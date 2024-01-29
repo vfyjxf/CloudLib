@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.ui;
 
-import dev.vfyjxf.cloudlib.api.ui.modular.IModularUI;
+import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
 import dev.vfyjxf.cloudlib.ui.widgets.WidgetGroup;

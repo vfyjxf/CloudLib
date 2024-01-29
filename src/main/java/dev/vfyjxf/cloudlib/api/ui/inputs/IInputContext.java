@@ -67,7 +67,7 @@ public interface IInputContext {
     }
 
     default FloatingPoint getRelative(IWidget widget) {
-        IWidgetGroup<?> parent = widget.getParent();
+        IWidgetGroup<?> parent = widget.parent();
         if (parent == null) return new FloatingPoint(getMouseX(), getMouseY());
         Point absolute = widget.getAbsolute();
         return new FloatingPoint(getMouseX() - absolute.x, getMouseY() - absolute.y);

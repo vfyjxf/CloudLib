@@ -46,7 +46,7 @@ public interface IWidgetGroup<T extends IWidget> extends IWidget, IDragConsumer<
         return null;
     }
 
-    List<IWidget> getWidgetById(Pattern regex);
+    List<IWidget> getById(Pattern regex);
 
     @Nullable
     @Override

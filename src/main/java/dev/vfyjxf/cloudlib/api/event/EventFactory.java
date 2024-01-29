@@ -14,7 +14,7 @@ import java.util.function.Function;
  * <p>
  * 2. Pre-phase events do not need to add the Pre suffix, but Post-phase events need to add the Post suffix.
  * <p>
- * 3. Usually, an event is defined in an interface with its listener.
+ * 3. Usually, an event is defined in an interface with its listeners.
  */
 public final class EventFactory {
 
@@ -26,11 +26,35 @@ public final class EventFactory {
         return new EventDefinition<>(type, invokerFactory);
     }
 
-    private record EventDefinition<T>(Class<T> type, Function<List<T>, T> function) implements IEventDefinition<T> {
+    private static class EventDefinition<T> implements IEventDefinition<T> {
+
+        private final Class<T> type;
+        private final Function<List<T>, T> function;
+        private final IEvent<T> global;
+
+        private EventDefinition(Class<T> type, Function<List<T>, T> function) {
+            this.type = type;
+            this.function = function;
+            this.global = new Event<>(function);
+        }
+
+        public Function<List<T>, T> function() {
+            return function;
+        }
+
+        @Override
+        public Class<T> type() {
+            return type;
+        }
 
         @Override
         public IEvent<T> create() {
             return new Event<>(function);
+        }
+
+        @Override
+        public IEvent<T> global() {
+            return global;
         }
     }
 

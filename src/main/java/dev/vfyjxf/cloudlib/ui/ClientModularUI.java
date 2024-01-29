@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.ui;
 
-import dev.vfyjxf.cloudlib.api.ui.modular.IModularUI;
+import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
 import dev.vfyjxf.cloudlib.event.EventListeners;
@@ -13,21 +13,20 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.event.ScreenEvent;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
 public class ClientModularUI implements IModularUI {
 
     private IWidgetGroup<IWidget> mainGroup;
-    private Screen screen;
 
     public ClientModularUI() {
         this.mainGroup = createMainGroup();
-        EventListeners.register(ScreenEvent.Opening.class, event -> screen = event.getScreen());
     }
 
     private IWidgetGroup<IWidget> createMainGroup() {
-        return new WidgetGroup<>()
+        IWidgetGroup<IWidget> main = new WidgetGroup<>()
                 .setUI(this)
                 .setPos(Point.ZERO)
                 .setSize(this.getScreenWidth(), this.getScreenHeight())
@@ -43,15 +42,19 @@ public class ClientModularUI implements IModularUI {
                     return false;
                 })
                 .cast();
+        main.setParent(main);
+        return main;
     }
 
     @Override
     public int getScreenWidth() {
+        Screen screen = getScreen();
         return screen == null ? 0 : screen.width;
     }
 
     @Override
     public int getScreenHeight() {
+        Screen screen = getScreen();
         return screen == null ? 0 : screen.height;
     }
 
@@ -72,7 +75,7 @@ public class ClientModularUI implements IModularUI {
 
     @Override
     public int guiLeft() {
-        if (screen instanceof AbstractContainerScreen<?> container) {
+        if (getScreen() instanceof AbstractContainerScreen<?> container) {
             return container.getGuiLeft();
         }
         return 0;
@@ -80,7 +83,7 @@ public class ClientModularUI implements IModularUI {
 
     @Override
     public int guiTop() {
-        if (screen instanceof AbstractContainerScreen<?> container) {
+        if (getScreen() instanceof AbstractContainerScreen<?> container) {
             return container.getGuiTop();
         }
         return 0;
@@ -104,6 +107,11 @@ public class ClientModularUI implements IModularUI {
     @Override
     public IWidgetGroup<IWidget> getMainGroup() {
         return mainGroup;
+    }
+
+    @Nullable
+    private static Screen getScreen() {
+        return Minecraft.getInstance().screen;
     }
 
 }

@@ -1,12 +1,11 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
+import dev.vfyjxf.cloudlib.api.data.property.IProperty;
 import dev.vfyjxf.cloudlib.api.event.IEventContext;
 import dev.vfyjxf.cloudlib.api.event.IEventManager;
+import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.IRenderableTexture;
 import dev.vfyjxf.cloudlib.api.ui.event.IWidgetEvent;
-import dev.vfyjxf.cloudlib.api.ui.keys.IKey;
-import dev.vfyjxf.cloudlib.api.ui.modular.IModularUI;
-import dev.vfyjxf.cloudlib.api.ui.property.IProperty;
 import dev.vfyjxf.cloudlib.api.ui.traits.ITrait;
 import dev.vfyjxf.cloudlib.api.ui.widgets.ITooltip;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
@@ -34,6 +33,7 @@ public class Widget implements IWidget {
     protected final EventManager<IWidget> eventManager = new EventManager<>(this);
     protected IModularUI ui;
     protected boolean initialized = false;
+    protected IWidgetGroup<IWidget> root;
     @Nullable
     protected IWidgetGroup<?> parent;
     protected String id = UUID.randomUUID().toString();
@@ -56,7 +56,7 @@ public class Widget implements IWidget {
         while (parent != null) {
             Point parentPos = parent.getPos();
             absolute.translate(parentPos.x, parentPos.y);
-            parent = parent.getParent();
+            parent = parent.parent();
         }
         return absolute;
     }
@@ -72,11 +72,11 @@ public class Widget implements IWidget {
         {
             graphics.pose().translate(position.x, position.y, 0);
             IEventContext context = context();
-            listener(IWidgetEvent.onRender).onRender(graphics, mouseX, mouseY, partialTicks, context);
+            listeners(IWidgetEvent.onRender).onRender(graphics, mouseX, mouseY, partialTicks, context);
             if (context.isCancelled()) return;
             if (background != null)
                 background.render(graphics);
-            listener(IWidgetEvent.onRenderPost).onRender(graphics, mouseX, mouseY, partialTicks, context());
+            listeners(IWidgetEvent.onRenderPost).onRender(graphics, mouseX, mouseY, partialTicks, context());
         }
         graphics.pose().popPose();
     }
@@ -108,25 +108,41 @@ public class Widget implements IWidget {
     }
 
     @Override
-    public @Nullable IWidgetGroup<?> getParent() {
+    public IWidgetGroup<IWidget> root() {
+        return root;
+    }
+
+    @Override
+    public @Nullable IWidgetGroup<?> parent() {
         return parent;
     }
 
     @Override
+    public IWidget setParent(IWidgetGroup<?> parent) {
+        this.parent = parent;
+        return this;
+    }
+
+    @Override
     public void init() {
-        listener(IWidgetEvent.onInit).onInit(this);
+        IWidgetGroup<?> parent = this.parent;
+        while (parent != null && parent != parent.parent()) {
+            parent = parent.parent();
+        }
+        this.root = (IWidgetGroup<IWidget>) parent;
+        listeners(IWidgetEvent.onInit).onInit(this);
         initialized = true;
     }
 
     @Override
     public void update() {
         if (initialized)
-            listener(IWidgetEvent.onUpdate).onUpdate(this);
+            listeners(IWidgetEvent.onUpdate).onUpdate(this);
     }
 
     @Override
     public void tick() {
-        listener(IWidgetEvent.onTick).onTick();
+        listeners(IWidgetEvent.onTick).onTick();
     }
 
     @Override
@@ -154,18 +170,8 @@ public class Widget implements IWidget {
 
     @Override
     public boolean removeTrait(ITrait trait) {
-        trait.onDelete();
+        trait.dispose();
         return traits.remove(trait);
-    }
-
-    @Override
-    public @Nullable IKey key() {
-        return null;
-    }
-
-    @Override
-    public IWidget setKey(@Nullable IKey key) {
-        return null;
     }
 
     @Override
@@ -202,7 +208,7 @@ public class Widget implements IWidget {
     @Override
     public IWidget setPos(Point position) {
         IEventContext context = context();
-        listener(IWidgetEvent.onPositionChanged).onPositionChanged(context, position);
+        listeners(IWidgetEvent.onPositionChanged).onPositionChanged(context, position);
         if (context.isCancelled()) return this;
         this.position = position;
         return this;
@@ -216,7 +222,7 @@ public class Widget implements IWidget {
     @Override
     public IWidget setSize(Dimension size) {
         IEventContext context = context();
-        listener(IWidgetEvent.onSizeChanged).onSizeChanged(context, size);
+        listeners(IWidgetEvent.onSizeChanged).onSizeChanged(context, size);
         if (context.isCancelled()) return this;
         this.size = size;
         return this;
@@ -316,12 +322,12 @@ public class Widget implements IWidget {
     }
 
     @Override
-    public <T> T putProperty(IProperty<T> property, T value) {
+    public <T> T put(IProperty<T> property, T value) {
         return (T) properties.put(property, value);
     }
 
     @Override
-    public <T> T getProperty(IProperty<T> property) {
+    public <T> T get(IProperty<T> property) {
         return (T) properties.get(property);
     }
 

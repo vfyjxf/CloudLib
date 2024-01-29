@@ -1,0 +1,25 @@
+plugins {
+    id "groovy-gradle-plugin"
+    id "java-gradle-plugin"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly gradleApi()
+
+    implementation 'org.ow2.asm:asm:9.5'
+    implementation 'org.ow2.asm:asm-tree:9.5'
+}
+
+gradlePlugin {
+    plugins {
+        cyclone {
+            id = 'dev.vfyjxf.cyclone'
+            implementationClass = 'dev.vfyjxf.cyclone.CyclonePlugin'
+            displayName = 'Cyclone'
+        }
+    }
+}

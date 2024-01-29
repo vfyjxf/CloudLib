@@ -13,7 +13,7 @@ public class FixedPositionTrait extends AbstractTrait {
     }
 
     @Override
-    public void onDelete() {
+    public void dispose() {
         holder.events().get(IWidgetEvent.onPositionChanged).unregister(listener);
     }
 }

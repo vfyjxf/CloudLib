@@ -33,7 +33,6 @@ public interface IWidgetEvent {
         }
     });
 
-
     IEventDefinition<OnRender> onRender = EventFactory.define(OnRender.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
         for (var listener : listeners) {
             listener.onRender(graphics, mouseX, mouseY, partialTicks, context);
@@ -65,6 +64,13 @@ public interface IWidgetEvent {
             listener.onTick();
         }
     });
+
+    IEventDefinition<OnDelete> onDelete = EventFactory.define(OnDelete.class, listeners -> (self) -> {
+        for (var listener : listeners) {
+            listener.onDeleted(self);
+        }
+    });
+
     IEventDefinition<OnChildAdded> onChildAdded = EventFactory.define(OnChildAdded.class, listeners -> (context, widget) -> {
         for (var listener : listeners) {
             listener.onChildAdded(context, widget);
@@ -128,6 +134,12 @@ public interface IWidgetEvent {
 
     interface OnTick extends IWidgetEvent {
         void onTick();
+    }
+
+    interface OnDelete extends IWidgetEvent {
+
+        void onDeleted(IWidget self);
+
     }
 
     interface OnChildAdded extends IWidgetEvent {

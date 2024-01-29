@@ -10,7 +10,7 @@ public interface IEventHolder<E extends IEventHolder<E>> {
         return events().createContext();
     }
 
-    default <T> T listener(IEventDefinition<T> definition) {
+    default <T> T listeners(IEventDefinition<T> definition) {
         return events().get(definition).invoker();
     }
 

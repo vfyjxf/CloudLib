@@ -19,7 +19,7 @@ public class LangBuilder {
     private final String specificNameSpace;
     private String key;
     /**
-     * English located value.
+     * English located get.
      */
     private String value;
 
@@ -44,7 +44,7 @@ public class LangBuilder {
 
     public Lang define(String key, String value) {
         if (key == null || value == null) {
-            LOGGER.error("key or value is null");
+            LOGGER.error("key or get is null");
             return null;
         }
         String realKey = specificNameSpace == null || specificNameSpace.isEmpty() ? modid + "." + key : modid + "." + specificNameSpace + "." + key;

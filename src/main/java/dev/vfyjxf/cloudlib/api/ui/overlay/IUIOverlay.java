@@ -1,17 +1,16 @@
 package dev.vfyjxf.cloudlib.api.ui.overlay;
 
+import dev.vfyjxf.cloudlib.api.annotations.Singleton;
+import dev.vfyjxf.cloudlib.api.event.IEventHolder;
+import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.IRenderable;
-import dev.vfyjxf.cloudlib.api.ui.modular.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
 import dev.vfyjxf.cloudlib.math.Rectangle;
 import dev.vfyjxf.cloudlib.utils.Singletons;
 
-import javax.annotation.Nullable;
-import java.util.List;
-
-public interface IUIOverlay extends IRenderable {
-
+@Singleton
+public interface IUIOverlay extends IRenderable, IEventHolder<IUIOverlay> {
 
     static IUIOverlay getInstance() {
         return Singletons.get(IUIOverlay.class);
@@ -26,13 +25,6 @@ public interface IUIOverlay extends IRenderable {
     void tick();
 
     IModularUI getUI();
-
-    List<IOverlayPlugin> getPlugins();
-
-    @Nullable
-    IOverlayPlugin getDisplayPlugin();
-
-    IUIOverlay setDisplayPlugin(IOverlayPlugin displayPlugin);
 
     IUIOverlay setUI(IModularUI ui);
 

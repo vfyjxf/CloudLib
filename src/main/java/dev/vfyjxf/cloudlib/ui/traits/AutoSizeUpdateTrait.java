@@ -24,7 +24,7 @@ public class AutoSizeUpdateTrait extends AbstractTrait {
 
 
     @Override
-    public void onDelete() {
+    public void dispose() {
         holder.events().get(IWidgetEvent.onUpdate).unregister(listener);
     }
 }

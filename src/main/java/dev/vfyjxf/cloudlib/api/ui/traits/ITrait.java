@@ -24,7 +24,7 @@ public interface ITrait {
 
     }
 
-    default void onDelete() {
+    default void dispose() {
 
     }
 

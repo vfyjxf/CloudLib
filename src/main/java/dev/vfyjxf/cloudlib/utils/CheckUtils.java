@@ -26,7 +26,7 @@ public class CheckUtils {
     }
 
     /**
-     * Checks the value whether in range [start, end).
+     * Checks the get whether in range [start, end).
      */
     public static void checkRange(int value, int start, int end) {
         Preconditions.checkArgument(value >= start && value < end, "Value must be in range [%s,%s)", start, end);
@@ -37,7 +37,7 @@ public class CheckUtils {
     }
 
     /**
-     * Checks the value whether in range [start, end].
+     * Checks the get whether in range [start, end].
      */
     public static void checkRangeClosed(int value, int start, int end) {
         Preconditions.checkArgument(value >= start && value <= end, "Value must be in range [%s,%s]", start, end);

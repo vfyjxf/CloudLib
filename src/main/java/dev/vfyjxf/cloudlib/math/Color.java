@@ -114,7 +114,7 @@ public final class Color {
     /**
      * Returns a brighter color
      *
-     * @param factor the higher the value, the brighter the color
+     * @param factor the higher the get, the brighter the color
      * @return the brighter color
      */
     public Color brighter(double factor) {
@@ -135,7 +135,7 @@ public final class Color {
     /**
      * Returns a darker color
      *
-     * @param factor the higher the value, the darker the color
+     * @param factor the higher the get, the darker the color
      * @return the darker color
      */
     public Color darker(double factor) {

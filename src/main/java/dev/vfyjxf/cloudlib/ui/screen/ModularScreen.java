@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.ui.screen;
 
-import dev.vfyjxf.cloudlib.api.ui.modular.IModularScreen;
-import dev.vfyjxf.cloudlib.api.ui.modular.IModularUI;
+import dev.vfyjxf.cloudlib.api.ui.IModularScreen;
+import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 
 public class ModularScreen implements IModularScreen {
     @Override

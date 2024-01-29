@@ -46,7 +46,7 @@ public class DynamicSizeTrait extends AbstractTrait {
     }
 
     @Override
-    public void onDelete() {
+    public void dispose() {
         holder.events().get(IWidgetEvent.onChildAddedPost).unregister(onChildAdded);
         holder.events().get(IWidgetEvent.onChildRemovedPost).unregister(onChildRemoved);
     }

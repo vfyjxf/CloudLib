@@ -9,4 +9,5 @@ pluginManagement {
         maven { url "https://jitpack.io" }
         gradlePluginPortal()
     }
+    includeBuild("Cyclone")
 }

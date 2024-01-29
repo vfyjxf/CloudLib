@@ -6,4 +6,6 @@ public interface IEventDefinition<T> {
 
     IEvent<T> create();
 
+    IEvent<T> global();
+
 }

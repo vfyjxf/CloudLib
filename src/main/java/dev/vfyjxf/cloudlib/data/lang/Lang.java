@@ -65,7 +65,7 @@ public class Lang {
     public String toString() {
         return "Lang{" +
                 "key='" + key + '\'' +
-                ", value='" + value + '\'' +
+                ", get='" + value + '\'' +
                 '}';
     }
 

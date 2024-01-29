@@ -4,7 +4,6 @@ import dev.vfyjxf.cloudlib.api.ui.widgets.ITooltip;
 import dev.vfyjxf.cloudlib.api.ui.widgets.ITooltipStack;
 import dev.vfyjxf.cloudlib.math.Point;
 import dev.vfyjxf.cloudlib.math.Rectangle;
-import dev.vfyjxf.cloudlib.mixin.GuiGraphicsAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.Font;
@@ -67,11 +66,9 @@ public final class ScreenUtil {
             if (!itemStack.isEmpty()) {
                 font = ForgeHooksClient.getTooltipFont(itemStack, font);
             }
-            //because some problems with arch loom,subproject can apply at,so we use mixin to access it.
-            GuiGraphicsAccessor accessor = (GuiGraphicsAccessor) graphics;
-            accessor.setTooltipStack(itemStack);
-            accessor.callRenderTooltipInternal(font, components, mouseX, mouseY, DefaultTooltipPositioner.INSTANCE);
-            accessor.setTooltipStack(null);
+            graphics.tooltipStack = itemStack;
+            graphics.renderTooltipInternal(font, components, mouseX, mouseY, DefaultTooltipPositioner.INSTANCE);
+            graphics.tooltipStack = ItemStack.EMPTY;
         }
         graphics.pose().popPose();
     }

@@ -1,18 +1,17 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import dev.vfyjxf.cloudlib.api.data.property.IPropertyHolder;
 import dev.vfyjxf.cloudlib.api.event.IEventDefinition;
 import dev.vfyjxf.cloudlib.api.event.IEventHolder;
 import dev.vfyjxf.cloudlib.api.event.IEventManager;
+import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.IRenderable;
 import dev.vfyjxf.cloudlib.api.ui.IRenderableTexture;
 import dev.vfyjxf.cloudlib.api.ui.drag.IDraggable;
 import dev.vfyjxf.cloudlib.api.ui.event.IInputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.IWidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.inputs.IInputContext;
-import dev.vfyjxf.cloudlib.api.ui.keys.IKey;
-import dev.vfyjxf.cloudlib.api.ui.modular.IModularUI;
-import dev.vfyjxf.cloudlib.api.ui.property.IPropertyHolder;
 import dev.vfyjxf.cloudlib.api.ui.traits.ITrait;
 import dev.vfyjxf.cloudlib.data.lang.Lang;
 import dev.vfyjxf.cloudlib.math.Dimension;
@@ -34,19 +33,21 @@ import java.util.function.Supplier;
 
 public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>, IPropertyHolder {
 
-    static boolean canUpdate(IWidget first, IWidget second) {
-        return first.getClass() == second.getClass() &&
-                first.key() == second.key();
-    }
-
-
     IModularUI getUI();
 
     @CanIgnoreReturnValue
-    IWidget setUI(IModularUI ui);
+    IWidget setUI(@Nullable IModularUI ui);
+
+    /**
+     * maybe itself.
+     */
+    IWidgetGroup<IWidget> root();
 
     @Nullable
-    IWidgetGroup<?> getParent();
+    IWidgetGroup<?> parent();
+
+    @CanIgnoreReturnValue
+    IWidget setParent(@Nullable IWidgetGroup<?> parent);
 
     /**
      * Construct the widget
@@ -94,14 +95,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
         return this;
     }
 
-    @Override
-    IEventManager<IWidget> events();
-
-    default <T> IWidget onEvent(IEventDefinition<T> definition, T listener) {
-        events().register(definition, listener);
-        return this;
-    }
-
     List<ITrait> traits();
 
     @CanIgnoreReturnValue
@@ -115,12 +108,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
     }
 
     boolean removeTrait(ITrait trait);
-
-    @Nullable
-    IKey key();
-
-    @CanIgnoreReturnValue
-    IWidget setKey(@Nullable IKey key);
 
     String getId();
 
@@ -202,12 +189,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
 
     IWidget setBackground(IRenderableTexture background);
 
-    @CanIgnoreReturnValue
-    default IWidget onRender(IWidgetEvent.OnRender listener) {
-        events().register(IWidgetEvent.onRender, listener);
-        return this;
-    }
-
     boolean active();
 
     void setActive(boolean active);
@@ -287,7 +268,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
     }
 
     default void onDelete() {
-
+        listeners(IWidgetEvent.onDelete).onDeleted(this);
     }
 
     @CanIgnoreReturnValue
@@ -301,30 +282,47 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
      * Event part
      */
 
+    @Override
+    IEventManager<IWidget> events();
+
+    default <T> IWidget onEvent(IEventDefinition<T> definition, T listener) {
+        events().register(definition, listener);
+        return this;
+    }
+
+    @CanIgnoreReturnValue
+    default IWidget onRender(IWidgetEvent.OnRender listener) {
+        return onEvent(IWidgetEvent.onRender, listener);
+    }
+
+    @CanIgnoreReturnValue
     default IWidget onMouseClicked(IInputEvent.OnMouseClicked listener) {
         return onEvent(IInputEvent.onMouseClicked, listener);
     }
 
+    @CanIgnoreReturnValue
     default IWidget onMouseReleased(IInputEvent.OnMouseReleased listener) {
         return onEvent(IInputEvent.onMouseReleased, listener);
     }
 
+    @CanIgnoreReturnValue
     default IWidget onKeyReleased(IInputEvent.OnKeyReleased listener) {
         return onEvent(IInputEvent.onKeyReleased, listener);
     }
 
+    @CanIgnoreReturnValue
     default IWidget onKeyPressed(IInputEvent.OnKeyPressed listener) {
         return onEvent(IInputEvent.onKeyPressed, listener);
     }
 
     default boolean mouseClicked(IInputContext input) {
         if (!visible() || !active() || !isMouseOver(input)) return false;
-        return listener(IInputEvent.onMouseClicked).onClicked(context(), input);
+        return listeners(IInputEvent.onMouseClicked).onClicked(context(), input);
     }
 
     default boolean mouseReleased(IInputContext input) {
         if (!visible() || !active() || !isMouseOver(input)) return false;
-        return listener(IInputEvent.onKeyReleased).onKeyReleased(context(), input);
+        return listeners(IInputEvent.onKeyReleased).onKeyReleased(context(), input);
     }
 
     default boolean mouseScrolled(double mouseX, double mouseY, double amount) {
@@ -341,12 +339,12 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
 
     default boolean keyPressed(IInputContext input) {
         if (!visible() || !active()) return false;
-        return listener(IInputEvent.onKeyPressed).onKeyPressed(context(), input);
+        return listeners(IInputEvent.onKeyPressed).onKeyPressed(context(), input);
     }
 
     default boolean keyReleased(IInputContext input) {
         if (!visible() || !active()) return false;
-        return listener(IInputEvent.onKeyReleased).onKeyReleased(context(), input);
+        return listeners(IInputEvent.onKeyReleased).onKeyReleased(context(), input);
     }
 
     //TODO:scissor
@@ -356,43 +354,35 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
      */
 
     default IWidget fixedPosition() {
-        this.trait(new FixedPositionTrait());
-        return this;
+        return this.trait(new FixedPositionTrait());
     }
 
     default IWidget relativeCoordinate(Supplier<Integer> x, Supplier<Integer> y) {
-        this.trait(new RelativeCoordinateTrait(x, y));
-        return this;
+        return this.trait(new RelativeCoordinateTrait(x, y));
     }
 
     default IWidget relativeHorizontal(Supplier<Integer> x) {
-        this.trait(new RelativeCoordinateTrait(x, this::getY));
-        return this;
+        return this.trait(new RelativeCoordinateTrait(x, this::getY));
     }
 
     default IWidget relativeVertical(Supplier<Integer> y) {
-        this.trait(new RelativeCoordinateTrait(this::getX, y));
-        return this;
+        return this.trait(new RelativeCoordinateTrait(this::getX, y));
     }
 
     default IWidget autoSize(Supplier<Integer> width, Supplier<Integer> height) {
-        this.trait(new AutoSizeUpdateTrait(width, height));
-        return this;
+        return this.trait(new AutoSizeUpdateTrait(width, height));
     }
 
     default IWidget autoWidth(Supplier<Integer> width) {
-        this.trait(new AutoSizeUpdateTrait(width, this::getHeight));
-        return this;
+        return this.trait(new AutoSizeUpdateTrait(width, this::getHeight));
     }
 
     default IWidget autoHeight(Supplier<Integer> height) {
-        this.trait(new AutoSizeUpdateTrait(this::getWidth, height));
-        return this;
+        return this.trait(new AutoSizeUpdateTrait(this::getWidth, height));
     }
 
     default IWidget dynamicSize() {
-        this.trait(new DynamicSizeTrait());
-        return this;
+        return this.trait(new DynamicSizeTrait());
     }
 
 }

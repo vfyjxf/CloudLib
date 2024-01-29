@@ -1,11 +1,11 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.event.IEventContext;
+import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.drag.IDragConsumer;
 import dev.vfyjxf.cloudlib.api.ui.event.IInputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.IWidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.inputs.IInputContext;
-import dev.vfyjxf.cloudlib.api.ui.modular.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
 import net.minecraft.client.gui.GuiGraphics;
@@ -103,18 +103,26 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
 
     @Override
     public boolean remove(T widget) {
-        return children.remove(widget);
+        int index = children.indexOf(widget);
+        if (index < 0) return false;
+        return remove(index);
     }
 
     @Override
     public boolean remove(int index) {
+        if (index < 0 || index >= children.size()) return false;
+        IWidget child = children.get(index);
+        child.onDelete();
+        child.setUI(null);
+        child.setParent(null);
         return children.remove(index) != null;
     }
 
     @Override
     public void clear() {
-        for (T child : children) child.onDelete();
-        children.clear();
+        for (int i = 0; i < children.size(); i++) {
+            remove(i);
+        }
     }
 
     @Override
@@ -129,7 +137,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
         {
             graphics.pose().translate(position.x, position.y, 0);
             IEventContext context = context();
-            listener(IWidgetEvent.onRender).onRender(graphics, mouseX, mouseY, partialTicks, context);
+            listeners(IWidgetEvent.onRender).onRender(graphics, mouseX, mouseY, partialTicks, context);
             if (context.isCancelled()) return;
             if (background != null)
                 background.render(graphics);
@@ -143,20 +151,20 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
                 }
                 graphics.pose().popPose();
             }
-            listener(IWidgetEvent.onRenderPost).onRender(graphics, mouseX, mouseY, partialTicks, context());
+            listeners(IWidgetEvent.onRenderPost).onRender(graphics, mouseX, mouseY, partialTicks, context());
         }
         graphics.pose().popPose();
     }
 
     @Override
-    public List<IWidget> getWidgetById(Pattern regex) {
+    public List<IWidget> getById(Pattern regex) {
         List<IWidget> widgets = new ArrayList<>();
         for (IWidget child : children) {
             if (regex.matcher(child.getId()).matches()) {
                 widgets.add(child);
             }
             if (child instanceof IWidgetGroup<?> group) {
-                List<IWidget> result = group.getWidgetById(regex);
+                List<IWidget> result = group.getById(regex);
                 widgets.addAll(result);
             }
         }
@@ -187,8 +195,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
     public boolean mouseClicked(IInputContext input) {
         if (!visible() || !active()) return false;
         IEventContext context = context();
-        boolean result = events().get(IInputEvent.onMouseClicked).invoker()
-                .onClicked(context, input);
+        boolean result = listeners(IInputEvent.onMouseClicked).onClicked(context, input);
         if (context.isCancelled()) return result;
         for (T child : children) {
             if (child.mouseClicked(input)) {
@@ -202,8 +209,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
     public boolean mouseReleased(IInputContext input) {
         if (!visible() || !active()) return false;
         IEventContext context = context();
-        boolean result = events().get(IInputEvent.onMouseReleased).invoker()
-                .onReleased(context, input);
+        boolean result = listeners(IInputEvent.onMouseReleased).onReleased(context, input);
         if (context.isCancelled()) return result;
         for (T child : children) {
             if (child.mouseReleased(input)) {
