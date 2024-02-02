@@ -102,7 +102,7 @@ public class Widget implements IWidget {
     }
 
     @Override
-    public IWidget setUI(IModularUI ui) {
+    public IWidget setUI(@Nullable IModularUI ui) {
         this.ui = ui;
         return this;
     }
@@ -118,7 +118,7 @@ public class Widget implements IWidget {
     }
 
     @Override
-    public IWidget setParent(IWidgetGroup<?> parent) {
+    public IWidget setParent(@Nullable IWidgetGroup<?> parent) {
         this.parent = parent;
         return this;
     }

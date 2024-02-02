@@ -59,6 +59,54 @@ public interface IWidgetGroup<T extends IWidget> extends IWidget, IDragConsumer<
         return IWidget.super.getHoveredWidget(mouseX, mouseY);
     }
 
+    @Override
+    default <W extends IWidget> @Nullable W getWidgetOfType(Class<W> type) {
+        if (type.isInstance(this)) {
+            return type.cast(this);
+        }
+        for (T child : children()) {
+            var result = child.getWidgetOfType(type);
+            if (result != null) {
+                return result;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    default <W extends IWidget> void getWidgetsOfType(Class<W> type, List<W> result) {
+        if (type.isInstance(this)) {
+            result.add(type.cast(this));
+        }
+        for (T child : children()) {
+            child.getWidgetsOfType(type, result);
+        }
+    }
+
+    @Override
+    default <W extends IWidget> @Nullable W findWidgetsOfType(Class<W> type) {
+        if (type.isInstance(this)) {
+            return type.cast(this);
+        }
+        for (T child : children()) {
+            var result = child.findWidgetsOfType(type);
+            if (result != null) {
+                return result;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    default <W extends IWidget> void findWidgetsOfType(Class<W> type, List<W> result) {
+        if (type.isInstance(this)) {
+            result.add(type.cast(this));
+        }
+        for (T child : children()) {
+            child.findWidgetsOfType(type, result);
+        }
+    }
+
     default List<IWidget> getContainedWidgets(boolean withInvisible) {
         List<IWidget> result = new ArrayList<>();
         for (T child : children()) {

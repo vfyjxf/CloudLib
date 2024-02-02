@@ -25,7 +25,7 @@ public class ClientStartup extends CommonStartup {
         bus.addListener(this::gatherData);
         Singletons.attachInstance(GuiEventHandler.class, new GuiEventHandler());
         MinecraftForge.EVENT_BUS.register(GuiEventHandler.getInstance());
-
+        attachInstances();
     }
 
     private static void attachInstances() {

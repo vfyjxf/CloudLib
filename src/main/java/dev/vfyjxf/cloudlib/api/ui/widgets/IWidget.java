@@ -25,6 +25,7 @@ import dev.vfyjxf.cloudlib.utils.ScreenUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -58,6 +59,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
     }
 
     @CanIgnoreReturnValue
+    @ApiStatus.NonExtendable
     default IWidget onInit(IWidgetEvent.OnInit listener) {
         events().register(IWidgetEvent.onInit, listener);
         return this;
@@ -77,6 +79,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
     }
 
     @CanIgnoreReturnValue
+    @ApiStatus.NonExtendable
     default IWidget onUpdate(IWidgetEvent.OnUpdate listener) {
         events().register(IWidgetEvent.onUpdate, listener);
         return this;
@@ -90,6 +93,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
     }
 
     @CanIgnoreReturnValue
+    @ApiStatus.NonExtendable
     default IWidget onTick(IWidgetEvent.OnTick listener) {
         events().register(IWidgetEvent.onTick, listener);
         return this;
@@ -221,6 +225,49 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
         return isMouseOver(input.getMouseX(), input.getMouseY());
     }
 
+
+    /**
+     * Top-down search
+     */
+    @Nullable
+    default <T extends IWidget> T getWidgetOfType(Class<T> type) {
+        if (type.isInstance(this)) {
+            return type.cast(this);
+        }
+        return null;
+    }
+
+    default <T extends IWidget> void getWidgetsOfType(Class<T> type, List<T> result) {
+        if (type.isInstance(this)) {
+            result.add(type.cast(this));
+        }
+    }
+
+    /**
+     * down to top search.
+     */
+    @Nullable
+    default <T extends IWidget> T findWidgetsOfType(Class<T> type) {
+        if (type.isInstance(this)) {
+            return type.cast(this);
+        }
+        var parent = parent();
+        if (parent != null) {
+            return parent.findWidgetsOfType(type);
+        }
+        return null;
+    }
+
+    default <T extends IWidget> void findWidgetsOfType(Class<T> type, List<T> result) {
+        if (type.isInstance(this)) {
+            result.add(type.cast(this));
+        }
+        var parent = parent();
+        if (parent != null) {
+            parent.findWidgetsOfType(type, result);
+        }
+    }
+
     @Nullable
     default IWidget getHoveredWidget(double mouseX, double mouseY) {
         if (isMouseOver(mouseX, mouseY)) {
@@ -291,26 +338,31 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
     }
 
     @CanIgnoreReturnValue
+    @ApiStatus.NonExtendable
     default IWidget onRender(IWidgetEvent.OnRender listener) {
         return onEvent(IWidgetEvent.onRender, listener);
     }
 
     @CanIgnoreReturnValue
+    @ApiStatus.NonExtendable
     default IWidget onMouseClicked(IInputEvent.OnMouseClicked listener) {
         return onEvent(IInputEvent.onMouseClicked, listener);
     }
 
     @CanIgnoreReturnValue
+    @ApiStatus.NonExtendable
     default IWidget onMouseReleased(IInputEvent.OnMouseReleased listener) {
         return onEvent(IInputEvent.onMouseReleased, listener);
     }
 
     @CanIgnoreReturnValue
+    @ApiStatus.NonExtendable
     default IWidget onKeyReleased(IInputEvent.OnKeyReleased listener) {
         return onEvent(IInputEvent.onKeyReleased, listener);
     }
 
     @CanIgnoreReturnValue
+    @ApiStatus.NonExtendable
     default IWidget onKeyPressed(IInputEvent.OnKeyPressed listener) {
         return onEvent(IInputEvent.onKeyPressed, listener);
     }
