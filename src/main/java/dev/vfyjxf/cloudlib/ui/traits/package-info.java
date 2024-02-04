@@ -1,4 +1,4 @@
 @NotNullByDefault
-package dev.vfyjxf.modpackhelper.ui.traits;
+package dev.vfyjxf.cloudlib.ui.traits;
 
 import dev.vfyjxf.cloudlib.api.annotations.NotNullByDefault;

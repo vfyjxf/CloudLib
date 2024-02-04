@@ -8,6 +8,9 @@ import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
 import dev.vfyjxf.cloudlib.math.Rectangle;
 import dev.vfyjxf.cloudlib.utils.Singletons;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 @Singleton
 public interface IUIOverlay extends IRenderable, IEventHolder<IUIOverlay> {
@@ -30,6 +33,15 @@ public interface IUIOverlay extends IRenderable, IEventHolder<IUIOverlay> {
 
     default IWidgetGroup<IWidget> getMainGroup() {
         return getUI().getMainGroup();
+    }
+
+
+    default <T extends IWidget> T getWidgetOfType(Class<T> type) {
+        return getMainGroup().getWidgetOfType(type);
+    }
+
+    default <T extends IWidget> void getWidgetsOfType(Class<T> type, List<T> widgets) {
+        getMainGroup().getWidgetsOfType(type, widgets);
     }
 
     Rectangle getBounds();

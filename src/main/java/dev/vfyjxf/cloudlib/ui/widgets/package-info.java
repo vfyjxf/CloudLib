@@ -1,4 +1,4 @@
 @NotNullByDefault
-package dev.vfyjxf.modpackhelper.ui.widgets;
+package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.annotations.NotNullByDefault;

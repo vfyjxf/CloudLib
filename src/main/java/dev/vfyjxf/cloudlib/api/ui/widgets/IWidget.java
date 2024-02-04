@@ -26,6 +26,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -54,6 +55,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
      * Construct the widget
      * include layout and traits.
      */
+    @MustBeInvokedByOverriders
     default void init() {
 
     }
@@ -229,7 +231,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
     /**
      * Top-down search
      */
-    @Nullable
     default <T extends IWidget> T getWidgetOfType(Class<T> type) {
         if (type.isInstance(this)) {
             return type.cast(this);
@@ -246,7 +247,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
     /**
      * down to top search.
      */
-    @Nullable
     default <T extends IWidget> T findWidgetsOfType(Class<T> type) {
         if (type.isInstance(this)) {
             return type.cast(this);

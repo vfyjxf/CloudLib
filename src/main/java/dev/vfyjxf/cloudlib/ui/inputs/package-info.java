@@ -1,4 +1,4 @@
 @NotNullByDefault
-package dev.vfyjxf.modpackhelper.ui.inputs;
+package dev.vfyjxf.cloudlib.ui.inputs;
 
 import dev.vfyjxf.cloudlib.api.annotations.NotNullByDefault;
