@@ -1,13 +1,14 @@
 plugins {
-    id "dev.architectury.loom" version "1.4-SNAPSHOT"
-    id "architectury-plugin" version "3.4-SNAPSHOT"
+    id 'java-library'
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'net.neoforged.gradle.userdev' version '7.0.80'
     id "io.github.p03w.machete" version "2.+"
-    id "maven-publish"
 //    id "dev.vfyjxf.cyclone"
 }
 sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
 
-archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
@@ -15,46 +16,61 @@ static def isJetBrainsRuntime() {
     return System.getProperty('java.vm.vendor').contains('JetBrains')
 }
 
-def generatedResources = file("src/generated")
+base {
+    archivesName = mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    accessTransformers {
+        file('src/main/resources/META-INF/accesstransformer.cfg')
+    }
+}
+
+configurations {
+    libraries {}
+    implementation.extendsFrom libraries
+}
+
+runs {
+    configureEach {
+        systemProperty 'forge.logging.markers', 'REGISTRIES'
+        systemProperty 'forge.logging.console.level', 'debug'
+        modSource project.sourceSets.main
+
+        dependencies {
+            runtime project.configurations.libraries
+        }
+    }
+
+    client {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+    }
+
+    server {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        programArgument '--nogui'
+    }
+    gameTestServer {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+    }
+
+    data {
+        programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+    }
+}
 
 sourceSets {
     main {
-        resources.srcDir generatedResources
+        resources.srcDir 'src/generated/resources'
     }
 }
 
-architectury {
-    compileOnly()
-    platformSetupLoomIde()
-    forge()
-}
-
-loom {
-
-    silentMojangMappingsLicense()
-    forge {
-        mixinConfigs = [
-                "cloudlib.mixins.json"
-        ]
+sourceSets {
+    main {
+        ext.refMap = "cloudlib.refmap.json"
     }
-
-    runs {
-        data {
-            data()
-            programArgs "--all", "--mod", "cloudlib"
-            programArgs "--output", generatedResources.absolutePath
-        }
-    }
-
-    if (isJetBrainsRuntime()) {
-        runs {
-            client {
-                vmArgs '-XX:+AllowEnhancedClassRedefinition'
-            }
-        }
-    }
-    runConfigs.each { it.setIdeConfigGenerated(true) } // Uncomment this if run configs not generated
-    addTaskBeforeRun(":${name}:classes")
 }
 
 repositories {
@@ -74,39 +90,44 @@ repositories {
             includeGroup "curse.maven"
         }
     }
-}
-
-configurations {
-    shade.extendsFrom(implementation, forgeRuntimeLibrary)
-    shadeMod.extendsFrom(shade, modImplementation)
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:${project.mc_version}"
+    implementation "net.neoforged:neoforge:${neo_version}"
 
-    mappings loom.layered() {
-//        mappings("org.quiltmc:quilt-mappings:${mc_version}+${quilt_mappings}:intermediary-v2")
-        parchment("org.parchmentmc.data:parchment-${mc_version}:${mapping_version}@zip")
-        officialMojangMappings()
+    compileOnly "mezz.jei:jei-${mc_version}-neoforge:${jei_version}"
+    runtimeOnly "maven.modrinth:jei:${jei_version}-neoforge"
+    libraries (jarJar("org.eclipse.collections:eclipse-collections-api:11.1.0")) {
+        jarJar.ranged(it, "[11.1.0,)")
     }
-    forge "net.minecraftforge:forge:${mc_version}-${forge_version}"
-
-    modCompileOnly "mezz.jei:jei-${mc_version}-forge:${jei_version}"
-    modRuntimeOnly "curse.maven:jei-238222:4712868"
-    implementation "org.eclipse.collections:eclipse-collections-api:11.1.0"
-    implementation "org.eclipse.collections:eclipse-collections:11.1.0"
-    implementation "mx.kenzie:mirror:5.0.5"
-    forgeRuntimeLibrary "org.eclipse.collections:eclipse-collections-api:11.1.0"
-    forgeRuntimeLibrary "org.eclipse.collections:eclipse-collections:11.1.0"
-    forgeRuntimeLibrary "mx.kenzie:mirror:5.0.5"
-    include "org.eclipse.collections:eclipse-collections-api:11.1.0"
-    include "org.eclipse.collections:eclipse-collections:11.1.0"
+    libraries (jarJar("org.eclipse.collections:eclipse-collections:11.1.0")) {
+        jarJar.ranged(it, "[11.1.0,)")
+    }
 }
 
-processResources {
-    inputs.property "version", project.version
-    filesMatching("META-INF/mods.toml") {
-        expand "version": project.version
+tasks.withType(ProcessResources).configureEach {
+    var replaceProperties = [
+            minecraft_version   : mc_version, minecraft_version_range: mc_version_range,
+            neo_version         : neo_version, neo_version_range: neo_version_range,
+            loader_version_range: loader_version_range,
+            mod_id              : mod_id, mod_name: mod_name, mod_version: mod_version,
+            jei_version         : jei_version
+    ]
+    inputs.properties replaceProperties
+
+    filesMatching(['META-INF/mods.toml']) {
+        expand replaceProperties + [project: project]
     }
 }
 
@@ -114,26 +135,17 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
     options.release = 17
 }
+
 java {
     withSourcesJar()
 }
 
-build {
-    dependsOn(publishToMavenLocal)
+tasks.named("jar").configure {
+    getArchiveClassifier().convention('slim')
 }
 
-jar {
-    manifest {
-        attributes([
-                "Specification-Title"     : project.mod_id,
-                "Specification-Vendor"    : project.mod_author,
-                "Specification-Version"   : "1",
-                "Implementation-Title"    : project.name,
-                "Implementation-Version"  : project.version,
-                "Implementation-Vendor"   : project.mod_author,
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
-    }
+tasks.named("jarJar").configure {
+    getArchiveClassifier().convention('')
 }
 
 // configure the maven publication
@@ -141,7 +153,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             groupId = project.maven_group
-            artifactId = project.archives_base_name
+            artifactId = project.mod_id
             version = project.mod_version
             from components.java
         }

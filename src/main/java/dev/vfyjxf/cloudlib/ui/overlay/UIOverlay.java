@@ -3,14 +3,10 @@ package dev.vfyjxf.cloudlib.ui.overlay;
 import dev.vfyjxf.cloudlib.api.event.IEventManager;
 import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.overlay.IUIOverlay;
-import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
-import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
 import dev.vfyjxf.cloudlib.event.EventManager;
 import dev.vfyjxf.cloudlib.math.Rectangle;
 import net.minecraft.client.gui.GuiGraphics;
-import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import java.awt.Color;
 
 ;

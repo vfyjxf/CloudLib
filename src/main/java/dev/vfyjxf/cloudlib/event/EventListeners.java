@@ -1,9 +1,9 @@
 package dev.vfyjxf.cloudlib.event;
 
 
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.eventbus.api.EventPriority;
+import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.function.Consumer;
 
@@ -17,7 +17,7 @@ public final class EventListeners {
     }
 
     public static <T extends Event> void register(Class<T> type, Consumer<T> listener) {
-        MinecraftForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, type, listener);
+        NeoForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, type, listener);
     }
 
 

@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.data.lang;
 
-import net.minecraftforge.common.data.LanguageProvider;
+import net.neoforged.neoforge.common.data.LanguageProvider;
 
 public interface ILangProvider {
 

@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.ui.widgets.ITooltip;
 import dev.vfyjxf.cloudlib.api.ui.widgets.ITooltipStack;
 import dev.vfyjxf.cloudlib.math.Point;
 import dev.vfyjxf.cloudlib.math.Rectangle;
+import dev.vfyjxf.cloudlib.mixin.GuiGraphicsAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.Font;
@@ -14,7 +15,7 @@ import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPosition
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.client.ForgeHooksClient;
+import net.neoforged.neoforge.client.ClientHooks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +49,7 @@ public final class ScreenUtil {
             ITooltipStack<?> stack = tooltip.stack();
             ItemStack itemStack = stack != null && stack.type() == ItemStack.class ? stack.castValue() : ItemStack.EMPTY;
             List<Component> texts = CollectionUtils.filterAndMap(tooltip.entries(), ITooltip.Entry::isText, ITooltip.Entry::asText);
-            List<ClientTooltipComponent> components = ForgeHooksClient.gatherTooltipComponents(itemStack, texts, Optional.empty(), mouseX, screen.width, screen.height, screen.getMinecraft().font);
+            List<ClientTooltipComponent> components = ClientHooks.gatherTooltipComponents(itemStack, texts, Optional.empty(), mouseX, screen.width, screen.height, screen.getMinecraft().font);
             components = new ArrayList<>(components);
             for (ITooltip.Entry entry : tooltip.entries()) {
                 if (!entry.isText()) {
@@ -64,11 +65,12 @@ public final class ScreenUtil {
             }
             Font font = Minecraft.getInstance().font;
             if (!itemStack.isEmpty()) {
-                font = ForgeHooksClient.getTooltipFont(itemStack, font);
+                font = ClientHooks.getTooltipFont(itemStack, font);
             }
-            graphics.tooltipStack = itemStack;
+            GuiGraphicsAccessor accessor = (GuiGraphicsAccessor) graphics;
+            accessor.setTooltipStack(itemStack);
             graphics.renderTooltipInternal(font, components, mouseX, mouseY, DefaultTooltipPositioner.INSTANCE);
-            graphics.tooltipStack = ItemStack.EMPTY;
+            accessor.setTooltipStack(ItemStack.EMPTY);
         }
         graphics.pose().popPose();
     }

@@ -18,6 +18,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
+import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -53,7 +54,7 @@ public class Widget implements IWidget {
         if (parent == null) return position;
         IWidgetGroup<?> parent = this.parent;
         Point absolute = position;
-        while (parent != null) {
+        while (parent != null && parent != this) {
             Point parentPos = parent.getPos();
             absolute.translate(parentPos.x, parentPos.y);
             parent = parent.parent();
@@ -124,7 +125,9 @@ public class Widget implements IWidget {
     }
 
     @Override
+    @MustBeInvokedByOverriders
     public void init() {
+        IWidget.super.init();
         IWidgetGroup<?> parent = this.parent;
         while (parent != null && parent != parent.parent()) {
             parent = parent.parent();
@@ -135,6 +138,7 @@ public class Widget implements IWidget {
     }
 
     @Override
+    @MustBeInvokedByOverriders
     public void update() {
         if (initialized)
             listeners(IWidgetEvent.onUpdate).onUpdate(this);
@@ -183,16 +187,6 @@ public class Widget implements IWidget {
     public IWidget setId(String id) {
         this.id = id;
         return this;
-    }
-
-    @Override
-    public IWidget uniqueId() {
-        return null;
-    }
-
-    @Override
-    public IWidget globalId() {
-        return null;
     }
 
     @Override

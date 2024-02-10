@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.ui;
 
-import dev.vfyjxf.cloudlib.api.ui.IUIHolder;
 import dev.vfyjxf.cloudlib.api.ui.IModularUI;
+import dev.vfyjxf.cloudlib.api.ui.IUIHolder;
 import net.minecraft.world.entity.player.Player;
 
 public class OverlayUIHolder implements IUIHolder {

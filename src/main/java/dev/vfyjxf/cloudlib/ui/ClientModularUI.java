@@ -3,7 +3,6 @@ package dev.vfyjxf.cloudlib.ui;
 import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
-import dev.vfyjxf.cloudlib.event.EventListeners;
 import dev.vfyjxf.cloudlib.math.Point;
 import dev.vfyjxf.cloudlib.ui.inputs.KeyMappings;
 import dev.vfyjxf.cloudlib.ui.widgets.WidgetGroup;
@@ -12,7 +11,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.client.event.ScreenEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -26,7 +24,7 @@ public class ClientModularUI implements IModularUI {
     }
 
     private IWidgetGroup<IWidget> createMainGroup() {
-        IWidgetGroup<IWidget> main = new WidgetGroup<>()
+        return new WidgetGroup<>()
                 .setUI(this)
                 .setPos(Point.ZERO)
                 .setSize(this.getScreenWidth(), this.getScreenHeight())
@@ -42,8 +40,6 @@ public class ClientModularUI implements IModularUI {
                     return false;
                 })
                 .cast();
-        main.setParent(main);
-        return main;
     }
 
     @Override

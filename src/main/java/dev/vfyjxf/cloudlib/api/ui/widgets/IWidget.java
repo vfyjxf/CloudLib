@@ -35,6 +35,10 @@ import java.util.function.Supplier;
 
 public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>, IPropertyHolder {
 
+    //////////////////////////////////////
+    //********       Basic     *********//
+    //////////////////////////////////////
+
     IModularUI getUI();
 
     @CanIgnoreReturnValue
@@ -119,10 +123,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
 
     @CanIgnoreReturnValue
     IWidget setId(String id);
-
-    IWidget uniqueId();
-
-    IWidget globalId();
 
     /**
      * @return Relative coordinates relative to the upper left corner of the parent.
@@ -211,6 +211,10 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
         setVisible(true);
     }
 
+    //////////////////////////////////////
+    //********       tools     *********//
+    //////////////////////////////////////
+
     /**
      * @param mouseX the absolute x coordinate of the mouse
      * @param mouseY the absolute y coordinate of the mouse
@@ -276,6 +280,14 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
         return null;
     }
 
+    default <O extends IWidget> O cast() {
+        return (O) this;
+    }
+
+    //////////////////////////////////////
+    //********     Tooltips    *********//
+    //////////////////////////////////////
+
     @Nullable
     ITooltip getTooltip();
 
@@ -314,20 +326,16 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
             ScreenUtil.renderTooltip(Objects.requireNonNull(Minecraft.getInstance().screen), graphics, tooltip, mouseX, mouseY);
     }
 
-    default void onDelete() {
-        listeners(IWidgetEvent.onDelete).onDeleted(this);
-    }
+    //////////////////////////////////////
+    //********        Group    *********//
+    //////////////////////////////////////
 
     @CanIgnoreReturnValue
     <T extends IWidget> IWidget asChild(IWidgetGroup<T> parent);
 
-    default <O extends IWidget> O cast() {
-        return (O) this;
-    }
-
-    /**
-     * Event part
-     */
+    //////////////////////////////////////
+    //********     Events      *********//
+    //////////////////////////////////////
 
     @Override
     IEventManager<IWidget> events();
@@ -367,6 +375,14 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
         return onEvent(IInputEvent.onKeyPressed, listener);
     }
 
+    default void onDelete() {
+        listeners(IWidgetEvent.onDelete).onDeleted(this);
+    }
+
+    //////////////////////////////////////
+    //********   User Input    *********//
+    //////////////////////////////////////
+
     default boolean mouseClicked(IInputContext input) {
         if (!visible() || !active() || !isMouseOver(input)) return false;
         return listeners(IInputEvent.onMouseClicked).onClicked(context(), input);
@@ -401,9 +417,10 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
 
     //TODO:scissor
 
-    /**
-     * Useful Traits methods
-     */
+    //////////////////////////////////////
+    //********       Traits    *********//
+    //////////////////////////////////////
+
 
     default IWidget fixedPosition() {
         return this.trait(new FixedPositionTrait());

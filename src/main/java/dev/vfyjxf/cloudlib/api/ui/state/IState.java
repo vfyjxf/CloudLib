@@ -56,7 +56,7 @@ public interface IState<T> {
 
     IState<T> onSet(Consumer<T> consumer);
 
-    default <U> IState<U> map(Function<T, U> mapper){
+    default <U> IState<U> map(Function<T, U> mapper) {
         return new State<>(mapper.apply(get()));
     }
 

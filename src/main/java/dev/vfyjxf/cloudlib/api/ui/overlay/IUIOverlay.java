@@ -8,7 +8,6 @@ import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
 import dev.vfyjxf.cloudlib.math.Rectangle;
 import dev.vfyjxf.cloudlib.utils.Singletons;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 

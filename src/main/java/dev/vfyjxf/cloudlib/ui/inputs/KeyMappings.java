@@ -5,8 +5,8 @@ import dev.vfyjxf.cloudlib.Constants;
 import dev.vfyjxf.cloudlib.data.lang.LangBuilder;
 import dev.vfyjxf.cloudlib.data.lang.LangProvider;
 import net.minecraft.client.KeyMapping;
-import net.minecraftforge.client.settings.KeyConflictContext;
-import net.minecraftforge.client.settings.KeyModifier;
+import net.neoforged.neoforge.client.settings.KeyConflictContext;
+import net.neoforged.neoforge.client.settings.KeyModifier;
 import org.lwjgl.glfw.GLFW;
 
 @LangProvider

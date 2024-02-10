@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.ui;
 
 
+import dev.vfyjxf.cloudlib.api.annotations.Singleton;
 import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
 import dev.vfyjxf.cloudlib.api.ui.UIConfig;
 import dev.vfyjxf.cloudlib.api.ui.inputs.IInputContext;
@@ -11,9 +12,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.ScreenEvent;
 
+@Singleton
 public class GuiEventHandler {
 
 

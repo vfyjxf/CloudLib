@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.startup;
 
 import dev.vfyjxf.cloudlib.Constants;
+import dev.vfyjxf.cloudlib.api.registry.IModPlugin;
 import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
 import dev.vfyjxf.cloudlib.api.ui.overlay.IUIOverlay;
 import dev.vfyjxf.cloudlib.data.lang.LangKeyProvider;
@@ -10,31 +11,36 @@ import dev.vfyjxf.cloudlib.ui.UIRegistry;
 import dev.vfyjxf.cloudlib.ui.overlay.UIOverlay;
 import dev.vfyjxf.cloudlib.utils.Singletons;
 import net.minecraft.data.DataProvider;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 public class ClientStartup extends CommonStartup {
+
+    public ClientStartup(IEventBus modBus) {
+        super(modBus);
+    }
 
     @Override
     public void init() {
         super.init();
-        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
-        bus.addListener(this::gatherData);
+        this.modBus.addListener(this::gatherData);
         Singletons.attachInstance(GuiEventHandler.class, new GuiEventHandler());
-        MinecraftForge.EVENT_BUS.register(GuiEventHandler.getInstance());
-        attachInstances();
-    }
-
-    private static void attachInstances() {
+        NeoForge.EVENT_BUS.register(GuiEventHandler.getInstance());
         Singletons.attachInstance(IUIRegistry.class, new UIRegistry());
-        Singletons.attachInstance(IUIOverlay.class, new UIOverlay(new ClientModularUI()));
     }
 
     @Override
-    public void loadComplete() {
+    public void loadComplete(FMLLoadCompleteEvent event) {
+        super.loadComplete(event);
+        event.enqueueWork(() -> {
+            Singletons.attachInstance(IUIOverlay.class, new UIOverlay(new ClientModularUI()));
+            for (IModPlugin plugin : plugins) {
+                plugin.registerUI(Singletons.get(IUIRegistry.class));
+            }
+        });
     }
 
 
