@@ -1,5 +1,5 @@
 modLoader = "javafml"
-loaderVersion = "[2,)"
+loaderVersion = "${loader_version_range}"
 license = "MIT License"
 
 [[mods]]
@@ -27,7 +27,7 @@ side="BOTH"
 
 [[dependencies.${mod_id}]]
 modId = "jei"
-mandatory = true
+type="required"
 versionRange = "[${jei_version},)"
 ordering = "AFTER"
 side = "BOTH"

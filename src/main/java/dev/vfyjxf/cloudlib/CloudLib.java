@@ -21,6 +21,7 @@ public class CloudLib {
         startup = dist == Dist.CLIENT ? new ClientStartup(modBus) : new ServerStartup(modBus);
         startup.init();
         NeoForge.EVENT_BUS.register(this);
+        modBus.register(this);
     }
 
     @SubscribeEvent

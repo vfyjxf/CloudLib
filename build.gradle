@@ -7,7 +7,6 @@ plugins {
     id "io.github.p03w.machete" version "2.+"
 //    id "dev.vfyjxf.cyclone"
 }
-sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
 
 version = project.mod_version
 group = project.maven_group
@@ -64,12 +63,6 @@ runs {
 sourceSets {
     main {
         resources.srcDir 'src/generated/resources'
-    }
-}
-
-sourceSets {
-    main {
-        ext.refMap = "cloudlib.refmap.json"
     }
 }
 
@@ -140,12 +133,12 @@ java {
     withSourcesJar()
 }
 
-tasks.named("jar").configure {
-    getArchiveClassifier().convention('slim')
+tasks.jar.configure {
+    archiveClassifier.set('slim')
 }
 
-tasks.named("jarJar").configure {
-    getArchiveClassifier().convention('')
+tasks.jarJar.configure {
+    archiveClassifier.set('')
 }
 
 // configure the maven publication
