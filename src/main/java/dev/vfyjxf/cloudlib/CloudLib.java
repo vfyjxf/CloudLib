@@ -17,10 +17,8 @@ public class CloudLib {
     private static CommonStartup startup;
 
     public CloudLib(IEventBus modBus, Dist dist) {
-        if (DatagenModLoader.isRunningDataGen()) return;
         startup = dist == Dist.CLIENT ? new ClientStartup(modBus) : new ServerStartup(modBus);
         startup.init();
-        NeoForge.EVENT_BUS.register(this);
         modBus.register(this);
     }
 

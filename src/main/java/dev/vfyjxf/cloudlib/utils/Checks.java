@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-public class CheckUtils {
+public class Checks {
 
     public static <T> T requireNonNull(@Nullable T obj, String message) {
         if (obj == null) {

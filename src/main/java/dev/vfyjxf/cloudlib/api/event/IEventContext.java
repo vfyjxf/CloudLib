@@ -4,6 +4,7 @@ public interface IEventContext {
 
     IEventManager<?> getManager();
 
+    @SuppressWarnings("unchecked")
     default <T> T holder() {
         return (T) getManager().holder();
     }

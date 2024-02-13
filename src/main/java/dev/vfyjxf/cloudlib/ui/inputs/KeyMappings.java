@@ -16,7 +16,7 @@ public final class KeyMappings {
     private static final String debug = builder.define("debug", "Debug").key();
     private static final String general = builder.define("general", "General").key();
     public static final KeyMapping refreshUI = new KeyMapping(
-            builder.defineKey("refresh_ui", "Refresh UI"),
+            builder.defineKey("rebuild_ui", "Rebuild UI"),
             KeyConflictContext.GUI,
             KeyModifier.ALT,
             InputConstants.Type.KEYSYM,

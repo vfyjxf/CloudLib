@@ -38,6 +38,11 @@ runs {
         systemProperty 'forge.logging.console.level', 'debug'
         modSource project.sourceSets.main
 
+        if (isJetBrainsRuntime()) {
+            jvmArgument "-XX:+AllowEnhancedClassRedefinition"
+            jvmArgument "-XX:HotswapAgent=fatjar"
+        }
+
         dependencies {
             runtime project.configurations.libraries
         }

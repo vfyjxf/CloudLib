@@ -1,6 +1,18 @@
 package dev.vfyjxf.cloudlib.math;
 
 public final class Color {
+
+    public static final Color WHITE = ofOpaque(0xFFFFFFFF);
+    public static final Color BLACK = ofOpaque(0xFF000000);
+    public static final Color RED = ofOpaque(0xFFFF0000);
+    public static final Color GREEN = ofOpaque(0xFF00FF00);
+    public static final Color BLUE = ofOpaque(0xFF0000FF);
+    public static final Color GRAY = ofOpaque(0xFF808080);
+    public static final Color YELLOW = ofOpaque(0xFFFFFF00);
+    public static final Color CYAN = ofOpaque(0xFF00FFFF);
+    public static final Color MAGENTA = ofOpaque(0xFFFF00FF);
+
+
     private final int color;
 
     private Color(int color) {

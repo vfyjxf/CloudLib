@@ -33,16 +33,19 @@ public class GuiEventHandler {
     public void onGuiInitPost(ScreenEvent.Init.Post event) {
         IUIOverlay overlay = Singletons.getNullable(IUIOverlay.class);
         if (overlay == null) return;
-        if (!(event.getScreen() instanceof AbstractContainerScreen<?>)) return;
+        if (!(event.getScreen() instanceof AbstractContainerScreen<?>)) {
+            overlay.getMainGroup().hide();
+            return;
+        }
         if (screen == event.getScreen()) {
             overlay.update();
         } else {
             overlay.getMainGroup().clear();
-            IUIRegistry.getInstance().getOverlayProviders().forEach(it -> it.build(overlay));
             overlay.init();
             overlay.update();
             UIConfig.getInstance().clear();
         }
+        overlay.getMainGroup().show();
         screen = event.getScreen();
     }
 

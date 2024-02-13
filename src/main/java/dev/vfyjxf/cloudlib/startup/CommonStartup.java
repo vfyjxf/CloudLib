@@ -22,7 +22,6 @@ public class CommonStartup {
     protected final IEventBus modBus;
     public CommonStartup(IEventBus modBus) {
         this.modBus = modBus;
-        NeoForge.EVENT_BUS.register(this);
         Singletons.attachInstance(UIConfig.class, new UIConfig());
         Singletons.attachInstance(ISerializeRegistry.class, new SerializeRegistry());
         plugins = PluginLoading.load(IModPlugin.class);

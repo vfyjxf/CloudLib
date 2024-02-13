@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.ui.overlay;
 
 import dev.vfyjxf.cloudlib.api.event.IEventManager;
+import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
 import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.overlay.IUIOverlay;
 import dev.vfyjxf.cloudlib.event.EventManager;
@@ -23,6 +24,8 @@ public class UIOverlay implements IUIOverlay {
     public UIOverlay(IModularUI modularUI) {
         ui = modularUI;
         bounds = new Rectangle(0, ui.getScreenWidth(), 0, ui.getScreenHeight());
+        ui.getMainGroup()
+                .onInit((self) -> IUIRegistry.getInstance().getOverlayProviders().forEach(it -> it.build(this)));
     }
 
     @Override

@@ -11,6 +11,8 @@ import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
 import net.minecraft.client.gui.GuiGraphics;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
+import org.jetbrains.annotations.MustBeInvokedByOverriders;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,12 +24,13 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
 
 
     @Override
-    public IWidgetGroup<T> setUI(IModularUI ui) {
+    public IWidgetGroup<T> setUI(@Nullable IModularUI ui) {
         super.setUI(ui);
         return this;
     }
 
     @Override
+    @MustBeInvokedByOverriders
     public void init() {
         super.init();
         for (T child : children) {
@@ -39,6 +42,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
     }
 
     @Override
+    @MustBeInvokedByOverriders
     public void update() {
         super.update();
         if (!initialized) return;
@@ -49,6 +53,17 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
     }
 
     @Override
+    public void rebuild() {
+        super.rebuild();
+        for (T child : children) {
+            if (child.initialized())
+                child.rebuild();
+        }
+        this.clear();
+    }
+
+    @Override
+    @MustBeInvokedByOverriders
     public void tick() {
         super.tick();
         for (T child : children) {
@@ -123,6 +138,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
         for (int i = 0; i < children.size(); i++) {
             remove(i);
         }
+        initialized = false;
     }
 
     @Override
@@ -237,8 +253,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
     @Override
     public boolean keyPressed(IInputContext input) {
         IEventContext context = context();
-        boolean result = events().get(IInputEvent.onKeyPressed).invoker()
-                .onKeyPressed(context, input);
+        boolean result = listeners(IInputEvent.onKeyPressed).onKeyPressed(context, input);
         if (context.isCancelled()) return result;
         for (T child : children) {
             if (child.keyPressed(input)) {
@@ -251,8 +266,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
     @Override
     public boolean keyReleased(IInputContext input) {
         IEventContext context = context();
-        boolean result = events().get(IInputEvent.onKeyReleased).invoker()
-                .onKeyReleased(context, input);
+        boolean result = listeners(IInputEvent.onKeyReleased).onKeyReleased(context, input);
         if (context.isCancelled()) return result;
         for (T child : children) {
             if (child.keyReleased(input)) {
@@ -260,5 +274,19 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
             }
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "WidgetGroup{" +
+                "initialized=" + initialized +
+                ", id='" + id + '\'' +
+                ", position=" + position +
+                ", absolute=" + absolute +
+                ", size=" + size +
+                ", active=" + active +
+                ", visible=" + visible +
+                ", moving=" + moving +
+                '}';
     }
 }

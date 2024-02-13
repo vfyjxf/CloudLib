@@ -92,6 +92,12 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
     }
 
     /**
+     * Only for debugging.
+     */
+    @ApiStatus.Internal
+    void rebuild();
+
+    /**
      * Call every tick.
      */
     default void tick() {
@@ -194,6 +200,8 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
     }
 
     IWidget setBackground(IRenderableTexture background);
+
+    IWidget setIcon(IRenderableTexture icon);
 
     boolean active();
 
@@ -330,6 +338,11 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
     //********        Group    *********//
     //////////////////////////////////////
 
+    /**
+     * Note that this method should only be used when the IWidgetGroup doesn't care about the consistency of children types,
+     * <p>
+     * it's only for IWidgetGroup<IWidget>, if you need to add a widget to the group, use {@link IWidgetGroup#widget(IWidget)}.
+     */
     @CanIgnoreReturnValue
     <T extends IWidget> IWidget asChild(IWidgetGroup<T> parent);
 

@@ -42,6 +42,7 @@ public class Widget implements IWidget {
     protected Point absolute = calculateAbsolute();
     protected Dimension size = Dimension.ZERO;
     protected IRenderableTexture background;
+    protected IRenderableTexture icon;
     protected boolean active = true;
     protected boolean visible = true;
     protected boolean moving = false;
@@ -53,7 +54,7 @@ public class Widget implements IWidget {
     protected Point calculateAbsolute() {
         if (parent == null) return position;
         IWidgetGroup<?> parent = this.parent;
-        Point absolute = position;
+        Point absolute = position.copy();
         while (parent != null && parent != this) {
             Point parentPos = parent.getPos();
             absolute.translate(parentPos.x, parentPos.y);
@@ -75,8 +76,8 @@ public class Widget implements IWidget {
             IEventContext context = context();
             listeners(IWidgetEvent.onRender).onRender(graphics, mouseX, mouseY, partialTicks, context);
             if (context.isCancelled()) return;
-            if (background != null)
-                background.render(graphics);
+            if (background != null) background.render(graphics);
+            if (icon != null) icon.render(graphics);
             listeners(IWidgetEvent.onRenderPost).onRender(graphics, mouseX, mouseY, partialTicks, context());
         }
         graphics.pose().popPose();
@@ -145,6 +146,13 @@ public class Widget implements IWidget {
     }
 
     @Override
+    @MustBeInvokedByOverriders
+    public void rebuild() {
+        initialized = false;
+    }
+
+    @Override
+    @MustBeInvokedByOverriders
     public void tick() {
         listeners(IWidgetEvent.onTick).onTick();
     }
@@ -225,6 +233,12 @@ public class Widget implements IWidget {
     @Override
     public IWidget setBackground(IRenderableTexture background) {
         this.background = background;
+        return this;
+    }
+
+    @Override
+    public IWidget setIcon(IRenderableTexture icon) {
+        this.icon = icon;
         return this;
     }
 
@@ -335,4 +349,19 @@ public class Widget implements IWidget {
         return properties;
     }
 
+    @Override
+    public String toString() {
+        return "Widget{" +
+                "initialized=" + initialized +
+                ", parent=" + (parent == null ? "null" : parent.getId()) +
+                ", icon=" + icon +
+                ", id='" + id + '\'' +
+                ", position=" + position +
+                ", absolute=" + absolute +
+                ", size=" + size +
+                ", active=" + active +
+                ", visible=" + visible +
+                ", moving=" + moving +
+                '}';
+    }
 }

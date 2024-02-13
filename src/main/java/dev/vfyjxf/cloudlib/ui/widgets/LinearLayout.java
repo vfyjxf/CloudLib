@@ -19,13 +19,13 @@ public class LinearLayout<T extends IWidget> extends WidgetGroup<T> {
             for (T child : children()) {
                 width += child.getWidth();
             }
-            widget.setX(width + 1);
+            widget.setX(width);
         } else {
             int height = 0;
             for (T child : children()) {
                 height += child.getHeight();
             }
-            widget.setY(height + 1);
+            widget.setY(height);
         }
         return this;
     }
@@ -39,5 +39,4 @@ public class LinearLayout<T extends IWidget> extends WidgetGroup<T> {
         this.horizontal = false;
         return this;
     }
-
 }

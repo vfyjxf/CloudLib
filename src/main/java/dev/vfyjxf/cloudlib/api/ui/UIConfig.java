@@ -16,7 +16,9 @@ public class UIConfig {
         return Singletons.get(UIConfig.class);
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T put(@NotNull ResourceLocation identifier, @NotNull IState<T> state) {
+        //noinspection
         return (T) states.put(identifier, state);
     }
 
