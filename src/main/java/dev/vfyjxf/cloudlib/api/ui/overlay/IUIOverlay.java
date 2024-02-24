@@ -11,6 +11,9 @@ import dev.vfyjxf.cloudlib.utils.Singletons;
 
 import java.util.List;
 
+/**
+ *
+ */
 @Singleton
 public interface IUIOverlay extends IRenderable, IEventHolder<IUIOverlay> {
 

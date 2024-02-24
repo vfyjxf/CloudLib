@@ -31,6 +31,10 @@ public interface IModularUI {
 
     int guiTop();
 
+    int guiWidth();
+
+    int guiHeight();
+
     double getMouseX();
 
     double getMouseY();

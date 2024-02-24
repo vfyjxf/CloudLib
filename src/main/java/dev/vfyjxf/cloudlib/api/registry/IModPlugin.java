@@ -4,8 +4,8 @@ import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
 
 public interface IModPlugin {
 
-    void registerUI(IUIRegistry registry);
+    default void registerUI(IUIRegistry registry){}
 
-    void registerSerialization(ISerializeRegistry registry);
+    default void registerSerialization(ISerializeRegistry registry){}
 
 }

@@ -12,7 +12,6 @@ import dev.vfyjxf.cloudlib.ui.overlay.UIOverlay;
 import dev.vfyjxf.cloudlib.utils.Singletons;
 import net.minecraft.data.DataProvider;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.data.event.GatherDataEvent;

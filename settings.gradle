@@ -11,7 +11,6 @@ pluginManagement {
         maven { url "https://maven.parchmentmc.org" }
         maven { url "https://jitpack.io" }
     }
-    includeBuild("Cyclone")
 }
 
 plugins {

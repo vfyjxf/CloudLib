@@ -1,16 +1,21 @@
 package dev.vfyjxf.cloudlib.ui;
 
+import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
+import dev.vfyjxf.cloudlib.api.ui.IArea;
+import dev.vfyjxf.cloudlib.api.ui.IGuiAreas;
 import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
+import dev.vfyjxf.cloudlib.event.EventListeners;
 import dev.vfyjxf.cloudlib.math.Point;
 import dev.vfyjxf.cloudlib.ui.inputs.KeyMappings;
 import dev.vfyjxf.cloudlib.ui.widgets.WidgetGroup;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.neoforge.client.event.ScreenEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -18,9 +23,19 @@ import java.util.Objects;
 public class ClientModularUI implements IModularUI {
 
     private IWidgetGroup<IWidget> mainGroup;
+    @Nullable
+    private IGuiAreas<Screen> guiAreas;
 
     public ClientModularUI() {
         this.mainGroup = createMainGroup();
+        EventListeners.register(ScreenEvent.Opening.class, EventPriority.LOWEST, event -> {
+            Screen screen = event.getNewScreen();
+            if (screen == null) {
+                guiAreas = null;
+                return;
+            }
+            guiAreas = (IGuiAreas<Screen>) IUIRegistry.getInstance().getGuiAreas(screen.getClass());
+        });
     }
 
     private IWidgetGroup<IWidget> createMainGroup() {
@@ -71,18 +86,34 @@ public class ClientModularUI implements IModularUI {
 
     @Override
     public int guiLeft() {
-        if (getScreen() instanceof AbstractContainerScreen<?> container) {
-            return container.getGuiLeft();
-        }
-        return 0;
+        Screen screen = getScreen();
+        if (guiAreas == null) return 0;
+        IArea area = guiAreas.mainArea(screen);
+        return area.x();
     }
 
     @Override
     public int guiTop() {
-        if (getScreen() instanceof AbstractContainerScreen<?> container) {
-            return container.getGuiTop();
-        }
-        return 0;
+        Screen screen = getScreen();
+        if (guiAreas == null) return 0;
+        IArea area = guiAreas.mainArea(screen);
+        return area.y();
+    }
+
+    @Override
+    public int guiWidth() {
+        Screen screen = getScreen();
+        if (guiAreas == null) return 0;
+        IArea area = guiAreas.mainArea(screen);
+        return area.width();
+    }
+
+    @Override
+    public int guiHeight() {
+        Screen screen = getScreen();
+        if (guiAreas == null) return 0;
+        IArea area = guiAreas.mainArea(screen);
+        return area.height();
     }
 
     @Override

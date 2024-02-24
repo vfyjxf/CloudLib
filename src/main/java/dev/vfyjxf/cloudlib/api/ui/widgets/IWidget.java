@@ -1,7 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import dev.vfyjxf.cloudlib.api.data.property.IPropertyHolder;
 import dev.vfyjxf.cloudlib.api.event.IEventDefinition;
 import dev.vfyjxf.cloudlib.api.event.IEventHolder;
 import dev.vfyjxf.cloudlib.api.event.IEventManager;
@@ -12,6 +11,7 @@ import dev.vfyjxf.cloudlib.api.ui.drag.IDraggable;
 import dev.vfyjxf.cloudlib.api.ui.event.IInputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.IWidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.inputs.IInputContext;
+import dev.vfyjxf.cloudlib.api.ui.constraints.IUIConstraints;
 import dev.vfyjxf.cloudlib.api.ui.traits.ITrait;
 import dev.vfyjxf.cloudlib.data.lang.Lang;
 import dev.vfyjxf.cloudlib.math.Dimension;
@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>, IPropertyHolder {
+public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> {
 
     //////////////////////////////////////
     //********       Basic     *********//
@@ -129,6 +129,8 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget>,
 
     @CanIgnoreReturnValue
     IWidget setId(String id);
+
+    IUIConstraints restraints();
 
     /**
      * @return Relative coordinates relative to the upper left corner of the parent.

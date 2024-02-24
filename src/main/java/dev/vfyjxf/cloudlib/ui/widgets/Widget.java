@@ -49,7 +49,6 @@ public class Widget implements IWidget {
     protected List<ITrait> traits = new ArrayList<>();
     @Nullable
     protected ITooltip tooltip;
-    protected MutableMap<IProperty<?>, Object> properties = Maps.mutable.empty();
 
     protected Point calculateAbsolute() {
         if (parent == null) return position;
@@ -327,26 +326,6 @@ public class Widget implements IWidget {
         this.parent = parent;
         this.onPositionUpdate();
         return this;
-    }
-
-    @Override
-    public <T> T put(IProperty<T> property, T value) {
-        return (T) properties.put(property, value);
-    }
-
-    @Override
-    public <T> T get(IProperty<T> property) {
-        return (T) properties.get(property);
-    }
-
-    @Override
-    public boolean hasProperty(IProperty<?> property) {
-        return properties.containsKey(property);
-    }
-
-    @Override
-    public Map<IProperty<?>, Object> getProperties() {
-        return properties;
     }
 
     @Override

@@ -20,5 +20,9 @@ public final class EventListeners {
         NeoForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, type, listener);
     }
 
+    public static <T extends Event> void register(Class<T> type, EventPriority priority, Consumer<T> listener) {
+        NeoForge.EVENT_BUS.addListener(priority, false, type, listener);
+    }
+
 
 }
