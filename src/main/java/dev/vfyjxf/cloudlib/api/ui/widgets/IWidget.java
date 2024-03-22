@@ -13,6 +13,7 @@ import dev.vfyjxf.cloudlib.api.ui.event.IWidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.inputs.IInputContext;
 import dev.vfyjxf.cloudlib.api.ui.constraints.IUIConstraints;
 import dev.vfyjxf.cloudlib.api.ui.traits.ITrait;
+import dev.vfyjxf.cloudlib.api.ui.traits.IUITraits;
 import dev.vfyjxf.cloudlib.data.lang.Lang;
 import dev.vfyjxf.cloudlib.math.Dimension;
 import dev.vfyjxf.cloudlib.math.Point;
@@ -57,7 +58,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
 
     /**
      * Construct the widget
-     * include layout and traits.
+     * include layout and addTrait.
      */
     @MustBeInvokedByOverriders
     default void init() {
@@ -110,20 +111,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
         events().register(IWidgetEvent.onTick, listener);
         return this;
     }
-
-    List<ITrait> traits();
-
-    @CanIgnoreReturnValue
-    IWidget trait(ITrait trait);
-
-    default IWidget traits(ITrait... traits) {
-        for (ITrait attribute : traits) {
-            trait(attribute);
-        }
-        return this;
-    }
-
-    boolean removeTrait(ITrait trait);
 
     String getId();
 
@@ -245,6 +232,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
     /**
      * Top-down search
      */
+    @Nullable
     default <T extends IWidget> T getWidgetOfType(Class<T> type) {
         if (type.isInstance(this)) {
             return type.cast(this);
@@ -261,6 +249,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
     /**
      * down to top search.
      */
+    @Nullable
     default <T extends IWidget> T findWidgetsOfType(Class<T> type) {
         if (type.isInstance(this)) {
             return type.cast(this);
@@ -290,6 +279,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     default <O extends IWidget> O cast() {
         return (O) this;
     }
@@ -437,36 +427,52 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
     //////////////////////////////////////
 
 
+    IUITraits traits();
+
+    IWidget setTraits(IUITraits traits);
+
+    @CanIgnoreReturnValue
+    IWidget addTrait(ITrait trait);
+
+    default IWidget addTrait(ITrait... traits) {
+        for (ITrait attribute : traits) {
+            addTrait(attribute);
+        }
+        return this;
+    }
+
+    boolean removeTrait(ITrait trait);
+
     default IWidget fixedPosition() {
-        return this.trait(new FixedPositionTrait());
+        return this.addTrait(new FixedPositionTrait());
     }
 
     default IWidget relativeCoordinate(Supplier<Integer> x, Supplier<Integer> y) {
-        return this.trait(new RelativeCoordinateTrait(x, y));
+        return this.addTrait(new RelativeCoordinateTrait(x, y));
     }
 
     default IWidget relativeHorizontal(Supplier<Integer> x) {
-        return this.trait(new RelativeCoordinateTrait(x, this::getY));
+        return this.addTrait(new RelativeCoordinateTrait(x, this::getY));
     }
 
     default IWidget relativeVertical(Supplier<Integer> y) {
-        return this.trait(new RelativeCoordinateTrait(this::getX, y));
+        return this.addTrait(new RelativeCoordinateTrait(this::getX, y));
     }
 
     default IWidget autoSize(Supplier<Integer> width, Supplier<Integer> height) {
-        return this.trait(new AutoSizeUpdateTrait(width, height));
+        return this.addTrait(new AutoSizeUpdateTrait(width, height));
     }
 
     default IWidget autoWidth(Supplier<Integer> width) {
-        return this.trait(new AutoSizeUpdateTrait(width, this::getHeight));
+        return this.addTrait(new AutoSizeUpdateTrait(width, this::getHeight));
     }
 
     default IWidget autoHeight(Supplier<Integer> height) {
-        return this.trait(new AutoSizeUpdateTrait(this::getWidth, height));
+        return this.addTrait(new AutoSizeUpdateTrait(this::getWidth, height));
     }
 
     default IWidget dynamicSize() {
-        return this.trait(new DynamicSizeTrait());
+        return this.addTrait(new DynamicSizeTrait());
     }
 
 }

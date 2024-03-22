@@ -10,14 +10,14 @@ public abstract class AbstractTrait implements ITrait {
     @Override
     public IWidget holder() {
         if (holder == null)
-            throw new IllegalStateException("This trait is not attached to a widget!");
+            throw new IllegalStateException("This addTrait is not attached to a widget!");
         return holder;
     }
 
     @Override
     public ITrait setHolder(IWidget holder) {
         if (this.holder != null)
-            throw new IllegalStateException("This trait is already attached to a widget!");
+            throw new IllegalStateException("This addTrait is already attached to a widget!");
         check(holder);
 
         this.holder = holder;

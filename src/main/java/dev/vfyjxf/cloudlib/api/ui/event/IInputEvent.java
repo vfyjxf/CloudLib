@@ -24,6 +24,7 @@ public interface IInputEvent {
         }
         return result;
     });
+
     IEventDefinition<OnMouseClicked> onMouseClicked = EventFactory.define(OnMouseClicked.class, listeners -> (context, input) -> {
         boolean result = false;
         for (var listener : listeners) {
@@ -32,6 +33,7 @@ public interface IInputEvent {
         }
         return result;
     });
+
     IEventDefinition<OnMouseReleased> onMouseReleased = EventFactory.define(OnMouseReleased.class, listeners -> (context, input) -> {
         boolean result = false;
         for (var listener : listeners) {

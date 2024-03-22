@@ -1,12 +1,13 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
-import dev.vfyjxf.cloudlib.api.data.property.IProperty;
 import dev.vfyjxf.cloudlib.api.event.IEventContext;
 import dev.vfyjxf.cloudlib.api.event.IEventManager;
 import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.IRenderableTexture;
+import dev.vfyjxf.cloudlib.api.ui.constraints.IUIConstraints;
 import dev.vfyjxf.cloudlib.api.ui.event.IWidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.traits.ITrait;
+import dev.vfyjxf.cloudlib.api.ui.traits.IUITraits;
 import dev.vfyjxf.cloudlib.api.ui.widgets.ITooltip;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
@@ -14,16 +15,12 @@ import dev.vfyjxf.cloudlib.data.lang.Lang;
 import dev.vfyjxf.cloudlib.event.EventManager;
 import dev.vfyjxf.cloudlib.math.Dimension;
 import dev.vfyjxf.cloudlib.math.Point;
+import dev.vfyjxf.cloudlib.ui.traits.container.UITraits;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import org.eclipse.collections.api.factory.Maps;
-import org.eclipse.collections.api.map.MutableMap;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -46,7 +43,7 @@ public class Widget implements IWidget {
     protected boolean active = true;
     protected boolean visible = true;
     protected boolean moving = false;
-    protected List<ITrait> traits = new ArrayList<>();
+    protected IUITraits traits = new UITraits();
     @Nullable
     protected ITooltip tooltip;
 
@@ -167,12 +164,12 @@ public class Widget implements IWidget {
     }
 
     @Override
-    public List<ITrait> traits() {
+    public IUITraits traits() {
         return traits;
     }
 
     @Override
-    public IWidget trait(ITrait trait) {
+    public IWidget addTrait(ITrait trait) {
         traits.add(trait);
         trait.setHolder(this);
         trait.init();
@@ -194,6 +191,11 @@ public class Widget implements IWidget {
     public IWidget setId(String id) {
         this.id = id;
         return this;
+    }
+
+    @Override
+    public IUIConstraints restraints() {
+        return null;
     }
 
     @Override

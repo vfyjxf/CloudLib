@@ -24,12 +24,11 @@ public class GuiEventHandler {
     private Screen screen;
 
     public GuiEventHandler() {
-
     }
 
     @SubscribeEvent
     public void onGuiInitPost(ScreenEvent.Init.Post event) {
-        IUIOverlay overlay = IUIOverlay.class.getInstanceNullable();
+        IUIOverlay overlay = Singletons.getNullable(IUIOverlay.class);
         if (overlay == null) return;
         if (screen == event.getScreen()) {
             overlay.update();
@@ -45,7 +44,7 @@ public class GuiEventHandler {
 
     @SubscribeEvent
     public void onBackgroundRender(ScreenEvent.BackgroundRendered event) {
-        IUIOverlay overlay = IUIOverlay.class.getInstanceNullable();
+        IUIOverlay overlay = Singletons.getNullable(IUIOverlay.class);
         if (overlay == null) return;
         Minecraft minecraft = Minecraft.getInstance();
         GuiGraphics graphics = event.getGuiGraphics();
@@ -62,7 +61,7 @@ public class GuiEventHandler {
 
     @SubscribeEvent
     public void onMouseClicked(ScreenEvent.MouseButtonPressed.Pre event) {
-        IUIOverlay overlay = IUIOverlay.class.getInstanceNullable();
+        IUIOverlay overlay = Singletons.getNullable(IUIOverlay.class);
         if (overlay == null) return;
         boolean result = overlay.getMainGroup().mouseClicked(IInputContext.fromMouse(event.getMouseX(), event.getMouseY(), event.getButton()));
         if (result)
@@ -71,7 +70,7 @@ public class GuiEventHandler {
 
     @SubscribeEvent
     public void onKeyPressed(ScreenEvent.KeyPressed.Pre event) {
-        IUIOverlay overlay = IUIOverlay.class.getInstanceNullable();
+        IUIOverlay overlay = Singletons.getNullable(IUIOverlay.class);
         if (overlay == null) return;
         boolean result = overlay.getMainGroup().keyPressed(IInputContext.fromKeyboard(event.getKeyCode(), event.getScanCode(), event.getModifiers(), ScreenUtil.getMouseX(), ScreenUtil.getMouseY()));
         if (result)

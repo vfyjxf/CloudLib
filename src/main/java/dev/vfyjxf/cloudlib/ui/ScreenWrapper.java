@@ -67,6 +67,16 @@ public class ScreenWrapper implements IModularUI {
     }
 
     @Override
+    public int guiWidth() {
+        return 0;
+    }
+
+    @Override
+    public int guiHeight() {
+        return 0;
+    }
+
+    @Override
     public double getMouseX() {
         return ScreenUtil.getMouseX();
     }

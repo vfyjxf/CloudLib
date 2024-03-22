@@ -18,7 +18,7 @@ public final class ScreenHelper {
 
     @SuppressWarnings("unchecked")
     public static Collection<IArea> getScreenExtraAreas(Screen screen) {
-        IUIRegistry registry = IUIRegistry.class.getInstance();
+        IUIRegistry registry = IUIRegistry.getInstance();
         IGuiAreas<Screen> guiAreas = registry.getGuiAreas(screen);
         MutableList<IArea> areas = Lists.mutable.empty();
         if (guiAreas != null) {
