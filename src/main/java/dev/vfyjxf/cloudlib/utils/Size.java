@@ -33,7 +33,7 @@ public class Size {
 
     @Override
     public String toString() {
-        return "Size{" +
+        return "SizeTraits{" +
                 "width=" + width +
                 ", height=" + height +
                 '}';

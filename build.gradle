@@ -1,10 +1,13 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id 'java-library'
     id 'eclipse'
+    id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.0.96'
+    id 'net.neoforged.gradle.userdev' version '7.0.145'
     id "io.github.p03w.machete" version "2.+"
-    id 'org.jetbrains.kotlin.jvm' version '1.9.22'
+    id 'org.jetbrains.kotlin.jvm' version '2.0.0'
 }
 
 version = project.mod_version
@@ -18,7 +21,8 @@ base {
     archivesName = mod_id
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+compileKotlin.compilerOptions.jvmTarget = JvmTarget.JVM_21
 
 minecraft {
     accessTransformers {
@@ -105,20 +109,18 @@ repositories {
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
 
-    compileOnly "mezz.jei:jei-${mc_version}-neoforge:${jei_version}"
-    runtimeOnly "maven.modrinth:jei:${jei_version}-neoforge"
-    implementation 'thedarkcolour:kotlinforforge-neoforge:4.10.0'
-    libraries(jarJar("org.eclipse.collections:eclipse-collections-api:11.1.0")) {
-        jarJar.ranged(it, "[11.1.0,)")
-    }
-    libraries(jarJar("org.eclipse.collections:eclipse-collections:11.1.0")) {
-        jarJar.ranged(it, "[11.1.0,)")
-    }
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+    localRunRuntime "maven.modrinth:jei:${jei_version}-neoforge"
+    implementation 'thedarkcolour:kotlinforforge-neoforge:5.2.0'
+    libraries "org.eclipse.collections:eclipse-collections-api:11.1.0"
+    jarJar "org.eclipse.collections:eclipse-collections-api:[11.1.0,)"
+    libraries "org.eclipse.collections:eclipse-collections:11.1.0"
+    jarJar "org.eclipse.collections:eclipse-collections:[11.1.0,)"
 }
 
 tasks.withType(ProcessResources).configureEach {
     var replaceProperties = [
-            minecraft_version   : mc_version, minecraft_version_range: mc_version_range,
+            minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
             neo_version         : neo_version, neo_version_range: neo_version_range,
             loader_version_range: loader_version_range,
             mod_id              : mod_id, mod_name: mod_name, mod_version: mod_version,
@@ -133,7 +135,7 @@ tasks.withType(ProcessResources).configureEach {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
-    options.release = 17
+    options.release = 21
 }
 
 java {
@@ -161,5 +163,12 @@ publishing {
 
     repositories {
         mavenLocal()
+    }
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
     }
 }

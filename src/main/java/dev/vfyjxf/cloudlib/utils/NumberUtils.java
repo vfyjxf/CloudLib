@@ -6,9 +6,9 @@ public class NumberUtils {
 
 
     public static String toSuffix(long number) {
-        String energy = Long.toString(number);
-        if (energy.length() <= 3) {
-            return energy;
+        String numberStr = Long.toString(number);
+        if (numberStr.length() <= 3) {
+            return numberStr;
         }
 
         long base = number;

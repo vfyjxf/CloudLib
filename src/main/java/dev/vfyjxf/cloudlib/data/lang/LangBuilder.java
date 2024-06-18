@@ -13,7 +13,7 @@ public class LangBuilder {
 
     public static final MutableList<LangBuilder> builders = Lists.mutable.empty();
 
-    private final MutableList<Lang> defines = Lists.mutable.empty();
+    private final MutableList<LangEntry> defines = Lists.mutable.empty();
 
     private final String modid;
     private final String specificNameSpace;
@@ -42,24 +42,24 @@ public class LangBuilder {
         this.specificNameSpace = specificNameSpace;
     }
 
-    public Lang define(String key, String value) {
+    public LangEntry define(String key, String value) {
         if (key == null || value == null) {
             LOGGER.error("key or get is null");
             return null;
         }
         String realKey = specificNameSpace == null || specificNameSpace.isEmpty() ? modid + "." + key : modid + "." + specificNameSpace + "." + key;
-        Lang lang = new Lang(realKey, value);
+        LangEntry langEntry = new LangEntry(realKey, value);
         this.key = null;
         this.value = null;
-        this.defines.add(lang);
-        return lang;
+        this.defines.add(langEntry);
+        return langEntry;
     }
 
     public String defineKey(String key, String value) {
         return define(key, value).key();
     }
 
-    public Lang define() {
+    public LangEntry define() {
         return this.define(key, value);
     }
 
@@ -73,7 +73,7 @@ public class LangBuilder {
         return this;
     }
 
-    public MutableList<Lang> getDefines() {
+    public MutableList<LangEntry> getDefines() {
         return defines;
     }
 }

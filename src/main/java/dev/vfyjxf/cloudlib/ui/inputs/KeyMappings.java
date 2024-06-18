@@ -9,7 +9,7 @@ import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.client.settings.KeyModifier;
 import org.lwjgl.glfw.GLFW;
 
-@LangProvider
+@LangProvider(Constants.MOD_ID)
 public final class KeyMappings {
 
     private final static LangBuilder builder = LangBuilder.create(Constants.NAMESPACE, "keys");

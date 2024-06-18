@@ -3,6 +3,7 @@ package dev.vfyjxf.cloudlib.ui.widgets;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
 
+//TODO:
 public class LinearLayout<T extends IWidget> extends WidgetGroup<T> {
 
     private boolean horizontal;
@@ -11,24 +12,6 @@ public class LinearLayout<T extends IWidget> extends WidgetGroup<T> {
 
     }
 
-    @Override
-    public IWidgetGroup<T> add(int index, T widget) {
-        super.add(index, widget);
-        if (horizontal) {
-            int width = 0;
-            for (T child : children()) {
-                width += child.getWidth();
-            }
-            widget.setX(width);
-        } else {
-            int height = 0;
-            for (T child : children()) {
-                height += child.getHeight();
-            }
-            widget.setY(height);
-        }
-        return this;
-    }
 
     public LinearLayout<T> horizontal() {
         this.horizontal = true;

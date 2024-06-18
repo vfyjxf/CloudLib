@@ -1,31 +1,25 @@
 package dev.vfyjxf.cloudlib.event;
 
 import dev.vfyjxf.cloudlib.api.event.IEvent;
-import dev.vfyjxf.cloudlib.api.event.IEventContext;
 import dev.vfyjxf.cloudlib.api.event.IEventDefinition;
-import dev.vfyjxf.cloudlib.api.event.IEventHolder;
-import dev.vfyjxf.cloudlib.api.event.IEventManager;
+import dev.vfyjxf.cloudlib.api.event.IEventHandler;
+import dev.vfyjxf.cloudlib.api.event.IEventChannel;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
 
 @SuppressWarnings("unchecked")
-public class EventManager<E extends IEventHolder<E>> implements IEventManager<E> {
+public class EventChannel<E extends IEventHandler<E>> implements IEventChannel<E> {
 
     private final E holder;
     private final MutableMap<IEventDefinition<?>, IEvent<?>> listeners = Maps.mutable.empty();
 
-    public EventManager(E holder) {
+    public EventChannel(E holder) {
         this.holder = holder;
     }
 
     @Override
     public E holder() {
         return holder;
-    }
-
-    @Override
-    public IEventContext createContext() {
-        return new EventContext(this);
     }
 
     @Override

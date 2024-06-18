@@ -23,7 +23,7 @@ public class IconButton extends Widget {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        if (!visible) return;
+        if (invisible()) return;
         background.render(graphics, 0, 0);
         icon.render(graphics, 0, 0);
     }

@@ -16,13 +16,4 @@ public class GridLayout<T extends IWidget> extends WidgetGroup<T> {
         this.horizontal = false;
         return this;
     }
-
-    @Override
-    public IWidgetGroup<T> add(int index, T widget) {
-        super.add(index, widget);
-        if (!contains(widget)) return this;
-
-
-        return this;
-    }
 }

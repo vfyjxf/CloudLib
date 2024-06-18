@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.overlay;
 
 import dev.vfyjxf.cloudlib.api.annotations.Singleton;
-import dev.vfyjxf.cloudlib.api.event.IEventHolder;
+import dev.vfyjxf.cloudlib.api.event.IEventHandler;
 import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.IRenderable;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
@@ -15,7 +15,7 @@ import java.util.List;
  *
  */
 @Singleton
-public interface IUIOverlay extends IRenderable, IEventHolder<IUIOverlay> {
+public interface IUIOverlay extends IRenderable, IEventHandler<IUIOverlay> {
 
     static IUIOverlay getInstance() {
         return Singletons.get(IUIOverlay.class);

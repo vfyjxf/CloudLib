@@ -4,7 +4,6 @@ import net.minecraft.client.gui.GuiGraphics;
 
 public interface IRenderableTexture {
 
-
     int getWidth();
 
     int getHeight();

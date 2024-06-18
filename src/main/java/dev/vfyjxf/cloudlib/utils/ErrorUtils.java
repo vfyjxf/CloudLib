@@ -1,9 +1,9 @@
 package dev.vfyjxf.cloudlib.utils;
 
-import mezz.jei.common.platform.IPlatformRegistry;
-import mezz.jei.common.platform.Services;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -22,32 +22,27 @@ public final class ErrorUtils {
             return "null";
         }
         Item item = itemStack.getItem();
-        IPlatformRegistry<Item> itemRegistry = Services.PLATFORM.getRegistry(Registries.ITEM);
+        Registry<Item> itemRegistry = BuiltInRegistries.ITEM;
 
-        final String itemName = itemRegistry.getRegistryName(item)
+        final String itemName = itemRegistry.getResourceKey(item)
+                .map(ResourceKey::location)
                 .map(ResourceLocation::toString)
                 .orElseGet(() -> {
                     if (item instanceof BlockItem) {
                         final String blockName;
                         Block block = ((BlockItem) item).getBlock();
-                        if (block == null) {
-                            blockName = "null";
-                        } else {
-                            IPlatformRegistry<Block> blockRegistry = Services.PLATFORM.getRegistry(Registries.BLOCK);
-                            blockName = blockRegistry.getRegistryName(block)
-                                    .map(ResourceLocation::toString)
-                                    .orElseGet(() -> block.getClass().getName());
-                        }
+                        Registry<Block> blockRegistry = BuiltInRegistries.BLOCK;
+                        blockName = blockRegistry.getResourceKey(block)
+                                .map(ResourceKey::location)
+                                .map(ResourceLocation::toString)
+                                .orElseGet(() -> block.getClass().getName());
                         return "BlockItem(" + blockName + ")";
                     } else {
                         return item.getClass().getName();
                     }
                 });
 
-        CompoundTag nbt = itemStack.getTag();
-        if (nbt != null) {
-            return itemStack + " " + itemName + " nbt:" + nbt;
-        }
-        return itemStack + " " + itemName;
+        DataComponentMap nbt = itemStack.getComponents();
+        return itemStack + " " + itemName + " components:" + nbt;
     }
 }

@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.vfyjxf.cloudlib.math.Rectangle;
 import net.minecraft.client.Minecraft;
@@ -16,6 +17,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -34,7 +36,9 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
+import org.w3c.dom.css.Rect;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,7 +50,7 @@ public class RenderHelper {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static void drawFluidTexture(@NotNull GuiGraphics graphics, float xCoord, float yCoord, TextureAtlasSprite textureSprite, int maskTop, int maskRight, float zLevel, int fluidColor) {
+    public static void drawFluidTexture(@Nonnull GuiGraphics graphics, float xCoord, float yCoord, TextureAtlasSprite textureSprite, int maskTop, int maskRight, float zLevel, int fluidColor) {
         float uMin = textureSprite.getU0();
         float uMax = textureSprite.getU1();
         float vMin = textureSprite.getV0();
@@ -54,16 +58,15 @@ public class RenderHelper {
         uMax = uMax - maskRight / 16f * (uMax - uMin);
         vMax = vMax - maskTop / 16f * (vMax - vMin);
 
-        BufferBuilder buffer = Tesselator.getInstance().getBuilder();
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
         var mat = graphics.pose().last().pose();
-        buffer.vertex(mat, xCoord, yCoord + 16, zLevel).uv(uMin, vMax).color(fluidColor).endVertex();
-        buffer.vertex(mat, xCoord + 16 - maskRight, yCoord + 16, zLevel).uv(uMax, vMax).color(fluidColor).endVertex();
-        buffer.vertex(mat, xCoord + 16 - maskRight, yCoord + maskTop, zLevel).uv(uMax, vMin).color(fluidColor).endVertex();
-        buffer.vertex(mat, xCoord, yCoord + maskTop, zLevel).uv(uMin, vMin).color(fluidColor).endVertex();
+        buffer.addVertex(mat, xCoord, yCoord + 16, zLevel).setUv(uMin, vMax).setColor(fluidColor);
+        buffer.addVertex(mat, xCoord + 16 - maskRight, yCoord + 16, zLevel).setUv(uMax, vMax).setColor(fluidColor);
+        buffer.addVertex(mat, xCoord + 16 - maskRight, yCoord + maskTop, zLevel).setUv(uMax, vMin).setColor(fluidColor);
+        buffer.addVertex(mat, xCoord, yCoord + maskTop, zLevel).setUv(uMin, vMin).setColor(fluidColor);
 
-        BufferUploader.drawWithShader(buffer.end());
+        BufferUploader.drawWithShader(buffer.buildOrThrow());
     }
 
     public static void drawFluidForGui(@NotNull GuiGraphics graphics, FluidStack contents, long tankCapacity, int startX, int startY, int widthT, int heightT) {
@@ -73,7 +76,7 @@ public class RenderHelper {
         if (fluidStillSprite == null) {
             fluidStillSprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(MissingTextureAtlasSprite.getLocation());
             if (!FMLEnvironment.production) {
-                LOGGER.error("Missing fluid texture for fluid: " + contents.getDisplayName().getString());
+                LOGGER.error("Missing fluid texture for fluid: " + contents.getHoverName().getString());
             }
         }
         int fluidColor = IClientFluidTypeExtensions.of(contents.getFluid()).getTintColor(contents) | 0xff000000;
@@ -112,10 +115,10 @@ public class RenderHelper {
 
     public static void drawBorder(@NotNull GuiGraphics graphics, int x, int y, int width, int height, int color, int border) {
         graphics.drawManaged(() -> {
-            drawSolidRect(graphics, x - border, y - border, width + 2 * border, border, color);
-            drawSolidRect(graphics, x - border, y + height, width + 2 * border, border, color);
-            drawSolidRect(graphics, x - border, y, border, height, color);
-            drawSolidRect(graphics, x + width, y, border, height, color);
+            drawSolidRect(graphics,x - border, y - border, width + 2 * border, border, color);
+            drawSolidRect(graphics,x - border, y + height, width + 2 * border, border, color);
+            drawSolidRect(graphics,x - border, y, border, height, color);
+            drawSolidRect(graphics,x + width, y, border, height, color);
         });
     }
 
@@ -182,7 +185,7 @@ public class RenderHelper {
         return Screen.getTooltipFromItem(mc, itemStack);
     }
 
-    public static void drawSolidRect(@NotNull GuiGraphics graphics, int x, int y, int width, int height, int color) {
+    public static void drawSolidRect(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, int color) {
         graphics.fill(x, y, x + width, y + height, color);
         RenderSystem.enableBlend();
     }
@@ -191,7 +194,7 @@ public class RenderHelper {
         drawSolidRect(graphics, rect.x, rect.y, rect.width, rect.height, color);
     }
 
-    public static void drawRectShadow(@NotNull GuiGraphics graphics, int x, int y, int width, int height, int distance) {
+    public static void drawRectShadow(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, int distance) {
         drawGradientRect(graphics, x + distance, y + height, width - distance, distance, 0x4f000000, 0, false);
         drawGradientRect(graphics, x + width, y + distance, distance, height - distance, 0x4f000000, 0, true);
 
@@ -199,73 +202,88 @@ public class RenderHelper {
         RenderSystem.enableBlend();
         RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
         Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.getBuilder();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        buffer.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
         x += width;
         y += height;
         Matrix4f mat = graphics.pose().last().pose();
-        buffer.vertex(mat, x, y, 0).color(0, 0, 0, startAlpha).endVertex();
-        buffer.vertex(mat, x, y + distance, 0).color(0, 0, 0, 0).endVertex();
-        buffer.vertex(mat, x + distance, y + distance, 0).color(0, 0, 0, 0).endVertex();
+        buffer.addVertex(mat, x, y, 0).setColor(0, 0, 0, startAlpha);
+        buffer.addVertex(mat, x, y + distance, 0).setColor(0, 0, 0, 0);
+        buffer.addVertex(mat, x + distance, y + distance, 0).setColor(0, 0, 0, 0);
 
-        buffer.vertex(mat, x, y, 0).color(0, 0, 0, startAlpha).endVertex();
-        buffer.vertex(mat, x + distance, y + distance, 0).color(0, 0, 0, 0).endVertex();
-        buffer.vertex(mat, x + distance, y, 0).color(0, 0, 0, 0).endVertex();
-        tesselator.end();
+        buffer.addVertex(mat, x, y, 0).setColor(0, 0, 0, startAlpha);
+        buffer.addVertex(mat, x + distance, y + distance, 0).setColor(0, 0, 0, 0);
+        buffer.addVertex(mat, x + distance, y, 0).setColor(0, 0, 0, 0);
+        BufferUploader.drawWithShader(buffer.buildOrThrow());
     }
 
-    public static void drawGradientRect(@NotNull GuiGraphics graphics, int x, int y, int width, int height, int startColor, int endColor) {
+    public static void drawGradientRect(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, int startColor, int endColor) {
         drawGradientRect(graphics, x, y, width, height, startColor, endColor, false);
     }
 
-    public static void drawGradientRect(@NotNull GuiGraphics graphics, float x, float y, float width, float height, int startColor, int endColor, boolean horizontal) {
-        float startAlpha = (float) (startColor >> 24 & 255) / 255.0F;
-        float startRed = (float) (startColor >> 16 & 255) / 255.0F;
-        float startGreen = (float) (startColor >> 8 & 255) / 255.0F;
-        float startBlue = (float) (startColor & 255) / 255.0F;
-        float endAlpha = (float) (endColor >> 24 & 255) / 255.0F;
-        float endRed = (float) (endColor >> 16 & 255) / 255.0F;
-        float endGreen = (float) (endColor >> 8 & 255) / 255.0F;
-        float endBlue = (float) (endColor & 255) / 255.0F;
+    public static void drawGradientRect(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, int startColor, int endColor, boolean horizontal) {
+        float startAlpha = (float)(startColor >> 24 & 255) / 255.0F;
+        float startRed   = (float)(startColor >> 16 & 255) / 255.0F;
+        float startGreen = (float)(startColor >>  8 & 255) / 255.0F;
+        float startBlue  = (float)(startColor       & 255) / 255.0F;
+        float endAlpha   = (float)(endColor   >> 24 & 255) / 255.0F;
+        float endRed     = (float)(endColor   >> 16 & 255) / 255.0F;
+        float endGreen   = (float)(endColor   >>  8 & 255) / 255.0F;
+        float endBlue    = (float)(endColor         & 255) / 255.0F;
         RenderSystem.enableBlend();
         RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
         Matrix4f mat = graphics.pose().last().pose();
         Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.getBuilder();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         if (horizontal) {
-            buffer.vertex(mat, x + width, y, 0).color(endRed, endGreen, endBlue, endAlpha).endVertex();
-            buffer.vertex(mat, x, y, 0).color(startRed, startGreen, startBlue, startAlpha).endVertex();
-            buffer.vertex(mat, x, y + height, 0).color(startRed, startGreen, startBlue, startAlpha).endVertex();
-            buffer.vertex(mat, x + width, y + height, 0).color(endRed, endGreen, endBlue, endAlpha).endVertex();
-            tesselator.end();
+            buffer.addVertex(mat,x + width, y, 0).setColor(endRed, endGreen, endBlue, endAlpha);
+            buffer.addVertex(mat,x, y, 0).setColor(startRed, startGreen, startBlue, startAlpha);
+            buffer.addVertex(mat,x, y + height, 0).setColor(startRed, startGreen, startBlue, startAlpha);
+            buffer.addVertex(mat,x + width, y + height, 0).setColor(endRed, endGreen, endBlue, endAlpha);
+            BufferUploader.drawWithShader(buffer.buildOrThrow());
         } else {
-            buffer.vertex(mat, x + width, y, 0).color(startRed, startGreen, startBlue, startAlpha).endVertex();
-            buffer.vertex(mat, x, y, 0).color(startRed, startGreen, startBlue, startAlpha).endVertex();
-            buffer.vertex(mat, x, y + height, 0).color(endRed, endGreen, endBlue, endAlpha).endVertex();
-            buffer.vertex(mat, x + width, y + height, 0).color(endRed, endGreen, endBlue, endAlpha).endVertex();
-            tesselator.end();
+            buffer.addVertex(mat,x + width, y, 0).setColor(startRed, startGreen, startBlue, startAlpha);
+            buffer.addVertex(mat,x, y, 0).setColor(startRed, startGreen, startBlue, startAlpha);
+            buffer.addVertex(mat,x, y + height, 0).setColor(endRed, endGreen, endBlue, endAlpha);
+            buffer.addVertex(mat,x + width, y + height, 0).setColor(endRed, endGreen, endBlue, endAlpha);
+            BufferUploader.drawWithShader(buffer.buildOrThrow());
         }
     }
 
-    public static void drawLines(@NotNull GuiGraphics graphics, List<Vec2> points, int startColor, int endColor, float width) {
+    public static void drawLines(@Nonnull GuiGraphics graphics, List<Vec2> points, int startColor, int endColor, float width) {
         Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder bufferbuilder = tesselator.getBuilder();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        bufferbuilder.begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferbuilder = tesselator.begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
+        drawColorLines(graphics.pose(), bufferbuilder, points, startColor, endColor, width);
+
+        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+        RenderSystem.defaultBlendFunc();
+    }
+
+    public static void drawTextureRect(@Nonnull GuiGraphics graphics, float x, float y, float width, float height) {
+        Tesselator tesselator = Tesselator.getInstance();
+        Matrix4f mat = graphics.pose().last().pose();
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        buffer.addVertex(mat, x, y + height, 0).setUv(0, 0);
+        buffer.addVertex(mat, x + width, y + height, 0).setUv(1, 0);
+        buffer.addVertex(mat, x + width, y, 0).setUv(1, 1);
+        buffer.addVertex(mat, x, y, 0).setUv(0, 1);
+        BufferUploader.drawWithShader(buffer.buildOrThrow());
+    }
+
+    public static void drawColorLines(@Nonnull PoseStack poseStack, VertexConsumer builder, List<Vec2> points, int setColorStart, int setColorEnd, float width) {
         if (points.size() < 2) return;
-        PoseStack poseStack = graphics.pose();
         Matrix4f mat = poseStack.last().pose();
         Vec2 lastPoint = points.get(0);
         Vec2 point = points.get(1);
         Vector3f vec = null;
-        int sa = (startColor >> 24) & 0xff, sr = (startColor >> 16) & 0xff, sg = (startColor >> 8) & 0xff, sb = startColor & 0xff;
-        int ea = (endColor >> 24) & 0xff, er = (endColor >> 16) & 0xff, eg = (endColor >> 8) & 0xff, eb = endColor & 0xff;
+        int sa = (setColorStart >> 24) & 0xff, sr = (setColorStart >> 16) & 0xff, sg = (setColorStart >> 8) & 0xff, sb = setColorStart & 0xff;
+        int ea = (setColorEnd >> 24) & 0xff, er = (setColorEnd >> 16) & 0xff, eg = (setColorEnd >> 8) & 0xff, eb = setColorEnd & 0xff;
         ea = (ea - sa);
         er = (er - sr);
         eg = (eg - sg);
@@ -275,41 +293,61 @@ public class RenderHelper {
             float e = i * 1f / points.size();
             point = points.get(i);
             vec = new Vector3f(point.x - lastPoint.x, point.y - lastPoint.y, 0).rotateZ(Mth.HALF_PI).normalize().mul(-width);
-            bufferbuilder.vertex(mat, lastPoint.x + vec.x, lastPoint.y + vec.y, 0)
-                    .color((sr + er * s) / 255, (sg + eg * s) / 255, (sb + eb * s) / 255, (sa + ea * s) / 255)
-                    .endVertex();
+            builder.addVertex(mat, lastPoint.x + vec.x, lastPoint.y + vec.y, 0)
+                    .setColor((sr + er * s) / 255, (sg + eg * s) / 255, (sb + eb * s) / 255, (sa + ea * s) / 255)
+            ;
             vec.mul(-1);
-            bufferbuilder.vertex(mat, lastPoint.x + vec.x, lastPoint.y + vec.y, 0)
-                    .color((sr + er * e) / 255, (sg + eg * e) / 255, (sb + eb * e) / 255, (sa + ea * e) / 255)
-                    .endVertex();
+            builder.addVertex(mat, lastPoint.x + vec.x, lastPoint.y + vec.y, 0)
+                    .setColor((sr + er * e) / 255, (sg + eg * e) / 255, (sb + eb * e) / 255, (sa + ea * e) / 255)
+            ;
             lastPoint = point;
         }
         vec.mul(-1);
-        bufferbuilder.vertex(mat, point.x + vec.x, point.y + vec.y, 0)
-                .color(sr + er, sg + eg, sb + eb, sa + ea)
-                .endVertex();
+        builder.addVertex(mat, point.x + vec.x, point.y + vec.y, 0)
+                .setColor(sr + er, sg + eg, sb + eb, sa + ea)
+        ;
         vec.mul(-1);
-        bufferbuilder.vertex(mat, point.x + vec.x, point.y + vec.y, 0)
-                .color(sr + er, sg + eg, sb + eb, sa + ea)
-                .endVertex();
-
-        tesselator.end();
-        RenderSystem.defaultBlendFunc();
+        builder.addVertex(mat, point.x + vec.x, point.y + vec.y, 0)
+                .setColor(sr + er, sg + eg, sb + eb, sa + ea)
+        ;
     }
 
-    public static void drawTextureRect(@NotNull GuiGraphics graphics, float x, float y, float width, float height) {
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.getBuilder();
-        Matrix4f mat = graphics.pose().last().pose();
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        buffer.vertex(mat, x, y + height, 0).uv(0, 0).endVertex();
-        buffer.vertex(mat, x + width, y + height, 0).uv(1, 0).endVertex();
-        buffer.vertex(mat, x + width, y, 0).uv(1, 1).endVertex();
-        buffer.vertex(mat, x, y, 0).uv(0, 1).endVertex();
-        tesselator.end();
+    public static void drawColorTexLines(@Nonnull PoseStack poseStack, VertexConsumer builder, List<Vec2> points, int setColorStart, int setColorEnd, float width) {
+        if (points.size() < 2) return;
+        Matrix4f mat = poseStack.last().pose();
+        Vec2 lastPoint = points.get(0);
+        Vec2 point = points.get(1);
+        Vector3f vec = null;
+        int sa = (setColorStart >> 24) & 0xff, sr = (setColorStart >> 16) & 0xff, sg = (setColorStart >> 8) & 0xff, sb = setColorStart & 0xff;
+        int ea = (setColorEnd >> 24) & 0xff, er = (setColorEnd >> 16) & 0xff, eg = (setColorEnd >> 8) & 0xff, eb = setColorEnd & 0xff;
+        ea = (ea - sa);
+        er = (er - sr);
+        eg = (eg - sg);
+        eb = (eb - sb);
+        for (int i = 1; i < points.size(); i++) {
+            float s = (i - 1f) / points.size();
+            float e = i * 1f / points.size();
+            point = points.get(i);
+            float u = (i - 1f) / points.size();
+            vec = new Vector3f(point.x - lastPoint.x, point.y - lastPoint.y, 0).rotateZ(Mth.HALF_PI).normalize().mul(-width);
+            builder.addVertex(mat, lastPoint.x + vec.x, lastPoint.y + vec.y, 0).setUv(u,0)
+                    .setColor((sr + er * s) / 255, (sg + eg * s) / 255, (sb + eb * s) / 255, (sa + ea * s) / 255)
+            ;
+            vec.mul(-1);
+            builder.addVertex(mat, lastPoint.x + vec.x, lastPoint.y + vec.y, 0).setUv(u,1)
+                    .setColor((sr + er * e) / 255, (sg + eg * e) / 255, (sb + eb * e) / 255, (sa + ea * e) / 255)
+            ;
+            lastPoint = point;
+        }
+        vec.mul(-1);
+        builder.addVertex(mat, point.x + vec.x, point.y + vec.y, 0).setUv(1,0)
+                .setColor(sr + er, sg + eg, sb + eb, sa + ea)
+        ;
+        vec.mul(-1);
+        builder.addVertex(mat, point.x + vec.x, point.y + vec.y, 0).setUv(1,1)
+                .setColor(sr + er, sg + eg, sb + eb, sa + ea)
+        ;
     }
-
 
     public static void drawTooltip(GuiGraphics graphics, int mouseX, int mouseY, List<Component> tooltipTexts, ItemStack tooltipStack, @Nullable TooltipComponent tooltipComponent, Font tooltipFont) {
         graphics.renderTooltip(tooltipFont, tooltipTexts, Optional.ofNullable(tooltipComponent), tooltipStack, mouseX, mouseY);

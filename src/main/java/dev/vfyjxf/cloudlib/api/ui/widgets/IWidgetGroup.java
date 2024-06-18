@@ -1,19 +1,35 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.drag.IDragConsumer;
+import dev.vfyjxf.cloudlib.api.ui.event.IWidgetEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public interface IWidgetGroup<T extends IWidget> extends IWidget, IDragConsumer<T> {
+public interface IWidgetGroup<T extends IWidget> extends IWidget, IDragConsumer<T>, Iterable<T> {
 
+    int size();
+
+    /**
+     * @return an immutable view of the children list.
+     */
     List<T> children();
 
     IWidgetGroup<T> add(T widget);
 
-    IWidgetGroup<T> add(int index, T widget);
+    boolean add(int index, T widget);
+
+    default IWidgetGroup<T> onChildAdded(IWidgetEvent.OnChildAdded onChildAdded) {
+        channel().register(IWidgetEvent.OnChildAdded.onChildAdded, onChildAdded);
+        return this;
+    }
+
+    default IWidgetGroup<T> onChildRemoved(IWidgetEvent.OnChildRemoved onChildRemoved) {
+        channel().register(IWidgetEvent.OnChildRemoved.onChildRemoved, onChildRemoved);
+        return this;
+    }
 
     default IWidgetGroup<T> widget(T widget) {
         widget.asChild(this);
@@ -38,7 +54,7 @@ public interface IWidgetGroup<T extends IWidget> extends IWidget, IDragConsumer<
 
     @Nullable
     default IWidget getById(String id) {
-        for (T child : children()) {
+        for (T child : this) {
             if (child.getId().equals(id)) {
                 return child;
             }
@@ -51,7 +67,7 @@ public interface IWidgetGroup<T extends IWidget> extends IWidget, IDragConsumer<
     @Nullable
     @Override
     default IWidget getHoveredWidget(double mouseX, double mouseY) {
-        for (T child : children()) {
+        for (T child : this) {
             if (child.visible() && child.isMouseOver(mouseX, mouseY)) {
                 return child;
             }
@@ -64,7 +80,7 @@ public interface IWidgetGroup<T extends IWidget> extends IWidget, IDragConsumer<
         if (type.isInstance(this)) {
             return type.cast(this);
         }
-        for (T child : children()) {
+        for (T child : this) {
             var result = child.getWidgetOfType(type);
             if (result != null) {
                 return result;
@@ -78,7 +94,7 @@ public interface IWidgetGroup<T extends IWidget> extends IWidget, IDragConsumer<
         if (type.isInstance(this)) {
             result.add(type.cast(this));
         }
-        for (T child : children()) {
+        for (T child : this) {
             child.getWidgetsOfType(type, result);
         }
     }
@@ -88,7 +104,7 @@ public interface IWidgetGroup<T extends IWidget> extends IWidget, IDragConsumer<
         if (type.isInstance(this)) {
             return type.cast(this);
         }
-        for (T child : children()) {
+        for (T child : this) {
             var result = child.findWidgetsOfType(type);
             if (result != null) {
                 return result;
@@ -102,14 +118,14 @@ public interface IWidgetGroup<T extends IWidget> extends IWidget, IDragConsumer<
         if (type.isInstance(this)) {
             result.add(type.cast(this));
         }
-        for (T child : children()) {
+        for (T child : this) {
             child.findWidgetsOfType(type, result);
         }
     }
 
     default List<IWidget> getContainedWidgets(boolean withInvisible) {
         List<IWidget> result = new ArrayList<>();
-        for (T child : children()) {
+        for (T child : this) {
             if (child.visible() || withInvisible) {
                 result.add(child);
                 if (child instanceof IWidgetGroup<?> group)

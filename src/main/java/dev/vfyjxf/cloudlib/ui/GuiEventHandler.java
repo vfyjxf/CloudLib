@@ -50,7 +50,7 @@ public class GuiEventHandler {
         GuiGraphics graphics = event.getGuiGraphics();
         double mouseX = ScreenUtil.getMouseX();
         double mouseY = ScreenUtil.getMouseY();
-        float partialTicks = minecraft.getPartialTick();
+        float partialTicks = minecraft.getTimer().getGameTimeDeltaPartialTick(false);
         overlay.render(graphics, (int) mouseX, (int) mouseY, partialTicks);
     }
 
@@ -64,17 +64,16 @@ public class GuiEventHandler {
         IUIOverlay overlay = Singletons.getNullable(IUIOverlay.class);
         if (overlay == null) return;
         boolean result = overlay.getMainGroup().mouseClicked(IInputContext.fromMouse(event.getMouseX(), event.getMouseY(), event.getButton()));
-        if (result)
-            event.setCanceled(true);
+        if (result) event.setCanceled(true);
     }
 
     @SubscribeEvent
     public void onKeyPressed(ScreenEvent.KeyPressed.Pre event) {
         IUIOverlay overlay = Singletons.getNullable(IUIOverlay.class);
         if (overlay == null) return;
-        boolean result = overlay.getMainGroup().keyPressed(IInputContext.fromKeyboard(event.getKeyCode(), event.getScanCode(), event.getModifiers(), ScreenUtil.getMouseX(), ScreenUtil.getMouseY()));
-        if (result)
-            event.setCanceled(true);
+        var inputContext = IInputContext.fromKeyboard(event.getKeyCode(), event.getScanCode(), event.getModifiers(), ScreenUtil.getMouseX(), ScreenUtil.getMouseY());
+        boolean result = overlay.getMainGroup().keyPressed(inputContext);
+        if (result) event.setCanceled(true);
     }
 
 }

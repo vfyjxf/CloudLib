@@ -11,24 +11,34 @@ import net.minecraft.client.gui.screens.Screen;
 
 public interface IInputContext {
 
+    static IInputContext fromMouse(double x, double y, int button, boolean isReleased) {
+        return new InputContext(InputConstants.Type.MOUSE.getOrCreate(button), x, y, 0, isReleased);
+    }
+
     static IInputContext fromMouse(double x, double y, int button) {
-        return new InputContext(InputConstants.Type.MOUSE.getOrCreate(button), x, y, 0);
+        return new InputContext(InputConstants.Type.MOUSE.getOrCreate(button), x, y, 0, false);
+    }
+
+    static IInputContext fromKeyboard(int keyCode, int scanCode, int modifiers, double mouseX, double mouseY, boolean isReleased) {
+        return new InputContext(InputConstants.getKey(keyCode, scanCode), mouseX, mouseY, modifiers, isReleased);
     }
 
     static IInputContext fromKeyboard(int keyCode, int scanCode, int modifiers, double mouseX, double mouseY) {
-        return new InputContext(InputConstants.getKey(keyCode, scanCode), mouseX, mouseY, modifiers);
+        return new InputContext(InputConstants.getKey(keyCode, scanCode), mouseX, mouseY, modifiers, false);
     }
 
-    InputConstants.Key getKey();
+    InputConstants.Key key();
 
-    double getMouseX();
+    double mouseX();
 
-    double getMouseY();
+    double mouseY();
 
     /**
      * for key to use.
      */
-    int getModifiers();
+    int modifiers();
+
+    boolean released();
 
     default boolean isCtrlDown() {
         return Screen.hasControlDown();
@@ -43,19 +53,19 @@ public interface IInputContext {
     }
 
     default boolean isMouse() {
-        return this.getKey().getType() == InputConstants.Type.MOUSE;
+        return this.key().getType() == InputConstants.Type.MOUSE;
     }
 
     default boolean isLeftClick() {
-        return isMouse() && getKey().getValue() == 0;
+        return isMouse() && key().getValue() == 0;
     }
 
     default boolean isRightClick() {
-        return isMouse() && getKey().getValue() == 1;
+        return isMouse() && key().getValue() == 1;
     }
 
     default boolean isKeyboard() {
-        return this.getKey().getType() == InputConstants.Type.KEYSYM;
+        return this.key().getType() == InputConstants.Type.KEYSYM;
     }
 
     boolean isAllowedChatCharacter();
@@ -63,14 +73,14 @@ public interface IInputContext {
     boolean is(KeyMapping keyMapping);
 
     default boolean is(InputConstants.Key key) {
-        return this.getKey().equals(key);
+        return this.key().equals(key);
     }
 
     default FloatingPoint getRelative(IWidget widget) {
         IWidgetGroup<?> parent = widget.parent();
-        if (parent == null) return new FloatingPoint(getMouseX(), getMouseY());
+        if (parent == null) return new FloatingPoint(mouseX(), mouseY());
         Point absolute = widget.getAbsolute();
-        return new FloatingPoint(getMouseX() - absolute.x, getMouseY() - absolute.y);
+        return new FloatingPoint(mouseX() - absolute.x, mouseY() - absolute.y);
     }
 
 }

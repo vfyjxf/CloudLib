@@ -1,13 +1,11 @@
 package dev.vfyjxf.cloudlib.api.ui.event;
 
-import dev.vfyjxf.cloudlib.api.event.EventFactory;
-import dev.vfyjxf.cloudlib.api.event.IEventContext;
-import dev.vfyjxf.cloudlib.api.event.IEventDefinition;
+import dev.vfyjxf.cloudlib.api.event.IEventContext.Common;
 import dev.vfyjxf.cloudlib.api.ui.inputs.IInputContext;
 
 public interface IInputEvent {
 
-    IEventDefinition<OnKeyPressed> onKeyPressed = EventFactory.define(OnKeyPressed.class, listeners -> (context, input) -> {
+    IUIEventDefinition<OnKeyPressed> onKeyPressed = UIEventFactory.define(OnKeyPressed.class, listeners -> (context, input) -> {
         boolean result = false;
         for (var listener : listeners) {
             result |= listener.onKeyPressed(context, input);
@@ -16,7 +14,7 @@ public interface IInputEvent {
         return result;
     });
 
-    IEventDefinition<OnKeyReleased> onKeyReleased = EventFactory.define(OnKeyReleased.class, listeners -> (context, input) -> {
+    IUIEventDefinition<OnKeyReleased> onKeyReleased = UIEventFactory.define(OnKeyReleased.class, listeners -> (context, input) -> {
         boolean result = false;
         for (var listener : listeners) {
             result |= listener.onKeyReleased(context, input);
@@ -25,7 +23,7 @@ public interface IInputEvent {
         return result;
     });
 
-    IEventDefinition<OnMouseClicked> onMouseClicked = EventFactory.define(OnMouseClicked.class, listeners -> (context, input) -> {
+    IUIEventDefinition<OnMouseClicked> onMouseClicked = UIEventFactory.define(OnMouseClicked.class, listeners -> (context, input) -> {
         boolean result = false;
         for (var listener : listeners) {
             result |= listener.onClicked(context, input);
@@ -34,7 +32,7 @@ public interface IInputEvent {
         return result;
     });
 
-    IEventDefinition<OnMouseReleased> onMouseReleased = EventFactory.define(OnMouseReleased.class, listeners -> (context, input) -> {
+    IUIEventDefinition<OnMouseReleased> onMouseReleased = UIEventFactory.define(OnMouseReleased.class, listeners -> (context, input) -> {
         boolean result = false;
         for (var listener : listeners) {
             result |= listener.onReleased(context, input);
@@ -45,30 +43,30 @@ public interface IInputEvent {
 
 
     interface OnKeyPressed {
-        boolean onKeyPressed(IEventContext context, IInputContext input);
+        boolean onKeyPressed(Common context, IInputContext input);
     }
 
     interface OnKeyReleased {
-        boolean onKeyReleased(IEventContext context, IInputContext input);
+        boolean onKeyReleased(Common context, IInputContext input);
     }
 
     interface OnMouseClicked {
-        boolean onClicked(IEventContext context, IInputContext input);
+        boolean onClicked(Common context, IInputContext input);
     }
 
     interface OnMouseReleased {
-        boolean onReleased(IEventContext context, IInputContext input);
+        boolean onReleased(Common context, IInputContext input);
     }
 
     interface OnMouseDragged {
-        void onDragged(IEventContext context, IInputContext input, double deltaX, double deltaY);
+        void onDragged(Common context, IInputContext input, double deltaX, double deltaY);
     }
 
     interface OnMouseScrolled {
-        void onScrolled(IEventContext context, IInputContext input, double scrollDelta);
+        void onScrolled(Common context, IInputContext input, double scrollDelta);
     }
 
     interface OnMouseMoved {
-        void onMoved(IEventContext context, IInputContext input);
+        void onMoved(Common context, IInputContext input);
     }
 }

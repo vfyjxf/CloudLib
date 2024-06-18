@@ -17,7 +17,8 @@ public record TooltipContext(Point mousePos, @Nullable TooltipFlag flag) impleme
 
     @Override
     public TooltipFlag flag() {
-        return flag == null ? (Minecraft.getInstance().options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL)
-                : flag;
+        if (flag == null)
+            return (Minecraft.getInstance().options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL);
+        else return flag;
     }
 }

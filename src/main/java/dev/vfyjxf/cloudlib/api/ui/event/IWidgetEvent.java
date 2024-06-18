@@ -1,8 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.event;
 
-import dev.vfyjxf.cloudlib.api.event.EventFactory;
-import dev.vfyjxf.cloudlib.api.event.IEventContext;
-import dev.vfyjxf.cloudlib.api.event.IEventDefinition;
+import dev.vfyjxf.cloudlib.api.event.IEventContext.Common;
 import dev.vfyjxf.cloudlib.api.ui.traits.ITrait;
 import dev.vfyjxf.cloudlib.api.ui.widgets.ITooltip;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
@@ -12,87 +10,87 @@ import net.minecraft.client.gui.GuiGraphics;
 
 public interface IWidgetEvent {
 
-    IEventDefinition<OnPositionChanged> onPositionChanged = EventFactory.define(OnPositionChanged.class, listeners -> (context, position) -> {
+    IUIEventDefinition<OnPositionChanged> onPositionChanged = UIEventFactory.define(OnPositionChanged.class, listeners -> (context, position) -> {
         for (var listener : listeners) {
             listener.onPositionChanged(context, position);
             if (context.isInterrupted()) return;
         }
     });
 
-    IEventDefinition<OnSizeChanged> onSizeChanged = EventFactory.define(OnSizeChanged.class, listeners -> (context, size) -> {
+    IUIEventDefinition<OnSizeChanged> onSizeChanged = UIEventFactory.define(OnSizeChanged.class, listeners -> (context, size) -> {
         for (var listener : listeners) {
             listener.onSizeChanged(context, size);
             if (context.isInterrupted()) return;
         }
     });
 
-    IEventDefinition<OnAttributesAdded> onAttributesAdded = EventFactory.define(OnAttributesAdded.class, listeners -> (context, attribute) -> {
+    IUIEventDefinition<OnAttributesAdded> onAttributesAdded = UIEventFactory.define(OnAttributesAdded.class, listeners -> (context, attribute) -> {
         for (var listener : listeners) {
             listener.onAttributesAdded(context, attribute);
             if (context.isInterrupted()) return;
         }
     });
 
-    IEventDefinition<OnRender> onRender = EventFactory.define(OnRender.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
+    IUIEventDefinition<OnRender> onRender = UIEventFactory.define(OnRender.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
         for (var listener : listeners) {
             listener.onRender(graphics, mouseX, mouseY, partialTicks, context);
             if (context.isInterrupted()) return;
         }
     });
 
-    IEventDefinition<OnRender> onRenderPost = EventFactory.define(OnRender.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
+    IUIEventDefinition<OnRender> onRenderPost = UIEventFactory.define(OnRender.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
         for (var listener : listeners) {
             listener.onRender(graphics, mouseX, mouseY, partialTicks, context);
             if (context.isInterrupted()) return;
         }
     });
 
-    IEventDefinition<OnUpdate> onUpdate = EventFactory.define(OnUpdate.class, listeners -> (widget) -> {
+    IUIEventDefinition<OnUpdate> onUpdate = UIEventFactory.define(OnUpdate.class, listeners -> (widget) -> {
         for (var listener : listeners) {
             listener.onUpdate(widget);
         }
     });
 
-    IEventDefinition<OnInit> onInit = EventFactory.define(OnInit.class, listeners -> (widget) -> {
+    IUIEventDefinition<OnInit> onInit = UIEventFactory.define(OnInit.class, listeners -> (widget) -> {
         for (var listener : listeners) {
             listener.onInit(widget);
         }
     });
 
-    IEventDefinition<OnTick> onTick = EventFactory.define(OnTick.class, listeners -> () -> {
+    IUIEventDefinition<OnTick> onTick = UIEventFactory.define(OnTick.class, listeners -> () -> {
         for (var listener : listeners) {
             listener.onTick();
         }
     });
 
-    IEventDefinition<OnDelete> onDelete = EventFactory.define(OnDelete.class, listeners -> (self) -> {
+    IUIEventDefinition<OnDelete> onDelete = UIEventFactory.define(OnDelete.class, listeners -> (self) -> {
         for (var listener : listeners) {
             listener.onDeleted(self);
         }
     });
 
-    IEventDefinition<OnChildAdded> onChildAdded = EventFactory.define(OnChildAdded.class, listeners -> (context, widget) -> {
+    IUIEventDefinition<OnChildAdded> onChildAdded = UIEventFactory.define(OnChildAdded.class, listeners -> (context, widget) -> {
         for (var listener : listeners) {
             listener.onChildAdded(context, widget);
             if (context.isInterrupted()) return;
         }
     });
 
-    IEventDefinition<OnChildAddedPost> onChildAddedPost = EventFactory.define(OnChildAddedPost.class, listeners -> (context, widget) -> {
+    IUIEventDefinition<OnChildAddedPost> onChildAddedPost = UIEventFactory.define(OnChildAddedPost.class, listeners -> (context, widget) -> {
         for (var listener : listeners) {
             listener.onChildAdded(context, widget);
             if (context.isInterrupted()) return;
         }
     });
 
-    IEventDefinition<OnChildRemoved> onChildRemoved = EventFactory.define(OnChildRemoved.class, listeners -> (context, widget) -> {
+    IUIEventDefinition<OnChildRemoved> onChildRemoved = UIEventFactory.define(OnChildRemoved.class, listeners -> (context, widget) -> {
         for (var listener : listeners) {
             listener.onChildRemoved(context, widget);
             if (context.isInterrupted()) return;
         }
     });
 
-    IEventDefinition<OnChildRemovedPost> onChildRemovedPost = EventFactory.define(OnChildRemovedPost.class, listeners -> (context, widget) -> {
+    IUIEventDefinition<OnChildRemovedPost> onChildRemovedPost = UIEventFactory.define(OnChildRemovedPost.class, listeners -> (context, widget) -> {
         for (var listener : listeners) {
             listener.onChildRemoved(context, widget);
             if (context.isInterrupted()) return;
@@ -100,70 +98,103 @@ public interface IWidgetEvent {
     });
 
 
-    IEventDefinition<OnTooltip> onTooltip = EventFactory.define(OnTooltip.class, listeners -> (context, tooltip) -> {
+    IUIEventDefinition<OnTooltip> onTooltip = UIEventFactory.define(OnTooltip.class, listeners -> (context, tooltip) -> {
         for (var listener : listeners) {
             listener.onTooltip(context, tooltip);
             if (context.isInterrupted()) return;
         }
     });
 
+    IUIEventDefinition<OnMeasure> onMeasure = UIEventFactory.define(OnMeasure.class, listeners -> (context, size) -> {
+        for (var listener : listeners) {
+            listener.onMeasure(context, size);
+            if (context.isInterrupted()) return;
+        }
+    });
+
+    IUIEventDefinition<OnLayout> onLayout = UIEventFactory.define(OnLayout.class, listeners -> (context) -> {
+        for (var listener : listeners) {
+            listener.onLayout(context);
+            if (context.isInterrupted()) return;
+        }
+    });
+
+    @FunctionalInterface
     interface OnPositionChanged extends IWidgetEvent {
-        void onPositionChanged(IEventContext context, Point position);
+        void onPositionChanged(Common context, Point position);
     }
 
+    @FunctionalInterface
     interface OnSizeChanged extends IWidgetEvent {
-        void onSizeChanged(IEventContext context, Dimension size);
+        void onSizeChanged(Common context, Dimension size);
     }
 
+    @FunctionalInterface
     interface OnAttributesAdded extends IWidgetEvent {
-        void onAttributesAdded(IEventContext context, ITrait attribute);
+        void onAttributesAdded(Common context, ITrait attribute);
     }
 
-
+    @FunctionalInterface
     interface OnRender extends IWidgetEvent {
-        void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, IEventContext context);
+        void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, Common context);
     }
 
+    @FunctionalInterface
     interface OnInit extends IWidgetEvent {
         void onInit(IWidget widget);
     }
 
+    @FunctionalInterface
     interface OnUpdate extends IWidgetEvent {
         void onUpdate(IWidget widget);
     }
 
+    @FunctionalInterface
     interface OnTick extends IWidgetEvent {
         void onTick();
     }
 
+    @FunctionalInterface
     interface OnDelete extends IWidgetEvent {
-
         void onDeleted(IWidget self);
-
     }
 
+    @FunctionalInterface
     interface OnChildAdded extends IWidgetEvent {
-        void onChildAdded(IEventContext context, IWidget widget);
+        void onChildAdded(Common context, IWidget widget);
     }
 
+    @FunctionalInterface
     interface OnChildAddedPost extends IWidgetEvent {
-        void onChildAdded(IEventContext context, IWidget widget);
+        void onChildAdded(Common context, IWidget widget);
     }
 
+    @FunctionalInterface
     interface OnChildRemoved extends IWidgetEvent {
-        void onChildRemoved(IEventContext context, IWidget widget);
+        void onChildRemoved(Common context, IWidget widget);
     }
 
+    @FunctionalInterface
     interface OnChildRemovedPost extends IWidgetEvent {
-        void onChildRemoved(IEventContext context, IWidget widget);
+        void onChildRemoved(Common context, IWidget widget);
     }
 
+    @FunctionalInterface
     interface OnMouseHover extends IWidgetEvent {
-
+        void onHover(int mouseX, int mouseY);
     }
 
+    @FunctionalInterface
     interface OnTooltip extends IWidgetEvent {
-        void onTooltip(IEventContext context, ITooltip tooltip);
+        void onTooltip(Common context, ITooltip tooltip);
+    }
+
+    interface OnMeasure extends IWidgetEvent {
+        void onMeasure(Common context, Dimension size);
+    }
+
+    interface OnLayout extends IWidgetEvent {
+        void onLayout(Common context);
     }
 
 }

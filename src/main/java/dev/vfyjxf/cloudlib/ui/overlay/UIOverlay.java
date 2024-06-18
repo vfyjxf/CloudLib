@@ -1,20 +1,18 @@
 package dev.vfyjxf.cloudlib.ui.overlay;
 
-import dev.vfyjxf.cloudlib.api.event.IEventManager;
+import dev.vfyjxf.cloudlib.api.event.IEventChannel;
 import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
 import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.overlay.IUIOverlay;
-import dev.vfyjxf.cloudlib.event.EventManager;
+import dev.vfyjxf.cloudlib.event.EventChannel;
 import dev.vfyjxf.cloudlib.math.Rectangle;
 import net.minecraft.client.gui.GuiGraphics;
 
 import java.awt.Color;
 
-;
-
 public class UIOverlay implements IUIOverlay {
 
-    private final IEventManager<IUIOverlay> events = new EventManager<>(this);
+    private final IEventChannel<IUIOverlay> events = new EventChannel<>(this);
 
     private IModularUI ui;
     private Rectangle bounds;
@@ -84,7 +82,7 @@ public class UIOverlay implements IUIOverlay {
     }
 
     @Override
-    public IEventManager<IUIOverlay> events() {
+    public IEventChannel<IUIOverlay> channel() {
         return this.events;
     }
 }

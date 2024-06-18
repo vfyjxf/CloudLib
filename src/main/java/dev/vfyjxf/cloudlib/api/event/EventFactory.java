@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.event;
 
+import dev.vfyjxf.cloudlib.api.ui.event.IUIEventDefinition;
 import org.eclipse.collections.impl.list.mutable.FastList;
 
 import java.util.List;
@@ -10,9 +11,9 @@ import java.util.function.Function;
  * <p>
  * Some basic promises:
  * <p>
- * 1. The naming of events follows the lowercase hump naming
+ * 1. The naming of channel follows the lowercase hump naming
  * <p>
- * 2. Pre-phase events do not need to add the Pre suffix, but Post-phase events need to add the Post suffix.
+ * 2. Pre-phase channel do not need to add the Pre suffix, but Post-phase channel need to add the Post suffix.
  * <p>
  * 3. Usually, an event is defined in an interface with its listeners.
  */
@@ -24,6 +25,10 @@ public final class EventFactory {
 
     public static <T> IEventDefinition<T> define(Class<T> type, Function<List<T>, T> invokerFactory) {
         return new EventDefinition<>(type, invokerFactory);
+    }
+
+    public static <T> IEvent<T> createEvent(Function<List<T>, T> invokerFactory) {
+        return new Event<>(invokerFactory);
     }
 
     private static class EventDefinition<T> implements IEventDefinition<T> {

@@ -9,7 +9,7 @@ public interface IDragConsumer<T extends IWidget> {
 
     IDragConsumer<T> add(T draggable, Runnable onEnter);
 
-    IDragConsumer<T> add(int index, T draggable);
+    boolean add(int index, T draggable);
 
     void add(T draggable, int index, Runnable onEnter);
 

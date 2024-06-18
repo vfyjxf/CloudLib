@@ -10,4 +10,10 @@ import java.lang.annotation.RetentionPolicy;
  */
 @Retention(RetentionPolicy.CLASS)
 public @interface RegisterPlugin {
+
+    //TODO
+    String value() default "";
+
+    Class<?> type() default Class.class;
+
 }

@@ -11,7 +11,7 @@ public class SpriteUploader extends TextureAtlasHolder {
     public final String modid;
 
     public SpriteUploader(TextureManager textureManager, String modid, ResourceLocation atlasLocation) {
-        super(textureManager, atlasLocation, new ResourceLocation(modid, "gui"));
+        super(textureManager, atlasLocation, ResourceLocation.fromNamespaceAndPath(modid, "gui"));
         this.atlasLocation = atlasLocation;
         this.modid = modid;
     }

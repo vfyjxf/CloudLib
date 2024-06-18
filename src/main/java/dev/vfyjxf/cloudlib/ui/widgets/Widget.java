@@ -1,23 +1,21 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
-import dev.vfyjxf.cloudlib.api.event.IEventContext;
-import dev.vfyjxf.cloudlib.api.event.IEventManager;
+import dev.vfyjxf.cloudlib.api.event.IEventChannel;
 import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.IRenderableTexture;
-import dev.vfyjxf.cloudlib.api.ui.constraints.IUIConstraints;
 import dev.vfyjxf.cloudlib.api.ui.event.IWidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.traits.ITrait;
-import dev.vfyjxf.cloudlib.api.ui.traits.IUITraits;
 import dev.vfyjxf.cloudlib.api.ui.widgets.ITooltip;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
-import dev.vfyjxf.cloudlib.data.lang.Lang;
-import dev.vfyjxf.cloudlib.event.EventManager;
+import dev.vfyjxf.cloudlib.api.ui.widgets.Visibility;
+import dev.vfyjxf.cloudlib.data.lang.LangEntry;
+import dev.vfyjxf.cloudlib.event.EventChannel;
 import dev.vfyjxf.cloudlib.math.Dimension;
 import dev.vfyjxf.cloudlib.math.Point;
-import dev.vfyjxf.cloudlib.ui.traits.container.UITraits;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,10 +26,10 @@ import java.util.function.Supplier;
 @SuppressWarnings("unchecked")
 public class Widget implements IWidget {
 
-    protected final EventManager<IWidget> eventManager = new EventManager<>(this);
+    protected final EventChannel<IWidget> eventChannel = new EventChannel<>(this);
     protected IModularUI ui;
     protected boolean initialized = false;
-    protected IWidgetGroup<IWidget> root;
+    protected IWidgetGroup<?> root;
     @Nullable
     protected IWidgetGroup<?> parent;
     protected String id = UUID.randomUUID().toString();
@@ -41,9 +39,9 @@ public class Widget implements IWidget {
     protected IRenderableTexture background;
     protected IRenderableTexture icon;
     protected boolean active = true;
-    protected boolean visible = true;
+    protected Visibility visibility = Visibility.VISIBLE;
     protected boolean moving = false;
-    protected IUITraits traits = new UITraits();
+    protected ITrait traits = ITrait.EMPTY;
     @Nullable
     protected ITooltip tooltip;
 
@@ -65,18 +63,22 @@ public class Widget implements IWidget {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        if (!visible) return;
+        if (invisible()) return;
         graphics.pose().pushPose();
         {
             graphics.pose().translate(position.x, position.y, 0);
-            IEventContext context = context();
+            var context = context();
             listeners(IWidgetEvent.onRender).onRender(graphics, mouseX, mouseY, partialTicks, context);
             if (context.isCancelled()) return;
-            if (background != null) background.render(graphics);
-            if (icon != null) icon.render(graphics);
+            renderInternal(graphics, mouseX, mouseY, partialTicks);
             listeners(IWidgetEvent.onRenderPost).onRender(graphics, mouseX, mouseY, partialTicks, context());
         }
         graphics.pose().popPose();
+    }
+
+    protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        if (background != null) background.render(graphics);
+        if (icon != null) icon.render(graphics);
     }
 
     @Override
@@ -106,17 +108,23 @@ public class Widget implements IWidget {
     }
 
     @Override
-    public IWidgetGroup<IWidget> root() {
+    public IWidgetGroup<? extends IWidget> root() {
         return root;
     }
 
+    @ApiStatus.Internal
     @Override
-    public @Nullable IWidgetGroup<?> parent() {
+    public final void setRoot(IWidgetGroup<? super IWidget> root) {
+        this.root = root;
+    }
+
+    @Override
+    public @Nullable IWidgetGroup<? extends IWidget> parent() {
         return parent;
     }
 
     @Override
-    public IWidget setParent(@Nullable IWidgetGroup<?> parent) {
+    public IWidget setParent(@Nullable IWidgetGroup<? super IWidget> parent) {
         this.parent = parent;
         return this;
     }
@@ -125,11 +133,6 @@ public class Widget implements IWidget {
     @MustBeInvokedByOverriders
     public void init() {
         IWidget.super.init();
-        IWidgetGroup<?> parent = this.parent;
-        while (parent != null && parent != parent.parent()) {
-            parent = parent.parent();
-        }
-        this.root = (IWidgetGroup<IWidget>) parent;
         listeners(IWidgetEvent.onInit).onInit(this);
         initialized = true;
     }
@@ -159,27 +162,33 @@ public class Widget implements IWidget {
     }
 
     @Override
-    public IEventManager<IWidget> events() {
-        return eventManager;
+    public IEventChannel<IWidget> channel() {
+        return eventChannel;
     }
 
     @Override
-    public IUITraits traits() {
+    public ITrait getTrait() {
         return traits;
     }
 
     @Override
+    public ITrait setTrait(ITrait trait) {
+        return traits = trait;
+    }
+
+    @Override
     public IWidget addTrait(ITrait trait) {
-        traits.add(trait);
-        trait.setHolder(this);
+        traits = traits.then(trait);
         trait.init();
         return this;
     }
 
     @Override
     public boolean removeTrait(ITrait trait) {
-        trait.dispose();
-        return traits.remove(trait);
+//        trait.dispose();
+//        return traits.remove(trait);
+        //TODO: Implement
+        return false;
     }
 
     @Override
@@ -194,11 +203,6 @@ public class Widget implements IWidget {
     }
 
     @Override
-    public IUIConstraints restraints() {
-        return null;
-    }
-
-    @Override
     public Point getPos() {
         return position;
     }
@@ -210,7 +214,7 @@ public class Widget implements IWidget {
 
     @Override
     public IWidget setPos(Point position) {
-        IEventContext context = context();
+        var context = context();
         listeners(IWidgetEvent.onPositionChanged).onPositionChanged(context, position);
         if (context.isCancelled()) return this;
         this.position = position;
@@ -224,7 +228,7 @@ public class Widget implements IWidget {
 
     @Override
     public IWidget setSize(Dimension size) {
-        IEventContext context = context();
+        var context = context();
         listeners(IWidgetEvent.onSizeChanged).onSizeChanged(context, size);
         if (context.isCancelled()) return this;
         this.size = size;
@@ -254,13 +258,13 @@ public class Widget implements IWidget {
     }
 
     @Override
-    public boolean visible() {
-        return visible;
+    public Visibility visibility() {
+        return visibility;
     }
 
     @Override
-    public void setVisible(boolean visible) {
-        this.visible = visible;
+    public void setVisibility(Visibility visibility) {
+        this.visibility = visibility;
     }
 
     @Override
@@ -269,7 +273,7 @@ public class Widget implements IWidget {
     }
 
     @Override
-    public IWidget tooltip(Lang key) {
+    public IWidget tooltip(LangEntry key) {
         return tooltip(Component.translatable(key.key()));
     }
 
@@ -292,7 +296,7 @@ public class Widget implements IWidget {
     }
 
     @Override
-    public IWidget tooltips(Lang... keys) {
+    public IWidget tooltips(LangEntry... keys) {
         return this;
     }
 
@@ -323,7 +327,7 @@ public class Widget implements IWidget {
 
     @Override
     public <T extends IWidget> IWidget asChild(IWidgetGroup<T> parent) {
-        parent.add((T) this);
+        if (parent.add(parent.size(), (T) this)) return this;
         this.setUI(parent.getUI());
         this.parent = parent;
         this.onPositionUpdate();
@@ -341,7 +345,7 @@ public class Widget implements IWidget {
                 ", absolute=" + absolute +
                 ", size=" + size +
                 ", active=" + active +
-                ", visible=" + visible +
+                ", visibility=" + visibility +
                 ", moving=" + moving +
                 '}';
     }

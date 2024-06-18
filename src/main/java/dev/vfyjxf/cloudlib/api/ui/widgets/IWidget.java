@@ -1,27 +1,22 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import dev.vfyjxf.cloudlib.api.event.IEventChannel;
 import dev.vfyjxf.cloudlib.api.event.IEventDefinition;
-import dev.vfyjxf.cloudlib.api.event.IEventHolder;
-import dev.vfyjxf.cloudlib.api.event.IEventManager;
+import dev.vfyjxf.cloudlib.api.event.IEventHandler;
 import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.IRenderable;
 import dev.vfyjxf.cloudlib.api.ui.IRenderableTexture;
+import dev.vfyjxf.cloudlib.api.ui.animation.IAnimatable;
 import dev.vfyjxf.cloudlib.api.ui.drag.IDraggable;
 import dev.vfyjxf.cloudlib.api.ui.event.IInputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.IWidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.inputs.IInputContext;
-import dev.vfyjxf.cloudlib.api.ui.constraints.IUIConstraints;
 import dev.vfyjxf.cloudlib.api.ui.traits.ITrait;
-import dev.vfyjxf.cloudlib.api.ui.traits.IUITraits;
-import dev.vfyjxf.cloudlib.data.lang.Lang;
+import dev.vfyjxf.cloudlib.data.lang.LangEntry;
 import dev.vfyjxf.cloudlib.math.Dimension;
 import dev.vfyjxf.cloudlib.math.Point;
 import dev.vfyjxf.cloudlib.math.Rectangle;
-import dev.vfyjxf.cloudlib.ui.traits.AutoSizeUpdateTrait;
-import dev.vfyjxf.cloudlib.ui.traits.DynamicSizeTrait;
-import dev.vfyjxf.cloudlib.ui.traits.FixedPositionTrait;
-import dev.vfyjxf.cloudlib.ui.traits.RelativeCoordinateTrait;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -34,7 +29,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> {
+public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>, IAnimatable<IWidget> {
 
     //////////////////////////////////////
     //********       Basic     *********//
@@ -48,13 +43,16 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
     /**
      * maybe itself.
      */
-    IWidgetGroup<IWidget> root();
+    IWidgetGroup<? extends IWidget> root();
+
+    @ApiStatus.Internal
+    void setRoot(IWidgetGroup<? super IWidget> root);
 
     @Nullable
-    IWidgetGroup<?> parent();
+    IWidgetGroup<? extends IWidget> parent();
 
     @CanIgnoreReturnValue
-    IWidget setParent(@Nullable IWidgetGroup<?> parent);
+    IWidget setParent(@Nullable IWidgetGroup<? super IWidget> parent);
 
     /**
      * Construct the widget
@@ -68,7 +66,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
     @CanIgnoreReturnValue
     @ApiStatus.NonExtendable
     default IWidget onInit(IWidgetEvent.OnInit listener) {
-        events().register(IWidgetEvent.onInit, listener);
+        channel().register(IWidgetEvent.onInit, listener);
         return this;
     }
 
@@ -88,7 +86,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
     @CanIgnoreReturnValue
     @ApiStatus.NonExtendable
     default IWidget onUpdate(IWidgetEvent.OnUpdate listener) {
-        events().register(IWidgetEvent.onUpdate, listener);
+        channel().register(IWidgetEvent.onUpdate, listener);
         return this;
     }
 
@@ -108,7 +106,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
     @CanIgnoreReturnValue
     @ApiStatus.NonExtendable
     default IWidget onTick(IWidgetEvent.OnTick listener) {
-        events().register(IWidgetEvent.onTick, listener);
+        channel().register(IWidgetEvent.onTick, listener);
         return this;
     }
 
@@ -116,8 +114,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
 
     @CanIgnoreReturnValue
     IWidget setId(String id);
-
-    IUIConstraints restraints();
 
     /**
      * @return Relative coordinates relative to the upper left corner of the parent.
@@ -196,9 +192,21 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
 
     void setActive(boolean active);
 
-    boolean visible();
+    Visibility visibility();
 
-    void setVisible(boolean visible);
+    void setVisibility(Visibility visibility);
+
+    default boolean visible() {
+        return visibility() == Visibility.VISIBLE;
+    }
+
+    default boolean invisible() {
+        return visibility() != Visibility.VISIBLE;
+    }
+
+    default void setVisible(boolean visible) {
+        setVisibility(visible ? Visibility.VISIBLE : Visibility.INVISIBLE);
+    }
 
     default void hide() {
         setVisible(false);
@@ -209,7 +217,27 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
     }
 
     //////////////////////////////////////
-    //********       tools     *********//
+    //********       layout     *********//
+    //////////////////////////////////////
+
+    default void measure(int width, int height) {
+
+    }
+
+    default IWidget onMeasure(IWidgetEvent.OnMeasure listener) {
+        return onEvent(IWidgetEvent.onMeasure, listener);
+    }
+
+    default void layout(int x, int y, int width, int height) {
+
+    }
+
+    default IWidget onLayout(IWidgetEvent.OnLayout listener) {
+        return onEvent(IWidgetEvent.onLayout, listener);
+    }
+
+    //////////////////////////////////////
+    //********       Tools     *********//
     //////////////////////////////////////
 
     /**
@@ -225,7 +253,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
     }
 
     default boolean isMouseOver(IInputContext input) {
-        return isMouseOver(input.getMouseX(), input.getMouseY());
+        return isMouseOver(input.mouseX(), input.mouseY());
     }
 
 
@@ -298,14 +326,14 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
      */
     IWidget tooltip(String text);
 
-    IWidget tooltip(Lang key);
+    IWidget tooltip(LangEntry key);
 
     IWidget tooltip(Component component);
 
     IWidget tooltip(Supplier<Component> supplier);
 
-    default IWidget tooltips(Lang... keys) {
-        for (Lang key : keys) {
+    default IWidget tooltips(LangEntry... keys) {
+        for (LangEntry key : keys) {
             tooltip(key);
         }
         return this;
@@ -343,10 +371,10 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
     //////////////////////////////////////
 
     @Override
-    IEventManager<IWidget> events();
+    IEventChannel<IWidget> channel();
 
     default <T> IWidget onEvent(IEventDefinition<T> definition, T listener) {
-        events().register(definition, listener);
+        channel().register(definition, listener);
         return this;
     }
 
@@ -420,23 +448,27 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
         return listeners(IInputEvent.onKeyReleased).onKeyReleased(context(), input);
     }
 
+    @Override
+    default IWidget interpolate(IWidget next, float delta) {
+        return this;
+    }
+
     //TODO:scissor
 
     //////////////////////////////////////
     //********       Traits    *********//
     //////////////////////////////////////
 
+    ITrait getTrait();
 
-    IUITraits traits();
-
-    IWidget setTraits(IUITraits traits);
+    ITrait setTrait(ITrait trait);
 
     @CanIgnoreReturnValue
     IWidget addTrait(ITrait trait);
 
     default IWidget addTrait(ITrait... traits) {
-        for (ITrait attribute : traits) {
-            addTrait(attribute);
+        for (ITrait trait : traits) {
+            addTrait(trait);
         }
         return this;
     }
@@ -444,35 +476,36 @@ public interface IWidget extends IRenderable, IDraggable, IEventHolder<IWidget> 
     boolean removeTrait(ITrait trait);
 
     default IWidget fixedPosition() {
-        return this.addTrait(new FixedPositionTrait());
+//        return this.addTrait(new FixedPositionTrait());
+        throw new UnsupportedOperationException();
     }
 
     default IWidget relativeCoordinate(Supplier<Integer> x, Supplier<Integer> y) {
-        return this.addTrait(new RelativeCoordinateTrait(x, y));
+        throw new UnsupportedOperationException();
     }
 
     default IWidget relativeHorizontal(Supplier<Integer> x) {
-        return this.addTrait(new RelativeCoordinateTrait(x, this::getY));
+        throw new UnsupportedOperationException();
     }
 
     default IWidget relativeVertical(Supplier<Integer> y) {
-        return this.addTrait(new RelativeCoordinateTrait(this::getX, y));
+        throw new UnsupportedOperationException();
     }
 
     default IWidget autoSize(Supplier<Integer> width, Supplier<Integer> height) {
-        return this.addTrait(new AutoSizeUpdateTrait(width, height));
+        throw new UnsupportedOperationException();
     }
 
     default IWidget autoWidth(Supplier<Integer> width) {
-        return this.addTrait(new AutoSizeUpdateTrait(width, this::getHeight));
+        throw new UnsupportedOperationException();
     }
 
     default IWidget autoHeight(Supplier<Integer> height) {
-        return this.addTrait(new AutoSizeUpdateTrait(this::getWidth, height));
+        throw new UnsupportedOperationException();
     }
 
     default IWidget dynamicSize() {
-        return this.addTrait(new DynamicSizeTrait());
+        throw new UnsupportedOperationException();
     }
 
 }

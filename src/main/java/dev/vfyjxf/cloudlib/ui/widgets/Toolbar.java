@@ -29,15 +29,6 @@ public class Toolbar<T extends IWidget> extends LinearLayout<T> {
         return this;
     }
 
-    @Override
-    public IWidgetGroup<T> add(int index, T widget) {
-        if (side.isHorizontal()) {
-            widget.setWidth(length);
-        } else {
-            widget.setHeight(length);
-        }
-        return super.add(index, widget);
-    }
 
     public Toolbar<T> fixedSize() {
         this.fixedSize = true;

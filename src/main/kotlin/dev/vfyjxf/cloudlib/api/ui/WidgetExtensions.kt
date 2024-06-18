@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui
 
+import dev.vfyjxf.cloudlib.api.ui.traits.CollectorTrait
 import dev.vfyjxf.cloudlib.api.ui.traits.ITrait
-import dev.vfyjxf.cloudlib.api.ui.traits.IUITraits
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup
 
@@ -14,16 +14,18 @@ infix fun <T : IWidget> IWidget.childOf(group: IWidgetGroup<T>) = apply {
     this.asChild(group)
 }
 
-inline infix fun <T : IWidget> T.trait(traitConfig: IUITraits.() -> Unit) = apply {
-    this.traits().traitConfig()
+infix fun <T : IWidget> T.trait(config: ITrait.() -> Unit) = apply {
+    val collector  = CollectorTrait()
+    collector.config()
+    this.trait = collector.toImmutable()
 }
 
-infix fun <T : IWidget> T.trait(trait: ITrait) = apply {
-    this.traits().then(trait)
-}
-
-inline fun <T : IWidget> T.onEvent(listeners : T.() -> Unit) = apply {
+inline fun <T : IWidget> T.onEvent(listeners: T.() -> Unit) = apply {
     this.listeners()
+}
+
+inline fun <C : IWidget, T : IWidgetGroup<C>> T.children(childrenAdditions: T.() -> Unit) = apply {
+    this.childrenAdditions()
 }
 
 

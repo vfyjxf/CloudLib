@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
-import dev.vfyjxf.cloudlib.api.event.IEventContext;
 import dev.vfyjxf.cloudlib.api.ui.IModularUI;
 import dev.vfyjxf.cloudlib.api.ui.drag.IDragConsumer;
 import dev.vfyjxf.cloudlib.api.ui.event.IInputEvent;
@@ -12,16 +11,18 @@ import net.minecraft.client.gui.GuiGraphics;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
 public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGroup<T> {
 
     protected final MutableList<T> children = Lists.mutable.empty();
-
+    protected final List<T> childrenView = children.asUnmodifiable();
 
     @Override
     public IWidgetGroup<T> setUI(@Nullable IModularUI ui) {
@@ -99,21 +100,32 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
 
 
     @Override
+    public int size() {
+        return children.size();
+    }
+
+    @Override
     public List<T> children() {
-        return children;
+        return childrenView;
     }
 
     @Override
     public IWidgetGroup<T> add(T widget) {
-        return this.add(children.size(), widget);
+        this.add(children.size(), widget);
+        return this;
     }
 
     @Override
-    public IWidgetGroup<T> add(int index, T widget) {
+    public boolean add(int index, T widget) {
         if (!children.contains(widget)) {
+            var context = context();
+            listeners(IWidgetEvent.onChildAdded).onChildAdded(context, widget);
+            if (context.isCancelled()) return false;
             children.add(index, widget);
+            listeners(IWidgetEvent.onChildAddedPost).onChildAdded(context, widget);
+            return true;
         }
-        return this;
+        return false;
     }
 
     @Override
@@ -147,29 +159,18 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        if (!visible) return;
-        graphics.pose().pushPose();
-        {
-            graphics.pose().translate(position.x, position.y, 0);
-            IEventContext context = context();
-            listeners(IWidgetEvent.onRender).onRender(graphics, mouseX, mouseY, partialTicks, context);
-            if (context.isCancelled()) return;
-            if (background != null)
-                background.render(graphics);
-            for (T child : children) {
-                graphics.pose().pushPose();
-                {
-                    graphics.pose().translate(position.x, position.y, 0);
-                    int translatedX = mouseX - this.position.x;
-                    int translatedY = mouseY - this.position.y;
-                    child.render(graphics, translatedX, translatedY, partialTicks);
-                }
-                graphics.pose().popPose();
+    protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        super.renderInternal(graphics, mouseX, mouseY, partialTicks);
+        for (T child : children) {
+            graphics.pose().pushPose();
+            {
+                graphics.pose().translate(position.x, position.y, 0);
+                int translatedX = mouseX - this.position.x;
+                int translatedY = mouseY - this.position.y;
+                child.render(graphics, translatedX, translatedY, partialTicks);
             }
-            listeners(IWidgetEvent.onRenderPost).onRender(graphics, mouseX, mouseY, partialTicks, context());
+            graphics.pose().popPose();
         }
-        graphics.pose().popPose();
     }
 
     @Override
@@ -210,7 +211,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
     @Override
     public boolean mouseClicked(IInputContext input) {
         if (!visible() || !active()) return false;
-        IEventContext context = context();
+        var context = context();
         boolean result = listeners(IInputEvent.onMouseClicked).onClicked(context, input);
         if (context.isCancelled()) return result;
         for (T child : children) {
@@ -224,7 +225,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
     @Override
     public boolean mouseReleased(IInputContext input) {
         if (!visible() || !active()) return false;
-        IEventContext context = context();
+        var context = context();
         boolean result = listeners(IInputEvent.onMouseReleased).onReleased(context, input);
         if (context.isCancelled()) return result;
         for (T child : children) {
@@ -252,7 +253,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
 
     @Override
     public boolean keyPressed(IInputContext input) {
-        IEventContext context = context();
+        var context = context();
         boolean result = listeners(IInputEvent.onKeyPressed).onKeyPressed(context, input);
         if (context.isCancelled()) return result;
         for (T child : children) {
@@ -265,7 +266,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
 
     @Override
     public boolean keyReleased(IInputContext input) {
-        IEventContext context = context();
+        var context = context();
         boolean result = listeners(IInputEvent.onKeyReleased).onKeyReleased(context, input);
         if (context.isCancelled()) return result;
         for (T child : children) {
@@ -285,8 +286,14 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
                 ", absolute=" + absolute +
                 ", size=" + size +
                 ", active=" + active +
-                ", visible=" + visible +
+                ", visibility=" + visibility +
                 ", moving=" + moving +
                 '}';
+    }
+
+    @NotNull
+    @Override
+    public Iterator<T> iterator() {
+        return childrenView.iterator();
     }
 }
