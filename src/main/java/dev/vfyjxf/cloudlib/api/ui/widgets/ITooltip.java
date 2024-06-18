@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import dev.vfyjxf.cloudlib.math.Point;
 import dev.vfyjxf.cloudlib.ui.widgets.ListTooltip;
 import dev.vfyjxf.cloudlib.ui.widgets.TooltipEntry;
@@ -102,7 +101,6 @@ public interface ITooltip {
     @Nullable
     ITooltipStack<?> stack();
 
-    @CanIgnoreReturnValue
     ITooltip setContextStack(@Nullable ITooltipStack<?> stack);
 
     interface Entry {

@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.event;
 
-import dev.vfyjxf.cloudlib.api.ui.event.IUIEventDefinition;
 import org.eclipse.collections.impl.list.mutable.FastList;
 
 import java.util.List;

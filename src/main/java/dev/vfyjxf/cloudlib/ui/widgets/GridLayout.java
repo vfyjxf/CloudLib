@@ -1,7 +1,6 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
-import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
 
 public class GridLayout<T extends IWidget> extends WidgetGroup<T> {
 

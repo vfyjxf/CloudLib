@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import dev.vfyjxf.cloudlib.api.event.IEventChannel;
 import dev.vfyjxf.cloudlib.api.event.IEventDefinition;
 import dev.vfyjxf.cloudlib.api.event.IEventHandler;
@@ -37,7 +36,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
 
     IModularUI getUI();
 
-    @CanIgnoreReturnValue
     IWidget setUI(@Nullable IModularUI ui);
 
     /**
@@ -51,7 +49,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
     @Nullable
     IWidgetGroup<? extends IWidget> parent();
 
-    @CanIgnoreReturnValue
     IWidget setParent(@Nullable IWidgetGroup<? super IWidget> parent);
 
     /**
@@ -63,7 +60,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
 
     }
 
-    @CanIgnoreReturnValue
     @ApiStatus.NonExtendable
     default IWidget onInit(IWidgetEvent.OnInit listener) {
         channel().register(IWidgetEvent.onInit, listener);
@@ -83,7 +79,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
 
     }
 
-    @CanIgnoreReturnValue
     @ApiStatus.NonExtendable
     default IWidget onUpdate(IWidgetEvent.OnUpdate listener) {
         channel().register(IWidgetEvent.onUpdate, listener);
@@ -103,7 +98,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
 
     }
 
-    @CanIgnoreReturnValue
     @ApiStatus.NonExtendable
     default IWidget onTick(IWidgetEvent.OnTick listener) {
         channel().register(IWidgetEvent.onTick, listener);
@@ -112,7 +106,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
 
     String getId();
 
-    @CanIgnoreReturnValue
     IWidget setId(String id);
 
     /**
@@ -135,22 +128,22 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
 
     IWidget setPos(Point position);
 
-    @CanIgnoreReturnValue
+
     default IWidget setPos(int x, int y) {
         return setPos(new Point(x, y));
     }
 
-    @CanIgnoreReturnValue
+
     default IWidget setX(int x) {
         return setPos(x, getY());
     }
 
-    @CanIgnoreReturnValue
+
     default IWidget setY(int y) {
         return setPos(getX(), y);
     }
 
-    @CanIgnoreReturnValue
+
     default IWidget translate(int dx, int dy) {
         return setPos(getPos().x + dx, getPos().y + dy);
     }
@@ -165,7 +158,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
         return getSize().height;
     }
 
-    @CanIgnoreReturnValue
     IWidget setSize(Dimension size);
 
     default IWidget setSize(int width, int height) {
@@ -363,7 +355,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
      * <p>
      * it's only for IWidgetGroup<IWidget>, if you need to add a widget to the group, use {@link IWidgetGroup#widget(IWidget)}.
      */
-    @CanIgnoreReturnValue
     <T extends IWidget> IWidget asChild(IWidgetGroup<T> parent);
 
     //////////////////////////////////////
@@ -378,31 +369,26 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
         return this;
     }
 
-    @CanIgnoreReturnValue
     @ApiStatus.NonExtendable
     default IWidget onRender(IWidgetEvent.OnRender listener) {
         return onEvent(IWidgetEvent.onRender, listener);
     }
 
-    @CanIgnoreReturnValue
     @ApiStatus.NonExtendable
     default IWidget onMouseClicked(IInputEvent.OnMouseClicked listener) {
         return onEvent(IInputEvent.onMouseClicked, listener);
     }
 
-    @CanIgnoreReturnValue
     @ApiStatus.NonExtendable
     default IWidget onMouseReleased(IInputEvent.OnMouseReleased listener) {
         return onEvent(IInputEvent.onMouseReleased, listener);
     }
 
-    @CanIgnoreReturnValue
     @ApiStatus.NonExtendable
     default IWidget onKeyReleased(IInputEvent.OnKeyReleased listener) {
         return onEvent(IInputEvent.onKeyReleased, listener);
     }
 
-    @CanIgnoreReturnValue
     @ApiStatus.NonExtendable
     default IWidget onKeyPressed(IInputEvent.OnKeyPressed listener) {
         return onEvent(IInputEvent.onKeyPressed, listener);
@@ -463,7 +449,6 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
 
     ITrait setTrait(ITrait trait);
 
-    @CanIgnoreReturnValue
     IWidget addTrait(ITrait trait);
 
     default IWidget addTrait(ITrait... traits) {

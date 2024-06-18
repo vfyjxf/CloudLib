@@ -1,9 +1,9 @@
 package dev.vfyjxf.cloudlib.event;
 
 import dev.vfyjxf.cloudlib.api.event.IEvent;
+import dev.vfyjxf.cloudlib.api.event.IEventChannel;
 import dev.vfyjxf.cloudlib.api.event.IEventDefinition;
 import dev.vfyjxf.cloudlib.api.event.IEventHandler;
-import dev.vfyjxf.cloudlib.api.event.IEventChannel;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
 

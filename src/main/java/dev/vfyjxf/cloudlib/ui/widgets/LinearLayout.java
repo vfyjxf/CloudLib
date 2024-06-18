@@ -1,7 +1,6 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
-import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
 
 //TODO:
 public class LinearLayout<T extends IWidget> extends WidgetGroup<T> {

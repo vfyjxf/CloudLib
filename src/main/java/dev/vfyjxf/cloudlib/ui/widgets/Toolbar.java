@@ -2,7 +2,6 @@ package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.UISide;
 import dev.vfyjxf.cloudlib.api.ui.widgets.IWidget;
-import dev.vfyjxf.cloudlib.api.ui.widgets.IWidgetGroup;
 import dev.vfyjxf.cloudlib.math.Dimension;
 
 public class Toolbar<T extends IWidget> extends LinearLayout<T> {

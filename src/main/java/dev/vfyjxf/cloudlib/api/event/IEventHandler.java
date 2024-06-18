@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.event;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 
 public interface IEventHandler<E extends IEventHandler<E>> {
 
@@ -22,7 +21,7 @@ public interface IEventHandler<E extends IEventHandler<E>> {
         return channel().get(definition).invoker();
     }
 
-    @CanIgnoreReturnValue
+
     default <T> T registerListener(IEventDefinition<T> definition, T listener) {
         return channel().get(definition).register(listener);
     }
