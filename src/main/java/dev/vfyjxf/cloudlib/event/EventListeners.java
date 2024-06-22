@@ -24,5 +24,9 @@ public final class EventListeners {
         NeoForge.EVENT_BUS.addListener(priority, false, type, listener);
     }
 
+    public static void unregister(Object listener) {
+        NeoForge.EVENT_BUS.unregister(listener);
+    }
+
 
 }

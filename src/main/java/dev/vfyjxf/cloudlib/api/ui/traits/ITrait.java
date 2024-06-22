@@ -93,7 +93,7 @@ public interface ITrait {
             if (isAttached)
                 throw new IllegalStateException("DataNode is already attached");
             if (holder == null)
-                throw new IllegalStateException("DataNode attachment called without holder");
+                throw new IllegalStateException("DataNode attachment called without handler");
             setAttached(true);
         }
 

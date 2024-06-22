@@ -9,9 +9,12 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Mod(Constants.MOD_ID)
 public class CloudLib {
+    public static final Logger logger = LogManager.getLogger("CloudLib");
     private static CommonStartup startup;
 
     public CloudLib(IEventBus modBus, Dist dist) {

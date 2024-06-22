@@ -21,6 +21,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,6 +50,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
     @Nullable
     IWidgetGroup<? extends IWidget> parent();
 
+    @Contract
     IWidget setParent(@Nullable IWidgetGroup<? super IWidget> parent);
 
     /**
@@ -404,12 +406,12 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
 
     default boolean mouseClicked(IInputContext input) {
         if (!visible() || !active() || !isMouseOver(input)) return false;
-        return listeners(IInputEvent.onMouseClicked).onClicked(context(), input);
+        return listeners(IInputEvent.onMouseClicked).onClicked(common(), input);
     }
 
     default boolean mouseReleased(IInputContext input) {
         if (!visible() || !active() || !isMouseOver(input)) return false;
-        return listeners(IInputEvent.onKeyReleased).onKeyReleased(context(), input);
+        return listeners(IInputEvent.onKeyReleased).onKeyReleased(common(), input);
     }
 
     default boolean mouseScrolled(double mouseX, double mouseY, double amount) {
@@ -426,12 +428,12 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
 
     default boolean keyPressed(IInputContext input) {
         if (!visible() || !active()) return false;
-        return listeners(IInputEvent.onKeyPressed).onKeyPressed(context(), input);
+        return listeners(IInputEvent.onKeyPressed).onKeyPressed(common(), input);
     }
 
     default boolean keyReleased(IInputContext input) {
         if (!visible() || !active()) return false;
-        return listeners(IInputEvent.onKeyReleased).onKeyReleased(context(), input);
+        return listeners(IInputEvent.onKeyReleased).onKeyReleased(common(), input);
     }
 
     @Override

@@ -10,16 +10,16 @@ import org.eclipse.collections.api.map.MutableMap;
 @SuppressWarnings("unchecked")
 public class EventChannel<E extends IEventHandler<E>> implements IEventChannel<E> {
 
-    private final E holder;
+    private final E handler;
     private final MutableMap<IEventDefinition<?>, IEvent<?>> listeners = Maps.mutable.empty();
 
-    public EventChannel(E holder) {
-        this.holder = holder;
+    public EventChannel(E handler) {
+        this.handler = handler;
     }
 
     @Override
-    public E holder() {
-        return holder;
+    public E handler() {
+        return handler;
     }
 
     @Override

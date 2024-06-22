@@ -7,12 +7,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 @NotThreadSafe
 public interface IEventChannel<E extends IEventHandler<E>> {
 
-    static IEventChannel<?> global() {
-        //TODO:global event bus.
-        return Singletons.get(IEventChannel.class);
-    }
-
-    IEventHandler<E> holder();
+    IEventHandler<E> handler();
 
     default IEventContext.Common context(){
         return new IEventContext.Common(this);

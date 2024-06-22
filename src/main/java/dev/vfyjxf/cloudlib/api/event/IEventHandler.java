@@ -5,15 +5,15 @@ public interface IEventHandler<E extends IEventHandler<E>> {
 
     IEventChannel<E> channel();
 
-    default IEventContext.Common context() {
+    default IEventContext.Common common() {
         return channel().context();
     }
 
-    default IEventContext.Cancelable cancelableCtx() {
+    default IEventContext.Cancelable cancelable() {
         return channel().cancelable();
     }
 
-    default IEventContext.Interruptible interruptibleCtx() {
+    default IEventContext.Interruptible interruptible() {
         return channel().interruptible();
     }
 
@@ -22,19 +22,19 @@ public interface IEventHandler<E extends IEventHandler<E>> {
     }
 
 
-    default <T> T registerListener(IEventDefinition<T> definition, T listener) {
+    default <T> T register(IEventDefinition<T> definition, T listener) {
         return channel().get(definition).register(listener);
     }
 
-    default <T> void unregisterListener(IEventDefinition<T> definition, T listener) {
+    default <T> void unregister(IEventDefinition<T> definition, T listener) {
         channel().get(definition).unregister(listener);
     }
 
-    default <T> void clearListeners(IEventDefinition<T> definition) {
+    default <T> void clear(IEventDefinition<T> definition) {
         channel().get(definition).clearListeners();
     }
 
-    default void clearAllListeners() {
+    default void clearAll() {
         channel().clearAllListeners();
     }
 

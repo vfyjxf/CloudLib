@@ -33,6 +33,7 @@ minecraft {
 configurations {
     libraries {}
     implementation.extendsFrom libraries
+    runtimeClasspath.extendsFrom localRuntime
 }
 
 runs {
@@ -52,6 +53,7 @@ runs {
     }
 
     client {
+        programArguments("--username", "Developer")
         systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
     }
 
@@ -110,8 +112,8 @@ dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
 
     compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
-    localRunRuntime "maven.modrinth:jei:${jei_version}-neoforge"
-    implementation 'thedarkcolour:kotlinforforge-neoforge:5.2.0'
+    localRuntime "maven.modrinth:jei:${jei_version}-neoforge"
+    implementation 'thedarkcolour:kotlinforforge-neoforge:5.3.0'
     libraries "org.eclipse.collections:eclipse-collections-api:11.1.0"
     jarJar "org.eclipse.collections:eclipse-collections-api:[11.1.0,)"
     libraries "org.eclipse.collections:eclipse-collections:11.1.0"
@@ -120,16 +122,20 @@ dependencies {
 
 tasks.withType(ProcessResources).configureEach {
     var replaceProperties = [
-            minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
-            neo_version         : neo_version, neo_version_range: neo_version_range,
-            loader_version_range: loader_version_range,
-            mod_id              : mod_id, mod_name: mod_name, mod_version: mod_version,
-            jei_version         : jei_version
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            neo_version_range      : neo_version_range,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_version            : mod_version,
+            jei_version            : jei_version
     ]
     inputs.properties replaceProperties
 
-    filesMatching(['META-INF/mods.toml']) {
-        expand replaceProperties + [project: project]
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand replaceProperties
     }
 }
 

@@ -43,7 +43,7 @@ public class UIRegistry implements IUIRegistry {
     @Override
     public void registerOverlayProvider(IOverlayProvider provider) {
         if (overlayProviders.contains(provider)) {
-            throw new IllegalArgumentException("Overlay provider " + provider.getClass().getName() + " already exists!");
+            throw new IllegalArgumentException("Overlay handler " + provider.getClass().getName() + " already exists!");
         }
         overlayProviders.add(provider);
     }

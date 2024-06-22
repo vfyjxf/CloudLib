@@ -118,7 +118,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
     @Override
     public boolean add(int index, T widget) {
         if (!children.contains(widget)) {
-            var context = context();
+            var context = common();
             listeners(IWidgetEvent.onChildAdded).onChildAdded(context, widget);
             if (context.isCancelled()) return false;
             children.add(index, widget);
@@ -211,7 +211,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
     @Override
     public boolean mouseClicked(IInputContext input) {
         if (!visible() || !active()) return false;
-        var context = context();
+        var context = common();
         boolean result = listeners(IInputEvent.onMouseClicked).onClicked(context, input);
         if (context.isCancelled()) return result;
         for (T child : children) {
@@ -225,7 +225,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
     @Override
     public boolean mouseReleased(IInputContext input) {
         if (!visible() || !active()) return false;
-        var context = context();
+        var context = common();
         boolean result = listeners(IInputEvent.onMouseReleased).onReleased(context, input);
         if (context.isCancelled()) return result;
         for (T child : children) {
@@ -253,7 +253,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
 
     @Override
     public boolean keyPressed(IInputContext input) {
-        var context = context();
+        var context = common();
         boolean result = listeners(IInputEvent.onKeyPressed).onKeyPressed(context, input);
         if (context.isCancelled()) return result;
         for (T child : children) {
@@ -266,7 +266,7 @@ public class WidgetGroup<T extends IWidget> extends Widget implements IWidgetGro
 
     @Override
     public boolean keyReleased(IInputContext input) {
-        var context = context();
+        var context = common();
         boolean result = listeners(IInputEvent.onKeyReleased).onKeyReleased(context, input);
         if (context.isCancelled()) return result;
         for (T child : children) {

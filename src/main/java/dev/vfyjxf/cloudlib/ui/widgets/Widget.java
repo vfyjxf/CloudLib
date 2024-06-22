@@ -67,11 +67,11 @@ public class Widget implements IWidget {
         graphics.pose().pushPose();
         {
             graphics.pose().translate(position.x, position.y, 0);
-            var context = context();
+            var context = common();
             listeners(IWidgetEvent.onRender).onRender(graphics, mouseX, mouseY, partialTicks, context);
             if (context.isCancelled()) return;
             renderInternal(graphics, mouseX, mouseY, partialTicks);
-            listeners(IWidgetEvent.onRenderPost).onRender(graphics, mouseX, mouseY, partialTicks, context());
+            listeners(IWidgetEvent.onRenderPost).onRender(graphics, mouseX, mouseY, partialTicks, common());
         }
         graphics.pose().popPose();
     }
@@ -214,7 +214,7 @@ public class Widget implements IWidget {
 
     @Override
     public IWidget setPos(Point position) {
-        var context = context();
+        var context = common();
         listeners(IWidgetEvent.onPositionChanged).onPositionChanged(context, position);
         if (context.isCancelled()) return this;
         this.position = position;
@@ -228,7 +228,7 @@ public class Widget implements IWidget {
 
     @Override
     public IWidget setSize(Dimension size) {
-        var context = context();
+        var context = common();
         listeners(IWidgetEvent.onSizeChanged).onSizeChanged(context, size);
         if (context.isCancelled()) return this;
         this.size = size;

@@ -6,7 +6,7 @@ public sealed interface IEventContext permits IEventContext.Common, IEventContex
 
     @SuppressWarnings("unchecked")
     default <T> T holder() {
-        return (T) getManager().holder();
+        return (T) getManager().handler();
     }
 
     boolean isCancelled();
