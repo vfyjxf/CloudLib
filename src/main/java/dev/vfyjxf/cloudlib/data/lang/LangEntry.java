@@ -1,14 +1,15 @@
 package dev.vfyjxf.cloudlib.data.lang;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 
 public record LangEntry(String key, String value) {
 
-    public Component get() {
+    public MutableComponent get() {
         return Component.translatable(this.key);
     }
 
-    public Component get(Object... args) {
+    public MutableComponent get(Object... args) {
         return Component.translatable(this.key, args);
     }
 

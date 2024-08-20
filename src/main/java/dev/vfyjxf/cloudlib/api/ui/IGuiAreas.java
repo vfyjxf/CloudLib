@@ -5,10 +5,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
+//TODO:Rewrite
 public interface IGuiAreas<T extends Screen> {
 
     /**
-     *If null, returns {@link IArea#EMPTY}
+     * If null, returns {@link IArea#EMPTY}
      */
     IArea mainArea(@Nullable T screen);
 

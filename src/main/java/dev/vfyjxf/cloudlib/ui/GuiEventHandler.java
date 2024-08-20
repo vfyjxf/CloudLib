@@ -40,6 +40,7 @@ public class GuiEventHandler {
         }
         overlay.getMainGroup().show();
         screen = event.getScreen();
+        throw new NullPointerException();
     }
 
     @SubscribeEvent

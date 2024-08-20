@@ -3,6 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.event;
 import dev.vfyjxf.cloudlib.api.annotations.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.event.EventFactory;
 import dev.vfyjxf.cloudlib.api.event.IEvent;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.List;
 import java.util.function.Function;
@@ -17,6 +18,7 @@ public final class UIEventFactory {
         return new UIEventDefinition<>(type, listener);
     }
 
+    @ApiStatus.Internal
     private static class UIEventDefinition<T> implements IUIEventDefinition<T> {
 
         private final Class<T> type;
@@ -27,10 +29,6 @@ public final class UIEventFactory {
             this.type = type;
             this.function = function;
             this.global = EventFactory.createEvent(function);
-        }
-
-        public Function<List<T>, T> function() {
-            return function;
         }
 
         @Override

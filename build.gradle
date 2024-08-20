@@ -5,7 +5,7 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.0.145'
+    id 'net.neoforged.moddev' version '0.1.126'
     id "io.github.p03w.machete" version "2.+"
     id 'org.jetbrains.kotlin.jvm' version '2.0.0'
 }
@@ -24,49 +24,63 @@ base {
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 compileKotlin.compilerOptions.jvmTarget = JvmTarget.JVM_21
 
-minecraft {
-    accessTransformers {
-        file('src/main/resources/META-INF/accesstransformer.cfg')
-    }
-}
-
 configurations {
-    libraries {}
-    implementation.extendsFrom libraries
     runtimeClasspath.extendsFrom localRuntime
 }
 
-runs {
-    configureEach {
-        systemProperty 'forge.logging.markers', 'REGISTRIES'
-        systemProperty 'forge.logging.console.level', 'debug'
-        modSource project.sourceSets.main
+neoForge {
+    version = project.neo_version
 
-        if (isJetBrainsRuntime()) {
-            jvmArgument "-XX:+AllowEnhancedClassRedefinition"
-            jvmArgument "-XX:HotswapAgent=fatjar"
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
+
+    accessTransformers.add('src/main/resources/META-INF/accesstransformer.cfg')
+    runs {
+        client {
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
-        dependencies {
-            runtime project.configurations.libraries
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        data {
+            data()
+            gameDirectory = project.file('run-data')
+
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+
+            if (isJetBrainsRuntime()) {
+                jvmArgument "-XX:+AllowEnhancedClassRedefinition"
+                jvmArgument "-XX:HotswapAgent=fatjar"
+            }
+
         }
     }
 
-    client {
-        programArguments("--username", "Developer")
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
     }
 
-    server {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-        programArgument '--nogui'
-    }
-    gameTestServer {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-    }
-
-    data {
-        programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+    unitTest {
+        enable()
+        testedMod = mods."${mod_id}"
     }
 }
 
@@ -109,15 +123,20 @@ repositories {
 }
 
 dependencies {
-    implementation "net.neoforged:neoforge:${neo_version}"
-
     compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
     localRuntime "maven.modrinth:jei:${jei_version}-neoforge"
     implementation 'thedarkcolour:kotlinforforge-neoforge:5.3.0'
-    libraries "org.eclipse.collections:eclipse-collections-api:11.1.0"
+    clientAdditionalRuntimeClasspath(implementation("org.eclipse.collections:eclipse-collections-api:11.1.0"))
     jarJar "org.eclipse.collections:eclipse-collections-api:[11.1.0,)"
-    libraries "org.eclipse.collections:eclipse-collections:11.1.0"
+    clientAdditionalRuntimeClasspath(implementation("org.eclipse.collections:eclipse-collections:11.1.0"))
     jarJar "org.eclipse.collections:eclipse-collections:[11.1.0,)"
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 tasks.withType(ProcessResources).configureEach {
@@ -148,13 +167,13 @@ java {
     withSourcesJar()
 }
 
-tasks.jar.configure {
-    archiveClassifier.set('slim')
-}
-
-tasks.jarJar.configure {
-    archiveClassifier.set('')
-}
+//tasks.jar.configure {
+//    archiveClassifier.set('slim')
+//}
+//
+//tasks.jarJar.configure {
+//    archiveClassifier.set('')
+//}
 
 // configure the maven publication
 publishing {

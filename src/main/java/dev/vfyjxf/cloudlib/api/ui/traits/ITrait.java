@@ -71,7 +71,7 @@ public interface ITrait {
 
     }
 
-    abstract class DataNode {
+    abstract class Node {
         protected boolean isAttached = false;
         @Nullable
         private IWidget holder = null;
@@ -91,9 +91,9 @@ public interface ITrait {
         @ApiStatus.Internal
         public void markAsAttached() {
             if (isAttached)
-                throw new IllegalStateException("DataNode is already attached");
+                throw new IllegalStateException("Node is already attached");
             if (holder == null)
-                throw new IllegalStateException("DataNode attachment called without handler");
+                throw new IllegalStateException("Node attachment called without handler");
             setAttached(true);
         }
 

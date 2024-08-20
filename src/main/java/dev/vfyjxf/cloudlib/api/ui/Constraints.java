@@ -9,6 +9,14 @@ public class Constraints {
     private final int maxWidth;
     private final int maxHeight;
 
+    public static Constraints create(int width, int height) {
+        return new Constraints(width, height, width, height);
+    }
+
+    public static Constraints create(int minWidth, int minHeight, int maxWidth, int maxHeight) {
+        return new Constraints(minWidth, minHeight, maxWidth, maxHeight);
+    }
+
     public Constraints(int minWidth, int minHeight, int maxWidth, int maxHeight) {
         this.minWidth = minWidth;
         this.minHeight = minHeight;
@@ -22,6 +30,34 @@ public class Constraints {
 
     public Constraints copy() {
         return new Constraints(minWidth, minHeight, maxWidth, maxHeight);
+    }
+
+    public Constraints withMinWidth(int minWidth) {
+        return new Constraints(minWidth, minHeight, maxWidth, maxHeight);
+    }
+
+    public Constraints withMinHeight(int minHeight) {
+        return new Constraints(minWidth, minHeight, maxWidth, maxHeight);
+    }
+
+    public Constraints withMaxWidth(int maxWidth) {
+        return new Constraints(minWidth, minHeight, maxWidth, maxHeight);
+    }
+
+    public Constraints withMaxHeight(int maxHeight) {
+        return new Constraints(minWidth, minHeight, maxWidth, maxHeight);
+    }
+
+    public Constraints withWidth(int width) {
+        return new Constraints(width, minHeight, width, maxHeight);
+    }
+
+    public Constraints withHeight(int height) {
+        return new Constraints(minWidth, height, maxWidth, height);
+    }
+
+    public Constraints withSize(int size) {
+        return new Constraints(size, size, size, size);
     }
 
     @Override

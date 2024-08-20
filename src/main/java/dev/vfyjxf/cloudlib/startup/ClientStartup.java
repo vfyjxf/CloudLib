@@ -36,8 +36,9 @@ public class ClientStartup extends CommonStartup {
         super.loadComplete(event);
         event.enqueueWork(() -> {
             Singletons.attachInstance(IUIOverlay.class, new UIOverlay(new ClientModularUI()));
+            IUIRegistry registry = Singletons.get(IUIRegistry.class);
             for (IModPlugin plugin : plugins) {
-                plugin.registerUI(Singletons.get(IUIRegistry.class));
+                plugin.registerUI(registry);
             }
         });
     }

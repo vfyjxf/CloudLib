@@ -42,10 +42,6 @@ public final class EventFactory {
             this.global = new Event<>(function);
         }
 
-        public Function<List<T>, T> function() {
-            return function;
-        }
-
         @Override
         public Class<T> type() {
             return type;
@@ -107,7 +103,7 @@ public final class EventFactory {
 
         public void update() {
             if (listeners.size() == 1) {
-                invoker = listeners.get(0);
+                invoker = listeners.getFirst();
             } else {
                 invoker = function.apply(listeners);
             }

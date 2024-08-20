@@ -3,7 +3,7 @@ loaderVersion = "${loader_version_range}"
 license = "MIT License"
 
 [[mixins]]
-config="cloudlib.mixins.json"
+config="${mod_id}.mixins.json"
 
 [[mods]]
 modId = "${mod_id}"
@@ -14,23 +14,23 @@ description = '''
 '''
 authors = "vfyjxf_"
 
-[[dependencies.${mod_id}]]
+[[dependencies."${mod_id}"]]
 modId = "neoforge"
 type = "required"
 versionRange="${neo_version_range}"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies."${mod_id}"]]
 modId = "minecraft"
 type="required"
 versionRange="${minecraft_version_range}"
 ordering="NONE"
 side="BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies."${mod_id}"]]
 modId = "jei"
-type="required"
+type="after"
 versionRange = "[${jei_version},)"
 ordering = "AFTER"
 side = "BOTH"

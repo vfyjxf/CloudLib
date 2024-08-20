@@ -8,17 +8,17 @@ import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
 
 @SuppressWarnings("unchecked")
-public class EventChannel<E extends IEventHandler<E>> implements IEventChannel<E> {
+public class EventChannel implements IEventChannel {
 
-    private final E handler;
+    private final IEventHandler handler;
     private final MutableMap<IEventDefinition<?>, IEvent<?>> listeners = Maps.mutable.empty();
 
-    public EventChannel(E handler) {
+    public EventChannel(IEventHandler handler) {
         this.handler = handler;
     }
 
     @Override
-    public E handler() {
+    public IEventHandler handler() {
         return handler;
     }
 

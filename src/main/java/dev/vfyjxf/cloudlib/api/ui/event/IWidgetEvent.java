@@ -24,9 +24,9 @@ public interface IWidgetEvent {
         }
     });
 
-    IUIEventDefinition<OnAttributesAdded> onAttributesAdded = UIEventFactory.define(OnAttributesAdded.class, listeners -> (context, attribute) -> {
+    IUIEventDefinition<OnTraitUpdate> onAttributesAdded = UIEventFactory.define(OnTraitUpdate.class, listeners -> (context, trait) -> {
         for (var listener : listeners) {
-            listener.onAttributesAdded(context, attribute);
+            listener.onTraitUpdate(context, trait);
             if (context.isInterrupted()) return;
         }
     });
@@ -105,17 +105,21 @@ public interface IWidgetEvent {
         }
     });
 
-    IUIEventDefinition<OnMeasure> onMeasure = UIEventFactory.define(OnMeasure.class, listeners -> (context, size) -> {
+    IUIEventDefinition<OnMeasure> onMeasure = UIEventFactory.define(OnMeasure.class, listeners -> (widget, size) -> {
         for (var listener : listeners) {
-            listener.onMeasure(context, size);
-            if (context.isInterrupted()) return;
+            listener.onMeasure(widget, size);
         }
     });
 
     IUIEventDefinition<OnLayout> onLayout = UIEventFactory.define(OnLayout.class, listeners -> (context) -> {
         for (var listener : listeners) {
             listener.onLayout(context);
-            if (context.isInterrupted()) return;
+        }
+    });
+
+    IUIEventDefinition<OnThemeUpdate> onThemeUpdate = UIEventFactory.define(OnThemeUpdate.class, listeners -> () -> {
+        for (var listener : listeners) {
+            listener.onThemeUpdate();
         }
     });
 
@@ -130,8 +134,8 @@ public interface IWidgetEvent {
     }
 
     @FunctionalInterface
-    interface OnAttributesAdded extends IWidgetEvent {
-        void onAttributesAdded(Common context, ITrait attribute);
+    interface OnTraitUpdate extends IWidgetEvent {
+        void onTraitUpdate(Common context, ITrait trait);
     }
 
     @FunctionalInterface
@@ -190,11 +194,15 @@ public interface IWidgetEvent {
     }
 
     interface OnMeasure extends IWidgetEvent {
-        void onMeasure(Common context, Dimension size);
+        void onMeasure(IWidget widget, Dimension size);
     }
 
     interface OnLayout extends IWidgetEvent {
-        void onLayout(Common context);
+        void onLayout(IWidget widget);
+    }
+
+    interface OnThemeUpdate extends IWidgetEvent {
+        void onThemeUpdate();
     }
 
 }

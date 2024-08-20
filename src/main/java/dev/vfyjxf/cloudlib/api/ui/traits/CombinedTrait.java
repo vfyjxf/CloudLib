@@ -13,6 +13,13 @@ public class CombinedTrait implements ITrait {
         this.inner = inner;
     }
 
+    public ITrait getOuter() {
+        return outer;
+    }
+
+    public ITrait getInner() {
+        return inner;
+    }
 
     @Override
     public <T> T foldIn(T initial, BiFunction<T, ITraitElement, T> operator) {

@@ -17,11 +17,13 @@ public class UIConfig {
     }
 
     @SuppressWarnings("unchecked")
+    @Nullable
     public <T> T put(@NotNull ResourceLocation identifier, @NotNull IState<T> state) {
         //noinspection
         return (T) states.put(identifier, state);
     }
 
+    @SuppressWarnings("unchecked")
     @Nullable
     public <T> T get(ResourceLocation identifier) {
         return (T) states.get(identifier);

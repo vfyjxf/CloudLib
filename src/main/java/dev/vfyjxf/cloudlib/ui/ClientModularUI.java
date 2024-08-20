@@ -43,8 +43,8 @@ public class ClientModularUI implements IModularUI {
                 .setUI(this)
                 .setPos(Point.ZERO)
                 .setSize(this.getScreenWidth(), this.getScreenHeight())
-                .fixedPosition()
-                .autoSize(this::getScreenWidth, this::getScreenHeight)
+//                .fixedPosition()
+//                .autoSize(this::getScreenWidth, this::getScreenHeight)
                 .onKeyPressed((context, input) -> {
                     if (input.is(KeyMappings.refreshUI)) {
                         mainGroup = null;

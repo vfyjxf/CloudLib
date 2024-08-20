@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 @SuppressWarnings("unchecked")
 public class Widget implements IWidget {
 
-    protected final EventChannel<IWidget> eventChannel = new EventChannel<>(this);
+    protected final EventChannel eventChannel = new EventChannel(this);
     protected IModularUI ui;
     protected boolean initialized = false;
     protected IWidgetGroup<?> root;
@@ -162,7 +162,7 @@ public class Widget implements IWidget {
     }
 
     @Override
-    public IEventChannel<IWidget> channel() {
+    public IEventChannel channel() {
         return eventChannel;
     }
 

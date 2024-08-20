@@ -15,7 +15,7 @@ import java.util.List;
  *
  */
 @Singleton
-public interface IUIOverlay extends IRenderable, IEventHandler<IUIOverlay> {
+public interface IUIOverlay extends IRenderable, IEventHandler {
 
     static IUIOverlay getInstance() {
         return Singletons.get(IUIOverlay.class);

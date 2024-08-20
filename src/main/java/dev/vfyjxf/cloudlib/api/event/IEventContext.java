@@ -2,11 +2,11 @@ package dev.vfyjxf.cloudlib.api.event;
 
 public sealed interface IEventContext permits IEventContext.Common, IEventContext.Cancelable, IEventContext.Interruptible {
 
-    IEventChannel<?> getManager();
+    IEventChannel getChannel();
 
     @SuppressWarnings("unchecked")
-    default <T> T holder() {
-        return (T) getManager().handler();
+    default <T> T handler() {
+        return (T) getChannel().handler();
     }
 
     boolean isCancelled();
@@ -15,17 +15,17 @@ public sealed interface IEventContext permits IEventContext.Common, IEventContex
 
     final class Common implements IEventContext {
 
-        private final IEventChannel<?> manager;
+        private final IEventChannel channel;
         private boolean cancelled = false;
         private boolean interrupted = false;
 
-        public Common(IEventChannel<?> manager) {
-            this.manager = manager;
+        public Common(IEventChannel channel) {
+            this.channel = channel;
         }
 
         @Override
-        public IEventChannel<?> getManager() {
-            return manager;
+        public IEventChannel getChannel() {
+            return channel;
         }
 
         @Override
@@ -50,16 +50,16 @@ public sealed interface IEventContext permits IEventContext.Common, IEventContex
 
     final class Cancelable implements IEventContext {
 
-        private final IEventChannel<?> manager;
+        private final IEventChannel channel;
         private boolean cancelled = false;
 
-        public Cancelable(IEventChannel<?> manager) {
-            this.manager = manager;
+        public Cancelable(IEventChannel channel) {
+            this.channel = channel;
         }
 
         @Override
-        public IEventChannel<?> getManager() {
-            return manager;
+        public IEventChannel getChannel() {
+            return channel;
         }
 
         @Override
@@ -80,16 +80,16 @@ public sealed interface IEventContext permits IEventContext.Common, IEventContex
 
     final class Interruptible implements IEventContext {
 
-        private final IEventChannel<?> manager;
+        private final IEventChannel channel;
         private boolean interrupted = false;
 
-        public Interruptible(IEventChannel<?> manager) {
-            this.manager = manager;
+        public Interruptible(IEventChannel channel) {
+            this.channel = channel;
         }
 
         @Override
-        public IEventChannel<?> getManager() {
-            return manager;
+        public IEventChannel getChannel() {
+            return channel;
         }
 
         @Override

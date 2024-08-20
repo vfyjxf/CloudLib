@@ -22,7 +22,7 @@ public class Singletons {
     public static <T> T get(Class<T> type) {
         T t = getNullable(type);
         if (t == null) {
-            throw new RuntimeException("Singleton of type " + type.getCanonicalName() + " not registered");
+            throw new IllegalStateException("Singleton of type " + type.getCanonicalName() + " not registered");
         }
         return t;
     }

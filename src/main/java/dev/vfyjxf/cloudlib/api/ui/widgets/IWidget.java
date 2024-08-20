@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import dev.vfyjxf.cloudlib.api.event.IEventChannel;
 import dev.vfyjxf.cloudlib.api.event.IEventDefinition;
 import dev.vfyjxf.cloudlib.api.event.IEventHandler;
@@ -29,7 +30,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>, IAnimatable<IWidget> {
+public interface IWidget extends IRenderable, IDraggable, IEventHandler, IAnimatable<IWidget> {
 
     //////////////////////////////////////
     //********       Basic     *********//
@@ -50,7 +51,8 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
     @Nullable
     IWidgetGroup<? extends IWidget> parent();
 
-    @Contract
+    @Contract("_ -> this")
+    @CanIgnoreReturnValue
     IWidget setParent(@Nullable IWidgetGroup<? super IWidget> parent);
 
     /**
@@ -364,7 +366,7 @@ public interface IWidget extends IRenderable, IDraggable, IEventHandler<IWidget>
     //////////////////////////////////////
 
     @Override
-    IEventChannel<IWidget> channel();
+    IEventChannel channel();
 
     default <T> IWidget onEvent(IEventDefinition<T> definition, T listener) {
         channel().register(definition, listener);

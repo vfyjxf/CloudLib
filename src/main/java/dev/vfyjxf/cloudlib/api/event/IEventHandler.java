@@ -1,9 +1,9 @@
 package dev.vfyjxf.cloudlib.api.event;
 
 
-public interface IEventHandler<E extends IEventHandler<E>> {
+public interface IEventHandler {
 
-    IEventChannel<E> channel();
+    IEventChannel channel();
 
     default IEventContext.Common common() {
         return channel().context();

@@ -1,13 +1,11 @@
 package dev.vfyjxf.cloudlib.api.event;
 
-import dev.vfyjxf.cloudlib.utils.Singletons;
-
 import javax.annotation.concurrent.NotThreadSafe;
 
 @NotThreadSafe
-public interface IEventChannel<E extends IEventHandler<E>> {
+public interface IEventChannel {
 
-    IEventHandler<E> handler();
+    IEventHandler handler();
 
     default IEventContext.Common context(){
         return new IEventContext.Common(this);

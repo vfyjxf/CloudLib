@@ -12,7 +12,7 @@ import java.awt.Color;
 
 public class UIOverlay implements IUIOverlay {
 
-    private final IEventChannel<IUIOverlay> events = new EventChannel<>(this);
+    private final IEventChannel events = new EventChannel(this);
 
     private IModularUI ui;
     private Rectangle bounds;
@@ -82,7 +82,7 @@ public class UIOverlay implements IUIOverlay {
     }
 
     @Override
-    public IEventChannel<IUIOverlay> channel() {
+    public IEventChannel channel() {
         return this.events;
     }
 }

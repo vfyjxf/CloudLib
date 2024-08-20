@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.traits;
 
-public abstract class TraitNodeElement<N extends ITrait.DataNode> implements ITraitElement {
+public abstract class TraitNodeElement<N extends ITrait.Node> implements ITraitElement {
 
     public abstract N create();
 
