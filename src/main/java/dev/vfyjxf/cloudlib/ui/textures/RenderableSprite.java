@@ -6,14 +6,14 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import dev.vfyjxf.cloudlib.api.ui.IRenderableTexture;
+import dev.vfyjxf.cloudlib.api.ui.RenderableTexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 
-public class RenderableSprite implements IRenderableTexture {
+public class RenderableSprite implements RenderableTexture {
     private final SpriteUploader spriteUploader;
     private final ResourceLocation location;
     private final int width;

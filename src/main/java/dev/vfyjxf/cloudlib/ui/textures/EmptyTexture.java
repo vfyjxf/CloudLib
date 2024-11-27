@@ -1,9 +1,9 @@
 package dev.vfyjxf.cloudlib.ui.textures;
 
-import dev.vfyjxf.cloudlib.api.ui.IRenderableTexture;
+import dev.vfyjxf.cloudlib.api.ui.RenderableTexture;
 import net.minecraft.client.gui.GuiGraphics;
 
-public class EmptyTexture implements IRenderableTexture {
+public class EmptyTexture implements RenderableTexture {
     @Override
     public int getWidth() {
         return 0;

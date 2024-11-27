@@ -6,13 +6,12 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
- * Based Architectury event system.
  * <p>
  * Some basic promises:
  * <p>
- * 1. The naming of channel follows the lowercase hump naming
+ * 1. The naming define events follows the lowercase hump naming
  * <p>
- * 2. Pre-phase channel do not need to add the Pre suffix, but Post-phase channel need to add the Post suffix.
+ * 2. Pre-phase events do not need to add the Pre suffix, but Post-phase events need to add the Post suffix.
  * <p>
  * 3. Usually, an event is defined in an interface with its listeners.
  */
@@ -22,24 +21,29 @@ public final class EventFactory {
     private EventFactory() {
     }
 
-    public static <T> IEventDefinition<T> define(Class<T> type, Function<List<T>, T> invokerFactory) {
-        return new EventDefinition<>(type, invokerFactory);
+    public static <T> EventDefinition<T> define(Class<T> type, Function<List<T>, T> invokerFactory) {
+        return new EventDefinitionImpl<>(type, invokerFactory);
     }
 
-    public static <T> IEvent<T> createEvent(Function<List<T>, T> invokerFactory) {
-        return new Event<>(invokerFactory);
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static <T> EventDefinition<T> defineGeneric(Class<? super T> type, Function<List<? extends T>, ? extends T> invokerFactory) {
+        return new EventDefinitionImpl<>(type, (Function) invokerFactory);
     }
 
-    private static class EventDefinition<T> implements IEventDefinition<T> {
+    public static <T> Event<T> createEvent(Function<List<T>, T> invokerFactory) {
+        return new EventImpl<>(invokerFactory);
+    }
+
+    private static class EventDefinitionImpl<T> implements EventDefinition<T> {
 
         private final Class<T> type;
         private final Function<List<T>, T> function;
-        private final IEvent<T> global;
+        private final Event<T> global;
 
-        private EventDefinition(Class<T> type, Function<List<T>, T> function) {
+        private EventDefinitionImpl(Class<T> type, Function<List<T>, T> function) {
             this.type = type;
             this.function = function;
-            this.global = new Event<>(function);
+            this.global = new EventImpl<>(function);
         }
 
         @Override
@@ -48,22 +52,22 @@ public final class EventFactory {
         }
 
         @Override
-        public IEvent<T> create() {
-            return new Event<>(function);
+        public Event<T> create() {
+            return new EventImpl<>(function);
         }
 
         @Override
-        public IEvent<T> global() {
+        public Event<T> global() {
             return global;
         }
     }
 
-    private static class Event<T> implements IEvent<T> {
+    private static class EventImpl<T> implements Event<T> {
         private final Function<List<T>, T> function;
         private T invoker = null;
         private final FastList<T> listeners;
 
-        private Event(Function<List<T>, T> function) {
+        private EventImpl(Function<List<T>, T> function) {
             this.function = function;
             listeners = FastList.newList();
         }

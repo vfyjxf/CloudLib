@@ -7,15 +7,15 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import dev.vfyjxf.cloudlib.api.ui.IRenderableTexture;
-import dev.vfyjxf.cloudlib.math.Rectangle;
+import dev.vfyjxf.cloudlib.api.math.Rect;
+import dev.vfyjxf.cloudlib.api.ui.RenderableTexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 
-public class RenderableNineSliceTexture implements IRenderableTexture {
+public class RenderableNineSliceTexture implements RenderableTexture {
     private final SpriteUploader spriteUploader;
     private final ResourceLocation location;
     private final int width;
@@ -37,8 +37,8 @@ public class RenderableNineSliceTexture implements IRenderableTexture {
         this.sliceBottom = bottom;
     }
 
-    public void render(PoseStack poseStack, Rectangle area) {
-        render(poseStack, area.x, area.y, area.getWidth(), area.getHeight());
+    public void render(PoseStack poseStack, Rect area) {
+        render(poseStack, area.x, area.y, area.width(), area.height);
     }
 
     public void render(PoseStack poseStack, int xOffset, int yOffset, int width, int height) {

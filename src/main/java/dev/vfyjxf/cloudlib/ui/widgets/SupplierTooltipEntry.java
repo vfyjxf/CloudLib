@@ -1,12 +1,12 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
-import dev.vfyjxf.cloudlib.api.ui.widgets.ITooltip;
+import dev.vfyjxf.cloudlib.api.ui.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 
 import java.util.function.Supplier;
 
-public record SupplierTooltipEntry(Supplier<Component> supplier) implements ITooltip.Entry {
+public record SupplierTooltipEntry(Supplier<Component> supplier) implements Tooltip {
 
     @Override
     public boolean isText() {

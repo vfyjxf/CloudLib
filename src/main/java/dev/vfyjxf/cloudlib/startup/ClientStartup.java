@@ -3,12 +3,9 @@ package dev.vfyjxf.cloudlib.startup;
 import dev.vfyjxf.cloudlib.Constants;
 import dev.vfyjxf.cloudlib.api.registry.IModPlugin;
 import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
-import dev.vfyjxf.cloudlib.api.ui.overlay.IUIOverlay;
 import dev.vfyjxf.cloudlib.data.lang.LangKeyProvider;
-import dev.vfyjxf.cloudlib.ui.ClientModularUI;
 import dev.vfyjxf.cloudlib.ui.GuiEventHandler;
 import dev.vfyjxf.cloudlib.ui.UIRegistry;
-import dev.vfyjxf.cloudlib.ui.overlay.UIOverlay;
 import dev.vfyjxf.cloudlib.utils.Singletons;
 import net.minecraft.data.DataProvider;
 import net.neoforged.bus.api.IEventBus;
@@ -35,7 +32,6 @@ public class ClientStartup extends CommonStartup {
     public void loadComplete(FMLLoadCompleteEvent event) {
         super.loadComplete(event);
         event.enqueueWork(() -> {
-            Singletons.attachInstance(IUIOverlay.class, new UIOverlay(new ClientModularUI()));
             IUIRegistry registry = Singletons.get(IUIRegistry.class);
             for (IModPlugin plugin : plugins) {
                 plugin.registerUI(registry);

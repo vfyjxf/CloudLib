@@ -3,7 +3,6 @@ package dev.vfyjxf.cloudlib.startup;
 import dev.vfyjxf.cloudlib.api.registry.IModPlugin;
 import dev.vfyjxf.cloudlib.api.registry.ISerializeRegistry;
 import dev.vfyjxf.cloudlib.api.registry.PluginLoading;
-import dev.vfyjxf.cloudlib.api.ui.UIConfig;
 import dev.vfyjxf.cloudlib.data.SerializeRegistry;
 import dev.vfyjxf.cloudlib.utils.Singletons;
 import net.neoforged.bus.api.IEventBus;
@@ -21,7 +20,6 @@ public class CommonStartup {
     protected final IEventBus modBus;
     public CommonStartup(IEventBus modBus) {
         this.modBus = modBus;
-        Singletons.attachInstance(UIConfig.class, new UIConfig());
         Singletons.attachInstance(ISerializeRegistry.class, new SerializeRegistry());
         plugins = PluginLoading.load(IModPlugin.class);
     }

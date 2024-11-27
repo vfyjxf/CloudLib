@@ -1,14 +1,14 @@
 package dev.vfyjxf.cloudlib.api.ui.serializer;
 
 import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
-import dev.vfyjxf.cloudlib.api.ui.IRenderable;
+import dev.vfyjxf.cloudlib.api.ui.Renderable;
 import net.minecraft.nbt.CompoundTag;
 import org.jetbrains.annotations.Nullable;
 
-public interface IRenderableSerializer<T extends IRenderable> {
+public interface IRenderableSerializer<T extends Renderable> {
 
     @Nullable
-    static <T extends IRenderable> IRenderableSerializer<T> getSerializer(Class<T> clazz) {
+    static <T extends Renderable> IRenderableSerializer<T> getSerializer(Class<T> clazz) {
         return IUIRegistry.getInstance().getSerializer(clazz);
     }
 

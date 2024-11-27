@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.helper;
 
-import dev.vfyjxf.cloudlib.api.ui.widgets.ITooltip;
+import dev.vfyjxf.cloudlib.api.ui.RichTooltip;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
@@ -72,13 +72,13 @@ public class TooltipBuilder {
         }).reject(Objects::isNull);
     }
 
-    public ITooltip build() {
-        return ITooltip.from(entries.collect(each -> {
+    public RichTooltip build() {
+        return RichTooltip.from(entries.collect(each -> {
             if (each instanceof Component component) {
-                return ITooltip.entry(component);
+                return RichTooltip.of(component);
             }
             if (each instanceof TooltipComponent component) {
-                return ITooltip.entry(component);
+                return RichTooltip.of(component);
             }
             return null;
         }).reject(Objects::isNull));

@@ -1,15 +1,15 @@
 package dev.vfyjxf.cloudlib.ui.textures;
 
-import dev.vfyjxf.cloudlib.api.ui.IRenderableTexture;
+import dev.vfyjxf.cloudlib.api.ui.RenderableTexture;
 import net.minecraft.client.gui.GuiGraphics;
 
-public class ScalableTexture implements IRenderableTexture {
+public class ScalableTexture implements RenderableTexture {
 
-    private final IRenderableTexture texture;
+    private final RenderableTexture texture;
     private final int width;
     private final int height;
 
-    public ScalableTexture(IRenderableTexture texture, int width, int height) {
+    public ScalableTexture(RenderableTexture texture, int width, int height) {
         this.texture = texture;
         this.width = width;
         this.height = height;

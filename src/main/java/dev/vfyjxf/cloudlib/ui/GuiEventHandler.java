@@ -2,9 +2,8 @@ package dev.vfyjxf.cloudlib.ui;
 
 
 import dev.vfyjxf.cloudlib.api.annotations.Singleton;
-import dev.vfyjxf.cloudlib.api.ui.UIConfig;
-import dev.vfyjxf.cloudlib.api.ui.inputs.IInputContext;
-import dev.vfyjxf.cloudlib.api.ui.overlay.IUIOverlay;
+import dev.vfyjxf.cloudlib.api.ui.overlay.UIOverlay;
+import dev.vfyjxf.cloudlib.api.ui.inputs.InputContext;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
 import dev.vfyjxf.cloudlib.utils.Singletons;
 import net.minecraft.client.Minecraft;
@@ -28,7 +27,7 @@ public class GuiEventHandler {
 
     @SubscribeEvent
     public void onGuiInitPost(ScreenEvent.Init.Post event) {
-        IUIOverlay overlay = Singletons.getNullable(IUIOverlay.class);
+        UIOverlay overlay = Singletons.getNullable(UIOverlay.class);
         if (overlay == null) return;
         if (screen == event.getScreen()) {
             overlay.update();
@@ -36,7 +35,6 @@ public class GuiEventHandler {
             overlay.getMainGroup().clear();
             overlay.init();
             overlay.update();
-            UIConfig.getInstance().clear();
         }
         overlay.getMainGroup().show();
         screen = event.getScreen();
@@ -44,8 +42,8 @@ public class GuiEventHandler {
     }
 
     @SubscribeEvent
-    public void onBackgroundRender(ScreenEvent.BackgroundRendered event) {
-        IUIOverlay overlay = Singletons.getNullable(IUIOverlay.class);
+    public void onRenderPost(ScreenEvent.Render.Post event) {
+        UIOverlay overlay = Singletons.getNullable(UIOverlay.class);
         if (overlay == null) return;
         Minecraft minecraft = Minecraft.getInstance();
         GuiGraphics graphics = event.getGuiGraphics();
@@ -62,17 +60,17 @@ public class GuiEventHandler {
 
     @SubscribeEvent
     public void onMouseClicked(ScreenEvent.MouseButtonPressed.Pre event) {
-        IUIOverlay overlay = Singletons.getNullable(IUIOverlay.class);
+        UIOverlay overlay = Singletons.getNullable(UIOverlay.class);
         if (overlay == null) return;
-        boolean result = overlay.getMainGroup().mouseClicked(IInputContext.fromMouse(event.getMouseX(), event.getMouseY(), event.getButton()));
+        boolean result = overlay.getMainGroup().mouseClicked(InputContext.fromMouse(event.getMouseX(), event.getMouseY(), event.getButton()));
         if (result) event.setCanceled(true);
     }
 
     @SubscribeEvent
     public void onKeyPressed(ScreenEvent.KeyPressed.Pre event) {
-        IUIOverlay overlay = Singletons.getNullable(IUIOverlay.class);
+        UIOverlay overlay = Singletons.getNullable(UIOverlay.class);
         if (overlay == null) return;
-        var inputContext = IInputContext.fromKeyboard(event.getKeyCode(), event.getScanCode(), event.getModifiers(), ScreenUtil.getMouseX(), ScreenUtil.getMouseY());
+        var inputContext = InputContext.fromKeyboard(event.getKeyCode(), event.getScanCode(), event.getModifiers(), ScreenUtil.getMouseX(), ScreenUtil.getMouseY());
         boolean result = overlay.getMainGroup().keyPressed(inputContext);
         if (result) event.setCanceled(true);
     }

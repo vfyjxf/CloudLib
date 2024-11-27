@@ -1,17 +1,16 @@
 package dev.vfyjxf.cloudlib.utils;
 
-import dev.vfyjxf.cloudlib.api.ui.widgets.ITooltip;
-import dev.vfyjxf.cloudlib.api.ui.widgets.ITooltipStack;
-import dev.vfyjxf.cloudlib.math.Point;
-import dev.vfyjxf.cloudlib.math.Rectangle;
-import dev.vfyjxf.cloudlib.mixin.GuiGraphicsAccessor;
+import dev.vfyjxf.cloudlib.api.math.Pos;
+import dev.vfyjxf.cloudlib.api.math.Rect;
+import dev.vfyjxf.cloudlib.api.ui.RichTooltip;
+import dev.vfyjxf.cloudlib.api.ui.Tooltip;
+import dev.vfyjxf.cloudlib.api.ui.widgets.TooltipStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
@@ -23,7 +22,7 @@ import java.util.Optional;
 
 public final class ScreenUtil {
 
-    public static final Rectangle POINT = new Rectangle(0, 0, 0, 0);
+    public static final Rect POINT = new Rect(0, 0, 0, 0);
 
     public static double getMouseX() {
         Minecraft minecraft = Minecraft.getInstance();
@@ -39,19 +38,19 @@ public final class ScreenUtil {
         return mouseHelper.ypos() * scale;
     }
 
-    public static Point ofMouse() {
-        return new Point((int) getMouseX(), (int) getMouseY());
+    public static Pos ofMouse() {
+        return new Pos((int) getMouseX(), (int) getMouseY());
     }
 
-    public static void renderTooltip(Screen screen, GuiGraphics graphics, ITooltip tooltip, int mouseX, int mouseY) {
+    public static void renderTooltip(Screen screen, GuiGraphics graphics, RichTooltip richTooltip, int mouseX, int mouseY) {
         graphics.pose().pushPose();
         {
-            ITooltipStack<?> stack = tooltip.stack();
+            TooltipStack<?> stack = richTooltip.stack();
             ItemStack itemStack = stack != null && stack.type() == ItemStack.class ? stack.castValue() : ItemStack.EMPTY;
-            List<Component> texts = CollectionUtils.filterAndMap(tooltip.entries(), ITooltip.Entry::isText, ITooltip.Entry::asText);
+            List<Component> texts = CollectionUtils.filterAndMap(richTooltip.tooltips(), Tooltip::isText, Tooltip::asText);
             List<ClientTooltipComponent> components = ClientHooks.gatherTooltipComponents(itemStack, texts, Optional.empty(), mouseX, screen.width, screen.height, screen.getMinecraft().font);
             components = new ArrayList<>(components);
-            for (ITooltip.Entry entry : tooltip.entries()) {
+            for (Tooltip entry : richTooltip.tooltips()) {
                 if (!entry.isText()) {
                     TooltipComponent component = entry.asComponent();
 
@@ -67,10 +66,7 @@ public final class ScreenUtil {
             if (!itemStack.isEmpty()) {
                 font = ClientHooks.getTooltipFont(itemStack, font);
             }
-            GuiGraphicsAccessor accessor = (GuiGraphicsAccessor) graphics;
-            accessor.setTooltipStack(itemStack);
-            graphics.renderTooltipInternal(font, components, mouseX, mouseY, DefaultTooltipPositioner.INSTANCE);
-            accessor.setTooltipStack(ItemStack.EMPTY);
+            //TODO:Rewrite this
         }
         graphics.pose().popPose();
     }

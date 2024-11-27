@@ -9,7 +9,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import dev.vfyjxf.cloudlib.math.Rectangle;
+import dev.vfyjxf.cloudlib.api.math.Rect;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -113,10 +113,10 @@ public class RenderHelper {
 
     public static void drawBorder(@NotNull GuiGraphics graphics, int x, int y, int width, int height, int color, int border) {
         graphics.drawManaged(() -> {
-            drawSolidRect(graphics,x - border, y - border, width + 2 * border, border, color);
-            drawSolidRect(graphics,x - border, y + height, width + 2 * border, border, color);
-            drawSolidRect(graphics,x - border, y, border, height, color);
-            drawSolidRect(graphics,x + width, y, border, height, color);
+            drawSolidRect(graphics, x - border, y - border, width + 2 * border, border, color);
+            drawSolidRect(graphics, x - border, y + height, width + 2 * border, border, color);
+            drawSolidRect(graphics, x - border, y, border, height, color);
+            drawSolidRect(graphics, x + width, y, border, height, color);
         });
     }
 
@@ -188,7 +188,7 @@ public class RenderHelper {
         RenderSystem.enableBlend();
     }
 
-    public static void drawSolidRect(@NotNull GuiGraphics graphics, Rectangle rect, int color) {
+    public static void drawSolidRect(@NotNull GuiGraphics graphics, Rect rect, int color) {
         drawSolidRect(graphics, rect.x, rect.y, rect.width, rect.height, color);
     }
 
@@ -220,14 +220,14 @@ public class RenderHelper {
     }
 
     public static void drawGradientRect(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, int startColor, int endColor, boolean horizontal) {
-        float startAlpha = (float)(startColor >> 24 & 255) / 255.0F;
-        float startRed   = (float)(startColor >> 16 & 255) / 255.0F;
-        float startGreen = (float)(startColor >>  8 & 255) / 255.0F;
-        float startBlue  = (float)(startColor       & 255) / 255.0F;
-        float endAlpha   = (float)(endColor   >> 24 & 255) / 255.0F;
-        float endRed     = (float)(endColor   >> 16 & 255) / 255.0F;
-        float endGreen   = (float)(endColor   >>  8 & 255) / 255.0F;
-        float endBlue    = (float)(endColor         & 255) / 255.0F;
+        float startAlpha = (float) (startColor >> 24 & 255) / 255.0F;
+        float startRed = (float) (startColor >> 16 & 255) / 255.0F;
+        float startGreen = (float) (startColor >> 8 & 255) / 255.0F;
+        float startBlue = (float) (startColor & 255) / 255.0F;
+        float endAlpha = (float) (endColor >> 24 & 255) / 255.0F;
+        float endRed = (float) (endColor >> 16 & 255) / 255.0F;
+        float endGreen = (float) (endColor >> 8 & 255) / 255.0F;
+        float endBlue = (float) (endColor & 255) / 255.0F;
         RenderSystem.enableBlend();
         RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
         Matrix4f mat = graphics.pose().last().pose();
@@ -235,16 +235,16 @@ public class RenderHelper {
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
         BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         if (horizontal) {
-            buffer.addVertex(mat,x + width, y, 0).setColor(endRed, endGreen, endBlue, endAlpha);
-            buffer.addVertex(mat,x, y, 0).setColor(startRed, startGreen, startBlue, startAlpha);
-            buffer.addVertex(mat,x, y + height, 0).setColor(startRed, startGreen, startBlue, startAlpha);
-            buffer.addVertex(mat,x + width, y + height, 0).setColor(endRed, endGreen, endBlue, endAlpha);
+            buffer.addVertex(mat, x + width, y, 0).setColor(endRed, endGreen, endBlue, endAlpha);
+            buffer.addVertex(mat, x, y, 0).setColor(startRed, startGreen, startBlue, startAlpha);
+            buffer.addVertex(mat, x, y + height, 0).setColor(startRed, startGreen, startBlue, startAlpha);
+            buffer.addVertex(mat, x + width, y + height, 0).setColor(endRed, endGreen, endBlue, endAlpha);
             BufferUploader.drawWithShader(buffer.buildOrThrow());
         } else {
-            buffer.addVertex(mat,x + width, y, 0).setColor(startRed, startGreen, startBlue, startAlpha);
-            buffer.addVertex(mat,x, y, 0).setColor(startRed, startGreen, startBlue, startAlpha);
-            buffer.addVertex(mat,x, y + height, 0).setColor(endRed, endGreen, endBlue, endAlpha);
-            buffer.addVertex(mat,x + width, y + height, 0).setColor(endRed, endGreen, endBlue, endAlpha);
+            buffer.addVertex(mat, x + width, y, 0).setColor(startRed, startGreen, startBlue, startAlpha);
+            buffer.addVertex(mat, x, y, 0).setColor(startRed, startGreen, startBlue, startAlpha);
+            buffer.addVertex(mat, x, y + height, 0).setColor(endRed, endGreen, endBlue, endAlpha);
+            buffer.addVertex(mat, x + width, y + height, 0).setColor(endRed, endGreen, endBlue, endAlpha);
             BufferUploader.drawWithShader(buffer.buildOrThrow());
         }
     }
@@ -328,21 +328,21 @@ public class RenderHelper {
             point = points.get(i);
             float u = (i - 1f) / points.size();
             vec = new Vector3f(point.x - lastPoint.x, point.y - lastPoint.y, 0).rotateZ(Mth.HALF_PI).normalize().mul(-width);
-            builder.addVertex(mat, lastPoint.x + vec.x, lastPoint.y + vec.y, 0).setUv(u,0)
+            builder.addVertex(mat, lastPoint.x + vec.x, lastPoint.y + vec.y, 0).setUv(u, 0)
                     .setColor((sr + er * s) / 255, (sg + eg * s) / 255, (sb + eb * s) / 255, (sa + ea * s) / 255)
             ;
             vec.mul(-1);
-            builder.addVertex(mat, lastPoint.x + vec.x, lastPoint.y + vec.y, 0).setUv(u,1)
+            builder.addVertex(mat, lastPoint.x + vec.x, lastPoint.y + vec.y, 0).setUv(u, 1)
                     .setColor((sr + er * e) / 255, (sg + eg * e) / 255, (sb + eb * e) / 255, (sa + ea * e) / 255)
             ;
             lastPoint = point;
         }
         vec.mul(-1);
-        builder.addVertex(mat, point.x + vec.x, point.y + vec.y, 0).setUv(1,0)
+        builder.addVertex(mat, point.x + vec.x, point.y + vec.y, 0).setUv(1, 0)
                 .setColor(sr + er, sg + eg, sb + eb, sa + ea)
         ;
         vec.mul(-1);
-        builder.addVertex(mat, point.x + vec.x, point.y + vec.y, 0).setUv(1,1)
+        builder.addVertex(mat, point.x + vec.x, point.y + vec.y, 0).setUv(1, 1)
                 .setColor(sr + er, sg + eg, sb + eb, sa + ea)
         ;
     }

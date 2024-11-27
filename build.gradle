@@ -1,13 +1,9 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     id 'java-library'
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '0.1.126'
-    id "io.github.p03w.machete" version "2.+"
-    id 'org.jetbrains.kotlin.jvm' version '2.0.0'
+    id 'net.neoforged.moddev' version '1.0.21'
 }
 
 version = project.mod_version
@@ -22,7 +18,6 @@ base {
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-compileKotlin.compilerOptions.jvmTarget = JvmTarget.JVM_21
 
 configurations {
     runtimeClasspath.extendsFrom localRuntime
@@ -36,15 +31,23 @@ neoForge {
         minecraftVersion = project.parchment_minecraft_version
     }
 
-    accessTransformers.add('src/main/resources/META-INF/accesstransformer.cfg')
     runs {
         client {
             client()
+            gameDirectory = project.file('run-client')
+        }
+    }
+
+    runs {
+        client {
+            client()
+            gameDirectory = project.file('run-client')
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
         server {
             server()
+            gameDirectory = project.file('run-server')
             programArgument '--nogui'
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
@@ -56,19 +59,16 @@ neoForge {
         data {
             data()
             gameDirectory = project.file('run-data')
-
             programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
 
         configureEach {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
             logLevel = org.slf4j.event.Level.DEBUG
-
             if (isJetBrainsRuntime()) {
                 jvmArgument "-XX:+AllowEnhancedClassRedefinition"
                 jvmArgument "-XX:HotswapAgent=fatjar"
             }
-
         }
     }
 
@@ -84,11 +84,7 @@ neoForge {
     }
 }
 
-sourceSets {
-    main {
-        resources.srcDir 'src/generated/resources'
-    }
-}
+sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     mavenCentral()
@@ -102,7 +98,6 @@ repositories {
     maven { url = "https://repo.kenzie.mx/releases" }
     maven { url = "https://maven.tterrag.com/" }
     maven { url = "https://oss.sonatype.org/content/repositories/snapshots/" }
-    maven { url = 'https://thedarkcolour.github.io/KotlinForForge/' }
     maven {
         url = "https://cursemaven.com"
         content {
@@ -124,8 +119,7 @@ repositories {
 
 dependencies {
     compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
-    localRuntime "maven.modrinth:jei:${jei_version}-neoforge"
-    implementation 'thedarkcolour:kotlinforforge-neoforge:5.3.0'
+//    localRuntime "maven.modrinth:jei:${jei_version}-neoforge"
     clientAdditionalRuntimeClasspath(implementation("org.eclipse.collections:eclipse-collections-api:11.1.0"))
     jarJar "org.eclipse.collections:eclipse-collections-api:[11.1.0,)"
     clientAdditionalRuntimeClasspath(implementation("org.eclipse.collections:eclipse-collections:11.1.0"))
@@ -139,7 +133,7 @@ test {
     useJUnitPlatform()
 }
 
-tasks.withType(ProcessResources).configureEach {
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
     var replaceProperties = [
             minecraft_version      : minecraft_version,
             minecraft_version_range: minecraft_version_range,
@@ -152,11 +146,12 @@ tasks.withType(ProcessResources).configureEach {
             jei_version            : jei_version
     ]
     inputs.properties replaceProperties
-
-    filesMatching(['META-INF/neoforge.mods.toml']) {
-        expand replaceProperties
-    }
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
 }
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
@@ -166,15 +161,6 @@ tasks.withType(JavaCompile).configureEach {
 java {
     withSourcesJar()
 }
-
-//tasks.jar.configure {
-//    archiveClassifier.set('slim')
-//}
-//
-//tasks.jarJar.configure {
-//    archiveClassifier.set('')
-//}
-
 // configure the maven publication
 publishing {
     publications {

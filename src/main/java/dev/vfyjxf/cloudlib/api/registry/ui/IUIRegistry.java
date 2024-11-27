@@ -1,11 +1,11 @@
 package dev.vfyjxf.cloudlib.api.registry.ui;
 
 import dev.vfyjxf.cloudlib.api.annotations.Singleton;
-import dev.vfyjxf.cloudlib.api.ui.IGlobalExtraAreas;
-import dev.vfyjxf.cloudlib.api.ui.IGuiAreas;
-import dev.vfyjxf.cloudlib.api.ui.IGuiExtraAreas;
-import dev.vfyjxf.cloudlib.api.ui.IRenderable;
-import dev.vfyjxf.cloudlib.api.ui.overlay.IOverlayProvider;
+import dev.vfyjxf.cloudlib.api.ui.GlobalExtraAreas;
+import dev.vfyjxf.cloudlib.api.ui.GuiAreas;
+import dev.vfyjxf.cloudlib.api.ui.GuiExtraAreas;
+import dev.vfyjxf.cloudlib.api.ui.Renderable;
+import dev.vfyjxf.cloudlib.api.ui.overlay.OverlayProvider;
 import dev.vfyjxf.cloudlib.api.ui.serializer.IRenderableSerializer;
 import dev.vfyjxf.cloudlib.utils.Singletons;
 import net.minecraft.client.gui.screens.Screen;
@@ -22,32 +22,32 @@ public interface IUIRegistry {
         return Singletons.get(IUIRegistry.class);
     }
 
-    <T extends IRenderable> void registerWidgetSerializer(Class<T> clazz, IRenderableSerializer<T> serializer);
+    <T extends Renderable> void registerWidgetSerializer(Class<T> clazz, IRenderableSerializer<T> serializer);
 
-    @Nullable <T extends IRenderable> IRenderableSerializer<T> getSerializer(Class<T> clazz);
+    @Nullable <T extends Renderable> IRenderableSerializer<T> getSerializer(Class<T> clazz);
 
-    void registerOverlayProvider(IOverlayProvider provider);
+    void registerOverlayProvider(OverlayProvider provider);
 
     @Unmodifiable
-    List<IOverlayProvider> getOverlayProviders();
+    List<OverlayProvider> getOverlayProviders();
 
-    <T extends Screen> void registerGuiAreas(Class<T> type, IGuiAreas<T> areas);
+    <T extends Screen> void registerGuiAreas(Class<T> type, GuiAreas<T> areas);
 
-    void registerGuiExtraAreas(Class<? extends Screen> type, IGuiExtraAreas<?> extraAreas);
+    void registerGuiExtraAreas(Class<? extends Screen> type, GuiExtraAreas<?> extraAreas);
 
-    void registerGlobalExtraAreas(IGlobalExtraAreas globalGuiAreas);
+    void registerGlobalExtraAreas(GlobalExtraAreas globalGuiAreas);
 
-    default @Nullable <T extends Screen> IGuiAreas<T> getGuiAreas(T screen){
-        return (IGuiAreas<T>) getGuiAreas(screen.getClass());
+    default @Nullable <T extends Screen> GuiAreas<T> getGuiAreas(T screen){
+        return (GuiAreas<T>) getGuiAreas(screen.getClass());
     }
 
-    @Nullable <T extends Screen> IGuiAreas<T> getGuiAreas(Class<T> type);
+    @Nullable <T extends Screen> GuiAreas<T> getGuiAreas(Class<T> type);
 
-    <T extends Screen> Collection<IGuiExtraAreas<? extends T>> getGuiExtraAreas(T screen);
+    <T extends Screen> Collection<GuiExtraAreas<? extends T>> getGuiExtraAreas(T screen);
 
-    <T extends Screen> Collection<IGuiExtraAreas<T>> getGuiExtraAreas(Class<T> type);
+    <T extends Screen> Collection<GuiExtraAreas<T>> getGuiExtraAreas(Class<T> type);
 
     @Unmodifiable
-    Collection<IGlobalExtraAreas> getGlobalExtraAreas();
+    Collection<GlobalExtraAreas> getGlobalExtraAreas();
 
 }
