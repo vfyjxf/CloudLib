@@ -120,9 +120,9 @@ repositories {
 dependencies {
     compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
 //    localRuntime "maven.modrinth:jei:${jei_version}-neoforge"
-    clientAdditionalRuntimeClasspath(implementation("org.eclipse.collections:eclipse-collections-api:11.1.0"))
+    additionalRuntimeClasspath(implementation("org.eclipse.collections:eclipse-collections-api:11.1.0"))
     jarJar "org.eclipse.collections:eclipse-collections-api:[11.1.0,)"
-    clientAdditionalRuntimeClasspath(implementation("org.eclipse.collections:eclipse-collections:11.1.0"))
+    additionalRuntimeClasspath(implementation("org.eclipse.collections:eclipse-collections:11.1.0"))
     jarJar "org.eclipse.collections:eclipse-collections:[11.1.0,)"
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'

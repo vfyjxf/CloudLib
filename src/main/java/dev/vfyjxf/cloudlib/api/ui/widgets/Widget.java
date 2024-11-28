@@ -254,6 +254,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     }
 
     public <T extends Widget> Widget asChild(WidgetGroup<T> parent) {
+        if (parent == this) throw new IllegalArgumentException("Cannot add widget to itself");
         if (parent.add(parent.size(), (T) this)) return this;
         this.parent = parent;
         this.onPositionUpdate();

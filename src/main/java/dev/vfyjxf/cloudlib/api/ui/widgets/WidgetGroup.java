@@ -85,6 +85,8 @@ public class WidgetGroup<T extends Widget> extends Widget {
     }
 
     public boolean add(int index, T widget) {
+        if (widget == this)
+            throw new IllegalArgumentException("Cannot add a widget to itself");
         if (!children.contains(widget)) {
             var context = common();
             listeners(WidgetEvent.onChildAdded).onChildAdded(context, widget);

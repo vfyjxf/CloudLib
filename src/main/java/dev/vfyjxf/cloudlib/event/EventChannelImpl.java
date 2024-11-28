@@ -14,7 +14,7 @@ public class EventChannelImpl<T> implements EventChannel<T> {
 
     private final EventHandler<T> handler;
     private final MutableMap<EventDefinition<?>, Event<?>> listeners = Maps.mutable.empty();
-    private final MutableList<Checker<T>> events = Lists.mutable.empty();
+    private final MutableList<Checker<T>> checkers = Lists.mutable.empty();
 
     public EventChannelImpl(EventHandler<T> handler) {
         this.handler = handler;
@@ -33,7 +33,7 @@ public class EventChannelImpl<T> implements EventChannel<T> {
     @SuppressWarnings("unchecked")
     @Override
     public <E extends T> Event<E> get(EventDefinition<E> definition) {
-        if (events.noneSatisfy(checker -> checker.check(definition.type()))) {
+        if (!checkers.isEmpty() && checkers.noneSatisfy(checker -> checker.check(definition.type()))) {
             throw new IllegalArgumentException("Event type: " + definition.type() + " not allowed");
         }
         return (Event<E>) listeners.getIfAbsentPut(definition, definition::create);
@@ -48,9 +48,9 @@ public class EventChannelImpl<T> implements EventChannel<T> {
 
     @Override
     public void checkEvent(Checker<T> checker) {
-        if (events.contains(checker)) {
+        if (checkers.contains(checker)) {
             throw new IllegalArgumentException("Event checker already registered");
         }
-        events.add(checker);
+        checkers.add(checker);
     }
 }
