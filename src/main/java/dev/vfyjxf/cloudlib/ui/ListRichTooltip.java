@@ -1,9 +1,8 @@
-package dev.vfyjxf.cloudlib.ui.widgets;
+package dev.vfyjxf.cloudlib.ui;
 
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.ui.RichTooltip;
 import dev.vfyjxf.cloudlib.api.ui.Tooltip;
-import dev.vfyjxf.cloudlib.api.ui.TooltipEntry;
 import dev.vfyjxf.cloudlib.api.ui.widgets.TooltipStack;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
 import net.minecraft.network.chat.Component;

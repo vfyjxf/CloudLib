@@ -1,10 +1,7 @@
 package dev.vfyjxf.cloudlib.startup;
 
 import dev.vfyjxf.cloudlib.api.registry.IModPlugin;
-import dev.vfyjxf.cloudlib.api.registry.ISerializeRegistry;
 import dev.vfyjxf.cloudlib.api.registry.PluginLoading;
-import dev.vfyjxf.cloudlib.data.SerializeRegistry;
-import dev.vfyjxf.cloudlib.utils.Singletons;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
@@ -20,7 +17,6 @@ public class CommonStartup {
     protected final IEventBus modBus;
     public CommonStartup(IEventBus modBus) {
         this.modBus = modBus;
-        Singletons.attachInstance(ISerializeRegistry.class, new SerializeRegistry());
         plugins = PluginLoading.load(IModPlugin.class);
     }
 
@@ -33,9 +29,9 @@ public class CommonStartup {
 
     public void loadComplete(FMLLoadCompleteEvent event) {
         event.enqueueWork(() -> {
-            for (IModPlugin plugin : plugins) {
-                plugin.registerSerialization(Singletons.get(ISerializeRegistry.class));
-            }
+//            for (IModPlugin plugin : plugins) {
+//                plugin.registerSerialization(Singletons.get(ISerializeRegistry.class));
+//            }
         });
     }
 

@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.ui.inputs;
+package dev.vfyjxf.cloudlib.ui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.vfyjxf.cloudlib.Constants;

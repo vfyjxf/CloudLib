@@ -1,9 +1,10 @@
 package dev.vfyjxf.cloudlib.ui;
 
+import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.ModularUI;
-import dev.vfyjxf.cloudlib.api.ui.inputs.InputContext;
+import dev.vfyjxf.cloudlib.api.ui.widgets.RootWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
-import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
+import dev.vfyjxf.cloudlib.ui.widgets.BasicPanel;
 import mezz.jei.gui.input.MouseUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,20 +14,31 @@ import org.jetbrains.annotations.MustBeInvokedByOverriders;
 
 public abstract class ModularScreen extends Screen implements ModularUI {
 
-    protected final WidgetGroup<Widget> mainGroup = new WidgetGroup<>();
+    protected final BasicPanel<Widget> mainGroup;
 
+    /**
+     * Note: Register init listener in constructor
+     */
     protected ModularScreen() {
         super(Component.empty());
+        mainGroup = new BasicPanel<>();
+        var root = new RootWidget();
+        mainGroup.setRoot(root);
+        mainGroup.asChild(root);
+        mainGroup.onInit((self) -> {
+            self.setPos(0, 0);
+            self.setSize(width, height);
+        });
     }
 
     @Override
     public int getGuiLeft() {
-        return mainGroup.getX();
+        return mainGroup.posX();
     }
 
     @Override
     public int getGuiTop() {
-        return mainGroup.getY();
+        return mainGroup.posY();
     }
 
     @Override
@@ -42,8 +54,7 @@ public abstract class ModularScreen extends Screen implements ModularUI {
     @MustBeInvokedByOverriders
     @Override
     protected void init() {
-        mainGroup.setPos(0, 0);
-        mainGroup.setSize(width, height);
+        mainGroup.init();
     }
 
     @Override
@@ -83,12 +94,20 @@ public abstract class ModularScreen extends Screen implements ModularUI {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return mainGroup.keyPressed(InputContext.fromKeyboard(keyCode, scanCode, modifiers, MouseUtil.getX(), MouseUtil.getY()));
+        var ret = mainGroup.keyPressed(InputContext.fromKeyboard(keyCode, scanCode, modifiers, MouseUtil.getX(), MouseUtil.getY()));
+        if (!ret) {
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
+        return true;
     }
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        return mainGroup.keyReleased(InputContext.fromKeyboard(keyCode, scanCode, modifiers, MouseUtil.getX(), MouseUtil.getY(), true));
+        var ret = mainGroup.keyReleased(InputContext.fromKeyboard(keyCode, scanCode, modifiers, MouseUtil.getX(), MouseUtil.getY(), true));
+        if (!ret) {
+            return super.keyReleased(keyCode, scanCode, modifiers);
+        }
+        return true;
     }
 
     @Override

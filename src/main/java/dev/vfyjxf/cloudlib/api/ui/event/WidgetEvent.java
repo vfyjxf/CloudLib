@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.event;
 
 import dev.vfyjxf.cloudlib.api.event.EventContext.Common;
+import dev.vfyjxf.cloudlib.api.event.EventContext.Interruptible;
 import dev.vfyjxf.cloudlib.api.event.EventDefinition;
 import dev.vfyjxf.cloudlib.api.event.EventFactory;
 import dev.vfyjxf.cloudlib.api.math.Dimension;
@@ -99,18 +100,6 @@ public interface WidgetEvent {
         }
     });
 
-    EventDefinition<OnMeasure> onMeasure = EventFactory.define(OnMeasure.class, listeners -> (widget, size) -> {
-        for (var listener : listeners) {
-            listener.onMeasure(widget, size);
-        }
-    });
-
-    EventDefinition<OnLayout> onLayout = EventFactory.define(OnLayout.class, listeners -> (context) -> {
-        for (var listener : listeners) {
-            listener.onLayout(context);
-        }
-    });
-
     EventDefinition<OnThemeUpdate> onThemeUpdate = EventFactory.define(OnThemeUpdate.class, listeners -> () -> {
         for (var listener : listeners) {
             listener.onThemeUpdate();
@@ -159,7 +148,7 @@ public interface WidgetEvent {
 
     @FunctionalInterface
     interface OnChildAddedPost extends WidgetEvent {
-        void onChildAdded(Common context, Widget widget);
+        void onChildAdded(Interruptible context, Widget widget);
     }
 
     @FunctionalInterface
@@ -169,25 +158,12 @@ public interface WidgetEvent {
 
     @FunctionalInterface
     interface OnChildRemovedPost extends WidgetEvent {
-        void onChildRemoved(Common context, Widget widget);
-    }
-
-    @FunctionalInterface
-    interface OnMouseHover extends WidgetEvent {
-        void onHover(int mouseX, int mouseY);
+        void onChildRemoved(Interruptible context, Widget widget);
     }
 
     @FunctionalInterface
     interface OnTooltip extends WidgetEvent {
         void onTooltip(Common context, RichTooltip richTooltip);
-    }
-
-    interface OnMeasure extends WidgetEvent {
-        void onMeasure(Widget widget, Dimension size);
-    }
-
-    interface OnLayout extends WidgetEvent {
-        void onLayout(Widget widget);
     }
 
     interface OnThemeUpdate extends WidgetEvent {

@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.ui;
 
 import dev.vfyjxf.cloudlib.api.annotations.Singleton;
 import dev.vfyjxf.cloudlib.api.ui.overlay.UIOverlay;
-import dev.vfyjxf.cloudlib.api.ui.inputs.InputContext;
+import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
 import dev.vfyjxf.cloudlib.utils.Singletons;
 import net.minecraft.client.Minecraft;

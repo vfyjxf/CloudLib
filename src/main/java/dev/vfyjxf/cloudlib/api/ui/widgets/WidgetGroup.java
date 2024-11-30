@@ -1,18 +1,16 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets;
 
+import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
-import dev.vfyjxf.cloudlib.api.ui.inputs.InputContext;
 import net.minecraft.client.gui.GuiGraphics;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -92,7 +90,7 @@ public class WidgetGroup<T extends Widget> extends Widget {
             listeners(WidgetEvent.onChildAdded).onChildAdded(context, widget);
             if (context.cancelled()) return false;
             children.add(index, widget);
-            listeners(WidgetEvent.onChildAddedPost).onChildAdded(context, widget);
+            listeners(WidgetEvent.onChildAddedPost).onChildAdded(interruptible(), widget);
             return true;
         }
         return false;
@@ -234,23 +232,34 @@ public class WidgetGroup<T extends Widget> extends Widget {
         return false;
     }
 
-
+    @Override
     public String toString() {
         return "WidgetGroup{" +
-                "initialized=" + initialized +
-                ", id='" + id + '\'' +
+                "id='" + id + '\'' +
+                ", children=" + children +
+                ", initialized=" + initialized +
+                ", root=" + (root == null ? "null" : root.getId()) +
+                ", parent=" + (parent == null ? "null" : parent.getId()) +
                 ", position=" + position +
                 ", absolute=" + absolute +
                 ", size=" + size +
                 ", active=" + active +
                 ", visibility=" + visibility +
+                ", richTooltip=" + richTooltip +
                 '}';
     }
 
-    @NotNull
 
-    public Iterator<T> iterator() {
-        return childrenView.iterator();
+    public WidgetGroup<T> child(T widget) {
+        widget.asChild(this);
+        return this;
+    }
+
+    public WidgetGroup<T> children(T... widgets) {
+        for (T widget : widgets) {
+            widget.asChild(this);
+        }
+        return this;
     }
 
     public WidgetGroup<T> widget(T widget) {
@@ -362,6 +371,26 @@ public class WidgetGroup<T extends Widget> extends Widget {
             }
         }
         return result;
+    }
+
+    public final WidgetGroup<T> onChildAdded(WidgetEvent.OnChildAdded listener) {
+        register(WidgetEvent.onChildAdded, listener);
+        return this;
+    }
+
+    public final WidgetGroup<T> onChildAddedPost(WidgetEvent.OnChildAddedPost listener) {
+        register(WidgetEvent.onChildAddedPost, listener);
+        return this;
+    }
+
+    public final WidgetGroup<T> onChildRemoved(WidgetEvent.OnChildRemoved listener) {
+        register(WidgetEvent.onChildRemoved, listener);
+        return this;
+    }
+
+    public final WidgetGroup<T> onChildRemovedPost(WidgetEvent.OnChildRemovedPost listener) {
+        register(WidgetEvent.onChildRemovedPost, listener);
+        return this;
     }
 
 }

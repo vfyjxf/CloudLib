@@ -4,6 +4,10 @@ public enum Visibility {
 
     VISIBLE,
     INVISIBLE,
-    GONE
+    GONE;
 
+    @Override
+    public String toString() {
+        return this.name().toLowerCase();
+    }
 }

@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.event;
 import dev.vfyjxf.cloudlib.api.event.EventContext.Common;
 import dev.vfyjxf.cloudlib.api.event.EventDefinition;
 import dev.vfyjxf.cloudlib.api.event.EventFactory;
-import dev.vfyjxf.cloudlib.api.ui.inputs.InputContext;
+import dev.vfyjxf.cloudlib.api.ui.InputContext;
 
 public interface InputEvent extends WidgetEvent {
 
@@ -43,32 +43,49 @@ public interface InputEvent extends WidgetEvent {
         return result;
     });
 
+    EventDefinition<OnMouseHover> onMouseHover = EventFactory.define(OnMouseHover.class, listeners -> (mouseX, mouseY) -> {
+        for (var listener : listeners) {
+            listener.onHover(mouseX, mouseY);
+        }
+    });
 
-    interface OnKeyPressed extends InputEvent{
+    @FunctionalInterface
+    interface OnKeyPressed extends InputEvent {
         boolean onKeyPressed(Common context, InputContext input);
     }
 
-    interface OnKeyReleased extends InputEvent{
+    @FunctionalInterface
+    interface OnKeyReleased extends InputEvent {
         boolean onKeyReleased(Common context, InputContext input);
     }
 
-    interface OnMouseClicked extends InputEvent{
+    @FunctionalInterface
+    interface OnMouseClicked extends InputEvent {
         boolean onClicked(Common context, InputContext input);
     }
 
-    interface OnMouseReleased extends InputEvent{
+    @FunctionalInterface
+    interface OnMouseReleased extends InputEvent {
         boolean onReleased(Common context, InputContext input);
     }
 
-    interface OnMouseDragged extends InputEvent{
+    @FunctionalInterface
+    interface OnMouseDragged extends InputEvent {
         void onDragged(Common context, InputContext input, double deltaX, double deltaY);
     }
 
-    interface OnMouseScrolled extends InputEvent{
+    @FunctionalInterface
+    interface OnMouseScrolled extends InputEvent {
         void onScrolled(Common context, InputContext input, double scrollX, double scrollY);
     }
 
-    interface OnMouseMoved extends InputEvent{
+    @FunctionalInterface
+    interface OnMouseMoved extends InputEvent {
         void onMoved(Common context, InputContext input);
+    }
+
+    @FunctionalInterface
+    interface OnMouseHover extends InputEvent {
+        void onHover(int mouseX, int mouseY);
     }
 }

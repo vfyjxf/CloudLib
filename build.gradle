@@ -124,6 +124,8 @@ dependencies {
     jarJar "org.eclipse.collections:eclipse-collections-api:[11.1.0,)"
     additionalRuntimeClasspath(implementation("org.eclipse.collections:eclipse-collections:11.1.0"))
     jarJar "org.eclipse.collections:eclipse-collections:[11.1.0,)"
+    additionalRuntimeClasspath(implementation("net.lenni0451:Reflect:1.4.0"))
+    jarJar "net.lenni0451:Reflect:1.4.0"
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

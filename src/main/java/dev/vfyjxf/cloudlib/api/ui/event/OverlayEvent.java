@@ -12,6 +12,7 @@ public interface OverlayEvent {
         }
     });
 
+    @FunctionalInterface
     interface OnOverlayBuild extends OverlayEvent {
 
         void onBuild(UIOverlay overlay);

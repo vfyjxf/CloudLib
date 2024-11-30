@@ -76,4 +76,32 @@ public class Rect {
         this.y = pos.y;
         return this;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Rect rect = (Rect) o;
+        return x == rect.x && y == rect.y && width == rect.width && height == rect.height;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = x;
+        result = 31 * result + y;
+        result = 31 * result + width;
+        result = 31 * result + height;
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Rect{" +
+                "x=" + x +
+                ", y=" + y +
+                ", width=" + width +
+                ", height=" + height +
+                '}';
+    }
 }

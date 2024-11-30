@@ -6,6 +6,4 @@ public interface IModPlugin {
 
     default void registerUI(IUIRegistry registry){}
 
-    default void registerSerialization(ISerializeRegistry registry){}
-
 }

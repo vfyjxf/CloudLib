@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.ui.widgets;
+package dev.vfyjxf.cloudlib.ui;
 
 import dev.vfyjxf.cloudlib.api.ui.Tooltip;
 import net.minecraft.network.chat.Component;

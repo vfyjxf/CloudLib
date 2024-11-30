@@ -1,17 +1,19 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
 import dev.vfyjxf.cloudlib.api.event.EventDefinition;
 import dev.vfyjxf.cloudlib.api.event.EventHandler;
 import dev.vfyjxf.cloudlib.api.math.Dimension;
 import dev.vfyjxf.cloudlib.api.math.Pos;
+import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.Renderable;
 import dev.vfyjxf.cloudlib.api.ui.RenderableTexture;
 import dev.vfyjxf.cloudlib.api.ui.RichTooltip;
+import dev.vfyjxf.cloudlib.api.ui.UIContext;
 import dev.vfyjxf.cloudlib.api.ui.animation.Animatable;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
-import dev.vfyjxf.cloudlib.api.ui.inputs.InputContext;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
 import dev.vfyjxf.cloudlib.ui.widgets.BasicWidget;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
@@ -19,6 +21,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,21 +39,33 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return new BasicWidget();
     }
 
+    //event
     protected final EventChannel<WidgetEvent> eventChannel = EventChannel.create(this);
+
+    //data
     protected boolean initialized = false;
-    protected WidgetGroup<?> root;
+    /**
+     * maybe itself
+     */
+    protected RootWidget root;
     @Nullable
     protected WidgetGroup<?> parent;
     protected String id = UUID.randomUUID().toString();
+    protected boolean active = true;
+
+    //bounds
     protected Pos position = Pos.ZERO;
     protected Pos absolute = calculateAbsolute();
     protected Dimension size = Dimension.ZERO;
+
+    //visual
     protected RenderableTexture background;
     protected RenderableTexture icon;
-    protected boolean active = true;
     protected Visibility visibility = Visibility.VISIBLE;
     @Nullable
     protected RichTooltip richTooltip;
+
+    //layout
 
     protected Pos calculateAbsolute() {
         if (parent == null) return position;
@@ -88,21 +103,25 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         if (icon != null) icon.render(graphics);
     }
 
-    public WidgetGroup<? extends Widget> root() {
+    public RootWidget root() {
         return root;
     }
 
     @ApiStatus.Internal
-    public final void setRoot(WidgetGroup<? super Widget> root) {
+    public final void setRoot(RootWidget root) {
         this.root = root;
+    }
+
+    public UIContext getContext() {
+        return root.getContext();
     }
 
     public @Nullable WidgetGroup<? extends Widget> parent() {
         return parent;
     }
 
-    @com.google.errorprone.annotations.CanIgnoreReturnValue
-    @org.jetbrains.annotations.Contract("_ -> this")
+    @CanIgnoreReturnValue
+    @Contract("_ -> this")
     public Widget setParent(@Nullable WidgetGroup<? super Widget> parent) {
         this.parent = parent;
         return this;
@@ -110,7 +129,6 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
 
     @MustBeInvokedByOverriders
     public void init() {
-
         listeners(WidgetEvent.onInit).onInit(this);
         initialized = true;
     }
@@ -145,6 +163,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return id;
     }
 
+    @Contract("_ -> this")
     public Widget setId(String id) {
         this.id = id;
         return this;
@@ -158,6 +177,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return absolute;
     }
 
+    @Contract("_ -> this")
     public Widget setPos(Pos position) {
         var context = common();
         listeners(WidgetEvent.onPositionChanged).onPositionChanged(context, position);
@@ -170,6 +190,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return size;
     }
 
+    @Contract("_ -> this")
     public Widget setSize(Dimension size) {
         var context = common();
         listeners(WidgetEvent.onSizeChanged).onSizeChanged(context, size);
@@ -178,11 +199,13 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return this;
     }
 
+    @Contract("_ -> this")
     public Widget setBackground(RenderableTexture background) {
         this.background = background;
         return this;
     }
 
+    @Contract("_ -> this")
     public Widget setIcon(RenderableTexture icon) {
         this.icon = icon;
         return this;
@@ -192,8 +215,10 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return active;
     }
 
-    public void setActive(boolean active) {
+    @Contract("_ -> this")
+    public Widget setActive(boolean active) {
         this.active = active;
+        return this;
     }
 
     public Visibility visibility() {
@@ -204,14 +229,17 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         this.visibility = visibility;
     }
 
+    @Contract("_ -> this")
     public Widget tooltip(String text) {
         return tooltip(Component.literal(text));
     }
 
+    @Contract("_ -> this")
     public Widget tooltip(LangEntry key) {
         return tooltip(Component.translatable(key.key()));
     }
 
+    @Contract("_ -> this")
     public Widget tooltip(Component component) {
         if (this.richTooltip == null) {
             this.richTooltip = RichTooltip.create();
@@ -220,6 +248,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return this;
     }
 
+    @Contract("_ -> this")
     public Widget tooltip(Supplier<Component> supplier) {
         if (this.richTooltip == null) {
             this.richTooltip = RichTooltip.create();
@@ -228,14 +257,17 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return this;
     }
 
+    @Contract("_ -> this")
     public Widget tooltips(LangEntry... keys) {
         return this;
     }
 
+    @Contract("_ -> this")
     public Widget tooltips(Component... components) {
         return this;
     }
 
+    @Contract("_ -> this")
     public Widget tooltip(RichTooltip richTooltip) {
         if (this.richTooltip == null) {
             this.richTooltip = RichTooltip.create();
@@ -248,26 +280,31 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return richTooltip;
     }
 
+    @Contract("_ -> this")
     public Widget setTooltip(@Nullable RichTooltip richTooltip) {
         this.richTooltip = richTooltip;
         return this;
     }
 
-    public <T extends Widget> Widget asChild(WidgetGroup<T> parent) {
+    @Contract("_-> this")
+    @CanIgnoreReturnValue
+    public final <T extends Widget> Widget asChild(WidgetGroup<T> parent) {
         if (parent == this) throw new IllegalArgumentException("Cannot add widget to itself");
-        if (parent.add(parent.size(), (T) this)) return this;
-        this.parent = parent;
-        this.onPositionUpdate();
+        if (parent.add(parent.size(), (T) this)) {
+            this.parent = parent;
+            this.onPositionUpdate();
+        }
         return this;
     }
 
     @Override
     public String toString() {
         return "Widget{" +
-                "initialized=" + initialized +
+                "id='" + id + '\'' +
+                ", initialized=" + initialized +
+                ", root=" + (root == null ? "null" : root.getId()) +
                 ", parent=" + (parent == null ? "null" : parent.getId()) +
                 ", icon=" + icon +
-                ", id='" + id + '\'' +
                 ", position=" + position +
                 ", absolute=" + absolute +
                 ", size=" + size +
@@ -277,43 +314,50 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     }
 
     @ApiStatus.NonExtendable
+    @Contract("_ -> this")
     public Widget onInit(WidgetEvent.OnInit listener) {
         events().register(WidgetEvent.onInit, listener);
         return this;
     }
 
     @ApiStatus.NonExtendable
+    @Contract("_ -> this")
     public Widget onUpdate(WidgetEvent.OnUpdate listener) {
         events().register(WidgetEvent.onUpdate, listener);
         return this;
     }
 
     @ApiStatus.NonExtendable
+    @Contract("_ -> this")
     public Widget onTick(WidgetEvent.OnTick listener) {
         events().register(WidgetEvent.onTick, listener);
         return this;
     }
 
-    public int getX() {
+    public int posX() {
         return getPos().x;
     }
 
-    public int getY() {
+    public int posY() {
         return getPos().y;
     }
 
+    @Contract("_,_ -> this")
     public Widget setPos(int x, int y) {
         return setPos(new Pos(x, y));
     }
 
-    public Widget setX(int x) {
-        return setPos(x, getY());
+    @Contract("_ -> this")
+    public Widget setPosX(int x) {
+        return setPos(x, posY());
     }
 
-    public Widget setY(int y) {
-        return setPos(getX(), y);
+    @Contract("_ -> this")
+    public Widget setPosY(int y) {
+        return setPos(posX(), y);
     }
 
+    @Contract("_,_ -> this")
     public Widget translate(int dx, int dy) {
         return setPos(getPos().x + dx, getPos().y + dy);
     }
@@ -326,18 +370,26 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return getSize().height;
     }
 
+    @Contract("_,_ -> this")
     public Widget setSize(int width, int height) {
         return setSize(new Dimension(width, height));
+    }
+
+    @Contract("_,_ -> this")
+    public Widget setSize(double width, double height) {
+        return setSize(new Dimension((int) width, (int) height));
     }
 
     public Rectangle getBounds() {
         return new Rectangle(getPos().x, getPos().y, getSize().width, getSize().height);
     }
 
+    @Contract("_ -> this")
     public Widget setWidth(int width) {
         return setSize(width, getSize().height);
     }
 
+    @Contract("_ -> this")
     public Widget setHeight(int height) {
         return setSize(getSize().width, height);
     }
@@ -362,22 +414,6 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         setVisible(true);
     }
 
-    public void measure(int width, int height) {
-
-    }
-
-    public Widget onMeasure(WidgetEvent.OnMeasure listener) {
-        return onEvent(WidgetEvent.onMeasure, listener);
-    }
-
-    public void layout(int x, int y, int width, int height) {
-
-    }
-
-    public Widget onLayout(WidgetEvent.OnLayout listener) {
-        return onEvent(WidgetEvent.onLayout, listener);
-    }
-
     /**
      * @param mouseX the absolute x coordinate of the mouse
      * @param mouseY the absolute y coordinate of the mouse
@@ -393,6 +429,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     public boolean isMouseOver(InputContext input) {
         return isMouseOver(input.mouseX(), input.mouseY());
     }
+
 
     /**
      * Top-down search
@@ -461,16 +498,19 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     }
 
     @ApiStatus.NonExtendable
+    @Contract("_ -> this")
     public Widget onRender(WidgetEvent.OnRender listener) {
         return onEvent(WidgetEvent.onRender, listener);
     }
 
     @ApiStatus.NonExtendable
+    @Contract("_ -> this")
     public Widget onMouseClicked(InputEvent.OnMouseClicked listener) {
         return onEvent(InputEvent.onMouseClicked, listener);
     }
 
     @ApiStatus.NonExtendable
+    @Contract("_ -> this")
     public Widget onMouseReleased(InputEvent.OnMouseReleased listener) {
         return onEvent(InputEvent.onMouseReleased, listener);
     }
@@ -481,6 +521,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     }
 
     @ApiStatus.NonExtendable
+    @Contract("_ -> this")
     public Widget onKeyPressed(InputEvent.OnKeyPressed listener) {
         return onEvent(InputEvent.onKeyPressed, listener);
     }
@@ -522,6 +563,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     }
 
     @Override
+    @Contract("_,_ -> this")
     public Widget interpolate(Widget next, float delta) {
         return this;
     }
