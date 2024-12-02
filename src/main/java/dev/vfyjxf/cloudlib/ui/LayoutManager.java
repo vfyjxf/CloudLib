@@ -5,6 +5,4 @@ public class LayoutManager {
     private boolean isInvalid;
 
 
-
-
 }

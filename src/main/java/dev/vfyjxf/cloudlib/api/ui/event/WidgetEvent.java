@@ -52,6 +52,12 @@ public interface WidgetEvent {
         }
     });
 
+    EventDefinition<OnInitPost> onInitPost = EventFactory.define(OnInitPost.class, listeners -> (widget) -> {
+        for (var listener : listeners) {
+            listener.onInit(widget);
+        }
+    });
+
     EventDefinition<OnTick> onTick = EventFactory.define(OnTick.class, listeners -> () -> {
         for (var listener : listeners) {
             listener.onTick();
@@ -123,6 +129,11 @@ public interface WidgetEvent {
 
     @FunctionalInterface
     interface OnInit extends WidgetEvent {
+        void onInit(Widget widget);
+    }
+
+    @FunctionalInterface
+    interface OnInitPost extends WidgetEvent {
         void onInit(Widget widget);
     }
 

@@ -21,6 +21,7 @@ public final class KeyMappings {
             KeyModifier.ALT,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_R,
-            debug);
+            debug
+    );
 
 }

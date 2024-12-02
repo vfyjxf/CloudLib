@@ -3,12 +3,15 @@ package dev.vfyjxf.cloudlib.api.ui.widgets;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
+import dev.vfyjxf.cloudlib.api.ui.layout.ColumnResizer;
+import dev.vfyjxf.cloudlib.api.ui.layout.GridResizer;
+import dev.vfyjxf.cloudlib.api.ui.layout.RowResizer;
 import net.minecraft.client.gui.GuiGraphics;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,14 +20,21 @@ import java.util.regex.Pattern;
 public class WidgetGroup<T extends Widget> extends Widget {
 
     protected final MutableList<T> children = Lists.mutable.empty();
-    protected final List<T> childrenView = children.asUnmodifiable();
+    protected final MutableList<T> childrenView = children.asUnmodifiable();
+
+    //////////////////////////////////////
+    //********      Basic      *********//
+    //////////////////////////////////////
 
     @MustBeInvokedByOverriders
+    @SuppressWarnings("all")
     public void init() {
-        super.init();
+        listeners(WidgetEvent.onInit).onInit(this);
         for (T child : children) {
             child.init();
         }
+        initialized = true;
+        listeners(WidgetEvent.onInitPost).onInit(this);
     }
 
     @MustBeInvokedByOverriders
@@ -37,16 +47,6 @@ public class WidgetGroup<T extends Widget> extends Widget {
         }
     }
 
-    @ApiStatus.Internal
-    public void rebuild() {
-        super.rebuild();
-        for (T child : children) {
-            if (child.initialized())
-                child.rebuild();
-        }
-        this.clear();
-    }
-
     @MustBeInvokedByOverriders
     public void tick() {
         super.tick();
@@ -56,24 +56,26 @@ public class WidgetGroup<T extends Widget> extends Widget {
         }
     }
 
-    public WidgetGroup<T> self() {
+    @Override
+    public WidgetGroup<T> resize() {
+        resizer.apply(this);
+        for (T child : children) {
+            child.resize();
+        }
+        resizer.postApply(this);
         return this;
     }
 
-    public void add(T draggable, int index, Runnable onEnter) {
-        this.add(index, draggable);
-        onEnter.run();
-    }
-
-    public boolean accept(T draggable) {
-        return false;
-    }
+    //////////////////////////////////////
+    //********    WidgetGroup  *********//
+    //////////////////////////////////////
 
     public int size() {
         return children.size();
     }
 
-    public List<T> children() {
+    @Unmodifiable
+    public MutableList<T> children() {
         return childrenView;
     }
 
@@ -121,7 +123,6 @@ public class WidgetGroup<T extends Widget> extends Widget {
         return children.contains(widget);
     }
 
-
     protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         super.renderInternal(graphics, mouseX, mouseY, partialTicks);
         for (T child : children) {
@@ -136,39 +137,42 @@ public class WidgetGroup<T extends Widget> extends Widget {
         }
     }
 
-    public List<Widget> getById(Pattern regex) {
-        List<Widget> widgets = new ArrayList<>();
-        for (Widget child : children) {
-            if (regex.matcher(child.getId()).matches()) {
-                widgets.add(child);
-            }
-            if (child instanceof WidgetGroup<?> group) {
-                List<Widget> result = group.getById(regex);
-                widgets.addAll(result);
-            }
+    /* Post resizers convenience methods
+     * TODO: remove child resizers when switching to another post method */
+
+    public RowResizer row() {
+        return this.row(5);
+    }
+
+    public RowResizer row(int margin) {
+        if (this.flex.post() instanceof RowResizer rowResizer) {
+            return rowResizer;
         }
-        return widgets;
+
+        return RowResizer.apply(this, margin);
     }
 
-    public List<Widget> getContainedWidgets(boolean withInvisible, int maxDepth) {
-        List<Widget> widgets = new ArrayList<>();
-        collectHelper(this, widgets, withInvisible, maxDepth, 0);
-        return widgets;
+    public ColumnResizer column() {
+        return this.column(5);
     }
 
-
-    private static void collectHelper(WidgetGroup<?> group, List<Widget> widgets, boolean withInvisible, int maxDepth, int depth) {
-        if (depth > maxDepth) return;
-        for (Widget child : group.children()) {
-            if (child instanceof dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup) {
-                collectHelper((WidgetGroup<?>) child, widgets, withInvisible, maxDepth, depth + 1);
-            } else {
-                if (withInvisible || child.visible())
-                    widgets.add(child);
-            }
+    public ColumnResizer column(int margin) {
+        if (this.flex.post() instanceof ColumnResizer columnResizer) {
+            return columnResizer;
         }
+
+        return ColumnResizer.apply(this, margin);
     }
 
+    public GridResizer grid(int margin) {
+        if (this.flex.post() instanceof GridResizer gridResizer) {
+            return gridResizer;
+        }
+
+        return GridResizer.apply(this, margin);
+    }
+
+    @Override
     public boolean mouseClicked(InputContext input) {
         if (!visible() || !active()) return false;
         var context = common();
@@ -182,6 +186,7 @@ public class WidgetGroup<T extends Widget> extends Widget {
         return false;
     }
 
+    @Override
     public boolean mouseReleased(InputContext input) {
         if (!visible() || !active()) return false;
         var context = common();
@@ -204,10 +209,12 @@ public class WidgetGroup<T extends Widget> extends Widget {
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
 
+    @Override
     public boolean mouseMoved(double mouseX, double mouseY) {
         return super.mouseMoved(mouseX, mouseY);
     }
 
+    @Override
     public boolean keyPressed(InputContext input) {
         var context = common();
         boolean result = listeners(InputEvent.onKeyPressed).onKeyPressed(context, input);
@@ -220,6 +227,7 @@ public class WidgetGroup<T extends Widget> extends Widget {
         return false;
     }
 
+    @Override
     public boolean keyReleased(InputContext input) {
         var context = common();
         boolean result = listeners(InputEvent.onKeyReleased).onKeyReleased(context, input);
@@ -283,6 +291,39 @@ public class WidgetGroup<T extends Widget> extends Widget {
             }
         }
         return null;
+    }
+
+    public List<Widget> getById(Pattern regex) {
+        List<Widget> widgets = new ArrayList<>();
+        for (Widget child : children) {
+            if (regex.matcher(child.getId()).matches()) {
+                widgets.add(child);
+            }
+            if (child instanceof WidgetGroup<?> group) {
+                List<Widget> result = group.getById(regex);
+                widgets.addAll(result);
+            }
+        }
+        return widgets;
+    }
+
+    public List<Widget> getContainedWidgets(boolean withInvisible, int maxDepth) {
+        List<Widget> widgets = new ArrayList<>();
+        collectHelper(this, widgets, withInvisible, maxDepth, 0);
+        return widgets;
+    }
+
+
+    private static void collectHelper(WidgetGroup<?> group, List<Widget> widgets, boolean withInvisible, int maxDepth, int depth) {
+        if (depth > maxDepth) return;
+        for (Widget child : group.children()) {
+            if (child instanceof dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup) {
+                collectHelper((WidgetGroup<?>) child, widgets, withInvisible, maxDepth, depth + 1);
+            } else {
+                if (withInvisible || child.visible())
+                    widgets.add(child);
+            }
+        }
     }
 
     @Nullable

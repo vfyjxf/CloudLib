@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.ui;
 
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.ModularUI;
+import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
 import dev.vfyjxf.cloudlib.api.ui.widgets.RootWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import dev.vfyjxf.cloudlib.ui.widgets.BasicPanel;
@@ -25,9 +26,15 @@ public abstract class ModularScreen extends Screen implements ModularUI {
         var root = new RootWidget();
         mainGroup.setRoot(root);
         mainGroup.asChild(root);
-        mainGroup.onInit((self) -> {
-            self.setPos(0, 0);
-            self.setSize(width, height);
+        mainGroup.onInit(self -> {
+            mainGroup.withModifier(
+                    Modifier.start()
+                            .pos(0, 0)
+                            .size(width, height)
+            );
+        });
+        mainGroup.onInitPost(self -> {
+            mainGroup.resize();
         });
     }
 

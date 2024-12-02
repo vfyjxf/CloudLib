@@ -15,6 +15,7 @@ public class CommonStartup {
     protected static final Logger LOGGER = LogManager.getLogger("CloudLib Startup");
     protected final Collection<IModPlugin> plugins;
     protected final IEventBus modBus;
+
     public CommonStartup(IEventBus modBus) {
         this.modBus = modBus;
         plugins = PluginLoading.load(IModPlugin.class);

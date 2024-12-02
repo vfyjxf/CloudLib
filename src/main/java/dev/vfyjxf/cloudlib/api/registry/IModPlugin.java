@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
 
 public interface IModPlugin {
 
-    default void registerUI(IUIRegistry registry){}
+    default void registerUI(IUIRegistry registry) {
+    }
 
 }

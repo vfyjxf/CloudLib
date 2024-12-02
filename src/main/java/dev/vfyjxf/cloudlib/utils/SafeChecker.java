@@ -4,5 +4,4 @@ package dev.vfyjxf.cloudlib.utils;
 public class SafeChecker {
 
 
-
 }
