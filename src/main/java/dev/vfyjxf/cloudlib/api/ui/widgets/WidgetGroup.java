@@ -3,6 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.widgets;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
+import dev.vfyjxf.cloudlib.api.ui.layout.BasicResizer;
 import dev.vfyjxf.cloudlib.api.ui.layout.ColumnResizer;
 import dev.vfyjxf.cloudlib.api.ui.layout.GridResizer;
 import dev.vfyjxf.cloudlib.api.ui.layout.RowResizer;
@@ -135,6 +136,11 @@ public class WidgetGroup<T extends Widget> extends Widget {
             }
             graphics.pose().popPose();
         }
+    }
+
+    public WidgetGroup<T> withLayout(BasicResizer resizer) {
+
+        return this;
     }
 
     /* Post resizers convenience methods

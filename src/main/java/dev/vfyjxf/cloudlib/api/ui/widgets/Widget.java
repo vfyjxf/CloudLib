@@ -17,6 +17,7 @@ import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.layout.Flex;
 import dev.vfyjxf.cloudlib.api.ui.layout.Margin;
+import dev.vfyjxf.cloudlib.api.ui.layout.Padding;
 import dev.vfyjxf.cloudlib.api.ui.layout.Resizer;
 import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
@@ -71,6 +72,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
 
     //layout
     protected final Margin margin = new Margin();
+    protected final Padding padding = new Padding();
     protected final Flex flex = new Flex();
     protected Resizer resizer = flex;
 

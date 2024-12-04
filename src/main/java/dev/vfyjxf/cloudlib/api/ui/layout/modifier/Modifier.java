@@ -12,6 +12,8 @@ import java.util.function.Predicate;
 
 /**
  * Design from Jetpack Compose
+ * <p>
+ * The layout modifier to pass layout parameters to a widget.
  */
 public interface Modifier {
 
@@ -241,6 +243,14 @@ public interface Modifier {
         return then(widget -> {
             widget.margin().bottom(bottom);
         });
+    }
+
+    //////////////////////////////////////
+    //********      Layout     *********//
+    //////////////////////////////////////
+
+    default Modifier layout() {
+        return then(null);
     }
 
     //////////////////////////////////////

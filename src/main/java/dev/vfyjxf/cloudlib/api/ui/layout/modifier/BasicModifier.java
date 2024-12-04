@@ -5,7 +5,7 @@ import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
-public class BasicModifier implements Modifier{
+public class BasicModifier implements Modifier {
     @Override
     public <R> R foldIn(R initial, BiFunction<R, Modifier, R> operation) {
         return null;

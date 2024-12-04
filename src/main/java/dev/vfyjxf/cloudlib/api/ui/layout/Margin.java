@@ -54,4 +54,16 @@ public class Margin {
     public int horizontal() {
         return this.left + this.right;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "left=" + left +
+                ", top=" + top +
+                ", right=" + right +
+                ", bottom=" + bottom +
+                ", vertical=" + vertical() +
+                ", horizontal=" + horizontal() +
+                '}';
+    }
 }

@@ -5,6 +5,9 @@ import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
 
 import java.util.List;
 
+/**
+ * TODO:rewrite layout resizer
+ */
 public class RowResizer extends AutomaticResizer {
     private int i;
     private int x;

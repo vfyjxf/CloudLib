@@ -42,9 +42,7 @@ public abstract class AutomaticResizer extends BasicResizer {
     }
 
     public Resizer child(Widget widget) {
-        ChildResizer child = new ChildResizer(this, widget);
-
-        return child;
+        return new ChildResizer(this, widget);
     }
 
     public List<ChildResizer> getResizers() {

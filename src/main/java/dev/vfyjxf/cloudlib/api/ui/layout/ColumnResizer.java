@@ -4,6 +4,9 @@ package dev.vfyjxf.cloudlib.api.ui.layout;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
 
+/**
+ * TODO:rewrite layout resizer
+ */
 public class ColumnResizer extends AutomaticResizer {
     private int x;
     private int y;
