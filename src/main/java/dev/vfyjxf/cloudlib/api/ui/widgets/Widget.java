@@ -4,9 +4,9 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
 import dev.vfyjxf.cloudlib.api.event.EventDefinition;
 import dev.vfyjxf.cloudlib.api.event.EventHandler;
-import dev.vfyjxf.cloudlib.api.math.Dimension;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
+import dev.vfyjxf.cloudlib.api.math.Size;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.Renderable;
 import dev.vfyjxf.cloudlib.api.ui.RenderableTexture;
@@ -17,13 +17,13 @@ import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.layout.Flex;
 import dev.vfyjxf.cloudlib.api.ui.layout.Margin;
+import dev.vfyjxf.cloudlib.api.ui.layout.Offset;
 import dev.vfyjxf.cloudlib.api.ui.layout.Padding;
 import dev.vfyjxf.cloudlib.api.ui.layout.Resizer;
 import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
 import dev.vfyjxf.cloudlib.ui.widgets.BasicWidget;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
@@ -32,7 +32,6 @@ import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -61,7 +60,10 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     //bounds
     protected Pos position = Pos.ZERO;
     protected Pos absolute = calculateAbsolute();
-    protected Dimension size = Dimension.ZERO;
+    /**
+     * The width and height of the widget,contains padding
+     */
+    protected Size size = Size.ZERO;
 
     //visual
     protected RenderableTexture background;
@@ -71,8 +73,6 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     protected RichTooltip richTooltip;
 
     //layout
-    protected final Margin margin = new Margin();
-    protected final Padding padding = new Padding();
     protected final Flex flex = new Flex();
     protected Resizer resizer = flex;
 
@@ -161,6 +161,11 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return this;
     }
 
+    @Contract("_ -> this")
+    public Widget mark(String id) {
+        return setId(id);
+    }
+
     @Contract("_-> this")
     @CanIgnoreReturnValue
     public final <T extends Widget> Widget asChild(WidgetGroup<T> parent) {
@@ -197,17 +202,90 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return this;
     }
 
-    public Dimension getSize() {
+    public Size getSize() {
         return size;
     }
 
     @Contract("_ -> this")
-    public Widget setSize(Dimension size) {
+    public Widget setSize(Size size) {
         var context = common();
         listeners(WidgetEvent.onSizeChanged).onSizeChanged(context, size);
         if (context.cancelled()) return this;
         this.size = size;
         return this;
+    }
+
+    public int posX() {
+        return getPos().x;
+    }
+
+    public int posY() {
+        return getPos().y;
+    }
+
+    @Contract("_,_ -> this")
+    public Widget setPos(int x, int y) {
+        return setPos(new Pos(x, y));
+    }
+
+    @Contract("_ -> this")
+    public Widget setPosX(int x) {
+        return setPos(x, posY());
+    }
+
+    @Contract("_ -> this")
+    public Widget setPosY(int y) {
+        return setPos(posX(), y);
+    }
+
+    @Contract("_,_ -> this")
+    public Widget translate(int dx, int dy) {
+        return setPos(getPos().x + dx, getPos().y + dy);
+    }
+
+    public int getWidth() {
+        return getSize().width;
+    }
+
+    public int getHeight() {
+        return getSize().height;
+    }
+
+    public int right() {
+        return posX() + getWidth();
+    }
+
+    public int bottom() {
+        return posY() + getHeight();
+    }
+
+    @Contract("_,_ -> this")
+    public Widget setSize(int width, int height) {
+        return setSize(new Size(width, height));
+    }
+
+    @Contract("_,_ -> this")
+    public Widget setSize(double width, double height) {
+        return setSize(new Size((int) width, (int) height));
+    }
+
+    public Widget setBound(int x, int y, int width, int height) {
+        return setPos(x, y)
+                .setSize(width, height);
+    }
+
+    public Rect getBounds() {
+        return new Rect(getPos().x, getPos().y, getSize().width, getSize().height);
+    }
+
+    @Contract("_ -> this")
+    public Widget setWidth(int width) {
+        return setSize(width, getSize().height);
+    }
+
+    @Contract("_ -> this")
+    public Widget setHeight(int height) {
+        return setSize(getSize().width, height);
     }
 
     //////////////////////////////////////
@@ -220,11 +298,13 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         graphics.pose().pushPose();
         {
             graphics.pose().translate(position.x, position.y, 0);
+            int relativeX = mouseX - position.x;
+            int relativeY = mouseY - position.y;
             var context = common();
-            listeners(WidgetEvent.onRender).onRender(graphics, mouseX, mouseY, partialTicks, context);
+            listeners(WidgetEvent.onRender).onRender(graphics, relativeX, relativeY, partialTicks, context);
             if (context.cancelled()) return;
-            renderInternal(graphics, mouseX, mouseY, partialTicks);
-            listeners(WidgetEvent.onRenderPost).onRender(graphics, mouseX, mouseY, partialTicks, common());
+            renderInternal(graphics, relativeX, relativeY, partialTicks);
+            listeners(WidgetEvent.onRenderPost).onRender(graphics, relativeX, relativeY, partialTicks, interruptible());
         }
         graphics.pose().popPose();
     }
@@ -235,10 +315,36 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     }
 
 
-    public void renderOverlay(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         RichTooltip richTooltip = getTooltip();
-        if (richTooltip != null)
-            ScreenUtil.renderTooltip(Objects.requireNonNull(Minecraft.getInstance().screen), graphics, richTooltip, mouseX, mouseY);
+        if (richTooltip != null) {
+            var mousePos = ScreenUtil.getMousePos();
+            ScreenUtil.renderTooltip(graphics, richTooltip, (int) mousePos.x, (int) mousePos.y);
+        }
+    }
+
+    public void renderOverlay(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+
+        if (invisible()) return;
+        graphics.pose().pushPose();
+        {
+            graphics.pose().translate(position.x, position.y, 0);
+            int relativeX = mouseX - position.x;
+            int relativeY = mouseY - position.y;
+            if (isMouseOverRelative(relativeX, relativeY)) {
+                var context = common();
+                listeners(WidgetEvent.onOverlayRender).onRender(graphics, relativeX, relativeY, partialTicks, context);
+                if (context.cancelled()) return;
+                renderOverlayInternal(graphics, relativeX, relativeY, partialTicks);
+
+                listeners(WidgetEvent.onOverlayRenderPost).onRender(graphics, relativeX, relativeY, partialTicks, interruptible());
+            }
+        }
+        graphics.pose().popPose();
+    }
+
+    protected void renderOverlayInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+
     }
 
 
@@ -279,7 +385,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
 
     @Contract("_ -> this")
     public Widget tooltip(LangEntry key) {
-        return tooltip(Component.translatable(key.key()));
+        return tooltip(key.get());
     }
 
     @Contract("_ -> this")
@@ -300,13 +406,29 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return this;
     }
 
+
+    /**
+     * NOTE: key must be without format args, if you want to use format args,use {@link #tooltip(LangEntry, Object...)}
+     *
+     * @param keys the keys to be translated.
+     */
     @Contract("_ -> this")
     public Widget tooltips(LangEntry... keys) {
+        for (LangEntry key : keys) {
+            tooltip(key);
+        }
         return this;
+    }
+
+    public Widget tooltip(LangEntry key, Object... args) {
+        return tooltip(key.get(args));
     }
 
     @Contract("_ -> this")
     public Widget tooltips(Component... components) {
+        for (Component component : components) {
+            tooltip(component);
+        }
         return this;
     }
 
@@ -373,77 +495,18 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return this;
     }
 
-    public int posX() {
-        return getPos().x;
-    }
-
-    public int posY() {
-        return getPos().y;
-    }
-
-    @Contract("_,_ -> this")
-    public Widget setPos(int x, int y) {
-        return setPos(new Pos(x, y));
-    }
-
+    @ApiStatus.NonExtendable
     @Contract("_ -> this")
-    public Widget setPosX(int x) {
-        return setPos(x, posY());
+    public final Widget onResize(WidgetEvent.OnResize listener) {
+        events().register(WidgetEvent.onResize, listener);
+        return this;
     }
 
+    @ApiStatus.NonExtendable
     @Contract("_ -> this")
-    public Widget setPosY(int y) {
-        return setPos(posX(), y);
-    }
-
-    @Contract("_,_ -> this")
-    public Widget translate(int dx, int dy) {
-        return setPos(getPos().x + dx, getPos().y + dy);
-    }
-
-    public int getWidth() {
-        return getSize().width;
-    }
-
-    public int getHeight() {
-        return getSize().height;
-    }
-
-    public int right() {
-        return posX() + getWidth();
-    }
-
-    public int bottom() {
-        return posY() + getHeight();
-    }
-
-    @Contract("_,_ -> this")
-    public Widget setSize(int width, int height) {
-        return setSize(new Dimension(width, height));
-    }
-
-    @Contract("_,_ -> this")
-    public Widget setSize(double width, double height) {
-        return setSize(new Dimension((int) width, (int) height));
-    }
-
-    public Widget setBound(int x, int y, int width, int height) {
-        return setPos(x, y)
-                .setSize(width, height);
-    }
-
-    public Rect getBounds() {
-        return new Rect(getPos().x, getPos().y, getSize().width, getSize().height);
-    }
-
-    @Contract("_ -> this")
-    public Widget setWidth(int width) {
-        return setSize(width, getSize().height);
-    }
-
-    @Contract("_ -> this")
-    public Widget setHeight(int height) {
-        return setSize(getSize().width, height);
+    public final Widget onResizePost(WidgetEvent.OnResizePost listener) {
+        events().register(WidgetEvent.onResizePost, listener);
+        return this;
     }
 
     public boolean visible() {
@@ -471,14 +534,19 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     //////////////////////////////////////
 
     public Widget withModifier(Modifier modifier) {
-        modifier.apply(this);
+        this.events().registerManaged(WidgetEvent.onInitPost, modifier::apply, 1);
         return this;
     }
 
-    public Widget resize() {
+    /**
+     * Resize and Layout the widget
+     */
+    public void layout() {
+        listeners(WidgetEvent.onResize).onResize(this);
         resizer.apply(this);
         resizer.postApply(this);
-        return this;
+        this.onPositionUpdate();
+        listeners(WidgetEvent.onResizePost).onResizePost(this);
     }
 
     @Override
@@ -496,7 +564,15 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     }
 
     public Margin margin() {
-        return margin;
+        return flex.margin();
+    }
+
+    public Padding padding() {
+        return flex.padding();
+    }
+
+    public Offset offset() {
+        return flex.offset();
     }
 
     public Resizer resizer() {
@@ -517,30 +593,36 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     //*******       Inputs     *********//
     //////////////////////////////////////
 
-    @ApiStatus.NonExtendable
     @Contract("_ -> this")
     public final Widget onRender(WidgetEvent.OnRender listener) {
         return onEvent(WidgetEvent.onRender, listener);
     }
 
-    @ApiStatus.NonExtendable
+    @Contract("_ -> this")
+    public final Widget onOverlayRender(WidgetEvent.OnOverlayRender listener) {
+        return onEvent(WidgetEvent.onOverlayRender, listener);
+    }
+
     @Contract("_ -> this")
     public final Widget onMouseClicked(InputEvent.OnMouseClicked listener) {
         return onEvent(InputEvent.onMouseClicked, listener);
     }
 
-    @ApiStatus.NonExtendable
+    @Contract("_ -> this")
+    public final Widget onMouseClickedInner(InputEvent.OnMouseClicked listener) {
+        return onEvent(InputEvent.onMouseClicked, listener);
+    }
+
     @Contract("_ -> this")
     public final Widget onMouseReleased(InputEvent.OnMouseReleased listener) {
         return onEvent(InputEvent.onMouseReleased, listener);
     }
 
-    @ApiStatus.NonExtendable
+    @Contract("_ -> this")
     public final Widget onKeyReleased(InputEvent.OnKeyReleased listener) {
         return onEvent(InputEvent.onKeyReleased, listener);
     }
 
-    @ApiStatus.NonExtendable
     @Contract("_ -> this")
     public final Widget onKeyPressed(InputEvent.OnKeyPressed listener) {
         return onEvent(InputEvent.onKeyPressed, listener);
@@ -616,6 +698,10 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
 
     public boolean isMouseOver(InputContext input) {
         return isMouseOver(input.mouseX(), input.mouseY());
+    }
+
+    public boolean isMouseOverRelative(double mouseX, double mouseY) {
+        return size.contains(mouseX, mouseY);
     }
 
     @SuppressWarnings("unchecked")

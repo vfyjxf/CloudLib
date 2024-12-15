@@ -26,6 +26,7 @@ public class UIRegistry implements IUIRegistry {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T extends Renderable> IRenderableSerializer<T> getSerializer(Class<T> clazz) {
         return (IRenderableSerializer<T>) serializerMap.get(clazz);
     }

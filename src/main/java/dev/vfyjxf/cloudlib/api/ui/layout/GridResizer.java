@@ -3,20 +3,22 @@ package dev.vfyjxf.cloudlib.api.ui.layout;
 
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
+import org.jetbrains.annotations.Contract;
 
 /**
  * TODO:rewrite layout resizer
  */
-public class GridResizer extends AutomaticResizer {
-    private int i;
-    private int x;
-    private int y;
-    private int h;
+public class GridResizer extends AutomaticResizer<GridResizer> {
+    private int index;
+    private int lastX;
+    private int lastY;
+    private int lastHeight;
+    private ChildResizer lastResizer;
 
     /**
      * How many elements in a row
      */
-    private int items = 2;
+    private int count = 2;
 
     /**
      * If above zero, what is the width of every cell should be,
@@ -29,27 +31,35 @@ public class GridResizer extends AutomaticResizer {
      */
     private boolean resizes = true;
 
-    public static GridResizer apply(WidgetGroup<? extends Widget> widget, int margin) {
-        GridResizer resizer = new GridResizer(widget, margin);
-
-        widget.flex().setPost(resizer);
-
-        return resizer;
-    }
-
-    protected GridResizer(WidgetGroup<? extends Widget> parent, int margin) {
-        super(parent, margin);
+    public GridResizer(WidgetGroup<? extends Widget> parent) {
+        super(parent);
+        parent.flex().setPost(this);
     }
 
     public GridResizer resizes(boolean resizes) {
         this.resizes = resizes;
+        return this;
+    }
 
+    //TODO:implement
+    @Contract("_ -> this")
+    public GridResizer fixed(int count) {
+        this.count = count;
+        return this;
+    }
+
+    @Contract("_ -> this")
+    public GridResizer adaptive(int minSize) {
+        return this;
+    }
+
+    @Contract("_ -> this")
+    public GridResizer fixedSize(int size) {
         return this;
     }
 
     public GridResizer items(int items) {
-        this.items = items;
-
+        this.count = items;
         return this;
     }
 
@@ -62,73 +72,36 @@ public class GridResizer extends AutomaticResizer {
      */
     public GridResizer width(int width) {
         this.width = width;
-
         return this;
     }
 
     @Override
-    public void apply(Widget widget, Resizer resizer, ChildResizer child) {
-        int w;
-        int h;
+    public void apply(Widget widget, Flex resizer, ChildResizer childResizer) {
+        //TODO:rewrite
+        int width;
+        int height;
         int x;
         int y;
-
-        if (this.width > 0) {
-            if (this.x + this.width > this.parent.getWidth() - this.padding * 2) {
-                this.y += this.h + this.margin;
-                this.h = 0;
-                this.x = 0;
-            }
-
-            w = this.width;
-            h = resizer == null ? 0 : resizer.getHeight();
-            x = this.parent.posX() + this.padding + this.x;
-            y = this.parent.posY() + this.padding + this.y;
-
-            if (h <= 0) {
-                h = this.height;
-            }
-
-            if (h <= 0) {
-                h = w;
-            }
-
-            this.h = Math.max(this.h, h);
-
-            widget.setBound(x, y, w, h);
-
-            this.x += this.width + this.margin;
-        } else {
-            if (this.i != 0 && this.i % this.items == 0) {
-                this.y += this.h + this.margin;
-                this.h = 0;
-                this.i = 0;
-            }
-
-            w = (this.parent.getWidth() - this.padding * 2 - this.margin * (this.items - 1)) / this.items;
-            h = resizer == null ? 0 : resizer.getHeight();
-            x = this.parent.posX() + this.padding + (w + this.margin) * this.i;
-            y = this.parent.posY() + this.padding + this.y;
-
-            if (h <= 0) {
-                h = this.height;
-            }
-
-            if (h <= 0) {
-                h = w;
-            }
-
-            this.h = Math.max(this.h, h);
-            this.i++;
-
-            widget.setBound(x, y, w, h);
+        if (this.index != 0 && this.index % this.count == 0) {
+            this.lastY += this.lastHeight + this.margin;
+            this.lastHeight = 0;
+            this.index = 0;
         }
 
+        width = (this.group.getWidth() - this.padding * 2 - this.margin * (this.count - 1)) / this.count;
+        height = resizer == null ? 0 : resizer.getHeight();
+        x = childResizer.widget.margin().start + (width + group.padding().start) * this.index + childResizer.widget.offset().x();
+        y = this.group.padding().top + this.lastY + childResizer.widget.offset().y() + childResizer.widget.margin().top;
+
+        this.lastHeight = Math.max(this.lastHeight, height);
+        this.index++;
+
+        widget.setBound(x, y, width, height);
     }
 
     @Override
     public void apply(Widget widget) {
-        this.i = this.x = this.y = this.h = 0;
+        this.index = this.lastX = this.lastY = this.lastHeight = 0;
     }
 
     @Override
@@ -138,7 +111,7 @@ public class GridResizer extends AutomaticResizer {
             int x = 0;
             int y = 0;
             int maxH = 0;
-            int width = this.parent.getWidth();
+            int width = this.group.getWidth();
 
             if (this.width > 0) {
                 for (ChildResizer child : this.getResizers()) {
@@ -149,7 +122,7 @@ public class GridResizer extends AutomaticResizer {
                     }
 
                     int w = this.width;
-                    int h = child.resizer == null ? 0 : child.resizer.getHeight();
+                    int h = child.flex() == null ? 0 : child.flex().getHeight();
 
                     if (h <= 0) {
                         h = this.height;
@@ -164,14 +137,14 @@ public class GridResizer extends AutomaticResizer {
                 }
             } else {
                 for (ChildResizer child : this.getResizers()) {
-                    if (i != 0 && i % this.items == 0) {
+                    if (i != 0 && i % this.count == 0) {
                         y += maxH + this.margin;
                         maxH = 0;
                         i = 0;
                     }
 
-                    int w = (width - this.padding * 2 - this.margin * (this.items - 1)) / this.items;
-                    int h = child.resizer == null ? 0 : child.resizer.getHeight();
+                    int w = (width - this.padding * 2 - this.margin * (this.count - 1)) / this.count;
+                    int h = child.flex() == null ? 0 : child.flex().getHeight();
 
                     if (h <= 0) {
                         h = this.height;

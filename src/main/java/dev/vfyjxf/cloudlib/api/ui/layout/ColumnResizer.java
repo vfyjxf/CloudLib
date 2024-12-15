@@ -4,13 +4,9 @@ package dev.vfyjxf.cloudlib.api.ui.layout;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
 
-/**
- * TODO:rewrite layout resizer
- */
-public class ColumnResizer extends AutomaticResizer {
-    private int x;
-    private int y;
-    private int w;
+//TODO:rework scroll
+public class ColumnResizer extends AutomaticResizer<ColumnResizer> {
+    private ChildResizer lastResizer;
 
     /**
      * Default width
@@ -24,129 +20,61 @@ public class ColumnResizer extends AutomaticResizer {
     private boolean vertical;
 
     /**
-     * Stretch column to the full width of the parent element
-     */
-    private boolean stretch;
-
-    //TODO:rework scroll
-    /**
-     * Scroll mode, this will automatically calculate the scroll area
-     */
-    private boolean scroll;
-
-    /**
      * Place elements after it reached the bottom on the left, instead of the right
      */
     private boolean flip;
 
-    public static ColumnResizer apply(WidgetGroup<? extends Widget> widget, int margin) {
-        ColumnResizer resizer = new ColumnResizer(widget, margin);
-
-        widget.flex().setPost(resizer);
-
-        return resizer;
+    public ColumnResizer(WidgetGroup<? extends Widget> parent) {
+        super(parent);
+        parent.flex().setPost(this);
     }
 
-    protected ColumnResizer(WidgetGroup<?> parent, int margin) {
-        super(parent, margin);
-    }
 
     public ColumnResizer width(int width) {
         this.width = width;
-
         return this;
     }
 
     public ColumnResizer vertical() {
         this.vertical = true;
-
-        return this;
-    }
-
-    public ColumnResizer stretch() {
-        this.stretch = true;
-
         return this;
     }
 
     public ColumnResizer flip() {
         this.flip = true;
-
         return this;
     }
 
     @Override
-    public void apply(Widget widget, Resizer resizer, ChildResizer child) {
-        Margin margin = child.widget.margin();
-        int w = resizer == null ? this.width : resizer.getWidth();
-        int h = resizer == null ? this.height : resizer.getHeight();
+    public void apply(Widget widget, Flex resizer, ChildResizer childResizer) {
+        int size = this.getResizers().size();
 
-        if (w == 0) {
-            w = this.width;
-        }
+        int baseX = group.padding().start;
+        int posX = baseX + childResizer.widget.margin().start;
+        posX += childResizer.widget.offset().x();
 
-        if (h == 0) {
-            h = this.height;
-        }
+        int baseY = lastResizer == null ? 0 : lastResizer.getY() + lastResizer.getHeight() + lastResizer.widget.margin().bottom;
+        int posY = baseY + childResizer.widget.margin().top + group.padding().top;
+        posY += childResizer.widget.offset().y();
 
-        if (this.stretch) {
-            w = this.parent.getWidth() - this.padding * 2;
-        }
-
-        int marginTop = margin.top;
-
-        if (!this.vertical && this.y + h + marginTop > this.parent.getHeight() - this.padding * 2) {
-            this.x += (this.w + this.padding) * (this.flip ? -1 : 1);
-            this.y = this.w = 0;
-
-            marginTop = 0;
-        }
-
-        int x = this.parent.posX() + this.x + this.padding + margin.left;
-        int y = this.parent.posY() + this.y + this.padding + marginTop;
-
-        widget.setBound(x, y, w, h);
-
-        this.w = Math.max(this.w, w + margin.horizontal());
-        this.y += h + this.margin + marginTop + margin.bottom;
+        int width = resizer.width().isUndefined() ?
+                group.getWidth() - group.padding().start : resizer.getWidth();
+        width = resizer.width().rangeDefined() ? resizer.width().normalizeSize(width) : width;
+        int height = resizer.height().isUndefined() ?
+                (group.getHeight()) / size : resizer.getHeight();
+        height = resizer.height().rangeDefined() ? resizer.height().normalizeSize(height) : height;
+        widget.setBound(
+                posX,
+                posY,
+                width,
+                height
+        );
+        lastResizer = childResizer;
     }
 
     @Override
     public void apply(Widget widget) {
-        this.x = 0;
-        this.y = 0;
-        this.w = 0;
+        this.lastResizer = null;
     }
 
-    @Override
-    public void postApply(Widget widget) {
-//        if (this.scroll && this.parent.area().scroll != null) {
-//            ScrollArea scroll = this.parent.area().scroll;
-//
-//            if (this.vertical && scroll.direction == ScrollDirection.VERTICAL) {
-//                scroll.scrollSize = this.y - this.margin + this.padding * 2;
-//            } else if (!this.vertical && scroll.direction == ScrollDirection.HORIZONTAL) {
-//                scroll.scrollSize = this.x + this.w + this.padding * 2;
-//            }
-//
-//            scroll.clamp();
-//        }
-    }
-
-    @Override
-    public int getHeight() {
-        if (this.vertical && !this.scroll) {
-            int y = this.padding * 2;
-
-            for (ChildResizer child : this.getResizers()) {
-                int h = child.resizer == null ? 0 : child.resizer.getHeight();
-
-                y += (h == 0 ? this.height : h) + this.margin + child.widget.margin().vertical();
-            }
-
-            return y - this.margin;
-        }
-
-        return super.getHeight();
-    }
 }

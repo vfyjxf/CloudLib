@@ -6,14 +6,14 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import dev.vfyjxf.cloudlib.api.ui.RenderableTexture;
+import dev.vfyjxf.cloudlib.api.ui.RenderableBoundTexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 
-public class RenderableSprite implements RenderableTexture {
+public class RenderableSprite implements RenderableBoundTexture {
     private final SpriteUploader spriteUploader;
     private final ResourceLocation location;
     private final int width;
@@ -50,11 +50,11 @@ public class RenderableSprite implements RenderableTexture {
 
     @Override
     public void render(GuiGraphics poseStack, int xOffset, int yOffset) {
-        render(poseStack, xOffset, yOffset, 0, 0, 0, 0);
+        render(poseStack, xOffset, yOffset, 0, 0, 0, 0, 0, 0);
     }
 
     @Override
-    public void render(GuiGraphics graphics, int xOffset, int yOffset, int maskTop, int maskBottom, int maskLeft, int maskRight) {
+    public void render(GuiGraphics graphics, int xOffset, int yOffset, int width, int height, int maskTop, int maskBottom, int maskLeft, int maskRight) {
         TextureAtlasSprite sprite = spriteUploader.getSprite(location);
         int textureWidth = this.width;
         int textureHeight = this.height;
@@ -69,8 +69,8 @@ public class RenderableSprite implements RenderableTexture {
 
         int x = xOffset + maskLeft;
         int y = yOffset + maskTop;
-        int width = textureWidth - maskRight - maskLeft;
-        int height = textureHeight - maskBottom - maskTop;
+        width = textureWidth - maskRight - maskLeft;
+        height = textureHeight - maskBottom - maskTop;
         float uSize = sprite.getU1() - sprite.getU0();
         float vSize = sprite.getV1() - sprite.getV0();
 

@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets.layout.modifier;
 
-import dev.vfyjxf.cloudlib.api.ui.layout.modifier.BasicModifier;
 import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 
@@ -9,6 +8,11 @@ import java.util.function.Predicate;
 
 //TODO: Implement the RightModifier
 public class RightModifier implements Modifier {
+
+    public RightModifier(Modifier modifier){
+
+    }
+
     @Override
     public <R> R foldIn(R initial, BiFunction<R, Modifier, R> operation) {
         return null;
@@ -35,10 +39,10 @@ public class RightModifier implements Modifier {
     }
 
     public LeftModifier right(int value) {
-        return new LeftModifier();
+        return new LeftModifier(null);
     }
 
     public Modifier width(int value) {
-        return new BasicModifier();
+        throw new UnsupportedOperationException("Not implemented");
     }
 }

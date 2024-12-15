@@ -5,7 +5,7 @@ import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
-public class BasicModifier implements Modifier {
+public abstract class BasicModifier<THIS extends BasicModifier<THIS>> implements Modifier {
     @Override
     public <R> R foldIn(R initial, BiFunction<R, Modifier, R> operation) {
         return null;
@@ -27,7 +27,5 @@ public class BasicModifier implements Modifier {
     }
 
     @Override
-    public void apply(Widget widget) {
-
-    }
+    public abstract void apply(Widget widget);
 }

@@ -24,6 +24,7 @@ public interface Resizer {
     default void remove(WidgetGroup<?> parent, Widget child) {
 
     }
+    //TODO:rework layout methods to position and size
 
     int getX();
 

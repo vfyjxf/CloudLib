@@ -7,14 +7,18 @@ import java.util.function.Supplier;
 
 public class Checks {
 
-    public static <T> T requireNonNull(@Nullable T obj, String message) {
+    public static void checkArgument(boolean expression, String errorMessageTemplate, Object... errorMessageArgs) {
+        Preconditions.checkArgument(expression, errorMessageTemplate, errorMessageArgs);
+    }
+
+    public static <T> T checkNotNull(@Nullable T obj, String message) {
         if (obj == null) {
             throw new NullPointerException(message);
         }
         return obj;
     }
 
-    public static <X extends Throwable, T> T requireNonNull(@Nullable T obj, Supplier<? extends X> exceptionSupplier) throws X {
+    public static <X extends Throwable, T> T checkNotNull(@Nullable T obj, Supplier<? extends X> exceptionSupplier) throws X {
         if (obj == null) {
             throw exceptionSupplier.get();
         }

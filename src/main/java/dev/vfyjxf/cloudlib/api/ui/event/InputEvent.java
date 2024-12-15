@@ -26,6 +26,17 @@ public interface InputEvent extends WidgetEvent {
     });
 
     EventDefinition<OnMouseClicked> onMouseClicked = EventFactory.define(OnMouseClicked.class, listeners -> (context, input) -> {
+        //TODO:classify the context, should it be common or cancelable?
+        boolean result = false;
+        for (var listener : listeners) {
+            result |= listener.onClicked(context, input);
+            if (context.cancelled()) return result;
+        }
+        return result;
+    });
+
+    EventDefinition<OnMouseClickedInner> onMouseClickedInner = EventFactory.define(OnMouseClickedInner.class, listeners -> (context, input) -> {
+        //TODO:classify the context, should it be common or cancelable?
         boolean result = false;
         for (var listener : listeners) {
             result |= listener.onClicked(context, input);
@@ -61,6 +72,11 @@ public interface InputEvent extends WidgetEvent {
 
     @FunctionalInterface
     interface OnMouseClicked extends InputEvent {
+        boolean onClicked(Common context, InputContext input);
+    }
+
+    @FunctionalInterface
+    interface OnMouseClickedInner extends InputEvent {
         boolean onClicked(Common context, InputContext input);
     }
 

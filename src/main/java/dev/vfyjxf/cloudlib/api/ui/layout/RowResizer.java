@@ -5,20 +5,9 @@ import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
 
 import java.util.List;
 
-/**
- * TODO:rewrite layout resizer
- */
-public class RowResizer extends AutomaticResizer {
-    private int i;
-    private int x;
-    private int w;
-    private int count;
+public class RowResizer extends AutomaticResizer<RowResizer> {
 
-    /**
-     * Preferred element to use in the row for the width adjustments caused by
-     * integer arithmetics, -1 = to the size() / 2
-     */
-    private int preferred = -1;
+    private ChildResizer lastResizer;
 
     /**
      * Default width for row elements if not specified by resizer
@@ -26,142 +15,76 @@ public class RowResizer extends AutomaticResizer {
     private int width;
 
     /**
-     * Whether the area should be resized according to the sum or row elements
-     */
-    private boolean resize;
-
-    /**
      * Whether the elements would be placed from right to left
      */
     private boolean reverse;
 
-    public static RowResizer apply(WidgetGroup<? extends Widget> widget, int margin) {
-        RowResizer resizer = new RowResizer(widget, margin);
-
-        widget.flex().setPost(resizer);
-
-        return resizer;
-    }
-
-    protected RowResizer(WidgetGroup<? extends Widget> parent, int margin) {
-        super(parent, margin);
-    }
-
-    public RowResizer preferred(int index) {
-        this.preferred = i;
-
-        return this;
+    public RowResizer(WidgetGroup<? extends Widget> parent) {
+        super(parent);
+        parent.flex().setPost(this);
     }
 
     public RowResizer width(int width) {
         this.width = width;
-
-        return this;
-    }
-
-    public RowResizer resize() {
-        this.resize = true;
-
         return this;
     }
 
     public RowResizer reverse() {
         this.reverse = true;
-
         return this;
     }
 
     @Override
-    public void apply(Widget widget, Resizer resizer, ChildResizer child) {
-        List<ChildResizer> resizers = this.getResizers();
-        int c = resizers.size();
-        int original = this.parent.getWidth() - this.padding * 2 - this.margin * (c - 1);
-        int w = this.count > 0 ? (original - this.w) / this.count : 0;
-        int x = this.parent.posX() + this.padding + this.x + child.widget.margin().left;
+    public void apply(Widget widget, Flex resizer, ChildResizer childResizer) {
+        int size = this.getResizers().size();
 
-        /* If it's reverse, start adding from the right side */
-        if (this.reverse) {
-            x = this.parent.right() - this.padding - this.x - child.widget.margin().right;
-        }
+        int baseX = lastResizer == null ? 0 : lastResizer.getX() + lastResizer.getWidth() + lastResizer.widget.margin().end;
+        int posX = baseX + childResizer.widget.margin().start + group.padding().start;
+        posX += childResizer.widget.offset().x();
 
-        /* If resizer specifies its custom width, use that one instead */
-        int cw = resizer == null ? 0 : resizer.getWidth();
-        int ch = resizer == null ? this.height : resizer.getHeight();
+        int baseY = group.padding().top;
+        int posY = baseY + childResizer.widget.margin().top;
+        posY += childResizer.widget.offset().y();
 
-        if (this.width > 0) {
-            cw = this.width;
-        }
-
-        cw = cw > 0 ? cw : w;
-
-        /* Readjust the middle element width to balance out int imprecision */
-        int preferred = this.preferred == -1 ? c / 2 : this.preferred;
-
-        if (this.i == preferred && !this.resize && this.width <= 0) {
-            int diff = original - this.w - w * this.count;
-
-            if (diff > 0) {
-                cw += diff;
-            }
-        }
-
-        /* Subtract the width from the X position */
-        if (this.reverse) {
-            x -= cw;
-        }
-
-        widget.setBound(x, this.parent.posY() + this.padding + child.widget.margin().top, cw, ch > 0 ? ch : this.parent.getHeight() - this.padding * 2);
-
-        this.x += cw + this.margin + child.widget.margin().horizontal();
-        this.i++;
+        int width = resizer.width().isUndefined() ?
+                (group.getWidth()) / size : resizer.getWidth();
+        width = resizer.width().rangeDefined() ? resizer.width().normalizeSize(width) : width;
+        int height = resizer.height().isUndefined() ?
+                group.getHeight() - group.padding().top : resizer.getHeight();
+        height = resizer.height().rangeDefined() ? resizer.height().normalizeSize(height) : height;
+        widget.setBound(
+                posX,
+                posY,
+                width,
+                height
+        );
+        lastResizer = childResizer;
     }
 
     @Override
     public void apply(Widget widget) {
-        List<ChildResizer> resizers = this.getResizers();
-
-        this.i = this.x = this.w = 0;
-        this.count = resizers.size();
-
-        for (ChildResizer resizer : resizers) {
-            int w = Math.max(resizer.resizer == null ? 0 : resizer.resizer.getWidth(), 0);
-
-            if (w > 0) {
-                this.w += w;
-                this.count--;
-            }
-        }
+        this.lastResizer = null;
     }
 
     @Override
     public int getWidth() {
-        if (this.resize) {
-            List<ChildResizer> resizers = this.getResizers();
-            int w = resizers.isEmpty() ? 0 : -this.margin;
-
-            for (ChildResizer resizer : resizers) {
-                int cw = resizer.resizer == null ? 0 : resizer.resizer.getWidth();
-
-                if (cw == 0 && this.width > 0) {
-                    cw = this.width;
-                }
-
-                w += Math.max(cw, 0) + this.margin + resizer.widget.margin().horizontal();
-            }
-
-            return w + this.padding * 2;
-        }
-
-        return 0;
+        if (!this.group.flex().widthExpandable()) return 0;
+        if (widthDefined()) return 0;
+        int totalWidth = (int) this.getResizers()
+                .select(resizer -> resizer.flex() != null)
+                .summarizeInt(resizer -> resizer.flex().getWidth() + resizer.widget.margin().horizontal())
+                .getSum();
+        return this.group.flex().width().normalizeSize(totalWidth);
     }
 
     @Override
     public int getHeight() {
+        if (!this.group.flex().heightExpandable()) return 0;
         List<ChildResizer> resizers = this.getResizers();
         int h = 0;
 
         for (ChildResizer child : resizers) {
-            h = Math.max(h, child.resizer == null ? 0 : child.resizer.getHeight() + child.widget.margin().vertical());
+            h = Math.max(h, child.flex() == null ? 0 : child.flex().getHeight() + child.widget.margin().vertical());
         }
 
         if (h == 0) {

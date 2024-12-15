@@ -17,6 +17,11 @@ public class RootWidget extends WidgetGroup<Widget> {
     }
 
     @Override
+    public UIContext getContext() {
+        return context;
+    }
+
+    @Override
     public String toString() {
         return "RootWidget{" +
                 "context=" + context +

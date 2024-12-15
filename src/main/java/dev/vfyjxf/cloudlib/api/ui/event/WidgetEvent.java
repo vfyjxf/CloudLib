@@ -4,8 +4,8 @@ import dev.vfyjxf.cloudlib.api.event.EventContext.Common;
 import dev.vfyjxf.cloudlib.api.event.EventContext.Interruptible;
 import dev.vfyjxf.cloudlib.api.event.EventDefinition;
 import dev.vfyjxf.cloudlib.api.event.EventFactory;
-import dev.vfyjxf.cloudlib.api.math.Dimension;
 import dev.vfyjxf.cloudlib.api.math.Pos;
+import dev.vfyjxf.cloudlib.api.math.Size;
 import dev.vfyjxf.cloudlib.api.ui.RichTooltip;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import net.minecraft.client.gui.GuiGraphics;
@@ -33,7 +33,27 @@ public interface WidgetEvent {
         }
     });
 
-    EventDefinition<OnRender> onRenderPost = EventFactory.define(OnRender.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
+    EventDefinition<OnRenderPost> onRenderPost = EventFactory.define(OnRenderPost.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
+        for (var listener : listeners) {
+            listener.onRender(graphics, mouseX, mouseY, partialTicks, context);
+            if (context.interrupted()) return;
+        }
+    });
+
+    /**
+     * Call when mouse over the widget
+     */
+    EventDefinition<OnOverlayRender> onOverlayRender = EventFactory.define(OnOverlayRender.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
+        for (var listener : listeners) {
+            listener.onRender(graphics, mouseX, mouseY, partialTicks, context);
+            if (context.interrupted()) return;
+        }
+    });
+
+    /**
+     * Call after tooltip render
+     */
+    EventDefinition<OnOverlayRenderPost> onOverlayRenderPost = EventFactory.define(OnOverlayRenderPost.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
         for (var listener : listeners) {
             listener.onRender(graphics, mouseX, mouseY, partialTicks, context);
             if (context.interrupted()) return;
@@ -98,7 +118,6 @@ public interface WidgetEvent {
         }
     });
 
-
     EventDefinition<OnTooltip> onTooltip = EventFactory.define(OnTooltip.class, listeners -> (context, tooltip) -> {
         for (var listener : listeners) {
             listener.onTooltip(context, tooltip);
@@ -112,6 +131,18 @@ public interface WidgetEvent {
         }
     });
 
+    EventDefinition<OnResize> onResize = EventFactory.define(OnResize.class, listeners -> (self) -> {
+        for (var listener : listeners) {
+            listener.onResize(self);
+        }
+    });
+
+    EventDefinition<OnResizePost> onResizePost = EventFactory.define(OnResizePost.class, listeners -> (self) -> {
+        for (var listener : listeners) {
+            listener.onResizePost(self);
+        }
+    });
+
     @FunctionalInterface
     interface OnPositionChanged extends WidgetEvent {
         void onPositionChanged(Common context, Pos position);
@@ -119,12 +150,27 @@ public interface WidgetEvent {
 
     @FunctionalInterface
     interface OnSizeChanged extends WidgetEvent {
-        void onSizeChanged(Common context, Dimension size);
+        void onSizeChanged(Common context, Size size);
     }
 
     @FunctionalInterface
     interface OnRender extends WidgetEvent {
         void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, Common context);
+    }
+
+    @FunctionalInterface
+    interface OnRenderPost extends WidgetEvent {
+        void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, Interruptible context);
+    }
+
+    @FunctionalInterface
+    interface OnOverlayRender extends WidgetEvent {
+        void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, Common context);
+    }
+
+    @FunctionalInterface
+    interface OnOverlayRenderPost extends WidgetEvent {
+        void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, Interruptible context);
     }
 
     @FunctionalInterface
@@ -177,8 +223,19 @@ public interface WidgetEvent {
         void onTooltip(Common context, RichTooltip richTooltip);
     }
 
+    @FunctionalInterface
     interface OnThemeUpdate extends WidgetEvent {
         void onThemeUpdate();
+    }
+
+    @FunctionalInterface
+    interface OnResize extends WidgetEvent {
+        void onResize(Widget self);
+    }
+
+    @FunctionalInterface
+    interface OnResizePost extends WidgetEvent {
+        void onResizePost(Widget self);
     }
 
 }

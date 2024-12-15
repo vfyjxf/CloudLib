@@ -4,7 +4,8 @@ package dev.vfyjxf.cloudlib.api.ui.layout;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
 
-public class ChildResizer extends DecoratedResizer {
+public class ChildResizer implements Resizer, ParentResizer {
+    private final Flex flex;
     public ParentResizer parent;
     public Widget widget;
     private int x;
@@ -13,19 +14,21 @@ public class ChildResizer extends DecoratedResizer {
     private int h;
 
     public ChildResizer(ParentResizer parent, Widget widget) {
-        super(widget.flex());
-
+        this.flex = widget.flex();
         this.parent = parent;
         this.widget = widget;
     }
 
+    public Flex flex() {
+        return flex;
+    }
+
     @Override
     public void apply(Widget widget) {
-        if (this.resizer != null) {
-            this.resizer.apply(widget);
+        if (this.flex != null) {
+            this.flex.apply(widget);
         }
-
-        this.parent.apply(widget, this.resizer, this);
+        this.parent.apply(widget, flex, this);
         this.x = widget.posX();
         this.y = widget.posY();
         this.w = widget.getWidth();
@@ -34,22 +37,22 @@ public class ChildResizer extends DecoratedResizer {
 
     @Override
     public void postApply(Widget widget) {
-        if (resizer != null) {
-            resizer.postApply(widget);
+        if (flex != null) {
+            flex.postApply(widget);
         }
     }
 
     @Override
     public void add(WidgetGroup<?> parent, Widget child) {
-        if (this.resizer != null) {
-            this.resizer.add(parent, child);
+        if (this.flex != null) {
+            this.flex.add(parent, child);
         }
     }
 
     @Override
     public void remove(WidgetGroup<?> parent, Widget child) {
-        if (this.resizer != null) {
-            this.resizer.remove(parent, child);
+        if (this.flex != null) {
+            this.flex.remove(parent, child);
         }
     }
 

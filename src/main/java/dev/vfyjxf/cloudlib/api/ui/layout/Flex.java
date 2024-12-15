@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.layout;
 
 
+import dev.vfyjxf.cloudlib.api.ui.alignment.Alignment;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
 
@@ -11,10 +12,26 @@ import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
  * {@link dev.vfyjxf.cloudlib.api.ui.widgets.Widget}.
  */
 public class Flex implements Resizer {
-    public final Unit x = new Unit();
-    public final Unit y = new Unit();
-    public final Unit width = new Unit();
-    public final Unit height = new Unit();
+    private final Unit x = new Unit();
+    private final Unit y = new Unit();
+    private final Unit width = new Unit();
+    private final Unit height = new Unit();
+
+    private final Margin margin = new Margin();
+    private final Padding padding = new Padding();
+    private final Offset offset = new Offset();
+
+    /**
+     * Whether the width can be expanded by layout.
+     */
+    private boolean widthExpandable = true;
+    /**
+     * Whether the height can be expanded by layout.
+     */
+    private boolean heightExpandable = true;
+    private Alignment alignment;
+    private Alignment.Horizontal horizontalAlignment;
+    private Alignment.Vertical verticalAlignment;
 
     /**
      * Default value:{@link Widget#parent()}
@@ -38,12 +55,69 @@ public class Flex implements Resizer {
         return width;
     }
 
+    public boolean widthExpandable() {
+        return widthExpandable;
+    }
+
+    public Flex setWidthExpandable(boolean expandable) {
+        this.widthExpandable = expandable;
+        return this;
+    }
+
+    public boolean heightExpandable() {
+        return heightExpandable;
+    }
+
+    public Flex setHeightExpandable(boolean expandable) {
+        this.heightExpandable = expandable;
+        return this;
+    }
+
+    public Margin margin() {
+        return margin;
+    }
+
+    public Offset offset() {
+        return offset;
+    }
+
+    public Padding padding() {
+        return padding;
+    }
+
     public Resizer relative() {
         return relative;
     }
 
     public Resizer post() {
         return post;
+    }
+
+    public Alignment alignment() {
+        return alignment;
+    }
+
+    public Alignment.Horizontal horizontalAlignment() {
+        return horizontalAlignment;
+    }
+
+    public Alignment.Vertical verticalAlignment() {
+        return verticalAlignment;
+    }
+
+    public Flex alignment(Alignment alignment) {
+        this.alignment = alignment;
+        return this;
+    }
+
+    public Flex horizontalAlignment(Alignment.Horizontal horizontalAlignment) {
+        this.horizontalAlignment = horizontalAlignment;
+        return this;
+    }
+
+    public Flex verticalAlignment(Alignment.Vertical verticalAlignment) {
+        this.verticalAlignment = verticalAlignment;
+        return this;
     }
 
     public void reset() {
@@ -108,7 +182,7 @@ public class Flex implements Resizer {
 
     @Override
     public int getX() {
-        int value = this.x.value();
+        int value = this.x.value() == Unit.UNDEFINED ? 0 : this.x.value();
 
         if (this.x.relative() != null) {
             if (this.x.factor() != 0) {
@@ -123,7 +197,7 @@ public class Flex implements Resizer {
 
     @Override
     public int getY() {
-        int value = this.y.value();
+        int value = this.y.value() == Unit.UNDEFINED ? 0 : this.y.value();
 
         if (this.y.relative() != null) {
             if (this.y.factor() != 0) {
@@ -146,7 +220,7 @@ public class Flex implements Resizer {
             return value;
         }
 
-        value = this.width.value();
+        value = this.width.value() == Unit.UNDEFINED ? 0 : this.width.value();
 
         if (this.relative != null && this.width.factor() != 0) {
             value += (int) (this.relative.getWidth() * this.width.factor());
@@ -164,7 +238,7 @@ public class Flex implements Resizer {
             return value;
         }
 
-        value = this.height.value();
+        value = this.height.value() == Unit.UNDEFINED ? 0 : this.height.value();
 
         if (this.relative != null && this.height.factor() != 0) {
             value += (int) (this.relative.getHeight() * this.height.factor());

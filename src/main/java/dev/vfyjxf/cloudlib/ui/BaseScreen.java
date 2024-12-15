@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.ui;
 
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.ModularUI;
+import dev.vfyjxf.cloudlib.api.ui.WidgetWindow;
 import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
 import dev.vfyjxf.cloudlib.api.ui.widgets.RootWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
@@ -11,31 +12,40 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 
-public abstract class ModularScreen extends Screen implements ModularUI {
+public abstract class BaseScreen extends Screen implements ModularUI {
 
     protected final BasicPanel<Widget> mainGroup;
+    private final RootWidget rootWidget;
+    private WidgetWindow displayWindow;
+    private MutableList<WidgetWindow> windows;
 
     /**
      * Note: Register init listener in constructor
      */
-    protected ModularScreen() {
+    protected BaseScreen() {
         super(Component.empty());
         mainGroup = new BasicPanel<>();
-        var root = new RootWidget();
-        mainGroup.setRoot(root);
-        mainGroup.asChild(root);
+        rootWidget = new RootWidget();
+        mainGroup.setRoot(rootWidget);
+        mainGroup.asChild(rootWidget);
         mainGroup.onInit(self -> {
             mainGroup.withModifier(
-                    Modifier.start()
+                    Modifier.builder()
                             .pos(0, 0)
                             .size(width, height)
             );
         });
-        mainGroup.onInitPost(self -> {
-            mainGroup.resize();
-        });
+    }
+
+    protected BasicPanel<Widget> mainGroup() {
+        return mainGroup;
+    }
+
+    public static Modifier Modifier() {
+        return Modifier.EMPTY;
     }
 
     @Override
@@ -61,12 +71,14 @@ public abstract class ModularScreen extends Screen implements ModularUI {
     @MustBeInvokedByOverriders
     @Override
     protected void init() {
-        mainGroup.init();
+        rootWidget.init();
+        mainGroup.layout();
     }
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         mainGroup.render(guiGraphics, mouseX, mouseY, partialTick);
+        mainGroup.renderOverlay(guiGraphics, mouseX, mouseY, partialTick);
     }
 
     @Override
@@ -101,7 +113,8 @@ public abstract class ModularScreen extends Screen implements ModularUI {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        var ret = mainGroup.keyPressed(InputContext.fromKeyboard(keyCode, scanCode, modifiers, MouseUtil.getX(), MouseUtil.getY()));
+        var context = InputContext.fromKeyboard(keyCode, scanCode, modifiers, MouseUtil.getX(), MouseUtil.getY());
+        var ret = mainGroup.keyPressed(context);
         if (!ret) {
             return super.keyPressed(keyCode, scanCode, modifiers);
         }
@@ -110,8 +123,13 @@ public abstract class ModularScreen extends Screen implements ModularUI {
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        var ret = mainGroup.keyReleased(InputContext.fromKeyboard(keyCode, scanCode, modifiers, MouseUtil.getX(), MouseUtil.getY(), true));
+        var context = InputContext.fromKeyboard(keyCode, scanCode, modifiers, MouseUtil.getX(), MouseUtil.getY(), true);
+        var ret = mainGroup.keyReleased(context);
         if (!ret) {
+            if (context.is(Minecraft.getInstance().options.keyInventory)) {
+                onClose();
+                return true;
+            }
             return super.keyReleased(keyCode, scanCode, modifiers);
         }
         return true;

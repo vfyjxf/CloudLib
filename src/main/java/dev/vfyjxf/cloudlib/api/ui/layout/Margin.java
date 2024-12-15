@@ -1,9 +1,9 @@
 package dev.vfyjxf.cloudlib.api.ui.layout;
 
 public class Margin {
-    public int left;
+    public int start;
     public int top;
-    public int right;
+    public int end;
     public int bottom;
 
     public Margin all(int all) {
@@ -14,36 +14,39 @@ public class Margin {
         return this.all(horizontal, vertical, horizontal, vertical);
     }
 
-    public Margin all(int left, int top, int right, int bottom) {
-        this.left = left;
+    public Margin all(int start, int top, int end, int bottom) {
+        this.start = start;
         this.top = top;
-        this.right = right;
+        this.end = end;
         this.bottom = bottom;
-
         return this;
     }
 
-    public Margin left(int left) {
-        this.left = left;
-
+    public Margin start(int start) {
+        this.start = start;
         return this;
     }
 
     public Margin top(int top) {
         this.top = top;
-
         return this;
     }
 
-    public Margin right(int right) {
-        this.right = right;
-
+    public Margin end(int end) {
+        this.end = end;
         return this;
     }
 
     public Margin bottom(int bottom) {
         this.bottom = bottom;
+        return this;
+    }
 
+    public Margin reset() {
+        this.start = 0;
+        this.top = 0;
+        this.end = 0;
+        this.bottom = 0;
         return this;
     }
 
@@ -52,15 +55,15 @@ public class Margin {
     }
 
     public int horizontal() {
-        return this.left + this.right;
+        return this.start + this.end;
     }
 
     @Override
     public String toString() {
         return "{" +
-                "left=" + left +
+                "left=" + start +
                 ", top=" + top +
-                ", right=" + right +
+                ", right=" + end +
                 ", bottom=" + bottom +
                 ", vertical=" + vertical() +
                 ", horizontal=" + horizontal() +

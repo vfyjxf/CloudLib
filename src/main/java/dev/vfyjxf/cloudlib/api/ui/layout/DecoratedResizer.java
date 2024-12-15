@@ -1,7 +1,8 @@
 package dev.vfyjxf.cloudlib.api.ui.layout;
 
-public abstract class DecoratedResizer extends BasicResizer {
-    public Resizer resizer;
+//TODO:refactor resizer design
+public abstract class DecoratedResizer implements Resizer, ParentResizer {
+    protected Resizer resizer;
 
     public DecoratedResizer(Resizer resizer) {
         this.resizer = resizer;

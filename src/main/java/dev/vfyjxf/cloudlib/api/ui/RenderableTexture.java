@@ -2,11 +2,8 @@ package dev.vfyjxf.cloudlib.api.ui;
 
 import net.minecraft.client.gui.GuiGraphics;
 
+//TODO:refactor texture interface
 public interface RenderableTexture {
-
-    int getWidth();
-
-    int getHeight();
 
     default void render(GuiGraphics graphics) {
         render(graphics, 0, 0);
@@ -18,6 +15,6 @@ public interface RenderableTexture {
         render(graphics, xOffset, yOffset);
     }
 
-    void render(GuiGraphics graphics, int xOffset, int yOffset, int maskTop, int maskBottom, int maskLeft, int maskRight);
+    void render(GuiGraphics graphics, int xOffset, int yOffset, int width, int height, int maskTop, int maskBottom, int maskLeft, int maskRight);
 
 }

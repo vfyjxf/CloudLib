@@ -23,7 +23,7 @@ public class UIContext {
     /**
      * The width of current {@link net.minecraft.client.Minecraft#screen}
      */
-    private int widget;
+    private int width;
     /**
      * The height of current {@link net.minecraft.client.Minecraft#screen}
      */
@@ -36,16 +36,19 @@ public class UIContext {
      */
     @Nullable
     public static UIContext current() {
-        var screen = Minecraft.getInstance().screen;
-        if (screen == null) return null;
-        return new UIContext(screen);
+        return new UIContext();
     }
 
+    private UIContext() {
+        var minecraft = Minecraft.getInstance();
+        this.font = minecraft.font;
+        //TODO:这应该是一个跨Screen的值吗，用于Overlay的时候
+        this.height = minecraft.getWindow().getGuiScaledWidth();
+        this.width = minecraft.getWindow().getGuiScaledHeight();
+    }
 
-    private UIContext(Screen screen) {
-        this.font = Minecraft.getInstance().font;
-        this.height = screen.height;
-        this.widget = screen.width;
+    public @Nullable Screen currentScreen() {
+        return Minecraft.getInstance().screen;
     }
 
     /**

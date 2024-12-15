@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 
+//TODO:decide should we add scroll tooltip like rich tooltip in black myth wukong
 public interface RichTooltip {
 
     static Tooltip of(Component text) {
@@ -135,6 +136,8 @@ public interface RichTooltip {
 
     @Contract("_ -> this")
     RichTooltip setContextStack(@Nullable TooltipStack<?> stack);
+
+    MutableList<Either<FormattedText, TooltipComponent>> toVanilla();
 
     boolean isEmpty();
 

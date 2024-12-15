@@ -3,6 +3,8 @@ package dev.vfyjxf.cloudlib.api.event;
 
 import dev.vfyjxf.cloudlib.event.EventChannelImpl;
 
+import java.util.function.BooleanSupplier;
+
 public interface EventChannel<T> {
 
     static <T> EventChannel<T> create(EventHandler<T> handler) {
@@ -27,6 +29,14 @@ public interface EventChannel<T> {
 
     default <E extends T> void register(EventDefinition<E> definition, E listener) {
         get(definition).register(listener);
+    }
+
+    default <E extends T> void registerManaged(EventDefinition<E> definition, E listener, int lifetime) {
+        get(definition).registerManaged(listener, lifetime);
+    }
+
+    default <E extends T> void registerManaged(EventDefinition<E> definition, E listener, BooleanSupplier condition) {
+        get(definition).registerManaged(listener, condition);
     }
 
     default <E extends T> void unregister(EventDefinition<E> definition) {

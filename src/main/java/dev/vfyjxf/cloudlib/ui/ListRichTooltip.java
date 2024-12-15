@@ -1,11 +1,13 @@
 package dev.vfyjxf.cloudlib.ui;
 
+import com.mojang.datafixers.util.Either;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.ui.RichTooltip;
 import dev.vfyjxf.cloudlib.api.ui.Tooltip;
 import dev.vfyjxf.cloudlib.api.ui.widgets.TooltipStack;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
@@ -97,6 +99,18 @@ public class ListRichTooltip implements RichTooltip {
     public RichTooltip setContextStack(@Nullable TooltipStack<?> stack) {
         this.stack = stack;
         return this;
+    }
+
+    @Override
+    public MutableList<Either<FormattedText, TooltipComponent>> toVanilla() {
+        return tooltips.collect(tooltip -> {
+            if (tooltip.isComponent()) {
+                return Either.right(tooltip.asComponent());
+            } else {
+                return Either.left(tooltip.asText());
+            }
+        });
+
     }
 
     @Override

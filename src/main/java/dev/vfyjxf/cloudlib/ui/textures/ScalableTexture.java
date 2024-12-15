@@ -1,15 +1,15 @@
 package dev.vfyjxf.cloudlib.ui.textures;
 
-import dev.vfyjxf.cloudlib.api.ui.RenderableTexture;
+import dev.vfyjxf.cloudlib.api.ui.RenderableBoundTexture;
 import net.minecraft.client.gui.GuiGraphics;
 
-public class ScalableTexture implements RenderableTexture {
+public class ScalableTexture implements RenderableBoundTexture {
 
-    private final RenderableTexture texture;
+    private final RenderableBoundTexture texture;
     private final int width;
     private final int height;
 
-    public ScalableTexture(RenderableTexture texture, int width, int height) {
+    public ScalableTexture(RenderableBoundTexture texture, int width, int height) {
         this.texture = texture;
         this.width = width;
         this.height = height;
@@ -46,11 +46,11 @@ public class ScalableTexture implements RenderableTexture {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int xOffset, int yOffset, int maskTop, int maskBottom, int maskLeft, int maskRight) {
+    public void render(GuiGraphics graphics, int xOffset, int yOffset, int width, int height, int maskTop, int maskBottom, int maskLeft, int maskRight) {
         graphics.pose().pushPose();
         {
             graphics.pose().scale((float) width / texture.getWidth(), (float) height / texture.getHeight(), 1);
-            texture.render(graphics, xOffset, yOffset, maskTop, maskBottom, maskLeft, maskRight);
+            texture.render(graphics, xOffset, yOffset, width, height, maskTop, maskBottom, maskLeft, maskRight);
         }
         graphics.pose().popPose();
     }

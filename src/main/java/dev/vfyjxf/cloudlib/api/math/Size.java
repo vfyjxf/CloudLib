@@ -1,13 +1,13 @@
 package dev.vfyjxf.cloudlib.api.math;
 
-public class Dimension {
+public class Size {
 
-    public static final Dimension ZERO = new Dimension(0, 0);
+    public static final Size ZERO = new Size(0, 0);
 
     public int width;
     public int height;
 
-    public Dimension(int width, int height) {
+    public Size(int width, int height) {
         this.width = width;
         this.height = height;
     }
@@ -28,14 +28,18 @@ public class Dimension {
         this.height = height;
     }
 
+    public boolean contains(double x, double y) {
+        return x >= 0 && x < width && y >= 0 && y < height;
+    }
+
     @Override
     public boolean equals(Object o) {
 
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Dimension dimension = (Dimension) o;
-        return width == dimension.width && height == dimension.height;
+        Size size = (Size) o;
+        return width == size.width && height == size.height;
     }
 
     @Override
@@ -47,7 +51,7 @@ public class Dimension {
 
     @Override
     public String toString() {
-        return "Dimension{" +
+        return "Size{" +
                 "width=" + width +
                 ", height=" + height +
                 '}';

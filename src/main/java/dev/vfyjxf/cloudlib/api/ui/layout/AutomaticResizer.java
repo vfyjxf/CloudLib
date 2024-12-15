@@ -1,42 +1,68 @@
 package dev.vfyjxf.cloudlib.api.ui.layout;
 
+import dev.vfyjxf.cloudlib.api.ui.alignment.Alignment;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
+import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.list.MutableList;
 
-import java.util.ArrayList;
-import java.util.List;
+public abstract class AutomaticResizer<T extends AutomaticResizer<T>> implements Resizer, ParentResizer {
+    protected WidgetGroup<? extends Widget> group;
+    //TODO:remove it,use widget Margin and Padding layout
+    protected int margin;
+    protected int padding;
+    protected int height;
 
-public abstract class AutomaticResizer extends BasicResizer {
-    public WidgetGroup<? extends Widget> parent;
-    public int margin;
-    public int padding;
-    public int height;
+    protected Alignment alignment;
+    protected Alignment.Horizontal horizontalAlignment;
+    protected Alignment.Vertical verticalAlignment;
 
-    public AutomaticResizer(WidgetGroup<? extends Widget> parent, int margin) {
-        this.parent = parent;
-        this.margin = margin;
-
+    public AutomaticResizer(WidgetGroup<? extends Widget> group) {
+        this.group = group;
         this.setup();
+    }
+
+    @SuppressWarnings("unchecked")
+    protected T self() {
+        return (T) this;
     }
 
     /* Standard properties */
 
-    public AutomaticResizer padding(int padding) {
-        this.padding = padding;
-
-        return this;
+    public T margin(int margin) {
+        this.margin = margin;
+        return self();
     }
 
-    public AutomaticResizer height(int height) {
-        this.height = height;
+    public T padding(int padding) {
+        this.padding = padding;
+        return self();
+    }
 
-        return this;
+    public T height(int height) {
+        this.height = height;
+        return self();
+    }
+
+    public T alignment(Alignment alignment) {
+        this.alignment = alignment;
+        return self();
+    }
+
+    public T horizontalAlignment(Alignment.Horizontal horizontalAlignment) {
+        this.horizontalAlignment = horizontalAlignment;
+        return self();
+    }
+
+    public T verticalAlignment(Alignment.Vertical verticalAlignment) {
+        this.verticalAlignment = verticalAlignment;
+        return self();
     }
 
     /* Child management */
 
     public void setup() {
-        for (Widget child : this.parent.children()) {
+        for (Widget child : this.group.children()) {
             child.resizer(this.child(child));
         }
     }
@@ -45,11 +71,9 @@ public abstract class AutomaticResizer extends BasicResizer {
         return new ChildResizer(this, widget);
     }
 
-    public List<ChildResizer> getResizers() {
-        List<ChildResizer> resizers = new ArrayList<>();
-
-
-        for (Widget widget : this.parent.children()) {
+    public MutableList<ChildResizer> getResizers() {
+        MutableList<ChildResizer> resizers = Lists.mutable.empty();
+        for (Widget widget : this.group.children()) {
             if (widget.resizer() instanceof ChildResizer resizer) {
                 resizers.add(resizer);
             }
@@ -70,8 +94,24 @@ public abstract class AutomaticResizer extends BasicResizer {
         Resizer resizer = child.resizer();
 
         if (resizer instanceof ChildResizer childResizer) {
-            child.resizer(childResizer.resizer);
+            child.resizer(childResizer.flex());
         }
+    }
+
+    protected boolean posXDefined() {
+        return !this.group.flex().x().isUndefined();
+    }
+
+    protected boolean posYDefined() {
+        return !this.group.flex().y().isUndefined();
+    }
+
+    protected boolean widthDefined() {
+        return !this.group.flex().width().isUndefined();
+    }
+
+    protected boolean heightDefined() {
+        return !this.group.flex().height().isUndefined();
     }
 
     @Override

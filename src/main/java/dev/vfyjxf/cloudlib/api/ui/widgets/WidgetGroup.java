@@ -3,10 +3,6 @@ package dev.vfyjxf.cloudlib.api.ui.widgets;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
-import dev.vfyjxf.cloudlib.api.ui.layout.BasicResizer;
-import dev.vfyjxf.cloudlib.api.ui.layout.ColumnResizer;
-import dev.vfyjxf.cloudlib.api.ui.layout.GridResizer;
-import dev.vfyjxf.cloudlib.api.ui.layout.RowResizer;
 import net.minecraft.client.gui.GuiGraphics;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
@@ -58,13 +54,15 @@ public class WidgetGroup<T extends Widget> extends Widget {
     }
 
     @Override
-    public WidgetGroup<T> resize() {
+    public void layout() {
+        listeners(WidgetEvent.onResize).onResize(this);
         resizer.apply(this);
         for (T child : children) {
-            child.resize();
+            child.layout();
         }
         resizer.postApply(this);
-        return this;
+        this.onPositionUpdate();
+        listeners(WidgetEvent.onResizePost).onResizePost(this);
     }
 
     //////////////////////////////////////
@@ -93,6 +91,7 @@ public class WidgetGroup<T extends Widget> extends Widget {
             listeners(WidgetEvent.onChildAdded).onChildAdded(context, widget);
             if (context.cancelled()) return false;
             children.add(index, widget);
+            widget.setRoot(root);
             listeners(WidgetEvent.onChildAddedPost).onChildAdded(interruptible(), widget);
             return true;
         }
@@ -124,58 +123,20 @@ public class WidgetGroup<T extends Widget> extends Widget {
         return children.contains(widget);
     }
 
+    @Override
     protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         super.renderInternal(graphics, mouseX, mouseY, partialTicks);
         for (T child : children) {
-            graphics.pose().pushPose();
-            {
-                graphics.pose().translate(position.x, position.y, 0);
-                int translatedX = mouseX - this.position.x;
-                int translatedY = mouseY - this.position.y;
-                child.render(graphics, translatedX, translatedY, partialTicks);
-            }
-            graphics.pose().popPose();
+            child.render(graphics, mouseX, mouseY, partialTicks);
         }
     }
 
-    public WidgetGroup<T> withLayout(BasicResizer resizer) {
-
-        return this;
-    }
-
-    /* Post resizers convenience methods
-     * TODO: remove child resizers when switching to another post method */
-
-    public RowResizer row() {
-        return this.row(5);
-    }
-
-    public RowResizer row(int margin) {
-        if (this.flex.post() instanceof RowResizer rowResizer) {
-            return rowResizer;
+    @Override
+    protected void renderOverlayInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        super.renderOverlayInternal(graphics, mouseX, mouseY, partialTicks);
+        for (T child : children) {
+            child.renderOverlay(graphics, mouseX, mouseY, partialTicks);
         }
-
-        return RowResizer.apply(this, margin);
-    }
-
-    public ColumnResizer column() {
-        return this.column(5);
-    }
-
-    public ColumnResizer column(int margin) {
-        if (this.flex.post() instanceof ColumnResizer columnResizer) {
-            return columnResizer;
-        }
-
-        return ColumnResizer.apply(this, margin);
-    }
-
-    public GridResizer grid(int margin) {
-        if (this.flex.post() instanceof GridResizer gridResizer) {
-            return gridResizer;
-        }
-
-        return GridResizer.apply(this, margin);
     }
 
     @Override
@@ -264,25 +225,48 @@ public class WidgetGroup<T extends Widget> extends Widget {
     }
 
 
+    public <W extends T> W addChild(W widget) {
+        widget.asChild(this);
+        return widget;
+    }
+
+    /**
+     * Builder style method to add a widget to the group
+     */
     public WidgetGroup<T> child(T widget) {
         widget.asChild(this);
         return this;
     }
 
-    public WidgetGroup<T> children(T... widgets) {
+    /**
+     * Builder style method to add a widget to the group
+     */
+    @SafeVarargs
+    public final WidgetGroup<T> children(T... widgets) {
         for (T widget : widgets) {
             widget.asChild(this);
         }
         return this;
     }
 
+    public <W extends T> W addWidget(W widget) {
+        widget.asChild(this);
+        return widget;
+    }
+
+    /**
+     * Builder style method to add a widget to the group
+     */
     public WidgetGroup<T> widget(T widget) {
         widget.asChild(this);
         return this;
     }
 
-    @SuppressWarnings("unchecked")
-    public WidgetGroup<T> widgets(T... widgets) {
+    /**
+     * Builder style method to add a widget to the group
+     */
+    @SafeVarargs
+    public final WidgetGroup<T> widgets(T... widgets) {
         for (T widget : widgets) {
             widget.asChild(this);
         }
