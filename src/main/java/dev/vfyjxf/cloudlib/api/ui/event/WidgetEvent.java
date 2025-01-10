@@ -6,22 +6,25 @@ import dev.vfyjxf.cloudlib.api.event.EventDefinition;
 import dev.vfyjxf.cloudlib.api.event.EventFactory;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Size;
-import dev.vfyjxf.cloudlib.api.ui.RichTooltip;
+import dev.vfyjxf.cloudlib.api.ui.ContextMenuBuilder;
+import dev.vfyjxf.cloudlib.api.ui.InputContext;
+import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
+import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import net.minecraft.client.gui.GuiGraphics;
 
 public interface WidgetEvent {
 
-    EventDefinition<OnPositionChanged> onPositionChanged = EventFactory.define(OnPositionChanged.class, listeners -> (context, position) -> {
+    EventDefinition<OnPositionChanged> onPositionChanged = EventFactory.define(OnPositionChanged.class, listeners -> (position, context) -> {
         for (var listener : listeners) {
-            listener.onPositionChanged(context, position);
+            listener.onPositionChanged(position, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnSizeChanged> onSizeChanged = EventFactory.define(OnSizeChanged.class, listeners -> (context, size) -> {
+    EventDefinition<OnSizeChanged> onSizeChanged = EventFactory.define(OnSizeChanged.class, listeners -> (size, context) -> {
         for (var listener : listeners) {
-            listener.onSizeChanged(context, size);
+            listener.onSizeChanged(size, context);
             if (context.interrupted()) return;
         }
     });
@@ -84,43 +87,43 @@ public interface WidgetEvent {
         }
     });
 
-    EventDefinition<OnDelete> onDelete = EventFactory.define(OnDelete.class, listeners -> (self) -> {
+    EventDefinition<OnRemove> onRemove = EventFactory.define(OnRemove.class, listeners -> (self) -> {
         for (var listener : listeners) {
-            listener.onDeleted(self);
+            listener.onRemove(self);
         }
     });
 
-    EventDefinition<OnChildAdded> onChildAdded = EventFactory.define(OnChildAdded.class, listeners -> (context, widget) -> {
+    EventDefinition<OnChildAdded> onChildAdded = EventFactory.define(OnChildAdded.class, listeners -> (widget, context) -> {
         for (var listener : listeners) {
-            listener.onChildAdded(context, widget);
+            listener.onChildAdded(widget, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnChildAddedPost> onChildAddedPost = EventFactory.define(OnChildAddedPost.class, listeners -> (context, widget) -> {
+    EventDefinition<OnChildAddedPost> onChildAddedPost = EventFactory.define(OnChildAddedPost.class, listeners -> (widget, context) -> {
         for (var listener : listeners) {
-            listener.onChildAdded(context, widget);
+            listener.onChildAdded(widget, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnChildRemoved> onChildRemoved = EventFactory.define(OnChildRemoved.class, listeners -> (context, widget) -> {
+    EventDefinition<OnChildRemoved> onChildRemoved = EventFactory.define(OnChildRemoved.class, listeners -> (widget, context) -> {
         for (var listener : listeners) {
-            listener.onChildRemoved(context, widget);
+            listener.onChildRemoved(widget, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnChildRemovedPost> onChildRemovedPost = EventFactory.define(OnChildRemovedPost.class, listeners -> (context, widget) -> {
+    EventDefinition<OnChildRemovedPost> onChildRemovedPost = EventFactory.define(OnChildRemovedPost.class, listeners -> (widget, context) -> {
         for (var listener : listeners) {
-            listener.onChildRemoved(context, widget);
+            listener.onChildRemoved(widget, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnTooltip> onTooltip = EventFactory.define(OnTooltip.class, listeners -> (context, tooltip) -> {
+    EventDefinition<OnTooltip> onTooltip = EventFactory.define(OnTooltip.class, listeners -> (tooltip, context) -> {
         for (var listener : listeners) {
-            listener.onTooltip(context, tooltip);
+            listener.onTooltip(tooltip, context);
             if (context.interrupted()) return;
         }
     });
@@ -143,14 +146,93 @@ public interface WidgetEvent {
         }
     });
 
+    EventDefinition<OnContextMenuBuild> onContextMenuBuild = EventFactory.define(OnContextMenuBuild.class, listeners -> (builder, widget, context) -> {
+        for (var listener : listeners) {
+            listener.onContextMenuBuild(builder, widget, context);
+            if (context.interrupted()) return;
+        }
+    });
+
+    /**
+     * Post on the widget to be dragged
+     * <p>
+     * For widget itself to use
+     */
+    EventDefinition<OnWidgetDragStart> onWidgetDragStart = EventFactory.define(OnWidgetDragStart.class, listeners -> (input, dragContext, eventContext) -> {
+        for (var listener : listeners) {
+            listener.onDragStart(input, dragContext, eventContext);
+            if (eventContext.interrupted()) return;
+        }
+    });
+
+    /**
+     * Post on the widget to be dragged
+     * <p>
+     * For widget itself to use
+     */
+    EventDefinition<OnWidgetDrag> onWidgetDrag = EventFactory.define(OnWidgetDrag.class, listeners -> (input, deltaX, deltaY, dragContext, eventContext) -> {
+        for (var listener : listeners) {
+            listener.onDrag(input, deltaX, deltaY, dragContext, eventContext);
+            if (eventContext.interrupted()) return;
+        }
+    });
+
+    /**
+     * Post on the widget to be dragged
+     * <p>
+     * For widget itself to use
+     */
+    EventDefinition<OnWidgetDragEnd> onWidgetDragEnd = EventFactory.define(OnWidgetDragEnd.class, listeners -> (input, dragContext, eventContext) -> {
+        for (var listener : listeners) {
+            listener.onDragEnd(input, dragContext, eventContext);
+            if (eventContext.interrupted()) return;
+        }
+    });
+
+    /**
+     * Post on MainGroup.
+     * <p>
+     * For {@link dev.vfyjxf.cloudlib.api.ui.drag.DragConsumer} to use
+     */
+    EventDefinition<OnDragStart> onDragStart = EventFactory.define(OnDragStart.class, listeners -> (toDrag, input, dragContext, eventContext) -> {
+        for (var listener : listeners) {
+            listener.onDragStart(toDrag, input, dragContext, eventContext);
+            if (eventContext.interrupted()) return;
+        }
+    });
+
+    /**
+     * Post on MainGroup
+     * <p>
+     * For {@link dev.vfyjxf.cloudlib.api.ui.drag.DragConsumer} to use
+     */
+    EventDefinition<OnDrag> onDrag = EventFactory.define(OnDrag.class, listeners -> (dragging, input, deltaX, deltaY, dragContext, eventContext) -> {
+        for (var listener : listeners) {
+            listener.onDrag(dragging, input, deltaX, deltaY, dragContext, eventContext);
+            if (eventContext.interrupted()) return;
+        }
+    });
+
+    /**
+     * Post on MainGroup
+     * <p>
+     * For {@link dev.vfyjxf.cloudlib.api.ui.drag.DragConsumer} to use
+     */
+    EventDefinition<OnDragEnd> onDragEnd = EventFactory.define(OnDragEnd.class, listeners -> (dragging, input, dragContext, eventContext) -> {
+        for (var listener : listeners) {
+            listener.onDragEnd(dragging, input, dragContext, eventContext);
+            if (eventContext.interrupted()) return;
+        }
+    });
+
     @FunctionalInterface
     interface OnPositionChanged extends WidgetEvent {
-        void onPositionChanged(Common context, Pos position);
+        void onPositionChanged(Pos position, Common context);
     }
 
     @FunctionalInterface
     interface OnSizeChanged extends WidgetEvent {
-        void onSizeChanged(Common context, Size size);
+        void onSizeChanged(Size size, Common context);
     }
 
     @FunctionalInterface
@@ -194,33 +276,33 @@ public interface WidgetEvent {
     }
 
     @FunctionalInterface
-    interface OnDelete extends WidgetEvent {
-        void onDeleted(Widget self);
+    interface OnRemove extends WidgetEvent {
+        void onRemove(Widget self);
     }
 
     @FunctionalInterface
     interface OnChildAdded extends WidgetEvent {
-        void onChildAdded(Common context, Widget widget);
+        void onChildAdded(Widget widget, Common context);
     }
 
     @FunctionalInterface
     interface OnChildAddedPost extends WidgetEvent {
-        void onChildAdded(Interruptible context, Widget widget);
+        void onChildAdded(Widget widget, Interruptible context);
     }
 
     @FunctionalInterface
     interface OnChildRemoved extends WidgetEvent {
-        void onChildRemoved(Common context, Widget widget);
+        void onChildRemoved(Widget widget, Common context);
     }
 
     @FunctionalInterface
     interface OnChildRemovedPost extends WidgetEvent {
-        void onChildRemoved(Interruptible context, Widget widget);
+        void onChildRemoved(Widget widget, Interruptible context);
     }
 
     @FunctionalInterface
     interface OnTooltip extends WidgetEvent {
-        void onTooltip(Common context, RichTooltip richTooltip);
+        void onTooltip(RichTooltip richTooltip, Common context);
     }
 
     @FunctionalInterface
@@ -236,6 +318,35 @@ public interface WidgetEvent {
     @FunctionalInterface
     interface OnResizePost extends WidgetEvent {
         void onResizePost(Widget self);
+    }
+
+    @FunctionalInterface
+    interface OnContextMenuBuild extends WidgetEvent {
+        void onContextMenuBuild(ContextMenuBuilder builder, Widget widget, Common context);
+    }
+
+    interface OnWidgetDragStart extends WidgetEvent {
+        void onDragStart(InputContext input, DragContext dragContext, Common eventContext);
+    }
+
+    interface OnWidgetDrag extends WidgetEvent {
+        void onDrag(InputContext input, int deltaX, int deltaY, DragContext dragContext, Interruptible eventContext);
+    }
+
+    interface OnWidgetDragEnd extends WidgetEvent {
+        void onDragEnd(InputContext input, DragContext dragContext, Interruptible eventContext);
+    }
+
+    interface OnDragStart extends WidgetEvent {
+        void onDragStart(Widget toDrag, InputContext input, DragContext dragContext, Common eventContext);
+    }
+
+    interface OnDrag extends WidgetEvent {
+        void onDrag(Widget dragging, InputContext input, int deltaX, int deltaY, DragContext dragContext, Interruptible eventContext);
+    }
+
+    interface OnDragEnd extends WidgetEvent {
+        void onDragEnd(Widget dragging, InputContext input, DragContext dragContext, Interruptible eventContext);
     }
 
 }

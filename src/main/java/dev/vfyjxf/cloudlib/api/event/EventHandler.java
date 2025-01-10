@@ -1,12 +1,17 @@
 package dev.vfyjxf.cloudlib.api.event;
 
 
+/**
+ * The event handler.
+ *
+ * @param <T> The type of event this handler will handle
+ */
 public interface EventHandler<T> {
 
     EventChannel<T> events();
 
     default EventContext.Common common() {
-        return events().context();
+        return events().common();
     }
 
     default EventContext.Cancelable cancelable() {
@@ -18,15 +23,16 @@ public interface EventHandler<T> {
     }
 
     default <E extends T> E listeners(EventDefinition<E> definition) {
-        return events().get(definition).invoker();
-    }
-
-    default void register(Object listenerOwner) {
-        events().register(listenerOwner);
+        return events().get(definition).actor();
     }
 
     default <E extends T> E register(EventDefinition<E> definition, E listener) {
         return events().get(definition).register(listener);
+    }
+
+    default <E extends T> EventHandler<T> onEvent(EventDefinition<E> definition, E listener) {
+        events().register(definition, listener);
+        return this;
     }
 
     default <E extends T> void unregister(EventDefinition<E> definition, E listener) {

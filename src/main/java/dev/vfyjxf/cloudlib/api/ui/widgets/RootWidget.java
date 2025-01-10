@@ -1,9 +1,15 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets;
 
+import dev.vfyjxf.cloudlib.api.actor.ActorContainer;
+import dev.vfyjxf.cloudlib.api.actor.ActorHolder;
 import dev.vfyjxf.cloudlib.api.ui.UIContext;
 
-public class RootWidget extends WidgetGroup<Widget> {
+/**
+ * A special widget that is the root of the widget tree.
+ */
+public final class RootWidget extends WidgetGroup<Widget> implements ActorHolder {
 
+    private final ActorContainer actors = new ActorContainer();
     private UIContext context;
 
     public RootWidget() {
@@ -34,5 +40,10 @@ public class RootWidget extends WidgetGroup<Widget> {
                 ", active=" + active +
                 ", visibility=" + visibility +
                 '}';
+    }
+
+    @Override
+    public ActorContainer actors() {
+        return actors;
     }
 }

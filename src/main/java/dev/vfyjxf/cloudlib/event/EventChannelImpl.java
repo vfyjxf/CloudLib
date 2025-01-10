@@ -25,11 +25,6 @@ public class EventChannelImpl<T> implements EventChannel<T> {
         return handler;
     }
 
-    @Override
-    public void register(Object listenerOwner) {
-        //TODO:WIP
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public <E extends T> Event<E> get(EventDefinition<E> definition) {

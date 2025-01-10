@@ -36,6 +36,10 @@ public class Checks {
         Preconditions.checkArgument(value >= start && value < end, "Value must be in range [%s,%s)", start, end);
     }
 
+    public static void checkRange(int value, int start, int end,String message) {
+        Preconditions.checkArgument(value >= start && value < end, "%s must be in range [%s,%s)", message, start, end);
+    }
+
     public static void checkRange(int value, int size) {
         checkRange(value, 0, size);
     }

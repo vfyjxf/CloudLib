@@ -85,12 +85,12 @@ public abstract class AutomaticResizer<T extends AutomaticResizer<T>> implements
     /* Miscellaneous */
 
     @Override
-    public void add(WidgetGroup<?> parent, Widget child) {
+    public void addResizer(WidgetGroup<?> parent, Widget child) {
         child.resizer(this.child(child));
     }
 
     @Override
-    public void remove(WidgetGroup<?> parent, Widget child) {
+    public void removeResizer(WidgetGroup<?> parent, Widget child) {
         Resizer resizer = child.resizer();
 
         if (resizer instanceof ChildResizer childResizer) {

@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.layout.ColumnResizer;
-import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
+import dev.vfyjxf.cloudlib.api.ui.modifier.Modifier;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
 

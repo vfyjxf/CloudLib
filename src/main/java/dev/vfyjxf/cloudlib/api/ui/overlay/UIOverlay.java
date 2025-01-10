@@ -1,27 +1,32 @@
 package dev.vfyjxf.cloudlib.api.ui.overlay;
 
-import dev.vfyjxf.cloudlib.api.annotations.Singleton;
 import dev.vfyjxf.cloudlib.api.event.EventHandler;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.Renderable;
 import dev.vfyjxf.cloudlib.api.ui.event.OverlayEvent;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
-import dev.vfyjxf.cloudlib.utils.Singletons;
-import org.eclipse.collections.api.list.MutableList;
-import org.jetbrains.annotations.Nullable;
+import dev.vfyjxf.cloudlib.ui.BaseScreen;
+import dev.vfyjxf.cloudlib.ui.UIManager;
+import net.minecraft.client.Minecraft;
 
 /**
- *
+ * Represents an overlay that can be attached to the screen or the game.
+ * E.g. JEI's bookmark overlay or ingredient list overlay.
  */
-@Singleton
 public interface UIOverlay extends Renderable, EventHandler<OverlayEvent> {
 
-    static UIOverlay getInstance() {
-        return Singletons.get(UIOverlay.class);
+    static UIOverlay current() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.screen instanceof BaseScreen baseScreen) {
+            return baseScreen.screenOverlay();
+        }
+        return UIManager.instance().attachedOverlay();
     }
 
     void init();
+
+    boolean holdByScreen();
 
     boolean initialized();
 
@@ -29,24 +34,17 @@ public interface UIOverlay extends Renderable, EventHandler<OverlayEvent> {
 
     void tick();
 
-    default WidgetGroup<Widget> getMainGroup() {
-        //TODO: Implement
-        return null;
-    }
+    WidgetGroup<Widget> mainGroup();
 
-    @Nullable
-    default <T extends Widget> T getWidgetOfType(Class<T> type) {
-        return getMainGroup().getWidgetOfType(type);
-    }
+    Rect getBound();
 
-    default <T extends Widget> void getWidgetsOfType(Class<T> type, MutableList<T> widgets) {
-        getMainGroup().getWidgetsOfType(type, widgets);
-    }
+    void setBound(Rect bounds);
 
-    Rect getBounds();
-
-    void setBounds(Rect bounds);
-
-    boolean containsMouse(int mouseX, int mouseY);
+    /**
+     * @param mouseX the absolute x position of the mouse
+     * @param mouseY the absolute y position of the mouse
+     * @return true if the mouse is over the overlay
+     */
+    boolean isMouseOver(double mouseX, double mouseY);
 
 }

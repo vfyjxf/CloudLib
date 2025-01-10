@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
+import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
 import net.minecraft.client.KeyMapping;
@@ -97,6 +98,10 @@ public record InputContext(
         return this.key().getType() == InputConstants.Type.MOUSE;
     }
 
+    public Pos mousePos() {
+        return new Pos((int) mouseX, (int) mouseY);
+    }
+
     public boolean isLeftClick() {
         return isMouse() && key().getValue() == 0;
     }
@@ -121,10 +126,13 @@ public record InputContext(
         return this.action() == KeyAction.REPEAT;
     }
 
-
-    public FloatPos relativeMousePos(Widget coordinate) {
+    /**
+     * @param coordinate the widget to get the mouse position relative to
+     * @return the mouse position relative to the widget
+     */
+    public FloatPos mouseRelative(Widget coordinate) {
         var parent = coordinate.parent();
-        var pos = ScreenUtil.getMousePos();
+        var pos = new FloatPos(mouseX, mouseY);
         while (parent != null) {
             pos.translate(-parent.posX(), -parent.posY());
             parent = parent.parent();

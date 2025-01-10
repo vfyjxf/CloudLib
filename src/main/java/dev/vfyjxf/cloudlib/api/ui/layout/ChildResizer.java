@@ -43,16 +43,16 @@ public class ChildResizer implements Resizer, ParentResizer {
     }
 
     @Override
-    public void add(WidgetGroup<?> parent, Widget child) {
+    public void addResizer(WidgetGroup<?> parent, Widget child) {
         if (this.flex != null) {
-            this.flex.add(parent, child);
+            this.flex.addResizer(parent, child);
         }
     }
 
     @Override
-    public void remove(WidgetGroup<?> parent, Widget child) {
+    public void removeResizer(WidgetGroup<?> parent, Widget child) {
         if (this.flex != null) {
-            this.flex.remove(parent, child);
+            this.flex.removeResizer(parent, child);
         }
     }
 

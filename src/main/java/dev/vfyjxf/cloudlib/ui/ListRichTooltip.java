@@ -2,8 +2,8 @@ package dev.vfyjxf.cloudlib.ui;
 
 import com.mojang.datafixers.util.Either;
 import dev.vfyjxf.cloudlib.api.math.Pos;
-import dev.vfyjxf.cloudlib.api.ui.RichTooltip;
 import dev.vfyjxf.cloudlib.api.ui.Tooltip;
+import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
 import dev.vfyjxf.cloudlib.api.ui.widgets.TooltipStack;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
 import net.minecraft.network.chat.Component;

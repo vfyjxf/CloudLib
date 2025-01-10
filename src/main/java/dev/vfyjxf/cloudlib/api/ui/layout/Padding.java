@@ -46,4 +46,11 @@ public class Padding {
         return this;
     }
 
+    public void reset() {
+        this.start = 0;
+        this.top = 0;
+        this.end = 0;
+        this.bottom = 0;
+    }
+
 }

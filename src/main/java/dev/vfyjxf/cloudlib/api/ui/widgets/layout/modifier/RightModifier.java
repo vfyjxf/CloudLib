@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets.layout.modifier;
 
-import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
+import dev.vfyjxf.cloudlib.api.ui.modifier.Modifier;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 
 import java.util.function.BiFunction;

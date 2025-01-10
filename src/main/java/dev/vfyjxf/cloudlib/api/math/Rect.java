@@ -12,6 +12,13 @@ public class Rect {
     public int width;
     public int height;
 
+    public Rect(Pos pos, Size size) {
+        this.x = pos.x;
+        this.y = pos.y;
+        this.width = size.width;
+        this.height = size.height;
+    }
+
     public Rect(Pos pos, int width, int height) {
         this.x = pos.x;
         this.y = pos.y;
@@ -42,6 +49,34 @@ public class Rect {
         return height;
     }
 
+    public int right() {
+        return x + width;
+    }
+
+    public int bottom() {
+        return y + height;
+    }
+
+    public Pos pos() {
+        return new Pos(x, y);
+    }
+
+    public Size size() {
+        return new Size(width, height);
+    }
+
+    public int centerX() {
+        return x + width / 2;
+    }
+
+    public int centerY() {
+        return y + height / 2;
+    }
+
+    public Pos center() {
+        return new Pos(centerX(), centerY());
+    }
+
     public void setX(int x) {
         this.x = x;
     }
@@ -66,9 +101,26 @@ public class Rect {
         return x >= this.x && x <= this.x + width && y >= this.y && y <= this.y + height;
     }
 
+    public boolean contains(Pos pos) {
+        return contains(pos.x, pos.y);
+    }
+
     public boolean contains(double x, double y) {
         return x >= this.x && x <= this.x + width && y >= this.y && y <= this.y + height;
     }
+
+    public boolean contains(Rect rect) {
+        return x <= rect.x && y <= rect.y && x + width >= rect.x + rect.width && y + height >= rect.y + rect.height;
+    }
+
+    public boolean intersects(Rect rect) {
+        return x < rect.x + rect.width && x + width > rect.x && y < rect.y + rect.height && y + height > rect.y;
+    }
+
+    public boolean intersects(int x, int y, int width, int height) {
+        return this.x < x + width && this.x + this.width > x && this.y < y + height && this.y + this.height > y;
+    }
+
 
     @Contract("_ -> this")
     public Rect move(Pos pos) {

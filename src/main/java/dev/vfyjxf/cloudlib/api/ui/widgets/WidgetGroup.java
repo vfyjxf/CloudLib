@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets;
 
+import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
@@ -18,6 +19,9 @@ public class WidgetGroup<T extends Widget> extends Widget {
 
     protected final MutableList<T> children = Lists.mutable.empty();
     protected final MutableList<T> childrenView = children.asUnmodifiable();
+
+    private MutableList<T> toAdd = Lists.mutable.empty();
+    private MutableList<T> toRemove = Lists.mutable.empty();
 
     //////////////////////////////////////
     //********      Basic      *********//
@@ -73,6 +77,15 @@ public class WidgetGroup<T extends Widget> extends Widget {
         return children.size();
     }
 
+    @Override
+    public Widget setPos(Pos position) {
+        super.setPos(position);
+        for (T child : children) {
+            child.onPositionUpdate();
+        }
+        return this;
+    }
+
     @Unmodifiable
     public MutableList<T> children() {
         return childrenView;
@@ -88,17 +101,18 @@ public class WidgetGroup<T extends Widget> extends Widget {
             throw new IllegalArgumentException("Cannot add a widget to itself");
         if (!children.contains(widget)) {
             var context = common();
-            listeners(WidgetEvent.onChildAdded).onChildAdded(context, widget);
+            listeners(WidgetEvent.onChildAdded).onChildAdded(widget, context);
             if (context.cancelled()) return false;
             children.add(index, widget);
             widget.setRoot(root);
-            listeners(WidgetEvent.onChildAddedPost).onChildAdded(interruptible(), widget);
+            listeners(WidgetEvent.onChildAddedPost).onChildAdded(widget, interruptible());
             return true;
         }
         return false;
     }
 
-    public boolean remove(T widget) {
+    public boolean remove(Widget widget) {
+        //noinspection SuspiciousMethodCalls
         int index = children.indexOf(widget);
         if (index < 0) return false;
         return remove(index);
@@ -107,7 +121,7 @@ public class WidgetGroup<T extends Widget> extends Widget {
     public boolean remove(int index) {
         if (index < 0 || index >= children.size()) return false;
         Widget child = children.get(index);
-        child.onDelete();
+        child.listeners(WidgetEvent.onRemove).onRemove(child);
         child.setParent(null);
         return children.remove(index) != null;
     }
@@ -127,7 +141,14 @@ public class WidgetGroup<T extends Widget> extends Widget {
     protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         super.renderInternal(graphics, mouseX, mouseY, partialTicks);
         for (T child : children) {
-            child.render(graphics, mouseX, mouseY, partialTicks);
+            graphics.pose().pushPose();
+            {
+                graphics.pose().translate(child.position.x, child.position.y, 0);
+                int relativeX = mouseX - child.position.x;
+                int relativeY = mouseY - child.position.y;
+                child.renderWidget(graphics, relativeX, relativeY, partialTicks);
+            }
+            graphics.pose().popPose();
         }
     }
 
@@ -143,7 +164,7 @@ public class WidgetGroup<T extends Widget> extends Widget {
     public boolean mouseClicked(InputContext input) {
         if (!visible() || !active()) return false;
         var context = common();
-        boolean result = listeners(InputEvent.onMouseClicked).onClicked(context, input);
+        boolean result = listeners(InputEvent.onMouseClicked).onClicked(input, context);
         if (context.cancelled()) return result;
         for (T child : children) {
             if (child.mouseClicked(input)) {
@@ -157,7 +178,7 @@ public class WidgetGroup<T extends Widget> extends Widget {
     public boolean mouseReleased(InputContext input) {
         if (!visible() || !active()) return false;
         var context = common();
-        boolean result = listeners(InputEvent.onMouseReleased).onReleased(context, input);
+        boolean result = listeners(InputEvent.onMouseReleased).onReleased(input, context);
         if (context.cancelled()) return result;
         for (T child : children) {
             if (child.mouseReleased(input)) {
@@ -169,22 +190,43 @@ public class WidgetGroup<T extends Widget> extends Widget {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        if (!visible() || !active()) return false;
+        var context = common();
+        boolean result = listeners(InputEvent.onMouseScrolled).onScrolled(mouseX, mouseY, scrollX, scrollY, context);
+        if (context.cancelled()) return result;
+        for (T child : children) {
+            if (child.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        if (!visible() || !active()) return false;
+        var context = common();
+        boolean result = listeners(InputEvent.onMouseDragged).onDragged(InputContext.fromMouse(mouseX, mouseY, button), deltaX, deltaY, context);
+        if (context.cancelled()) return result;
+        for (T child : children) {
+            if (child.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
-    public boolean mouseMoved(double mouseX, double mouseY) {
-        return super.mouseMoved(mouseX, mouseY);
+    public void mouseMoved(double mouseX, double mouseY) {
+        super.mouseMoved(mouseX, mouseY);
+        for (T child : children) {
+            child.mouseMoved(mouseX, mouseY);
+        }
     }
 
     @Override
     public boolean keyPressed(InputContext input) {
         var context = common();
-        boolean result = listeners(InputEvent.onKeyPressed).onKeyPressed(context, input);
+        boolean result = listeners(InputEvent.onKeyPressed).onKeyPressed(input, context);
         if (context.cancelled()) return result;
         for (T child : children) {
             if (child.keyPressed(input)) {
@@ -197,7 +239,7 @@ public class WidgetGroup<T extends Widget> extends Widget {
     @Override
     public boolean keyReleased(InputContext input) {
         var context = common();
-        boolean result = listeners(InputEvent.onKeyReleased).onKeyReleased(context, input);
+        boolean result = listeners(InputEvent.onKeyReleased).onKeyReleased(input, context);
         if (context.cancelled()) return result;
         for (T child : children) {
             if (child.keyReleased(input)) {
@@ -223,7 +265,6 @@ public class WidgetGroup<T extends Widget> extends Widget {
                 ", richTooltip=" + richTooltip +
                 '}';
     }
-
 
     public <W extends T> W addChild(W widget) {
         widget.asChild(this);
@@ -273,6 +314,10 @@ public class WidgetGroup<T extends Widget> extends Widget {
         return this;
     }
 
+    //////////////////////////////////////
+    //********       Utils     *********//
+    //////////////////////////////////////
+
     @Nullable
     public Widget getById(String id) {
         for (T child : children) {
@@ -303,7 +348,6 @@ public class WidgetGroup<T extends Widget> extends Widget {
         return widgets;
     }
 
-
     private static void collectHelper(WidgetGroup<?> group, List<Widget> widgets, boolean withInvisible, int maxDepth, int depth) {
         if (depth > maxDepth) return;
         for (Widget child : group.children()) {
@@ -314,94 +358,6 @@ public class WidgetGroup<T extends Widget> extends Widget {
                     widgets.add(child);
             }
         }
-    }
-
-    @Nullable
-    public Widget getHoveredWidget(double mouseX, double mouseY) {
-        for (T child : children) {
-            if (child.visible() && child.isMouseOver(mouseX, mouseY)) {
-                return child;
-            }
-        }
-        if (isMouseOver(mouseX, mouseY)) {
-            return this;
-        }
-        return null;
-    }
-
-    public <W extends Widget> @Nullable W getWidgetOfType(Class<W> type) {
-        if (type.isInstance(this)) {
-            return type.cast(this);
-        }
-        for (T child : children) {
-            @Nullable W result = null;
-            if (type.isInstance(child)) {
-                result = type.cast(child);
-            }
-            if (result != null) {
-                return result;
-            }
-        }
-        return null;
-    }
-
-    public <W extends Widget> void getWidgetsOfType(Class<W> type, MutableList<W> result) {
-        if (type.isInstance(this)) {
-            result.add(type.cast(this));
-        }
-        for (T child : children) {
-            if (type.isInstance(child)) {
-                result.add(type.cast(child));
-            }
-        }
-    }
-
-    public <W extends Widget> @Nullable W findWidgetsOfType(Class<W> type) {
-        if (type.isInstance(this)) {
-            return type.cast(this);
-        }
-        for (T child : children) {
-            @Nullable W result = null;
-            if (type.isInstance(child)) {
-                result = type.cast(child);
-            } else {
-                var parent = child.parent();
-                if (parent != null) {
-                    result = parent.findWidgetsOfType(type);
-                }
-            }
-            if (result != null) {
-                return result;
-            }
-        }
-        return null;
-    }
-
-    public <W extends Widget> void findWidgetsOfType(Class<W> type, MutableList<W> result) {
-        if (type.isInstance(this)) {
-            result.add(type.cast(this));
-        }
-        for (T child : children) {
-            if (type.isInstance(child)) {
-                result.add(type.cast(child));
-            }
-            var parent = child.parent();
-            if (parent != null) {
-                parent.findWidgetsOfType(type, result);
-            }
-        }
-    }
-
-    public List<Widget> getContainedWidgets(boolean withInvisible) {
-        List<Widget> result = new ArrayList<>();
-        for (T child : children) {
-            if (child.visible() || withInvisible) {
-                result.add(child);
-                if (child instanceof WidgetGroup<?> group)
-                    result.addAll((group).getContainedWidgets(withInvisible));
-            }
-        }
-        return result;
     }
 
     public final WidgetGroup<T> onChildAdded(WidgetEvent.OnChildAdded listener) {

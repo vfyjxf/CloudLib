@@ -15,7 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 public class LangKeyProvider extends LanguageProvider {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private final MutableList<ILangProvider> providers = Lists.mutable.empty();
+    private final MutableList<CustomLangProvider> providers = Lists.mutable.empty();
 
     public LangKeyProvider(String modid, PackOutput output) {
         super(output, modid, "en_us");
@@ -26,8 +26,8 @@ public class LangKeyProvider extends LanguageProvider {
                         try {
                             var clazz = Class.forName(annotation.memberName());
                             //if clazz impl ILangProvider
-                            if (ILangProvider.class.isAssignableFrom(clazz)) {
-                                ILangProvider provider = (ILangProvider) clazz.getDeclaredConstructor().newInstance();
+                            if (CustomLangProvider.class.isAssignableFrom(clazz)) {
+                                CustomLangProvider provider = (CustomLangProvider) clazz.getDeclaredConstructor().newInstance();
                                 providers.add(provider);
                             }
                         } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException |
@@ -42,7 +42,7 @@ public class LangKeyProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         LangBuilder.builders.forEach(builder -> builder.getDefines().forEach(it -> this.add(it.key(), it.value())));
-        for (ILangProvider provider : providers) {
+        for (CustomLangProvider provider : providers) {
             provider.addTranslations(this);
         }
     }

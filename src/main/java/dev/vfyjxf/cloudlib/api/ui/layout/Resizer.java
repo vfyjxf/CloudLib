@@ -17,11 +17,11 @@ public interface Resizer {
 
     }
 
-    default void add(WidgetGroup<?> parent, Widget child) {
+    default void addResizer(WidgetGroup<?> parent, Widget child) {
 
     }
 
-    default void remove(WidgetGroup<?> parent, Widget child) {
+    default void removeResizer(WidgetGroup<?> parent, Widget child) {
 
     }
     //TODO:rework layout methods to position and size

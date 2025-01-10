@@ -41,12 +41,15 @@ class EventFactoryTest {
             System.out.println("testIndependent");
             customCondition++;
         }, () -> customCondition == 2);
+        eventHandler.events().get(onTest).register(() -> {
+            System.out.println("test");
+        },100);
     }
 
     @Test
     public void test(MinecraftServer server) {
-        eventHandler.events().get(onTest).invoker().test();
-        eventHandler.events().get(onTest).invoker().test();
-        eventHandler.events().get(onTest).invoker().test();
+        eventHandler.events().get(onTest).actor().test();
+        eventHandler.events().get(onTest).actor().test();
+        eventHandler.events().get(onTest).actor().test();
     }
 }

@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.startup;
 
 import dev.vfyjxf.cloudlib.api.registry.IModPlugin;
-import dev.vfyjxf.cloudlib.api.registry.PluginLoading;
+import dev.vfyjxf.cloudlib.api.utils.ServiceLoading;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
@@ -18,7 +18,7 @@ public class CommonStartup {
 
     public CommonStartup(IEventBus modBus) {
         this.modBus = modBus;
-        plugins = PluginLoading.load(IModPlugin.class);
+        plugins = ServiceLoading.load(IModPlugin.class);
     }
 
 

@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.helper;
 
-import dev.vfyjxf.cloudlib.api.ui.RichTooltip;
+import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;

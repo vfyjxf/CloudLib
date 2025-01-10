@@ -11,12 +11,6 @@ import org.jetbrains.annotations.Nullable;
 public class UIContext {
 
     /**
-     * Nullable when use overlay.
-     */
-    @Nullable
-    private Screen screen;
-
-    /**
      * The font used to render text.
      */
     private Font font;
@@ -34,7 +28,6 @@ public class UIContext {
     /**
      * @return if {@link net.minecraft.client.Minecraft#screen} is null,return null
      */
-    @Nullable
     public static UIContext current() {
         return new UIContext();
     }
@@ -42,7 +35,6 @@ public class UIContext {
     private UIContext() {
         var minecraft = Minecraft.getInstance();
         this.font = minecraft.font;
-        //TODO:这应该是一个跨Screen的值吗，用于Overlay的时候
         this.height = minecraft.getWindow().getGuiScaledWidth();
         this.width = minecraft.getWindow().getGuiScaledHeight();
     }
@@ -51,11 +43,17 @@ public class UIContext {
         return Minecraft.getInstance().screen;
     }
 
+    @Nullable
+    public <T extends Screen> T typedScreen(Class<T> type) {
+        var screen = currentScreen();
+        return type.isInstance(screen) ? type.cast(screen) : null;
+    }
+
     /**
      * @param coordinate the widget to get the relative mouse position
      * @return the relative position of the mouse
      */
-    public FloatPos relativeMousePos(Widget coordinate) {
+    public FloatPos mouseRelative(Widget coordinate) {
         var parent = coordinate.parent();
         var pos = mousePos();
         while (parent != null) {

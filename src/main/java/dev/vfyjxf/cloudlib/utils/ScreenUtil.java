@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.utils;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
-import dev.vfyjxf.cloudlib.api.ui.RichTooltip;
+import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.Font;

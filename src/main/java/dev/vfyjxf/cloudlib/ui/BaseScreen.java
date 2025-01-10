@@ -1,12 +1,14 @@
 package dev.vfyjxf.cloudlib.ui;
 
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
-import dev.vfyjxf.cloudlib.api.ui.ModularUI;
 import dev.vfyjxf.cloudlib.api.ui.WidgetWindow;
-import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
+import dev.vfyjxf.cloudlib.api.ui.modifier.Modifier;
+import dev.vfyjxf.cloudlib.api.ui.overlay.UIOverlay;
 import dev.vfyjxf.cloudlib.api.ui.widgets.RootWidget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
-import dev.vfyjxf.cloudlib.ui.widgets.BasicPanel;
+import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
+import dev.vfyjxf.cloudlib.ui.drag.DraggableManager;
+import dev.vfyjxf.cloudlib.ui.overlay.UIOverlayImpl;
 import mezz.jei.gui.input.MouseUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -15,10 +17,12 @@ import net.minecraft.network.chat.Component;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 
-public abstract class BaseScreen extends Screen implements ModularUI {
+public abstract class BaseScreen extends Screen {
 
-    protected final BasicPanel<Widget> mainGroup;
+    protected final WidgetGroup<Widget> mainGroup;
     private final RootWidget rootWidget;
+    private final UIOverlay screenOverlay;
+    private final DraggableManager draggableManager;
     private WidgetWindow displayWindow;
     private MutableList<WidgetWindow> windows;
 
@@ -27,45 +31,41 @@ public abstract class BaseScreen extends Screen implements ModularUI {
      */
     protected BaseScreen() {
         super(Component.empty());
-        mainGroup = new BasicPanel<>();
+        //region setup main panel
         rootWidget = new RootWidget();
-        mainGroup.setRoot(rootWidget);
-        mainGroup.asChild(rootWidget);
-        mainGroup.onInit(self -> {
-            mainGroup.withModifier(
-                    Modifier.builder()
-                            .pos(0, 0)
-                            .size(width, height)
-            );
-        });
+        rootWidget.mark("root");
+        mainGroup = new WidgetGroup<>();
+        {
+            mainGroup.setRoot(rootWidget);
+            mainGroup.mark("main");
+            mainGroup.asChild(rootWidget);
+            mainGroup.onInit(self -> {
+                mainGroup.withModifier(
+                        Modifier.builder()
+                                .pos(0, 0)
+                                .size(width, height)
+                );
+            });
+            draggableManager = new DraggableManager(mainGroup);
+        }
+        //endregion
+        //region screen overlay
+        var overlayPanel = mainGroup.addWidget(new WidgetGroup<>());
+        overlayPanel.mark("overlay");
+        screenOverlay = new UIOverlayImpl(overlayPanel, true);
+        //endregion
     }
 
-    protected BasicPanel<Widget> mainGroup() {
+    protected WidgetGroup<Widget> mainGroup() {
         return mainGroup;
+    }
+
+    public UIOverlay screenOverlay() {
+        return screenOverlay;
     }
 
     public static Modifier Modifier() {
         return Modifier.EMPTY;
-    }
-
-    @Override
-    public int getGuiLeft() {
-        return mainGroup.posX();
-    }
-
-    @Override
-    public int getGuiTop() {
-        return mainGroup.posY();
-    }
-
-    @Override
-    public int getXSize() {
-        return mainGroup.getWidth();
-    }
-
-    @Override
-    public int getYSize() {
-        return mainGroup.getHeight();
     }
 
     @MustBeInvokedByOverriders
@@ -76,9 +76,11 @@ public abstract class BaseScreen extends Screen implements ModularUI {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        mainGroup.render(guiGraphics, mouseX, mouseY, partialTick);
-        mainGroup.renderOverlay(guiGraphics, mouseX, mouseY, partialTick);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        mainGroup.render(graphics, mouseX, mouseY, partialTick);
+        mainGroup.renderOverlay(graphics, mouseX, mouseY, partialTick);
+        mainGroup.renderTooltip(graphics, mouseX, mouseY);
+        draggableManager.renderDragging(graphics, mouseX, mouseY, partialTick);
     }
 
     @Override
@@ -116,6 +118,10 @@ public abstract class BaseScreen extends Screen implements ModularUI {
         var context = InputContext.fromKeyboard(keyCode, scanCode, modifiers, MouseUtil.getX(), MouseUtil.getY());
         var ret = mainGroup.keyPressed(context);
         if (!ret) {
+            if (context.is(Minecraft.getInstance().options.keyInventory) && shouldCloseOnEsc()) {
+                onClose();
+                return true;
+            }
             return super.keyPressed(keyCode, scanCode, modifiers);
         }
         return true;
@@ -126,10 +132,6 @@ public abstract class BaseScreen extends Screen implements ModularUI {
         var context = InputContext.fromKeyboard(keyCode, scanCode, modifiers, MouseUtil.getX(), MouseUtil.getY(), true);
         var ret = mainGroup.keyReleased(context);
         if (!ret) {
-            if (context.is(Minecraft.getInstance().options.keyInventory)) {
-                onClose();
-                return true;
-            }
             return super.keyReleased(keyCode, scanCode, modifiers);
         }
         return true;

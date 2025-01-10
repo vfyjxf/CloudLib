@@ -1,6 +1,10 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import dev.vfyjxf.cloudlib.api.actor.ActorContainer;
+import dev.vfyjxf.cloudlib.api.actor.ActorHolder;
+import dev.vfyjxf.cloudlib.api.data.DataAttachable;
+import dev.vfyjxf.cloudlib.api.data.DataContainer;
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
 import dev.vfyjxf.cloudlib.api.event.EventDefinition;
 import dev.vfyjxf.cloudlib.api.event.EventHandler;
@@ -10,9 +14,9 @@ import dev.vfyjxf.cloudlib.api.math.Size;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.Renderable;
 import dev.vfyjxf.cloudlib.api.ui.RenderableTexture;
-import dev.vfyjxf.cloudlib.api.ui.RichTooltip;
 import dev.vfyjxf.cloudlib.api.ui.UIContext;
 import dev.vfyjxf.cloudlib.api.ui.animation.Animatable;
+import dev.vfyjxf.cloudlib.api.ui.drag.DragProvider;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.layout.Flex;
@@ -20,24 +24,44 @@ import dev.vfyjxf.cloudlib.api.ui.layout.Margin;
 import dev.vfyjxf.cloudlib.api.ui.layout.Offset;
 import dev.vfyjxf.cloudlib.api.ui.layout.Padding;
 import dev.vfyjxf.cloudlib.api.ui.layout.Resizer;
-import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
+import dev.vfyjxf.cloudlib.api.ui.modifier.Modifier;
+import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
 import dev.vfyjxf.cloudlib.ui.widgets.BasicWidget;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import org.intellij.lang.annotations.Flow;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
 
+/**
+ * The basic unit of the UI system.
+ * <p>
+ * A widget is a component that can be rendered on the screen.
+ * It can be interacted with the mouse and keyboard.
+ * <p>
+ * Subsystem:
+ * <ul>
+ *     <li>Layout: Using {@link Resizer } and {@link Flex} to automatically calculates the position and size of widgets.</li>
+ *     <li>Event: Implemented {@link EventHandler<WidgetEvent>} to allow combining different events to create complex widgets. </li>
+ *     <li>Render: Provides events for rendering the widget itself, the widget's tooltip, the widget's overlay.</li>
+ *     <li>Data: {@link DataAttachable} is implemented to allow components to attach additional data.</li>
+ *     <li>Actor: {@link ActorContainer} bound to the {@link RootWidget#actors()} by default.</li>
+ *   <ul>
+ */
 @SuppressWarnings("unchecked")
-public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, Animatable<Widget>, Resizer {
+public abstract class Widget implements
+        Renderable, Animatable<Widget>,
+        Resizer, EventHandler<WidgetEvent>,
+        DataAttachable, ActorHolder {
 
     public static Widget create() {
         return new BasicWidget();
@@ -48,6 +72,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
 
     //data
     protected boolean initialized = false;
+    protected final DataContainer dataContainer = new DataContainer();
     /**
      * maybe itself
      */
@@ -72,6 +97,10 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     @Nullable
     protected RichTooltip richTooltip;
 
+    //draggable
+    protected boolean draggable = false;
+    protected boolean dragging = false;
+
     //layout
     protected final Flex flex = new Flex();
     protected Resizer resizer = flex;
@@ -85,7 +114,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         WidgetGroup<?> parent = this.parent;
         Pos absolute = position.copy();
         while (parent != null && parent != this) {
-            Pos parentPos = parent.getPos();
+            Pos parentPos = parent.getRelative();
             absolute.translate(parentPos.x, parentPos.y);
             parent = parent.parent();
         }
@@ -113,6 +142,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return root.getContext();
     }
 
+    @Flow(target = "this")
     public @Nullable WidgetGroup<? extends Widget> parent() {
         return parent;
     }
@@ -132,6 +162,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     }
 
     @MustBeInvokedByOverriders
+    //TODO:Decide whether to keep this method
     public void update() {
         if (initialized)
             listeners(WidgetEvent.onUpdate).onUpdate(this);
@@ -146,11 +177,28 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return initialized;
     }
 
+    public boolean interactable() {
+        return active && visible();
+    }
+
+    @Override
+    public @NotNull DataContainer dataContainer() {
+        return dataContainer;
+    }
+
+    @Override
+    public ActorContainer actors() {
+        return root.actors();
+    }
+
     @Override
     public EventChannel<WidgetEvent> events() {
         return eventChannel;
     }
 
+    /**
+     * @return the unique id of the widget.
+     */
     public String getId() {
         return id;
     }
@@ -171,9 +219,12 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     public final <T extends Widget> Widget asChild(WidgetGroup<T> parent) {
         if (parent == this) throw new IllegalArgumentException("Cannot add widget to itself");
         if (parent.add(parent.size(), (T) this)) {
+            if (this.parent != null) {
+                this.parent.removeResizer(this.parent, this);
+            }
             this.parent = parent;
             this.onPositionUpdate();
-            parent.resizer.add(parent, this);
+            parent.resizer.addResizer(parent, this);
             if (this.flex.relative() == null) {
                 this.flex.setRelative(parent);
             }
@@ -181,14 +232,62 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return this;
     }
 
+    @Contract("_ -> this")
+    public Widget onInit(WidgetEvent.OnInit listener) {
+        events().register(WidgetEvent.onInit, listener);
+        return this;
+    }
+
+    @Contract("_ -> this")
+    public Widget onInitPost(WidgetEvent.OnInitPost listener) {
+        events().register(WidgetEvent.onInitPost, listener);
+        return this;
+    }
+
+    @Contract("_ -> this")
+    public Widget onRemove(WidgetEvent.OnRemove listener) {
+        events().register(WidgetEvent.onRemove, listener);
+        return this;
+    }
+
+    @Contract("_ -> this")
+    public Widget onUpdate(WidgetEvent.OnUpdate listener) {
+        events().register(WidgetEvent.onUpdate, listener);
+        return this;
+    }
+
+    @Contract("_ -> this")
+    public Widget onTick(WidgetEvent.OnTick listener) {
+        events().register(WidgetEvent.onTick, listener);
+        return this;
+    }
+
+    @Contract("_ -> this")
+    public Widget onResize(WidgetEvent.OnResize listener) {
+        events().register(WidgetEvent.onResize, listener);
+        return this;
+    }
+
+    @Contract("_ -> this")
+    public Widget onResizePost(WidgetEvent.OnResizePost listener) {
+        events().register(WidgetEvent.onResizePost, listener);
+        return this;
+    }
+
     //////////////////////////////////////
     //********       Area      *********//
     //////////////////////////////////////
 
-    public Pos getPos() {
+    /**
+     * @return the relative position of the widget, relative to its parent.
+     */
+    public Pos getRelative() {
         return position;
     }
 
+    /**
+     * @return the absolute position of the widget, relative to the screen.
+     */
     public Pos getAbsolute() {
         return absolute;
     }
@@ -196,9 +295,10 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     @Contract("_ -> this")
     public Widget setPos(Pos position) {
         var context = common();
-        listeners(WidgetEvent.onPositionChanged).onPositionChanged(context, position);
+        listeners(WidgetEvent.onPositionChanged).onPositionChanged(position, context);
         if (context.cancelled()) return this;
         this.position = position;
+        onPositionUpdate();
         return this;
     }
 
@@ -209,18 +309,18 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     @Contract("_ -> this")
     public Widget setSize(Size size) {
         var context = common();
-        listeners(WidgetEvent.onSizeChanged).onSizeChanged(context, size);
+        listeners(WidgetEvent.onSizeChanged).onSizeChanged(size, context);
         if (context.cancelled()) return this;
         this.size = size;
         return this;
     }
 
     public int posX() {
-        return getPos().x;
+        return getRelative().x;
     }
 
     public int posY() {
-        return getPos().y;
+        return getRelative().y;
     }
 
     @Contract("_,_ -> this")
@@ -240,7 +340,7 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
 
     @Contract("_,_ -> this")
     public Widget translate(int dx, int dy) {
-        return setPos(getPos().x + dx, getPos().y + dy);
+        return setPos(getRelative().x + dx, getRelative().y + dy);
     }
 
     public int getWidth() {
@@ -274,8 +374,16 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
                 .setSize(width, height);
     }
 
+    public Widget setBound(Rect rect) {
+        return setBound(rect.x, rect.y, rect.width, rect.height);
+    }
+
     public Rect getBounds() {
-        return new Rect(getPos().x, getPos().y, getSize().width, getSize().height);
+        return new Rect(getRelative().x, getRelative().y, getSize().width, getSize().height);
+    }
+
+    public Rect getAbsoluteBounds() {
+        return new Rect(getAbsolute().x, getAbsolute().y, getSize().width, getSize().height);
     }
 
     @Contract("_ -> this")
@@ -292,19 +400,28 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     //*******       Render     *********//
     //////////////////////////////////////
 
+    /**
+     * Render the widget with condition checks.
+     *
+     * @param graphics     the graphics
+     * @param mouseX       the relative x coordinate of the mouse
+     * @param mouseY       the relative y coordinate of the mouse
+     * @param partialTicks the partial ticks
+     */
+    public final void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        if (invisible() || dragging) return;
+        render(graphics, mouseX, mouseY, partialTicks);
+    }
+
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        if (invisible()) return;
         graphics.pose().pushPose();
         {
-            graphics.pose().translate(position.x, position.y, 0);
-            int relativeX = mouseX - position.x;
-            int relativeY = mouseY - position.y;
             var context = common();
-            listeners(WidgetEvent.onRender).onRender(graphics, relativeX, relativeY, partialTicks, context);
+            listeners(WidgetEvent.onRender).onRender(graphics, mouseX, mouseY, partialTicks, context);
             if (context.cancelled()) return;
-            renderInternal(graphics, relativeX, relativeY, partialTicks);
-            listeners(WidgetEvent.onRenderPost).onRender(graphics, relativeX, relativeY, partialTicks, interruptible());
+            renderInternal(graphics, mouseX, mouseY, partialTicks);
+            listeners(WidgetEvent.onRenderPost).onRender(graphics, mouseX, mouseY, partialTicks, interruptible());
         }
         graphics.pose().popPose();
     }
@@ -314,15 +431,22 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         if (icon != null) icon.render(graphics);
     }
 
-
-    public void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
         RichTooltip richTooltip = getTooltip();
-        if (richTooltip != null) {
+        if (isMouseOver(mouseX, mouseY) && richTooltip != null) {
             var mousePos = ScreenUtil.getMousePos();
             ScreenUtil.renderTooltip(graphics, richTooltip, (int) mousePos.x, (int) mousePos.y);
         }
     }
 
+    /**
+     * Render the overlay of the widget.E.g. slot highlight.
+     *
+     * @param graphics     the graphics
+     * @param mouseX       the relative x coordinate of the mouse
+     * @param mouseY       the relative y coordinate of the mouse
+     * @param partialTicks the partial ticks
+     */
     public void renderOverlay(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 
         if (invisible()) return;
@@ -347,7 +471,6 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
 
     }
 
-
     @Contract("_ -> this")
     public Widget setBackground(RenderableTexture background) {
         this.background = background;
@@ -362,6 +485,10 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
 
     public boolean active() {
         return active;
+    }
+
+    public boolean inactive() {
+        return !active;
     }
 
     @Contract("_ -> this")
@@ -451,62 +578,18 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return this;
     }
 
-    @Override
-    public String toString() {
-        return "Widget{" +
-                "id='" + id + '\'' +
-                ", initialized=" + initialized +
-                ", root=" + (root == null ? "null" : root.getId()) +
-                ", parent=" + (parent == null ? "null" : parent.getId()) +
-                ", icon=" + icon +
-                ", position=" + position +
-                ", absolute=" + absolute +
-                ", size=" + size +
-                ", active=" + active +
-                ", visibility=" + visibility +
-                '}';
+    @Contract("_ -> this")
+    public Widget onRender(WidgetEvent.OnRender listener) {
+        return onEvent(WidgetEvent.onRender, listener);
     }
 
-    @ApiStatus.NonExtendable
-    @Contract("_ -> this")
-    public final Widget onInit(WidgetEvent.OnInit listener) {
-        events().register(WidgetEvent.onInit, listener);
-        return this;
+    public Widget onRenderPost(WidgetEvent.OnRenderPost listener) {
+        return onEvent(WidgetEvent.onRenderPost, listener);
     }
 
-    @ApiStatus.NonExtendable
     @Contract("_ -> this")
-    public final Widget onInitPost(WidgetEvent.OnInitPost listener) {
-        events().register(WidgetEvent.onInitPost, listener);
-        return this;
-    }
-
-    @ApiStatus.NonExtendable
-    @Contract("_ -> this")
-    public final Widget onUpdate(WidgetEvent.OnUpdate listener) {
-        events().register(WidgetEvent.onUpdate, listener);
-        return this;
-    }
-
-    @ApiStatus.NonExtendable
-    @Contract("_ -> this")
-    public final Widget onTick(WidgetEvent.OnTick listener) {
-        events().register(WidgetEvent.onTick, listener);
-        return this;
-    }
-
-    @ApiStatus.NonExtendable
-    @Contract("_ -> this")
-    public final Widget onResize(WidgetEvent.OnResize listener) {
-        events().register(WidgetEvent.onResize, listener);
-        return this;
-    }
-
-    @ApiStatus.NonExtendable
-    @Contract("_ -> this")
-    public final Widget onResizePost(WidgetEvent.OnResizePost listener) {
-        events().register(WidgetEvent.onResizePost, listener);
-        return this;
+    public Widget onOverlayRender(WidgetEvent.OnOverlayRender listener) {
+        return onEvent(WidgetEvent.onOverlayRender, listener);
     }
 
     public boolean visible() {
@@ -594,74 +677,108 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
     //////////////////////////////////////
 
     @Contract("_ -> this")
-    public final Widget onRender(WidgetEvent.OnRender listener) {
-        return onEvent(WidgetEvent.onRender, listener);
-    }
-
-    @Contract("_ -> this")
-    public final Widget onOverlayRender(WidgetEvent.OnOverlayRender listener) {
-        return onEvent(WidgetEvent.onOverlayRender, listener);
-    }
-
-    @Contract("_ -> this")
-    public final Widget onMouseClicked(InputEvent.OnMouseClicked listener) {
+    public Widget onMouseClicked(InputEvent.OnMouseClicked listener) {
         return onEvent(InputEvent.onMouseClicked, listener);
     }
 
     @Contract("_ -> this")
-    public final Widget onMouseClickedInner(InputEvent.OnMouseClicked listener) {
-        return onEvent(InputEvent.onMouseClicked, listener);
-    }
-
-    @Contract("_ -> this")
-    public final Widget onMouseReleased(InputEvent.OnMouseReleased listener) {
+    public Widget onMouseReleased(InputEvent.OnMouseReleased listener) {
         return onEvent(InputEvent.onMouseReleased, listener);
     }
 
     @Contract("_ -> this")
-    public final Widget onKeyReleased(InputEvent.OnKeyReleased listener) {
+    public Widget onMouseHover(InputEvent.OnMouseHover listener) {
+        return onEvent(InputEvent.onMouseHover, listener);
+    }
+
+    @Contract("_ -> this")
+    public Widget onMouseDragged(InputEvent.OnMouseDragged listener) {
+        return onEvent(InputEvent.onMouseDragged, listener);
+    }
+
+    @Contract("_ -> this")
+    public Widget onKeyReleased(InputEvent.OnKeyReleased listener) {
         return onEvent(InputEvent.onKeyReleased, listener);
     }
 
     @Contract("_ -> this")
-    public final Widget onKeyPressed(InputEvent.OnKeyPressed listener) {
+    public Widget onKeyPressed(InputEvent.OnKeyPressed listener) {
         return onEvent(InputEvent.onKeyPressed, listener);
     }
 
-    public void onDelete() {
-        listeners(WidgetEvent.onDelete).onDeleted(this);
-    }
-
+    /**
+     * @param input the input context
+     * @return whether the event is consumed.
+     */
     public boolean mouseClicked(InputContext input) {
-        if (!visible() || !active() || !isMouseOver(input)) return false;
-        return listeners(InputEvent.onMouseClicked).onClicked(common(), input);
+        if (!interactable() || !isMouseOver(input)) return false;
+        return listeners(InputEvent.onMouseClicked).onClicked(input, common());
     }
 
+    /**
+     * Most of the time, you should use this method to handle mouse click event.
+     *
+     * @param input the input context
+     * @return whether the event is consumed.
+     */
     public boolean mouseReleased(InputContext input) {
-        if (!visible() || !active() || !isMouseOver(input)) return false;
-        return listeners(InputEvent.onKeyReleased).onKeyReleased(common(), input);
+        if (!interactable() || !isMouseOver(input)) return false;
+        return listeners(InputEvent.onKeyReleased).onKeyReleased(input, common());
     }
 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        return false;
+        if (!interactable() || !isMouseOver(mouseX, mouseY)) return false;
+        return listeners(InputEvent.onMouseScrolled).onScrolled(mouseX, mouseY, scrollX, scrollY, common());
     }
 
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        return false;
+        if (!interactable() || !isMouseOver(mouseX, mouseY)) return false;
+        var input = InputContext.fromMouse(mouseX, mouseY, button);
+        return listeners(InputEvent.onMouseDragged).onDragged(input, deltaX, deltaY, common());
     }
 
-    public boolean mouseMoved(double mouseX, double mouseY) {
-        return false;
+    public void mouseMoved(double mouseX, double mouseY) {
+        listeners(InputEvent.onMouseMoved).onMoved(mouseX, mouseY, interruptible());
     }
 
     public boolean keyPressed(InputContext input) {
-        if (!visible() || !active()) return false;
-        return listeners(InputEvent.onKeyPressed).onKeyPressed(common(), input);
+        if (!interactable()) return false;
+        return listeners(InputEvent.onKeyPressed).onKeyPressed(input, common());
     }
 
     public boolean keyReleased(InputContext input) {
-        if (!visible() || !active()) return false;
-        return listeners(InputEvent.onKeyReleased).onKeyReleased(common(), input);
+        if (!interactable()) return false;
+        return listeners(InputEvent.onKeyReleased).onKeyReleased(input, common());
+    }
+
+    //////////////////////////////////////
+    //*******      Draggable   *********//
+    //////////////////////////////////////
+
+
+    public boolean draggable() {
+        return draggable;
+    }
+
+    @Contract("_ -> this")
+    public Widget setDraggable(boolean draggable) {
+        this.draggable = draggable;
+        if (draggable) {
+            onInitPost(self -> {
+                addActor(DragProvider.ACTOR_KEY, DragProvider.fromWidget(this));
+            });
+        }
+        return this;
+    }
+
+    public boolean dragging() {
+        return dragging;
+    }
+
+    @Contract("_ -> this")
+    public Widget setDragging(boolean dragging) {
+        this.dragging = dragging;
+        return this;
     }
 
     //////////////////////////////////////
@@ -674,13 +791,29 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return this;
     }
 
+    @Override
+    public String toString() {
+        return "Widget{" +
+                "id='" + id + '\'' +
+                ", initialized=" + initialized +
+                ", root=" + (root == null ? "null" : root.getId()) +
+                ", parent=" + (parent == null ? "null" : parent.getId()) +
+                ", icon=" + icon +
+                ", position=" + position +
+                ", absolute=" + absolute +
+                ", size=" + size +
+                ", active=" + active +
+                ", visibility=" + visibility +
+                '}';
+    }
+
 
     //////////////////////////////////////
     //*******       Utils      *********//
     //////////////////////////////////////
 
     public <T extends WidgetEvent> Widget onEvent(EventDefinition<T> definition, T listener) {
-        events().register(definition, listener);
+        EventHandler.super.onEvent(definition, listener);
         return this;
     }
 
@@ -704,58 +837,23 @@ public abstract class Widget implements Renderable, EventHandler<WidgetEvent>, A
         return size.contains(mouseX, mouseY);
     }
 
+    public boolean intersects(Widget boundProvider) {
+        return intersects(boundProvider.getAbsoluteBounds());
+    }
+
+    public boolean intersects(int x, int y, int width, int height) {
+        return this.position.x >= x && this.position.y >= y &&
+                this.position.x + this.size.width <= x + width &&
+                this.position.y + this.size.height <= y + height;
+    }
+
+    public boolean intersects(Rect bound) {
+        return bound.intersects(getAbsoluteBounds());
+    }
+
     @SuppressWarnings("unchecked")
     public <O extends Widget> O cast() {
         return (O) this;
     }
 
-    /**
-     * Top-down search
-     */
-    @Nullable
-    public <T extends Widget> T getWidgetOfType(Class<T> type) {
-        if (type.isInstance(this)) {
-            return type.cast(this);
-        }
-        return null;
-    }
-
-    public <T extends Widget> void getWidgetsOfType(Class<T> type, List<T> result) {
-        if (type.isInstance(this)) {
-            result.add(type.cast(this));
-        }
-    }
-
-    /**
-     * down to top search.
-     */
-    @Nullable
-    public <T extends Widget> T findWidgetsOfType(Class<T> type) {
-        if (type.isInstance(this)) {
-            return type.cast(this);
-        }
-        var parent = parent();
-        if (parent != null) {
-            return parent.findWidgetsOfType(type);
-        }
-        return null;
-    }
-
-    public <T extends Widget> void findWidgetsOfType(Class<T> type, List<T> result) {
-        if (type.isInstance(this)) {
-            result.add(type.cast(this));
-        }
-        var parent = parent();
-        if (parent != null) {
-            parent.findWidgetsOfType(type, result);
-        }
-    }
-
-    @Nullable
-    public Widget getHoveredWidget(double mouseX, double mouseY) {
-        if (isMouseOver(mouseX, mouseY)) {
-            return this;
-        }
-        return null;
-    }
 }

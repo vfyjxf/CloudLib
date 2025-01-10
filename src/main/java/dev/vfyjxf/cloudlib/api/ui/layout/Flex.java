@@ -125,8 +125,47 @@ public class Flex implements Resizer {
         y.reset();
         width.reset();
         height.reset();
+        margin.reset();
+        offset.reset();
+        padding.reset();
         relative = null;
         post = null;
+    }
+
+    public void resetX() {
+        x.reset();
+    }
+
+    public void resetY() {
+        y.reset();
+    }
+
+    public void resetWidth() {
+        width.reset();
+    }
+
+    public void resetHeight() {
+        height.reset();
+    }
+
+    public void resetRelative() {
+        relative = null;
+    }
+
+    public void resetPost() {
+        post = null;
+    }
+
+    public void resetMargin() {
+        margin.reset();
+    }
+
+    public void resetOffset() {
+        offset.reset();
+    }
+
+    public void resetPadding() {
+        padding.reset();
     }
 
     public Flex setRelative(Resizer relative) {
@@ -167,16 +206,16 @@ public class Flex implements Resizer {
     }
 
     @Override
-    public void add(WidgetGroup<?> parent, Widget child) {
+    public void addResizer(WidgetGroup<?> parent, Widget child) {
         if (this.post != null) {
-            this.post.add(parent, child);
+            this.post.addResizer(parent, child);
         }
     }
 
     @Override
-    public void remove(WidgetGroup<?> parent, Widget child) {
+    public void removeResizer(WidgetGroup<?> parent, Widget child) {
         if (this.post != null) {
-            this.post.remove(parent, child);
+            this.post.removeResizer(parent, child);
         }
     }
 

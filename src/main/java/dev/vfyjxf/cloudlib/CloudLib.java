@@ -3,6 +3,8 @@ package dev.vfyjxf.cloudlib;
 import dev.vfyjxf.cloudlib.startup.ClientStartup;
 import dev.vfyjxf.cloudlib.startup.CommonStartup;
 import dev.vfyjxf.cloudlib.startup.ServerStartup;
+import dev.vfyjxf.cloudlib.utils.Locations;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -34,5 +36,8 @@ public class CloudLib {
         startup.loadComplete(event);
     }
 
+    public static ResourceLocation of(String path) {
+        return Locations.of(path);
+    }
 
 }

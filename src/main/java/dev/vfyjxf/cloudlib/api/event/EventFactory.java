@@ -1,21 +1,24 @@
 package dev.vfyjxf.cloudlib.api.event;
 
 import com.google.common.reflect.AbstractInvocationHandler;
+import dev.vfyjxf.cloudlib.api.actor.MergeableActor;
 import dev.vfyjxf.cloudlib.utils.Checks;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
-import org.eclipse.collections.impl.list.mutable.FastList;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
 /**
+ * The EventFactory is a factory class for defining {@link EventDefinition}
+ *
  * <p>
  * Some basic promises:
  * <p>
@@ -33,29 +36,29 @@ public final class EventFactory {
     private EventFactory() {
     }
 
-    public static <T> EventDefinition<T> define(Class<T> type, Function<List<T>, T> invokerFactory) {
-        return new EventDefinitionImpl<>(type, invokerFactory);
+    public static <T> EventDefinition<T> define(Class<T> type, Function<List<T>, T> merger) {
+        return new EventDefinitionImpl<>(type, merger);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T> EventDefinition<T> defineGeneric(Class<? super T> type, Function<List<? extends T>, ? extends T> invokerFactory) {
-        return new EventDefinitionImpl<>(type, (Function) invokerFactory);
+    public static <T> EventDefinition<T> defineGeneric(Class<? super T> type, Function<List<? extends T>, ? extends T> merger) {
+        return new EventDefinitionImpl<>(type, (Function) merger);
     }
 
-    public static <T> Event<T> createEvent(Function<List<T>, T> invokerFactory) {
-        return new EventImpl<>(invokerFactory);
+    public static <T> Event<T> createEvent(Function<List<T>, T> combiner) {
+        return new EventImpl<>(combiner);
     }
 
     private static class EventDefinitionImpl<T> implements EventDefinition<T> {
 
         private final Class<T> type;
-        private final Function<List<T>, T> function;
+        private final Function<List<T>, T> merger;
         private final Event<T> global;
 
-        private EventDefinitionImpl(Class<T> type, Function<List<T>, T> function) {
+        private EventDefinitionImpl(Class<T> type, Function<java.util.List<T>, T> merger) {
             this.type = type;
-            this.function = function;
-            this.global = new EventImpl<>(function);
+            this.merger = merger;
+            this.global = new EventImpl<>(merger);
         }
 
         @Override
@@ -65,47 +68,48 @@ public final class EventFactory {
 
         @Override
         public Event<T> create() {
-            return new EventImpl<>(function);
+            return new EventImpl<>(merger);
         }
 
         @Override
         public Event<T> global() {
             return global;
         }
+
+        @Override
+        public String toString() {
+            return "EventDefinitionImpl{" +
+                    "type=" + type.getSimpleName() +
+                    '}';
+        }
     }
 
-    private static class EventImpl<T> implements Event<T> {
-        private final Function<List<T>, T> function;
-        private T invoker = null;
-        private final FastList<T> listeners;
+    private static class EventImpl<T> extends MergeableActor<T> implements Event<T> {
         private final MutableMap<T, BooleanSupplier> listenerLifetimeManage;
 
-        private EventImpl(Function<List<T>, T> function) {
-            this.function = function;
-            listeners = FastList.newList();
+        private EventImpl(Function<List<T>, T> merger) {
+            super(merger);
             listenerLifetimeManage = Maps.mutable.withInitialCapacity(1);
         }
 
         @Override
-        public T invoker() {
-            if (!listenerLifetimeManage.isEmpty()) {
-                int size = listeners.size();
-                listeners.removeIf(listener -> listenerLifetimeManage.get(listener).getAsBoolean());
-                if (size != listeners.size()) {
-                    invoker = null;
-                }
+        public T actor() {
+            checkLifetime();
+            if (actor == null) {
+                updateActor();
             }
-            if (invoker == null) {
-                update();
-            }
-            return invoker;
+            return actor;
         }
 
         @Override
-        public T register(T listener) {
+        public T register(T listener, int priority) {
+            Checks.checkRange(priority, 0, Integer.MAX_VALUE, "priority");
             Checks.checkNotNull(listener, "listener");
-            listeners.add(listener);
-            invoker = null;
+            Checks.checkArgument(!isRegistered(listener), "listener is already registered");
+
+            actors.add(new ActorEntry<>(listener, priority));
+            actors.sort(ActorEntry::compareTo);
+            actor = null;
             return listener;
         }
 
@@ -146,28 +150,52 @@ public final class EventFactory {
 
         @Override
         public void unregister(T listener) {
-            listeners.remove(listener);
-            listeners.trimToSize();
-            invoker = null;
+            actors.removeIf(l -> l.actor() == listener);
+            actors.trimToSize();
+            actor = null;
         }
 
         @Override
         public boolean isRegistered(T listener) {
-            return listeners.contains(listener);
+            return actors.anySatisfy(l -> l.actor() == listener);
         }
 
         @Override
         public void clearListeners() {
-            listeners.clear();
-            invoker = null;
+            actors.clear();
+            actor = null;
         }
 
-        public void update() {
-            if (listeners.size() == 1) {
-                invoker = listeners.getFirst();
-            } else {
-                invoker = function.apply(listeners);
+        private void checkLifetime() {
+            if (!listenerLifetimeManage.isEmpty()) {
+                int size = actors.size();
+                for (Iterator<ActorEntry<T>> iterator = actors.iterator(); iterator.hasNext(); ) {
+                    T listener = iterator.next().actor();
+                    var manage = listenerLifetimeManage.get(listener);
+                    if (manage != null && manage.getAsBoolean()) {
+                        iterator.remove();
+                        listenerLifetimeManage.remove(listener);
+                    }
+                }
+                if (size != actors.size()) {
+                    actor = null;
+                }
             }
+        }
+
+        @Override
+        public void put(T actor, int priority) {
+            this.register(actor, priority);
+        }
+
+        @Override
+        public void put(T actor) {
+            this.register(actor);
+        }
+
+        @Override
+        public void remove(T actor) {
+            this.unregister(actor);
         }
     }
 }

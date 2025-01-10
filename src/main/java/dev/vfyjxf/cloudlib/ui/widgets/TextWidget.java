@@ -2,12 +2,13 @@ package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.UIContext;
 import dev.vfyjxf.cloudlib.api.ui.alignment.Alignment;
+import dev.vfyjxf.cloudlib.api.ui.alignment.AlignmentReviver;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
-public class TextWidget extends Widget {
+public class TextWidget extends Widget implements AlignmentReviver<TextWidget> {
 
     private Component text;
     private Alignment.Horizontal horizontalAlignment;
@@ -45,6 +46,11 @@ public class TextWidget extends Widget {
 
     public void setText(Component text) {
         this.text = text;
+    }
+
+    @Override
+    public TextWidget alignment(Alignment alignment) {
+        return this;
     }
 
     public TextWidget horizontalAlignment(Alignment.Horizontal horizontalAlignment) {
