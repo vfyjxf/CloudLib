@@ -1,7 +1,6 @@
 package dev.vfyjxf.cloudlib.api.event;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import dev.vfyjxf.cloudlib.api.actor.Actor;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Range;
 
@@ -16,12 +15,12 @@ import java.util.function.BooleanSupplier;
  *
  * @param <T> the invoker type,it must be a functional interface.
  */
-public interface Event<T> extends Actor<T> {
+public interface Event<T>  {
 
     /**
      * @return the actor of the event
      */
-    T actor();
+    T invoker();
 
     /**
      * Register a listener with default priority.
@@ -62,6 +61,17 @@ public interface Event<T> extends Actor<T> {
      */
     @CanIgnoreReturnValue
     T registerManaged(T listener, BooleanSupplier condition);
+
+    /**
+     * Register a listener which managed by the reference.
+     * <p>
+     * the listener will be removed when the reference is collected by the GC.
+     *
+     * @param listener  the listener to register
+     * @param reference the reference to manage the listener
+     * @return the listener
+     */
+    T registerManaged(T listener, Object reference);
 
     /**
      * Unregister a listener.

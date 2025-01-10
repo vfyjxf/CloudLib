@@ -48,8 +48,8 @@ class EventFactoryTest {
 
     @Test
     public void test(MinecraftServer server) {
-        eventHandler.events().get(onTest).actor().test();
-        eventHandler.events().get(onTest).actor().test();
-        eventHandler.events().get(onTest).actor().test();
+        eventHandler.events().get(onTest).invoker().test();
+        eventHandler.events().get(onTest).invoker().test();
+        eventHandler.events().get(onTest).invoker().test();
     }
 }

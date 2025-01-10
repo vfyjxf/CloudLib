@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.actor;
 
+import dev.vfyjxf.cloudlib.utils.Checks;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
 import org.jetbrains.annotations.NotNull;
@@ -44,6 +45,19 @@ public class ActorContainer {
     public <T> void add(@NotNull MergeableActorKey<T> key, @NotNull T actor, int priority) {
         MergeableActor<T> mergeableActor = (MergeableActor<T>) mergeableActors.computeIfAbsent(key, k -> new SimpleMergeableActor<>(key));
         mergeableActor.put(actor, priority);
+    }
+
+    public <T> void addWeak(@NotNull MergeableActorKey<T> key, @NotNull T actor, @NotNull Object reference) {
+        addWeak(key, actor, ActorPriority.DEFAULT, reference);
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public <T> void addWeak(@NotNull MergeableActorKey<T> key, @NotNull T actor, int priority, @NotNull Object reference) {
+        Checks.checkNotNull(key, "key");
+        Checks.checkNotNull(actor, "actor");
+        Checks.checkNotNull(reference, "reference");
+        MergeableActor<T> mergeableActor = (MergeableActor<T>) mergeableActors.computeIfAbsent(key, k -> new SimpleMergeableActor<>(key));
+        mergeableActor.putWeak(reference, actor, priority);
     }
 
     public boolean has(@NotNull MergeableActorKey<?> key) {

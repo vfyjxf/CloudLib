@@ -106,11 +106,10 @@ public class TestLayoutScreen extends BaseScreen {
                                     dragConsumerWidget.intersects(context.draggingBounds())),
                             (element, context) -> {
                                 Widget value = element.value();
-                                Pos pos = context.relativePos(dragConsumerWidget);
                                 var parent = value.parent();
-                                if (parent != null) {
-                                    parent.remove(value);
-                                }
+                                if (parent == null) return false;
+                                Pos pos = context.relativePos(dragConsumerWidget);
+                                parent.remove(value);
                                 value.withModifier(
                                         Modifier.builder()
                                                 .resetPos()

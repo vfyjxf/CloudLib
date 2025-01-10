@@ -30,6 +30,14 @@ public interface ActorHolder {
         actors().add(key, actor, priority);
     }
 
+    default <T> void addWeakActor(@NotNull MergeableActorKey<T> key, @NotNull T actor, @NotNull Object reference) {
+        actors().addWeak(key, actor, reference);
+    }
+
+    default <T> void addWeakActor(@NotNull MergeableActorKey<T> key, @NotNull T actor, int priority, @NotNull Object reference) {
+        actors().addWeak(key, actor, priority, reference);
+    }
+
     default boolean has(@NotNull MergeableActorKey<?> key) {
         return actors().has(key);
     }

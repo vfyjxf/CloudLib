@@ -29,7 +29,7 @@ public interface EventDefinition<T> {
      * @return The invoker of the global event.
      */
     default T invoker() {
-        return global().actor();
+        return global().invoker();
     }
 
     /**

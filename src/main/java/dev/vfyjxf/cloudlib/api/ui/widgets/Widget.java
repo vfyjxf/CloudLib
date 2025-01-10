@@ -765,7 +765,7 @@ public abstract class Widget implements
         this.draggable = draggable;
         if (draggable) {
             onInitPost(self -> {
-                addActor(DragProvider.ACTOR_KEY, DragProvider.fromWidget(this));
+                addWeakActor(DragProvider.ACTOR_KEY, DragProvider.fromWidget(this), this);
             });
         }
         return this;

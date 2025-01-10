@@ -38,12 +38,12 @@ public interface DragProvider {
         return new DragProvider() {
             @Override
             public boolean draggable(UIContext uiContext, InputContext input, DragContext dragContext) {
-                return widget.isMouseOver(input);
+                return widget.parent() != null && widget.isMouseOver(input);
             }
 
             @Override
             public DraggableElement<?> getDraggableElement(UIContext uiContext, InputContext input, DragContext dragContext) {
-                if (widget.isMouseOver(input)) return DraggableElement.draggable(widget);
+                if (widget.parent() != null && widget.isMouseOver(input)) return DraggableElement.draggable(widget);
                 else return null;
             }
         };

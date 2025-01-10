@@ -23,7 +23,7 @@ public interface EventHandler<T> {
     }
 
     default <E extends T> E listeners(EventDefinition<E> definition) {
-        return events().get(definition).actor();
+        return events().get(definition).invoker();
     }
 
     default <E extends T> E register(EventDefinition<E> definition, E listener) {

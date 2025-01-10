@@ -1,13 +1,14 @@
 package dev.vfyjxf.cloudlib.api.event;
 
 import com.google.common.reflect.AbstractInvocationHandler;
-import dev.vfyjxf.cloudlib.api.actor.MergeableActor;
 import dev.vfyjxf.cloudlib.utils.Checks;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.impl.list.mutable.FastList;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.invoke.MethodHandles;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Iterator;
@@ -84,21 +85,24 @@ public final class EventFactory {
         }
     }
 
-    private static class EventImpl<T> extends MergeableActor<T> implements Event<T> {
+    private static class EventImpl<T> implements Event<T> {
         private final MutableMap<T, BooleanSupplier> listenerLifetimeManage;
+        private final Function<List<T>, T> merger;
+        private final FastList<ListenerEntry<T>> listeners = FastList.newList();
+        private T invoker;
 
         private EventImpl(Function<List<T>, T> merger) {
-            super(merger);
+            this.merger = merger;
             listenerLifetimeManage = Maps.mutable.withInitialCapacity(1);
         }
 
         @Override
-        public T actor() {
+        public T invoker() {
             checkLifetime();
-            if (actor == null) {
-                updateActor();
+            if (invoker == null) {
+                update();
             }
-            return actor;
+            return invoker;
         }
 
         @Override
@@ -107,9 +111,9 @@ public final class EventFactory {
             Checks.checkNotNull(listener, "listener");
             Checks.checkArgument(!isRegistered(listener), "listener is already registered");
 
-            actors.add(new ActorEntry<>(listener, priority));
-            actors.sort(ActorEntry::compareTo);
-            actor = null;
+            listeners.add(new ListenerEntry<>(listener, priority));
+            listeners.sort(ListenerEntry::compareTo);
+            invoker = null;
             return listener;
         }
 
@@ -149,53 +153,62 @@ public final class EventFactory {
         }
 
         @Override
+        public T registerManaged(T listener, Object reference) {
+            Checks.checkNotNull(listener, "listener");
+            Checks.checkNotNull(reference, "reference");
+            WeakReference<Object> ref = new WeakReference<>(reference);
+            return registerManaged(listener, () -> ref.get() == null);
+        }
+
+        @Override
         public void unregister(T listener) {
-            actors.removeIf(l -> l.actor() == listener);
-            actors.trimToSize();
-            actor = null;
+            listeners.removeIf(l -> l.listener == listener);
+            listeners.trimToSize();
+            invoker = null;
         }
 
         @Override
         public boolean isRegistered(T listener) {
-            return actors.anySatisfy(l -> l.actor() == listener);
+            return listeners.anySatisfy(l -> l.listener == listener);
         }
 
         @Override
         public void clearListeners() {
-            actors.clear();
-            actor = null;
+            listeners.clear();
+            invoker = null;
+        }
+
+        private void update() {
+            if (listeners.size() == 1) {
+                invoker = listeners.getFirst().listener;
+            } else {
+                invoker = merger.apply(listeners.collect(ListenerEntry::listener));
+            }
         }
 
         private void checkLifetime() {
             if (!listenerLifetimeManage.isEmpty()) {
-                int size = actors.size();
-                for (Iterator<ActorEntry<T>> iterator = actors.iterator(); iterator.hasNext(); ) {
-                    T listener = iterator.next().actor();
+                int size = listeners.size();
+                for (Iterator<ListenerEntry<T>> iterator = listeners.iterator(); iterator.hasNext(); ) {
+                    T listener = iterator.next().listener;
                     var manage = listenerLifetimeManage.get(listener);
                     if (manage != null && manage.getAsBoolean()) {
                         iterator.remove();
                         listenerLifetimeManage.remove(listener);
                     }
                 }
-                if (size != actors.size()) {
-                    actor = null;
+                if (size != listeners.size()) {
+                    invoker = null;
                 }
             }
         }
 
-        @Override
-        public void put(T actor, int priority) {
-            this.register(actor, priority);
+        private record ListenerEntry<T>(T listener, int priority) implements Comparable<ListenerEntry<T>> {
+            @Override
+            public int compareTo(ListenerEntry<T> o) {
+                return Integer.compare(o.priority, priority);
+            }
         }
 
-        @Override
-        public void put(T actor) {
-            this.register(actor);
-        }
-
-        @Override
-        public void remove(T actor) {
-            this.unregister(actor);
-        }
     }
 }
