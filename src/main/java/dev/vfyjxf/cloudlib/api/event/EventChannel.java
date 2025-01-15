@@ -59,6 +59,10 @@ public interface EventChannel<T> {
         get(definition).registerManaged(listener, condition);
     }
 
+    default <E extends T> void registerManaged(EventDefinition<E> definition, E listener, Object reference) {
+        get(definition).registerManaged(listener, reference);
+    }
+
     default <E extends T> void unregister(EventDefinition<E> definition) {
         get(definition).clearListeners();
     }
