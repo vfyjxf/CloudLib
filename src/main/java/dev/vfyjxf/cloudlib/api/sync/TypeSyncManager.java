@@ -68,10 +68,6 @@ public class TypeSyncManager<O extends SyncDataHolder> {
             StreamCodec<RegistryFriendlyByteBuf, T> streamCodec,
             T... token
     ) {
-        Class<?> callerClass = stackWalker.getCallerClass();
-        if (callerClass != bindType) {
-            throw new IllegalStateException("The managed value should be defined in the same class as the bind type");
-        }
         SyncValue<O, T> syncValue = new SyncValue<>(this, syncValues.size(), bindType, dist, getter, setter, streamCodec, token);
         syncValues.add(syncValue);
         return syncValue;

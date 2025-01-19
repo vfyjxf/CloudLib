@@ -29,6 +29,7 @@ class SyncManagerTest {
 
     @Test
     public void testCatch(MinecraftServer minecraftServer) {
+        var type = DataHolder.TYPE_SYNC_MANAGER;
         Assertions.assertThrows(IllegalStateException.class, () -> {
             TypeSyncManager.define(DataHolder.class).server(
                     holder -> holder.intData,
