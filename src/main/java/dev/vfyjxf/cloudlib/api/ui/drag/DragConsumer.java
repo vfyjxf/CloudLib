@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.drag;
 
-import dev.vfyjxf.cloudlib.api.actor.MergeableActorKey;
+import dev.vfyjxf.cloudlib.api.performer.CompositeScenario;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import dev.vfyjxf.cloudlib.utils.Locations;
 
@@ -9,7 +9,7 @@ import java.util.function.BiPredicate;
 
 public interface DragConsumer {
 
-    MergeableActorKey<DragConsumer> ACTOR_KEY = new MergeableActorKey<>(
+    CompositeScenario<DragConsumer> SCENARIO = new CompositeScenario<>(
             Locations.of("drag_consumer"),
             DragConsumer.class,
             listeners -> new DragConsumer() {
@@ -47,7 +47,7 @@ public interface DragConsumer {
             }
     );
 
-    static DragConsumer fromConsumer(BiFunction<DraggableElement<?>, DragContext, Boolean> consumer) {
+    static DragConsumer consumeWidget(BiFunction<DraggableElement<?>, DragContext, Boolean> consumer) {
         return new DragConsumer() {
             @Override
             public boolean consume(DraggableElement<?> element, DragContext context) {
@@ -57,7 +57,7 @@ public interface DragConsumer {
     }
 
     @SuppressWarnings("unchecked")
-    static DragConsumer forWidgetConsumer(
+    static DragConsumer consumeSpecificWidget(
             BiPredicate<Widget, DragContext> predicate,
             BiFunction<DraggableElement<Widget>, DragContext, Boolean> consumer
 

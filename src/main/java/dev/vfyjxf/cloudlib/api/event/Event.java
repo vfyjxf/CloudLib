@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.event;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Range;
 
@@ -10,12 +11,12 @@ import java.util.function.BooleanSupplier;
  * The event object, which holds all listener and manage them.
  * <p>
  * <b>Difference with Actor:</b> Actor's interface usually has multiple methods that need to be implemented,
- * while the majority of the objects held by the Event are objects of a functional interface,
- * and the Event supports lifecycle management and additional process control behavior.
+ * while the majority of the objects held by the Event are objects of a functional interface.
  *
  * @param <T> the invoker type,it must be a functional interface.
  */
-public interface Event<T>  {
+@ApiStatus.NonExtendable
+public interface Event<T> {
 
     /**
      * @return the actor of the event
@@ -50,7 +51,7 @@ public interface Event<T>  {
      */
     @Contract("_, _ -> new")
     @CanIgnoreReturnValue
-    T registerManaged(T listener, int lifetime);
+    T registerManaged(T listener, @Range(from = 1, to = Integer.MAX_VALUE) int lifetime);
 
     /**
      * Register a listener which lifetime managed by the condition.
@@ -71,6 +72,7 @@ public interface Event<T>  {
      * @param reference the reference to manage the listener
      * @return the listener
      */
+    @CanIgnoreReturnValue
     T registerManaged(T listener, Object reference);
 
     /**

@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 /**
  * Represents an object that can have data attached to it.
+ * It is recommended to use neoforge's {@link net.neoforged.neoforge.attachment.IAttachmentHolder} if you want to attach a serializable data.
  */
 @SuppressWarnings("ConstantConditions")
 public interface DataAttachable {
@@ -18,7 +19,7 @@ public interface DataAttachable {
         dataContainer().attach(key, value);
     }
 
-    default <T> @NotNull T getData(DataKey<T> key) {
+    default <T> T getData(DataKey<T> key) {
         return dataContainer().get(key);
     }
 

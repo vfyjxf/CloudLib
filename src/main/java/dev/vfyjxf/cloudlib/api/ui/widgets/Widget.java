@@ -1,8 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import dev.vfyjxf.cloudlib.api.actor.ActorContainer;
-import dev.vfyjxf.cloudlib.api.actor.ActorHolder;
 import dev.vfyjxf.cloudlib.api.data.DataAttachable;
 import dev.vfyjxf.cloudlib.api.data.DataContainer;
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
@@ -11,6 +9,8 @@ import dev.vfyjxf.cloudlib.api.event.EventHandler;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.math.Size;
+import dev.vfyjxf.cloudlib.api.performer.Backstage;
+import dev.vfyjxf.cloudlib.api.performer.PerformerContainer;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.Renderable;
 import dev.vfyjxf.cloudlib.api.ui.RenderableTexture;
@@ -45,7 +45,7 @@ import java.util.function.Supplier;
 /**
  * The basic unit of the UI system.
  * <p>
- * A widget is a component that can be rendered on the screen.
+ * C widget is a component that can be rendered on the screen.
  * It can be interacted with the mouse and keyboard.
  * <p>
  * Subsystem:
@@ -54,18 +54,20 @@ import java.util.function.Supplier;
  *     <li>Event: Implemented {@link EventHandler<WidgetEvent>} to allow combining different events to create complex widgets. </li>
  *     <li>Render: Provides events for rendering the widget itself, the widget's tooltip, the widget's overlay.</li>
  *     <li>Data: {@link DataAttachable} is implemented to allow components to attach additional data.</li>
- *     <li>Actor: {@link ActorContainer} bound to the {@link RootWidget#actors()} by default.</li>
+ *     <li>Actor: {@link PerformerContainer} bound to the {@link RootWidget#performers()} by default.</li>
  *   <ul>
  */
 @SuppressWarnings("unchecked")
 public abstract class Widget implements
-        Renderable, Animatable<Widget>,
-        Resizer, EventHandler<WidgetEvent>,
-        DataAttachable, ActorHolder {
+                             Renderable, Animatable<Widget>,
+                             Resizer, EventHandler<WidgetEvent>,
+                             DataAttachable, Backstage {
 
     public static Widget create() {
         return new BasicWidget();
     }
+
+    //region Fields
 
     //event
     protected final EventChannel<WidgetEvent> eventChannel = EventChannel.create(this);
@@ -105,10 +107,9 @@ public abstract class Widget implements
     protected final Flex flex = new Flex();
     protected Resizer resizer = flex;
 
-    //////////////////////////////////////
-    //********  Internal impl  *********//
-    //////////////////////////////////////
+    //endregion
 
+    //region Internal impl
     protected Pos calculateAbsolute() {
         if (parent == null) return position;
         WidgetGroup<?> parent = this.parent;
@@ -125,9 +126,9 @@ public abstract class Widget implements
         absolute = calculateAbsolute();
     }
 
-    //////////////////////////////////////
-    //********       Basic     *********//
-    //////////////////////////////////////
+    //endregion
+
+    //region Basic
 
     public RootWidget root() {
         return root;
@@ -187,8 +188,8 @@ public abstract class Widget implements
     }
 
     @Override
-    public ActorContainer actors() {
-        return root.actors();
+    public PerformerContainer performers() {
+        return root.performers();
     }
 
     @Override
@@ -274,9 +275,9 @@ public abstract class Widget implements
         return this;
     }
 
-    //////////////////////////////////////
-    //********       Area      *********//
-    //////////////////////////////////////
+    //endregion
+
+    //region Area
 
     /**
      * @return the relative position of the widget, relative to its parent.
@@ -396,9 +397,9 @@ public abstract class Widget implements
         return setSize(getSize().width, height);
     }
 
-    //////////////////////////////////////
-    //*******       Render     *********//
-    //////////////////////////////////////
+    //endregion
+
+    //region Render
 
     /**
      * Render the widget with condition checks.
@@ -612,10 +613,9 @@ public abstract class Widget implements
         setVisible(true);
     }
 
-    //////////////////////////////////////
-    //*******       Layout     *********//
-    //////////////////////////////////////
+    //endregion
 
+    //region Layout
     public Widget withModifier(Modifier modifier) {
         this.events().registerManaged(WidgetEvent.onInitPost, modifier::apply, 1);
         return this;
@@ -672,9 +672,9 @@ public abstract class Widget implements
         return this;
     }
 
-    //////////////////////////////////////
-    //*******       Inputs     *********//
-    //////////////////////////////////////
+    //endregion
+
+    //region Inputs
 
     @Contract("_ -> this")
     public Widget onMouseClicked(InputEvent.OnMouseClicked listener) {
@@ -751,11 +751,9 @@ public abstract class Widget implements
         return listeners(InputEvent.onKeyReleased).onKeyReleased(input, common());
     }
 
-    //////////////////////////////////////
-    //*******      Draggable   *********//
-    //////////////////////////////////////
+    //endregion
 
-
+    //region Draggable
     public boolean draggable() {
         return draggable;
     }
@@ -765,7 +763,7 @@ public abstract class Widget implements
         this.draggable = draggable;
         if (draggable) {
             onInitPost(self -> {
-                addWeakActor(DragProvider.ACTOR_KEY, DragProvider.fromWidget(this), this);
+                addWeakPerformer(DragProvider.SCENARIO, DragProvider.fromWidget(this), this);
             });
         }
         return this;
@@ -781,10 +779,9 @@ public abstract class Widget implements
         return this;
     }
 
-    //////////////////////////////////////
-    //*******       Animate    *********//
-    //////////////////////////////////////
+    //endregion
 
+    //region Animate
     @Override
     @Contract("_,_ -> this")
     public Widget interpolate(Widget next, float delta) {
@@ -807,11 +804,9 @@ public abstract class Widget implements
                 '}';
     }
 
+    //endregion
 
-    //////////////////////////////////////
-    //*******       Utils      *********//
-    //////////////////////////////////////
-
+    //region Utils
     public <T extends WidgetEvent> Widget onEvent(EventDefinition<T> definition, T listener) {
         EventHandler.super.onEvent(definition, listener);
         return this;
@@ -855,5 +850,7 @@ public abstract class Widget implements
     public <O extends Widget> O cast() {
         return (O) this;
     }
+
+    //endregion
 
 }

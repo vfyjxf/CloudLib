@@ -13,7 +13,6 @@ import dev.vfyjxf.cloudlib.api.ui.widgets.Widgets;
 import dev.vfyjxf.cloudlib.helper.RenderHelper;
 import dev.vfyjxf.cloudlib.ui.BaseScreen;
 
-@TestScreen
 public class TestLayoutScreen extends BaseScreen {
 
     private TestLayoutScreen() {
@@ -83,11 +82,10 @@ public class TestLayoutScreen extends BaseScreen {
         {
             draggable.mark("draggable");
             draggable.setDraggable(true);
-            var modifier = Modifier.builder()
-                    .posRel(0.5, 0.5)
-                    .size(30, 30);
             draggable.withModifier(
-                    modifier
+                    Modifier.builder()
+                            .posRel(0.5, 0.5)
+                            .size(30, 30)
             );
             draggable.onRender(((graphics, mouseX, mouseY, partialTicks, context) -> {
                 RenderHelper.drawSolidRect(graphics, 0, 0, draggable.getWidth(), draggable.getHeight(), 0xffdb1616);
@@ -99,11 +97,12 @@ public class TestLayoutScreen extends BaseScreen {
                 RenderHelper.drawSolidRect(graphics, 0, 0, dragConsumerWidget.getWidth(), dragConsumerWidget.getHeight(), 0xff2a2a2a);
             }));
             dragConsumerWidget.setDraggable(true);
-            dragConsumerWidget.addActor(
-                    DragConsumer.ACTOR_KEY,
-                    DragConsumer.forWidgetConsumer(
-                            ((widget, context) -> widget.getId().startsWith("draggable") &&
-                                    dragConsumerWidget.intersects(context.draggingBounds())),
+            dragConsumerWidget.addPerformer(
+                    DragConsumer.SCENARIO,
+                    DragConsumer.consumeSpecificWidget(
+                            ((widget, context) ->
+                                    widget.getId().startsWith("draggable") &&
+                                            dragConsumerWidget.intersects(context.draggingBounds())),
                             (element, context) -> {
                                 Widget value = element.value();
                                 var parent = value.parent();

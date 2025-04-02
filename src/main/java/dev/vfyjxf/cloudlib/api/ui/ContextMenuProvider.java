@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 
 /**
- * A provider to build context menu
+ * C provider to build context menu
  */
 public interface ContextMenuProvider {
 

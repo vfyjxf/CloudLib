@@ -120,9 +120,23 @@ repositories {
 dependencies {
     compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
     additionalRuntimeClasspath(implementation("org.eclipse.collections:eclipse-collections-api:11.1.0"))
-    jarJar "org.eclipse.collections:eclipse-collections-api:[11.1.0,)"
+    jarJar("org.eclipse.collections:eclipse-collections-api:[11.1.0,)") {
+        version {
+            prefer("11.1.0")
+        }
+    }
     additionalRuntimeClasspath(implementation("org.eclipse.collections:eclipse-collections:11.1.0"))
-    jarJar "org.eclipse.collections:eclipse-collections:[11.1.0,)"
+    jarJar("org.eclipse.collections:eclipse-collections:[11.1.0,)") {
+        version {
+            prefer("11.1.0")
+        }
+    }
+    additionalRuntimeClasspath(implementation 'org.appliedenergistics.yoga:yoga:1.0.0')
+    jarJar("org.appliedenergistics.yoga:yoga:1.0.0") {
+        version {
+            prefer("1.0.0")
+        }
+    }
     additionalRuntimeClasspath(implementation("net.lenni0451:Reflect:1.4.0"))
     jarJar "net.lenni0451:Reflect:1.4.0"
 

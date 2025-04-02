@@ -1,15 +1,16 @@
 package dev.vfyjxf.cloudlib.api.ui.widgets;
 
-import dev.vfyjxf.cloudlib.api.actor.ActorContainer;
-import dev.vfyjxf.cloudlib.api.actor.ActorHolder;
+import dev.vfyjxf.cloudlib.api.performer.Backstage;
+import dev.vfyjxf.cloudlib.api.performer.PerformerContainer;
 import dev.vfyjxf.cloudlib.api.ui.UIContext;
 
 /**
  * A special widget that is the root of the widget tree.
  */
-public final class RootWidget extends WidgetGroup<Widget> implements ActorHolder {
+//TODO:make root widget properties to be immutable to prevent modification from other
+public final class RootWidget extends WidgetGroup<Widget> implements Backstage {
 
-    private final ActorContainer actors = new ActorContainer();
+    private final PerformerContainer performers = new PerformerContainer();
     private UIContext context;
 
     public RootWidget() {
@@ -43,7 +44,7 @@ public final class RootWidget extends WidgetGroup<Widget> implements ActorHolder
     }
 
     @Override
-    public ActorContainer actors() {
-        return actors;
+    public PerformerContainer performers() {
+        return performers;
     }
 }

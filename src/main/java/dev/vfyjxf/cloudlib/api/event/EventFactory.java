@@ -56,7 +56,7 @@ public final class EventFactory {
         private final Function<List<T>, T> merger;
         private final Event<T> global;
 
-        private EventDefinitionImpl(Class<T> type, Function<java.util.List<T>, T> merger) {
+        private EventDefinitionImpl(Class<T> type, Function<List<T>, T> merger) {
             this.type = type;
             this.merger = merger;
             this.global = new EventImpl<>(merger);
@@ -138,9 +138,7 @@ public final class EventFactory {
                         }
                     }
             );
-            register(proxied);
-            listenerLifetimeManage.put(proxied, () -> counter.get() <= 0);
-            return proxied;
+            return registerManaged(proxied, () -> counter.get() <= 0);
         }
 
         @Override
@@ -163,6 +161,7 @@ public final class EventFactory {
         @Override
         public void unregister(T listener) {
             listeners.removeIf(l -> l.listener == listener);
+            listenerLifetimeManage.remove(listener);
             listeners.trimToSize();
             invoker = null;
         }

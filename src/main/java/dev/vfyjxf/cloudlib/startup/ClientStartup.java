@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.startup;
 
 import dev.vfyjxf.cloudlib.Constants;
-import dev.vfyjxf.cloudlib.api.registry.IModPlugin;
+import dev.vfyjxf.cloudlib.api.registry.ModuleEntryPoint;
 import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
 import dev.vfyjxf.cloudlib.api.ui.text.RichTooltipComponent;
 import dev.vfyjxf.cloudlib.data.lang.LangKeyProvider;
@@ -40,7 +40,7 @@ public class ClientStartup extends CommonStartup {
         super.loadComplete(event);
         event.enqueueWork(() -> {
             IUIRegistry registry = Singletons.get(IUIRegistry.class);
-            for (IModPlugin plugin : plugins) {
+            for (ModuleEntryPoint plugin : plugins) {
                 plugin.registerUI(registry);
             }
         });

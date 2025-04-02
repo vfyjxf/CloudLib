@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.drag;
 
-import dev.vfyjxf.cloudlib.api.actor.MergeableActorKey;
+import dev.vfyjxf.cloudlib.api.performer.CompositeScenario;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.UIContext;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 public interface DragProvider {
 
-    MergeableActorKey<DragProvider> ACTOR_KEY = new MergeableActorKey<>(
+    CompositeScenario<DragProvider> SCENARIO = new CompositeScenario<>(
             Locations.of("drag_provider"),
             DragProvider.class,
             listeners -> new DragProvider() {
@@ -42,7 +42,7 @@ public interface DragProvider {
             }
 
             @Override
-            public DraggableElement<?> getDraggableElement(UIContext uiContext, InputContext input, DragContext dragContext) {
+            public @Nullable DraggableElement<?> getDraggableElement(UIContext uiContext, InputContext input, DragContext dragContext) {
                 if (widget.parent() != null && widget.isMouseOver(input)) return DraggableElement.draggable(widget);
                 else return null;
             }
