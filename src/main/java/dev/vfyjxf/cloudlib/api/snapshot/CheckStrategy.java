@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.api.network.sync;
+package dev.vfyjxf.cloudlib.api.snapshot;
 
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;

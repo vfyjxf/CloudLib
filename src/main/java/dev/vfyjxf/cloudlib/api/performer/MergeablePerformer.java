@@ -30,34 +30,34 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
     }
 
     @Override
-    public void put(T actor) {
-        put(actor, PerformerPriorities.DEFAULT);
+    public void put(T performer) {
+        put(performer, PerformerPriorities.DEFAULT);
     }
 
     @Override
-    public void remove(@NotNull T actor) {
-        Checks.checkNotNull(actor, "actor");
-        performers.removeIf(entry -> entry.performer().equals(actor));
+    public void remove(@NotNull T performer) {
+        Checks.checkNotNull(performer, "performer");
+        performers.removeIf(entry -> entry.performer().equals(performer));
         this.performer = null;
     }
 
-    public void putWeak(Object key, T actor) {
-        putWeak(key, actor, PerformerPriorities.DEFAULT);
+    public void putWeak(Object key, T performer) {
+        putWeak(key, performer, PerformerPriorities.DEFAULT);
     }
 
-    public void put(T actor, int priority) {
-        Checks.checkNotNull(actor, "actor");
-        performers.add(new DirectPerformerEntry<>(actor, priority));
+    public void put(T performer, int priority) {
+        Checks.checkNotNull(performer, "performer");
+        performers.add(new DirectPerformerEntry<>(performer, priority));
         performers.sort(PerformerEntry::compareTo);
 
         this.performer = null;
     }
 
-    public void putWeak(Object key, T actor, int priority) {
+    public void putWeak(Object key, T performer, int priority) {
         Checks.checkNotNull(key, "key");
-        Checks.checkNotNull(actor, "actor");
-        Checks.checkArgument(!Objects.equals(key, actor), "key and actor cannot be the same object!");
-        performers.add(new WeakReferencePerformerEntry<>(key, actor, priority));
+        Checks.checkNotNull(performer, "performer");
+        Checks.checkArgument(!Objects.equals(key, performer), "key and performer cannot be the same object!");
+        performers.add(new WeakReferencePerformerEntry<>(key, performer, priority));
         weakCount++;
 
         this.performer = null;

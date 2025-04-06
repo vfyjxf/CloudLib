@@ -9,12 +9,12 @@ public interface MutablePerformer<T> extends Performer<T> {
     }
 
     /**
-     * Puts an actor object to this actor reference.
+     * Puts a performer object to this performer reference.
      *
-     * @param actor the actor
+     * @param performer the performer
      */
-    void put(T actor);
+    void put(T performer);
 
-    void remove(@NotNull T actor);
+    void remove(@NotNull T performer);
 
 }

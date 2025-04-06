@@ -10,13 +10,13 @@ class SingleMutablePerformer<T> implements MutablePerformer<T> {
     }
 
     @Override
-    public void put(T actor) {
-        this.performer = actor;
+    public void put(T performer) {
+        this.performer = performer;
     }
 
     @Override
-    public void remove(@NotNull T actor) {
-        if (this.performer == actor) {
+    public void remove(@NotNull T performer) {
+        if (this.performer == performer) {
             this.performer = null;
         }
     }

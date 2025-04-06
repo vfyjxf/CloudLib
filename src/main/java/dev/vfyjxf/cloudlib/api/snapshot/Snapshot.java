@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.snapshot;
 
-import dev.vfyjxf.cloudlib.api.network.sync.CheckStrategy;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -8,7 +7,7 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
- * C value snapshot to observe the value's change.
+ * A value snapshot to observe the value's change.
  *
  * @param <T> the type of the value
  */
@@ -24,12 +23,12 @@ public sealed interface Snapshot<T> {
         return None.instance();
     }
 
-    static <T> Snapshot<T> copyOf(T value, UnaryOperator<T> copier, CheckStrategy<T> strategy) {
-        return new CopyInstance<>(value, copier, strategy);
+    static <T> Snapshot<T> copyOf(T initValue, UnaryOperator<T> copier, CheckStrategy<T> strategy) {
+        return new CopyInstance<>(initValue, copier, strategy);
     }
 
     static <T> Snapshot<T> copyOf(UnaryOperator<T> copier, CheckStrategy<T> strategy) {
-        return new CopyInstance<>(copier, strategy);
+        return new CopyInstance<>(null, copier, strategy);
     }
 
     static <T> Snapshot<T> readonlyOf(T value) {
@@ -44,7 +43,7 @@ public sealed interface Snapshot<T> {
         return new MutableRef<>(strategy);
     }
 
-    static <T> T readValue(Snapshot<T> snapshot) {
+    static <T> T readValue(Snapshot<T> snapshot) throws IllegalStateException {
         return switch (snapshot) {
             case None ignored -> throw new IllegalStateException("Cannot read value in None snapshot");
             case Readonly<T> ref -> ref.value;
@@ -65,8 +64,6 @@ public sealed interface Snapshot<T> {
     }
 
     static <T> State currentState(Snapshot<T> instance, T current) {
-        var Straneg = 1;
-        System.out.println(Straneg);
         return switch (instance) {
             case None ignored -> State.UNCHANGED;
             case Readonly<T> snapshot -> {
@@ -99,6 +96,9 @@ public sealed interface Snapshot<T> {
         };
     }
 
+    /**
+     * A snapshot that does not hold any value.
+     */
     enum None implements Snapshot<Object> {
         INSTANCE;
 
@@ -239,11 +239,6 @@ public sealed interface Snapshot<T> {
             this.copier = copier;
             this.strategy = strategy;
             this.value = copier.apply(initialValue);
-        }
-
-        public CopyInstance(UnaryOperator<T> copier, CheckStrategy<T> strategy) {
-            this.copier = copier;
-            this.strategy = strategy;
         }
 
         public UnaryOperator<T> copier() {

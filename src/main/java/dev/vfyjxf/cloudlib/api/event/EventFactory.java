@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.event;
 
 import com.google.common.reflect.AbstractInvocationHandler;
 import dev.vfyjxf.cloudlib.utils.Checks;
+import dev.vfyjxf.cloudlib.utils.ClassUtils;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.list.mutable.FastList;
@@ -38,11 +39,13 @@ public final class EventFactory {
     }
 
     public static <T> EventDefinition<T> define(Class<T> type, Function<List<T>, T> merger) {
+        Checks.checkArgument(ClassUtils.isFunctionalInterface(type), "type must be a functional interface");
         return new EventDefinitionImpl<>(type, merger);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> EventDefinition<T> defineGeneric(Class<? super T> type, Function<List<? extends T>, ? extends T> merger) {
+        Checks.checkArgument(ClassUtils.isFunctionalInterface(type), "type must be a functional interface");
         return new EventDefinitionImpl<>(type, (Function) merger);
     }
 

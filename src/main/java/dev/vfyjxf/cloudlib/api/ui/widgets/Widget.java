@@ -54,7 +54,7 @@ import java.util.function.Supplier;
  *     <li>Event: Implemented {@link EventHandler<WidgetEvent>} to allow combining different events to create complex widgets. </li>
  *     <li>Render: Provides events for rendering the widget itself, the widget's tooltip, the widget's overlay.</li>
  *     <li>Data: {@link DataAttachable} is implemented to allow components to attach additional data.</li>
- *     <li>Actor: {@link PerformerContainer} bound to the {@link RootWidget#performers()} by default.</li>
+ *     <li>Performer: {@link PerformerContainer} bound to the {@link RootWidget#performers()} by default.</li>
  *   <ul>
  */
 @SuppressWarnings("unchecked")

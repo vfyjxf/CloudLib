@@ -35,13 +35,6 @@ neoForge {
         client {
             client()
             gameDirectory = project.file('run-client')
-        }
-    }
-
-    runs {
-        client {
-            client()
-            gameDirectory = project.file('run-client')
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 

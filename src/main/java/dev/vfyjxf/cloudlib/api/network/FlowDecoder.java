@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.api.network.sync;
+package dev.vfyjxf.cloudlib.api.network;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;

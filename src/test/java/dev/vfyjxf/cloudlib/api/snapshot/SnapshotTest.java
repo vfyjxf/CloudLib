@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.snapshot;
 
-import dev.vfyjxf.cloudlib.api.network.sync.CheckStrategy;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
