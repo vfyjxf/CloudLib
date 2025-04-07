@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.network.expose.diff;
 
-import dev.vfyjxf.cloudlib.api.event.SingleEventChannel;
+import dev.vfyjxf.cloudlib.api.event.EventFactory;
+import dev.vfyjxf.cloudlib.api.event.SimpleEvent;
 import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
 import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
 import dev.vfyjxf.cloudlib.api.network.expose.BasicLayerExpose;
@@ -9,7 +10,7 @@ import dev.vfyjxf.cloudlib.api.snapshot.Snapshot;
 
 public class DiffLayerExpose<E, D> extends BasicLayerExpose<E> implements Differential<D> {
 
-    private final SingleEventChannel<D> diffReceiveListeners = new SingleEventChannel<>();
+    private final SimpleEvent<D> diffReceiveEvent = EventFactory.createSimpleEvent();
 
     protected <T> DiffLayerExpose(
             String name, short id,
@@ -21,6 +22,6 @@ public class DiffLayerExpose<E, D> extends BasicLayerExpose<E> implements Differ
 
     @Override
     public void whenDiffReceive(D difference) {
-        diffReceiveListeners.register(difference);
+        diffReceiveEvent.register(difference);
     }
 }

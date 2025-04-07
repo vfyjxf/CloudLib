@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
-import dev.vfyjxf.cloudlib.api.event.SingleEventChannel;
+import dev.vfyjxf.cloudlib.api.event.EventFactory;
+import dev.vfyjxf.cloudlib.api.event.SimpleEvent;
 import dev.vfyjxf.cloudlib.api.network.expose.common.Expose;
 import dev.vfyjxf.cloudlib.api.snapshot.Snapshot;
 import org.jetbrains.annotations.ApiStatus;
@@ -10,7 +11,7 @@ import java.util.function.Consumer;
 @ApiStatus.Internal
 public abstract class BasicExpose<T> implements Expose<T> {
 
-    private final SingleEventChannel<Consumer<T>> eventChannel = new SingleEventChannel<>();
+    private final SimpleEvent<Consumer<T>> receiveEvent = EventFactory.createSimpleEvent();
     private final String name;
     private final short id;
     private final Snapshot<T> snapshot;
@@ -50,7 +51,7 @@ public abstract class BasicExpose<T> implements Expose<T> {
 
     @Override
     public void whenReceive(Consumer<T> consumer) {
-        eventChannel.register(consumer);
+        receiveEvent.register(consumer);
     }
 
 }

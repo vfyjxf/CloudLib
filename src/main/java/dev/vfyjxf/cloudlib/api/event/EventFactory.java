@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -51,6 +52,10 @@ public final class EventFactory {
 
     public static <T> Event<T> createEvent(Function<List<T>, T> combiner) {
         return new EventImpl<>(combiner);
+    }
+
+    public static <T> SimpleEvent<T> createSimpleEvent() {
+        return new SimpleEventImpl<>();
     }
 
     private static class EventDefinitionImpl<T> implements EventDefinition<T> {
@@ -212,5 +217,41 @@ public final class EventFactory {
             }
         }
 
+    }
+
+    private static class SimpleEventImpl<T> implements SimpleEvent<T> {
+        private final FastList<T> listeners = FastList.newList();
+
+        @Override
+        public void invoke(Consumer<T> invoker) {
+            for (T listener : listeners) {
+                invoker.accept(listener);
+            }
+        }
+
+        @Override
+        public T register(T listener) {
+            if (isRegistered(listener)) {
+                throw new IllegalArgumentException("Listener is already registered");
+            }
+            listeners.add(listener);
+            return listener;
+        }
+
+        @Override
+        public void unregister(T listener) {
+            listeners.remove(listener);
+            listeners.trimToSize();
+        }
+
+        @Override
+        public boolean isRegistered(T listener) {
+            return listeners.contains(listener);
+        }
+
+        @Override
+        public void clearListeners() {
+            listeners.clear();
+        }
     }
 }

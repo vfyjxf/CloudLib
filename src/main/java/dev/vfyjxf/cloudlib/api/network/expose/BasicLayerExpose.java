@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
-import dev.vfyjxf.cloudlib.api.event.SingleEventChannel;
+import dev.vfyjxf.cloudlib.api.event.EventFactory;
+import dev.vfyjxf.cloudlib.api.event.SimpleEvent;
 import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
 import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
 import dev.vfyjxf.cloudlib.api.network.expose.common.LayerExpose;
@@ -14,7 +15,7 @@ public abstract class BasicLayerExpose<E> implements LayerExpose<E> {
     private final short id;
     private final LayerSnapshot<?> snapshot;
     private final FlowDecoder<E> decoder;
-    private final SingleEventChannel<Consumer<E>> receiveListeners = new SingleEventChannel<>();
+    private final SimpleEvent<Consumer<E>> receiveEvent = EventFactory.createSimpleEvent();
 
     protected <T> BasicLayerExpose(
             String name, short id,
@@ -40,7 +41,7 @@ public abstract class BasicLayerExpose<E> implements LayerExpose<E> {
 
     @Override
     public void whenReceive(Consumer<E> consumer) {
-        receiveListeners.register(consumer);
+        receiveEvent.register(consumer);
     }
 
     @SuppressWarnings("unchecked")
