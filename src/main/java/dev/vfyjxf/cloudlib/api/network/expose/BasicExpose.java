@@ -1,27 +1,33 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
-import dev.vfyjxf.cloudlib.api.event.EventFactory;
-import dev.vfyjxf.cloudlib.api.event.SimpleEvent;
-import dev.vfyjxf.cloudlib.api.network.expose.common.Expose;
+import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
+import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
 import dev.vfyjxf.cloudlib.api.snapshot.Snapshot;
 import org.jetbrains.annotations.ApiStatus;
 
-import java.util.function.Consumer;
-
 @ApiStatus.Internal
-public abstract class BasicExpose<T> implements Expose<T> {
+sealed abstract class BasicExpose<T> implements Expose<T>
+        permits BasicDownstreamExpose,
+                StandardReversed {
 
-    private final SimpleEvent<Consumer<T>> receiveEvent = EventFactory.createSimpleEvent();
     private final String name;
     private final short id;
     private final Snapshot<T> snapshot;
     private final ValueSupplier<T> supplier;
+    protected final FlowEncoder<T> encoder;
+    protected final FlowDecoder<T> decoder;
 
-    protected BasicExpose(String name, short id, Snapshot<T> snapshot, ValueSupplier<T> supplier) {
+    protected BasicExpose(
+            String name, short id,
+            Snapshot<T> snapshot, ValueSupplier<T> supplier,
+            FlowEncoder<T> encoder, FlowDecoder<T> decoder
+    ) {
         this.name = name;
         this.id = id;
         this.snapshot = snapshot;
         this.supplier = supplier;
+        this.encoder = encoder;
+        this.decoder = decoder;
     }
 
     @Override
@@ -47,11 +53,6 @@ public abstract class BasicExpose<T> implements Expose<T> {
     @Override
     public ValueSupplier<T> supplier() {
         return supplier;
-    }
-
-    @Override
-    public void whenReceive(Consumer<T> consumer) {
-        receiveEvent.register(consumer);
     }
 
 }

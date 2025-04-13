@@ -1,39 +1,54 @@
 package dev.vfyjxf.cloudlib;
 
-import dev.vfyjxf.cloudlib.startup.ClientStartup;
-import dev.vfyjxf.cloudlib.startup.CommonStartup;
-import dev.vfyjxf.cloudlib.startup.ServerStartup;
+import dev.vfyjxf.cloudlib.api.registry.ModuleEntryPoint;
+import dev.vfyjxf.cloudlib.api.utils.ServiceLoading;
+import dev.vfyjxf.cloudlib.network.CloudlibNetworkPayloads;
+import dev.vfyjxf.cloudlib.test.TestRegistry;
+import dev.vfyjxf.cloudlib.test.sync.TestBlockEntity;
 import dev.vfyjxf.cloudlib.utils.Locations;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLConstructModEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.collections.api.collection.ImmutableCollection;
 
-@Mod(Constants.MOD_ID)
-public class CloudLib {
+public abstract class CloudLib {
     public static final Logger logger = LogManager.getLogger("CloudLib");
-    private static CommonStartup startup;
+    protected final ImmutableCollection<ModuleEntryPoint> plugins;
 
     public CloudLib(IEventBus modBus, Dist dist) {
-        startup = dist == Dist.CLIENT ? new ClientStartup(modBus) : new ServerStartup(modBus);
-        startup.init();
-        modBus.register(this);
+        //region internal init
+        plugins = ServiceLoading.load(ModuleEntryPoint.class).toImmutable();
+        //endregion
+
+        //region debug & test init
+        TestRegistry.register(modBus);
+        //region
+
+        //region fml lifecycle listener
+        modBus.addListener(this::commonSetup);
+        modBus.addListener(this::loadComplete);
+        //region
+
+        //region register
+        modBus.addListener(CloudlibNetworkPayloads::register);
+        //endregion
     }
 
-    @SubscribeEvent
-    public void commonSetup(FMLCommonSetupEvent event) {
-        startup.commonSetup(event);
+    protected void constructMod(FMLConstructModEvent event) {
+        event.enqueueWork(() -> {
+            var a = TestBlockEntity.Menu.INFO;
+        });
     }
 
+    protected void commonSetup(FMLCommonSetupEvent event) {
+    }
 
-    @SubscribeEvent
-    public void loadComplete(FMLLoadCompleteEvent event) {
-        startup.loadComplete(event);
+    protected void loadComplete(FMLLoadCompleteEvent event) {
     }
 
     public static ResourceLocation of(String path) {

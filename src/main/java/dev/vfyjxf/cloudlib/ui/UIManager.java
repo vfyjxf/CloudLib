@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.ui;
 
+import dev.vfyjxf.cloudlib.api.ui.BasicScreen;
 import dev.vfyjxf.cloudlib.api.ui.overlay.UIOverlay;
 import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
 import dev.vfyjxf.cloudlib.ui.overlay.UIOverlayImpl;
@@ -23,7 +24,7 @@ public class UIManager {
     private UIOverlayImpl overlay = null;
 
     @Nullable
-    private BaseScreen screen;
+    private BasicScreen screen;
     private boolean closeAll = false;
 
     public UIOverlay attachedOverlay() {
@@ -35,8 +36,8 @@ public class UIManager {
         var nextScreen = event.getNewScreen();
         var minecraft = Minecraft.getInstance();
         if ((closeAll = (nextScreen == null)) || minecraft.level == null) return;
-        if (event.getNewScreen() instanceof BaseScreen baseScreen) {
-            screen = baseScreen;
+        if (event.getNewScreen() instanceof BasicScreen basicScreen) {
+            screen = basicScreen;
         }
         createOverlay();
     }

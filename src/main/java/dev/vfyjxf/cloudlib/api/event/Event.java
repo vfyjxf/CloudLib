@@ -6,19 +6,26 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Range;
 
+import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 
 /**
  * The event object, which holds all listener and manage them.
  * <p>
  * <b>Difference with {@link Performer}:</b> {@link Performer}'s interface usually has multiple methods that need to be implemented,
  * while the majority of the objects held by the {@link Event} are objects of a functional interface.
+ * <p>
  * {@link Event} will be handled by {@link EventHandler},but {@link Performer} will be handled by anything.
  *
  * @param <T> the invoker type,it <b>must</b> be a functional interface.
  */
 @ApiStatus.NonExtendable
 public interface Event<T> {
+
+    static <T> Event<T> create(Function<List<T>, T> combiner) {
+        return EventFactory.createEvent(combiner);
+    }
 
     /**
      * @return the combined invoker of the event

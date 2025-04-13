@@ -10,6 +10,9 @@ public interface CheckStrategy<T> {
 
     boolean matches(T a, T b);
 
+    default boolean notMatches(T a, T b) {
+        return !matches(a, b);
+    }
 
     static <T> CheckStrategy<T> neverEqual() {
         return (a, b) -> false;

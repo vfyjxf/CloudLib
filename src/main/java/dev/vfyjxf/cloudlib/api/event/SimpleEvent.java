@@ -11,6 +11,10 @@ import java.util.function.Consumer;
  */
 public interface SimpleEvent<T> {
 
+    static <T> SimpleEvent<T> create() {
+        return EventFactory.createSimpleEvent();
+    }
+
     void invoke(Consumer<T> invoker);
 
     /**

@@ -11,9 +11,9 @@ import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widgets;
 import dev.vfyjxf.cloudlib.helper.RenderHelper;
-import dev.vfyjxf.cloudlib.ui.BaseScreen;
+import dev.vfyjxf.cloudlib.api.ui.BasicScreen;
 
-public class TestLayoutScreen extends BaseScreen {
+public class TestLayoutScreen extends BasicScreen {
 
     private TestLayoutScreen() {
         //render background by event

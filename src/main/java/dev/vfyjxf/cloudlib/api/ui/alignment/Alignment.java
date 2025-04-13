@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Size;
 
 //Design from Jetpack Compose
+
 /**
  * An interface to calculate the position of a sized box inside an available space. {@link Alignment} is
  * often used to define the alignment of a layout inside a parent layout.

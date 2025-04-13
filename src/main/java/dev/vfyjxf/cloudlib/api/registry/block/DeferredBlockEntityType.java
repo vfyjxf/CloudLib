@@ -6,7 +6,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 
-public class DeferredBlockEntityType<T extends BlockEntity> extends DeferredHolder<BlockEntityType<?>,BlockEntityType<T>> {
+public class DeferredBlockEntityType<T extends BlockEntity> extends DeferredHolder<BlockEntityType<?>, BlockEntityType<T>> {
     /**
      * Creates a new DeferredHolder with a ResourceKey.
      *

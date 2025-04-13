@@ -34,7 +34,7 @@ public abstract class BasicEntityBlock<T extends BlockEntity> extends Block impl
 
     @Override
     protected @Nullable MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
-        //spectator mode use this method to open menu,but it doesn't provide a byteBuf to write custom,so we don't support it.
+        //spectator mode use this method to open menu,but it doesn't provide a byteBuf to write custom data,so we don't support it.
         return null;
     }
 

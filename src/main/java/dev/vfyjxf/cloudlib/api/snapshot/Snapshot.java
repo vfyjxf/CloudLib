@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.snapshot;
 
+import dev.vfyjxf.cloudlib.utils.Checks;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -39,13 +40,30 @@ public sealed interface Snapshot<T> {
         return new ImmutableRef<>(value, strategy);
     }
 
+    @SafeVarargs
+    static <T extends Observable> Snapshot<T> immutableRefOf(T value, T... typeCatch) {
+        Checks.checkNotNull(value, "The value cannot be null");
+        Checks.checkArgument(typeCatch.length == 0, "The typeCatch must be empty");
+        return new ImmutableRef<>(value, (unused) -> value.changed());
+    }
+
     static <T> Snapshot<T> mutableRefOf(CheckStrategy<T> strategy) {
         return new MutableRef<>(strategy);
     }
 
+    static <T> void init(Snapshot<T> snapshot, T value) {
+        switch (snapshot) {
+            case None ignored -> {}
+            case Readonly<T> ignored -> {}
+            case ImmutableRef<T> ignored -> {}
+            case MutableRef<T> ref -> ref.value = value;
+            case CopyInstance<T> ref -> ref.set(value);
+        }
+    }
+
     static <T> T readValue(Snapshot<T> snapshot) throws IllegalStateException {
         return switch (snapshot) {
-            case None ignored -> throw new IllegalStateException("Cannot read value in None snapshot");
+            case None ignored -> throw new IllegalStateException("Cannot read value in Empty snapshot");
             case Readonly<T> ref -> ref.value;
             case ImmutableRef<T> ref -> ref.value;
             case MutableRef<T> ref -> ref.value;
@@ -109,12 +127,12 @@ public sealed interface Snapshot<T> {
 
         @Override
         public String toString() {
-            return "None";
+            return "Empty";
         }
     }
 
     /**
-     * snapshot of the readonly value
+     * snapshot of the readonly value,the value is immutable
      *
      * @param <T> the type of the value
      */

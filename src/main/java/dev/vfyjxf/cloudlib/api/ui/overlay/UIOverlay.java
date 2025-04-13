@@ -6,7 +6,7 @@ import dev.vfyjxf.cloudlib.api.ui.Renderable;
 import dev.vfyjxf.cloudlib.api.ui.event.OverlayEvent;
 import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
 import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
-import dev.vfyjxf.cloudlib.ui.BaseScreen;
+import dev.vfyjxf.cloudlib.api.ui.BasicScreen;
 import dev.vfyjxf.cloudlib.ui.UIManager;
 import net.minecraft.client.Minecraft;
 
@@ -18,8 +18,8 @@ public interface UIOverlay extends Renderable, EventHandler<OverlayEvent> {
 
     static UIOverlay current() {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.screen instanceof BaseScreen baseScreen) {
-            return baseScreen.screenOverlay();
+        if (minecraft.screen instanceof BasicScreen basicScreen) {
+            return basicScreen.screenOverlay();
         }
         return UIManager.instance().attachedOverlay();
     }

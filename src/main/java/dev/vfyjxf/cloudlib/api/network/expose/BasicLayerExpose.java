@@ -1,21 +1,25 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
-import dev.vfyjxf.cloudlib.api.event.EventFactory;
 import dev.vfyjxf.cloudlib.api.event.SimpleEvent;
 import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
 import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
-import dev.vfyjxf.cloudlib.api.network.expose.common.LayerExpose;
 import dev.vfyjxf.cloudlib.api.snapshot.Snapshot;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 
 import java.util.function.Consumer;
 
-public abstract class BasicLayerExpose<E> implements LayerExpose<E> {
+sealed abstract class BasicLayerExpose<E>
+        implements LayerExpose<E>, Transcoder
+        permits StandardLayerExpose,
+                StandardReversedLayerExpose,
+                StandardDiffLayerExpose,
+                StandardDiffReverseLayerExpose {
 
+    private final SimpleEvent<Consumer<E>> receiveEvent = SimpleEvent.create();
     private final String name;
     private final short id;
     private final LayerSnapshot<?> snapshot;
     private final FlowDecoder<E> decoder;
-    private final SimpleEvent<Consumer<E>> receiveEvent = EventFactory.createSimpleEvent();
 
     protected <T> BasicLayerExpose(
             String name, short id,
@@ -31,12 +35,18 @@ public abstract class BasicLayerExpose<E> implements LayerExpose<E> {
 
     @Override
     public String name() {
-        return "";
+        return name;
     }
 
     @Override
     public short id() {
-        return 0;
+        return id;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> LayerSnapshot<T> layerSnapshot() {
+        return (LayerSnapshot<T>) this.snapshot;
     }
 
     @Override
@@ -44,9 +54,14 @@ public abstract class BasicLayerExpose<E> implements LayerExpose<E> {
         receiveEvent.register(consumer);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <T> LayerSnapshot<T> layerSnapshot() {
-        return (LayerSnapshot<T>) this.snapshot;
+    public void writeToClient(RegistryFriendlyByteBuf byteBuf) {
+        layerSnapshot().encoder().encode(byteBuf, layerSnapshot().current());
+    }
+
+    @Override
+    public void readFromServer(RegistryFriendlyByteBuf byteBuf) {
+        E received = decoder.decode(byteBuf);
+        receiveEvent.invoke(c -> c.accept(received));
     }
 }

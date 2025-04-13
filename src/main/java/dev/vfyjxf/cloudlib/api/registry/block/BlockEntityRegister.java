@@ -6,6 +6,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -37,6 +38,10 @@ public class BlockEntityRegister {
                     return blockEntityType;
                 }
         );
+    }
+
+    public void register(IEventBus modBus) {
+        register.register(modBus);
     }
 
     @FunctionalInterface
