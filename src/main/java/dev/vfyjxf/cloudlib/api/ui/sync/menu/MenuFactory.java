@@ -1,10 +1,9 @@
 package dev.vfyjxf.cloudlib.api.ui.sync.menu;
 
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 
-public interface MenuFactory<M extends AbstractContainerMenu, A> {
+public interface MenuFactory<M extends BasicMenu<?>, A> {
     /**
      * @param menuType  the menu type for client to create the menu
      * @param id        the container id
@@ -13,4 +12,10 @@ public interface MenuFactory<M extends AbstractContainerMenu, A> {
      * @return the menu
      */
     M create(MenuType<M> menuType, int id, Inventory playerInv, A accessor);
+
+    default M createWithInit(MenuType<M> menuType, int id, Inventory playerInv, A accessor) {
+        M menu = create(menuType, id, playerInv, accessor);
+        menu.init();
+        return menu;
+    }
 }

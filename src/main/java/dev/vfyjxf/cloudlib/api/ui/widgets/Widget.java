@@ -788,22 +788,6 @@ public abstract class Widget implements
         return this;
     }
 
-    @Override
-    public String toString() {
-        return "Widget{" +
-                "id='" + id + '\'' +
-                ", initialized=" + initialized +
-                ", root=" + (root == null ? "null" : root.getId()) +
-                ", parent=" + (parent == null ? "null" : parent.getId()) +
-                ", icon=" + icon +
-                ", position=" + position +
-                ", absolute=" + absolute +
-                ", size=" + size +
-                ", active=" + active +
-                ", visibility=" + visibility +
-                '}';
-    }
-
     //endregion
 
     //region Utils
@@ -849,6 +833,22 @@ public abstract class Widget implements
     @SuppressWarnings("unchecked")
     public <O extends Widget> O cast() {
         return (O) this;
+    }
+
+    @Override
+    public String toString() {
+        return "Widget{" +
+                "id='" + id + '\'' +
+                ", initialized=" + initialized +
+                ", root=" + (root == null ? "null" : root.getId()) +
+                ", parent=" + (parent == null ? "null" : parent.getId()) +
+                ", icon=" + icon +
+                ", position=" + position +
+                ", absolute=" + absolute +
+                ", size=" + size +
+                ", active=" + active +
+                ", visibility=" + visibility +
+                '}';
     }
 
     //endregion

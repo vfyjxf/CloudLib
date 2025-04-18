@@ -3,7 +3,8 @@ package dev.vfyjxf.cloudlib.api.network.expose;
 import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
 import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
 import dev.vfyjxf.cloudlib.api.network.FlowHandler;
-import dev.vfyjxf.cloudlib.api.snapshot.Snapshot;
+import dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot;
+import org.jetbrains.annotations.Contract;
 
 import java.util.function.Consumer;
 
@@ -72,8 +73,10 @@ public interface ReversedLayerExpose<E, S, R> extends LayerExpose<E>, Reversed<S
     }
 
     @Override
+    @Contract("_->this")
     ReversedLayerExpose<E, S, R> whenReceiveFromClient(Consumer<R> consumer);
 
     @Override
     void sendToServer(S toSend);
+
 }

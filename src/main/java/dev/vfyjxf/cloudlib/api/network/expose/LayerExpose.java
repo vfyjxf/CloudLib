@@ -1,9 +1,9 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
+import dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot;
 import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
 import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
 import dev.vfyjxf.cloudlib.api.network.FlowHandler;
-import dev.vfyjxf.cloudlib.api.snapshot.Snapshot;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.function.Consumer;
@@ -61,32 +61,10 @@ public non-sealed interface LayerExpose<E> extends ExposeCommon {
     //region snapshot
 
     @ApiStatus.Internal
-    record LayerSnapshot<T>(
-            Snapshot<T> snapshot,
-            ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder
-    ) {
-        public T current() {
-            return valueSupplier.get();
-        }
-    }
-
-    @ApiStatus.Internal
-    <T> LayerSnapshot<T> layerSnapshot();
+    Snapshot<?> snapshot();
 
     @Override
-    default <T> boolean changed() {
-        LayerSnapshot<T> layerSnapshot = layerSnapshot();
-        Snapshot<T> snapshot = layerSnapshot.snapshot();
-        return switch (Snapshot.currentState(snapshot, layerSnapshot.current())) {
-            case UNCHANGED -> false;
-            case CHANGED -> true;
-            case ILLEGAL -> {
-                boolean readonly = snapshot instanceof Snapshot.Readonly;
-                throw new IllegalStateException("Illegally modifity a " + (readonly ? "readonly" : "immutable reference") + " snapshot(id:" + id() + " name:" + name() + ")");
-            }
-        };
-    }
+    <T> boolean changed();
 
     //endregion
 

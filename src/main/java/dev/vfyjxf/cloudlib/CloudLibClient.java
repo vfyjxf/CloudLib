@@ -11,6 +11,7 @@ import dev.vfyjxf.cloudlib.utils.Singletons;
 import net.minecraft.data.DataProvider;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
@@ -22,8 +23,8 @@ import java.util.function.Function;
 @Mod(value = Constants.MOD_ID, dist = Dist.CLIENT)
 public class CloudLibClient extends CloudLib {
 
-    public CloudLibClient(IEventBus modBus, Dist dist) {
-        super(modBus, dist);
+    public CloudLibClient(ModContainer container, IEventBus modBus, Dist dist) {
+        super(container, modBus, dist);
         modBus.addListener(this::gatherData);
         modBus.addListener(this::registerClientTooltipComponentFactories);
         Singletons.attachInstance(GuiEventHandler.class, new GuiEventHandler());

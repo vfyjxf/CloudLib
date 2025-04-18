@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.api.snapshot;
 
+import dev.vfyjxf.cloudlib.api.data.CheckStrategy;
+import dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -37,7 +39,7 @@ class SnapshotTest {
     private record Expose<T>(Snapshot<T> snapshot, Supplier<T> supplier) {
 
         public Snapshot.State state() {
-            return Snapshot.currentState(snapshot, supplier.get());
+            return snapshot.currentState(supplier.get());
         }
 
         public boolean changed() {

@@ -1,10 +1,9 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
+import dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot;
 import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
 import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
 import dev.vfyjxf.cloudlib.api.network.UnaryFlowHandler;
-import dev.vfyjxf.cloudlib.api.snapshot.Snapshot;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.UnknownNullability;
 
@@ -75,14 +74,19 @@ public non-sealed interface Expose<T> extends ExposeCommon {
     @Contract(pure = true)
     Snapshot<T> snapshot();
 
-    default @UnknownNullability T previous() {
-        return Snapshot.getValue(snapshot());
+
+    /**
+     * @return the previous value of this Expose
+     * @throws IllegalStateException if the snapshot is {@link dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot.None}
+     */
+    default @UnknownNullability T previous() throws IllegalStateException {
+        return snapshot().readValue();
     }
 
     @Override
     default boolean changed() {
         var snapshot = snapshot();
-        return switch (Snapshot.currentState(snapshot, current())) {
+        return switch (snapshot.currentState(current())) {
             case UNCHANGED -> false;
             case CHANGED -> true;
             case ILLEGAL -> {
@@ -97,9 +101,6 @@ public non-sealed interface Expose<T> extends ExposeCommon {
      */
     @Contract(pure = true)
     T current();
-
-    @ApiStatus.Internal
-    ValueSupplier<T> supplier();
 
     //endregion
 

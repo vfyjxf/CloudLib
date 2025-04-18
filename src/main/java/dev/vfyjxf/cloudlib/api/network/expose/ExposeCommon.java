@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Contract;
 
 @ApiStatus.Internal
 public sealed interface ExposeCommon permits Expose, LayerExpose {
@@ -23,7 +24,10 @@ public sealed interface ExposeCommon permits Expose, LayerExpose {
      * @param <T> the type of the snapshot
      * @return whether the snapshot has changed
      */
+    @Contract(pure = true)
     @ApiStatus.Internal
     <T> boolean changed();
+
+    void updateSnapshot();
 
 }

@@ -10,7 +10,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -29,7 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 @EventBusSubscriber(modid = Constants.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
-public record MenuInfo<M extends AbstractContainerMenu, A>(
+public record MenuInfo<M extends BasicMenu<?>, A>(
         MenuType<M> menuType,
         MenuFactory<M, A> menuFactory,
         Supplier<ScreenFactory<M, ?>> screenFactory,
@@ -54,7 +53,7 @@ public record MenuInfo<M extends AbstractContainerMenu, A>(
     ) {
         return new ServerMenuFactory<>(
                 displayName,
-                ((id, playerInv, accessor) -> menuFactory.create(menuType, id, playerInv, accessor)),
+                ((id, playerInv, accessor) -> menuFactory.createWithInit(menuType, id, playerInv, accessor)),
                 providerType,
                 provider,
                 resetOnClose,
@@ -93,7 +92,7 @@ public record MenuInfo<M extends AbstractContainerMenu, A>(
 
     @SafeVarargs
     @SuppressWarnings("unchecked")
-    public static <M extends AbstractContainerMenu, A, P, S extends Screen & MenuAccess<M>> MenuInfo<M, A> create(
+    public static <M extends BasicMenu<?>, A, P, S extends Screen & MenuAccess<M>> MenuInfo<M, A> create(
             ResourceLocation menuTypeId,
             MenuFactory<M, A> menuFactory,
             Supplier<ScreenFactory<M, S>> screenFactory,
@@ -115,7 +114,7 @@ public record MenuInfo<M extends AbstractContainerMenu, A>(
             if (accessor == null) {
                 throw new IllegalStateException("Cannot find accessor for " + typeId);
             }
-            return menuFactory.create(reference.get(), containerId, inv, accessor);
+            return menuFactory.createWithInit(reference.get(), containerId, inv, accessor);
         });
         //endregion
         reference.set(menuType);
@@ -124,7 +123,7 @@ public record MenuInfo<M extends AbstractContainerMenu, A>(
     }
 
     @SafeVarargs
-    public static <M extends AbstractContainerMenu, A, S extends Screen & MenuAccess<M>> MenuInfo<M, A> create(
+    public static <M extends BasicMenu<?>, A, S extends Screen & MenuAccess<M>> MenuInfo<M, A> create(
             MenuType<M> menuType,
             MenuFactory<M, A> menuFactory,
             Supplier<ScreenFactory<M, S>> screenFactory,
@@ -133,7 +132,7 @@ public record MenuInfo<M extends AbstractContainerMenu, A>(
         return createInstance(menuType, menuFactory, screenFactory, getAccessorType(typeCatch));
     }
 
-    public static <M extends AbstractContainerMenu, A, S extends Screen & MenuAccess<M>> MenuInfo<M, A> create(
+    public static <M extends BasicMenu<?>, A, S extends Screen & MenuAccess<M>> MenuInfo<M, A> create(
             MenuType<M> menuType,
             MenuFactory<M, A> menuFactory,
             Supplier<ScreenFactory<M, S>> screenFactory,
@@ -143,7 +142,7 @@ public record MenuInfo<M extends AbstractContainerMenu, A>(
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static <M extends AbstractContainerMenu, A, S extends Screen & MenuAccess<M>> MenuInfo<M, A> createInstance(
+    private static <M extends BasicMenu<?>, A, S extends Screen & MenuAccess<M>> MenuInfo<M, A> createInstance(
             MenuType<M> menuType,
             MenuFactory<M, A> menuFactory,
             Supplier<ScreenFactory<M, S>> screenFactory,
@@ -183,7 +182,7 @@ public record MenuInfo<M extends AbstractContainerMenu, A>(
         }
     }
 
-    private static <M extends AbstractContainerMenu, S extends Screen & MenuAccess<M>> void registerMenuScreenHelper(
+    private static <M extends BasicMenu<?>, S extends Screen & MenuAccess<M>> void registerMenuScreenHelper(
             RegisterMenuScreensEvent event,
             MenuInfo<M, ?> menuInfo,
             Supplier<ScreenFactory<M, S>> screenFactorySupplier

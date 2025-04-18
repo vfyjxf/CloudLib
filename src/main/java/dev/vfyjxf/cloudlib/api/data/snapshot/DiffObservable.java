@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.api.snapshot;
+package dev.vfyjxf.cloudlib.api.data.snapshot;
 
 public interface DiffObservable<D> extends Observable {
 

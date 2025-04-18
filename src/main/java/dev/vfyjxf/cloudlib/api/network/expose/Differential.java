@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
-import dev.vfyjxf.cloudlib.api.snapshot.DiffObservable;
+import dev.vfyjxf.cloudlib.api.data.snapshot.DiffObservable;
 import dev.vfyjxf.cloudlib.api.utils.Maybe;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.jetbrains.annotations.ApiStatus;
@@ -24,7 +24,7 @@ interface Differential<D> {
 
     Maybe<D> difference();
 
-    static <T extends DiffObservable<D>, D> Maybe<D> getDifference(LayerExpose.LayerSnapshot<T> snapshot) {
+    static <T extends DiffObservable<D>, D> Maybe<D> getDifference(BasicLayerExpose.LayerSnapshot<T> snapshot) {
         T current = snapshot.current();
         return current.changed() ? Maybe.of(current.difference()) : Maybe.empty();
     }

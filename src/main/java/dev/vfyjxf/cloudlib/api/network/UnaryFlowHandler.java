@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.network;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 
-public interface UnaryFlowHandler<T> extends FlowHandler<T, T> {
+public interface UnaryFlowHandler<T> extends FlowHandler<T, T>, StreamCodec<RegistryFriendlyByteBuf, T> {
 
     static <T> UnaryFlowHandler<T> codecOf(StreamCodec<? super RegistryFriendlyByteBuf, T> codec) {
         return new UnaryFlowHandler<>() {

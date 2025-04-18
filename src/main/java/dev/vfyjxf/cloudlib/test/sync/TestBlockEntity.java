@@ -1,10 +1,12 @@
 package dev.vfyjxf.cloudlib.test.sync;
 
+import dev.vfyjxf.cloudlib.api.data.CheckStrategy;
+import dev.vfyjxf.cloudlib.api.data.snapshot.DiffObservable;
+import dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot;
 import dev.vfyjxf.cloudlib.api.network.UnaryFlowHandler;
 import dev.vfyjxf.cloudlib.api.network.expose.Expose;
+import dev.vfyjxf.cloudlib.api.network.expose.LayerExpose;
 import dev.vfyjxf.cloudlib.api.network.expose.ReversedOnly;
-import dev.vfyjxf.cloudlib.api.snapshot.CheckStrategy;
-import dev.vfyjxf.cloudlib.api.snapshot.DiffObservable;
 import dev.vfyjxf.cloudlib.api.ui.sync.menu.BasicMenu;
 import dev.vfyjxf.cloudlib.api.ui.sync.menu.MenuInfo;
 import dev.vfyjxf.cloudlib.test.TestRegistry;
@@ -19,17 +21,19 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
-import static dev.vfyjxf.cloudlib.api.snapshot.CheckStrategy.primitive;
-import static dev.vfyjxf.cloudlib.api.snapshot.CheckStrategy.sameItemStack;
-import static dev.vfyjxf.cloudlib.api.snapshot.Snapshot.mutableRefOf;
+import static dev.vfyjxf.cloudlib.api.data.CheckStrategy.primitive;
+import static dev.vfyjxf.cloudlib.api.data.CheckStrategy.sameItemStack;
+import static dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot.mutableRefOf;
 
 public class TestBlockEntity extends BlockEntity {
 
@@ -56,10 +60,8 @@ public class TestBlockEntity extends BlockEntity {
 
     public static BlockEntityTicker<TestBlockEntity> ticker() {
         return (level1, pos, state, blockEntity) -> {
+            if (level1.isClientSide) return;
             blockEntity.currentTick++;
-            if (blockEntity.currentTick % 20 == 0) {
-                System.out.println(blockEntity.selected);
-            }
             ThreadLocalRandom random = ThreadLocalRandom.current();
             if (blockEntity.currentTick % random.nextInt(1, 20) == 0) {
                 blockEntity.basic = random.nextInt(100);
@@ -79,19 +81,19 @@ public class TestBlockEntity extends BlockEntity {
 
     public static class Menu extends BasicMenu<TestBlockEntity> {
 
-//        public final Expose<@NotNull Integer> basic = expose(
-//                "basic",
-//                mutableRefOf(primitive()),
-//                o -> o.basic,
-//                UnaryFlowHandler.codecOf(ByteBufCodecs.INT)
-//        );
-//
-//        public final Expose<@NotNull String> reference = expose(
-//                "reference",
-//                mutableRefOf(CheckStrategy.equals()),
-//                o -> o.reference,
-//                UnaryFlowHandler.codecOf(ByteBufCodecs.STRING_UTF8)
-//        );
+        public final Expose<@NotNull Integer> basic = expose(
+                "basic",
+                mutableRefOf(primitive()),
+                o -> o.basic,
+                UnaryFlowHandler.codecOf(ByteBufCodecs.INT)
+        );
+
+        public final Expose<@NotNull String> reference = expose(
+                "reference",
+                mutableRefOf(CheckStrategy.equals()),
+                o -> o.reference,
+                UnaryFlowHandler.codecOf(ByteBufCodecs.STRING_UTF8)
+        );
 
         public final Expose<@NotNull ItemStack> registerEntry = expose(
                 "registerEntry",
@@ -99,38 +101,41 @@ public class TestBlockEntity extends BlockEntity {
                 o -> o.registerEntry,
                 UnaryFlowHandler.codecOf(ItemStack.STREAM_CODEC)
         );
-//
-//        public final ReversedOnly<@NotNull ItemStack, @NotNull ItemStack> selected = reversedOnly(
-//                "selected",
-//                ItemStack.STREAM_CODEC::encode,
-//                ItemStack.STREAM_CODEC::decode
-//        ).whenReceiveFromClient(stack -> provider.selected = stack);
 
-//        public final LayerExpose<@NotNull List<ItemStack>> layerExpose = layerExpose(
-//                "transform",
-//                Snapshot.immutableRefOf(provider.transform),
-//                o -> o.transform,
-//                (byteBuf, element) ->
-//                {
-//                    IItemHandler inner = element.inner;
-//                    int size = inner.getSlots();
-//                    byteBuf.writeInt(size);
-//                    for (int i = 0; i < size; i++) {
-//                        ItemStack stack = inner.getStackInSlot(i);
-//                        ItemStack.OPTIONAL_STREAM_CODEC.encode(byteBuf, stack);
-//                    }
-//                },
-//                (byteBuf) ->
-//                {
-//                    int size = byteBuf.readInt();
-//                    List<ItemStack> stacks = new ArrayList<>();
-//                    for (int i = 0; i < size; i++) {
-//                        ItemStack stack = ItemStack.OPTIONAL_STREAM_CODEC.decode(byteBuf);
-//                        stacks.add(stack);
-//                    }
-//                    return stacks;
-//                }
-//        );
+        public final ReversedOnly<@NotNull ItemStack, @NotNull ItemStack> selected = reversedOnly(
+                "selected",
+                ItemStack.STREAM_CODEC::encode,
+                ItemStack.STREAM_CODEC::decode
+        ).whenReceiveFromClient(stack -> {
+            provider.selected = stack;
+            System.out.println("Selected: " + stack);
+        });
+
+        public final LayerExpose<@NotNull List<ItemStack>> layerExpose = layerExpose(
+                "transform",
+                Snapshot.immutableRefOf(provider.transform),
+                o -> o.transform,
+                (byteBuf, element) ->
+                {
+                    IItemHandler inner = element.inner;
+                    int size = inner.getSlots();
+                    byteBuf.writeInt(size);
+                    for (int i = 0; i < size; i++) {
+                        ItemStack stack = inner.getStackInSlot(i);
+                        ItemStack.OPTIONAL_STREAM_CODEC.encode(byteBuf, stack);
+                    }
+                },
+                (byteBuf) ->
+                {
+                    int size = byteBuf.readInt();
+                    List<ItemStack> stacks = new ArrayList<>();
+                    for (int i = 0; i < size; i++) {
+                        ItemStack stack = ItemStack.OPTIONAL_STREAM_CODEC.decode(byteBuf);
+                        stacks.add(stack);
+                    }
+                    return stacks;
+                }
+        );
 
         public static final MenuInfo<Menu, TestBlockEntity> INFO = MenuInfo.create(
                 Locations.of("test_block_entity"),
@@ -140,7 +145,6 @@ public class TestBlockEntity extends BlockEntity {
 
         public Menu(MenuType<Menu> menuType, int containerId, Inventory inventory, TestBlockEntity holder) {
             super(menuType, containerId, holder, inventory);
-
         }
 
         @Override

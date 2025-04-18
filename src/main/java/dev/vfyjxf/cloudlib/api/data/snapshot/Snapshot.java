@@ -1,5 +1,6 @@
-package dev.vfyjxf.cloudlib.api.snapshot;
+package dev.vfyjxf.cloudlib.api.data.snapshot;
 
+import dev.vfyjxf.cloudlib.api.data.CheckStrategy;
 import dev.vfyjxf.cloudlib.utils.Checks;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,16 +18,25 @@ public sealed interface Snapshot<T> {
     enum State {
         CHANGED,
         UNCHANGED,
-        ILLEGAL
+        ILLEGAL;
+
+        public boolean changed() {
+            return this == CHANGED;
+        }
+
+        public boolean unchanged() {
+            return this == UNCHANGED;
+        }
+
+        public boolean illegal() {
+            return this == ILLEGAL;
+        }
     }
 
     static <T> Snapshot<T> noneOf() {
         return None.instance();
     }
 
-    static <T> Snapshot<T> copyOf(T initValue, UnaryOperator<T> copier, CheckStrategy<T> strategy) {
-        return new CopyInstance<>(initValue, copier, strategy);
-    }
 
     static <T> Snapshot<T> copyOf(UnaryOperator<T> copier, CheckStrategy<T> strategy) {
         return new CopyInstance<>(null, copier, strategy);
@@ -51,6 +61,30 @@ public sealed interface Snapshot<T> {
         return new MutableRef<>(strategy);
     }
 
+    default boolean mutable() {
+        return this instanceof MutableRef<T> ||
+                this instanceof CopyInstance<T>;
+    }
+
+    /**
+     * @return the value of the snapshot
+     * @throws IllegalStateException if the snapshot is {@link None}
+     */
+    T readValue() throws IllegalStateException;
+
+    /**
+     * @return the value of the snapshot, if the snapshot is {@link None} return null
+     */
+    @Nullable
+    T value();
+
+    State currentState(T current);
+
+    /**
+     * @return true if the state is changed, false if the state is unchanged
+     */
+    boolean updateState(T current);
+
     static <T> void init(Snapshot<T> snapshot, T value) {
         switch (snapshot) {
             case None ignored -> {}
@@ -61,53 +95,8 @@ public sealed interface Snapshot<T> {
         }
     }
 
-    static <T> T readValue(Snapshot<T> snapshot) throws IllegalStateException {
-        return switch (snapshot) {
-            case None ignored -> throw new IllegalStateException("Cannot read value in Empty snapshot");
-            case Readonly<T> ref -> ref.value;
-            case ImmutableRef<T> ref -> ref.value;
-            case MutableRef<T> ref -> ref.value;
-            case CopyInstance<T> ref -> ref.value;
-        };
-    }
-
-    static <T> @Nullable T getValue(Snapshot<T> snapshot) {
-        return switch (snapshot) {
-            case None ignored -> null;
-            case Readonly<T> ref -> ref.value;
-            case ImmutableRef<T> ref -> ref.value;
-            case MutableRef<T> ref -> ref.value;
-            case CopyInstance<T> ref -> ref.value;
-        };
-    }
-
-    static <T> State currentState(Snapshot<T> instance, T current) {
-        return switch (instance) {
-            case None ignored -> State.UNCHANGED;
-            case Readonly<T> snapshot -> {
-                boolean changed = snapshot.value != current || !snapshot.strategy.test(current);
-                if (changed) yield State.ILLEGAL;
-                else yield State.UNCHANGED;
-            }
-            case ImmutableRef<T> snapshot -> {
-                if (snapshot.value != current) yield State.ILLEGAL;
-                else yield snapshot.strategy.test(snapshot.value) ? State.UNCHANGED : State.CHANGED;
-            }
-            case MutableRef<T> snapshot -> {
-                var changed = !snapshot.strategy.matches(snapshot.value, current);
-                if (changed) snapshot.value = current;
-                yield changed ? State.CHANGED : State.UNCHANGED;
-            }
-            case CopyInstance<T> snapshot -> {
-                var changed = !snapshot.strategy.matches(snapshot.value, current);
-                if (changed) snapshot.set(current);
-                yield changed ? State.CHANGED : State.UNCHANGED;
-            }
-        };
-    }
-
     static <T> boolean changed(Snapshot<T> instance, T current) {
-        return switch (currentState(instance, current)) {
+        return switch (instance.currentState(current)) {
             case CHANGED -> true;
             case UNCHANGED -> false;
             case ILLEGAL -> throw new IllegalStateException("The snapshot has been changed illegally");
@@ -127,32 +116,71 @@ public sealed interface Snapshot<T> {
 
         @Override
         public String toString() {
-            return "Empty";
+            return "None";
+        }
+
+        @Override
+        public Object readValue() throws IllegalStateException {
+            throw new IllegalStateException("Cannot read value in None snapshot");
+        }
+
+        @Override
+        public @Nullable Object value() {
+            return null;
+        }
+
+        @Override
+        public boolean updateState(Object current) {
+            return false;
+        }
+
+        @Override
+        public State currentState(Object current) {
+            return State.UNCHANGED;
         }
     }
 
     /**
      * snapshot of the readonly value,the value is immutable
-     *
-     * @param <T> the type of the value
      */
     final class Readonly<T> implements Snapshot<T> {
         private final T value;
         private final Predicate<T> strategy;
-        private final int hash;
 
         public Readonly(T value) {
             this.value = value;
-            this.hash = Objects.hashCode(value);
-            this.strategy = (current -> current == this.value && Objects.hashCode(current) == this.hash);
+            int hash = Objects.hashCode(value);
+            this.strategy = (current -> current == this.value && Objects.hashCode(current) == hash);
         }
 
-        public T value() {
-            return value;
-        }
 
         public Predicate<T> strategy() {
             return strategy;
+        }
+
+        @Override
+        public T readValue() throws IllegalStateException {
+            return value;
+        }
+
+        @Override
+        public @Nullable T value() {
+            return value;
+        }
+
+        @Override
+        public State currentState(T current) {
+            boolean changed = value != current || !strategy.test(current);
+            if (changed) return State.ILLEGAL;
+            else return State.UNCHANGED;
+        }
+
+        @Override
+        public boolean updateState(T current) {
+            State state = currentState(current);
+            if (state == State.ILLEGAL)
+                throw new IllegalStateException("The snapshot has been changed illegally");
+            else return false;
         }
 
         @Override
@@ -181,8 +209,6 @@ public sealed interface Snapshot<T> {
 
     /**
      * the shallow immutable reference,normally the value is a {@link Observable}
-     *
-     * @param <T> the type of the value
      */
     record ImmutableRef<T>(T value, Predicate<T> strategy) implements Snapshot<T> {
 
@@ -191,11 +217,56 @@ public sealed interface Snapshot<T> {
         }
 
         @Override
+        public T readValue() throws IllegalStateException {
+            return value;
+        }
+
+        @Override
+        public T value() {
+            return value;
+        }
+
+        public Predicate<T> strategy() {
+            return strategy;
+        }
+
+        @Override
+        public State currentState(T current) {
+            if (value != current) return State.ILLEGAL;
+            else return strategy.test(value) ? State.UNCHANGED : State.CHANGED;
+        }
+
+        @Override
+        public boolean updateState(T current) {
+            return switch (currentState(current)) {
+                case CHANGED -> true;
+                case UNCHANGED -> false;
+                case ILLEGAL -> throw new IllegalStateException("The snapshot has been changed illegally");
+            };
+        }
+
+        @Override
         public String toString() {
             return "ImmutableRef{" +
                     "value=" + value +
                     '}';
+
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (ImmutableRef<?>) obj;
+            return Objects.equals(this.value, that.value) &&
+                    Objects.equals(this.strategy, that.strategy);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(value, strategy);
+        }
+
     }
 
     /**
@@ -215,8 +286,26 @@ public sealed interface Snapshot<T> {
             return strategy;
         }
 
+        @Override
+        public T readValue() throws IllegalStateException {
+            return null;
+        }
+
         public T value() {
             return value;
+        }
+
+        @Override
+        public State currentState(T current) {
+            var changed = !strategy.matches(value, current);
+            return changed ? State.CHANGED : State.UNCHANGED;
+        }
+
+        @Override
+        public boolean updateState(T current) {
+            State state = currentState(current);
+            if (state.changed()) value = current;
+            return state.changed();
         }
 
         @Override
@@ -267,12 +356,31 @@ public sealed interface Snapshot<T> {
             return strategy;
         }
 
+        @Override
+        public T readValue() throws IllegalStateException {
+            return value;
+        }
+
+        @Override
         public T value() {
             return value;
         }
 
-        public void set(T value) {
+        private void set(T value) {
             this.value = copier.apply(value);
+        }
+
+        @Override
+        public State currentState(T current) {
+            var changed = !strategy.matches(value, current);
+            return changed ? State.CHANGED : State.UNCHANGED;
+        }
+
+        @Override
+        public boolean updateState(T current) {
+            State state = currentState(current);
+            if (state.changed()) set(current);
+            return state.changed();
         }
 
         @Override

@@ -1,8 +1,8 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
+import dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot;
 import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
 import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
-import dev.vfyjxf.cloudlib.api.snapshot.Snapshot;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Internal
@@ -51,8 +51,9 @@ sealed abstract class BasicExpose<T> implements Expose<T>
     }
 
     @Override
-    public ValueSupplier<T> supplier() {
-        return supplier;
+    public void updateSnapshot() {
+        if (snapshot.mutable()) {
+            snapshot.updateState(supplier.get());
+        }
     }
-
 }

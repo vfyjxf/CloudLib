@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
+import org.jetbrains.annotations.Contract;
+
 import java.util.function.Consumer;
 
 /**
@@ -17,14 +19,16 @@ interface Reversed<S, R> {
      * Write the value to the send list,all the values in the send list will be sent to the server in the end of current ui tick.
      *
      * @param toSend the value to send
+     * @throws IllegalStateException if the value is already set
      */
-    void sendToServer(S toSend);
+    void sendToServer(S toSend) throws IllegalStateException;
 
     /**
      * Register a listener to be called when a value is received from the client.
      *
      * @param consumer the listener to register
      */
+    @Contract("_ -> this")
     Reversed<S, R> whenReceiveFromClient(Consumer<R> consumer);
 
     boolean hasReversedData();

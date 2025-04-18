@@ -84,15 +84,21 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        renderTransparentBackground(graphics);
         mainGroup.render(graphics, mouseX, mouseY, partialTick);
         mainGroup.renderOverlay(graphics, mouseX, mouseY, partialTick);
         mainGroup.renderTooltip(graphics, mouseX, mouseY);
         draggableManager.renderDragging(graphics, mouseX, mouseY, partialTick);
     }
 
+    @Override
+    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+
+    }
 
     protected void containerTick() {
         mainGroup.tick();
+        menu.sendReveredDataToServer();
     }
 
     @Override

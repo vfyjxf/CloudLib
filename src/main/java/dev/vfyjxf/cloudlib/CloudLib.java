@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib;
 
 import dev.vfyjxf.cloudlib.api.registry.ModuleEntryPoint;
 import dev.vfyjxf.cloudlib.api.utils.ServiceLoading;
+import dev.vfyjxf.cloudlib.debug.DebugConfig;
 import dev.vfyjxf.cloudlib.network.CloudlibNetworkPayloads;
 import dev.vfyjxf.cloudlib.test.TestRegistry;
 import dev.vfyjxf.cloudlib.test.sync.TestBlockEntity;
@@ -9,6 +10,7 @@ import dev.vfyjxf.cloudlib.utils.Locations;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLConstructModEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
@@ -20,13 +22,14 @@ public abstract class CloudLib {
     public static final Logger logger = LogManager.getLogger("CloudLib");
     protected final ImmutableCollection<ModuleEntryPoint> plugins;
 
-    public CloudLib(IEventBus modBus, Dist dist) {
+    public CloudLib(ModContainer container, IEventBus modBus, Dist dist) {
         //region internal init
         plugins = ServiceLoading.load(ModuleEntryPoint.class).toImmutable();
         //endregion
 
         //region debug & test init
         TestRegistry.register(modBus);
+        DebugConfig.register(container);
         //region
 
         //region fml lifecycle listener

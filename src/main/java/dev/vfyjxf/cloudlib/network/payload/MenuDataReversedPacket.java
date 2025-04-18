@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.network.payload;
 
-import dev.vfyjxf.cloudlib.api.network.payload.ClientPayloadInfo;
-import dev.vfyjxf.cloudlib.api.network.payload.ClientboundPayload;
+import dev.vfyjxf.cloudlib.api.network.payload.ServerPayloadInfo;
+import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
 import dev.vfyjxf.cloudlib.api.ui.sync.menu.BasicMenu;
 import dev.vfyjxf.cloudlib.network.CloudlibNetworkPayloads;
 import io.netty.buffer.Unpooled;
@@ -9,23 +9,23 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.connection.ConnectionType;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.function.Consumer;
 
-public record MenuSyncDownstreamPacket(int containerId, byte[] syncData) implements ClientboundPayload {
+public record MenuDataReversedPacket(int containerId, byte[] syncData) implements ServerboundPayload {
 
-    public static final ClientPayloadInfo<MenuSyncDownstreamPacket> INFO = CloudlibNetworkPayloads.createClientInfo(
+    public static final ServerPayloadInfo<MenuDataReversedPacket> INFO = CloudlibNetworkPayloads.createServerInfo(
             StreamCodec.ofMember(
-                    MenuSyncDownstreamPacket::write,
-                    MenuSyncDownstreamPacket::decode
+                    MenuDataReversedPacket::encode,
+                    MenuDataReversedPacket::decode
             ),
-            "menu_sync_downstream"
+            "menu_sync_reversed"
     );
 
-    public MenuSyncDownstreamPacket(int containerId, Consumer<RegistryFriendlyByteBuf> writer, RegistryAccess registryAccess) {
+    public MenuDataReversedPacket(int containerId, Consumer<RegistryFriendlyByteBuf> writer, RegistryAccess registryAccess) {
         this(containerId, writeData(writer, registryAccess));
     }
 
@@ -37,30 +37,28 @@ public record MenuSyncDownstreamPacket(int containerId, byte[] syncData) impleme
         return result;
     }
 
-
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return INFO.type();
     }
 
-    private void write(RegistryFriendlyByteBuf buf) {
+    private void encode(RegistryFriendlyByteBuf buf) {
         buf.writeInt(containerId);
         buf.writeByteArray(syncData);
     }
 
-    private static MenuSyncDownstreamPacket decode(RegistryFriendlyByteBuf buf) {
-        int containerId = buf.readInt();
-        byte[] bytes = buf.readByteArray();
-        return new MenuSyncDownstreamPacket(containerId, bytes);
+    private static MenuDataReversedPacket decode(RegistryFriendlyByteBuf buf) {
+        return new MenuDataReversedPacket(buf.readInt(), buf.readByteArray());
     }
 
     @Override
-    public void handle(IPayloadContext context, Player player) {
+    public void handle(IPayloadContext context, ServerPlayer player) {
         if (player.containerMenu instanceof BasicMenu<?> menu && menu.containerId == containerId) {
             var buffer = new RegistryFriendlyByteBuf(Unpooled.wrappedBuffer(syncData), player.registryAccess(), ConnectionType.OTHER);
-            menu.receiveFromServer(buffer);
+            menu.receiveFromClient(buffer);
         } else {
-            CloudlibNetworkPayloads.log.warn("A MenuSyncDownstreamPacket received, but the menu {} is not a BasicMenu or the menu id is not match, this is a bug, please report it to the developer.", player.containerMenu);
+            CloudlibNetworkPayloads.log.warn("Received menu data reversed packet for non-matching menu: {} != {}", containerId, player.containerMenu.containerId);
         }
     }
+
 }

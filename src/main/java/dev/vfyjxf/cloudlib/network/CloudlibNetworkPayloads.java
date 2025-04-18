@@ -5,21 +5,25 @@ import dev.vfyjxf.cloudlib.api.network.payload.ClientPayloadInfo;
 import dev.vfyjxf.cloudlib.api.network.payload.ClientboundPayload;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerPayloadInfo;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
-import dev.vfyjxf.cloudlib.network.payload.MenuReversedPacket;
+import dev.vfyjxf.cloudlib.network.payload.MenuDataReversedPacket;
 import dev.vfyjxf.cloudlib.network.payload.MenuSyncDownstreamPacket;
 import dev.vfyjxf.cloudlib.utils.Locations;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CloudlibNetworkPayloads {
+
+    public static final Logger log = LoggerFactory.getLogger("CloudlibNetworkPayloads");
 
     public static void register(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(Constants.MOD_ID);
         //region play 2 client
         MenuSyncDownstreamPacket.INFO.registerPlay(registrar);
-        MenuReversedPacket.INFO.registerPlay(registrar);
+        MenuDataReversedPacket.INFO.registerPlay(registrar);
         //endregion
 
         //region play 2 server

@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.network.expose;
 import dev.vfyjxf.cloudlib.api.event.SimpleEvent;
 import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
 import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
-import dev.vfyjxf.cloudlib.api.snapshot.Snapshot;
+import dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 
 import java.util.function.Consumer;

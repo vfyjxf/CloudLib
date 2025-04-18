@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.sync.menu;
 
+import dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot;
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
 import dev.vfyjxf.cloudlib.api.event.EventHandler;
 import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
@@ -10,20 +11,45 @@ import dev.vfyjxf.cloudlib.api.network.expose.ExposeManagement;
 import dev.vfyjxf.cloudlib.api.network.expose.LayerExpose;
 import dev.vfyjxf.cloudlib.api.network.expose.ReversedOnly;
 import dev.vfyjxf.cloudlib.api.network.payload.ClientboundPayload;
-import dev.vfyjxf.cloudlib.api.snapshot.Snapshot;
+import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
 import dev.vfyjxf.cloudlib.api.ui.event.MenuEvent;
+import dev.vfyjxf.cloudlib.network.CloudlibNetworkPayloads;
+import dev.vfyjxf.cloudlib.network.payload.MenuDataReversedPacket;
 import dev.vfyjxf.cloudlib.network.payload.MenuSyncDownstreamPacket;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.network.PacketDistributor;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.function.Function;
 
-public abstract class BasicMenu<P> extends AbstractContainerMenu implements EventHandler<MenuEvent> {
+/**
+ * AN extension version of {@link AbstractContainerMenu} ,
+ * which provider more convenient way to manage menu and its screen binding.
+ * <p>
+ * <b>submodules :</b>
+ * <ul>
+ *     <li> {@link Expose} - a structural way to define what data should be synchronized and how client send data to server.</li>
+ * </ul>
+ *
+ * @param <P> the data provider type
+ * @see MenuInfo
+ * @see Expose
+ * @see LayerExpose
+ * @see ReversedOnly
+ */
+public abstract class BasicMenu<P>
+        extends AbstractContainerMenu
+        implements EventHandler<MenuEvent> {
+
+    protected final Level level;
     protected final Player player;
     protected final Inventory playerInventory;
     protected final P provider;
@@ -35,7 +61,16 @@ public abstract class BasicMenu<P> extends AbstractContainerMenu implements Even
         this.provider = holder;
         this.playerInventory = inventory;
         this.player = inventory.player;
+        this.level = player.level();
     }
+
+    //region structure
+
+    public void init() {
+        exposeManagement.updateSnapshotState();
+    }
+
+    //endregion
 
     //region utils
 
@@ -82,8 +117,7 @@ public abstract class BasicMenu<P> extends AbstractContainerMenu implements Even
             String name,
             Snapshot<T> snapshot, Function<P, T> valueSupplier,
             FlowEncoder<T> encoder, FlowDecoder<E> decoder
-    )
-    {
+    ) {
         Snapshot.init(snapshot, valueSupplier.apply(provider));
         return exposeManagement.registerExpose(
                 LayerExpose.create(
@@ -111,9 +145,36 @@ public abstract class BasicMenu<P> extends AbstractContainerMenu implements Even
 
     //region network & sync
 
-    protected final void sendPacketToClient(ClientboundPayload packet) {
+    protected final void sendPayloadToClient(ClientboundPayload payload) {
         if (player instanceof ServerPlayer serverPlayer) {
-            serverPlayer.connection.send(packet);
+            serverPlayer.connection.send(payload);
+        } else {
+            CloudlibNetworkPayloads.log.warn("Tried to send payload to client, but player is not a server player.");
+        }
+    }
+
+    protected final void sendPayloadToServer(ServerboundPayload payload) {
+        if (level.isClientSide) {
+            PacketDistributor.sendToServer(payload);
+        } else {
+            CloudlibNetworkPayloads.log.warn("Tried to send payload to server, but player is not a client player.");
+        }
+    }
+
+    @ApiStatus.Internal
+    public void receiveFromServer(RegistryFriendlyByteBuf byteBuf) {
+        exposeManagement.receiveFromServer(byteBuf);
+    }
+
+    @ApiStatus.Internal
+    public void receiveFromClient(RegistryFriendlyByteBuf byteBuf) {
+        exposeManagement.receiveFromClient(byteBuf);
+    }
+
+    @ApiStatus.Internal
+    public void sendReveredDataToServer() {
+        if (exposeManagement.anyToServer()) {
+            sendPayloadToServer(new MenuDataReversedPacket(containerId, exposeManagement::writeToServer, registryAccess()));
         }
     }
 
@@ -122,7 +183,7 @@ public abstract class BasicMenu<P> extends AbstractContainerMenu implements Even
         super.broadcastChanges();
 
         if (exposeManagement.anyToClient()) {
-            sendPacketToClient(new MenuSyncDownstreamPacket(containerId, exposeManagement::sendDifferenceToClient, registryAccess()));
+            sendPayloadToClient(new MenuSyncDownstreamPacket(containerId, exposeManagement::writeDifferenceToClient, registryAccess()));
         }
     }
 
@@ -131,7 +192,7 @@ public abstract class BasicMenu<P> extends AbstractContainerMenu implements Even
         super.sendAllDataToRemote();
 
         if (exposeManagement.hasExpose()) {
-            sendPacketToClient(new MenuSyncDownstreamPacket(containerId, exposeManagement::sendAllToClient, registryAccess()));
+            sendPayloadToClient(new MenuSyncDownstreamPacket(containerId, exposeManagement::writeAllToClient, registryAccess()));
         }
     }
 

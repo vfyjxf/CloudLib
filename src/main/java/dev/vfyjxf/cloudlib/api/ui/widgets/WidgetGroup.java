@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -127,8 +128,11 @@ public class WidgetGroup<T extends Widget> extends Widget {
     }
 
     public void clear() {
-        for (int i = 0; i < children.size(); i++) {
-            remove(i);
+        for (Iterator<T> iterator = children.iterator(); iterator.hasNext(); ) {
+            T child = iterator.next();
+            child.listeners(WidgetEvent.onRemove).onRemove(child);
+            child.setParent(null);
+            iterator.remove();
         }
         initialized = false;
     }
