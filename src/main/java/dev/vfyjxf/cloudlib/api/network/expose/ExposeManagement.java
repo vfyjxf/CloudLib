@@ -37,6 +37,12 @@ public final class ExposeManagement {
         }
     }
 
+    public void forceUpdateSnapshotState() {
+        for (ExposeCommon expose : exposes) {
+            expose.forceUpdateSnapshot();
+        }
+    }
+
     public boolean hasExpose() {
         return !exposes.isEmpty();
     }
@@ -93,6 +99,7 @@ public final class ExposeManagement {
 
     public void writeToClient(RegistryFriendlyByteBuf byteBuf, SyncStrategy strategy) {
         if (strategy == SyncStrategy.FULL) {
+            byteBuf.writeBoolean(true);//flag:send all
             for (ExposeCommon expose : exposes) {
                 if (expose instanceof ReversedOnly<?, ?>) continue;
                 byteBuf.writeShort(expose.id());
@@ -100,12 +107,16 @@ public final class ExposeManagement {
                 expose.updateSnapshot();
             }
         } else {
+            byteBuf.writeBoolean(false);//flag:send diff
             for (ExposeCommon expose : exposes) {
                 try {
                     if (!expose.changed()) continue;
                     byteBuf.writeShort(expose.id());
-                    if (strategy == SyncStrategy.DIFFERENCE && expose instanceof Differential<?> differential) {
-                        writeDiff(expose, differential, byteBuf);
+                    if (strategy == SyncStrategy.DIFFERENCE &&
+                            expose instanceof Transcoder transcoder &&
+                            expose instanceof Differential<?> differential
+                    ) {
+                        writeDiff(transcoder, differential, byteBuf);
                     } else {
                         writeExpose(expose, byteBuf);
                     }
@@ -118,13 +129,34 @@ public final class ExposeManagement {
         byteBuf.writeShort(Short.MIN_VALUE);
     }
 
+    private static void writeExpose(ExposeCommon exposeCommon, RegistryFriendlyByteBuf byteBuf) {
+        switch (exposeCommon) {
+            case BasicDownstreamExpose<?> expose -> expose.writeToClient(byteBuf);
+            case BasicLayerExpose<?> layerExpose -> layerExpose.writeToClient(byteBuf);
+            default -> throw new IllegalStateException("Unexpected expose: " + exposeCommon);
+        }
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    private static <D> void writeDiff(Transcoder transcoder, Differential<D> differential, RegistryFriendlyByteBuf byteBuf) {
+        Maybe<D> difference = differential.difference();
+        if (difference.defined()) {
+            byteBuf.writeBoolean(true);
+            differential.encodeDifference(byteBuf, difference.get());
+        } else {
+            byteBuf.writeBoolean(false);
+            transcoder.writeToClient(byteBuf);
+        }
+    }
+
     public void receiveFromServer(RegistryFriendlyByteBuf byteBuf) {
+        boolean sendAll = byteBuf.readBoolean();
         for (short id = byteBuf.readShort(); id != Short.MIN_VALUE; id = byteBuf.readShort()) {
             ExposeCommon expose = exposes.get(id);
             if (expose == null) throw new IllegalStateException("No expose found with id: " + id);
             try {
                 Transcoder transcoder = (Transcoder) expose;
-                if (expose instanceof Differential<?> differential && byteBuf.readBoolean()) {//boolean:send difference
+                if (!sendAll && expose instanceof Differential<?> differential && byteBuf.readBoolean()) {
                     differential.decodeDifference(byteBuf);
                 } else {
                     transcoder.readFromServer(byteBuf);
@@ -133,6 +165,18 @@ public final class ExposeManagement {
                 throw new RuntimeException("Failed to read expose: (id:" + expose.id() + " name:" + expose.name() + ")", e);
             }
         }
+    }
+
+    public void writeToServer(RegistryFriendlyByteBuf byteBuf) {
+        for (ExposeCommon expose : exposes) {
+            if (expose instanceof Reversed<?, ?> reversed) {
+                if (reversed.hasReversedData()) {
+                    byteBuf.writeShort(expose.id());
+                    ((ReversedTranscoder) reversed).writeToServer(byteBuf);
+                }
+            }
+        }
+        byteBuf.writeShort(Short.MIN_VALUE);
     }
 
     public void receiveFromClient(RegistryFriendlyByteBuf byteBuf) {
@@ -149,36 +193,4 @@ public final class ExposeManagement {
         }
     }
 
-    private static void writeExpose(ExposeCommon exposeCommon, RegistryFriendlyByteBuf byteBuf) {
-        switch (exposeCommon) {
-            case BasicDownstreamExpose<?> expose -> expose.writeToClient(byteBuf);
-            case BasicLayerExpose<?> layerExpose -> layerExpose.writeToClient(byteBuf);
-            default -> throw new IllegalStateException("Unexpected expose: " + exposeCommon);
-        }
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    private static <D> void writeDiff(ExposeCommon expose, Differential<D> differential, RegistryFriendlyByteBuf byteBuf) {
-        Maybe<D> difference = differential.difference();
-        if (difference.defined()) {
-            byteBuf.writeShort(expose.id());
-            byteBuf.writeBoolean(true);
-            differential.encodeDifference(byteBuf, difference.get());
-        } else {
-            byteBuf.writeShort(expose.id());
-            byteBuf.writeBoolean(false);
-        }
-    }
-
-    public void writeToServer(RegistryFriendlyByteBuf byteBuf) {
-        for (ExposeCommon expose : exposes) {
-            if (expose instanceof Reversed<?, ?> reversed) {
-                if (reversed.hasReversedData()) {
-                    byteBuf.writeShort(expose.id());
-                    ((ReversedTranscoder) reversed).writeToServer(byteBuf);
-                }
-            }
-        }
-        byteBuf.writeShort(Short.MIN_VALUE);
-    }
 }

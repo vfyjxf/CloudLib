@@ -91,6 +91,22 @@ sealed abstract class BasicLayerExpose<E>
         }
     }
 
+    @Override
+    public void forceUpdateSnapshot() {
+        if (layerSnapshot.mutableSnapshot()) {
+            layerSnapshot.forceUpdateSnapshot();
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "BasicLayerExpose{" +
+                "name='" + name + '\'' +
+                ", id=" + id +
+                ", layerSnapshot=" + layerSnapshot +
+                '}';
+    }
+
     @ApiStatus.Internal
     public record LayerSnapshot<T>(
             Snapshot<T> snapshot,
@@ -115,5 +131,10 @@ sealed abstract class BasicLayerExpose<E>
             }
         }
 
+        public void forceUpdateSnapshot() {
+            if (snapshot.mutable()) {
+                snapshot.forceUpdateState(current());
+            }
+        }
     }
 }

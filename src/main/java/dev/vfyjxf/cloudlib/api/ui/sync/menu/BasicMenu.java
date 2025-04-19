@@ -1,15 +1,20 @@
 package dev.vfyjxf.cloudlib.api.ui.sync.menu;
 
+import dev.vfyjxf.cloudlib.api.data.snapshot.DiffObservable;
 import dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot;
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
 import dev.vfyjxf.cloudlib.api.event.EventHandler;
 import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
 import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
+import dev.vfyjxf.cloudlib.api.network.FlowHandler;
 import dev.vfyjxf.cloudlib.api.network.UnaryFlowHandler;
+import dev.vfyjxf.cloudlib.api.network.expose.DiffLayerExpose;
+import dev.vfyjxf.cloudlib.api.network.expose.DiffReverseLayerExpose;
 import dev.vfyjxf.cloudlib.api.network.expose.Expose;
 import dev.vfyjxf.cloudlib.api.network.expose.ExposeManagement;
 import dev.vfyjxf.cloudlib.api.network.expose.LayerExpose;
 import dev.vfyjxf.cloudlib.api.network.expose.ReversedOnly;
+import dev.vfyjxf.cloudlib.api.network.expose.UnaryReversed;
 import dev.vfyjxf.cloudlib.api.network.payload.ClientboundPayload;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
 import dev.vfyjxf.cloudlib.api.ui.event.MenuEvent;
@@ -67,7 +72,7 @@ public abstract class BasicMenu<P>
     //region structure
 
     public void init() {
-        exposeManagement.updateSnapshotState();
+        exposeManagement.forceUpdateSnapshotState();
     }
 
     //endregion
@@ -82,12 +87,13 @@ public abstract class BasicMenu<P>
 
     //region expose factories
 
+    //region basic expose
+
     protected <T> Expose<T> expose(
             String name,
             Snapshot<T> snapshot, Function<P, T> valueSupplier,
             FlowEncoder<T> encoder, FlowDecoder<T> decoder
     ) {
-        Snapshot.init(snapshot, valueSupplier.apply(provider));
         return exposeManagement.registerExpose(
                 Expose.create(
                         name, exposeManagement.nextId(),
@@ -102,7 +108,6 @@ public abstract class BasicMenu<P>
             Snapshot<T> snapshot, Function<P, T> valueSupplier,
             UnaryFlowHandler<T> exposeCodec
     ) {
-        Snapshot.init(snapshot, valueSupplier.apply(provider));
         return exposeManagement.registerExpose(
                 Expose.create(
                         name, exposeManagement.nextId(),
@@ -118,7 +123,6 @@ public abstract class BasicMenu<P>
             Snapshot<T> snapshot, Function<P, T> valueSupplier,
             FlowEncoder<T> encoder, FlowDecoder<E> decoder
     ) {
-        Snapshot.init(snapshot, valueSupplier.apply(provider));
         return exposeManagement.registerExpose(
                 LayerExpose.create(
                         name, exposeManagement.nextId(),
@@ -127,6 +131,22 @@ public abstract class BasicMenu<P>
                 )
         );
     }
+
+    protected <T, E> LayerExpose<E> layerExpose(
+            String name,
+            Snapshot<T> snapshot, Function<P, T> valueSupplier,
+            FlowHandler<T, E> codec
+    ) {
+        return exposeManagement.registerExpose(
+                LayerExpose.create(
+                        name, exposeManagement.nextId(),
+                        snapshot, () -> valueSupplier.apply(provider),
+                        codec
+                )
+        );
+    }
+
+    //region reversed expose
 
     protected <S, R> ReversedOnly<S, R> reversedOnly(
             String name,
@@ -140,6 +160,216 @@ public abstract class BasicMenu<P>
                 )
         );
     }
+
+    protected <S, R> ReversedOnly<S, R> reversedOnly(
+            String name,
+            FlowHandler<S, R> reverseCodec
+    ) {
+        return exposeManagement.registerReversed(
+                ReversedOnly.create(
+                        name, exposeManagement.nextId(),
+                        reverseCodec
+                )
+        );
+    }
+
+    protected <T> UnaryReversed<T> unaryReversed(
+            String name,
+            FlowEncoder<T> encoder,
+            FlowDecoder<T> decoder
+    ) {
+        return exposeManagement.registerReversed(
+                UnaryReversed.create(
+                        name, exposeManagement.nextId(),
+                        encoder, decoder
+                )
+        );
+    }
+
+    protected <T> UnaryReversed<T> unaryReversed(
+            String name,
+            FlowHandler<T, T> codec
+    ) {
+        return exposeManagement.registerReversed(
+                UnaryReversed.create(
+                        name, exposeManagement.nextId(),
+                        codec
+                )
+        );
+    }
+
+    protected <T> UnaryReversed<T> unaryReversed(
+            String name,
+            UnaryFlowHandler<T> codec
+    ) {
+        return exposeManagement.registerReversed(
+                UnaryReversed.create(
+                        name, exposeManagement.nextId(),
+                        codec
+                )
+        );
+    }
+    //endregion
+
+    //endregion
+
+    //region difference expose
+
+    protected <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> diffLayerExpose(
+            String name,
+            Snapshot<T> snapshot, Function<P, T> valueSupplier,
+            FlowEncoder<T> encoder, FlowDecoder<E> decoder,
+            FlowEncoder<D> diffEncoder, FlowDecoder<D> diffDecoder
+    ) {
+        return exposeManagement.registerExpose(
+                DiffLayerExpose.create(
+                        name, exposeManagement.nextId(),
+                        snapshot, () -> valueSupplier.apply(provider),
+                        encoder, decoder,
+                        diffEncoder, diffDecoder
+                )
+        );
+    }
+
+    protected <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> diffLayerExpose(
+            String name,
+            Snapshot<T> snapshot, Function<P, T> valueSupplier,
+            FlowHandler<T, E> codec,
+            FlowEncoder<D> diffEncoder, FlowDecoder<D> diffDecoder
+    ) {
+        return exposeManagement.registerExpose(
+                DiffLayerExpose.create(
+                        name, exposeManagement.nextId(),
+                        snapshot, () -> valueSupplier.apply(provider),
+                        codec,
+                        diffEncoder, diffDecoder
+                )
+        );
+    }
+
+    protected <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> diffLayerExpose(
+            String name,
+            Snapshot<T> snapshot, Function<P, T> valueSupplier,
+            FlowEncoder<T> encoder, FlowDecoder<E> decoder,
+            UnaryFlowHandler<D> diffCodec
+    ) {
+        return exposeManagement.registerExpose(
+                DiffLayerExpose.create(
+                        name, exposeManagement.nextId(),
+                        snapshot, () -> valueSupplier.apply(provider),
+                        encoder, decoder,
+                        diffCodec
+                )
+        );
+    }
+
+    protected <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> diffLayerExpose(
+            String name,
+            Snapshot<T> snapshot, Function<P, T> valueSupplier,
+            FlowHandler<T, E> codec,
+            UnaryFlowHandler<D> diffCodec
+    ) {
+        return exposeManagement.registerExpose(
+                DiffLayerExpose.create(
+                        name, exposeManagement.nextId(),
+                        snapshot, () -> valueSupplier.apply(provider),
+                        codec,
+                        diffCodec
+                )
+        );
+    }
+
+    protected <T extends DiffObservable<D>, E, D, S, R> DiffReverseLayerExpose<E, D, S, R> diffReverseLayerExpose(
+            String name,
+            Snapshot<T> snapshot, Function<P, T> valueSupplier,
+            FlowEncoder<T> encoder, FlowDecoder<E> decoder,
+            FlowEncoder<D> diffEncoder, FlowDecoder<D> diffDecoder,
+            FlowEncoder<S> reverseEncoder, FlowDecoder<R> reverseDecoder
+    ) {
+        return exposeManagement.registerExpose(
+                DiffReverseLayerExpose.create(
+                        name, exposeManagement.nextId(),
+                        snapshot, () -> valueSupplier.apply(provider),
+                        encoder, decoder,
+                        diffEncoder, diffDecoder,
+                        reverseEncoder, reverseDecoder
+                )
+        );
+    }
+
+    protected <T extends DiffObservable<D>, E, D, S, R> DiffReverseLayerExpose<E, D, S, R> diffReverseLayerExpose(
+            String name,
+            Snapshot<T> snapshot, Function<P, T> valueSupplier,
+            FlowHandler<T, E> codec,
+            FlowEncoder<D> diffEncoder, FlowDecoder<D> diffDecoder,
+            FlowEncoder<S> reverseEncoder, FlowDecoder<R> reverseDecoder
+    ) {
+        return exposeManagement.registerExpose(
+                DiffReverseLayerExpose.create(
+                        name, exposeManagement.nextId(),
+                        snapshot, () -> valueSupplier.apply(provider),
+                        codec, codec,
+                        diffEncoder, diffDecoder,
+                        reverseEncoder, reverseDecoder
+                )
+        );
+    }
+
+    protected <T extends DiffObservable<D>, E, D, S, R> DiffReverseLayerExpose<E, D, S, R> diffReverseLayerExpose(
+            String name,
+            Snapshot<T> snapshot, Function<P, T> valueSupplier,
+            FlowEncoder<T> encoder, FlowDecoder<E> decoder,
+            UnaryFlowHandler<D> diffCodec,
+            FlowEncoder<S> reverseEncoder, FlowDecoder<R> reverseDecoder
+    ) {
+        return exposeManagement.registerExpose(
+                DiffReverseLayerExpose.create(
+                        name, exposeManagement.nextId(),
+                        snapshot, () -> valueSupplier.apply(provider),
+                        encoder, decoder,
+                        diffCodec, diffCodec,
+                        reverseEncoder, reverseDecoder
+                )
+        );
+    }
+
+    protected <T extends DiffObservable<D>, E, D, S, R> DiffReverseLayerExpose<E, D, S, R> diffReverseLayerExpose(
+            String name,
+            Snapshot<T> snapshot, Function<P, T> valueSupplier,
+            FlowEncoder<T> encoder, FlowDecoder<E> decoder,
+            FlowEncoder<D> diffEncoder, FlowDecoder<D> diffDecoder,
+            FlowHandler<S, R> reverseCodec
+    ) {
+        return exposeManagement.registerExpose(
+                DiffReverseLayerExpose.create(
+                        name, exposeManagement.nextId(),
+                        snapshot, () -> valueSupplier.apply(provider),
+                        encoder, decoder,
+                        diffEncoder, diffDecoder,
+                        reverseCodec, reverseCodec
+                )
+        );
+    }
+
+    protected <T extends DiffObservable<D>, E, D, S, R> DiffReverseLayerExpose<E, D, S, R> diffReverseLayerExpose(
+            String name,
+            Snapshot<T> snapshot, Function<P, T> valueSupplier,
+            FlowHandler<T, E> codec,
+            UnaryFlowHandler<D> diffCodec,
+            FlowHandler<S, R> reverseCodec
+    ) {
+        return exposeManagement.registerExpose(
+                DiffReverseLayerExpose.create(
+                        name, exposeManagement.nextId(),
+                        snapshot, () -> valueSupplier.apply(provider),
+                        codec, codec,
+                        diffCodec, diffCodec,
+                        reverseCodec, reverseCodec
+                )
+        );
+    }
+
+    //endregion
 
     //endregion
 

@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.data;
 
+import dev.vfyjxf.cloudlib.api.data.snapshot.Observable;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
 import org.jetbrains.annotations.Contract;
@@ -10,10 +11,10 @@ import java.util.Objects;
 public interface CheckStrategy<T> {
 
     @Contract(pure = true)
-    boolean matches(T a, T b);
+    boolean matches(T previous, T current);
 
-    default boolean notMatches(T a, T b) {
-        return !matches(a, b);
+    default boolean notMatches(T previous, T current) {
+        return !matches(previous, current);
     }
 
     static <T> CheckStrategy<T> neverEqual() {
@@ -22,6 +23,18 @@ public interface CheckStrategy<T> {
 
     static <T> CheckStrategy<T> identity() {
         return (a, b) -> a == b;
+    }
+
+    static <T> CheckStrategy<T[]> array(CheckStrategy<T> elementStrategy) {
+        return (a, b) -> {
+            if (a == b) return true;
+            if (a == null || b == null) return false;
+            if (a.length != b.length) return false;
+            for (int i = 0; i < a.length; i++) {
+                if (!elementStrategy.matches(a[i], b[i])) return false;
+            }
+            return true;
+        };
     }
 
     /**
@@ -45,6 +58,14 @@ public interface CheckStrategy<T> {
      */
     static <T extends @Nullable Object> CheckStrategy<T> primitive() {
         return Objects::equals;
+    }
+
+    static <T extends Observable> CheckStrategy<T> observable() {
+        return (previous, current) -> {
+            if (previous == current) return true;
+            if (previous == null || current == null) return false;
+            return current.changed();
+        };
     }
 
     /**

@@ -29,8 +29,19 @@ interface Differential<D> {
         return current.changed() ? Maybe.of(current.difference()) : Maybe.empty();
     }
 
+    /**
+     * Encode the difference to the buffer.
+     *
+     * @param byteBuf    the buffer to encode the difference
+     * @param difference the difference to encode
+     */
     void encodeDifference(RegistryFriendlyByteBuf byteBuf, D difference);
 
+    /**
+     * Decode the difference from the buffer.
+     * @param byteBuf the buffer to decode the difference
+     * @return the difference
+     */
     D decodeDifference(RegistryFriendlyByteBuf byteBuf);
 
 }

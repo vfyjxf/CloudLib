@@ -85,14 +85,13 @@ public sealed interface Snapshot<T> {
      */
     boolean updateState(T current);
 
-    static <T> void init(Snapshot<T> snapshot, T value) {
-        switch (snapshot) {
-            case None ignored -> {}
-            case Readonly<T> ignored -> {}
-            case ImmutableRef<T> ignored -> {}
-            case MutableRef<T> ref -> ref.value = value;
-            case CopyInstance<T> ref -> ref.set(value);
-        }
+    /**
+     * Force update the state of the snapshot, normally this method used to init mutable snapshot
+     *
+     * @param current the current value
+     */
+    default void forceUpdateState(T current) {
+        updateState(current);
     }
 
     static <T> boolean changed(Snapshot<T> instance, T current) {
@@ -306,6 +305,11 @@ public sealed interface Snapshot<T> {
             State state = currentState(current);
             if (state.changed()) value = current;
             return state.changed();
+        }
+
+        @Override
+        public void forceUpdateState(T current) {
+            value = current;
         }
 
         @Override

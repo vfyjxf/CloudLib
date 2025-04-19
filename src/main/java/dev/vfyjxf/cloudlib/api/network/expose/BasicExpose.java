@@ -56,4 +56,20 @@ sealed abstract class BasicExpose<T> implements Expose<T>
             snapshot.updateState(supplier.get());
         }
     }
+
+    @Override
+    public void forceUpdateSnapshot() {
+        if (snapshot.mutable()) {
+            snapshot.forceUpdateState(supplier.get());
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "BasicExpose{" +
+                "name='" + name + '\'' +
+                ", id=" + id +
+                ", snapshot=" + snapshot +
+                '}';
+    }
 }
