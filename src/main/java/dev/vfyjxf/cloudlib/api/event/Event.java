@@ -1,24 +1,34 @@
 package dev.vfyjxf.cloudlib.api.event;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import dev.vfyjxf.cloudlib.api.performer.Performer;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Range;
 
+import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 
 /**
  * The event object, which holds all listener and manage them.
  * <p>
- * <b>Difference with Actor:</b> Actor's interface usually has multiple methods that need to be implemented,
- * while the majority of the objects held by the Event are objects of a functional interface,
- * and the Event supports lifecycle management and additional process control behavior.
+ * <b>Difference with {@link Performer}:</b> {@link Performer}'s interface usually has multiple methods that need to be implemented,
+ * while the majority of the objects held by the {@link Event} are objects of a functional interface.
+ * <p>
+ * {@link Event} will be handled by {@link EventHandler},but {@link Performer} will be handled by anything.
  *
- * @param <T> the invoker type,it must be a functional interface.
+ * @param <T> the invoker type,it <b>must</b> be a functional interface.
  */
-public interface Event<T>  {
+@ApiStatus.NonExtendable
+public interface Event<T> {
+
+    static <T> Event<T> create(Function<List<T>, T> combiner) {
+        return EventFactory.createEvent(combiner);
+    }
 
     /**
-     * @return the actor of the event
+     * @return the combined invoker of the event
      */
     T invoker();
 
@@ -50,7 +60,7 @@ public interface Event<T>  {
      */
     @Contract("_, _ -> new")
     @CanIgnoreReturnValue
-    T registerManaged(T listener, int lifetime);
+    T registerManaged(T listener, @Range(from = 1, to = Integer.MAX_VALUE) int lifetime);
 
     /**
      * Register a listener which lifetime managed by the condition.
@@ -71,6 +81,7 @@ public interface Event<T>  {
      * @param reference the reference to manage the listener
      * @return the listener
      */
+    @CanIgnoreReturnValue
     T registerManaged(T listener, Object reference);
 
     /**

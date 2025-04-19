@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 //TODO: Implement the RightModifier
 public class RightModifier implements Modifier {
 
-    public RightModifier(Modifier modifier){
+    public RightModifier(Modifier modifier) {
 
     }
 

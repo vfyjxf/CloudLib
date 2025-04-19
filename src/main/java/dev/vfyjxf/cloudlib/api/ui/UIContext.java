@@ -6,6 +6,10 @@ import dev.vfyjxf.cloudlib.utils.ScreenUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 public class UIContext {
@@ -75,6 +79,15 @@ public class UIContext {
 
     public Font getFont() {
         return font;
+    }
+
+    @Nullable
+    public ItemStack getStackUnderMouse() {
+        AbstractContainerScreen<?> screen = typedScreen(AbstractContainerScreen.class);
+        AbstractContainerMenu menu = screen != null ? screen.getMenu() : null;
+        if (menu == null) return null;
+        Slot slot = screen.getSlotUnderMouse();
+        return slot == null ? null : slot.getItem();
     }
 
     public void tick() {

@@ -17,7 +17,7 @@ public class DraggableManager {
      * When the mouse is dragged, the distance between the start position and the current position is less than this value,
      * and the drag event is not triggered.
      * <p>
-     * A magic number from testing.
+     * C magic number from testing.
      */
     private static final double MIN_DRAG_DISTANCE = 3 * 3;
 
@@ -38,7 +38,7 @@ public class DraggableManager {
             if (!input.isLeftClick()) return false;
             this.endDrag(input);
             var dragContext = new DragContextImpl(this);
-            DragProvider dragProvider = mainGroup.getActor(DragProvider.ACTOR_KEY);
+            DragProvider dragProvider = mainGroup.getPerformer(DragProvider.SCENARIO);
             if (dragProvider.draggable(mainGroup.getContext(), input, dragContext)) {
                 var draggableElement = dragProvider.getDraggableElement(mainGroup.getContext(), input, dragContext);
                 if (draggableElement != null) {
@@ -62,11 +62,11 @@ public class DraggableManager {
                 if (distance < MIN_DRAG_DISTANCE) return;
                 var input = InputContext.fromMouse(mouseX, mouseY, 0);
                 draggableElement.dragStart(input, currentContext);
-                mainGroup.getActor(DragConsumer.ACTOR_KEY).dragStart(draggableElement, currentContext);
+                mainGroup.getPerformer(DragConsumer.SCENARIO).dragStart(draggableElement, currentContext);
                 dragging = true;
             }
             draggableElement.onDrag(mouseX, mouseY, currentContext);
-            var dragConsumer = mainGroup.getActor(DragConsumer.ACTOR_KEY);
+            var dragConsumer = mainGroup.getPerformer(DragConsumer.SCENARIO);
             dragConsumer.onDrag(draggableElement, currentContext, deltaX, deltaY);
         }));
 
@@ -82,7 +82,7 @@ public class DraggableManager {
         if (dragging && currentContext != null) {
             var draggableElement = currentContext.draggingElement();
             if (draggableElement != null) {
-                DragConsumer dragConsumer = mainGroup.getActor(DragConsumer.ACTOR_KEY);
+                DragConsumer dragConsumer = mainGroup.getPerformer(DragConsumer.SCENARIO);
                 FloatPos start = currentContext.getStart();
                 double deltaX = input.mouseX() - start.x();
                 double deltaY = input.mouseY() - start.y();

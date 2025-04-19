@@ -14,7 +14,8 @@ import org.jetbrains.annotations.Nullable;
  * <p>
  * {@link Common}:Provides both cancelable and interruptible functionality.But when canceling, it also interrupts the event.
  */
-public sealed interface EventContext permits EventContext.Common, EventContext.Cancelable, EventContext.Interruptible {
+//TODO:Add EmptyContext to avoid create new context for empty event listener list
+public sealed interface EventContext {
 
     @ApiStatus.Internal
     EventChannel<?> getChannel();

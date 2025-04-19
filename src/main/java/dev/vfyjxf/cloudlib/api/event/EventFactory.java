@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.event;
 
 import com.google.common.reflect.AbstractInvocationHandler;
 import dev.vfyjxf.cloudlib.utils.Checks;
+import dev.vfyjxf.cloudlib.utils.ClassUtils;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.list.mutable.FastList;
@@ -15,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -38,16 +40,22 @@ public final class EventFactory {
     }
 
     public static <T> EventDefinition<T> define(Class<T> type, Function<List<T>, T> merger) {
+        Checks.checkArgument(ClassUtils.isFunctionalInterface(type), "type must be a functional interface");
         return new EventDefinitionImpl<>(type, merger);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> EventDefinition<T> defineGeneric(Class<? super T> type, Function<List<? extends T>, ? extends T> merger) {
+        Checks.checkArgument(ClassUtils.isFunctionalInterface(type), "type must be a functional interface");
         return new EventDefinitionImpl<>(type, (Function) merger);
     }
 
     public static <T> Event<T> createEvent(Function<List<T>, T> combiner) {
         return new EventImpl<>(combiner);
+    }
+
+    public static <T> SimpleEvent<T> createSimpleEvent() {
+        return new SimpleEventImpl<>();
     }
 
     private static class EventDefinitionImpl<T> implements EventDefinition<T> {
@@ -56,7 +64,7 @@ public final class EventFactory {
         private final Function<List<T>, T> merger;
         private final Event<T> global;
 
-        private EventDefinitionImpl(Class<T> type, Function<java.util.List<T>, T> merger) {
+        private EventDefinitionImpl(Class<T> type, Function<List<T>, T> merger) {
             this.type = type;
             this.merger = merger;
             this.global = new EventImpl<>(merger);
@@ -138,9 +146,7 @@ public final class EventFactory {
                         }
                     }
             );
-            register(proxied);
-            listenerLifetimeManage.put(proxied, () -> counter.get() <= 0);
-            return proxied;
+            return registerManaged(proxied, () -> counter.get() <= 0);
         }
 
         @Override
@@ -163,6 +169,7 @@ public final class EventFactory {
         @Override
         public void unregister(T listener) {
             listeners.removeIf(l -> l.listener == listener);
+            listenerLifetimeManage.remove(listener);
             listeners.trimToSize();
             invoker = null;
         }
@@ -210,5 +217,41 @@ public final class EventFactory {
             }
         }
 
+    }
+
+    private static class SimpleEventImpl<T> implements SimpleEvent<T> {
+        private final FastList<T> listeners = FastList.newList();
+
+        @Override
+        public void invoke(Consumer<T> invoker) {
+            for (T listener : listeners) {
+                invoker.accept(listener);
+            }
+        }
+
+        @Override
+        public T register(T listener) {
+            if (isRegistered(listener)) {
+                throw new IllegalArgumentException("Listener is already registered");
+            }
+            listeners.add(listener);
+            return listener;
+        }
+
+        @Override
+        public void unregister(T listener) {
+            listeners.remove(listener);
+            listeners.trimToSize();
+        }
+
+        @Override
+        public boolean isRegistered(T listener) {
+            return listeners.contains(listener);
+        }
+
+        @Override
+        public void clearListeners() {
+            listeners.clear();
+        }
     }
 }

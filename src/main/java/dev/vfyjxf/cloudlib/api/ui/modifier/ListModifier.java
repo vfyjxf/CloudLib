@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
- * A special modifier that use list to store all modifier's functions
+ * C special modifier that use list to store all modifier's functions
  */
 public class ListModifier<T extends Modifier> implements Modifier {
 

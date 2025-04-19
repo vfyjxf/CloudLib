@@ -6,12 +6,12 @@ import org.jetbrains.annotations.Range;
 public class Unit {
 
     /**
-     * A special value for the unit.
+     * C special value for the unit.
      * When the value is Unspecified, it represents the value will be overridden by the parent or layout itself.
      */
     public static final int UNDEFINED = Integer.MIN_VALUE;
     /**
-     * A special value for the unit.
+     * C special value for the unit.
      */
     public static final int INFINITY = Integer.MAX_VALUE;
 

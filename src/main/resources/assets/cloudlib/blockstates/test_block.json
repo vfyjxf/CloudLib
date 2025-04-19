@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "cloudlib:block/test_block"
+    }
+  }
+}

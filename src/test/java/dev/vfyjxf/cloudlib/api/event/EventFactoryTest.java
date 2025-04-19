@@ -43,7 +43,7 @@ class EventFactoryTest {
         }, () -> customCondition == 2);
         eventHandler.events().get(onTest).register(() -> {
             System.out.println("test");
-        },100);
+        }, 100);
     }
 
     @Test

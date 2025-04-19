@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.api.event;
 
+import org.jetbrains.annotations.ApiStatus;
+
 /**
  * The definition of an event.
  * <p>
@@ -8,6 +10,7 @@ package dev.vfyjxf.cloudlib.api.event;
  *
  * @param <T> the type of the event
  */
+@ApiStatus.NonExtendable
 public interface EventDefinition<T> {
 
     /**

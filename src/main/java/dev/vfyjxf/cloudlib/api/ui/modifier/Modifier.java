@@ -64,9 +64,7 @@ public interface Modifier {
         return EMPTY;
     }
 
-    //////////////////////////////////////
-    //********       Basic     *********//
-    //////////////////////////////////////
+    //region Basic
 
     <R> R foldIn(R initial, BiFunction<R, Modifier, R> operation);
 
@@ -96,9 +94,9 @@ public interface Modifier {
 
     void apply(Widget widget);
 
-    //////////////////////////////////////
-    //********     Position    *********//
-    //////////////////////////////////////
+    //endregion
+
+    //region Position
 
     default Modifier pos(int x, int y) {
         return then(widget -> {
@@ -135,10 +133,9 @@ public interface Modifier {
         return posRel(0, y);
     }
 
-    //////////////////////////////////////
-    //********      Width      *********//
-    //////////////////////////////////////
+    //endregion
 
+    //region Width
     default Modifier widthFixed(int width) {
         return then(widget -> {
             widget.flex().width().setValue(width).setMin(width).setMax(width);
@@ -160,7 +157,7 @@ public interface Modifier {
     }
 
     /**
-     * A helper method to avoid declaring the parameter as float when using this method
+     * C helper method to avoid declaring the parameter as float when using this method
      */
     default Modifier fillMaxWidth(@Range(from = 0, to = 1) double fraction) {
         Checks.checkRangeClosed(fraction, 0, 1);
@@ -176,9 +173,9 @@ public interface Modifier {
         });
     }
 
-    //////////////////////////////////////
-    //********     Height      *********//
-    //////////////////////////////////////
+    //endregion
+
+    // region Height
 
     default Modifier heightFixed(int height) {
         return then(widget -> {
@@ -207,9 +204,9 @@ public interface Modifier {
         });
     }
 
-    //////////////////////////////////////
-    //********      Size       *********//
-    //////////////////////////////////////
+    //endregion
+
+    // region Size
 
     default Modifier size(int size) {
         return size(size, size);
@@ -250,9 +247,9 @@ public interface Modifier {
         return requiredSize(size, size);
     }
 
-    //////////////////////////////////////
-    //********      Anchor     *********//
-    //////////////////////////////////////
+    //endregion
+
+    //region Anchor
 
     default Modifier anchor(@Range(from = 0, to = 1) double x, @Range(from = 0, to = 1) double y) {
         Checks.checkRangeClosed(x, 0, 1);
@@ -275,9 +272,9 @@ public interface Modifier {
         return anchor(0, y);
     }
 
-    //////////////////////////////////////
-    //********      Margin     *********//
-    //////////////////////////////////////
+    //endregion
+
+    //region Margin
 
     default Modifier margin(int margin) {
         return then(widget -> {
@@ -321,9 +318,9 @@ public interface Modifier {
         });
     }
 
-    //////////////////////////////////////
-    //********     Padding     *********//
-    //////////////////////////////////////
+    //endregion
+
+    //region Padding
 
     default Modifier padding(int padding) {
         return then(widget -> {
@@ -343,9 +340,9 @@ public interface Modifier {
         });
     }
 
-    //////////////////////////////////////
-    //********      Offset     *********//
-    //////////////////////////////////////
+    //endregion
+
+    //region Offset
 
     default Modifier offset(int x, int y) {
         return then(widget -> {
@@ -355,9 +352,9 @@ public interface Modifier {
         });
     }
 
-    //////////////////////////////////////
-    //********       Align     *********//
-    //////////////////////////////////////
+    //endregion
+
+    //region Align
 
     /**
      * NOTE:the align modifier will override the alignment of parent's default alignment
@@ -397,10 +394,9 @@ public interface Modifier {
         });
     }
 
-    //////////////////////////////////////
-    //********      Render     *********//
-    //////////////////////////////////////
+    //endregion
 
+    //region Background
 
     default Modifier background(RenderableTexture background) {
         return then(widget -> {
@@ -414,6 +410,7 @@ public interface Modifier {
         });
     }
 
+    //FIXME:size and position scale bug
     default Modifier scale(double scale) {
         return then(widget -> {
             widget.onRender((graphics, mouseX, mouseY, partialTicks, context) -> {
@@ -440,10 +437,9 @@ public interface Modifier {
         });
     }
 
-    //////////////////////////////////////
-    //********      Layout     *********//
-    //////////////////////////////////////
+    //endregion
 
+    //region Layout
     default Modifier layout(Resizer layout) {
         return next(widget -> {
             widget.flex().setPost(layout);
@@ -454,10 +450,10 @@ public interface Modifier {
         return layoutWith(builder, l -> {});
     }
 
-    default <T extends Resizer> Modifier layoutWith(Function<WidgetGroup<? extends Widget>, T> builder, Consumer<T> config) {
+    default <T extends Resizer> Modifier layoutWith(Function<WidgetGroup<? extends Widget>, T> builder, Consumer<T> configurator) {
         return next(widget -> {
             T layout = builder.apply(widget);
-            config.accept(layout);
+            configurator.accept(layout);
             widget.flex().setPost(layout);
         });
     }
@@ -466,10 +462,9 @@ public interface Modifier {
         return layout(layoutBuilder.get());
     }
 
-    //////////////////////////////////////
-    //********   Extra Widget  *********//
-    //////////////////////////////////////
+    //endregion
 
+    //region Extra Widget
     default Modifier contextMenu(ContextMenuProvider provider) {
         return then(widget -> {
             widget.onMouseClicked((input, context) -> {
@@ -483,10 +478,9 @@ public interface Modifier {
         });
     }
 
-    //////////////////////////////////////
-    //********       Reset     *********//
-    //////////////////////////////////////
+    //endregion
 
+    //region Reset
     default Modifier resetPos() {
         return then(widget -> {
             widget.flex().resetX();
@@ -544,9 +538,9 @@ public interface Modifier {
     }
 
 
-    //////////////////////////////////////
-    //********      Custom     *********//
-    //////////////////////////////////////
+    //endregion
+
+    //region Custom
 
     /**
      * Normally, accessing Flex directly from the Widget is the faster option, and this method only exists to maintain coherence.
@@ -580,4 +574,6 @@ public interface Modifier {
     default <M extends Modifier, P> M with(BiFunction<Modifier, P, M> delegator, P parameter) {
         return delegator.apply(this, parameter);
     }
+
+    //endregion
 }
