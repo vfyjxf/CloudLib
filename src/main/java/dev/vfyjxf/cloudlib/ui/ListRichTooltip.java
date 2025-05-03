@@ -4,7 +4,7 @@ import com.mojang.datafixers.util.Either;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.ui.Tooltip;
 import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
-import dev.vfyjxf.cloudlib.api.ui.widgets.TooltipStack;
+import dev.vfyjxf.cloudlib.api.ui.widget.TooltipStack;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
@@ -33,12 +33,12 @@ public class ListRichTooltip implements RichTooltip {
 
     @Override
     public int getPosX() {
-        return mousePos.x;
+        return mousePos.x();
     }
 
     @Override
     public int getPosY() {
-        return mousePos.y;
+        return mousePos.y();
     }
 
     @Override

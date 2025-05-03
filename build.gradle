@@ -64,6 +64,7 @@ neoForge {
                 jvmArgument "-XX:+AllowEnhancedClassRedefinition"
                 jvmArgument "-XX:HotswapAgent=fatjar"
             }
+            systemProperty('terminal.jline', 'true')
         }
     }
 

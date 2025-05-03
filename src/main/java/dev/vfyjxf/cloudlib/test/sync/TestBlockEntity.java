@@ -1,11 +1,7 @@
 package dev.vfyjxf.cloudlib.test.sync;
 
-import dev.vfyjxf.cloudlib.api.data.CheckStrategy;
 import dev.vfyjxf.cloudlib.api.data.snapshot.DiffObservable;
-import dev.vfyjxf.cloudlib.api.network.UnaryFlowHandler;
 import dev.vfyjxf.cloudlib.api.network.expose.DiffLayerExpose;
-import dev.vfyjxf.cloudlib.api.network.expose.Expose;
-import dev.vfyjxf.cloudlib.api.network.expose.ReversedOnly;
 import dev.vfyjxf.cloudlib.api.ui.sync.menu.BasicMenu;
 import dev.vfyjxf.cloudlib.api.ui.sync.menu.MenuInfo;
 import dev.vfyjxf.cloudlib.test.TestRegistry;
@@ -15,18 +11,15 @@ import it.unimi.dsi.fastutil.ints.IntObjectPair;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 import java.util.List;
@@ -35,10 +28,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static dev.vfyjxf.cloudlib.api.data.CheckStrategy.primitive;
-import static dev.vfyjxf.cloudlib.api.data.CheckStrategy.sameItemStack;
 import static dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot.immutableRefOf;
-import static dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot.mutableRefOf;
 
 public class TestBlockEntity extends BlockEntity {
 
@@ -180,7 +170,7 @@ public class TestBlockEntity extends BlockEntity {
                 () -> TestBlockEntityScreen::new
         );
 
-        public Menu(MenuType<Menu> menuType, int containerId, Inventory inventory, TestBlockEntity holder) {
+        private Menu(MenuType<Menu> menuType, int containerId, Inventory inventory, TestBlockEntity holder) {
             super(menuType, containerId, holder, inventory);
         }
 

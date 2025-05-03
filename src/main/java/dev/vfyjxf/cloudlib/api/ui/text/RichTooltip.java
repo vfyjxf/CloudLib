@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.text;
 import com.mojang.datafixers.util.Either;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.ui.Tooltip;
-import dev.vfyjxf.cloudlib.api.ui.widgets.TooltipStack;
+import dev.vfyjxf.cloudlib.api.ui.widget.TooltipStack;
 import dev.vfyjxf.cloudlib.ui.ListRichTooltip;
 import dev.vfyjxf.cloudlib.ui.TooltipEntry;
 import net.minecraft.network.chat.Component;

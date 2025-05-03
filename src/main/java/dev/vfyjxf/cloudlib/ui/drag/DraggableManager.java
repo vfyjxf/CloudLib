@@ -5,8 +5,8 @@ import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragConsumer;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragProvider;
-import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
-import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
+import dev.vfyjxf.cloudlib.api.ui.widget.WidgetGroup;
 import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -50,7 +50,7 @@ public class DraggableManager {
             return false;
         }));
 
-        mainGroup.onRender(((graphics, mouseX, mouseY, partialTicks, context) -> {
+        mainGroup.onRender(((graphics, mouseX, mouseY, partialTicks, self, context) -> {
             if (currentContext == null) return;
             var start = currentContext.getStart();
             double deltaX = mouseX - start.x();

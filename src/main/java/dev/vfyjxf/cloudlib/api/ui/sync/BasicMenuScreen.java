@@ -1,13 +1,13 @@
 package dev.vfyjxf.cloudlib.api.ui.sync;
 
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
-import dev.vfyjxf.cloudlib.api.ui.WidgetWindow;
-import dev.vfyjxf.cloudlib.api.ui.modifier.Modifier;
+import dev.vfyjxf.cloudlib.api.ui.window.WidgetWindow;
+import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
 import dev.vfyjxf.cloudlib.api.ui.overlay.UIOverlay;
 import dev.vfyjxf.cloudlib.api.ui.sync.menu.BasicMenu;
-import dev.vfyjxf.cloudlib.api.ui.widgets.RootWidget;
-import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
-import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.widget.RootWidget;
+import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
+import dev.vfyjxf.cloudlib.api.ui.widget.WidgetGroup;
 import dev.vfyjxf.cloudlib.ui.drag.DraggableManager;
 import dev.vfyjxf.cloudlib.ui.overlay.UIOverlayImpl;
 import mezz.jei.gui.input.MouseUtil;
@@ -25,7 +25,7 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
     protected final WidgetGroup<Widget> mainGroup;
     protected final Player player;
     private final RootWidget rootWidget;
-    private final UIOverlay screenOverlay;
+    private final UIOverlay screenOverlay = null;
     private final DraggableManager draggableManager;
     private WidgetWindow displayWindow;
     private MutableList<WidgetWindow> windows;
@@ -48,7 +48,6 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
             mainGroup.onInit(self -> {
                 mainGroup.withModifier(
                         Modifier.builder()
-                                .pos(0, 0)
                                 .size(width, height)
                 );
             });
@@ -56,9 +55,9 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
         }
         //endregion
         //region screen overlay
-        var overlayPanel = mainGroup.addWidget(new WidgetGroup<>());
-        overlayPanel.mark("overlay");
-        screenOverlay = new UIOverlayImpl(overlayPanel, true);
+//        var overlayPanel = mainGroup.addWidget(new WidgetGroup<>());
+//        overlayPanel.mark("overlay");
+//        screenOverlay = new UIOverlayImpl(overlayPanel, true);
         //endregion
     }
 

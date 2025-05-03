@@ -10,7 +10,7 @@ import dev.vfyjxf.cloudlib.api.ui.ContextMenuBuilder;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
 import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
-import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
+import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
 import net.minecraft.client.gui.GuiGraphics;
 
 public interface WidgetEvent {
@@ -29,16 +29,16 @@ public interface WidgetEvent {
         }
     });
 
-    EventDefinition<OnRender> onRender = EventFactory.define(OnRender.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
+    EventDefinition<OnRender> onRender = EventFactory.define(OnRender.class, listeners -> (graphics, mouseX, mouseY, partialTicks, self, context) -> {
         for (var listener : listeners) {
-            listener.onRender(graphics, mouseX, mouseY, partialTicks, context);
+            listener.onRender(graphics, mouseX, mouseY, partialTicks, self, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnRenderPost> onRenderPost = EventFactory.define(OnRenderPost.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
+    EventDefinition<OnRenderPost> onRenderPost = EventFactory.define(OnRenderPost.class, listeners -> (graphics, mouseX, mouseY, partialTicks, self, context) -> {
         for (var listener : listeners) {
-            listener.onRender(graphics, mouseX, mouseY, partialTicks, context);
+            listener.onRender(graphics, mouseX, mouseY, partialTicks, self, context);
             if (context.interrupted()) return;
         }
     });
@@ -237,12 +237,12 @@ public interface WidgetEvent {
 
     @FunctionalInterface
     interface OnRender extends WidgetEvent {
-        void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, Common context);
+        void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, Widget self, Common context);
     }
 
     @FunctionalInterface
     interface OnRenderPost extends WidgetEvent {
-        void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, Interruptible context);
+        void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, Widget self, Interruptible context);
     }
 
     @FunctionalInterface

@@ -5,8 +5,8 @@ import dev.vfyjxf.cloudlib.api.event.EventHandler;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.event.OverlayEvent;
 import dev.vfyjxf.cloudlib.api.ui.overlay.UIOverlay;
-import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
-import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
+import dev.vfyjxf.cloudlib.api.ui.widget.WidgetGroup;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class UIOverlayImpl implements UIOverlay, EventHandler<OverlayEvent> {
@@ -39,17 +39,12 @@ public class UIOverlayImpl implements UIOverlay, EventHandler<OverlayEvent> {
     }
 
     @Override
-    public void update() {
-        mainGroup.update();
-    }
-
-    @Override
     public void tick() {
         mainGroup.tick();
     }
 
     @Override
-    public WidgetGroup<Widget> mainGroup() {
+    public WidgetGroup<Widget> overlayGroup() {
         return mainGroup;
     }
 

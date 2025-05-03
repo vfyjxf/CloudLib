@@ -13,15 +13,15 @@ public class Rect {
     public int height;
 
     public Rect(Pos pos, Size size) {
-        this.x = pos.x;
-        this.y = pos.y;
-        this.width = size.width;
-        this.height = size.height;
+        this.x = pos.x();
+        this.y = pos.y();
+        this.width = size.width();
+        this.height = size.height();
     }
 
     public Rect(Pos pos, int width, int height) {
-        this.x = pos.x;
-        this.y = pos.y;
+        this.x = pos.x();
+        this.y = pos.y();
         this.width = width;
         this.height = height;
     }
@@ -102,7 +102,7 @@ public class Rect {
     }
 
     public boolean contains(Pos pos) {
-        return contains(pos.x, pos.y);
+        return contains(pos.x(), pos.y());
     }
 
     public boolean contains(double x, double y) {
@@ -124,8 +124,8 @@ public class Rect {
 
     @Contract("_ -> this")
     public Rect move(Pos pos) {
-        this.x = pos.x;
-        this.y = pos.y;
+        this.x = pos.x();
+        this.y = pos.y();
         return this;
     }
 

@@ -5,7 +5,6 @@ import dev.vfyjxf.cloudlib.api.utils.ServiceLoading;
 import dev.vfyjxf.cloudlib.debug.DebugConfig;
 import dev.vfyjxf.cloudlib.network.CloudlibNetworkPayloads;
 import dev.vfyjxf.cloudlib.test.TestRegistry;
-import dev.vfyjxf.cloudlib.test.sync.TestBlockEntity;
 import dev.vfyjxf.cloudlib.utils.Locations;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
@@ -14,6 +13,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLConstructModEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.collection.ImmutableCollection;
@@ -22,14 +22,17 @@ public abstract class CloudLib {
     public static final Logger logger = LogManager.getLogger("CloudLib");
     protected final ImmutableCollection<ModuleEntryPoint> plugins;
 
+    //TODO:Move thread unsafe operations to constructModEvent
     public CloudLib(ModContainer container, IEventBus modBus, Dist dist) {
         //region internal init
         plugins = ServiceLoading.load(ModuleEntryPoint.class).toImmutable();
         //endregion
 
         //region debug & test init
-        TestRegistry.register(modBus);
-        DebugConfig.register(container);
+        if (!FMLEnvironment.production) {
+            TestRegistry.register(modBus);
+            DebugConfig.register(container);
+        }
         //region
 
         //region fml lifecycle listener
@@ -43,9 +46,6 @@ public abstract class CloudLib {
     }
 
     protected void constructMod(FMLConstructModEvent event) {
-        event.enqueueWork(() -> {
-            var a = TestBlockEntity.Menu.INFO;
-        });
     }
 
     protected void commonSetup(FMLCommonSetupEvent event) {

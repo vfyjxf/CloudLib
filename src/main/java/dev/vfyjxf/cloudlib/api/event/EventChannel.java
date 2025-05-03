@@ -1,7 +1,6 @@
 package dev.vfyjxf.cloudlib.api.event;
 
 
-import dev.vfyjxf.cloudlib.event.EventChannelImpl;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.function.BooleanSupplier;
@@ -13,7 +12,7 @@ import java.util.function.BooleanSupplier;
  * @param <T> the base type of the events
  */
 @ApiStatus.NonExtendable
-public interface EventChannel<T> {
+public sealed interface EventChannel<T> permits EventChannelImpl {
 
     static <T> EventChannel<T> create(EventHandler<T> handler) {
         return new EventChannelImpl<>(handler);

@@ -1,18 +1,16 @@
 package dev.vfyjxf.cloudlib.api.math;
 
+import org.jetbrains.annotations.Contract;
+
 /**
  * Represents a position in 2D space.
  */
-public class Pos {
+public record Pos(int x, int y) {
 
-    public static final Pos ZERO = new Pos(0, 0);
+    public static final Pos ORIGIN = new Pos(0, 0);
 
-    public int x;
-    public int y;
-
-    public Pos(int x, int y) {
-        this.x = x;
-        this.y = y;
+    public Pos(MutablePos pos) {
+        this(pos.x(), pos.y());
     }
 
     public int x() {
@@ -23,44 +21,27 @@ public class Pos {
         return y;
     }
 
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
+    @Contract(" -> new")
     public Pos copy() {
-        return new Pos(x, y);
+        return new Pos(x(), y());
     }
 
-    public void translate(int x, int y) {
-        this.x += x;
-        this.y += y;
+    public MutablePos toMutable() {
+        return new MutablePos(this);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Pos pos = (Pos) o;
-        return x == pos.x && y == pos.y;
+    @Contract("_,_-> new")
+    public Pos translate(int x, int y) {
+        return new Pos(this.x() + x, this.y() + y);
     }
 
-    @Override
-    public int hashCode() {
-        int result = x;
-        result = 31 * result + y;
-        return result;
+    public Pos translate(Pos pos) {
+        return new Pos(this.x() + pos.x(), this.y() + pos.y());
     }
 
-    @Override
-    public String toString() {
-        return "Pos{" +
-                "x=" + x +
-                ", y=" + y +
-                '}';
+    @Contract("_,_-> new")
+    public Pos scale(int x, int y) {
+        return new Pos(this.x() * x, this.y() * y);
     }
+
 }

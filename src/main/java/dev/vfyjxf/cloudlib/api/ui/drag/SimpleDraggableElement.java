@@ -2,7 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.drag;
 
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
-import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
+import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
 import net.minecraft.client.gui.GuiGraphics;
 
 class SimpleDraggableElement implements DraggableElement<Widget> {

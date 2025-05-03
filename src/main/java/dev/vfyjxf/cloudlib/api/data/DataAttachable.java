@@ -62,7 +62,7 @@ public interface DataAttachable {
         return dataContainer().detach(key);
     }
 
-    default void clear() {
+    default void clearData() {
         dataContainer().clear();
     }
 

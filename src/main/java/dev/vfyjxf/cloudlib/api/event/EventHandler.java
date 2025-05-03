@@ -35,6 +35,11 @@ public interface EventHandler<T> {
         return this;
     }
 
+    default <E extends T> EventHandler<T> when(EventDefinition<E> definition, E listener) {
+        events().register(definition, listener);
+        return this;
+    }
+
     default <E extends T> void unregister(EventDefinition<E> definition, E listener) {
         events().get(definition).unregister(listener);
     }

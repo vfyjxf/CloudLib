@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.event;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.function.Consumer;
 
@@ -9,7 +10,8 @@ import java.util.function.Consumer;
  *
  * @param <T> the type of the listener
  */
-public interface SimpleEvent<T> {
+@ApiStatus.NonExtendable
+public sealed interface SimpleEvent<T> permits EventFactory.SimpleEventImpl {
 
     static <T> SimpleEvent<T> create() {
         return EventFactory.createSimpleEvent();

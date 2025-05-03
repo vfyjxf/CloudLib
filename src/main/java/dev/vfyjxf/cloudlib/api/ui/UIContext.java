@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui;
 
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
-import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
+import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;

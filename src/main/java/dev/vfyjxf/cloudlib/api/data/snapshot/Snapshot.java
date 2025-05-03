@@ -155,6 +155,7 @@ public sealed interface Snapshot<T> {
 
         public Predicate<T> strategy() {
             return strategy;
+
         }
 
         @Override

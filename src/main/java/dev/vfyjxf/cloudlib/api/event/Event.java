@@ -21,10 +21,11 @@ import java.util.function.Function;
  * @param <T> the invoker type,it <b>must</b> be a functional interface.
  */
 @ApiStatus.NonExtendable
-public interface Event<T> {
+public sealed interface Event<T> permits EventFactory.EventImpl {
 
-    static <T> Event<T> create(Function<List<T>, T> combiner) {
-        return EventFactory.createEvent(combiner);
+    @SafeVarargs
+    static <T> Event<T> create(Function<List<T>, T> combiner, T... type) {
+        return EventFactory.createEvent(combiner, type);
     }
 
     /**

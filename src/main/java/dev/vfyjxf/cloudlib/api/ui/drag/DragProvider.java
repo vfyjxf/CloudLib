@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.drag;
 import dev.vfyjxf.cloudlib.api.performer.CompositeScenario;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.UIContext;
-import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
+import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
 import dev.vfyjxf.cloudlib.utils.Locations;
 import org.jetbrains.annotations.Nullable;
 

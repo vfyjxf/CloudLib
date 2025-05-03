@@ -2,11 +2,11 @@ package dev.vfyjxf.cloudlib.api.ui.overlay;
 
 import dev.vfyjxf.cloudlib.api.event.EventHandler;
 import dev.vfyjxf.cloudlib.api.math.Rect;
+import dev.vfyjxf.cloudlib.api.ui.BasicScreen;
 import dev.vfyjxf.cloudlib.api.ui.Renderable;
 import dev.vfyjxf.cloudlib.api.ui.event.OverlayEvent;
-import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
-import dev.vfyjxf.cloudlib.api.ui.widgets.WidgetGroup;
-import dev.vfyjxf.cloudlib.api.ui.BasicScreen;
+import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
+import dev.vfyjxf.cloudlib.api.ui.widget.WidgetGroup;
 import dev.vfyjxf.cloudlib.ui.UIManager;
 import net.minecraft.client.Minecraft;
 
@@ -30,11 +30,9 @@ public interface UIOverlay extends Renderable, EventHandler<OverlayEvent> {
 
     boolean initialized();
 
-    void update();
-
     void tick();
 
-    WidgetGroup<Widget> mainGroup();
+    WidgetGroup<Widget> overlayGroup();
 
     Rect getBound();
 

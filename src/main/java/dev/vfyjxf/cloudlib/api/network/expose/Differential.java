@@ -39,6 +39,7 @@ interface Differential<D> {
 
     /**
      * Decode the difference from the buffer.
+     *
      * @param byteBuf the buffer to decode the difference
      * @return the difference
      */

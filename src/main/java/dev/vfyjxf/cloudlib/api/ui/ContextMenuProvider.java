@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui;
 
-import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
+import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
 
 /**
  * C provider to build context menu

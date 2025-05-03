@@ -1,20 +1,11 @@
 package dev.vfyjxf.cloudlib.test.sync;
 
-import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
-import dev.vfyjxf.cloudlib.api.ui.modifier.Modifier;
 import dev.vfyjxf.cloudlib.api.ui.sync.BasicMenuScreen;
-import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
-import dev.vfyjxf.cloudlib.helper.RenderHelper;
-import dev.vfyjxf.cloudlib.ui.widgets.TextWidget;
-import net.minecraft.network.chat.Component;
+import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
-import java.awt.Color;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
 public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu> {
@@ -22,10 +13,10 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
     public TestBlockEntityScreen(TestBlockEntity.Menu menu, Inventory playerInventory) {
         super(menu, playerInventory);
 
-        mainGroup.withModifier(
-                Modifier()
-                        .background(0xff282c34)
-        );
+//        mainGroup.withModifier(
+//                Modifier()
+//                        .background(0xff282c34)
+//        );
 
 //        //region item display
 //        var itemDisplayWidget = mainGroup().addWidget(new Widget() {
@@ -66,7 +57,7 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
             private final ItemStack displayItem = stack;
 
             {
-                onEvent(WidgetEvent.onRender, ((graphics, mouseX, mouseY, partialTicks, context) -> {
+                onEvent(WidgetEvent.onRender, ((graphics, mouseX, mouseY, partialTicks, self, context) -> {
                     if (displayItem.isEmpty()) return;
                     graphics.renderItem(displayItem, 0, 0);
                 }));

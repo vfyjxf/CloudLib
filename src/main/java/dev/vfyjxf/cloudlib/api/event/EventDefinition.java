@@ -11,7 +11,7 @@ import org.jetbrains.annotations.ApiStatus;
  * @param <T> the type of the event
  */
 @ApiStatus.NonExtendable
-public interface EventDefinition<T> {
+public sealed interface EventDefinition<T> permits EventFactory.EventDefinitionImpl {
 
     /**
      * @return The type of the event.Normally, it is an interface.

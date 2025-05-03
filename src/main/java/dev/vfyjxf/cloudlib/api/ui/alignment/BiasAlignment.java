@@ -20,8 +20,8 @@ public record BiasAlignment(
     public Pos align(Size size, Size space) {
         // Convert to Px first and only round at the end, to avoid rounding twice while calculating
         // the new positions
-        var centerX = (space.width - size.width) / 2f;
-        var centerY = (space.height - size.height) / 2f;
+        var centerX = (space.width() - size.width()) / 2f;
+        var centerY = (space.height() - size.height()) / 2f;
         var x = centerX * (1 + horizontalBias);
         var y = centerY * (1 + verticalBias);
         return new Pos(Math.round(x), Math.round(y));

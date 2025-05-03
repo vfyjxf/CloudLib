@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.drag;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
-import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
+import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
 import org.jetbrains.annotations.Nullable;
 
 public interface DragContext {
@@ -35,13 +35,13 @@ public interface DragContext {
 
     default Pos relativePos(Widget coordinate) {
         DraggableElement<?> element = draggingElement();
-        if (element == null) return Pos.ZERO;
+        if (element == null) return Pos.ORIGIN;
         Rect original = element.originalBounds();
         FloatPos start = getStart();
         FloatPos current = getCurrent();
         int absX = (int) (current.x() - start.x() + original.x);
         int absY = (int) (current.y() - start.y() + original.y);
-        return new Pos(absX - coordinate.getAbsolute().x, absY - coordinate.getAbsolute().y);
+        return new Pos(absX - coordinate.getAbsolute().x(), absY - coordinate.getAbsolute().y());
     }
 
     default Rect draggingBounds() {

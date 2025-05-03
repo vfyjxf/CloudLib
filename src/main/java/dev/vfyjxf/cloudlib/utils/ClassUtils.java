@@ -47,11 +47,15 @@ public final class ClassUtils {
     }
 
     public static boolean isFunctionalInterface(Class<?> clazz) {
+        return findFunctionalMethod(clazz) != null;
+    }
+
+    @Nullable
+    public static Method findFunctionalMethod(Class<?> clazz) {
         if (clazz.isInterface()) {
+            Method functionalMethod = null;
             Method[] methods = clazz.getMethods();
-            int abstractCount = 0;
-            for (int i = 0; i < methods.length && abstractCount <= 1; i++) {
-                Method method = methods[i];
+            for (Method method : methods) {
                 if (!Modifier.isAbstract(method.getModifiers())) continue;
                 boolean fromObject = switch (method.getName()) {
                     case "hashCode" -> method.getReturnType() == int.class && method.getParameterCount() == 0;
@@ -62,11 +66,14 @@ public final class ClassUtils {
                     case "finalize" -> method.getReturnType() == void.class && method.getParameterCount() == 0;
                     default -> false;
                 };
-                if (!fromObject) abstractCount++;
+                if (!fromObject) {
+                    if (functionalMethod != null) return null;//type is not functional
+                    functionalMethod = method;
+                }
             }
-            return abstractCount == 1;
+            return functionalMethod;
         }
-        return false;
+        return null;
     }
 
     private ClassUtils() {
