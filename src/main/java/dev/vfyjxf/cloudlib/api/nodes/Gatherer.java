@@ -1,6 +1,6 @@
-package dev.vfyjxf.cloudlib.api.ui.gather;
+package dev.vfyjxf.cloudlib.api.nodes;
 
-import dev.vfyjxf.cloudlib.api.nodes.UpperNodeAppender;
+
 import dev.vfyjxf.cloudlib.utils.Checks;
 
 import java.util.function.BiConsumer;
@@ -18,7 +18,7 @@ public interface Gatherer<T, A, R> {
         return Gatherers.Value.DEFAULT.initializer();
     }
 
-    static <S, R> BiConsumer<S, UpperNodeAppender<? super R>> defaultFinisher() {
+    static <S, R> BiConsumer<S, Appender<? super R>> defaultFinisher() {
         return Gatherers.Value.DEFAULT.finisher();
     }
 
@@ -28,7 +28,7 @@ public interface Gatherer<T, A, R> {
 
     Integrator<T, A, R> integrator();
 
-    default BiConsumer<A, UpperNodeAppender<? super R>> finisher() {
+    default BiConsumer<A, Appender<? super R>> finisher() {
         return defaultFinisher();
     }
 
@@ -55,7 +55,7 @@ public interface Gatherer<T, A, R> {
     static <T, A, R> Gatherer<T, A, R> of(
             Supplier<A> initializer,
             Integrator<T, A, R> integrator,
-            BiConsumer<A, UpperNodeAppender<? super R>> finisher
+            BiConsumer<A, Appender<? super R>> finisher
     ) {
         return new Gatherers.GathererImpl<>(
                 Checks.checkNotNull(initializer, "initializer"),
@@ -67,7 +67,7 @@ public interface Gatherer<T, A, R> {
 
     interface Integrator<T, A, R> {
 
-        boolean integrate(A state, T from, UpperNodeAppender<? super R> appender);
+        boolean integrate(A state, T from, Appender<? super R> appender);
 
 
         static <T, A, R> Greedy<T, A, R> ofGreedy(Greedy<T, A, R> greedy) {

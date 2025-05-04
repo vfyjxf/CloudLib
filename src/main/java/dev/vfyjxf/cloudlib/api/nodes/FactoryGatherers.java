@@ -1,11 +1,9 @@
 package dev.vfyjxf.cloudlib.api.nodes;
 
-import dev.vfyjxf.cloudlib.api.ui.gather.Gatherer;
-
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static dev.vfyjxf.cloudlib.api.ui.gather.Gatherer.Integrator.ofGreedy;
+import static dev.vfyjxf.cloudlib.api.nodes.Gatherer.Integrator.ofGreedy;
 
 public class FactoryGatherers {
 

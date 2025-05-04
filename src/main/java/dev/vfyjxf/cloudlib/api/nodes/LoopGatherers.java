@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.nodes;
 
-import dev.vfyjxf.cloudlib.api.ui.gather.Gatherer;
 import dev.vfyjxf.cloudlib.utils.Checks;
 import org.apache.commons.lang3.function.TriConsumer;
 
@@ -14,7 +13,7 @@ public final class LoopGatherers {
     public static <T, R> Gatherer<T, ?, R> range(
             int fromInclusive,
             int toExclusive,
-            TriConsumer<Integer, T, UpperNodeAppender<? super R>> consumer
+            TriConsumer<Integer, T, Appender<? super R>> consumer
     ) {
         return range(fromInclusive, toExclusive, 1, consumer);
     }
@@ -23,14 +22,14 @@ public final class LoopGatherers {
             int fromInclusive,
             int toExclusive,
             int step,
-            TriConsumer<Integer, T, UpperNodeAppender<? super R>> consumer
+            TriConsumer<Integer, T, Appender<? super R>> consumer
     ) {
         Checks.checkArgument(fromInclusive < toExclusive, "fromInclusive must be less than toExclusive");
 
         class State {
             int current = fromInclusive;
 
-            boolean integrate(T from, UpperNodeAppender<? super R> appender) {
+            boolean integrate(T from, Appender<? super R> appender) {
                 consumer.accept(current, from, appender);
                 current += step;
                 return current < toExclusive;
@@ -62,7 +61,7 @@ public final class LoopGatherers {
         class State {
             int current = fromInclusive;
 
-            boolean integrate(T from, UpperNodeAppender<? super R> appender) {
+            boolean integrate(T from, Appender<? super R> appender) {
                 R node = factory.apply(current, from);
                 appender.append(node);
                 current += step;
@@ -82,14 +81,14 @@ public final class LoopGatherers {
      */
     public static <A, T, R> Gatherer<T, ?, R> each(
             Iterable<A> iterable,
-            TriConsumer<A, T, UpperNodeAppender<? super R>> consumer
+            TriConsumer<A, T, Appender<? super R>> consumer
     ) {
         class State {
             final Iterator<A> iterator = iterable.iterator();
             final boolean isEmpty = !iterator.hasNext();
             A current = iterator.hasNext() ? iterator.next() : null;
 
-            boolean integrate(T from, UpperNodeAppender<? super R> appender) {
+            boolean integrate(T from, Appender<? super R> appender) {
                 if (isEmpty) return false;
                 consumer.accept(current, from, appender);
                 if (iterator.hasNext()) current = iterator.next();
@@ -116,7 +115,7 @@ public final class LoopGatherers {
             final boolean isEmpty = !iterator.hasNext();
             A current = iterator.hasNext() ? iterator.next() : null;
 
-            boolean integrate(T from, UpperNodeAppender<? super R> appender) {
+            boolean integrate(T from, Appender<? super R> appender) {
                 if (isEmpty) return false;
                 R node = factory.apply(current, from);
                 appender.append(node);
@@ -138,12 +137,12 @@ public final class LoopGatherers {
     public static <A, T, R> Gatherer<T, ?, R> until(
             Supplier<A> initializer,
             Predicate<A> walkAndDetect,
-            TriConsumer<A, T, UpperNodeAppender<? super R>> consumer
+            TriConsumer<A, T, Appender<? super R>> consumer
     ) {
         class State {
             final A state = initializer.get();
 
-            boolean integrate(T from, UpperNodeAppender<? super R> appender) {
+            boolean integrate(T from, Appender<? super R> appender) {
                 consumer.accept(state, from, appender);
                 return walkAndDetect.test(state);
             }
@@ -165,7 +164,7 @@ public final class LoopGatherers {
         class State {
             final A state = initializer.get();
 
-            boolean integrate(T from, UpperNodeAppender<? super R> appender) {
+            boolean integrate(T from, Appender<? super R> appender) {
                 R node = factory.apply(state, from);
                 appender.append(node);
                 return walkAndDetect.test(state);

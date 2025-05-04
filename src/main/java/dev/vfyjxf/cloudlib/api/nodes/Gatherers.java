@@ -1,6 +1,4 @@
-package dev.vfyjxf.cloudlib.api.ui.gather;
-
-import dev.vfyjxf.cloudlib.api.nodes.UpperNodeAppender;
+package dev.vfyjxf.cloudlib.api.nodes;
 
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -28,15 +26,15 @@ public class Gatherers {
         }
 
         @SuppressWarnings("unchecked")
-        <S, R> BiConsumer<S, UpperNodeAppender<? super R>> finisher() {
-            return (BiConsumer<S, UpperNodeAppender<? super R>>) this;
+        <S, R> BiConsumer<S, Appender<? super R>> finisher() {
+            return (BiConsumer<S, Appender<? super R>>) this;
         }
     }
 
     record GathererImpl<T, A, R>(
             @Override Supplier<A> initializer,
             @Override Gatherer.Integrator<T, A, R> integrator,
-            @Override BiConsumer<A, UpperNodeAppender<? super R>> finisher
+            @Override BiConsumer<A, Appender<? super R>> finisher
     ) implements Gatherer<T, A, R> {}
 
     static class Composite<T, A, R, AA, RR> implements Gatherer<T, Object, RR> {
@@ -62,7 +60,7 @@ public class Gatherers {
         }
 
         @Override
-        public BiConsumer<Object, UpperNodeAppender<? super RR>> finisher() {
+        public BiConsumer<Object, Appender<? super RR>> finisher() {
             return null;
         }
 
