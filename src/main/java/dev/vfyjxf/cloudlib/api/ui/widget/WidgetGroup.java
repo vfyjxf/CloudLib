@@ -84,14 +84,14 @@ public class WidgetGroup<T extends Widget> extends Widget {
         return childrenView;
     }
 
-    WidgetGroup<T> add(T widget) {
+    public WidgetGroup<T> add(T widget) {
         this.add(children.size(), widget);
         return this;
     }
 
     boolean add(int index, T widget) {
         if (widget == this)
-            throw new IllegalArgumentException("Cannot add a widget to itself");
+            throw new IllegalArgumentException("Cannot addGroup a widget to itself");
         if (!children.contains(widget)) {
             var context = common();
             listeners(WidgetEvent.onChildAdded).onChildAdded(widget, context);
@@ -316,18 +316,18 @@ public class WidgetGroup<T extends Widget> extends Widget {
     @Override
     public String toString() {
         return "WidgetGroup{" +
-                "id='" + id + '\'' +
-                ", children=" + children +
-                ", initialized=" + initialized +
-                ", root=" + (root == null ? "null" : root.getId()) +
-                ", parent=" + (parent == null ? "null" : parent.getId()) +
-                ", position=" + position +
-                ", absolute=" + absolute +
-                ", size=" + size +
-                ", active=" + active +
-                ", visibility=" + visibility +
-                ", richTooltip=" + richTooltip +
-                '}';
+                       "id='" + id + '\'' +
+                       ", children=" + children +
+                       ", initialized=" + initialized +
+                       ", root=" + (root == null ? "null" : root.getId()) +
+                       ", parent=" + (parent == null ? "null" : parent.getId()) +
+                       ", position=" + position +
+                       ", absolute=" + absolute +
+                       ", size=" + size +
+                       ", active=" + active +
+                       ", visibility=" + visibility +
+                       ", richTooltip=" + richTooltip +
+                       '}';
     }
 
 }

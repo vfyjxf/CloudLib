@@ -101,10 +101,10 @@ sealed abstract class BasicLayerExpose<E>
     @Override
     public String toString() {
         return "BasicLayerExpose{" +
-                "name='" + name + '\'' +
-                ", id=" + id +
-                ", layerSnapshot=" + layerSnapshot +
-                '}';
+                       "name='" + name + '\'' +
+                       ", id=" + id +
+                       ", layerSnapshot=" + layerSnapshot +
+                       '}';
     }
 
     @ApiStatus.Internal

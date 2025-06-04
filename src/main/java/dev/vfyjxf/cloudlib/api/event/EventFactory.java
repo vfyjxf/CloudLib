@@ -33,7 +33,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.List;
@@ -118,8 +117,8 @@ public final class EventFactory {
         @Override
         public String toString() {
             return "EventDefinitionImpl{" +
-                    "type=" + type.getSimpleName() +
-                    '}';
+                           "type=" + type.getSimpleName() +
+                           '}';
         }
     }
 

@@ -1,9 +1,10 @@
 package dev.vfyjxf.cloudlib.api.ui.widget;
 
-import dev.vfyjxf.cloudlib.api.ui.LifecycleStage;
+import dev.vfyjxf.cloudlib.api.ui.state.NoneState;
+import dev.vfyjxf.cloudlib.api.ui.state.State;
 import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
+
+import java.util.function.BiFunction;
 
 /**
  * Internal interface for basic widget lifecycle and state management.
@@ -11,29 +12,33 @@ import org.jetbrains.annotations.Nullable;
 @ApiStatus.Internal
 abstract class BasicWidget {
 
-    final StateManagement stateManagement = new StateManagement(this);
-    LifecycleStage stage = LifecycleStage.CONSTRUCT;
-    boolean dirty = true;
+    protected final State state;
+    private final BiFunction<State, BasicWidget, BasicWidget> factory;
 
-
-
-    @Contract(pure = true)
-    abstract @Nullable BasicWidget parent();
-
-    void markDirty() {
-        if (!dirty) {
-            this.dirty = true;
-        }
-        var parent = parent();
-        if (parent != null) {
-            parent.markDirty(); ;
-        }
+    /**
+     * Stateless widget constructor.
+     */
+    BasicWidget() {
+        state = NoneState.INSTANCE;
+        factory = (state, widget) -> widget;
     }
 
-//
-//    abstract void runInitStage();
-//
-//    abstract void dispose();
-//
-//    abstract void runDestroyStage();
+    /**
+     * Stateful widget constructor.
+     */
+    @SuppressWarnings("unchecked")
+    <S extends State, W extends BasicWidget>
+    BasicWidget(S state, BiFunction<S, W, W> factory) {
+        this.state = state;
+        this.factory = (BiFunction<State, BasicWidget, BasicWidget>) factory;
+    }
+
+    boolean stateless() {
+        return state == NoneState.INSTANCE;
+    }
+
+    boolean stateful() {
+        return state != NoneState.INSTANCE;
+    }
+
 }

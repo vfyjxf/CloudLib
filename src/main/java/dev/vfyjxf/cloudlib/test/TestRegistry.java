@@ -41,8 +41,8 @@ public final class TestRegistry {
             BLOCK_ENTITIES.register(
                     "test_block_entity",
                     () -> BlockEntityType.Builder
-                            .of(TestBlockEntity::new, testBlock.get())
-                            .build(null)
+                                  .of(TestBlockEntity::new, testBlock.get())
+                                  .build(null)
             );
 
     public static void register(IEventBus modBus) {
@@ -73,14 +73,14 @@ public final class TestRegistry {
         public static final DeferredHolder<CreativeModeTab, CreativeModeTab> creativeTab = CREATIVE_TAB.register(
                 "conduit_tab",
                 () -> CreativeModeTab.builder()
-                        .title(Component.literal("Debug Entries"))
-                        .icon(() -> Blocks.DARK_OAK_DOOR.asItem().getDefaultInstance())
-                        .displayItems((parameters, output) -> {
-                            for (DeferredItem<?> creativeTagItem : creativeTagItems) {
-                                output.accept(creativeTagItem.get());
-                            }
-                        })
-                        .build()
+                              .title(Component.literal("Debug Entries"))
+                              .icon(() -> Blocks.DARK_OAK_DOOR.asItem().getDefaultInstance())
+                              .displayItems((parameters, output) -> {
+                                  for (DeferredItem<?> creativeTagItem : creativeTagItems) {
+                                      output.accept(creativeTagItem.get());
+                                  }
+                              })
+                              .build()
         );
     }
 

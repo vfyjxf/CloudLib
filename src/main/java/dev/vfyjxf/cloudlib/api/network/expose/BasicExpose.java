@@ -67,9 +67,9 @@ sealed abstract class BasicExpose<T> implements Expose<T>
     @Override
     public String toString() {
         return "BasicExpose{" +
-                "name='" + name + '\'' +
-                ", id=" + id +
-                ", snapshot=" + snapshot +
-                '}';
+                       "name='" + name + '\'' +
+                       ", id=" + id +
+                       ", snapshot=" + snapshot +
+                       '}';
     }
 }

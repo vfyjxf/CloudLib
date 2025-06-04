@@ -119,8 +119,10 @@ public final class LoopGatherers {
                 if (isEmpty) return false;
                 R node = factory.apply(current, from);
                 appender.append(node);
-                if (iterator.hasNext()) current = iterator.next();
-                return iterator.hasNext();
+                if (iterator.hasNext()) {
+                    current = iterator.next();
+                    return true;
+                } else return false;
             }
         }
 

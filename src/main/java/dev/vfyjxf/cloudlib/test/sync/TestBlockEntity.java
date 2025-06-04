@@ -138,8 +138,8 @@ public class TestBlockEntity extends BlockEntity {
                 (byteBuf, element) ->
                 {
                     List<ItemStack> list = IntStream.range(0, element.getSlots())
-                            .mapToObj(element::getStackInSlot)
-                            .toList();
+                                                   .mapToObj(element::getStackInSlot)
+                                                   .toList();
                     ItemStack.OPTIONAL_LIST_STREAM_CODEC.encode(byteBuf, list);
                 },
                 ItemStack.OPTIONAL_LIST_STREAM_CODEC::decode,
@@ -170,7 +170,7 @@ public class TestBlockEntity extends BlockEntity {
                 () -> TestBlockEntityScreen::new
         );
 
-        private Menu(MenuType<Menu> menuType, int containerId, Inventory inventory, TestBlockEntity holder) {
+        public Menu(MenuType<Menu> menuType, int containerId, Inventory inventory, TestBlockEntity holder) {
             super(menuType, containerId, holder, inventory);
         }
 
@@ -206,9 +206,9 @@ public class TestBlockEntity extends BlockEntity {
         @Override
         public Set<IntObjectPair<ItemStack>> difference() {
             var difference = changedSlots.intStream()
-                    .mapToObj(slot -> IntObjectPair.of(slot, this.getStackInSlot(slot)))
-                    .filter(pair -> !pair.right().isEmpty())
-                    .collect(Collectors.toSet());
+                                     .mapToObj(slot -> IntObjectPair.of(slot, this.getStackInSlot(slot)))
+                                     .filter(pair -> !pair.right().isEmpty())
+                                     .collect(Collectors.toSet());
             changedSlots.clear();
             return difference;
         }

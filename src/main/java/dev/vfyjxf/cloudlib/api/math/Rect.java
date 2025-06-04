@@ -150,10 +150,10 @@ public class Rect {
     @Override
     public String toString() {
         return "Rect{" +
-                "x=" + x +
-                ", y=" + y +
-                ", width=" + width +
-                ", height=" + height +
-                '}';
+                       "x=" + x +
+                       ", y=" + y +
+                       ", width=" + width +
+                       ", height=" + height +
+                       '}';
     }
 }

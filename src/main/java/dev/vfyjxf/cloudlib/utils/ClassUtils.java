@@ -60,7 +60,7 @@ public final class ClassUtils {
                 boolean fromObject = switch (method.getName()) {
                     case "hashCode" -> method.getReturnType() == int.class && method.getParameterCount() == 0;
                     case "equals" -> method.getReturnType() == boolean.class && method.getParameterCount() == 1 &&
-                            method.getParameterTypes()[0] == Object.class;
+                                             method.getParameterTypes()[0] == Object.class;
                     case "toString" -> method.getReturnType() == String.class && method.getParameterCount() == 0;
                     case "clone" -> method.getReturnType() == Object.class && method.getParameterCount() == 0;
                     case "finalize" -> method.getReturnType() == void.class && method.getParameterCount() == 0;

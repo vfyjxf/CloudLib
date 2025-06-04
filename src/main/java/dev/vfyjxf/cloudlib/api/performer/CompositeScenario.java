@@ -10,8 +10,8 @@ public record CompositeScenario<T>(ResourceLocation id, Class<T> type, Function<
     @Override
     public String toString() {
         return "CompositeScenario{" +
-                "id=" + id +
-                ", type=" + type +
-                '}';
+                       "id=" + id +
+                       ", type=" + type +
+                       '}';
     }
 }

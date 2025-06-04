@@ -22,6 +22,7 @@ import dev.vfyjxf.cloudlib.api.ui.drag.DragProvider;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
+import dev.vfyjxf.cloudlib.api.ui.state.State;
 import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
@@ -36,6 +37,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 
@@ -122,6 +124,14 @@ public class Widget
     //endregion
 
     //region Internal impl
+
+    public Widget() {}
+
+    protected <S extends State, W extends Widget>
+    Widget(S state, BiFunction<S, W, W> factory) {
+        super(state, factory);
+    }
+
     protected Pos calculateAbsolute() {
         if (parent == null) return position;
         WidgetGroup<?> parent = this.parent;
@@ -177,10 +187,6 @@ public class Widget
     @MustBeInvokedByOverriders
     public void tick() {
         listeners(WidgetEvent.onTick).onTick();
-    }
-
-    public LifecycleStage lifecycleStage() {
-        return stage;
     }
 
     public boolean initialized() {
@@ -380,7 +386,7 @@ public class Widget
 
     public Widget setBound(int x, int y, int width, int height) {
         return setPos(x, y)
-                .setSize(width, height);
+                       .setSize(width, height);
     }
 
     public Widget setBound(Rect rect) {
@@ -813,9 +819,9 @@ public class Widget
      */
     public boolean isMouseOver(double mouseX, double mouseY) {
         return mouseX >= getAbsolute().x() &&
-                mouseX <= getAbsolute().x() + getSize().width() &&
-                mouseY >= getAbsolute().y() &&
-                mouseY <= getAbsolute().y() + getSize().height();
+                       mouseX <= getAbsolute().x() + getSize().width() &&
+                       mouseY >= getAbsolute().y() &&
+                       mouseY <= getAbsolute().y() + getSize().height();
     }
 
     public boolean isMouseOver(InputContext input) {
@@ -832,8 +838,8 @@ public class Widget
 
     public boolean intersects(int x, int y, int width, int height) {
         return this.position.x() >= x && this.position.y() >= y &&
-                this.position.x() + this.size.width() <= x + width &&
-                this.position.y() + this.size.height() <= y + height;
+                       this.position.x() + this.size.width() <= x + width &&
+                       this.position.y() + this.size.height() <= y + height;
     }
 
     public boolean intersects(Rect bound) {
@@ -848,17 +854,17 @@ public class Widget
     @Override
     public String toString() {
         return "Widget{" +
-                "id='" + id + '\'' +
-                ", initialized=" + initialized +
-                ", root=" + (root == null ? "null" : root.getId()) +
-                ", parent=" + (parent == null ? "null" : parent.getId()) +
-                ", icon=" + icon +
-                ", position=" + position +
-                ", absolute=" + absolute +
-                ", size=" + size +
-                ", active=" + active +
-                ", visibility=" + visibility +
-                '}';
+                       "id='" + id + '\'' +
+                       ", initialized=" + initialized +
+                       ", root=" + (root == null ? "null" : root.getId()) +
+                       ", parent=" + (parent == null ? "null" : parent.getId()) +
+                       ", icon=" + icon +
+                       ", position=" + position +
+                       ", absolute=" + absolute +
+                       ", size=" + size +
+                       ", active=" + active +
+                       ", visibility=" + visibility +
+                       '}';
     }
 
     //endregion

@@ -25,7 +25,7 @@ public final class ItemHelper {
                                     ExtraCodecs.intRange(1, Integer.MAX_VALUE).fieldOf("count").orElse(1).forGetter(ItemStack::getCount),
                                     DataComponentPatch.CODEC.optionalFieldOf("components", DataComponentPatch.EMPTY).forGetter(ItemStack::getComponentsPatch)
                             )
-                            .apply(instance, ItemStack::new)
+                                        .apply(instance, ItemStack::new)
             )
     );
 

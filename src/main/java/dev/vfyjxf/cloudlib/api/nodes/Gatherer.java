@@ -32,7 +32,6 @@ public interface Gatherer<T, A, R> {
         return defaultFinisher();
     }
 
-
     static <T, A, R> Gatherer<T, A, R> ofSequential(
             Supplier<A> initializer,
             Integrator<T, A, R> integrator
@@ -68,7 +67,6 @@ public interface Gatherer<T, A, R> {
     interface Integrator<T, A, R> {
 
         boolean integrate(A state, T from, Appender<? super R> appender);
-
 
         static <T, A, R> Greedy<T, A, R> ofGreedy(Greedy<T, A, R> greedy) {
             return greedy;

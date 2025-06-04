@@ -5,10 +5,9 @@ import java.util.function.Supplier;
 
 import static dev.vfyjxf.cloudlib.api.nodes.Gatherer.Integrator.ofGreedy;
 
-public class FactoryGatherers {
+public class UnaryGatherers {
 
-
-    public static <T, R> Gatherer<T, ?, R> create(
+    public static <T, R> Gatherer<T, ?, R> factory(
             Supplier<? extends R> factory
     ) {
         return Gatherer.of(ofGreedy(
@@ -18,7 +17,7 @@ public class FactoryGatherers {
                 }));
     }
 
-    public static <T, R> Gatherer<T, ?, R> create(
+    public static <T, R> Gatherer<T, ?, R> factory(
             Function<T, ? extends R> factory
     ) {
         return Gatherer.of(ofGreedy(

@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.nodes;
 
 public interface Appender<E> {
+
     /**
      * @param element the element to append
      * @return {@code true} if more elements can be sent,

@@ -4,6 +4,7 @@ plugins {
     id 'idea'
     id 'maven-publish'
     id 'net.neoforged.moddev' version '2.0.72'
+    id "me.champeau.jmh" version "0.7.2"
 //    id("net.ltgt.errorprone") version "4.1.0"
 //    id("net.ltgt.nullaway") version "2.1.0"
 }
@@ -118,6 +119,7 @@ dependencies {
 //    errorprone "com.uber.nullaway:nullaway:0.12.6"
 //    errorprone "com.google.errorprone:error_prone_core:2.37.0"
 //    compileOnly "net.minecraftforge:eventbus:7.0-beta.1"
+    localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
     compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
     additionalRuntimeClasspath(implementation("org.eclipse.collections:eclipse-collections-api:11.1.0"))
     jarJar("org.eclipse.collections:eclipse-collections-api:[11.1.0,)") {
@@ -146,6 +148,9 @@ dependencies {
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+    jmh "org.openjdk.jmh:jmh-core:1.37"
+    jmh "org.openjdk.jmh:jmh-generator-annprocess:1.37"
+    jmhAnnotationProcessor "org.openjdk.jmh:jmh-generator-annprocess:1.37"
 }
 
 test {

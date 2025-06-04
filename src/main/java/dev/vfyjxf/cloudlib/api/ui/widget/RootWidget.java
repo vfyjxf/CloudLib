@@ -34,16 +34,16 @@ public final class RootWidget extends WidgetGroup<Widget> implements Backstage {
     @Override
     public String toString() {
         return "RootWidget{" +
-                "context=" + context +
-                ", children=" + children() +
-                ", id='" + id + '\'' +
-                ", position=" + position +
-                ", absolute=" + absolute +
-                ", initialized=" + initialized +
-                ", size=" + size +
-                ", active=" + active +
-                ", visibility=" + visibility +
-                '}';
+                       "context=" + context +
+                       ", children=" + children() +
+                       ", id='" + id + '\'' +
+                       ", position=" + position +
+                       ", absolute=" + absolute +
+                       ", initialized=" + initialized +
+                       ", size=" + size +
+                       ", active=" + active +
+                       ", visibility=" + visibility +
+                       '}';
     }
 
     @Override
