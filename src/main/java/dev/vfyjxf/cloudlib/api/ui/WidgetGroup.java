@@ -1,6 +1,5 @@
-package dev.vfyjxf.cloudlib.api.ui.widget;
+package dev.vfyjxf.cloudlib.api.ui;
 
-import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
 import net.minecraft.client.gui.GuiGraphics;
@@ -15,7 +14,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class WidgetGroup<T extends Widget> extends Widget {
+//TODO:Refactor subWidget and GroupWidget
+public non-sealed class WidgetGroup<T extends Widget> extends Widget implements Group<T> {
 
     //region Fields
 
@@ -87,6 +87,11 @@ public class WidgetGroup<T extends Widget> extends Widget {
     public WidgetGroup<T> add(T widget) {
         this.add(children.size(), widget);
         return this;
+    }
+
+    public T addWidget(T widget) {
+        this.add(widget);
+        return widget;
     }
 
     boolean add(int index, T widget) {
@@ -316,18 +321,18 @@ public class WidgetGroup<T extends Widget> extends Widget {
     @Override
     public String toString() {
         return "WidgetGroup{" +
-                       "id='" + id + '\'' +
-                       ", children=" + children +
-                       ", initialized=" + initialized +
-                       ", root=" + (root == null ? "null" : root.getId()) +
-                       ", parent=" + (parent == null ? "null" : parent.getId()) +
-                       ", position=" + position +
-                       ", absolute=" + absolute +
-                       ", size=" + size +
-                       ", active=" + active +
-                       ", visibility=" + visibility +
-                       ", richTooltip=" + richTooltip +
-                       '}';
+                "id='" + id + '\'' +
+                ", children=" + children +
+                ", initialized=" + initialized +
+                ", root=" + (root == null ? "null" : root.getId()) +
+                ", parent=" + (parent == null ? "null" : parent.getId()) +
+                ", position=" + position +
+                ", absolute=" + absolute +
+                ", size=" + size +
+                ", active=" + active +
+                ", visibility=" + visibility +
+                ", richTooltip=" + richTooltip +
+                '}';
     }
 
 }

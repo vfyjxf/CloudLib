@@ -12,6 +12,7 @@ public class GroupBuilderConceptTest {
     @Test
     void testConcept() {
         final var blueprint = new GroupBlueprint<>() {
+
             @Override
             public GroupElement<Element> construct(Scope<Element> scope) {
                 scope.group(new GroupBlueprint<GroupElement<SpecificElement>, SpecificElement>() {
@@ -49,7 +50,7 @@ public class GroupBuilderConceptTest {
             }
         };
 
-        GroupElement<Element> groupElement = BuildScope.create(blueprint);
+        GroupElement<Element> groupElement = BuildScope.create(blueprint).down();
         System.out.println(groupElement);
     }
 
@@ -59,7 +60,15 @@ public class GroupBuilderConceptTest {
 //region basic type
 //标记接口，密封确保直接实现类只有 GroupElement
 //由于java的相交类型必须为类类型和接口类型的混合，所以将Group的约束定义为接口，而不是直接使用GroupElement<E>
-sealed interface Group<E> permits GroupElement {}
+sealed interface Group<E> permits GroupElement {
+    default GroupElement<E> down() {
+        return (GroupElement<E>) this;
+    }
+
+    default GroupElement<E> self() {
+        return (GroupElement<E>) this;
+    }
+}
 
 class Element {
     final String description;
@@ -119,9 +128,9 @@ sealed interface Scope<E extends Element> {
 sealed interface BuildScope<T extends GroupElement<E>, E extends Element> extends Scope<E> {
 
     @SuppressWarnings("unchecked")
-    static <R extends T, T extends Group<E>, E extends Element> R create(GroupBlueprint<T, E> blueprint) {
+    static <T extends Group<E>, E extends Element> T create(GroupBlueprint<T, E> blueprint) {
         AnyGroupBuildScope<E> scope = new AnyGroupBuildScope<>();
-        return (R) scope.apply((GroupBlueprint<GroupElement<E>, E>) blueprint);
+        return (T) scope.apply((GroupBlueprint<GroupElement<E>, E>) blueprint);
     }
 
     T apply(GroupBlueprint<T, E> blueprint);

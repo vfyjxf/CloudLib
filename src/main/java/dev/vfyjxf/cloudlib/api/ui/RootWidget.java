@@ -1,9 +1,7 @@
-package dev.vfyjxf.cloudlib.api.ui.widget;
+package dev.vfyjxf.cloudlib.api.ui;
 
 import dev.vfyjxf.cloudlib.api.performer.Backstage;
 import dev.vfyjxf.cloudlib.api.performer.PerformerContainer;
-import dev.vfyjxf.cloudlib.api.ui.UIContext;
-import org.jetbrains.annotations.ApiStatus;
 
 /**
  * A special widget that is the root of the widget tree.
@@ -13,8 +11,6 @@ public final class RootWidget extends WidgetGroup<Widget> implements Backstage {
     private final PerformerContainer performers = new PerformerContainer();
     private UIContext context;
 
-    @ApiStatus.Internal
-    WidgetManager manager = new WidgetManager(this);
 
     public RootWidget() {
         this.root = this;

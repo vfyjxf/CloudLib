@@ -2,7 +2,7 @@ package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.RenderableTexture;
-import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
+import dev.vfyjxf.cloudlib.api.ui.Widget;
 import net.minecraft.client.gui.GuiGraphics;
 
 import java.util.function.Consumer;

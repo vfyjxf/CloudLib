@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 public interface State {
 
     static <T> MutableState<T> mutableOf(T initialValue) {
-        throw new UnsupportedOperationException("Not Implemented");
+        return null;
     }
 
     static <T extends @Nullable Object> MutableState<T> mutable() {

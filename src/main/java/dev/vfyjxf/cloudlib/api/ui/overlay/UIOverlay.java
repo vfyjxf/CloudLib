@@ -5,8 +5,8 @@ import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.BasicScreen;
 import dev.vfyjxf.cloudlib.api.ui.Renderable;
 import dev.vfyjxf.cloudlib.api.ui.event.OverlayEvent;
-import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
-import dev.vfyjxf.cloudlib.api.ui.widget.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.Widget;
+import dev.vfyjxf.cloudlib.api.ui.WidgetGroup;
 import dev.vfyjxf.cloudlib.ui.UIManager;
 import net.minecraft.client.Minecraft;
 

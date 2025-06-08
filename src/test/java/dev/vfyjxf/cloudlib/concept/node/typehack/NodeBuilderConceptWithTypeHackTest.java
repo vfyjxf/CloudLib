@@ -3,8 +3,8 @@ package dev.vfyjxf.cloudlib.concept.node.typehack;
 import dev.vfyjxf.cloudlib.api.data.DataAttachable;
 import dev.vfyjxf.cloudlib.api.data.DataContainer;
 import dev.vfyjxf.cloudlib.api.data.DataKey;
-import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
-import dev.vfyjxf.cloudlib.api.ui.widget.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.Widget;
+import dev.vfyjxf.cloudlib.api.ui.WidgetGroup;
 import dev.vfyjxf.cloudlib.concept.node.typehack.NodeBuilderConceptWithTypeHackTest.Group;
 import dev.vfyjxf.cloudlib.concept.node.typehack.NodeBuilderConceptWithTypeHackTest.Instance;
 import org.eclipse.collections.api.factory.Lists;
@@ -26,11 +26,11 @@ public class NodeBuilderConceptWithTypeHackTest {
             @Override
             public Group<Instance> construct(GroupScope<Instance> scope) {
                 class SpecificGroup extends Group<SpecificInstance> {}
-//                new GroupBlueprint<SpecificGroup, SpecificInstance>() {
+//                new GroupSpec<SpecificGroup, SpecificInstance>() {
 //                    @Override
 //                    public SpecificGroup construct(GroupScope<SpecificInstance> scope) {
 //
-//                        scope.group(t -> t, new GroupBlueprint<Group<SpecificInstance>, SpecificInstance>() {
+//                        scope.group(t -> t, new GroupSpec<Group<SpecificInstance>, SpecificInstance>() {
 //
 //                            @Override
 //                            public Group<SpecificInstance> construct(GroupScope<SpecificInstance> scope) {

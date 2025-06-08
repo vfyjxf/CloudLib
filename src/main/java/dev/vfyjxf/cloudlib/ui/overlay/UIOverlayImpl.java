@@ -5,8 +5,8 @@ import dev.vfyjxf.cloudlib.api.event.EventHandler;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.event.OverlayEvent;
 import dev.vfyjxf.cloudlib.api.ui.overlay.UIOverlay;
-import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
-import dev.vfyjxf.cloudlib.api.ui.widget.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.Widget;
+import dev.vfyjxf.cloudlib.api.ui.WidgetGroup;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class UIOverlayImpl implements UIOverlay, EventHandler<OverlayEvent> {

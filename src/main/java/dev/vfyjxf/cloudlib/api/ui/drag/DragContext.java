@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.drag;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
-import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
+import dev.vfyjxf.cloudlib.api.ui.Widget;
 import org.jetbrains.annotations.Nullable;
 
 public interface DragContext {

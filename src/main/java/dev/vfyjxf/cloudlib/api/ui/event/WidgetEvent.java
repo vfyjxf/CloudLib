@@ -10,7 +10,7 @@ import dev.vfyjxf.cloudlib.api.ui.ContextMenuBuilder;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
 import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
-import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
+import dev.vfyjxf.cloudlib.api.ui.Widget;
 import net.minecraft.client.gui.GuiGraphics;
 
 public interface WidgetEvent {

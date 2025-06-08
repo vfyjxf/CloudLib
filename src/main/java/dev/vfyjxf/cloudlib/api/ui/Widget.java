@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.api.ui.widget;
+package dev.vfyjxf.cloudlib.api.ui;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import dev.vfyjxf.cloudlib.api.data.DataAttachable;
@@ -12,32 +12,22 @@ import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.math.Size;
 import dev.vfyjxf.cloudlib.api.performer.Backstage;
 import dev.vfyjxf.cloudlib.api.performer.PerformerContainer;
-import dev.vfyjxf.cloudlib.api.ui.InputContext;
-import dev.vfyjxf.cloudlib.api.ui.LifecycleStage;
-import dev.vfyjxf.cloudlib.api.ui.Renderable;
-import dev.vfyjxf.cloudlib.api.ui.RenderableTexture;
-import dev.vfyjxf.cloudlib.api.ui.UIContext;
 import dev.vfyjxf.cloudlib.api.ui.animation.Animatable;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragProvider;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
-import dev.vfyjxf.cloudlib.api.ui.state.State;
 import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
+import dev.vfyjxf.cloudlib.api.ui.widget.Visibility;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
 import dev.vfyjxf.cloudlib.utils.ScreenUtil;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.appliedenergistics.yoga.YogaNode;
 import org.intellij.lang.annotations.Flow;
-import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.MustBeInvokedByOverriders;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
 import java.util.UUID;
-import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 
@@ -58,10 +48,9 @@ import java.util.function.Supplier;
  */
 @SuppressWarnings("unchecked")
 public class Widget
-        extends BasicWidget
         implements Renderable, Animatable<Widget>,
-                   EventHandler<WidgetEvent>,
-                   DataAttachable, Backstage {
+        EventHandler<WidgetEvent>,
+        DataAttachable, Backstage {
 
     //region Fields
 
@@ -71,6 +60,12 @@ public class Widget
 
     //region data attachment
     protected final DataContainer dataContainer = new DataContainer();
+    //endregion
+
+    //region management
+
+    private Lifecycle lifecycle = Lifecycle.CONSTRUCTING;
+
     //endregion
 
     //region Tree
@@ -126,11 +121,6 @@ public class Widget
     //region Internal impl
 
     public Widget() {}
-
-    protected <S extends State, W extends Widget>
-    Widget(S state, BiFunction<S, W, W> factory) {
-        super(state, factory);
-    }
 
     protected Pos calculateAbsolute() {
         if (parent == null) return position;
@@ -386,7 +376,7 @@ public class Widget
 
     public Widget setBound(int x, int y, int width, int height) {
         return setPos(x, y)
-                       .setSize(width, height);
+                .setSize(width, height);
     }
 
     public Widget setBound(Rect rect) {
@@ -819,9 +809,9 @@ public class Widget
      */
     public boolean isMouseOver(double mouseX, double mouseY) {
         return mouseX >= getAbsolute().x() &&
-                       mouseX <= getAbsolute().x() + getSize().width() &&
-                       mouseY >= getAbsolute().y() &&
-                       mouseY <= getAbsolute().y() + getSize().height();
+                mouseX <= getAbsolute().x() + getSize().width() &&
+                mouseY >= getAbsolute().y() &&
+                mouseY <= getAbsolute().y() + getSize().height();
     }
 
     public boolean isMouseOver(InputContext input) {
@@ -838,8 +828,8 @@ public class Widget
 
     public boolean intersects(int x, int y, int width, int height) {
         return this.position.x() >= x && this.position.y() >= y &&
-                       this.position.x() + this.size.width() <= x + width &&
-                       this.position.y() + this.size.height() <= y + height;
+                this.position.x() + this.size.width() <= x + width &&
+                this.position.y() + this.size.height() <= y + height;
     }
 
     public boolean intersects(Rect bound) {
@@ -854,17 +844,17 @@ public class Widget
     @Override
     public String toString() {
         return "Widget{" +
-                       "id='" + id + '\'' +
-                       ", initialized=" + initialized +
-                       ", root=" + (root == null ? "null" : root.getId()) +
-                       ", parent=" + (parent == null ? "null" : parent.getId()) +
-                       ", icon=" + icon +
-                       ", position=" + position +
-                       ", absolute=" + absolute +
-                       ", size=" + size +
-                       ", active=" + active +
-                       ", visibility=" + visibility +
-                       '}';
+                "id='" + id + '\'' +
+                ", initialized=" + initialized +
+                ", root=" + (root == null ? "null" : root.getId()) +
+                ", parent=" + (parent == null ? "null" : parent.getId()) +
+                ", icon=" + icon +
+                ", position=" + position +
+                ", absolute=" + absolute +
+                ", size=" + size +
+                ", active=" + active +
+                ", visibility=" + visibility +
+                '}';
     }
 
     //endregion

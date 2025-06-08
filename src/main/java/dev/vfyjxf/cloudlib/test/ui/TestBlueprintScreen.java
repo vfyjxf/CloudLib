@@ -3,9 +3,9 @@ package dev.vfyjxf.cloudlib.test.ui;
 import dev.vfyjxf.cloudlib.api.ui.BasicScreen;
 
 @TestScreen
-public class TestStatefulScreen extends BasicScreen {
+public class TestBlueprintScreen extends BasicScreen {
 
-    private TestStatefulScreen() {
+    private TestBlueprintScreen() {
     }
 
 

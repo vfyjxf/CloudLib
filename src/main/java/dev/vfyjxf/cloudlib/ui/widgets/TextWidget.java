@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
-import dev.vfyjxf.cloudlib.api.ui.widget.Widget;
-import dev.vfyjxf.cloudlib.api.ui.widget.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.Widget;
+import dev.vfyjxf.cloudlib.api.ui.WidgetGroup;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
