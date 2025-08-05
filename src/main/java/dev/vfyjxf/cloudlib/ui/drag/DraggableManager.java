@@ -5,11 +5,12 @@ import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragConsumer;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragProvider;
-import dev.vfyjxf.cloudlib.api.ui.Widget;
-import dev.vfyjxf.cloudlib.api.ui.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.ApiStatus;
 
+//TODO:Refactor dragging system to spec based system.
 @ApiStatus.Internal
 public class DraggableManager {
 

@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
-import dev.vfyjxf.cloudlib.api.utils.Maybe;
-import dev.vfyjxf.cloudlib.utils.Checks;
+import dev.vfyjxf.cloudlib.api.util.Maybe;
+import dev.vfyjxf.cloudlib.util.Checks;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.eclipse.collections.api.map.primitive.MutableShortObjectMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ShortObjectHashMap;

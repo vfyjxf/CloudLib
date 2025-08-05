@@ -6,6 +6,10 @@ import net.minecraft.network.codec.StreamDecoder;
 
 public interface FlowDecoder<T> extends StreamDecoder<RegistryFriendlyByteBuf, T> {
 
+    static <T> FlowDecoder<T> encoder(FlowDecoder<T> decoder) {
+        return decoder;
+    }
+
     static <T> FlowDecoder<T> of(StreamDecoder<? super FriendlyByteBuf, T> decoder) {
         return decoder::decode;
     }

@@ -1,14 +1,18 @@
 package dev.vfyjxf.cloudlib.api.ui.state;
 
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * Basic interface for a ui state.
  */
-public interface State {
+public sealed interface State
+        permits NoneState,
+        ReadableState,
+        CompoundState {
 
-    static <T> MutableState<T> mutableOf(T initialValue) {
+    static <T> @NotNull MutableState<T> mutableOf(T initialValue) {
         return null;
     }
 

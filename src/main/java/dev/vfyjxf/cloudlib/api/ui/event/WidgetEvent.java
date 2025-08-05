@@ -6,11 +6,10 @@ import dev.vfyjxf.cloudlib.api.event.EventDefinition;
 import dev.vfyjxf.cloudlib.api.event.EventFactory;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Size;
-import dev.vfyjxf.cloudlib.api.ui.ContextMenuBuilder;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
 import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
-import dev.vfyjxf.cloudlib.api.ui.Widget;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import net.minecraft.client.gui.GuiGraphics;
 
 public interface WidgetEvent {
@@ -143,13 +142,6 @@ public interface WidgetEvent {
     EventDefinition<OnResizePost> onResizePost = EventFactory.define(OnResizePost.class, listeners -> (self) -> {
         for (var listener : listeners) {
             listener.onResizePost(self);
-        }
-    });
-
-    EventDefinition<OnContextMenuBuild> onContextMenuBuild = EventFactory.define(OnContextMenuBuild.class, listeners -> (builder, widget, context) -> {
-        for (var listener : listeners) {
-            listener.onContextMenuBuild(builder, widget, context);
-            if (context.interrupted()) return;
         }
     });
 
@@ -321,30 +313,31 @@ public interface WidgetEvent {
     }
 
     @FunctionalInterface
-    interface OnContextMenuBuild extends WidgetEvent {
-        void onContextMenuBuild(ContextMenuBuilder builder, Widget widget, Common context);
-    }
-
     interface OnWidgetDragStart extends WidgetEvent {
         void onDragStart(InputContext input, DragContext dragContext, Common eventContext);
     }
 
+    @FunctionalInterface
     interface OnWidgetDrag extends WidgetEvent {
         void onDrag(InputContext input, int deltaX, int deltaY, DragContext dragContext, Interruptible eventContext);
     }
 
+    @FunctionalInterface
     interface OnWidgetDragEnd extends WidgetEvent {
         void onDragEnd(InputContext input, DragContext dragContext, Interruptible eventContext);
     }
 
+    @FunctionalInterface
     interface OnDragStart extends WidgetEvent {
         void onDragStart(Widget toDrag, InputContext input, DragContext dragContext, Common eventContext);
     }
 
+    @FunctionalInterface
     interface OnDrag extends WidgetEvent {
         void onDrag(Widget dragging, InputContext input, int deltaX, int deltaY, DragContext dragContext, Interruptible eventContext);
     }
 
+    @FunctionalInterface
     interface OnDragEnd extends WidgetEvent {
         void onDragEnd(Widget dragging, InputContext input, DragContext dragContext, Interruptible eventContext);
     }

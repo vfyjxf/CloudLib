@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.widget;
 
 import dev.vfyjxf.cloudlib.api.math.Pos;
-import dev.vfyjxf.cloudlib.utils.ScreenUtil;
+import dev.vfyjxf.cloudlib.util.ScreenUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.TooltipFlag;
 import org.jetbrains.annotations.Nullable;

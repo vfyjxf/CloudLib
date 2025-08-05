@@ -2,24 +2,29 @@ package dev.vfyjxf.cloudlib.api.ui.overlay;
 
 import dev.vfyjxf.cloudlib.api.event.EventHandler;
 import dev.vfyjxf.cloudlib.api.math.Rect;
-import dev.vfyjxf.cloudlib.api.ui.BasicScreen;
 import dev.vfyjxf.cloudlib.api.ui.Renderable;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.event.OverlayEvent;
-import dev.vfyjxf.cloudlib.api.ui.Widget;
-import dev.vfyjxf.cloudlib.api.ui.WidgetGroup;
 import dev.vfyjxf.cloudlib.ui.UIManager;
 import net.minecraft.client.Minecraft;
+import org.jetbrains.annotations.Contract;
 
 /**
  * Represents an overlay that can be attached to the screen or the game.
  * E.g. JEI's bookmark overlay or ingredient list overlay.
  */
+//TODO:refactor overlay
 public interface UIOverlay extends Renderable, EventHandler<OverlayEvent> {
+
+    interface Provider {
+        UIOverlay screenOverlay();
+    }
 
     static UIOverlay current() {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.screen instanceof BasicScreen basicScreen) {
-            return basicScreen.screenOverlay();
+        if (minecraft.screen instanceof Provider provider) {
+            return provider.screenOverlay();
         }
         return UIManager.instance().attachedOverlay();
     }

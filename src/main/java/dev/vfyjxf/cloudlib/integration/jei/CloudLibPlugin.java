@@ -2,7 +2,7 @@ package dev.vfyjxf.cloudlib.integration.jei;
 
 import com.google.common.base.Preconditions;
 import dev.vfyjxf.cloudlib.Constants;
-import dev.vfyjxf.cloudlib.api.annotations.NotNullByDefault;
+import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.runtime.IJeiRuntime;

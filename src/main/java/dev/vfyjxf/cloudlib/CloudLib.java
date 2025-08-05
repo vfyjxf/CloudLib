@@ -1,11 +1,11 @@
 package dev.vfyjxf.cloudlib;
 
 import dev.vfyjxf.cloudlib.api.registry.ModuleEntryPoint;
-import dev.vfyjxf.cloudlib.api.utils.ServiceLoading;
+import dev.vfyjxf.cloudlib.api.util.ServiceLoading;
 import dev.vfyjxf.cloudlib.debug.DebugConfig;
-import dev.vfyjxf.cloudlib.network.CloudlibNetworkPayloads;
+import dev.vfyjxf.cloudlib.network.CloudlibPayloads;
 import dev.vfyjxf.cloudlib.test.TestRegistry;
-import dev.vfyjxf.cloudlib.utils.Locations;
+import dev.vfyjxf.cloudlib.util.Locations;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -36,23 +36,21 @@ public abstract class CloudLib {
         //region
 
         //region fml lifecycle listener
+        modBus.addListener(this::constructMod);
         modBus.addListener(this::commonSetup);
         modBus.addListener(this::loadComplete);
         //region
 
         //region register
-        modBus.addListener(CloudlibNetworkPayloads::register);
+        modBus.addListener(CloudlibPayloads::register);
         //endregion
     }
 
-    protected void constructMod(FMLConstructModEvent event) {
-    }
+    protected void constructMod(FMLConstructModEvent event) {}
 
-    protected void commonSetup(FMLCommonSetupEvent event) {
-    }
+    protected void commonSetup(FMLCommonSetupEvent event) {}
 
-    protected void loadComplete(FMLLoadCompleteEvent event) {
-    }
+    protected void loadComplete(FMLLoadCompleteEvent event) {}
 
     public static ResourceLocation of(String path) {
         return Locations.of(path);

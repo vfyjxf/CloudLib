@@ -7,7 +7,7 @@ import dev.vfyjxf.cloudlib.data.lang.LangKeyProvider;
 import dev.vfyjxf.cloudlib.ui.GuiEventHandler;
 import dev.vfyjxf.cloudlib.ui.UIManager;
 import dev.vfyjxf.cloudlib.ui.UIRegistry;
-import dev.vfyjxf.cloudlib.utils.Singletons;
+import dev.vfyjxf.cloudlib.util.Singletons;
 import net.minecraft.data.DataProvider;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;

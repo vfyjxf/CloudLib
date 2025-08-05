@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.drag;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.Renderable;
-import dev.vfyjxf.cloudlib.api.ui.Widget;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import net.minecraft.client.gui.GuiGraphics;
 
 import java.util.function.Predicate;

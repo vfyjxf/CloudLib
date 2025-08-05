@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.network.payload;
 import dev.vfyjxf.cloudlib.api.network.payload.ClientPayloadInfo;
 import dev.vfyjxf.cloudlib.api.network.payload.ClientboundPayload;
 import dev.vfyjxf.cloudlib.api.ui.sync.menu.BasicMenu;
-import dev.vfyjxf.cloudlib.network.CloudlibNetworkPayloads;
+import dev.vfyjxf.cloudlib.network.CloudlibPayloads;
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 public record MenuSyncDownstreamPacket(int containerId, byte[] syncData) implements ClientboundPayload {
 
-    public static final ClientPayloadInfo<MenuSyncDownstreamPacket> INFO = CloudlibNetworkPayloads.createClientInfo(
+    public static final ClientPayloadInfo<MenuSyncDownstreamPacket> INFO = CloudlibPayloads.createClientInfo(
             StreamCodec.ofMember(
                     MenuSyncDownstreamPacket::write,
                     MenuSyncDownstreamPacket::decode
@@ -60,7 +60,7 @@ public record MenuSyncDownstreamPacket(int containerId, byte[] syncData) impleme
             var buffer = new RegistryFriendlyByteBuf(Unpooled.wrappedBuffer(syncData), player.registryAccess(), ConnectionType.OTHER);
             menu.receiveFromServer(buffer);
         } else {
-            CloudlibNetworkPayloads.log.warn("A MenuSyncDownstreamPacket received, but the menu {} is not a BasicMenu or the menu id is not match, this is a bug, please report it to the developer.", player.containerMenu);
+            CloudlibPayloads.log.warn("A MenuSyncDownstreamPacket received, but the menu {} is not a BasicMenu or the menu id is not match, this is a bug, please report it to the developer.", player.containerMenu);
         }
     }
 }

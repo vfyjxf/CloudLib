@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.ui.state;
 
-import dev.vfyjxf.cloudlib.api.ui.state.compound.CompoundState;
 import org.eclipse.collections.api.list.MutableList;
 
 public interface MutableState<T> extends ReadableState<T> {

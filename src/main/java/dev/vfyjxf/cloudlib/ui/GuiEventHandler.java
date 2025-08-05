@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.ui;
 
 
-import dev.vfyjxf.cloudlib.utils.Singletons;
+import dev.vfyjxf.cloudlib.util.Singletons;
 import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;

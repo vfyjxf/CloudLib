@@ -5,7 +5,7 @@ import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.ui.Tooltip;
 import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
 import dev.vfyjxf.cloudlib.api.ui.widget.TooltipStack;
-import dev.vfyjxf.cloudlib.utils.ScreenUtil;
+import dev.vfyjxf.cloudlib.util.ScreenUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;

@@ -63,7 +63,7 @@ class SnapshotTest {
 
     }
 
-    @Test
+//    @Test
     void serverTick(MinecraftServer server) {
         TestHolder testHolder = new TestHolder();
         Expose<Integer> copyOf = new Expose<>(

@@ -3,8 +3,8 @@ package dev.vfyjxf.cloudlib.api.ui.drag;
 import dev.vfyjxf.cloudlib.api.performer.CompositeScenario;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.UIContext;
-import dev.vfyjxf.cloudlib.api.ui.Widget;
-import dev.vfyjxf.cloudlib.utils.Locations;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.util.Locations;
 import org.jetbrains.annotations.Nullable;
 
 public interface DragProvider {

@@ -18,7 +18,7 @@ import dev.vfyjxf.cloudlib.api.network.expose.UnaryReversed;
 import dev.vfyjxf.cloudlib.api.network.payload.ClientboundPayload;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
 import dev.vfyjxf.cloudlib.api.ui.event.MenuEvent;
-import dev.vfyjxf.cloudlib.network.CloudlibNetworkPayloads;
+import dev.vfyjxf.cloudlib.network.CloudlibPayloads;
 import dev.vfyjxf.cloudlib.network.payload.MenuDataReversedPacket;
 import dev.vfyjxf.cloudlib.network.payload.MenuSyncDownstreamPacket;
 import net.minecraft.core.RegistryAccess;
@@ -379,7 +379,7 @@ public abstract class BasicMenu<P>
         if (player instanceof ServerPlayer serverPlayer) {
             serverPlayer.connection.send(payload);
         } else {
-            CloudlibNetworkPayloads.log.warn("Tried to send payload to client, but player is not a server player.");
+            CloudlibPayloads.log.warn("Tried to send payload to client, but player is not a server player.");
         }
     }
 
@@ -387,7 +387,7 @@ public abstract class BasicMenu<P>
         if (level.isClientSide) {
             PacketDistributor.sendToServer(payload);
         } else {
-            CloudlibNetworkPayloads.log.warn("Tried to send payload to server, but player is not a client player.");
+            CloudlibPayloads.log.warn("Tried to send payload to server, but player is not a client player.");
         }
     }
 

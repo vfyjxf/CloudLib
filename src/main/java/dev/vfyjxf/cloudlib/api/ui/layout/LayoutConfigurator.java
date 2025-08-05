@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.layout;
 
 import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
-import dev.vfyjxf.cloudlib.api.ui.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import org.appliedenergistics.yoga.YogaNode;
 
 import java.util.function.Consumer;

@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
-import dev.vfyjxf.cloudlib.api.ui.Widget;
-import dev.vfyjxf.cloudlib.api.ui.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -45,7 +45,7 @@ public class TextWidget extends WidgetGroup<TextWidget.InternalDisplay> {
     }
 
     private void configureInternalDisplay() {
-        var font = getContext().getFont();
+        var font = getContext().font();
         int labelWidth = font.width(text);
         display.yogaNode().setWidth(StyleSizeLength.points(labelWidth));
         display.yogaNode().setHeight(StyleSizeLength.points(font.lineHeight));
@@ -54,7 +54,7 @@ public class TextWidget extends WidgetGroup<TextWidget.InternalDisplay> {
     protected class InternalDisplay extends Widget {
         @Override
         protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-            var font = getContext().getFont();
+            var font = getContext().font();
             graphics.drawString(font, text, 0, 0, 0xffffff);
         }
     }

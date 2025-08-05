@@ -2,7 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.sync.menu;
 
 import dev.vfyjxf.cloudlib.Constants;
 import dev.vfyjxf.cloudlib.ui.sync.holder.BlockEntityProviderType;
-import dev.vfyjxf.cloudlib.utils.ClassUtils;
+import dev.vfyjxf.cloudlib.util.ClassUtils;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;

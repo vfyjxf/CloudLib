@@ -1,8 +1,8 @@
 package dev.vfyjxf.cloudlib.api.ui.drag;
 
 import dev.vfyjxf.cloudlib.api.performer.CompositeScenario;
-import dev.vfyjxf.cloudlib.api.ui.Widget;
-import dev.vfyjxf.cloudlib.utils.Locations;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.util.Locations;
 
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;

@@ -19,8 +19,8 @@
  */
 package dev.vfyjxf.cloudlib.api.event;
 
-import dev.vfyjxf.cloudlib.utils.Checks;
-import dev.vfyjxf.cloudlib.utils.ClassUtils;
+import dev.vfyjxf.cloudlib.util.Checks;
+import dev.vfyjxf.cloudlib.util.ClassUtils;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.list.mutable.FastList;
@@ -80,7 +80,10 @@ public final class EventFactory {
     @SafeVarargs
     public static <T> Event<T> createEvent(Function<List<T>, T> combiner, T... type) {
         Class<T> genericType = ClassUtils.getGenericType(type);
-        return new EventImpl<>(genericType, combiner);
+        Method invokeMethod = ClassUtils.findFunctionalMethod(genericType);
+        Checks.checkArgument(invokeMethod != null, "type must be a functional interface");
+
+        return new EventImpl<>(genericType, invokeMethod, combiner);
     }
 
     public static <T> SimpleEvent<T> createSimpleEvent() {
@@ -90,13 +93,16 @@ public final class EventFactory {
     static final class EventDefinitionImpl<T> implements EventDefinition<T> {
 
         private final Class<T> type;
+        private final Method invokeMethod;
         private final Function<List<T>, T> merger;
         private final Event<T> global;
 
         private EventDefinitionImpl(Class<T> type, Function<List<T>, T> merger) {
             this.type = type;
             this.merger = merger;
-            this.global = new EventImpl<>(type, merger);
+            this.invokeMethod = ClassUtils.findFunctionalMethod(type);
+            assert invokeMethod != null : "Functional interface must have a single abstract method";
+            this.global = new EventImpl<>(type, invokeMethod, merger);
         }
 
         @Override
@@ -106,7 +112,7 @@ public final class EventFactory {
 
         @Override
         public Event<T> create() {
-            return new EventImpl<>(type, merger);
+            return new EventImpl<>(type, invokeMethod, merger);
         }
 
         @Override
@@ -117,23 +123,24 @@ public final class EventFactory {
         @Override
         public String toString() {
             return "EventDefinitionImpl{" +
-                           "type=" + type.getSimpleName() +
-                           '}';
+                    "type=" + type.getSimpleName() +
+                    '}';
         }
     }
 
     static final class EventImpl<T> implements Event<T> {
         private final Class<T> type;
+        private final Method invokeMethod;
         private final MutableMap<T, BooleanSupplier> listenerLifetimeManage;
         private final Function<List<T>, T> merger;
         private final FastList<ListenerEntry<T>> listeners = FastList.newList();
         private T invoker;
 
-        private EventImpl(Class<T> type, Function<List<T>, T> merger) {
+        private EventImpl(Class<T> type, Method invokeMethod, Function<List<T>, T> merger) {
             this.type = type;
+            this.invokeMethod = invokeMethod;
             this.merger = merger;
-            listenerLifetimeManage = Maps.mutable.withInitialCapacity(1);
-            MethodHandle handle;
+            this.listenerLifetimeManage = Maps.mutable.withInitialCapacity(1);
         }
 
         @Override
@@ -162,10 +169,8 @@ public final class EventFactory {
             Checks.checkNotNull(listener, "listener");
             Checks.checkArgument(lifetime > 0, "lifetime must be greater than 0");
             AtomicInteger counter = new AtomicInteger(lifetime);
-            Method method = ClassUtils.findFunctionalMethod(type);
-            assert method != null : "Functional interface must have a single abstract method";
-            T wrapper = makeWrapper(type, method, listener, counter);
-            counter.decrementAndGet();
+            assert invokeMethod != null : "Functional interface must have a single abstract method";
+            T wrapper = makeWrapper(type, invokeMethod, listener, counter);
             return registerManaged(wrapper, () -> counter.get() <= 0);
         }
 

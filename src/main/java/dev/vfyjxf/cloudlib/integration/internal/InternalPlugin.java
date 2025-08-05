@@ -2,7 +2,7 @@ package dev.vfyjxf.cloudlib.integration.internal;
 
 import dev.vfyjxf.cloudlib.api.registry.ModuleEntryPoint;
 import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
-import dev.vfyjxf.cloudlib.api.utils.ModService;
+import dev.vfyjxf.cloudlib.api.util.ModService;
 
 @ModService
 public class InternalPlugin implements ModuleEntryPoint {

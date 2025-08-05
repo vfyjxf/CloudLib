@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.widget;
 
-import dev.vfyjxf.cloudlib.api.ui.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 
 //TODO:implement scrollable
 public interface Scrollable<W extends WidgetGroup<?> & Scrollable<W>> {

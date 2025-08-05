@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
 import dev.vfyjxf.cloudlib.api.data.snapshot.DiffObservable;
-import dev.vfyjxf.cloudlib.api.utils.Maybe;
+import dev.vfyjxf.cloudlib.api.util.Maybe;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.jetbrains.annotations.ApiStatus;
 

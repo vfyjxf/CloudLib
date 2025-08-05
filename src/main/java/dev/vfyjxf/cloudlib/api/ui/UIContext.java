@@ -1,7 +1,8 @@
 package dev.vfyjxf.cloudlib.api.ui;
 
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
-import dev.vfyjxf.cloudlib.utils.ScreenUtil;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.util.ScreenUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
@@ -16,17 +17,15 @@ public class UIContext {
     /**
      * The font used to render text.
      */
-    private Font font;
+    private final Font font;
     /**
      * The width of current {@link net.minecraft.client.Minecraft#screen}
      */
-    private int width;
+    private final int width;
     /**
      * The height of current {@link net.minecraft.client.Minecraft#screen}
      */
-    private int height;
-    private double mouseX;
-    private double mouseY;
+    private final int height;
 
     /**
      * @return if {@link net.minecraft.client.Minecraft#screen} is null,return null
@@ -70,14 +69,19 @@ public class UIContext {
      * @return the absolute position of the mouse
      */
     public FloatPos mousePos() {
-        var pos = ScreenUtil.getMousePos();
-        this.mouseX = pos.x;
-        this.mouseY = pos.y;
-        return pos;
+        return ScreenUtil.getMousePos();
     }
 
-    public Font getFont() {
+    public Font font() {
         return font;
+    }
+
+    public int width() {
+        return width;
+    }
+
+    public int height() {
+        return height;
     }
 
     @Nullable
@@ -87,12 +91,6 @@ public class UIContext {
         if (menu == null) return null;
         Slot slot = screen.getSlotUnderMouse();
         return slot == null ? null : slot.getItem();
-    }
-
-    public void tick() {
-        var pos = ScreenUtil.getMousePos();
-        this.mouseX = pos.x;
-        this.mouseY = pos.y;
     }
 
 }
