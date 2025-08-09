@@ -1,12 +1,13 @@
 package dev.vfyjxf.cloudlib.concept.node.typehack;
 
+import dev.vfyjxf.cloudlib.api.data.AttachableDataContainer;
 import dev.vfyjxf.cloudlib.api.data.DataAttachable;
-import dev.vfyjxf.cloudlib.api.data.DataContainer;
-import dev.vfyjxf.cloudlib.api.data.DataKey;
+import dev.vfyjxf.cloudlib.api.data.DataType;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.concept.node.typehack.NodeBuilderConceptWithTypeHackTest.Group;
 import dev.vfyjxf.cloudlib.concept.node.typehack.NodeBuilderConceptWithTypeHackTest.Instance;
+import net.minecraft.resources.ResourceLocation;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.NotNull;
@@ -17,8 +18,8 @@ import java.util.function.Function;
 
 public class NodeBuilderConceptWithTypeHackTest {
 
-    private static final DataKey<String> TEST_KEY = DataKey.valueOf("test_key", "default_value");
-    private static final DataKey<Integer> TEST_KEY_2 = DataKey.valueOf("test_key_2", 42);
+    private static final DataType<String> TEST_TYPE = DataType.valueOf(ResourceLocation.withDefaultNamespace("test"), "default_value");
+    private static final DataType<Integer> TEST_TYPE_2 = DataType.valueOf(ResourceLocation.withDefaultNamespace("test_2"), 42);
 
     @Test
     void build() {
@@ -63,11 +64,11 @@ public class NodeBuilderConceptWithTypeHackTest {
 
 
     static class Instance implements DataAttachable {
-        private final DataContainer dataContainer = new DataContainer();
+        private final AttachableDataContainer attachableDataContainer = new AttachableDataContainer();
 
         @Override
-        public @NotNull DataContainer dataContainer() {
-            return dataContainer;
+        public @NotNull AttachableDataContainer attachableDataContainer() {
+            return attachableDataContainer;
         }
     }
 

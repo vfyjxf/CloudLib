@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
+import dev.vfyjxf.cloudlib.api.data.AttachableDataContainer;
 import dev.vfyjxf.cloudlib.api.data.DataAttachable;
-import dev.vfyjxf.cloudlib.api.data.DataContainer;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.ui.UIContext;
 import net.minecraft.client.gui.Font;
@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public final class BuildContext implements DataAttachable {
 
     //region attachable
-    private final DataContainer dataContainer = new DataContainer();
+    private final AttachableDataContainer attachableDataContainer = new AttachableDataContainer();
     //endregion
 
 
@@ -43,7 +43,7 @@ public final class BuildContext implements DataAttachable {
 
 
     @Override
-    public @NotNull DataContainer dataContainer() {
-        return dataContainer;
+    public @NotNull AttachableDataContainer attachableDataContainer() {
+        return attachableDataContainer;
     }
 }

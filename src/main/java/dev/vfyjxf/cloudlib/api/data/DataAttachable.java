@@ -8,74 +8,76 @@ import java.util.function.Supplier;
 /**
  * Represents an object that can have data attached to it.
  * It is recommended to use neoforge's {@link net.neoforged.neoforge.attachment.IAttachmentHolder} if you want to attach a serializable data.
+ * <p>
+ * We call {@link DataType} and {@link net.neoforged.neoforge.attachment.AttachmentType} as "attachable".
  */
 @SuppressWarnings("ConstantConditions")
 public interface DataAttachable {
 
     @NotNull
-    DataContainer dataContainer();
+    AttachableDataContainer attachableDataContainer();
 
-    default <T> void attach(DataKey<T> key, T value) {
-        dataContainer().attach(key, value);
+    default <T> void attachData(DataType<T> type, T value) {
+        attachableDataContainer().attach(type, value);
     }
 
-    default <T> T getData(DataKey<T> key) {
-        return dataContainer().get(key);
+    default <T> T getData(DataType<T> type) {
+        return attachableDataContainer().get(type);
     }
 
     @Nullable
-    default <T> T getNullable(DataKey<T> key) {
-        return dataContainer().getNullable(key);
+    default <T> T getNullable(DataType<T> type) {
+        return attachableDataContainer().getNullable(type);
     }
 
-    default <T> T getOrDefault(DataKey<T> key, T defaultValue) {
-        return dataContainer().getOrDefault(key, defaultValue);
+    default <T> T getOrDefault(DataType<T> type, T defaultValue) {
+        return attachableDataContainer().getOrDefault(type, defaultValue);
     }
 
-    default <T> T getOrDefault(DataKey<T> key, Supplier<T> supplier) {
-        T value = getData(key);
+    default <T> T getOrDefault(DataType<T> type, Supplier<T> supplier) {
+        T value = getData(type);
         if (value == null) {
             return supplier.get();
         }
         return value;
     }
 
-    default <T> T getIfAbsentPut(DataKey<T> key, Supplier<T> supplier) {
-        T value = getData(key);
+    default <T> T getIfAbsentPut(DataType<T> type, Supplier<T> supplier) {
+        T value = getData(type);
         if (value == null) {
             value = supplier.get();
-            attach(key, value);
+            attachData(type, value);
         }
         return value;
     }
 
-    default <T> T getIfAbsentPut(DataKey<T> key, @Nullable T value) {
-        T existing = getData(key);
+    default <T> T getIfAbsentPut(DataType<T> type, @Nullable T value) {
+        T existing = getData(type);
         if (existing == null) {
-            attach(key, value);
+            attachData(type, value);
             return value;
         }
         return existing;
     }
 
-    default <T> T detach(DataKey<T> key) {
-        return dataContainer().detach(key);
+    default <T> T detachData(DataType<T> type) {
+        return attachableDataContainer().detach(type);
     }
 
     default void clearData() {
-        dataContainer().clear();
+        attachableDataContainer().clear();
     }
 
-    default boolean isEmpty() {
-        return dataContainer().isEmpty();
+    default boolean isDataEmpty() {
+        return attachableDataContainer().isEmpty();
     }
 
-    default boolean hasData() {
-        return !isEmpty();
+    default boolean hasAnyData() {
+        return !isDataEmpty();
     }
 
-    default boolean has(DataKey<?> key) {
-        return dataContainer().has(key);
+    default boolean hasData(DataType<?> type) {
+        return attachableDataContainer().has(type);
     }
 
 }

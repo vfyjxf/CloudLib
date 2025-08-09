@@ -1,8 +1,8 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import dev.vfyjxf.cloudlib.api.data.AttachableDataContainer;
 import dev.vfyjxf.cloudlib.api.data.DataAttachable;
-import dev.vfyjxf.cloudlib.api.data.DataContainer;
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
 import dev.vfyjxf.cloudlib.api.event.EventDefinition;
 import dev.vfyjxf.cloudlib.api.event.EventHandler;
@@ -58,7 +58,7 @@ public class Widget
     //endregion
 
     //region data attachment
-    protected final DataContainer dataContainer = new DataContainer();
+    protected final AttachableDataContainer attachableDataContainer = new AttachableDataContainer();
     //endregion
 
     //region management
@@ -182,8 +182,8 @@ public class Widget
     }
 
     @Override
-    public @NotNull DataContainer dataContainer() {
-        return dataContainer;
+    public @NotNull AttachableDataContainer attachableDataContainer() {
+        return attachableDataContainer;
     }
 
     @Override
