@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-@EventBusSubscriber(modid = Constants.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = Constants.MOD_ID)
 public record MenuInfo<M extends BasicMenu<?>, A>(
         MenuType<M> menuType,
         MenuFactory<M, A> menuFactory,
@@ -173,7 +173,7 @@ public record MenuInfo<M extends BasicMenu<?>, A>(
         typeToRegister.clear();
     }
 
-    @EventBusSubscriber(value = Dist.CLIENT, modid = Constants.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+    @EventBusSubscriber(value = Dist.CLIENT, modid = Constants.MOD_ID)
     private static class ClientListener {
         @SubscribeEvent
         @SuppressWarnings({"unchecked", "rawtypes"})
