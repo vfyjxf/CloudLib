@@ -1,41 +1,75 @@
 package dev.vfyjxf.cloudlib.api.ui.widget;
 
-import dev.vfyjxf.cloudlib.api.math.Pos;
+import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.util.ScreenUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.maps.MapId;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+import net.neoforged.neoforge.common.util.AttributeTooltipContext;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
 
-public record TooltipContext(Pos mousePos, @Nullable TooltipFlag flag) {
+public record TooltipContext(
+        HolderLookup.Provider registries,
+        Level level,
+        Player player,
+        TooltipFlag flag,
+        float tickRate
+) implements AttributeTooltipContext {
 
-    static TooltipContext of() {
-        return TooltipContext.of(Pos.ORIGIN);
+    static TooltipContext create(@Nullable Level level, @Nullable Player player, @Nullable TooltipFlag tooltipFlag) {
+        var minecraft = Minecraft.getInstance();
+        level = level == null ? Objects.requireNonNull(minecraft.level) : level;
+        player = player == null ? Objects.requireNonNull(minecraft.player) : player;
+        var advancedItemTooltips = minecraft.options.advancedItemTooltips;
+        tooltipFlag = tooltipFlag == null ? (
+                advancedItemTooltips ? TooltipFlag.ADVANCED : TooltipFlag.NORMAL
+        ) : tooltipFlag;
+        var registryAccess = level.registryAccess();
+        float tickRate = level.tickRateManager().tickrate();
+        return new TooltipContext(registryAccess, level, player, tooltipFlag, tickRate);
     }
 
-    static TooltipContext of(Pos mouse) {
-        return TooltipContext.of(mouse, null);
+    static TooltipContext create() {
+        var minecraft = Minecraft.getInstance();
+        var level = minecraft.level;
+        return create(level, minecraft.player, null);
     }
 
-    static TooltipContext of(Pos mouse, @Nullable TooltipFlag flag) {
-        return new TooltipContext(mouse, flag);
+    public FloatPos mousePos() {
+        return ScreenUtil.getMousePos();
     }
 
-    static TooltipContext ofMouse() {
-        return TooltipContext.of(ScreenUtil.ofMouse());
+    public boolean isCtrlDown() {
+        return Screen.hasControlDown();
     }
 
-    public TooltipContext(Pos mousePos, @Nullable TooltipFlag flag) {
-        this.mousePos = Objects.requireNonNull(mousePos);
-        this.flag = flag;
+    public boolean isShiftDown() {
+        return Screen.hasShiftDown();
+    }
+
+    public boolean isAltDown() {
+        return Screen.hasAltDown();
     }
 
     @Override
     public TooltipFlag flag() {
-        if (flag == null)
-            return (Minecraft.getInstance().options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL);
-        else return flag;
+        if (flag == null) {
+            var options = Minecraft.getInstance().options;
+            if (options.advancedItemTooltips) return TooltipFlag.ADVANCED;
+            else return TooltipFlag.NORMAL;
+        } else return flag;
+    }
+
+    @Override
+    public @Nullable MapItemSavedData mapData(MapId mapId) {
+        return level == null ? null : level.getMapData(mapId);
     }
 }
