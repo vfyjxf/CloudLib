@@ -19,6 +19,11 @@ final class EmptyRichTooltip implements RichTooltip {
     }
 
     @Override
+    public RichTooltip add(int index, TooltipEntry entry) {
+        throw new UnsupportedOperationException("This operation is not supported for EmptyRichTooltip");
+    }
+
+    @Override
     public RichTooltip add(Component text) {
         throw new UnsupportedOperationException("This operation is not supported for EmptyRichTooltip");
     }

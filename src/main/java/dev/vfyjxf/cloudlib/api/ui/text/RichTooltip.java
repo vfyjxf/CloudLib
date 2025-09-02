@@ -79,6 +79,8 @@ public sealed interface RichTooltip permits EmptyRichTooltip, ListRichTooltip {
 
     RichTooltip add(TooltipEntry entry);
 
+    RichTooltip add(int index, TooltipEntry entry);
+
     RichTooltip add(Component text);
 
     RichTooltip add(TooltipComponent component);

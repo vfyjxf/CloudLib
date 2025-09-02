@@ -32,6 +32,12 @@ final class ListRichTooltip implements RichTooltip {
     }
 
     @Override
+    public RichTooltip add(int index, TooltipEntry entry) {
+        entries.add(index, entry);
+        return this;
+    }
+
+    @Override
     public RichTooltip add(Component text) {
         entries.add(new TooltipEntry.TextEntry(text));
         return this;
