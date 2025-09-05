@@ -2,7 +2,6 @@ package dev.vfyjxf.cloudlib;
 
 import dev.vfyjxf.cloudlib.api.registry.ModuleEntryPoint;
 import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
-import dev.vfyjxf.cloudlib.api.ui.text.RichTooltipComponent;
 import dev.vfyjxf.cloudlib.data.lang.LangKeyProvider;
 import dev.vfyjxf.cloudlib.ui.GuiEventHandler;
 import dev.vfyjxf.cloudlib.ui.UIManager;
@@ -17,8 +16,6 @@ import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
-
-import java.util.function.Function;
 
 @Mod(value = Constants.MOD_ID, dist = Dist.CLIENT)
 public class CloudLibClient extends CloudLib {
@@ -44,7 +41,7 @@ public class CloudLibClient extends CloudLib {
     }
 
     private void registerClientTooltipComponentFactories(RegisterClientTooltipComponentFactoriesEvent event) {
-        event.register(RichTooltipComponent.class, Function.identity());
+//        event.register(RichTooltipComponent.class, Function.identity());
     }
 
     private void gatherData(GatherDataEvent event) {

@@ -566,7 +566,7 @@ public class Widget
         if (this.richTooltip == null) {
             this.richTooltip = RichTooltip.create();
         }
-        this.richTooltip.ofAll(richTooltip);
+        this.richTooltip.addAll(richTooltip);
         return this;
     }
 
