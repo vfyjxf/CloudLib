@@ -52,7 +52,7 @@ public sealed interface Snapshot<T> {
 
     @SafeVarargs
     static <T extends Observable> Snapshot<T> immutableRefOf(T value, T... typeCatch) {
-        Checks.checkNotNull(value, "The value cannot be null");
+        Checks.checkNotNull(value, "value");
         Checks.checkArgument(typeCatch.length == 0, "The typeCatch must be empty");
         return new ImmutableRef<>(value, (unused) -> value.changed());
     }

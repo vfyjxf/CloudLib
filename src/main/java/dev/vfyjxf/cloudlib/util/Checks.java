@@ -11,9 +11,9 @@ public class Checks {
         Preconditions.checkArgument(expression, errorMessageTemplate, errorMessageArgs);
     }
 
-    public static <T> T checkNotNull(@Nullable T obj, String message) {
+    public static <T> T checkNotNull(@Nullable T obj, String name) {
         if (obj == null) {
-            throw new NullPointerException(message);
+            throw new NullPointerException(name + "can't be null");
         }
         return obj;
     }

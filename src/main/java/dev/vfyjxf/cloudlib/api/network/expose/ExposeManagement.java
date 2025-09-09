@@ -52,7 +52,7 @@ public final class ExposeManagement {
     }
 
     public <T extends ExposeCommon> T registerExpose(T expose) {
-        Checks.checkNotNull(expose, "Expose cannot be null");
+        Checks.checkNotNull(expose, "expose");
         if (exposes.containsKey(expose.id())) {
             throw new IllegalArgumentException("Expose with id " + expose.id() + " already exists");
         }
@@ -61,7 +61,7 @@ public final class ExposeManagement {
     }
 
     public <T extends ReversedOnly<?, ?>> T registerReversed(T reversed) {
-        Checks.checkNotNull(reversed, "Reversed cannot be null");
+        Checks.checkNotNull(reversed, "reversed");
         ExposeCommon expose = (ExposeCommon) reversed;
         if (exposes.containsKey(expose.id())) {
             throw new IllegalArgumentException("Reversed with id " + expose.id() + " already exists");
