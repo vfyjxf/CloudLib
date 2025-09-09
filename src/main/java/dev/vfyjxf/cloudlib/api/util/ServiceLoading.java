@@ -9,6 +9,7 @@ import org.eclipse.collections.impl.list.mutable.FastList;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.util.Objects;
 
@@ -26,13 +27,14 @@ public class ServiceLoading {
     /**
      * Load service instances from mods without caching.
      *
+     * @param annotationMarker marker annotatio
      * @param serviceInterface service interface
      * @param <T>              service interface type
      * @return a list of service instances
      */
-    public static <T> MutableList<T> load(Class<T> serviceInterface) {
+    public static <T> MutableList<T> load(Class<? extends Annotation> annotationMarker, Class<T> serviceInterface) {
         MutableList<T> services = new FastList<>();
-        Type annotationType = Type.getType(ModService.class);
+        Type annotationType = Type.getType(annotationMarker);
         for (ModFileScanData scanData : ModList.get().getAllScanData()) {
             Iterable<ModFileScanData.AnnotationData> annotations = scanData.getAnnotations();
             for (ModFileScanData.AnnotationData a : annotations) {
@@ -44,6 +46,17 @@ public class ServiceLoading {
             }
         }
         return services;
+    }
+
+    /**
+     * Load service instances from mods without caching.
+     *
+     * @param serviceInterface service interface
+     * @param <T>              service interface type
+     * @return a list of service instances
+     */
+    public static <T> MutableList<T> load(Class<T> serviceInterface) {
+        return load(ModService.class, serviceInterface);
     }
 
     @Nullable
