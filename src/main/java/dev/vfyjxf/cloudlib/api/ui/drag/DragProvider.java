@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 public interface DragProvider {
 
     CompositeScenario<DragProvider> SCENARIO = new CompositeScenario<>(
-            Locations.of("drag_provider"),
+            Locations.ofMod("drag_provider"),
             DragProvider.class,
             listeners -> new DragProvider() {
                 @Override

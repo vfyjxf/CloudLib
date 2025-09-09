@@ -10,7 +10,7 @@ import java.util.function.BiPredicate;
 public interface DragConsumer {
 
     CompositeScenario<DragConsumer> SCENARIO = new CompositeScenario<>(
-            Locations.of("drag_consumer"),
+            Locations.ofMod("drag_consumer"),
             DragConsumer.class,
             listeners -> new DragConsumer() {
 

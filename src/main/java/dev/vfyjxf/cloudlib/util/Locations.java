@@ -27,7 +27,7 @@ public final class Locations {
         return ResourceLocation.withDefaultNamespace(path);
     }
 
-    public static ResourceLocation of(String path) {
+    public static ResourceLocation ofMod(String path) {
         return ResourceLocation.fromNamespaceAndPath(Constants.NAMESPACE, path);
     }
 

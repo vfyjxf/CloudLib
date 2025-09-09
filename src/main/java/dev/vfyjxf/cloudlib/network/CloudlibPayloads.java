@@ -36,13 +36,13 @@ public class CloudlibPayloads {
             StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec,
             String path
     ) {
-        return ClientPayloadInfo.create(streamCodec, Locations.of(path));
+        return ClientPayloadInfo.create(streamCodec, Locations.ofMod(path));
     }
 
     public static <T extends ServerboundPayload> ServerPayloadInfo<T> createServerInfo(
             StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec,
             String path
     ) {
-        return ServerPayloadInfo.create(streamCodec, Locations.of(path));
+        return ServerPayloadInfo.create(streamCodec, Locations.ofMod(path));
     }
 }

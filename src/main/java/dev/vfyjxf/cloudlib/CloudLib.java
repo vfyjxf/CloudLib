@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib;
 
-import dev.vfyjxf.cloudlib.api.module.ModEntryPoint;
 import dev.vfyjxf.cloudlib.api.registry.ModuleEntryPoint;
 import dev.vfyjxf.cloudlib.api.util.ServiceLoading;
 import dev.vfyjxf.cloudlib.debug.DebugConfig;
@@ -19,13 +18,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.collection.ImmutableCollection;
 
-public abstract class CloudLib extends ModEntryPoint {
+public abstract class CloudLib {
     public static final Logger logger = LogManager.getLogger("CloudLib");
     protected final ImmutableCollection<ModuleEntryPoint> plugins;
 
     //TODO:Move thread unsafe operations to constructModEvent
     public CloudLib(ModContainer container, IEventBus modBus, Dist dist) {
-        super(container, modBus);
         //region internal init
         plugins = ServiceLoading.load(ModuleEntryPoint.class).toImmutable();
         //endregion
@@ -55,7 +53,7 @@ public abstract class CloudLib extends ModEntryPoint {
     protected void loadComplete(FMLLoadCompleteEvent event) {}
 
     public static ResourceLocation of(String path) {
-        return Locations.of(path);
+        return Locations.ofMod(path);
     }
 
 }

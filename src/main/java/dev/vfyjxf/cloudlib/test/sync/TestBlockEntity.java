@@ -178,7 +178,7 @@ public class TestBlockEntity extends BlockEntity {
                 );
 
         public static final MenuInfo<Menu, TestBlockEntity> INFO = MenuInfo.create(
-                Locations.of("test_block_entity"),
+                Locations.ofMod("test_block_entity"),
                 Menu::new,
                 () -> TestBlockEntityScreen::new
         );
