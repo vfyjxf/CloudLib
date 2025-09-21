@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
-import org.eclipse.collections.api.factory.Lists;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import org.eclipse.collections.api.list.MutableList;
 
 import java.util.Collection;
@@ -34,7 +34,7 @@ public interface PlanFragment<T extends Widget> {
 
 final class PlanFragmentImpl<T extends Widget> implements PlanFragment<T> {
 
-    private final MutableList<PlanConfigurator<T>> configurators = Lists.mutable.empty();
+    private final MutableList<PlanConfigurator<T>> configurators = MutableLists.empty();
 
     @SuppressWarnings("unchecked")
     @Override
@@ -44,9 +44,9 @@ final class PlanFragmentImpl<T extends Widget> implements PlanFragment<T> {
                 switch (entry) {
                     case ConstructiblePlan.WidgetEntry<? extends T> widgetEntry -> plan.include(widgetEntry.widget());
                     case ConstructiblePlan.WidgetSpecEntry<? extends T> widgetSpecEntry ->
-                            plan.include(widgetSpecEntry.spec());
+                        plan.include(widgetSpecEntry.spec());
                     case ConstructiblePlan.GroupSpecEntry<?, ?> groupSpecEntry ->
-                            plan.group((GroupSpec<? extends T, ? extends Widget>) groupSpecEntry.spec());
+                        plan.group((GroupSpec<? extends T, ? extends Widget>) groupSpecEntry.spec());
                 }
             }
         }
@@ -62,7 +62,7 @@ final class PlanFragmentImpl<T extends Widget> implements PlanFragment<T> {
 
 final class PlanConfigurator<E extends Widget> implements PlanFragment.PlanConfigure<E> {
 
-    final MutableList<ConstructiblePlan.PlanEntry<? extends E>> entries = Lists.mutable.empty();
+    final MutableList<ConstructiblePlan.PlanEntry<? extends E>> entries = MutableLists.empty();
 
     @Override
     public void include(WidgetSpec<? extends E> spec) {

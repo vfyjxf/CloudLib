@@ -1,9 +1,9 @@
 package dev.vfyjxf.cloudlib.api.ui.text;
 
 import dev.vfyjxf.cloudlib.api.ui.widget.TooltipStack;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,7 +45,7 @@ final class EmptyRichTooltip implements RichTooltip {
 
     @Override
     public MutableList<TooltipEntry> entries() {
-        return Lists.mutable.empty();
+        return MutableLists.empty();
     }
 
     @Override

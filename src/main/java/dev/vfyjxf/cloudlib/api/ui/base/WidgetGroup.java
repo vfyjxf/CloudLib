@@ -3,8 +3,8 @@ package dev.vfyjxf.cloudlib.api.ui.base;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import net.minecraft.client.gui.GuiGraphics;
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
@@ -20,7 +20,7 @@ public non-sealed class WidgetGroup<T extends Widget> extends Widget implements 
 
     //region Fields
 
-    private final MutableList<T> children = Lists.mutable.empty();
+    private final MutableList<T> children = MutableLists.empty();
     private final MutableList<T> childrenView = children.asUnmodifiable();
 
     //endregion
@@ -51,8 +51,8 @@ public non-sealed class WidgetGroup<T extends Widget> extends Widget implements 
     public void layout() {
         if (!layoutByParent) {
             yogaNode.calculateLayout(
-                    getWidth(),
-                    getHeight()
+                getWidth(),
+                getHeight()
             );
         }
         if (yogaNode.hasNewLayout()) {
@@ -344,18 +344,18 @@ public non-sealed class WidgetGroup<T extends Widget> extends Widget implements 
     @Override
     public String toString() {
         return "WidgetGroup{" +
-                "id='" + id + '\'' +
-                ", children=" + children +
-                ", initialized=" + initialized +
-                ", root=" + (root == null ? "null" : root.getId()) +
-                ", parent=" + (parent == null ? "null" : parent.getId()) +
-                ", position=" + position +
-                ", absolute=" + absolute +
-                ", size=" + size +
-                ", active=" + active +
-                ", visibility=" + visibility +
-                ", richTooltip=" + richTooltip +
-                '}';
+            "id='" + id + '\'' +
+            ", children=" + children +
+            ", initialized=" + initialized +
+            ", root=" + (root == null ? "null" : root.getId()) +
+            ", parent=" + (parent == null ? "null" : parent.getId()) +
+            ", position=" + position +
+            ", absolute=" + absolute +
+            ", size=" + size +
+            ", active=" + active +
+            ", visibility=" + visibility +
+            ", richTooltip=" + richTooltip +
+            '}';
     }
 
     //endregion

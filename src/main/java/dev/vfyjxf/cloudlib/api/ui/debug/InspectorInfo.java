@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.debug;
 
-import org.eclipse.collections.api.factory.Lists;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,7 +12,7 @@ public class InspectorInfo {
     private String name = null;
     @Nullable
     private Object value = null;
-    private MutableList<InspectorInfoElement> properties = Lists.mutable.empty();
+    private MutableList<InspectorInfoElement> properties = MutableLists.empty();
 
     public @Nullable String getName() {
         return name;

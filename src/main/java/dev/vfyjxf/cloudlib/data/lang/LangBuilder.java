@@ -1,8 +1,8 @@
 package dev.vfyjxf.cloudlib.data.lang;
 
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 
 import javax.annotation.Nullable;
@@ -11,9 +11,9 @@ public class LangBuilder {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static final MutableList<LangBuilder> builders = Lists.mutable.empty();
+    public static final MutableList<LangBuilder> builders = MutableLists.empty();
 
-    private final MutableList<LangEntry> defines = Lists.mutable.empty();
+    private final MutableList<LangEntry> defines = MutableLists.empty();
 
     private final String modid;
     private final String specificNameSpace;

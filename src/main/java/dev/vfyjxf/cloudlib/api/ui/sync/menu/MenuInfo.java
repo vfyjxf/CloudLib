@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.sync.menu;
 
 import dev.vfyjxf.cloudlib.Constants;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import dev.vfyjxf.cloudlib.ui.sync.holder.BlockEntityProviderType;
 import dev.vfyjxf.cloudlib.util.ClassUtils;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -21,7 +22,6 @@ import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.factory.BiMaps;
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -31,64 +31,64 @@ import java.util.function.Supplier;
 
 @EventBusSubscriber(modid = Constants.MOD_ID)
 public record MenuInfo<M extends BasicMenu<?>, A>(
-        MenuType<M> menuType,
-        MenuFactory<M, A> menuFactory,
-        Supplier<ScreenFactory<M, ?>> screenFactory,
-        Class<A> accessorType
+    MenuType<M> menuType,
+    MenuFactory<M, A> menuFactory,
+    Supplier<ScreenFactory<M, ?>> screenFactory,
+    Class<A> accessorType
 ) {
-    private static final MutableList<MenuInfo<?, ?>> allInfos = Lists.mutable.empty();
+    private static final MutableList<MenuInfo<?, ?>> allInfos = MutableLists.empty();
     private static final ConcurrentHashMap<ResourceLocation, MenuType<?>> typeToRegister = new ConcurrentHashMap<>();
     static final MutableBiMap<ResourceLocation, MenuProviderType<?>> PROVIDER_TYPES = BiMaps.mutable.empty();
 
     static {
         PROVIDER_TYPES.put(
-                BlockEntityProviderType.INSTANCE.id(),
-                BlockEntityProviderType.INSTANCE
+            BlockEntityProviderType.INSTANCE.id(),
+            BlockEntityProviderType.INSTANCE
         );
     }
 
     public <P> ServerMenuFactory<M, A, P> createProvider(
-            Supplier<Component> displayName,
-            MenuProviderType<P> providerType,
-            P provider,
-            boolean resetOnClose
+        Supplier<Component> displayName,
+        MenuProviderType<P> providerType,
+        P provider,
+        boolean resetOnClose
     ) {
         return new ServerMenuFactory<>(
-                displayName,
-                ((id, playerInv, accessor) -> menuFactory.createWithInit(menuType, id, playerInv, accessor)),
-                providerType,
-                provider,
-                resetOnClose,
-                accessorType
+            displayName,
+            ((id, playerInv, accessor) -> menuFactory.createWithInit(menuType, id, playerInv, accessor)),
+            providerType,
+            provider,
+            resetOnClose,
+            accessorType
         );
     }
 
     public ServerMenuFactory<M, A, BlockEntity> fromBlock(
-            BlockEntity blockEntity,
-            boolean resetOnClose
+        BlockEntity blockEntity,
+        boolean resetOnClose
     ) {
         return createProvider(
-                ServerMenuFactory.EMPTY_NAME,
-                BlockEntityProviderType.INSTANCE,
-                blockEntity,
-                resetOnClose
+            ServerMenuFactory.EMPTY_NAME,
+            BlockEntityProviderType.INSTANCE,
+            blockEntity,
+            resetOnClose
         );
     }
 
     public ServerMenuFactory<M, A, BlockEntity> fromBlock(
-            BlockEntity blockEntity
+        BlockEntity blockEntity
     ) {
         return fromBlock(blockEntity, true);
     }
 
     public <P> void openMenu(Player player, ServerMenuFactory<M, A, P> infoProvider) {
         player.openMenu(
-                infoProvider,
-                byteBuf -> {
-                    MenuProviderType<P> type = infoProvider.providerType();
-                    byteBuf.writeResourceLocation(type.id());
-                    type.writeProvider(infoProvider.provider(), byteBuf);
-                }
+            infoProvider,
+            byteBuf -> {
+                MenuProviderType<P> type = infoProvider.providerType();
+                byteBuf.writeResourceLocation(type.id());
+                type.writeProvider(infoProvider.provider(), byteBuf);
+            }
         );
     }
 
@@ -96,10 +96,10 @@ public record MenuInfo<M extends BasicMenu<?>, A>(
     @SuppressWarnings("unchecked")
     //TODO:提供一套注解驱动的注册方法或者类似Block那类的注册方法，将声明区分开
     public static <M extends BasicMenu<?>, A, P, S extends Screen & MenuAccess<M>> MenuInfo<M, A> create(
-            ResourceLocation menuTypeId,
-            MenuFactory<M, A> menuFactory,
-            Supplier<ScreenFactory<M, S>> screenFactory,
-            A... typeCatch
+        ResourceLocation menuTypeId,
+        MenuFactory<M, A> menuFactory,
+        Supplier<ScreenFactory<M, S>> screenFactory,
+        A... typeCatch
     ) {
         AtomicReference<MenuType<M>> reference = new AtomicReference<>();
         //region client menu
@@ -125,29 +125,29 @@ public record MenuInfo<M extends BasicMenu<?>, A>(
 
     @SafeVarargs
     public static <M extends BasicMenu<?>, A, S extends Screen & MenuAccess<M>> MenuInfo<M, A> create(
-            MenuType<M> menuType,
-            MenuFactory<M, A> menuFactory,
-            Supplier<ScreenFactory<M, S>> screenFactory,
-            A... typeCatch
+        MenuType<M> menuType,
+        MenuFactory<M, A> menuFactory,
+        Supplier<ScreenFactory<M, S>> screenFactory,
+        A... typeCatch
     ) {
         return createInstance(menuType, menuFactory, screenFactory, ClassUtils.getGenericType(typeCatch));
     }
 
     public static <M extends BasicMenu<?>, A, S extends Screen & MenuAccess<M>> MenuInfo<M, A> create(
-            MenuType<M> menuType,
-            MenuFactory<M, A> menuFactory,
-            Supplier<ScreenFactory<M, S>> screenFactory,
-            Class<A> accessorType
+        MenuType<M> menuType,
+        MenuFactory<M, A> menuFactory,
+        Supplier<ScreenFactory<M, S>> screenFactory,
+        Class<A> accessorType
     ) {
         return createInstance(menuType, menuFactory, screenFactory, accessorType);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static <M extends BasicMenu<?>, A, S extends Screen & MenuAccess<M>> MenuInfo<M, A> createInstance(
-            MenuType<M> menuType,
-            MenuFactory<M, A> menuFactory,
-            Supplier<ScreenFactory<M, S>> screenFactory,
-            Class<A> accessorType
+        MenuType<M> menuType,
+        MenuFactory<M, A> menuFactory,
+        Supplier<ScreenFactory<M, S>> screenFactory,
+        Class<A> accessorType
     ) {
 
         MenuInfo menuInfo = new MenuInfo<>(menuType, menuFactory, (Supplier) screenFactory, accessorType);
@@ -186,17 +186,17 @@ public record MenuInfo<M extends BasicMenu<?>, A>(
         }
 
         private static <M extends BasicMenu<?>, S extends Screen & MenuAccess<M>> void registerMenuScreenHelper(
-                RegisterMenuScreensEvent event,
-                MenuInfo<M, ?> menuInfo,
-                Supplier<ScreenFactory<M, S>> screenFactorySupplier
+            RegisterMenuScreensEvent event,
+            MenuInfo<M, ?> menuInfo,
+            Supplier<ScreenFactory<M, S>> screenFactorySupplier
         ) {
             MenuType<M> menuType = menuInfo.menuType;
             //compiler can't infer the type if we put the lambda in the position of constructor
             MenuScreens.ScreenConstructor<M, S> constructor = (menu, inventory, title) ->
-                    screenFactorySupplier.get().createScreen(menu, inventory);
+                screenFactorySupplier.get().createScreen(menu, inventory);
             event.register(
-                    menuType,
-                    constructor
+                menuType,
+                constructor
             );
         }
     }

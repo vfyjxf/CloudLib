@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.event;
 
 
-import org.eclipse.collections.api.factory.Lists;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
@@ -10,7 +10,7 @@ final class EventChannelImpl<T> implements EventChannel<T> {
 
     private final EventHandler<T> handler;
     private final MutableMap<EventDefinition<?>, Event<?>> listeners = Maps.mutable.empty();
-    private final MutableList<Checker<T>> checkers = Lists.mutable.empty();
+    private final MutableList<Checker<T>> checkers = MutableLists.empty();
 
     public EventChannelImpl(EventHandler<T> handler) {
         this.handler = handler;

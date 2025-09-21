@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.registry.util;
 
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import dev.vfyjxf.cloudlib.util.Locations;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
@@ -8,7 +9,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import org.apache.commons.lang3.tuple.Pair;
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 
 
@@ -24,7 +24,7 @@ public class SimpleRegister<T> {
     private final ResourceKey<? extends Registry<T>> registryKey;
     private final String namespace;
 
-    private final MutableList<Pair<ResourceLocation, T>> entries = Lists.mutable.empty();
+    private final MutableList<Pair<ResourceLocation, T>> entries = MutableLists.empty();
 
     private SimpleRegister(ResourceKey<? extends Registry<T>> registryKey, String namespace) {
         this.registryKey = registryKey;

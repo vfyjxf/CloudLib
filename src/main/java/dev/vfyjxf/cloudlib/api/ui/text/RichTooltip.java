@@ -2,10 +2,10 @@ package dev.vfyjxf.cloudlib.api.ui.text;
 
 import com.mojang.datafixers.util.Either;
 import dev.vfyjxf.cloudlib.api.ui.widget.TooltipStack;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -138,14 +138,14 @@ public sealed interface RichTooltip permits EmptyRichTooltip, ListRichTooltip {
     RichTooltip copy();
 
     default MutableList<Either<FormattedText, TooltipComponent>> toVanilla() {
-        MutableList<Either<FormattedText, TooltipComponent>> result = Lists.mutable.empty();
+        MutableList<Either<FormattedText, TooltipComponent>> result = MutableLists.empty();
         for (var entry : entries()) {
             result.add(
-                    switch (entry) {
-                        case TooltipEntry.TextEntry(var text) -> Either.left(text);
-                        case TooltipEntry.TextProvider(var provider) -> Either.left(provider.get());
-                        case TooltipEntry.ComponentEntry(var component) -> Either.right(component);
-                    }
+                switch (entry) {
+                    case TooltipEntry.TextEntry(var text) -> Either.left(text);
+                    case TooltipEntry.TextProvider(var provider) -> Either.left(provider.get());
+                    case TooltipEntry.ComponentEntry(var component) -> Either.right(component);
+                }
             );
         }
         return result;

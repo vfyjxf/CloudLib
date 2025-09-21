@@ -5,10 +5,10 @@ import dev.vfyjxf.cloudlib.api.data.DataAttachable;
 import dev.vfyjxf.cloudlib.api.data.DataType;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import dev.vfyjxf.cloudlib.concept.node.typehack.NodeBuilderConceptWithTypeHackTest.Group;
 import dev.vfyjxf.cloudlib.concept.node.typehack.NodeBuilderConceptWithTypeHackTest.Instance;
 import net.minecraft.resources.ResourceLocation;
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -77,7 +77,7 @@ public class NodeBuilderConceptWithTypeHackTest {
     }
 
     static class Group<T extends Instance> extends Instance {
-        final MutableList<T> instances = Lists.mutable.empty();
+        final MutableList<T> instances = MutableLists.empty();
     }
 
 }

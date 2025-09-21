@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.concept.node.anygroup;
 
-import org.eclipse.collections.api.factory.Lists;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import org.eclipse.collections.api.list.MutableList;
 import org.junit.jupiter.api.Test;
 
@@ -21,8 +21,8 @@ public class GroupBuilderConceptTest {
                         scope.element(() -> new SpecificElement("Specific Element A"));
                         scope.element(new SpecificElement("Specific Element B"));
                         scope.elements(List.of(
-                                new SpecificElement("Specific Element C"),
-                                new SpecificElement("Specific Element D")
+                            new SpecificElement("Specific Element C"),
+                            new SpecificElement("Specific Element D")
                         ));
 
                         return new GroupElement<>("Specific Group");
@@ -36,8 +36,8 @@ public class GroupBuilderConceptTest {
                         scope.element(() -> new Element("Element A"));
                         scope.element(new Element("Element B"));
                         scope.elements(List.of(
-                                new Element("Element C"),
-                                new Element("Element D")
+                            new Element("Element C"),
+                            new Element("Element D")
                         ));
 
                         return new GroupElement<>("Element Group");
@@ -45,7 +45,7 @@ public class GroupBuilderConceptTest {
                 });
 
                 return new GroupElement<>(
-                        "Root"
+                    "Root"
                 );
             }
         };
@@ -78,8 +78,8 @@ class Element {
     @Override
     public String toString() {
         return "Element{" +
-                "description='" + description + '\'' +
-                '}';
+            "description='" + description + '\'' +
+            '}';
     }
 }
 
@@ -88,16 +88,16 @@ class SpecificElement extends Element {
 }
 
 non-sealed class GroupElement<E> extends Element implements Group<E> {
-    final MutableList<E> elements = Lists.mutable.empty();
+    final MutableList<E> elements = MutableLists.empty();
 
     GroupElement(String desc) {super("Group:" + desc);}
 
     @Override
     public String toString() {
         return "GroupElement{" +
-                "description='" + description + '\'' +
-                ", elements=" + elements +
-                '}';
+            "description='" + description + '\'' +
+            ", elements=" + elements +
+            '}';
     }
 }
 //endregion
@@ -138,7 +138,7 @@ sealed interface BuildScope<T extends GroupElement<E>, E extends Element> extend
 
 final class AnyGroupBuildScope<E extends Element> implements BuildScope<GroupElement<E>, E> {
 
-    private final MutableList<Entry<E>> entries = Lists.mutable.empty();
+    private final MutableList<Entry<E>> entries = MutableLists.empty();
 
     @Override
     public GroupElement<E> apply(GroupBlueprint<GroupElement<E>, E> blueprint) {
@@ -192,10 +192,10 @@ final class AnyGroupBuildScope<E extends Element> implements BuildScope<GroupEle
     private record ElementEntry<E extends Element>(E element) implements Entry<E> {}
 
     private record ElementBlueprintEntry<E extends Element>(
-            ElementBlueprint<? extends E> blueprint) implements Entry<E> {}
+        ElementBlueprint<? extends E> blueprint) implements Entry<E> {}
 
     private record GroupEntry<E extends Element, T extends Element>(
-            GroupBlueprint<? extends E, T> blueprint) implements Entry<E> {}
+        GroupBlueprint<? extends E, T> blueprint) implements Entry<E> {}
 
 }
 

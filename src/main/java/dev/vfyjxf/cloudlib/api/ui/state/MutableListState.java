@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.state;
 
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import org.eclipse.collections.api.*;
 import org.eclipse.collections.api.annotation.Beta;
 import org.eclipse.collections.api.bag.ImmutableBag;
@@ -29,7 +30,6 @@ import org.eclipse.collections.api.collection.primitive.MutableFloatCollection;
 import org.eclipse.collections.api.collection.primitive.MutableIntCollection;
 import org.eclipse.collections.api.collection.primitive.MutableLongCollection;
 import org.eclipse.collections.api.collection.primitive.MutableShortCollection;
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
@@ -73,7 +73,7 @@ import java.util.stream.Stream;
 
 
 public final class MutableListState<T> implements CompoundState, RandomAccess, MutableList<T> {
-    private final MutableList<T> internal = Lists.mutable.empty();
+    private final MutableList<T> internal = MutableLists.empty();
     private boolean changed = false;
 
     public MutableListState() {

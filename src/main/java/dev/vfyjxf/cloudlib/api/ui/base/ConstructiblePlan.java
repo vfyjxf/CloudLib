@@ -1,11 +1,11 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
 import dev.vfyjxf.cloudlib.api.ui.state.MutableState;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.collector.Collectors2;
-import org.eclipse.collections.impl.factory.Lists;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -56,10 +56,10 @@ public sealed interface ConstructiblePlan<T extends WidgetGroup<E>, E extends Wi
     record WidgetEntry<E extends Widget>(E widget) implements PlanEntry<E> {}
 
     record WidgetSpecEntry<E extends Widget>(WidgetSpec<? extends E> spec)
-            implements PlanEntry<E> {}
+        implements PlanEntry<E> {}
 
     record GroupSpecEntry<R extends Widget & Group<T>, T extends Widget>(
-            GroupSpec<R, T> spec
+        GroupSpec<R, T> spec
     ) implements PlanEntry<R> {}
 
     //endregion
@@ -70,7 +70,7 @@ final class PlanImpl<E extends Widget> implements ConstructiblePlan<WidgetGroup<
 
     private final BuildContext context;
     private final Set<Consumer<StateUsage>> stateUsages = new ObjectLinkedOpenHashSet<>();
-    private final MutableList<PlanEntry<? extends E>> entries = Lists.mutable.empty();
+    private final MutableList<PlanEntry<? extends E>> entries = MutableLists.empty();
     private final @Nullable BuildVisitor visitor;
 
     PlanImpl(BuildContext context, @Nullable BuildVisitor visitor) {
@@ -87,8 +87,8 @@ final class PlanImpl<E extends Widget> implements ConstructiblePlan<WidgetGroup<
         }
 
         return collector.states
-                .stream()
-                .collect(Collectors2.toSet());
+            .stream()
+            .collect(Collectors2.toSet());
     }
 
     @Override

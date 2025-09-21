@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.layout.modifier;
 
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import org.appliedenergistics.yoga.YogaNode;
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 
 import java.util.function.BiFunction;
@@ -14,7 +14,7 @@ import java.util.function.Predicate;
 public class ListModifier<T extends Modifier> implements Modifier {
 
     private final Modifier outer;
-    private final MutableList<Modifier> modifiers = Lists.mutable.empty();
+    private final MutableList<Modifier> modifiers = MutableLists.empty();
 
     public ListModifier(Modifier outer) {
         this.outer = outer;

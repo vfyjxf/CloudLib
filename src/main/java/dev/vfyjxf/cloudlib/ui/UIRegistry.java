@@ -2,7 +2,7 @@ package dev.vfyjxf.cloudlib.ui;
 
 import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
 import dev.vfyjxf.cloudlib.api.ui.overlay.OverlayProvider;
-import org.eclipse.collections.api.factory.Lists;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -10,7 +10,7 @@ import java.util.List;
 
 public class UIRegistry implements IUIRegistry {
 
-    private final MutableList<OverlayProvider> overlayProviders = Lists.mutable.empty();
+    private final MutableList<OverlayProvider> overlayProviders = MutableLists.empty();
 
     @Override
     public void registerOverlayProvider(OverlayProvider provider) {

@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
 import dev.vfyjxf.cloudlib.api.ui.state.State;
-import org.eclipse.collections.api.factory.Lists;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
@@ -21,9 +21,9 @@ final class WidgetManager {
         Objects.requireNonNull(rootSpec, "Root spec cannot be null");
         this.rootSpec = rootSpec;
         this.rootNode = new GroupNode(
-                rootSpec,
-                Sets.immutable.empty(),
-                Lists.mutable.empty()
+            rootSpec,
+            Sets.immutable.empty(),
+            MutableLists.empty()
         );
         this.stateManager = new StateManager(rootNode);
     }
@@ -67,7 +67,7 @@ final class WidgetManager {
             switch (entry) {
                 case ConstructiblePlan.WidgetEntry<?>(var instance) ->
                     // Handle constant widget instance
-                        groupNode.children().add(new ConstantNode(instance));
+                    groupNode.children().add(new ConstantNode(instance));
                 case ConstructiblePlan.WidgetSpecEntry(var spec) -> {
 //                    var widgetStates = SpecUtils.findSpecState(spec);
                     groupNode.children().add(new ElementNode(spec, Sets.immutable.empty(), widget));
@@ -85,9 +85,9 @@ final class WidgetManager {
                 groupQueue.push(start);
             } else {
                 var node = new GroupNode(spec,
-                        Sets.immutable.empty(),
-                        Lists.mutable.empty(),
-                        constructing);
+                    Sets.immutable.empty(),
+                    MutableLists.empty(),
+                    constructing);
                 GroupNode parent = groupQueue.peek();
                 if (parent != null) parent.children().add(node);
                 groupQueue.push(node);
@@ -115,9 +115,9 @@ final class WidgetManager {
         private Widget instance;
 
         private ElementNode(
-                WidgetSpec<? extends Widget> spec,
-                ImmutableSet<? extends State> states,
-                Widget widget
+            WidgetSpec<? extends Widget> spec,
+            ImmutableSet<? extends State> states,
+            Widget widget
         ) {
             this.spec = spec;
             this.states = states;
@@ -142,10 +142,10 @@ final class WidgetManager {
         private final MutableList<SpecNode> children;
 
         <R extends Widget & Group<E>, E extends Widget> GroupNode(
-                GroupSpec<R, ? extends E> spec,
-                ImmutableSet<? extends State> states,
-                MutableList<SpecNode> children,
-                @Nullable R instance
+            GroupSpec<R, ? extends E> spec,
+            ImmutableSet<? extends State> states,
+            MutableList<SpecNode> children,
+            @Nullable R instance
         ) {
             this.specAndInstance = new SpecAndInstance<>(spec, instance);
             this.states = states;
@@ -153,9 +153,9 @@ final class WidgetManager {
         }
 
         <R extends Widget & Group<E>, E extends Widget> GroupNode(
-                GroupSpec<R, ? extends E> spec,
-                ImmutableSet<? extends State> states,
-                MutableList<SpecNode> children
+            GroupSpec<R, ? extends E> spec,
+            ImmutableSet<? extends State> states,
+            MutableList<SpecNode> children
         ) {
             this(spec, states, children, null);
         }

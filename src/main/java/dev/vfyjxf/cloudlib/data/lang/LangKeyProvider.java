@@ -1,12 +1,12 @@
 package dev.vfyjxf.cloudlib.data.lang;
 
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import net.minecraft.data.PackOutput;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.data.LanguageProvider;
 import net.neoforged.neoforgespi.language.ModFileScanData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 
 import java.lang.annotation.ElementType;
@@ -15,27 +15,27 @@ import java.lang.reflect.InvocationTargetException;
 public class LangKeyProvider extends LanguageProvider {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private final MutableList<CustomLangProvider> providers = Lists.mutable.empty();
+    private final MutableList<CustomLangProvider> providers = MutableLists.empty();
 
     public LangKeyProvider(String modid, PackOutput output) {
         super(output, modid, "en_us");
         for (ModFileScanData data : ModList.get().getAllScanData()) {
             data.getAnnotatedBy(LangProvider.class, ElementType.TYPE)
-                    .filter(annotation -> modid.equals(annotation.annotationData().get("value")))
-                    .forEach(annotation -> {
-                        try {
-                            var clazz = Class.forName(annotation.memberName());
-                            //if clazz impl ILangProvider
-                            if (CustomLangProvider.class.isAssignableFrom(clazz)) {
-                                CustomLangProvider provider = (CustomLangProvider) clazz.getDeclaredConstructor().newInstance();
-                                providers.add(provider);
-                            }
-                        } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException |
-                                 IllegalAccessException |
-                                 InstantiationException e) {
-                            LOGGER.error("Failed to load lang handler: {}", annotation.memberName(), e);
+                .filter(annotation -> modid.equals(annotation.annotationData().get("value")))
+                .forEach(annotation -> {
+                    try {
+                        var clazz = Class.forName(annotation.memberName());
+                        //if clazz impl ILangProvider
+                        if (CustomLangProvider.class.isAssignableFrom(clazz)) {
+                            CustomLangProvider provider = (CustomLangProvider) clazz.getDeclaredConstructor().newInstance();
+                            providers.add(provider);
                         }
-                    });
+                    } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException |
+                             IllegalAccessException |
+                             InstantiationException e) {
+                        LOGGER.error("Failed to load lang handler: {}", annotation.memberName(), e);
+                    }
+                });
         }
     }
 
