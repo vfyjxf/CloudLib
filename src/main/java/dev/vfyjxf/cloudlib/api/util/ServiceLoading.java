@@ -20,6 +20,7 @@ import java.util.Objects;
  * <p>
  * <b>Note:</b> Service Class must be annotated with {@link ModService} and it must hava a default constructor.
  */
+//TODO:Redesign
 public class ServiceLoading {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -27,7 +28,7 @@ public class ServiceLoading {
     /**
      * Load service instances from mods without caching.
      *
-     * @param annotationMarker marker annotatio
+     * @param annotationMarker marker annotation
      * @param serviceInterface service interface
      * @param <T>              service interface type
      * @return a list of service instances
