@@ -24,14 +24,15 @@ public final class PluginLoader {
 
     public static <T extends ModPlugin> LoadingResult<T> load(Class<T> pluginClass, ClassLoader classLoader) throws CyclePresentException {
         Checks.checkNotNull(pluginClass, "pluginClass");
+        Checks.checkNotNull(classLoader, "classLoader");
 
         ServiceLoader<T> loader = ServiceLoader.load(pluginClass, classLoader);
         var loadingPlugins = loader.stream()
-            .map(ServiceLoader.Provider::get)
-            .map(LoadingPlugin::of)
-            .collect(Collectors.toSet());
+                                   .map(ServiceLoader.Provider::get)
+                                   .map(LoadingPlugin::of)
+                                   .collect(Collectors.toSet());
         var id2Plugin = loadingPlugins.stream()
-            .collect(Collectors.toMap(LoadingPlugin::id, plugin -> plugin));
+                                      .collect(Collectors.toMap(LoadingPlugin::id, plugin -> plugin));
 
         MutableGraph<LoadingPlugin<T>> graph = GraphBuilder.directed().build();
         loadingPlugins.forEach(graph::addNode);
@@ -58,9 +59,9 @@ public final class PluginLoader {
 
             var missingTargetDeps =
                 loadingPlugin.dependencies()
-                    .stream()
-                    .filter(dep -> !id2Plugin.containsKey(dep.pluginId()))
-                    .collect(Collectors2.groupBy(PluginDependency::constraint, Multimaps.mutable.list::empty));
+                             .stream()
+                             .filter(dep -> !id2Plugin.containsKey(dep.pluginId()))
+                             .collect(Collectors2.groupBy(PluginDependency::constraint, Multimaps.mutable.list::empty));
 
             var required = missingTargetDeps.get(PluginDependency.Constraint.REQUIRED);
             var ignorable = missingTargetDeps.get(PluginDependency.Constraint.OPTIONAL_REQUIRED);
@@ -73,7 +74,7 @@ public final class PluginLoader {
 
             var pluginFailures =
                 required.select(dep -> !id2Plugin.containsKey(dep.pluginId()))
-                    .collect(dep -> new LoadingFailure<>(plugin, FailureType.FATAL, "Missing required dependency: " + dep.pluginId()));
+                        .collect(dep -> new LoadingFailure<>(plugin, FailureType.FATAL, "Missing required dependency: " + dep.pluginId()));
 
             failures.addAll(pluginFailures);
         }
@@ -81,7 +82,8 @@ public final class PluginLoader {
         return new LoadingResult<>(plugins, failures);
     }
 
-    public record LoadingResult<T extends ModPlugin>(MutableList<T> plugins, MutableList<LoadingFailure<T>> failures) {}
+    public record LoadingResult<T extends ModPlugin>(MutableList<T> plugins, MutableList<LoadingFailure<T>> failures) {
+    }
 
     public record LoadingFailure<T extends ModPlugin>(T instance, FailureType type, String reason) {
         @Override

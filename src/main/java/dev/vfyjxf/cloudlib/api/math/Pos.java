@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Contract;
  */
 public record Pos(int x, int y) {
 
-    public static final Pos ORIGIN = new Pos(0, 0);
+    public static final Pos origin = new Pos(0, 0);
 
     public Pos(MutablePos pos) {
         this(pos.x(), pos.y());

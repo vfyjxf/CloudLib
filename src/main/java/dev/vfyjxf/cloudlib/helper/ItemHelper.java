@@ -17,24 +17,26 @@ public final class ItemHelper {
     /**
      * Codec without count size limitation
      */
-    public static final Codec<ItemStack> CODEC = Codec.lazyInitialized(
+    public static final Codec<ItemStack> codec = Codec.lazyInitialized(
         () -> RecordCodecBuilder.create(
             instance -> instance.group(
-                    ITEM_NON_AIR_CODEC.fieldOf("id").forGetter(ItemStack::getItemHolder),
-                    ExtraCodecs.POSITIVE_INT.fieldOf("count").orElse(1).forGetter(ItemStack::getCount),
-                    DataComponentPatch.CODEC
-                        .optionalFieldOf("components", DataComponentPatch.EMPTY)
-                        .forGetter(ItemStack::getComponentsPatch)
-                )
-                .apply(instance, ItemStack::new)
+                ITEM_NON_AIR_CODEC.fieldOf("id").forGetter(ItemStack::getItemHolder),
+                ExtraCodecs.POSITIVE_INT.fieldOf("count").orElse(1).forGetter(ItemStack::getCount),
+                DataComponentPatch.CODEC
+                    .optionalFieldOf("components", DataComponentPatch.EMPTY)
+                    .forGetter(ItemStack::getComponentsPatch)
+            ).apply(instance, ItemStack::new)
         )
     );
 
     /**
      * Optional codec without count size limitation
      */
-    public static final Codec<ItemStack> OPTIONAL_CODEC = ExtraCodecs.optionalEmptyMap(CODEC)
-        .xmap(op -> op.orElse(ItemStack.EMPTY), stack -> stack.isEmpty() ? Optional.empty() : Optional.of(stack));
+    public static final Codec<ItemStack> optionalCodec =
+        ExtraCodecs.optionalEmptyMap(codec)
+                   .xmap(op -> op.orElse(ItemStack.EMPTY),
+                       stack -> stack.isEmpty() ? Optional.empty() : Optional.of(stack)
+                   );
 
 }
 

@@ -35,7 +35,7 @@ public interface DragContext {
 
     default Pos relativePos(Widget coordinate) {
         DraggableElement<?> element = draggingElement();
-        if (element == null) return Pos.ORIGIN;
+        if (element == null) return Pos.origin;
         Rect original = element.originalBounds();
         FloatPos start = getStart();
         FloatPos current = getCurrent();

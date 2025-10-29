@@ -17,27 +17,27 @@ import java.util.Objects;
 
 
 public record TooltipContext(
-        HolderLookup.Provider registries,
-        Level level,
-        Player player,
-        TooltipFlag flag,
-        float tickRate
+    HolderLookup.Provider registries,
+    Level level,
+    Player player,
+    TooltipFlag flag,
+    float tickRate
 ) implements AttributeTooltipContext {
 
-    static TooltipContext create(@Nullable Level level, @Nullable Player player, @Nullable TooltipFlag tooltipFlag) {
+    public static TooltipContext create(@Nullable Level level, @Nullable Player player, @Nullable TooltipFlag tooltipFlag) {
         var minecraft = Minecraft.getInstance();
         level = level == null ? Objects.requireNonNull(minecraft.level) : level;
         player = player == null ? Objects.requireNonNull(minecraft.player) : player;
         var advancedItemTooltips = minecraft.options.advancedItemTooltips;
         tooltipFlag = tooltipFlag == null ? (
-                advancedItemTooltips ? TooltipFlag.ADVANCED : TooltipFlag.NORMAL
+            advancedItemTooltips ? TooltipFlag.ADVANCED : TooltipFlag.NORMAL
         ) : tooltipFlag;
         var registryAccess = level.registryAccess();
         float tickRate = level.tickRateManager().tickrate();
         return new TooltipContext(registryAccess, level, player, tooltipFlag, tickRate);
     }
 
-    static TooltipContext create() {
+    public static TooltipContext create() {
         var minecraft = Minecraft.getInstance();
         var level = minecraft.level;
         return create(level, minecraft.player, null);

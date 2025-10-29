@@ -91,12 +91,12 @@ public class Widget
     //endregion
 
     //region Bounds
-    protected Pos position = Pos.ORIGIN;
+    protected Pos position = Pos.origin;
     protected Pos absolute = calculateAbsolute();
     /**
      * The width and height of the widget,contains padding
      */
-    protected Size size = Size.POINT;
+    protected Size size = Size.point;
     //endregion
 
     //region Visual
