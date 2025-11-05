@@ -13,6 +13,8 @@ import net.minecraft.resources.ResourceLocation;
 @NotNullByDefault
 public class CloudLibPlugin implements IModPlugin {
 
+    public static final ResourceLocation pluginId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "jei_plugin");
+
     public static IScreenHelper getScreenHelper() {
         Preconditions.checkState(screenHelper != null, "ScreenHelper is not initialized yet.");
         return screenHelper;
@@ -22,7 +24,7 @@ public class CloudLibPlugin implements IModPlugin {
 
     @Override
     public ResourceLocation getPluginUid() {
-        return Constants.JEI_PLUGIN_UID;
+        return pluginId;
     }
 
     @Override

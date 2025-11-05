@@ -3,13 +3,14 @@ package dev.vfyjxf.cloudlib.api.plugin;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
+import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.Checks;
-import net.minecraft.resources.ResourceLocation;
 import net.neoforged.fml.loading.toposort.CyclePresentException;
 import net.neoforged.fml.loading.toposort.TopologicalSort;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.collector.Collectors2;
 import org.eclipse.collections.impl.factory.Multimaps;
+import org.slf4j.Logger;
 
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -82,6 +83,29 @@ public final class PluginLoader {
         return new LoadingResult<>(plugins, failures);
     }
 
+    //region util
+
+    public static <T extends ModPlugin> MutableList<T> loadPlugin(Logger logger, String className, Class<T> pluginClass) {
+        PluginLoader.LoadingResult<T> loadingResult = PluginLoader.load(pluginClass);
+        if (loadingResult.failures().notEmpty()) {
+            var failureByType =
+                loadingResult.failures()
+                             .groupBy(PluginLoader.LoadingFailure::type);
+            var warnings = failureByType.get(PluginLoader.FailureType.WARNING);
+            for (var warning : warnings) {
+                logger.warn("{}: {} is skipped because : {}", className, warning.instance().pluginId(), warning.reason());
+            }
+            var fatal = failureByType.get(PluginLoader.FailureType.FATAL);
+            if (fatal.notEmpty()) {
+                String errorString = fatal.makeString("", ",\n", "");
+                throw new IllegalStateException("Fatal error when loading" + className + "s: " + errorString);
+            }
+        }
+        return loadingResult.plugins();
+    }
+
+    //endregion
+
     public record LoadingResult<T extends ModPlugin>(MutableList<T> plugins, MutableList<LoadingFailure<T>> failures) {
     }
 
@@ -97,7 +121,7 @@ public final class PluginLoader {
         WARNING
     }
 
-    private record LoadingPlugin<T extends ModPlugin>(T plugin, ResourceLocation id) {
+    private record LoadingPlugin<T extends ModPlugin>(T plugin, Namespace id) {
 
         static <T extends ModPlugin> LoadingPlugin<T> of(T plugin) {
             return new LoadingPlugin<>(plugin, plugin.pluginId());

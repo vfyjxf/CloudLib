@@ -142,6 +142,9 @@ dependencies {
     additionalRuntimeClasspath(api("net.lenni0451:Reflect:1.4.0"))
     jarJar "net.lenni0451:Reflect:1.4.0"
 
+    compileOnly 'com.google.auto.service:auto-service:1.1.1'
+    annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
     testImplementation "net.neoforged:testframework:${project.neo_version}"
     testImplementation 'com.palantir.javapoet:javapoet:0.6.0'

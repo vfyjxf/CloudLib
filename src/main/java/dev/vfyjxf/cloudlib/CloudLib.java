@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib;
 
-import dev.vfyjxf.cloudlib.api.registry.ModuleEntryPoint;
-import dev.vfyjxf.cloudlib.api.util.ServiceLoading;
+import dev.vfyjxf.cloudlib.api.plugin.CloudLibPlugin;
+import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
 import dev.vfyjxf.cloudlib.debug.DebugConfig;
 import dev.vfyjxf.cloudlib.network.CloudlibPayloads;
 import dev.vfyjxf.cloudlib.test.TestRegistry;
@@ -14,18 +14,18 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLConstructModEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.eclipse.collections.api.collection.ImmutableCollection;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class CloudLib {
-    public static final Logger logger = LogManager.getLogger("CloudLib");
-    protected final ImmutableCollection<ModuleEntryPoint> plugins;
+    public static final Logger logger = LoggerFactory.getLogger("CloudLib");
+    protected final ImmutableList<CloudLibPlugin> plugins;
 
     //TODO:Move thread unsafe operations to constructModEvent
     public CloudLib(ModContainer container, IEventBus modBus, Dist dist) {
         //region internal init
-        plugins = ServiceLoading.load(ModuleEntryPoint.class).toImmutable();
+        plugins = PluginLoader.loadPlugin(logger, "CloudLib Plugin", CloudLibPlugin.class).toImmutable();
         //endregion
 
         //region debug & test init

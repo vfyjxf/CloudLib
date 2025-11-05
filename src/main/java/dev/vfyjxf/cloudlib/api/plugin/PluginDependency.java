@@ -1,9 +1,9 @@
 package dev.vfyjxf.cloudlib.api.plugin;
 
-import net.minecraft.resources.ResourceLocation;
+import dev.vfyjxf.cloudlib.api.util.Namespace;
 
 public record PluginDependency(
-    ResourceLocation pluginId,
+    Namespace pluginId,
     Order order,
     Constraint constraint
 ) {
