@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Mod(value = Constants.MOD_ID, dist = Dist.CLIENT)
-public class CloudLibClient extends CloudLib {
+public final class CloudLibClient extends CloudLib {
 
     public static final Logger logger = LoggerFactory.getLogger("CloudLib Client");
 

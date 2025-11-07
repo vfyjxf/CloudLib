@@ -11,15 +11,16 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.file.Path;
 import java.util.Objects;
 
 /**
  * @see ResourceLocation
- * @see java.nio.file.Path
+ * @see Path
  */
 @NotNullByDefault
 @FieldNotNullByDefault
-public record Namespace(String root, String path, int hash) implements Comparable<Namespace> {
+public final class Namespace implements Comparable<Namespace> {
 
     public static final Codec<Namespace> codec = Codec.STRING.comapFlatMap(
         str -> {
@@ -64,7 +65,17 @@ public record Namespace(String root, String path, int hash) implements Comparabl
         }
     }
 
-    public Namespace {
+    private final String root;
+    private final String path;
+    private final int hash;
+
+    public String root() {return root;}
+
+    public String path() {return path;}
+
+    public int hash() {return hash;}
+
+    private Namespace(String root, String path) {
         Checks.checkNotNull(root, "root");
         Checks.checkNotNull(path, "path");
         if (!ResourceLocation.isValidNamespace(root)) {
@@ -73,11 +84,9 @@ public record Namespace(String root, String path, int hash) implements Comparabl
         if (!ResourceLocation.isValidPath(path)) {
             throw new IllegalArgumentException("Non [a-z0-9/._-] character in path of namespace: " + root + ":" + path);
         }
-        hash = 31 * root.hashCode() + path.hashCode();
-    }
-
-    public Namespace(String root, String path) {
-        this(root, path, 0);
+        this.hash = 31 * root.hashCode() + path.hashCode();
+        this.root = root;
+        this.path = path;
     }
 
     public Namespace resolve(String path) {

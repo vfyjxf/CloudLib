@@ -18,7 +18,7 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class CloudLib {
+public sealed abstract class CloudLib permits CloudLibClient, CloudLibServer {
     public static final Logger logger = LoggerFactory.getLogger("CloudLib");
     protected final ImmutableList<CloudLibPlugin> plugins;
 
