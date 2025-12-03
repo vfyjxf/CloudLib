@@ -60,7 +60,8 @@ public sealed interface Maybe<T extends @Nullable Object> {
 
     T get();
 
-    enum Empty implements Maybe<Object> {
+    @SuppressWarnings("rawtypes")
+    enum Empty implements Maybe {
         INSTANCE;
 
         @SuppressWarnings("unchecked")

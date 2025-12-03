@@ -85,7 +85,7 @@ public final class PluginLoader {
 
     //region util
 
-    public static <T extends ModPlugin> MutableList<T> loadPlugin(Logger logger, String className, Class<T> pluginClass) {
+    public static <T extends ModPlugin> MutableList<T> loadPlugin(Logger logger, String pluginCategory, Class<T> pluginClass) {
         PluginLoader.LoadingResult<T> loadingResult = PluginLoader.load(pluginClass);
         if (loadingResult.failures().notEmpty()) {
             var failureByType =
@@ -93,12 +93,12 @@ public final class PluginLoader {
                              .groupBy(PluginLoader.LoadingFailure::type);
             var warnings = failureByType.get(PluginLoader.FailureType.WARNING);
             for (var warning : warnings) {
-                logger.warn("{}: {} is skipped because : {}", className, warning.instance().pluginId(), warning.reason());
+                logger.warn("{}: {} is skipped because : {}", pluginCategory, warning.instance().pluginId(), warning.reason());
             }
             var fatal = failureByType.get(PluginLoader.FailureType.FATAL);
             if (fatal.notEmpty()) {
                 String errorString = fatal.makeString("", ",\n", "");
-                throw new IllegalStateException("Fatal error when loading" + className + "s: " + errorString);
+                throw new IllegalStateException("Fatal error when loading " + pluginCategory + "s: " + errorString);
             }
         }
         return loadingResult.plugins();
