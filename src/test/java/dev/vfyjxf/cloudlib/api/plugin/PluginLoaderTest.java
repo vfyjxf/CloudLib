@@ -1,8 +1,8 @@
 package dev.vfyjxf.cloudlib.api.plugin;
 
 import com.google.auto.service.AutoService;
-import dev.vfyjxf.cloudlib.util.Locations;
-import net.minecraft.resources.ResourceLocation;
+import dev.vfyjxf.cloudlib.api.util.Namespace;
+import dev.vfyjxf.cloudlib.util.CloudNamespaces;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +18,7 @@ public class PluginLoaderTest {
         Assertions.assertEquals(2, result.plugins().size());
         Assertions.assertEquals(
             "plugin: cloudlib:test_plugin_e failed to load because: Missing required dependency: cloudlib:test_plugin_c,\n" +
-                "plugin: cloudlib:test_plugin_d failed to load because: Missing optional dependency: cloudlib:test_plugin_c",
+            "plugin: cloudlib:test_plugin_d failed to load because: Missing optional dependency: cloudlib:test_plugin_c",
             result.failures().makeString("", ",\n", "")
         );
     }
@@ -27,8 +27,8 @@ public class PluginLoaderTest {
     public static class TestPlugin implements ModPlugin {
 
         @Override
-        public ResourceLocation pluginId() {
-            return Locations.ofMod("test_plugin_a");
+        public Namespace pluginId() {
+            return CloudNamespaces.ofMod("test_plugin_a");
         }
 
         @Override
@@ -41,15 +41,15 @@ public class PluginLoaderTest {
     public static class TestPluginB implements ModPlugin {
 
         @Override
-        public ResourceLocation pluginId() {
-            return Locations.ofMod("test_plugin_b");
+        public Namespace pluginId() {
+            return CloudNamespaces.ofMod("test_plugin_b");
         }
 
         @Override
         public Set<PluginDependency> dependencies() {
             return Set.of(
                 new PluginDependency(
-                    Locations.ofMod("test_plugin_a"),
+                    CloudNamespaces.ofMod("test_plugin_a"),
                     PluginDependency.Order.AFTER,
                     PluginDependency.Constraint.REQUIRED
                 )
@@ -61,15 +61,15 @@ public class PluginLoaderTest {
     public static class TestPluginC implements ModPlugin {
 
         @Override
-        public ResourceLocation pluginId() {
-            return Locations.ofMod("test_plugin_c");
+        public Namespace pluginId() {
+            return CloudNamespaces.ofMod("test_plugin_c");
         }
 
         @Override
         public Set<PluginDependency> dependencies() {
             return Set.of(
                 new PluginDependency(
-                    Locations.ofMod("test_plugin_b"),
+                    CloudNamespaces.ofMod("test_plugin_b"),
                     PluginDependency.Order.AFTER,
                     PluginDependency.Constraint.OPTIONAL_REQUIRED
                 )
@@ -81,15 +81,15 @@ public class PluginLoaderTest {
     public static class TestPluginD implements ModPlugin {
 
         @Override
-        public ResourceLocation pluginId() {
-            return Locations.ofMod("test_plugin_d");
+        public Namespace pluginId() {
+            return CloudNamespaces.ofMod("test_plugin_d");
         }
 
         @Override
         public Set<PluginDependency> dependencies() {
             return Set.of(
                 new PluginDependency(
-                    Locations.ofMod("test_plugin_c"),
+                    CloudNamespaces.ofMod("test_plugin_c"),
                     PluginDependency.Order.AFTER,
                     PluginDependency.Constraint.OPTIONAL_REQUIRED
                 )
@@ -101,15 +101,15 @@ public class PluginLoaderTest {
     public static class TestPluginE implements ModPlugin {
 
         @Override
-        public ResourceLocation pluginId() {
-            return Locations.ofMod("test_plugin_e");
+        public Namespace pluginId() {
+            return CloudNamespaces.ofMod("test_plugin_e");
         }
 
         @Override
         public Set<PluginDependency> dependencies() {
             return Set.of(
                 new PluginDependency(
-                    Locations.ofMod("test_plugin_c"),
+                    CloudNamespaces.ofMod("test_plugin_c"),
                     PluginDependency.Order.AFTER,
                     PluginDependency.Constraint.REQUIRED
                 )
