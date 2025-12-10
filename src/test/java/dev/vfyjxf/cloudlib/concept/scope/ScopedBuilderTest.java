@@ -1,52 +1,37 @@
 package dev.vfyjxf.cloudlib.concept.scope;
 
+import net.minecraft.server.MinecraftServer;
+import net.neoforged.testframework.junit.EphemeralTestServerProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Stack;
 
+@ExtendWith(EphemeralTestServerProvider.class)
 public class ScopedBuilderTest {
 
     @Test
-    void build() {
+    void build(MinecraftServer server) {
         try (var root = RootScope.create()) {
             try (var main = ChildScope.autoScope()) {
                 try (var sub = ChildScope.autoScope()) {
-                    System.out.println(Scope.current());
                     Assertions.assertEquals(sub, Scope.current());
+                }
+                try (var sub2 = ChildScope.autoScope()) {
+                    Assertions.assertEquals(sub2, Scope.current());
+                }
+                try (var sub3 = ChildScope.autoScope()) {
+                    Assertions.assertEquals(sub3, Scope.current());
+                }
+                try (var sub4 = ChildScope.autoScope()) {
+                    Assertions.assertEquals(sub4, Scope.current());
                 }
                 Assertions.assertEquals(main, Scope.current());
             }
             Assertions.assertEquals(root, Scope.current());
         }
         Assertions.assertThrows(IllegalStateException.class, Scope::current);
-    }
-
-    public static class Node {
-        String name;
-
-        public Node(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public String toString() {
-            return name;
-        }
-    }
-
-    public static class GroupNode extends Node {
-        List<Node> children = new ArrayList<>();
-
-        public GroupNode(String name) {
-            super(name);
-        }
-
-        void addChild(Node child) {
-            children.add(child);
-        }
     }
 
 }

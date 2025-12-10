@@ -61,10 +61,6 @@ neoForge {
         configureEach {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
             logLevel = org.slf4j.event.Level.DEBUG
-            if (isJetBrainsRuntime()) {
-                jvmArgument "-XX:+AllowEnhancedClassRedefinition"
-                jvmArgument "-XX:HotswapAgent=fatjar"
-            }
             systemProperty('terminal.jline', 'true')
         }
     }
@@ -116,9 +112,6 @@ repositories {
 }
 
 dependencies {
-//    errorprone "com.uber.nullaway:nullaway:0.12.6"
-//    errorprone "com.google.errorprone:error_prone_core:2.37.0"
-//    compileOnly "net.minecraftforge:eventbus:7.0-beta.1"
     localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
     compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
     additionalRuntimeClasspath(api("org.eclipse.collections:eclipse-collections-api:11.1.0"))

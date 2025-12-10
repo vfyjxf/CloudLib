@@ -12,6 +12,7 @@ import org.eclipse.collections.impl.collector.Collectors2;
 import org.eclipse.collections.impl.factory.Multimaps;
 import org.slf4j.Logger;
 
+import java.util.Collection;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -19,19 +20,36 @@ import java.util.stream.Collectors;
 @SuppressWarnings("UnstableApiUsage")
 public final class PluginLoader {
 
-    public static <T extends ModPlugin> LoadingResult<T> load(Class<T> pluginClass) throws CyclePresentException {
+    public static <T extends ModPlugin> LoadingResult<T> load(Class<T> pluginClass) throws CyclePresentException, IllegalStateException {
         return load(pluginClass, PluginLoader.class.getClassLoader());
     }
 
-    public static <T extends ModPlugin> LoadingResult<T> load(Class<T> pluginClass, ClassLoader classLoader) throws CyclePresentException {
+    public static <T extends ModPlugin> LoadingResult<T> load(Class<T> pluginClass, ClassLoader classLoader) throws CyclePresentException, IllegalStateException {
         Checks.checkNotNull(pluginClass, "pluginClass");
         Checks.checkNotNull(classLoader, "classLoader");
 
         ServiceLoader<T> loader = ServiceLoader.load(pluginClass, classLoader);
-        var loadingPlugins = loader.stream()
-                                   .map(ServiceLoader.Provider::get)
-                                   .map(LoadingPlugin::of)
-                                   .collect(Collectors.toSet());
+        var pluginsList = loader.stream()
+                                .map(ServiceLoader.Provider::get)
+                                .map(LoadingPlugin::of)
+                                .collect(Collectors.groupingBy(LoadingPlugin::id, Collectors.toList()));
+        var duplicatePlugins = pluginsList.values()
+                                          .stream()
+                                          .filter(plugins -> plugins.size() > 1)
+                                          .toList();
+        if (!duplicatePlugins.isEmpty()) {
+            String errorMessage = duplicatePlugins.stream()
+                                                  .flatMap(Collection::stream)
+                                                  .map(LoadingPlugin::id)
+                                                  .distinct()
+                                                  .map(Namespace::toString)
+                                                  .collect(Collectors.joining(", "));
+            throw new IllegalStateException("Duplicate plugins: " + errorMessage);
+        }
+        var loadingPlugins = pluginsList.values()
+                                        .stream()
+                                        .flatMap(Collection::stream)
+                                        .collect(Collectors.toSet());
         var id2Plugin = loadingPlugins.stream()
                                       .collect(Collectors.toMap(LoadingPlugin::id, plugin -> plugin));
 
@@ -85,7 +103,7 @@ public final class PluginLoader {
 
     //region util
 
-    public static <T extends ModPlugin> MutableList<T> loadPlugin(Logger logger, String pluginCategory, Class<T> pluginClass) {
+    public static <T extends ModPlugin> MutableList<T> loadPlugin(Logger logger, String pluginCategory, Class<T> pluginClass) throws CyclePresentException, IllegalStateException {
         PluginLoader.LoadingResult<T> loadingResult = PluginLoader.load(pluginClass);
         if (loadingResult.failures().notEmpty()) {
             var failureByType =
