@@ -124,6 +124,12 @@ public final class PluginLoader {
 
     //endregion
 
+    /**
+     *
+     * @param plugins  unloaded plugins
+     * @param failures loading failures
+     * @param <T>      plugin type
+     */
     public record LoadingResult<T extends ModPlugin>(MutableList<T> plugins, MutableList<LoadingFailure<T>> failures) {
     }
 

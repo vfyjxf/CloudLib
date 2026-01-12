@@ -73,7 +73,7 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
 //            itemDisplayList.clear();
 //            for (int i = 0; i < stacks.size(); i++) {
 //                ItemStack stack = stacks.get(i);
-//                var itemDisplay = itemDisplayList.addWidget(itemDisplayFactory.apply(stack));
+//                var itemDisplay = itemDisplayList.addWidget(itemDisplayFactory.updateWidget(stack));
 //                itemDisplay.mark("itemDisplay" + i);
 //                itemDisplay.withModifier(
 //                        Modifier.builder()
@@ -106,7 +106,7 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
 //        //endregion
 
 //        //region selected
-//        var selectedDisplay = mainGroup().addWidget(itemDisplayFactory.apply(ItemStack.EMPTY));
+//        var selectedDisplay = mainGroup().addWidget(itemDisplayFactory.updateWidget(ItemStack.EMPTY));
 //        selectedDisplay.mark("selectedDisplay");
 //        selectedDisplay.withModifier(
 //                Modifier().

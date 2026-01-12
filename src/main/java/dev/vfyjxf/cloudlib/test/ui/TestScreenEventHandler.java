@@ -3,9 +3,6 @@ package dev.vfyjxf.cloudlib.test.ui;
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.vfyjxf.cloudlib.Constants;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
-import dev.vfyjxf.cloudlib.api.ui.UIFactory;
-import dev.vfyjxf.cloudlib.api.ui.base.BasicSpecScreen;
-import dev.vfyjxf.cloudlib.api.ui.base.PlanFragment;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -43,22 +40,7 @@ public class TestScreenEventHandler {
                 if (annotation.annotationType().equals(annotationType)) {
                     String memberName = annotation.memberName();
                     testScreenSupplier = () -> {
-                        try {
-                            Class<?> type = Class.forName(memberName);
-                            var constructor = type.getDeclaredConstructor(PlanFragment.class, PlanFragment.class);
-                            constructor.setAccessible(true);
-                            return UIFactory.createScreen(((mainGroup, overlay) -> {
-                                try {
-                                    return (BasicSpecScreen) constructor.newInstance(mainGroup, overlay);
-                                } catch (ReflectiveOperationException e) {
-                                    e.printStackTrace();
-                                    return null;
-                                }
-                            }));
-                        } catch (ReflectiveOperationException e) {
-                            e.printStackTrace();
-                            return null;
-                        }
+                        return null;
                     };
                 }
             }

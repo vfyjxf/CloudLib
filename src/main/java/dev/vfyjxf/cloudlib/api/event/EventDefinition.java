@@ -1,7 +1,5 @@
 package dev.vfyjxf.cloudlib.api.event;
 
-import org.jetbrains.annotations.ApiStatus;
-
 /**
  * The definition of an event.
  * <p>
@@ -10,8 +8,7 @@ import org.jetbrains.annotations.ApiStatus;
  *
  * @param <T> the type of the event
  */
-@ApiStatus.NonExtendable
-public sealed interface EventDefinition<T> permits EventFactory.EventDefinitionImpl {
+public sealed interface EventDefinition<T> permits Events.EventDefinitionImpl {
 
     /**
      * @return The type of the event.Normally, it is an interface.
@@ -24,15 +21,15 @@ public sealed interface EventDefinition<T> permits EventFactory.EventDefinitionI
     Event<T> create();
 
     /**
-     * @return The global event instance.
+     * @return get a default event instance.
      */
-    Event<T> global();
+    Event<T> defaultEvent();
 
     /**
      * @return The invoker of the global event.
      */
     default T invoker() {
-        return global().invoker();
+        return defaultEvent().invoker();
     }
 
     /**
@@ -40,14 +37,14 @@ public sealed interface EventDefinition<T> permits EventFactory.EventDefinitionI
      * @return The listener registered.
      */
     default T register(T listener) {
-        return global().register(listener);
+        return defaultEvent().register(listener);
     }
 
     /**
      * @param listener The listener to be unregistered.
      */
     default void unregister(T listener) {
-        global().unregister(listener);
+        defaultEvent().unregister(listener);
     }
 
     /**
@@ -55,14 +52,14 @@ public sealed interface EventDefinition<T> permits EventFactory.EventDefinitionI
      * @return Whether the listener is registered.
      */
     default boolean isRegistered(T listener) {
-        return global().isRegistered(listener);
+        return defaultEvent().isRegistered(listener);
     }
 
     /**
      * Unregister all listeners.
      */
     default void unregisterAll() {
-        global().clearListeners();
+        defaultEvent().clearListeners();
     }
 
 }

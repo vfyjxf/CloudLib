@@ -12,22 +12,28 @@ import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.math.Size;
 import dev.vfyjxf.cloudlib.api.performer.Backstage;
 import dev.vfyjxf.cloudlib.api.performer.PerformerContainer;
-import dev.vfyjxf.cloudlib.api.ui.*;
+import dev.vfyjxf.cloudlib.api.ui.InputContext;
+import dev.vfyjxf.cloudlib.api.ui.Lifecycle;
+import dev.vfyjxf.cloudlib.api.ui.Renderable;
+import dev.vfyjxf.cloudlib.api.ui.UIContext;
 import dev.vfyjxf.cloudlib.api.ui.animation.Animatable;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragProvider;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
 import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
+import dev.vfyjxf.cloudlib.api.ui.texture.UITexture;
 import dev.vfyjxf.cloudlib.api.ui.widget.Visibility;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
 import dev.vfyjxf.cloudlib.util.ScreenUtil;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.appliedenergistics.yoga.YogaNode;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.MustBeInvokedByOverriders;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnknownNullability;
 
-import java.util.UUID;
 import java.util.function.Supplier;
 
 
@@ -49,9 +55,9 @@ import java.util.function.Supplier;
 @SuppressWarnings("unchecked")
 //TODO:对Widget的各个生命周期给出明确定义，对各种Widget生命周期有关的，更新有关的事件明确给出定义，如Init，update,tick等
 public class Widget
-        implements Renderable, Animatable<Widget>,
-        EventHandler<WidgetEvent>,
-        DataAttachable, Backstage {
+    implements Renderable, Animatable<Widget>,
+               EventHandler<WidgetEvent>,
+               DataAttachable, Backstage {
 
     //region Event
     protected final EventChannel<WidgetEvent> eventChannel = EventChannel.create(this);
@@ -63,7 +69,7 @@ public class Widget
 
     //region management
 
-    private Lifecycle lifecycle = Lifecycle.CONSTRUCTING;
+    Lifecycle lifecycle = Lifecycle.CONSTRUCTING;
 
     //endregion
 
@@ -83,10 +89,19 @@ public class Widget
     //endregion
 
     //region Node Attributes
+
+    @Nullable Object key;
+
+    /**
+     * The blueprint of the widget.
+     */
+    @Nullable Blueprint<?> blueprint;
+
+    final StateSlot.StateContext stateContext = new StateSlot.StateContext();
+
+    //TODO:废弃这个状态，语义混乱不明确
     protected boolean initialized = false;
 
-
-    protected String id = UUID.randomUUID().toString();
     protected boolean active = true;
     //endregion
 
@@ -100,8 +115,8 @@ public class Widget
     //endregion
 
     //region Visual
-    protected RenderableTexture background;
-    protected RenderableTexture icon;
+    protected UITexture background;
+    protected UITexture icon;
     protected Visibility visibility = Visibility.VISIBLE;
     @Nullable
     protected RichTooltip richTooltip;
@@ -140,49 +155,10 @@ public class Widget
 
     //endregion
 
-    //region Basic
-
-    public RootWidget root() {
-        return root;
-    }
-
-    public UIContext getContext() {
-        return root.getContext();
-    }
-
-    public @UnknownNullability WidgetGroup<? extends Widget> parent() {
-        return parent;
-    }
-
-    @CanIgnoreReturnValue
-    @Contract("_ -> this")
-    protected Widget setParent(@Nullable WidgetGroup<? super Widget> parent) {
-        this.parent = parent;
-        return this;
-    }
-
-    @MustBeInvokedByOverriders
-    public void init() {
-        listeners(WidgetEvent.onInit).onInit(this);
-        initialized = true;
-        listeners(WidgetEvent.onInitPost).onInit(this);
-    }
-
-    @MustBeInvokedByOverriders
-    public void tick() {
-        listeners(WidgetEvent.onTick).onTick();
-    }
-
-    public boolean initialized() {
-        return initialized;
-    }
-
-    public boolean interactable() {
-        return active && visible();
-    }
+    //region capability
 
     @Override
-    public @NotNull AttachableDataContainer attachableDataContainer() {
+    public AttachableDataContainer attachableDataContainer() {
         return attachableDataContainer;
     }
 
@@ -196,40 +172,80 @@ public class Widget
         return eventChannel;
     }
 
-    /**
-     * @return the unique id of the widget.
-     */
-    public String getId() {
-        return id;
+    //endregion
+
+
+    //region Basic
+
+    public @Nullable Object key() {
+        return key;
     }
 
-    @Contract("_ -> this")
-    public Widget setId(String id) {
-        this.id = id;
-        return this;
+    public @UnknownNullability WidgetGroup<? extends Widget> parent() {
+        return parent;
     }
 
-    @Contract("_ -> this")
-    public Widget mark(String id) {
-        return setId(id);
-    }
-
-    @Contract("_-> this")
     @CanIgnoreReturnValue
-    public final <T extends Widget> Widget asChild(WidgetGroup<T> parent) {
-        if (parent == this) throw new IllegalArgumentException("Cannot add widget to itself");
-        if (parent.add(parent.size(), (T) this)) {
-            if (this.parent != null) {
-                this.parent.yogaNode.removeChild(this.yogaNode);
-            }
-            this.parent = parent;
-            this.onPositionUpdate();
-            if (layoutByParent) {
-                parent.yogaNode.addChildAt(this.yogaNode, parent.yogaNode.getChildCount());
-            }
-        }
+    @Contract("_ -> this")
+    protected Widget setParent(@Nullable WidgetGroup<? super Widget> parent) {
+        this.parent = parent;
         return this;
     }
+
+    public boolean initialized() {
+        return initialized;
+    }
+
+    public boolean interactable() {
+        return active && visible();
+    }
+
+    public RootWidget root() {
+        return root;
+    }
+
+    //todo:refactor this
+    public UIContext getContext() {
+        return root.getContext();
+    }
+
+    @MustBeInvokedByOverriders
+    public void init() {
+        listeners(WidgetEvent.onInit).onInit(this);
+        initialized = true;
+        listeners(WidgetEvent.onInitPost).onInit(this);
+    }
+
+    //endregion
+
+    //region signal
+
+
+    @MustBeInvokedByOverriders
+    public void tick() {
+        listeners(WidgetEvent.onTick).onTick();
+    }
+
+    //endregion
+
+    //region lifecycle
+
+    public void mount() {
+
+    }
+
+    public void unmount() {
+
+    }
+
+    public void  onStateChanged() {
+
+    }
+
+    //TODO:Add update lifecycle hooks
+
+    //endregion
+
 
     @Contract("_ -> this")
     public Widget onInit(WidgetEvent.OnInit listener) {
@@ -370,7 +386,7 @@ public class Widget
 
     public Widget setBound(int x, int y, int width, int height) {
         return setPos(x, y)
-                .setSize(width, height);
+            .setSize(width, height);
     }
 
     public Widget setBound(Rect rect) {
@@ -426,8 +442,8 @@ public class Widget
     }
 
     protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        if (background != null) background.render(graphics);
-        if (icon != null) icon.render(graphics);
+        if (background != null) background.render(graphics, 0, 0, getWidth(), getHeight());
+        if (icon != null) icon.render(graphics, 0, 0, getWidth(), getHeight());
     }
 
     public void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
@@ -474,13 +490,13 @@ public class Widget
     }
 
     @Contract("_ -> this")
-    public Widget setBackground(RenderableTexture background) {
+    public Widget setBackground(UITexture background) {
         this.background = background;
         return this;
     }
 
     @Contract("_ -> this")
-    public Widget setIcon(RenderableTexture icon) {
+    public Widget setIcon(UITexture icon) {
         this.icon = icon;
         return this;
     }
@@ -638,8 +654,8 @@ public class Widget
     public void layout() {
         if (!layoutByParent) {
             yogaNode.calculateLayout(
-                    getWidth(),
-                    getHeight()
+                getWidth(),
+                getHeight()
             );
         }
         if (yogaNode.hasNewLayout()) {
@@ -652,12 +668,12 @@ public class Widget
 
     protected void applyLayoutResult() {
         this.setPos(
-                (int) yogaNode.getLayoutX(),
-                (int) yogaNode.getLayoutY()
+            (int) yogaNode.getLayoutX(),
+            (int) yogaNode.getLayoutY()
         );
         this.setSize(
-                yogaNode.getLayoutWidth(),
-                yogaNode.getLayoutHeight()
+            yogaNode.getLayoutWidth(),
+            yogaNode.getLayoutHeight()
         );
 
     }
@@ -785,6 +801,24 @@ public class Widget
     //endregion
 
     //region Utils
+
+    @Contract("_-> this")
+    @CanIgnoreReturnValue
+    public final <T extends Widget> Widget asChild(WidgetGroup<T> parent) {
+        if (parent == this) throw new IllegalArgumentException("Cannot add widget to itself");
+        if (parent.add(parent.size(), (T) this)) {
+            if (this.parent != null) {
+                this.parent.yogaNode.removeChild(this.yogaNode);
+            }
+            this.parent = parent;
+            this.onPositionUpdate();
+            if (layoutByParent) {
+                parent.yogaNode.addChildAt(this.yogaNode, parent.yogaNode.getChildCount());
+            }
+        }
+        return this;
+    }
+
     public <T extends WidgetEvent> Widget onEvent(EventDefinition<T> definition, T listener) {
         EventHandler.super.onEvent(definition, listener);
         return this;
@@ -803,9 +837,9 @@ public class Widget
      */
     public boolean isMouseOver(double mouseX, double mouseY) {
         return mouseX >= getAbsolute().x() &&
-                mouseX <= getAbsolute().x() + getSize().width() &&
-                mouseY >= getAbsolute().y() &&
-                mouseY <= getAbsolute().y() + getSize().height();
+               mouseX <= getAbsolute().x() + getSize().width() &&
+               mouseY >= getAbsolute().y() &&
+               mouseY <= getAbsolute().y() + getSize().height();
     }
 
     public boolean isMouseOver(InputContext input) {
@@ -822,8 +856,8 @@ public class Widget
 
     public boolean intersects(int x, int y, int width, int height) {
         return this.position.x() >= x && this.position.y() >= y &&
-                this.position.x() + this.size.width() <= x + width &&
-                this.position.y() + this.size.height() <= y + height;
+               this.position.x() + this.size.width() <= x + width &&
+               this.position.y() + this.size.height() <= y + height;
     }
 
     public boolean intersects(Rect bound) {
@@ -838,17 +872,17 @@ public class Widget
     @Override
     public String toString() {
         return "Widget{" +
-                "id='" + id + '\'' +
-                ", initialized=" + initialized +
-                ", root=" + (root == null ? "null" : root.getId()) +
-                ", parent=" + (parent == null ? "null" : parent.getId()) +
-                ", icon=" + icon +
-                ", position=" + position +
-                ", absolute=" + absolute +
-                ", size=" + size +
-                ", active=" + active +
-                ", visibility=" + visibility +
-                '}';
+               "key='" + (key == null ? "null" : key) + '\'' +
+               ", initialized=" + initialized +
+               ", root=" + (root == null ? "null" : root.key()) +
+               ", parent=" + (parent == null ? "null" : parent.key()) +
+               ", icon=" + icon +
+               ", position=" + position +
+               ", absolute=" + absolute +
+               ", size=" + size +
+               ", active=" + active +
+               ", visibility=" + visibility +
+               '}';
     }
 
     //endregion

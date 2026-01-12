@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.event;
 import dev.vfyjxf.cloudlib.api.event.EventContext.Common;
 import dev.vfyjxf.cloudlib.api.event.EventContext.Interruptible;
 import dev.vfyjxf.cloudlib.api.event.EventDefinition;
-import dev.vfyjxf.cloudlib.api.event.EventFactory;
+import dev.vfyjxf.cloudlib.api.event.Events;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Size;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
@@ -14,28 +14,28 @@ import net.minecraft.client.gui.GuiGraphics;
 
 public interface WidgetEvent {
 
-    EventDefinition<OnPositionChanged> onPositionChanged = EventFactory.define(OnPositionChanged.class, listeners -> (position, context) -> {
+    EventDefinition<OnPositionChanged> onPositionChanged = Events.define(OnPositionChanged.class, listeners -> (position, context) -> {
         for (var listener : listeners) {
             listener.onPositionChanged(position, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnSizeChanged> onSizeChanged = EventFactory.define(OnSizeChanged.class, listeners -> (size, context) -> {
+    EventDefinition<OnSizeChanged> onSizeChanged = Events.define(OnSizeChanged.class, listeners -> (size, context) -> {
         for (var listener : listeners) {
             listener.onSizeChanged(size, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnRender> onRender = EventFactory.define(OnRender.class, listeners -> (graphics, mouseX, mouseY, partialTicks, self, context) -> {
+    EventDefinition<OnRender> onRender = Events.define(OnRender.class, listeners -> (graphics, mouseX, mouseY, partialTicks, self, context) -> {
         for (var listener : listeners) {
             listener.onRender(graphics, mouseX, mouseY, partialTicks, self, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnRenderPost> onRenderPost = EventFactory.define(OnRenderPost.class, listeners -> (graphics, mouseX, mouseY, partialTicks, self, context) -> {
+    EventDefinition<OnRenderPost> onRenderPost = Events.define(OnRenderPost.class, listeners -> (graphics, mouseX, mouseY, partialTicks, self, context) -> {
         for (var listener : listeners) {
             listener.onRender(graphics, mouseX, mouseY, partialTicks, self, context);
             if (context.interrupted()) return;
@@ -45,7 +45,7 @@ public interface WidgetEvent {
     /**
      * Call when mouse over the widget
      */
-    EventDefinition<OnOverlayRender> onOverlayRender = EventFactory.define(OnOverlayRender.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
+    EventDefinition<OnOverlayRender> onOverlayRender = Events.define(OnOverlayRender.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
         for (var listener : listeners) {
             listener.onRender(graphics, mouseX, mouseY, partialTicks, context);
             if (context.interrupted()) return;
@@ -55,91 +55,91 @@ public interface WidgetEvent {
     /**
      * Call after tooltip render
      */
-    EventDefinition<OnOverlayRenderPost> onOverlayRenderPost = EventFactory.define(OnOverlayRenderPost.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
+    EventDefinition<OnOverlayRenderPost> onOverlayRenderPost = Events.define(OnOverlayRenderPost.class, listeners -> (graphics, mouseX, mouseY, partialTicks, context) -> {
         for (var listener : listeners) {
             listener.onRender(graphics, mouseX, mouseY, partialTicks, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnUpdate> onUpdate = EventFactory.define(OnUpdate.class, listeners -> (widget) -> {
+    EventDefinition<OnUpdate> onUpdate = Events.define(OnUpdate.class, listeners -> (widget) -> {
         for (var listener : listeners) {
             listener.onUpdate(widget);
         }
     });
 
-    EventDefinition<OnInit> onInit = EventFactory.define(OnInit.class, listeners -> (widget) -> {
+    EventDefinition<OnInit> onInit = Events.define(OnInit.class, listeners -> (widget) -> {
         for (var listener : listeners) {
             listener.onInit(widget);
         }
     });
 
-    EventDefinition<OnInitPost> onInitPost = EventFactory.define(OnInitPost.class, listeners -> (widget) -> {
+    EventDefinition<OnInitPost> onInitPost = Events.define(OnInitPost.class, listeners -> (widget) -> {
         for (var listener : listeners) {
             listener.onInit(widget);
         }
     });
 
-    EventDefinition<OnTick> onTick = EventFactory.define(OnTick.class, listeners -> () -> {
+    EventDefinition<OnTick> onTick = Events.define(OnTick.class, listeners -> () -> {
         for (var listener : listeners) {
             listener.onTick();
         }
     });
 
-    EventDefinition<OnRemove> onRemove = EventFactory.define(OnRemove.class, listeners -> (self) -> {
+    EventDefinition<OnRemove> onRemove = Events.define(OnRemove.class, listeners -> (self) -> {
         for (var listener : listeners) {
             listener.onRemove(self);
         }
     });
 
-    EventDefinition<OnChildAdded> onChildAdded = EventFactory.define(OnChildAdded.class, listeners -> (widget, context) -> {
+    EventDefinition<OnChildAdded> onChildAdded = Events.define(OnChildAdded.class, listeners -> (widget, context) -> {
         for (var listener : listeners) {
             listener.onChildAdded(widget, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnChildAddedPost> onChildAddedPost = EventFactory.define(OnChildAddedPost.class, listeners -> (widget, context) -> {
+    EventDefinition<OnChildAddedPost> onChildAddedPost = Events.define(OnChildAddedPost.class, listeners -> (widget, context) -> {
         for (var listener : listeners) {
             listener.onChildAdded(widget, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnChildRemoved> onChildRemoved = EventFactory.define(OnChildRemoved.class, listeners -> (widget, context) -> {
+    EventDefinition<OnChildRemoved> onChildRemoved = Events.define(OnChildRemoved.class, listeners -> (widget, context) -> {
         for (var listener : listeners) {
             listener.onChildRemoved(widget, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnChildRemovedPost> onChildRemovedPost = EventFactory.define(OnChildRemovedPost.class, listeners -> (widget, context) -> {
+    EventDefinition<OnChildRemovedPost> onChildRemovedPost = Events.define(OnChildRemovedPost.class, listeners -> (widget, context) -> {
         for (var listener : listeners) {
             listener.onChildRemoved(widget, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnTooltip> onTooltip = EventFactory.define(OnTooltip.class, listeners -> (tooltip, context) -> {
+    EventDefinition<OnTooltip> onTooltip = Events.define(OnTooltip.class, listeners -> (tooltip, context) -> {
         for (var listener : listeners) {
             listener.onTooltip(tooltip, context);
             if (context.interrupted()) return;
         }
     });
 
-    EventDefinition<OnThemeUpdate> onThemeUpdate = EventFactory.define(OnThemeUpdate.class, listeners -> () -> {
+    EventDefinition<OnThemeUpdate> onThemeUpdate = Events.define(OnThemeUpdate.class, listeners -> () -> {
         for (var listener : listeners) {
             listener.onThemeUpdate();
         }
     });
 
-    EventDefinition<OnResize> onResize = EventFactory.define(OnResize.class, listeners -> (self) -> {
+    EventDefinition<OnResize> onResize = Events.define(OnResize.class, listeners -> (self) -> {
         for (var listener : listeners) {
             listener.onResize(self);
         }
     });
 
-    EventDefinition<OnResizePost> onResizePost = EventFactory.define(OnResizePost.class, listeners -> (self) -> {
+    EventDefinition<OnResizePost> onResizePost = Events.define(OnResizePost.class, listeners -> (self) -> {
         for (var listener : listeners) {
             listener.onResizePost(self);
         }
@@ -150,7 +150,7 @@ public interface WidgetEvent {
      * <p>
      * For widget itself to use
      */
-    EventDefinition<OnWidgetDragStart> onWidgetDragStart = EventFactory.define(OnWidgetDragStart.class, listeners -> (input, dragContext, eventContext) -> {
+    EventDefinition<OnWidgetDragStart> onWidgetDragStart = Events.define(OnWidgetDragStart.class, listeners -> (input, dragContext, eventContext) -> {
         for (var listener : listeners) {
             listener.onDragStart(input, dragContext, eventContext);
             if (eventContext.interrupted()) return;
@@ -162,7 +162,7 @@ public interface WidgetEvent {
      * <p>
      * For widget itself to use
      */
-    EventDefinition<OnWidgetDrag> onWidgetDrag = EventFactory.define(OnWidgetDrag.class, listeners -> (input, deltaX, deltaY, dragContext, eventContext) -> {
+    EventDefinition<OnWidgetDrag> onWidgetDrag = Events.define(OnWidgetDrag.class, listeners -> (input, deltaX, deltaY, dragContext, eventContext) -> {
         for (var listener : listeners) {
             listener.onDrag(input, deltaX, deltaY, dragContext, eventContext);
             if (eventContext.interrupted()) return;
@@ -174,7 +174,7 @@ public interface WidgetEvent {
      * <p>
      * For widget itself to use
      */
-    EventDefinition<OnWidgetDragEnd> onWidgetDragEnd = EventFactory.define(OnWidgetDragEnd.class, listeners -> (input, dragContext, eventContext) -> {
+    EventDefinition<OnWidgetDragEnd> onWidgetDragEnd = Events.define(OnWidgetDragEnd.class, listeners -> (input, dragContext, eventContext) -> {
         for (var listener : listeners) {
             listener.onDragEnd(input, dragContext, eventContext);
             if (eventContext.interrupted()) return;
@@ -186,7 +186,7 @@ public interface WidgetEvent {
      * <p>
      * For {@link dev.vfyjxf.cloudlib.api.ui.drag.DragConsumer} to use
      */
-    EventDefinition<OnDragStart> onDragStart = EventFactory.define(OnDragStart.class, listeners -> (toDrag, input, dragContext, eventContext) -> {
+    EventDefinition<OnDragStart> onDragStart = Events.define(OnDragStart.class, listeners -> (toDrag, input, dragContext, eventContext) -> {
         for (var listener : listeners) {
             listener.onDragStart(toDrag, input, dragContext, eventContext);
             if (eventContext.interrupted()) return;
@@ -198,7 +198,7 @@ public interface WidgetEvent {
      * <p>
      * For {@link dev.vfyjxf.cloudlib.api.ui.drag.DragConsumer} to use
      */
-    EventDefinition<OnDrag> onDrag = EventFactory.define(OnDrag.class, listeners -> (dragging, input, deltaX, deltaY, dragContext, eventContext) -> {
+    EventDefinition<OnDrag> onDrag = Events.define(OnDrag.class, listeners -> (dragging, input, deltaX, deltaY, dragContext, eventContext) -> {
         for (var listener : listeners) {
             listener.onDrag(dragging, input, deltaX, deltaY, dragContext, eventContext);
             if (eventContext.interrupted()) return;
@@ -210,7 +210,7 @@ public interface WidgetEvent {
      * <p>
      * For {@link dev.vfyjxf.cloudlib.api.ui.drag.DragConsumer} to use
      */
-    EventDefinition<OnDragEnd> onDragEnd = EventFactory.define(OnDragEnd.class, listeners -> (dragging, input, dragContext, eventContext) -> {
+    EventDefinition<OnDragEnd> onDragEnd = Events.define(OnDragEnd.class, listeners -> (dragging, input, dragContext, eventContext) -> {
         for (var listener : listeners) {
             listener.onDragEnd(dragging, input, dragContext, eventContext);
             if (eventContext.interrupted()) return;

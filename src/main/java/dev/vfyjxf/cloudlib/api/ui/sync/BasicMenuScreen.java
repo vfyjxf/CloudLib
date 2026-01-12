@@ -39,11 +39,9 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
 
         //region setup main panel
         rootWidget = new RootWidget();
-        rootWidget.mark("root");
         mainGroup = new WidgetGroup<>();
         {
 //            mainGroup.setRoot(rootWidget);
-            mainGroup.mark("main");
             mainGroup.asChild(rootWidget);
             mainGroup.onInit(self -> {
                 mainGroup.withModifier(

@@ -11,10 +11,10 @@ import java.util.function.Consumer;
  * @param <T> the type of the listener
  */
 @ApiStatus.NonExtendable
-public sealed interface SimpleEvent<T> permits EventFactory.SimpleEventImpl {
+public sealed interface SimpleEvent<T> permits Events.SimpleEventImpl {
 
     static <T> SimpleEvent<T> create() {
-        return EventFactory.createSimpleEvent();
+        return Events.createSimpleEvent();
     }
 
     void invoke(Consumer<T> invoker);

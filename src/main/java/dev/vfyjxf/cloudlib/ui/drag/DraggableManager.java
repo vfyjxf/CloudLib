@@ -2,11 +2,11 @@ package dev.vfyjxf.cloudlib.ui.drag;
 
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragConsumer;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragProvider;
-import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -77,6 +77,18 @@ public class DraggableManager {
             }
             return false;
         }));
+
+        new Widget() {{
+            onInit((widget -> {
+
+            }));
+
+            onMouseClicked((input, context) -> {
+                if (!input.isLeftClick()) return false;
+                endDrag(input);
+                return true;
+            });
+        }};
     }
 
     public void endDrag(InputContext input) {

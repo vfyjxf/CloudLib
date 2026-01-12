@@ -33,7 +33,7 @@ public final class RootWidget extends WidgetGroup<Widget> implements Backstage {
         return "RootWidget{" +
                        "context=" + context +
                        ", children=" + children() +
-                       ", id='" + id + '\'' +
+                       ", key='" + (key == null ? "null" : key) + '\'' +
                        ", position=" + position +
                        ", absolute=" + absolute +
                        ", initialized=" + initialized +

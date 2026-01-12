@@ -30,11 +30,9 @@ public abstract class BasicScreen extends Screen {
         super(Component.empty());
         //region setup main panel
         rootWidget = new RootWidget();
-        rootWidget.mark("root");
         mainGroup = new WidgetGroup<>();
         {
             mainGroup.root = rootWidget;
-            mainGroup.mark("main");
             mainGroup.asChild(rootWidget);
             mainGroup.layoutBySelf();
             mainGroup.onInit(self -> mainGroup.withModifier(

@@ -7,20 +7,16 @@ import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import net.minecraft.client.gui.GuiGraphics;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
-import java.util.regex.Pattern;
 
 //TODO:Refactor subWidget and GroupWidget
-public non-sealed class WidgetGroup<T extends Widget> extends Widget implements Group<T> {
+public class WidgetGroup<T extends Widget> extends Widget {
 
     //region Fields
 
-    private final MutableList<T> children = MutableLists.empty();
+    final MutableList<T> children = MutableLists.empty();
     private final MutableList<T> childrenView = children.asUnmodifiable();
 
     //endregion
@@ -79,8 +75,7 @@ public non-sealed class WidgetGroup<T extends Widget> extends Widget implements 
         return children.size();
     }
 
-    @Unmodifiable
-    public MutableList<T> children() {
+    public @Unmodifiable MutableList<T> children() {
         return childrenView;
     }
 
@@ -126,19 +121,6 @@ public non-sealed class WidgetGroup<T extends Widget> extends Widget implements 
         int index = children.indexOf(widget);
         if (index < 0) return false;
         return remove(index);
-    }
-
-    /**
-     * @param current
-     * @param next
-     * @param <W>     type of Widget
-     * @return the updated widget, which is the same as 'next' if the update is successful, or 'current' if not.
-     */
-    protected <W extends T> W updateWidget(W current, W next) {
-        if (current == next) return current;
-        int index = children.indexOf(current);
-        if (index < 0) throw new IllegalArgumentException("Current widget is not a child of this group");
-        return null;
     }
 
     protected boolean remove(int index) {
@@ -279,48 +261,6 @@ public non-sealed class WidgetGroup<T extends Widget> extends Widget implements 
 
     //region Group Utils
 
-    @Nullable
-    public Widget getById(String id) {
-        for (T child : children) {
-            if (child.getId().equals(id)) {
-                return child;
-            }
-        }
-        return null;
-    }
-
-    public List<Widget> getById(Pattern regex) {
-        List<Widget> widgets = new ArrayList<>();
-        for (Widget child : children) {
-            if (regex.matcher(child.getId()).matches()) {
-                widgets.add(child);
-            }
-            if (child instanceof WidgetGroup<?> group) {
-                List<Widget> result = group.getById(regex);
-                widgets.addAll(result);
-            }
-        }
-        return widgets;
-    }
-
-    public List<Widget> getContainedWidgets(boolean withInvisible, int maxDepth) {
-        List<Widget> widgets = new ArrayList<>();
-        collectHelper(this, widgets, withInvisible, maxDepth, 0);
-        return widgets;
-    }
-
-    private static void collectHelper(WidgetGroup<?> group, List<Widget> widgets, boolean withInvisible, int maxDepth, int depth) {
-        if (depth > maxDepth) return;
-        for (Widget child : group.children()) {
-            if (child instanceof WidgetGroup) {
-                collectHelper((WidgetGroup<?>) child, widgets, withInvisible, maxDepth, depth + 1);
-            } else {
-                if (withInvisible || child.visible())
-                    widgets.add(child);
-            }
-        }
-    }
-
     public final WidgetGroup<T> onChildAdded(WidgetEvent.OnChildAdded listener) {
         register(WidgetEvent.onChildAdded, listener);
         return this;
@@ -344,18 +284,18 @@ public non-sealed class WidgetGroup<T extends Widget> extends Widget implements 
     @Override
     public String toString() {
         return "WidgetGroup{" +
-            "id='" + id + '\'' +
-            ", children=" + children +
-            ", initialized=" + initialized +
-            ", root=" + (root == null ? "null" : root.getId()) +
-            ", parent=" + (parent == null ? "null" : parent.getId()) +
-            ", position=" + position +
-            ", absolute=" + absolute +
-            ", size=" + size +
-            ", active=" + active +
-            ", visibility=" + visibility +
-            ", richTooltip=" + richTooltip +
-            '}';
+               "key='" + (key == null ? "null" : key) + '\'' +
+               ", children=" + children +
+               ", initialized=" + initialized +
+               ", root=" + (root == null ? "null" : root.key()) +
+               ", parent=" + (parent == null ? "null" : parent.key()) +
+               ", position=" + position +
+               ", absolute=" + absolute +
+               ", size=" + size +
+               ", active=" + active +
+               ", visibility=" + visibility +
+               ", richTooltip=" + richTooltip +
+               '}';
     }
 
     //endregion

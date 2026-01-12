@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
-import dev.vfyjxf.cloudlib.api.ui.RenderableTexture;
+import dev.vfyjxf.cloudlib.api.ui.texture.UITexture;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -13,17 +13,17 @@ import java.util.function.Consumer;
 public class ButtonWidget extends Widget {
 
     private boolean selected;
-    private RenderableTexture selectedBackground;
-    private RenderableTexture selectedIcon;
-    private RenderableTexture hoverIcon;
+    private UITexture selectedBackground;
+    private UITexture selectedIcon;
+    private UITexture hoverIcon;
     private boolean clicked;
 
     public ButtonWidget(
-            RenderableTexture background,
-            RenderableTexture icon,
-            RenderableTexture selectedBackground,
-            RenderableTexture selectedIcon,
-            RenderableTexture hoverIcon,
+            UITexture background,
+            UITexture icon,
+            UITexture selectedBackground,
+            UITexture selectedIcon,
+            UITexture hoverIcon,
             Consumer<InputContext> onClick
     ) {
         onMouseClicked((input, context) -> {
