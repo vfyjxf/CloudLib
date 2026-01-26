@@ -5,48 +5,14 @@ import org.jetbrains.annotations.Contract;
 /**
  * Represents a rectangle.
  */
-public class Rect {
-
-    public int x;
-    public int y;
-    public int width;
-    public int height;
+public record Rect(int x, int y, int width, int height) {
 
     public Rect(Pos pos, Size size) {
-        this.x = pos.x();
-        this.y = pos.y();
-        this.width = size.width();
-        this.height = size.height();
+        this(pos.x(), pos.y(), size.width(), size.height());
     }
 
     public Rect(Pos pos, int width, int height) {
-        this.x = pos.x();
-        this.y = pos.y();
-        this.width = width;
-        this.height = height;
-    }
-
-    public Rect(int x, int y, int width, int height) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-    }
-
-    public int x() {
-        return x;
-    }
-
-    public int y() {
-        return y;
-    }
-
-    public int width() {
-        return width;
-    }
-
-    public int height() {
-        return height;
+        this(pos.x(), pos.y(), width, height);
     }
 
     public int right() {
@@ -75,22 +41,6 @@ public class Rect {
 
     public Pos center() {
         return new Pos(centerX(), centerY());
-    }
-
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
     }
 
     public Rect copy() {
@@ -122,11 +72,9 @@ public class Rect {
     }
 
 
-    @Contract("_ -> this")
+    @Contract("_ -> new")
     public Rect move(Pos pos) {
-        this.x = pos.x();
-        this.y = pos.y();
-        return this;
+        return new Rect(pos.x() + x, pos.y() + y, width, height);
     }
 
     @Override
@@ -150,10 +98,10 @@ public class Rect {
     @Override
     public String toString() {
         return "Rect{" +
-                       "x=" + x +
-                       ", y=" + y +
-                       ", width=" + width +
-                       ", height=" + height +
-                       '}';
+               "x=" + x +
+               ", y=" + y +
+               ", width=" + width +
+               ", height=" + height +
+               '}';
     }
 }

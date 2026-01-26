@@ -70,7 +70,7 @@ public sealed interface Maybe<T extends @Nullable Object> {
         }
 
         @Override
-        public Object get() {
+        public Void get() {
             throw new NoSuchElementException("Maybe is empty");
         }
 

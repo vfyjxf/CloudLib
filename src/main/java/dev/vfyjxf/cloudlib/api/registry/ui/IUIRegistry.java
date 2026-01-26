@@ -9,10 +9,6 @@ import java.util.List;
 //TODO:Refactor and cleanup
 public interface IUIRegistry {
 
-    static IUIRegistry getInstance() {
-        return Singletons.get(IUIRegistry.class);
-    }
-
     void registerOverlayProvider(OverlayProvider provider);
 
     @Unmodifiable

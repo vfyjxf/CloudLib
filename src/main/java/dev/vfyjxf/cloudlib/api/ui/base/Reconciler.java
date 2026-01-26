@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
-import dev.vfyjxf.cloudlib.api.ui.UIContext;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -45,33 +44,35 @@ final class Reconciler {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T extends Widget> T reconcile(
+        Scene scene,
+        SceneContext context,
         @Nullable T oldWidget,
         Blueprint<T> newBlueprint,
-        @Nullable WidgetGroup<T> parent
+        @Nullable CompositeWidget<T> parent
     ) {
         //create if there is no existing widget
         if (oldWidget == null) {
-            return mount(newBlueprint, parent, parent != null ? parent.getContext() : UIContext.current());
+            return mount(newBlueprint, parent, scene, context);
         }
         //try to update
         if (canUpdate(oldWidget.blueprint, newBlueprint)) {
             oldWidget.blueprint = newBlueprint;
             oldWidget.key = newBlueprint.key();
-            newBlueprint.updateWidget(oldWidget, parent != null ? parent.getContext() : UIContext.current());
-            if (oldWidget instanceof WidgetGroup<?> group && newBlueprint instanceof Blueprint.Group groupBlueprint) {
+            newBlueprint.updateWidget(oldWidget, scene, context);
+            if (oldWidget instanceof CompositeWidget<?> group && newBlueprint instanceof Blueprint.Group groupBlueprint) {
                 var stateContext = oldWidget.stateContext;
                 var children =
                     StateSlot.currentContext() == stateContext ?
                     groupBlueprint.children() :
                     StateSlot.withContext(stateContext, groupBlueprint::children);
-                reconcileChildren(group, children);
+                reconcileChildren(group, children, scene, context);
                 stateContext.runEffects();
             }
             return oldWidget;
         }
 
         oldWidget.unmount();
-        return mount(newBlueprint, parent, parent != null ? parent.getContext() : UIContext.current());
+        return mount(newBlueprint, parent, scene, context);
     }
 
     /**
@@ -87,17 +88,17 @@ final class Reconciler {
     /**
      * Reconciles the children of a widget with new child blueprints.
      */
-    public static <T extends Widget> void reconcileChildren(WidgetGroup<T> parent, List<? extends Blueprint<T>> newBlueprints) {
+    public static <T extends Widget> void reconcileChildren(CompositeWidget<T> parent, List<? extends Blueprint<T>> childrenBlueprints, Scene scene, SceneContext context) {
 
-        if (parent.children.isEmpty() && newBlueprints.isEmpty()) {
+        if (parent.children.isEmpty() && childrenBlueprints.isEmpty()) {
             return;
         }
 
-        if (parent.children.size() == newBlueprints.size()) {
+        if (parent.children.size() == childrenBlueprints.size()) {
             boolean allMatch = true;
             for (int i = 0; i < parent.children.size(); i++) {
                 Widget oldChild = parent.children.get(i);
-                var newBlueprint = newBlueprints.get(i);
+                var newBlueprint = childrenBlueprints.get(i);
                 if (!canUpdate(oldChild.blueprint, newBlueprint)) {
                     allMatch = false;
                     break;
@@ -106,20 +107,26 @@ final class Reconciler {
 
             if (allMatch) {
                 for (int i = 0; i < parent.children.size(); i++) {
-                    reconcile(parent.children.get(i), newBlueprints.get(i), parent);
+                    reconcile(scene, context, parent.children.get(i), childrenBlueprints.get(i), parent);
                 }
                 return;
             }
         }
 
-        reconcileChildrenFull(parent, parent.children, newBlueprints);
+        reconcileChildrenFull(parent, parent.children, childrenBlueprints, scene, context);
     }
 
     /**
      * Full reconciliation algorithm with key matching support.
      */
-    private static <T extends Widget> void reconcileChildrenFull(WidgetGroup<T> parent, List<? extends T> oldChildren, List<? extends Blueprint<T>> newBlueprints) {
-        List<T> newChildren = new ArrayList<>(newBlueprints.size());
+    private static <T extends Widget> void reconcileChildrenFull(
+        CompositeWidget<T> parent,
+        List<? extends T> oldChildren,
+        List<? extends Blueprint<T>> childrenBlueprints,
+        Scene scene,
+        SceneContext context
+    ) {
+        List<T> newChildren = new ArrayList<>(childrenBlueprints.size());
 
         Map<Object, T> keyedOldChildren = null;
         List<T> unkeyedOldChildren = null;
@@ -149,7 +156,7 @@ final class Reconciler {
         int unkeyedIndex = 0;
         List<T> reusedWidgets = new ArrayList<>();
 
-        for (Blueprint<T> newBlueprint : newBlueprints) {
+        for (Blueprint<T> newBlueprint : childrenBlueprints) {
             Object key = newBlueprint.key();
             T oldWidget = null;
 
@@ -166,7 +173,7 @@ final class Reconciler {
                 }
             }
 
-            T newWidget = reconcile(oldWidget, newBlueprint, parent);
+            T newWidget = reconcile(scene, context, oldWidget, newBlueprint, parent);
             newChildren.add(newWidget);
 
             if (oldWidget != null) {
@@ -199,13 +206,13 @@ final class Reconciler {
      * @return the mounted widget tree
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T extends Widget> T mount(Blueprint<T> blueprint, @Nullable WidgetGroup<T> parent, UIContext context) {
-        T widget = blueprint.createWidget(context);
+    public static <T extends Widget> T mount(Blueprint<T> blueprint, @Nullable CompositeWidget<T> parent, Scene scene, SceneContext context) {
+        T widget = blueprint.createWidget(scene, context);
 
         widget.blueprint = blueprint;
         widget.key = blueprint.key();
 
-        if (widget instanceof WidgetGroup<?> group && blueprint instanceof Blueprint.Group groupBlueprint) {
+        if (widget instanceof CompositeWidget<?> group && blueprint instanceof Blueprint.Group groupBlueprint) {
             widget.stateContext.setOnDirty(() -> {
                 widget.stateContext.clearDirty();
                 widget.onStateChanged();
@@ -214,10 +221,10 @@ final class Reconciler {
                     StateSlot.currentContext() == stateContext ?
                     groupBlueprint.children() :
                     StateSlot.withContext(stateContext, groupBlueprint::children);
-                Reconciler.reconcileChildren(group, children);
+                Reconciler.reconcileChildren(group, children, scene, context);
                 stateContext.runEffects();
             });
-        }else {
+        } else {
             widget.stateContext.setOnDirty(() -> {
                 widget.stateContext.clearDirty();
                 widget.onStateChanged();
@@ -228,8 +235,8 @@ final class Reconciler {
             parent.addWidget(widget);
         }
 
-        blueprint.updateWidget(widget, context);
-        widget.mount();
+        blueprint.updateWidget(widget, scene, context);
+        widget.mount(scene, context);
         return widget;
     }
 

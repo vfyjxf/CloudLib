@@ -12,7 +12,7 @@ class SimpleDraggableElement implements DraggableElement<Widget> {
 
     SimpleDraggableElement(Widget widget) {
         this.widget = widget;
-        this.originalBounds = widget.getAbsoluteBounds().copy();
+        this.originalBounds = widget.absoluteBounds().copy();
     }
 
     @Override
@@ -23,7 +23,8 @@ class SimpleDraggableElement implements DraggableElement<Widget> {
     @Override
     public void dragEnd(InputContext input, DragContext context, double deltaX, double deltaY, boolean consumed) {
         if (!consumed) {
-            widget.translate((int) deltaX, (int) deltaY);
+            throw new UnsupportedOperationException("Not Implemented");
+//            widget.translate((int) deltaX, (int) deltaY);
         }
         widget.setDragging(false);
     }

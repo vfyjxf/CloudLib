@@ -1,6 +1,10 @@
 package dev.vfyjxf.cloudlib.api.event;
 
 
+import dev.vfyjxf.cloudlib.api.event.context.BubbleContext;
+import dev.vfyjxf.cloudlib.api.event.context.CancelableContext;
+import dev.vfyjxf.cloudlib.api.event.context.CommonContext;
+import dev.vfyjxf.cloudlib.api.event.context.InterruptibleContext;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
@@ -22,16 +26,20 @@ public sealed interface EventChannel<T> permits EventChannelImpl {
 
     EventHandler<T> handler();
 
-    default EventContext.Common common() {
-        return new EventContext.Common(this);
+    default CommonContext common() {
+        return new CommonContext(this);
     }
 
-    default EventContext.Cancelable cancelable() {
-        return new EventContext.Cancelable(this);
+    default CancelableContext cancelable() {
+        return new CancelableContext(this);
     }
 
-    default EventContext.Interruptible interruptible() {
-        return new EventContext.Interruptible(this);
+    default InterruptibleContext interruptible() {
+        return new InterruptibleContext(this);
+    }
+
+    default BubbleContext bubble() {
+        return new BubbleContext(this);
     }
 
     default <E extends T> void register(EventDefinition<E> definition, E listener) {

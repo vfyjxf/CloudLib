@@ -15,7 +15,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-
 public record TooltipContext(
     HolderLookup.Provider registries,
     Level level,

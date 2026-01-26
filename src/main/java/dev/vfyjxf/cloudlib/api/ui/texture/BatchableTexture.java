@@ -9,7 +9,7 @@ import net.minecraft.resources.ResourceLocation;
  * <p>
  * Textures implementing this interface can be efficiently batched by {@link TextureBatch}.
  */
-public interface BatchableTexture extends UITexture {
+public interface BatchableTexture extends VisualTexture {
 
     /**
      * Returns the texture's ResourceLocation.

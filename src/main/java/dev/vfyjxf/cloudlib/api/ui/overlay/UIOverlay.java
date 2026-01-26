@@ -4,11 +4,10 @@ import dev.vfyjxf.cloudlib.api.event.EventHandler;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.Renderable;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.event.OverlayEvent;
 import dev.vfyjxf.cloudlib.ui.UIManager;
 import net.minecraft.client.Minecraft;
-import org.jetbrains.annotations.Contract;
 
 /**
  * Represents an overlay that can be attached to the screen or the game.
@@ -33,15 +32,11 @@ public interface UIOverlay extends Renderable, EventHandler<OverlayEvent> {
 
     boolean holdByScreen();
 
-    boolean initialized();
-
     void tick();
 
-    WidgetGroup<Widget> overlayGroup();
+    CompositeWidget<Widget> overlayGroup();
 
     Rect getBound();
-
-    void setBound(Rect bounds);
 
     /**
      * @param mouseX the absolute x position of the mouse

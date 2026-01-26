@@ -1,9 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
-import dev.vfyjxf.cloudlib.api.ui.UIContext;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -383,12 +381,12 @@ class ReconcilerTest {
         }
 
         @Override
-        public Widget createWidget(UIContext context) {
+        public Widget createWidget(Scene scene, SceneContext context) {
             return new Widget();
         }
 
         @Override
-        public void updateWidget(Widget widget, UIContext context) {
+        public void updateWidget(Widget widget, Scene scene, SceneContext context) {
         }
 
         @Override
@@ -403,7 +401,7 @@ class ReconcilerTest {
         }
     }
 
-    private static class TestContainerBlueprint implements Blueprint.Group<WidgetGroup<Widget>, Widget> {
+    private static class TestContainerBlueprint implements Blueprint.Group<CompositeWidget<Widget>, Widget> {
         private final String name;
         private final MutableList<Blueprint<Widget>> children = Lists.mutable.empty();
         private Object key;
@@ -426,12 +424,12 @@ class ReconcilerTest {
         }
 
         @Override
-        public WidgetGroup<Widget> createWidget(UIContext context) {
-            return new WidgetGroup<>();
+        public CompositeWidget<Widget> createWidget(Scene scene, SceneContext context) {
+            return new CompositeWidget<>();
         }
 
         @Override
-        public void updateWidget(WidgetGroup<Widget> widget, UIContext context) {
+        public void updateWidget(CompositeWidget<Widget> widget, Scene scene, SceneContext context) {
         }
 
         @Override

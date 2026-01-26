@@ -5,7 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 /**
  * A texture with intrinsic dimensions.
  */
-public interface SizedTexture extends UITexture {
+public interface SizedTexture extends VisualTexture {
 
     int width();
 

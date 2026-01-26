@@ -17,19 +17,19 @@ public class ProgressTexture implements SizedTexture {
 
     //region factory methods
 
-    public static ProgressTexture horizontal(UITexture bg, UITexture fg, int w, int h, Supplier<Float> progress) {
+    public static ProgressTexture horizontal(VisualTexture bg, VisualTexture fg, int w, int h, Supplier<Float> progress) {
         return new ProgressTexture(bg, fg, w, h, Direction.LEFT_TO_RIGHT, progress);
     }
 
-    public static ProgressTexture vertical(UITexture bg, UITexture fg, int w, int h, Supplier<Float> progress) {
+    public static ProgressTexture vertical(VisualTexture bg, VisualTexture fg, int w, int h, Supplier<Float> progress) {
         return new ProgressTexture(bg, fg, w, h, Direction.BOTTOM_TO_TOP, progress);
     }
 
-    public static ProgressTexture horizontal(UITexture bg, UITexture fg, int w, int h, Animation<?> anim) {
+    public static ProgressTexture horizontal(VisualTexture bg, VisualTexture fg, int w, int h, Animation<?> anim) {
         return new ProgressTexture(bg, fg, w, h, Direction.LEFT_TO_RIGHT, anim);
     }
 
-    public static ProgressTexture vertical(UITexture bg, UITexture fg, int w, int h, Animation<?> anim) {
+    public static ProgressTexture vertical(VisualTexture bg, VisualTexture fg, int w, int h, Animation<?> anim) {
         return new ProgressTexture(bg, fg, w, h, Direction.BOTTOM_TO_TOP, anim);
     }
 
@@ -42,13 +42,13 @@ public class ProgressTexture implements SizedTexture {
         TOP_TO_BOTTOM
     }
 
-    private final UITexture background;
-    private final UITexture foreground;
+    private final VisualTexture background;
+    private final VisualTexture foreground;
     private final int width, height;
     private final Direction direction;
     private final Supplier<Float> progressSupplier;
 
-    public ProgressTexture(UITexture background, UITexture foreground, int width, int height,
+    public ProgressTexture(VisualTexture background, VisualTexture foreground, int width, int height,
                            Direction direction, Supplier<Float> progressSupplier) {
         this.background = background;
         this.foreground = foreground;
@@ -61,7 +61,7 @@ public class ProgressTexture implements SizedTexture {
     /**
      * Creates with progress from an Animation.
      */
-    public ProgressTexture(UITexture background, UITexture foreground, int width, int height,
+    public ProgressTexture(VisualTexture background, VisualTexture foreground, int width, int height,
                            Direction direction, Animation<?> animation) {
         this(background, foreground, width, height, direction, animation::progress);
     }
@@ -69,7 +69,7 @@ public class ProgressTexture implements SizedTexture {
     /**
      * Creates with horizontal direction (left to right).
      */
-    public ProgressTexture(UITexture background, UITexture foreground, int width, int height,
+    public ProgressTexture(VisualTexture background, VisualTexture foreground, int width, int height,
                            Supplier<Float> progressSupplier) {
         this(background, foreground, width, height, Direction.LEFT_TO_RIGHT, progressSupplier);
     }

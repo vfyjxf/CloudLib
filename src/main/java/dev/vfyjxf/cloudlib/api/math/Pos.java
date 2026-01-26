@@ -13,6 +13,10 @@ public record Pos(int x, int y) {
         this(pos.x(), pos.y());
     }
 
+    public Pos(float x, float y) {
+        this((int) x, (int) y);
+    }
+
     public int x() {
         return x;
     }

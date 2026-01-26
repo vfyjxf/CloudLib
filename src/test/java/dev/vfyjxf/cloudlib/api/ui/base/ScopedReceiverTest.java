@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
-import dev.vfyjxf.cloudlib.api.ui.UIContext;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -22,12 +21,12 @@ class ScopedReceiverTest {
         }
 
         @Override
-        public Widget createWidget(UIContext context) {
+        public Widget createWidget(Scene scene, SceneContext context) {
             return new Widget();
         }
 
         @Override
-        public void updateWidget(Widget widget, UIContext context) {
+        public void updateWidget(Widget widget, Scene scene, SceneContext context) {
             // no-op
         }
 

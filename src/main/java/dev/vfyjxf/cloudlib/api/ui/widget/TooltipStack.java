@@ -6,6 +6,7 @@ public interface TooltipStack<T> {
 
     Class<T> type();
 
+    @SuppressWarnings("unchecked")
     default <R> R castValue() {
         return (R) value();
     }

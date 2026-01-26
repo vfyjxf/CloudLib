@@ -76,7 +76,7 @@ public interface Animation<T> {
      */
     default void render(GuiGraphics graphics, int x, int y, int width, int height, float partialTick) {
         T val = value(partialTick);
-        if (val instanceof UITexture texture) {
+        if (val instanceof VisualTexture texture) {
             texture.render(graphics, x, y, width, height);
         }
     }

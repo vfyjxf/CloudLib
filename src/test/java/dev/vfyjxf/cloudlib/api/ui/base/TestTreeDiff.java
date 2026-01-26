@@ -87,7 +87,7 @@ public final class TestTreeDiff {
         String primary = primaryOf(widget);
 
         List<Node> children = List.of();
-        if (widget instanceof WidgetGroup<?> group) {
+        if (widget instanceof CompositeWidget<?> group) {
             List<Node> tmp = new ArrayList<>(group.children().size());
             for (Widget child : group.children()) {
                 tmp.add(snapshotNode(child));

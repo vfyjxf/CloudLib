@@ -99,7 +99,7 @@ public class TextureBatch implements BatchableTexture.BatchCollector {
      * <p>
      * BatchableTexture instances are batched, others are drawn separately.
      */
-    public TextureBatch draw(UITexture texture, int x, int y, int width, int height) {
+    public TextureBatch draw(VisualTexture texture, int x, int y, int width, int height) {
         checkBuilding();
         if (texture instanceof BatchableTexture batchable && batchable.supportsBatching()) {
             batchable.addToBatch(this, x, y, width, height, currentColor);

@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
-import dev.vfyjxf.cloudlib.api.ui.UIContext;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,18 +16,18 @@ public interface Blueprint<T extends Widget> {
         return null;
     }
 
-    T createWidget(UIContext context);
+    T createWidget(Scene scene, SceneContext context);
 
     /**
      * Apply configuration to the widget. Called on mount and update.
      */
-    void updateWidget(T widget, UIContext context);
+    void updateWidget(T widget, Scene scene, SceneContext context);
 
 
     /**
      * Container node with children. e.g. VStack, HStack.
      */
-    interface Group<T extends WidgetGroup<E>, E extends Widget> extends Blueprint<T> {
+    interface Group<T extends CompositeWidget<E>, E extends Widget> extends Blueprint<T> {
         MutableList<? extends Blueprint<E>> children();
     }
 }

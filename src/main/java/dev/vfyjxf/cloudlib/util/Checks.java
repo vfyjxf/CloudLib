@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.util;
 
 import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
@@ -11,7 +12,7 @@ public class Checks {
         Preconditions.checkArgument(expression, errorMessageTemplate, errorMessageArgs);
     }
 
-    public static <T> T checkNotNull(@Nullable T obj, String name) {
+    public static <T> @NotNull T checkNotNull(@Nullable T obj, String name) {
         if (obj == null) {
             throw new NullPointerException(name + "can't be null");
         }

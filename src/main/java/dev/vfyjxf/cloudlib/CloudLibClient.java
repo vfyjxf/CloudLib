@@ -2,11 +2,9 @@ package dev.vfyjxf.cloudlib;
 
 import dev.vfyjxf.cloudlib.api.plugin.CloudLibClientPlugin;
 import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
-import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
 import dev.vfyjxf.cloudlib.data.lang.LangKeyProvider;
 import dev.vfyjxf.cloudlib.ui.GuiEventHandler;
 import dev.vfyjxf.cloudlib.ui.UIManager;
-import dev.vfyjxf.cloudlib.ui.UIRegistry;
 import dev.vfyjxf.cloudlib.util.Singletons;
 import net.minecraft.data.DataProvider;
 import net.neoforged.api.distmarker.Dist;
@@ -35,18 +33,12 @@ public final class CloudLibClient extends CloudLib {
         modBus.addListener(this::registerClientTooltipComponentFactories);
         Singletons.attachInstance(GuiEventHandler.class, new GuiEventHandler());
         NeoForge.EVENT_BUS.register(GuiEventHandler.getInstance());
-        Singletons.attachInstance(IUIRegistry.class, new UIRegistry());
         NeoForge.EVENT_BUS.register(UIManager.instance());
     }
 
     @Override
     protected void loadComplete(FMLLoadCompleteEvent event) {
-        event.enqueueWork(() -> {
-            IUIRegistry registry = Singletons.get(IUIRegistry.class);
-            for (var plugin : clientPlugins) {
-                plugin.registerUI(registry);
-            }
-        });
+
     }
 
     private void registerClientTooltipComponentFactories(RegisterClientTooltipComponentFactoriesEvent event) {

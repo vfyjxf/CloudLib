@@ -20,7 +20,7 @@ public interface DragContext {
     }
 
     default void addAcceptableArea(Widget consumer) {
-        addAcceptableArea(new Rect(consumer.getAbsolute(), consumer.getSize()));
+        addAcceptableArea(new Rect(consumer.absolutePos(), consumer.size()));
     }
 
     /**
@@ -39,9 +39,9 @@ public interface DragContext {
         Rect original = element.originalBounds();
         FloatPos start = getStart();
         FloatPos current = getCurrent();
-        int absX = (int) (current.x() - start.x() + original.x);
-        int absY = (int) (current.y() - start.y() + original.y);
-        return new Pos(absX - coordinate.getAbsolute().x(), absY - coordinate.getAbsolute().y());
+        int absX = (int) (current.x() - start.x() + original.x());
+        int absY = (int) (current.y() - start.y() + original.y());
+        return new Pos(absX - coordinate.absolutePos().x(), absY - coordinate.absolutePos().y());
     }
 
     default Rect draggingBounds() {
@@ -50,9 +50,9 @@ public interface DragContext {
         FloatPos start = getStart();
         FloatPos current = getCurrent();
         Rect original = element.originalBounds();
-        int x = (int) (current.x() - start.x() + original.x);
-        int y = (int) (current.y() - start.y() + original.y);
-        return new Rect(x, y, original.width, original.height);
+        int x = (int) (current.x() - start.x() + original.x());
+        int y = (int) (current.y() - start.y() + original.y());
+        return new Rect(x, y, original.width(), original.height());
     }
 
 

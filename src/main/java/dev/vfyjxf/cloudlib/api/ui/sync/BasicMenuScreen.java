@@ -1,15 +1,13 @@
 package dev.vfyjxf.cloudlib.api.ui.sync;
 
-import dev.vfyjxf.cloudlib.api.ui.InputContext;
-import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
+import dev.vfyjxf.cloudlib.api.ui.base.Scene;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
+import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.overlay.UIOverlay;
 import dev.vfyjxf.cloudlib.api.ui.sync.menu.BasicMenu;
-import dev.vfyjxf.cloudlib.api.ui.base.RootWidget;
-import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.window.WidgetWindow;
 import dev.vfyjxf.cloudlib.ui.drag.DraggableManager;
-import mezz.jei.gui.input.MouseUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -24,7 +22,7 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
 
     protected final WidgetGroup<Widget> mainGroup;
     protected final Player player;
-    private final RootWidget rootWidget;
+    private final Scene scene;
     private final UIOverlay screenOverlay = null;
     private final DraggableManager draggableManager;
     private WidgetWindow displayWindow;
@@ -38,19 +36,19 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
         //endregion
 
         //region setup main panel
-        rootWidget = new RootWidget();
         mainGroup = new WidgetGroup<>();
         {
 //            mainGroup.setRoot(rootWidget);
-            mainGroup.asChild(rootWidget);
-            mainGroup.onInit(self -> {
-                mainGroup.withModifier(
-                        Modifier.builder()
-                                .size(width, height)
-                );
-            });
+//            mainGroup.asChild(rootWidget);
+//            mainGroup.onInit(self -> {
+//                mainGroup.withModifier(
+//                        Modifier.builder()
+//                                .size(width, height)
+//                );
+//            });
             draggableManager = new DraggableManager(mainGroup);
         }
+        scene = new Scene(mainGroup);
         //endregion
         //region screen overlay
 //        var overlayPanel = mainGroup.addWidget(new WidgetGroup<>());
@@ -59,7 +57,7 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
         //endregion
     }
 
-    protected WidgetGroup<Widget> mainGroup() {
+    protected CompositeWidget<Widget> mainGroup() {
         return mainGroup;
     }
 
@@ -67,15 +65,11 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
         return screenOverlay;
     }
 
-    public static Modifier Modifier() {
-        return Modifier.EMPTY;
-    }
-
     @MustBeInvokedByOverriders
     @Override
     protected void init() {
-        rootWidget.init();
-        mainGroup.layout();
+//        rootWidget.init();
+        mainGroup.applyLayout();
         super.init();
     }
 
@@ -105,56 +99,48 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        return mainGroup.mouseClicked(InputContext.fromMouse(MouseUtil.getX(), MouseUtil.getY(), button));
+        return scene.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        return mainGroup.mouseReleased(InputContext.fromMouse(MouseUtil.getX(), MouseUtil.getY(), button, true));
+        return scene.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        return mainGroup.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        return scene.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        return mainGroup.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        return scene.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        var context = InputContext.fromKeyboard(keyCode, scanCode, modifiers, MouseUtil.getX(), MouseUtil.getY());
-        var ret = mainGroup.keyPressed(context);
-        if (!ret) {
-            if (context.is(Minecraft.getInstance().options.keyInventory) && shouldCloseOnEsc()) {
-                onClose();
-                return true;
-            }
-            return super.keyPressed(keyCode, scanCode, modifiers);
+        if (scene.keyPressed(keyCode, scanCode, modifiers)) return true;
+        if (Minecraft.getInstance().options.keyInventory.consumeClick() && shouldCloseOnEsc()) {
+            onClose();
+            return true;
         }
-        return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        var context = InputContext.fromKeyboard(keyCode, scanCode, modifiers, MouseUtil.getX(), MouseUtil.getY(), true);
-        var ret = mainGroup.keyReleased(context);
-        if (!ret) {
-            return super.keyReleased(keyCode, scanCode, modifiers);
-        }
-        return true;
+        if (scene.keyReleased(keyCode, scanCode, modifiers)) return true;
+        return super.keyReleased(keyCode, scanCode, modifiers);
     }
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        return super.charTyped(codePoint, modifiers);
+        return scene.charTyped(codePoint, modifiers);
     }
 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
-        mainGroup.mouseMoved(mouseX, mouseY);
+        scene.mouseMoved(mouseX, mouseY);
     }
 
 }

@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
-import dev.vfyjxf.cloudlib.api.ui.UIContext;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
@@ -72,7 +71,7 @@ public final class TestDSL {
         }
     }
 
-    public static class TestStackWidget extends WidgetGroup<Widget> {
+    public static class TestStackWidget extends CompositeWidget<Widget> {
         public final String kind;
         public @Nullable String name;
         public Style style = Style.NONE;
@@ -130,12 +129,12 @@ public final class TestDSL {
         }
 
         @Override
-        public TestTextWidget createWidget(UIContext context) {
+        public TestTextWidget createWidget(Scene scene, SceneContext context) {
             return new TestTextWidget();
         }
 
         @Override
-        public void updateWidget(TestTextWidget widget, UIContext context) {
+        public void updateWidget(TestTextWidget widget, Scene scene, SceneContext context) {
             widget.text = text;
             widget.style = style;
             widget.updateCount++;
@@ -163,12 +162,12 @@ public final class TestDSL {
         }
 
         @Override
-        public TestButtonWidget createWidget(UIContext context) {
+        public TestButtonWidget createWidget(Scene scene, SceneContext context) {
             return new TestButtonWidget();
         }
 
         @Override
-        public void updateWidget(TestButtonWidget widget, UIContext context) {
+        public void updateWidget(TestButtonWidget widget, Scene scene, SceneContext context) {
             widget.label = label;
             widget.onClick = onClick;
             widget.style = style;
@@ -202,14 +201,14 @@ public final class TestDSL {
         }
 
         @Override
-        public void updateWidget(TestStackWidget widget, UIContext context) {
+        public void updateWidget(TestStackWidget widget, Scene scene, SceneContext context) {
             widget.style = style;
         }
 
         protected abstract String kind();
 
         @Override
-        public TestStackWidget createWidget(UIContext context) {
+        public TestStackWidget createWidget(Scene scene, SceneContext context) {
             return new TestStackWidget(kind());
         }
     }
@@ -297,8 +296,8 @@ public final class TestDSL {
         }
 
         @Override
-        public void updateWidget(TestStackWidget widget, UIContext context) {
-            super.updateWidget(widget, context);
+        public void updateWidget(TestStackWidget widget, Scene scene, SceneContext context) {
+            super.updateWidget(widget, scene, context);
             widget.name = name;
         }
 

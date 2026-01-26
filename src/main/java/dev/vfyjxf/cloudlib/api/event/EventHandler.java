@@ -1,6 +1,11 @@
 package dev.vfyjxf.cloudlib.api.event;
 
 
+import dev.vfyjxf.cloudlib.api.event.context.BubbleContext;
+import dev.vfyjxf.cloudlib.api.event.context.CancelableContext;
+import dev.vfyjxf.cloudlib.api.event.context.CommonContext;
+import dev.vfyjxf.cloudlib.api.event.context.InterruptibleContext;
+
 /**
  * The event handler.
  *
@@ -10,16 +15,20 @@ public interface EventHandler<T> {
 
     EventChannel<T> events();
 
-    default EventContext.Common common() {
+    default CommonContext common() {
         return events().common();
     }
 
-    default EventContext.Cancelable cancelable() {
+    default CancelableContext cancelable() {
         return events().cancelable();
     }
 
-    default EventContext.Interruptible interruptible() {
+    default InterruptibleContext interruptible() {
         return events().interruptible();
+    }
+
+    default BubbleContext bubble() {
+        return events().bubble();
     }
 
     default <E extends T> E listeners(EventDefinition<E> definition) {
@@ -44,11 +53,11 @@ public interface EventHandler<T> {
         events().get(definition).unregister(listener);
     }
 
-    default <E extends T> void clear(EventDefinition<E> definition) {
+    default <E extends T> void clearListeners(EventDefinition<E> definition) {
         events().get(definition).clearListeners();
     }
 
-    default void clearAll() {
+    default void clearAllListeners() {
         events().clearAllListeners();
     }
 

@@ -28,6 +28,7 @@ configurations {
 
 neoForge {
     version = project.neo_version
+    accessTransformers = project.files('src/main/resources/META-INF/accesstransformer.cfg')
 
     parchment {
         mappingsVersion = project.parchment_mappings_version
@@ -126,10 +127,10 @@ dependencies {
             prefer("11.1.0")
         }
     }
-    additionalRuntimeClasspath(api 'org.appliedenergistics.yoga:yoga:1.0.0')
-    jarJar("org.appliedenergistics.yoga:yoga:1.0.0") {
+    additionalRuntimeClasspath(api 'dev.vfyjxf:taffy:1.1.0')
+    jarJar("dev.vfyjxf:taffy:1.1.0") {
         version {
-            prefer("1.0.0")
+            prefer("1.1.0")
         }
     }
     additionalRuntimeClasspath(api("net.lenni0451:Reflect:1.4.0"))

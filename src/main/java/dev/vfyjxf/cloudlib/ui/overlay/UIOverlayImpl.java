@@ -4,7 +4,7 @@ import dev.vfyjxf.cloudlib.api.event.EventChannel;
 import dev.vfyjxf.cloudlib.api.event.EventHandler;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.event.OverlayEvent;
 import dev.vfyjxf.cloudlib.api.ui.overlay.UIOverlay;
 import net.minecraft.client.gui.GuiGraphics;
@@ -12,10 +12,10 @@ import net.minecraft.client.gui.GuiGraphics;
 public class UIOverlayImpl implements UIOverlay, EventHandler<OverlayEvent> {
 
     private final EventChannel<OverlayEvent> events = EventChannel.create(this);
-    private final WidgetGroup<Widget> overlayGroup;
+    private final CompositeWidget<Widget> overlayGroup;
     private final boolean holdByScreen;
 
-    public UIOverlayImpl(WidgetGroup<Widget> overlayGroup, boolean holdByScreen) {
+    public UIOverlayImpl(CompositeWidget<Widget> overlayGroup, boolean holdByScreen) {
         this.overlayGroup = overlayGroup;
         this.holdByScreen = holdByScreen;
         listeners(OverlayEvent.onOverlayBuild).onBuild(this);
@@ -24,7 +24,7 @@ public class UIOverlayImpl implements UIOverlay, EventHandler<OverlayEvent> {
     @Override
     public void init() {
         if (!holdByScreen) {
-            overlayGroup.init();
+//            overlayGroup.init();
         }
     }
 
@@ -34,28 +34,18 @@ public class UIOverlayImpl implements UIOverlay, EventHandler<OverlayEvent> {
     }
 
     @Override
-    public boolean initialized() {
-        return overlayGroup.initialized();
-    }
-
-    @Override
     public void tick() {
         overlayGroup.tick();
     }
 
     @Override
-    public WidgetGroup<Widget> overlayGroup() {
+    public CompositeWidget<Widget> overlayGroup() {
         return overlayGroup;
     }
 
     @Override
     public Rect getBound() {
-        return overlayGroup.getBounds();
-    }
-
-    @Override
-    public void setBound(Rect bounds) {
-        overlayGroup.setBound(bounds);
+        return overlayGroup.bounds();
     }
 
     @Override

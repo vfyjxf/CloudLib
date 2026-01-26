@@ -9,9 +9,9 @@ import java.util.List;
  * Frame animations are discrete and do not interpolate between frames.
  * For smooth effects, use {@link #frameProgress(float)} to get the progress within the current frame.
  */
-public class FrameAnimation implements Playable<UITexture> {
+public class FrameAnimation implements Playable<VisualTexture> {
 
-    private record Frame(UITexture texture, float duration) {}
+    private record Frame(VisualTexture texture, float duration) {}
 
     private final List<Frame> frames = new ArrayList<>();
     private int currentIndex = 0;
@@ -25,13 +25,13 @@ public class FrameAnimation implements Playable<UITexture> {
 
     public FrameAnimation() {}
 
-    public FrameAnimation addFrame(UITexture texture, float duration) {
+    public FrameAnimation addFrame(VisualTexture texture, float duration) {
         frames.add(new Frame(texture, duration));
         return this;
     }
 
-    public FrameAnimation addFrames(float duration, UITexture... textures) {
-        for (UITexture t : textures) {
+    public FrameAnimation addFrames(float duration, VisualTexture... textures) {
+        for (VisualTexture t : textures) {
             addFrame(t, duration);
         }
         return this;
@@ -57,8 +57,8 @@ public class FrameAnimation implements Playable<UITexture> {
     /**
      * Returns the texture at the specified frame index.
      */
-    public UITexture frameAt(int index) {
-        if (index < 0 || index >= frames.size()) return UITexture.EMPTY;
+    public VisualTexture frameAt(int index) {
+        if (index < 0 || index >= frames.size()) return VisualTexture.empty;
         return frames.get(index).texture;
     }
 
@@ -88,13 +88,13 @@ public class FrameAnimation implements Playable<UITexture> {
     //region Animation 实现
 
     @Override
-    public UITexture value() {
-        if (frames.isEmpty()) return UITexture.EMPTY;
+    public VisualTexture value() {
+        if (frames.isEmpty()) return VisualTexture.empty;
         return frames.get(currentIndex).texture;
     }
 
     @Override
-    public UITexture value(float partialTick) {
+    public VisualTexture value(float partialTick) {
         // 帧动画是离散的，直接返回当前帧
         // partialTick 主要影响 frameProgress()，供外部使用
         return value();

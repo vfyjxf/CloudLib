@@ -6,29 +6,29 @@ import dev.vfyjxf.cloudlib.api.data.DataAttachable;
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
 import dev.vfyjxf.cloudlib.api.event.EventDefinition;
 import dev.vfyjxf.cloudlib.api.event.EventHandler;
-import dev.vfyjxf.cloudlib.api.math.MutablePos;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.math.Size;
 import dev.vfyjxf.cloudlib.api.performer.Backstage;
 import dev.vfyjxf.cloudlib.api.performer.PerformerContainer;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
-import dev.vfyjxf.cloudlib.api.ui.Lifecycle;
 import dev.vfyjxf.cloudlib.api.ui.Renderable;
-import dev.vfyjxf.cloudlib.api.ui.UIContext;
-import dev.vfyjxf.cloudlib.api.ui.animation.Animatable;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragProvider;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
+import dev.vfyjxf.cloudlib.api.ui.event.InputEvents;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
-import dev.vfyjxf.cloudlib.api.ui.layout.modifier.Modifier;
+import dev.vfyjxf.cloudlib.api.ui.style.StyleContext;
+import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
+import dev.vfyjxf.cloudlib.api.ui.style.VisualContext;
 import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
-import dev.vfyjxf.cloudlib.api.ui.texture.UITexture;
-import dev.vfyjxf.cloudlib.api.ui.widget.Visibility;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
+import dev.vfyjxf.cloudlib.util.Checks;
 import dev.vfyjxf.cloudlib.util.ScreenUtil;
+import dev.vfyjxf.taffy.tree.Layout;
+import dev.vfyjxf.taffy.tree.NodeId;
+import dev.vfyjxf.taffy.tree.TaffyTree;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import org.appliedenergistics.yoga.YogaNode;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
@@ -40,55 +40,38 @@ import java.util.function.Supplier;
 /**
  * The basic unit of the UI system.
  * <p>
- * C widget is a component that can be rendered on the screen.
+ * widget is a component that can be rendered on the screen.
  * It can be interacted with the mouse and keyboard.
  * <p>
  * Subsystem:
  * <ul>
- *     <li>{@code LayoutConfigurator}: Using {@link YogaNode } to automatically calculates the position and size of widgets.</li>
+ *     <li>{@code Layout}: Using {@link TaffyTree } to automatically calculates the position and size of widgets.</li>
  *     <li>{@code Event}: Implemented {@link EventHandler<WidgetEvent>} to allow combining different events to create complex widgets. </li>
  *     <li>{@code Render}: Provides events for rendering the widget itself, the widget's tooltip, the widget's overlay.</li>
  *     <li>{@code Data}: {@link DataAttachable} is implemented to allow components to attach additional data.</li>
- *     <li>{@code Performer}: {@link PerformerContainer} bound to the {@link RootWidget#performers()} by default.</li>
+ *     <li>{@code Performer}: {@link PerformerContainer} bound to the {@link Scene#performers()} by default.</li>
  *   <ul>
  */
 @SuppressWarnings("unchecked")
-//TODO:对Widget的各个生命周期给出明确定义，对各种Widget生命周期有关的，更新有关的事件明确给出定义，如Init，update,tick等
+@CanIgnoreReturnValue
 public class Widget
-    implements Renderable, Animatable<Widget>,
+    implements Renderable,
                EventHandler<WidgetEvent>,
-               DataAttachable, Backstage {
+               DataAttachable,
+               Backstage {
 
-    //region Event
-    protected final EventChannel<WidgetEvent> eventChannel = EventChannel.create(this);
-    //endregion
+    //region core
 
-    //region data attachment
-    protected final AttachableDataContainer attachableDataContainer = new AttachableDataContainer();
-    //endregion
+    Lifecycle lifecycle = Lifecycle.created;
 
-    //region management
-
-    Lifecycle lifecycle = Lifecycle.CONSTRUCTING;
-
-    //endregion
-
-    //region Tree
+    Scene scene;
+    SceneContext context;
 
     /**
-     * maybe itself
-     */
-    protected RootWidget root;
-
-    /**
-     * Normally,only {@link RootWidget} doesn't have a parent.
+     * Normally,only root widget doesn't have a parent.
      */
     @UnknownNullability
-    protected WidgetGroup<?> parent;
-
-    //endregion
-
-    //region Node Attributes
+    CompositeWidget<?> parent;
 
     @Nullable Object key;
 
@@ -99,72 +82,75 @@ public class Widget
 
     final StateSlot.StateContext stateContext = new StateSlot.StateContext();
 
-    //TODO:废弃这个状态，语义混乱不明确
-    protected boolean initialized = false;
-
     protected boolean active = true;
     //endregion
 
-    //region Bounds
-    protected Pos position = Pos.origin;
-    protected Pos absolute = calculateAbsolute();
-    /**
-     * The width and height of the widget,contains padding
-     */
-    protected Size size = Size.point;
+    //region layout & style
+
+    @Nullable NodeId nodeId;
+
+    protected final StyleContext style = new StyleContext(this);
+
+    Layout layout;
+
     //endregion
 
-    //region Visual
-    protected UITexture background;
-    protected UITexture icon;
-    protected Visibility visibility = Visibility.VISIBLE;
+    //region area & visual
+
+    /**
+     * Relative position of the widget, relative to its parent.
+     */
+    Pos position = Pos.origin;
+    /**
+     * Cached absolute position of the widget, relative to the root widget.
+     */
+    @Nullable Pos absolute = null;
+    /**
+     * Size of the widget.
+     */
+    Size size = Size.point;
+
+    final VisualContext visualContext = style.visualContext();
+    protected boolean visible = true;
     @Nullable
     protected RichTooltip richTooltip;
     //endregion
 
-    //region Draggable
+    //region state
+
+    //region draggable
     protected boolean draggable = false;
     protected boolean dragging = false;
+
+    //region fucus
+    protected boolean focusable = false;
+    protected boolean focused = false;
+
+
+    //region hover
+    protected boolean hovered = false;
     //endregion
 
-    //region layout
-    protected final YogaNode yogaNode = new YogaNode();
-    protected boolean layoutByParent = true;
+    //region Event
+    protected final EventChannel<WidgetEvent> eventChannel = EventChannel.create(this);
     //endregion
 
-
-    //region Internal impl
+    //region data attachment
+    protected final AttachableDataContainer dataContainer = new AttachableDataContainer();
+    //endregion
 
     public Widget() {}
-
-    protected Pos calculateAbsolute() {
-        if (parent == null) return position;
-        WidgetGroup<?> parent = this.parent;
-        MutablePos calculated = position.toMutable();
-        while (parent != null && parent != this) {
-            Pos parentPos = parent.getRelative();
-            calculated.translate(parentPos.x(), parentPos.y());
-            parent = parent.parent();
-        }
-        return calculated.toImmutable();
-    }
-
-    protected void onPositionUpdate() {
-        absolute = calculateAbsolute();
-    }
-
-    //endregion
 
     //region capability
 
     @Override
     public AttachableDataContainer attachableDataContainer() {
-        return attachableDataContainer;
+        return dataContainer;
     }
 
     @Override
     public PerformerContainer performers() {
-        return root.performers();
+        return scene().performers();
     }
 
     @Override
@@ -174,52 +160,43 @@ public class Widget
 
     //endregion
 
+    //region basic
 
-    //region Basic
+    public Lifecycle lifecycle() {
+        return lifecycle;
+    }
+
+    public Scene scene() {
+        Checks.checkArgument(lifecycle.mounted(), "Widget is not mounted!");
+        return scene;
+    }
+
+    public SceneContext context() {
+        Checks.checkArgument(lifecycle.mounted(), "Widget is not mounted!");
+        return context;
+    }
 
     public @Nullable Object key() {
         return key;
     }
 
-    public @UnknownNullability WidgetGroup<? extends Widget> parent() {
+    public @UnknownNullability CompositeWidget<? extends Widget> parent() {
         return parent;
     }
 
-    @CanIgnoreReturnValue
-    @Contract("_ -> this")
-    protected Widget setParent(@Nullable WidgetGroup<? super Widget> parent) {
-        this.parent = parent;
-        return this;
+    public final WidgetPath path() {
+        Checks.checkArgument(lifecycle.mounted(), "Widget is not mounted!");
+        return this.scene.pathOf(this);
     }
 
-    public boolean initialized() {
-        return initialized;
-    }
-
-    public boolean interactable() {
-        return active && visible();
-    }
-
-    public RootWidget root() {
-        return root;
-    }
-
-    //todo:refactor this
-    public UIContext getContext() {
-        return root.getContext();
-    }
-
-    @MustBeInvokedByOverriders
-    public void init() {
-        listeners(WidgetEvent.onInit).onInit(this);
-        initialized = true;
-        listeners(WidgetEvent.onInitPost).onInit(this);
+    public NodeId nodeId() {
+        Checks.checkArgument(lifecycle.mounted(), "Widget is not mounted!");
+        return Checks.checkNotNull(nodeId, "Widget is not mounted or destroyed!");
     }
 
     //endregion
 
     //region signal
-
 
     @MustBeInvokedByOverriders
     public void tick() {
@@ -230,99 +207,132 @@ public class Widget
 
     //region lifecycle
 
-    public void mount() {
-
-    }
-
-    public void unmount() {
-
-    }
-
-    public void  onStateChanged() {
-
-    }
-
-    //TODO:Add update lifecycle hooks
-
-    //endregion
-
-
-    @Contract("_ -> this")
     public Widget onInit(WidgetEvent.OnInit listener) {
         events().register(WidgetEvent.onInit, listener);
         return this;
     }
 
-    @Contract("_ -> this")
-    public Widget onInitPost(WidgetEvent.OnInitPost listener) {
-        events().register(WidgetEvent.onInitPost, listener);
+    public Widget onMount(WidgetEvent.OnMount listener) {
+        events().register(WidgetEvent.onMount, listener);
         return this;
     }
 
-    @Contract("_ -> this")
-    public Widget onRemove(WidgetEvent.OnRemove listener) {
-        events().register(WidgetEvent.onRemove, listener);
+    public Widget onUnmount(WidgetEvent.OnUnmount listener) {
+        events().register(WidgetEvent.onUnmount, listener);
         return this;
     }
 
-    @Contract("_ -> this")
-    public Widget onUpdate(WidgetEvent.OnUpdate listener) {
-        events().register(WidgetEvent.onUpdate, listener);
+    public Widget onDestroy(WidgetEvent.OnDestroy listener) {
+        events().register(WidgetEvent.onDestroy, listener);
         return this;
     }
 
-    @Contract("_ -> this")
-    public Widget onTick(WidgetEvent.OnTick listener) {
-        events().register(WidgetEvent.onTick, listener);
-        return this;
+    void init() {
+        if (lifecycle == Lifecycle.destroyed) {
+            throw new IllegalArgumentException("Widget is already destroyed!");
+        }
+        if (!lifecycle.initialized()) {
+            listeners(WidgetEvent.onInit).onInit(this);
+        }
+        lifecycle = Lifecycle.initialized;
     }
 
-    @Contract("_ -> this")
-    public Widget onResize(WidgetEvent.OnResize listener) {
-        events().register(WidgetEvent.onResize, listener);
-        return this;
+    void mount(Scene scene, SceneContext context) {
+        if (lifecycle == Lifecycle.destroyed) {
+            throw new IllegalArgumentException("Widget is already destroyed!");
+        }
+        if (!lifecycle.initialized()) {
+            throw new IllegalArgumentException("Widget is not initialized!");
+        }
+        this.scene = scene;
+        this.context = context;
+        this.nodeId = scene.tree.newLeaf(this.style.layoutStyle());
+        //TODO:Blueprint support!
+        if (parent != null) {
+            scene.tree.insertChildAtIndex(parent.nodeId(), parent.children.indexOf(this), nodeId);
+        }
+        listeners(WidgetEvent.onMount).onMount(scene, context);
+        lifecycle = Lifecycle.mounted;
     }
 
-    @Contract("_ -> this")
-    public Widget onResizePost(WidgetEvent.OnResizePost listener) {
-        events().register(WidgetEvent.onResizePost, listener);
-        return this;
+    void unmount() {
+        //TODO:Blueprint support!
+        var scene = this.scene;
+        if (parent != null) {
+            scene.tree.removeChild(parent.nodeId(), nodeId);
+        }
+        scene.tree.remove(nodeId);
+        this.scene = null;
+        this.context = null;
+        listeners(WidgetEvent.onUnmount).onUnmount(parent, this);
+        scene.unmount(this);
+        lifecycle = Lifecycle.unmounted;
+    }
+
+    void destroy() {
+        //TODO:Should we destroy a widget doesn't unmount?
+        if (!lifecycle.unmounted()) {
+            throw new IllegalArgumentException("Widget is not unmounted!");
+        }
+        this.parent = null;
+        this.key = null;
+        this.scene = null;
+        this.context = null;
+        this.nodeId = null;
+        listeners(WidgetEvent.onDestroy).onDestroy(this);
+        events().clearAllListeners();
+        lifecycle = Lifecycle.destroyed;
+    }
+
+    public void onStateChanged() {
+
     }
 
     //endregion
 
-    //region Area
+    //region area
 
     /**
      * @return the relative position of the widget, relative to its parent.
      */
-    public Pos getRelative() {
+    public Pos pos() {
         return position;
     }
 
     /**
-     * @return the absolute position of the widget, relative to the screen.
+     * @return the absolute position of the widget, relative to the root widget.
      */
-    public Pos getAbsolute() {
+    public Pos absolutePos() {
+        if (absolute == null) {
+            if (parent == null) absolute = position;
+            else absolute = parent.absolutePos().translate(position.x(), position.y());
+        }
         return absolute;
     }
 
     @Contract("_ -> this")
-    public Widget setPos(Pos position) {
+    protected Widget setPos(Pos position) {
         var context = common();
         listeners(WidgetEvent.onPositionChanged).onPositionChanged(position, context);
         if (context.cancelled()) return this;
         this.position = position;
-        onPositionUpdate();
+        onPositionChanged();
         return this;
     }
 
-    public Size getSize() {
+    /**
+     * Invalidates the cached absolute position.
+     */
+    protected void onPositionChanged() {
+        this.absolute = null;
+    }
+
+    public Size size() {
         return size;
     }
 
     @Contract("_ -> this")
-    public Widget setSize(Size size) {
+    protected Widget setSize(Size size) {
         var context = common();
         listeners(WidgetEvent.onSizeChanged).onSizeChanged(size, context);
         if (context.cancelled()) return this;
@@ -331,89 +341,89 @@ public class Widget
     }
 
     public int posX() {
-        return getRelative().x();
+        return pos().x();
     }
 
     public int posY() {
-        return getRelative().y();
+        return pos().y();
     }
 
     @Contract("_,_ -> this")
-    public Widget setPos(int x, int y) {
+    protected Widget setPos(int x, int y) {
         return setPos(new Pos(x, y));
     }
 
     @Contract("_ -> this")
-    public Widget setPosX(int x) {
+    protected Widget setPosX(int x) {
         return setPos(x, posY());
     }
 
     @Contract("_ -> this")
-    public Widget setPosY(int y) {
+    protected Widget setPosY(int y) {
         return setPos(posX(), y);
     }
 
     @Contract("_,_ -> this")
-    public Widget translate(int dx, int dy) {
-        return setPos(getRelative().x() + dx, getRelative().y() + dy);
+    protected Widget translate(int dx, int dy) {
+        return setPos(pos().x() + dx, pos().y() + dy);
     }
 
-    public int getWidth() {
-        return getSize().width();
+    public int width() {
+        return size().width();
     }
 
-    public int getHeight() {
-        return getSize().height();
+    public int height() {
+        return size().height();
     }
 
     public int right() {
-        return posX() + getWidth();
+        return posX() + width();
     }
 
     public int bottom() {
-        return posY() + getHeight();
+        return posY() + height();
     }
 
     @Contract("_,_ -> this")
-    public Widget setSize(int width, int height) {
+    protected Widget setSize(int width, int height) {
         return setSize(new Size(width, height));
     }
 
     @Contract("_,_ -> this")
-    public Widget setSize(double width, double height) {
+    protected Widget setSize(double width, double height) {
         return setSize(new Size((int) width, (int) height));
     }
 
-    public Widget setBound(int x, int y, int width, int height) {
+    protected Widget setBound(int x, int y, int width, int height) {
         return setPos(x, y)
             .setSize(width, height);
     }
 
-    public Widget setBound(Rect rect) {
-        return setBound(rect.x, rect.y, rect.width, rect.height);
+    protected Widget setBound(Rect rect) {
+        return setBound(rect.x(), rect.y(), rect.width(), rect.height());
     }
 
-    public Rect getBounds() {
-        return new Rect(getRelative().x(), getRelative().y(), getSize().width(), getSize().height());
+    public Rect bounds() {
+        return new Rect(pos().x(), pos().y(), size().width(), size().height());
     }
 
-    public Rect getAbsoluteBounds() {
-        return new Rect(getAbsolute().x(), getAbsolute().y(), getSize().width(), getSize().height());
-    }
-
-    @Contract("_ -> this")
-    public Widget setWidth(int width) {
-        return setSize(width, getSize().height());
+    public Rect absoluteBounds() {
+        return new Rect(absolutePos().x(), absolutePos().y(), size().width(), size().height());
     }
 
     @Contract("_ -> this")
-    public Widget setHeight(int height) {
-        return setSize(getSize().width(), height);
+    protected Widget setWidth(int width) {
+        return setSize(width, size().height());
+    }
+
+    @Contract("_ -> this")
+    protected Widget setHeight(int height) {
+        return setSize(size().width(), height);
     }
 
     //endregion
 
-    //region Render
+    //region rendering
 
     /**
      * Render the widget with condition checks.
@@ -442,8 +452,8 @@ public class Widget
     }
 
     protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        if (background != null) background.render(graphics, 0, 0, getWidth(), getHeight());
-        if (icon != null) icon.render(graphics, 0, 0, getWidth(), getHeight());
+        visualContext.background().render(graphics, 0, 0, width(), height());
+        visualContext.icon().render(graphics, 0, 0, width(), height());
     }
 
     public void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
@@ -466,7 +476,6 @@ public class Widget
      * @param partialTicks the partial ticks
      */
     public void renderOverlay(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-
         if (invisible()) return;
         graphics.pose().pushPose();
         {
@@ -489,16 +498,16 @@ public class Widget
 
     }
 
-    @Contract("_ -> this")
-    public Widget setBackground(UITexture background) {
-        this.background = background;
-        return this;
+    //endregion
+
+    //region visibility & active
+
+    public boolean visible() {
+        return visible;
     }
 
-    @Contract("_ -> this")
-    public Widget setIcon(UITexture icon) {
-        this.icon = icon;
-        return this;
+    public boolean invisible() {
+        return !visible;
     }
 
     public boolean active() {
@@ -509,31 +518,25 @@ public class Widget
         return !active;
     }
 
-    @Contract("_ -> this")
     public Widget setActive(boolean active) {
         this.active = active;
         return this;
     }
 
-    public Visibility visibility() {
-        return visibility;
+    public boolean interactable() {
+        return active && visible();
     }
 
-    public void setVisibility(Visibility visibility) {
-        this.visibility = visibility;
-    }
+    //region tooltip
 
-    @Contract("_ -> this")
     public Widget tooltip(String text) {
         return tooltip(Component.literal(text));
     }
 
-    @Contract("_ -> this")
     public Widget tooltip(LangEntry key) {
         return tooltip(key.get());
     }
 
-    @Contract("_ -> this")
     public Widget tooltip(Component component) {
         if (this.richTooltip == null) {
             this.richTooltip = RichTooltip.create();
@@ -542,7 +545,6 @@ public class Widget
         return this;
     }
 
-    @Contract("_ -> this")
     public Widget tooltip(Supplier<Component> supplier) {
         if (this.richTooltip == null) {
             this.richTooltip = RichTooltip.create();
@@ -596,6 +598,10 @@ public class Widget
         return this;
     }
 
+    //endregion
+
+    //region render hooks
+
     @Contract("_ -> this")
     public Widget onRender(WidgetEvent.OnRender listener) {
         return onEvent(WidgetEvent.onRender, listener);
@@ -610,155 +616,75 @@ public class Widget
         return onEvent(WidgetEvent.onOverlayRender, listener);
     }
 
-    public boolean visible() {
-        return visibility() == Visibility.VISIBLE;
+    //endregion
+
+    //region style & layout
+
+    public StyleContext style() {
+        return style;
     }
 
-    public boolean invisible() {
-        return visibility() != Visibility.VISIBLE;
+    public Widget applyStyle(UIStyle style) {
+        style.apply(this.style);
+        return this;
     }
 
-    public void setVisible(boolean visible) {
-        setVisibility(visible ? Visibility.VISIBLE : Visibility.INVISIBLE);
-    }
-
-    public void hide() {
-        setVisible(false);
-    }
-
-    public void show() {
-        setVisible(true);
+    public void applyLayout() {
+        TaffyTree taffyTree = scene.layoutTree();
+        if (nodeId != null && taffyTree.needsVisit(nodeId)) {
+            Layout layout = taffyTree.getLayout(nodeId);
+            this.layout = layout;
+            setPos(new Pos(layout.location().x, layout.location().y));
+            setSize(layout.size().width, layout.size().height);
+            taffyTree.acknowledgeLayout(nodeId);
+        }
     }
 
     //endregion
 
-    //region Layouts
-    public Widget withModifier(Modifier modifier) {
-        this.events().registerManaged(WidgetEvent.onInitPost, widget -> modifier.apply(widget.yogaNode), 1);
-        return this;
-    }
-
-    public Widget layoutBySelf() {
-        this.layoutByParent = false;
-        return this;
-    }
-
-    public Widget setLayoutByParent(boolean layoutByParent) {
-        this.layoutByParent = layoutByParent;
-        return this;
-    }
-
-    /**
-     * Resize and LayoutConfigurator the widget
-     */
-    public void layout() {
-        if (!layoutByParent) {
-            yogaNode.calculateLayout(
-                getWidth(),
-                getHeight()
-            );
-        }
-        if (yogaNode.hasNewLayout()) {
-            listeners(WidgetEvent.onResize).onResize(this);
-            applyLayoutResult();
-            this.onPositionUpdate();
-            listeners(WidgetEvent.onResizePost).onResizePost(this);
-        }
-    }
-
-    protected void applyLayoutResult() {
-        this.setPos(
-            (int) yogaNode.getLayoutX(),
-            (int) yogaNode.getLayoutY()
-        );
-        this.setSize(
-            yogaNode.getLayoutWidth(),
-            yogaNode.getLayoutHeight()
-        );
-
-    }
-
-    public YogaNode yogaNode() {
-        return yogaNode;
-    }
-
-    //endregion
-
-    //region Inputs
+    //region Input
 
     @Contract("_ -> this")
     public Widget onMouseClicked(InputEvent.OnMouseClicked listener) {
-        return onEvent(InputEvent.onMouseClicked, listener);
+        return onEvent(InputEvents.onMouseClicked, listener);
+    }
+
+    @Contract("_ -> this")
+    public Widget onMouseClick(InputEvent.OnMouseClick listener) {
+        return onEvent(InputEvents.onMouseClick, listener);
     }
 
     @Contract("_ -> this")
     public Widget onMouseReleased(InputEvent.OnMouseReleased listener) {
-        return onEvent(InputEvent.onMouseReleased, listener);
-    }
-
-    @Contract("_ -> this")
-    public Widget onMouseHover(InputEvent.OnMouseHover listener) {
-        return onEvent(InputEvent.onMouseHover, listener);
+        return onEvent(InputEvents.onMouseReleased, listener);
     }
 
     @Contract("_ -> this")
     public Widget onMouseDragged(InputEvent.OnMouseDragged listener) {
-        return onEvent(InputEvent.onMouseDragged, listener);
+        return onEvent(InputEvents.onMouseDragged, listener);
     }
+
+    public Widget onMouseEnter(InputEvent.OnMouseEnter listener) {
+        return onEvent(InputEvents.onMouseEnter, listener);
+    }
+
+    public Widget onMouseLeave(InputEvent.OnMouseLeave listener) {
+        return onEvent(InputEvents.onMouseLeave, listener);
+    }
+
 
     @Contract("_ -> this")
     public Widget onKeyReleased(InputEvent.OnKeyReleased listener) {
-        return onEvent(InputEvent.onKeyReleased, listener);
+        return onEvent(InputEvents.onKeyReleased, listener);
     }
 
     @Contract("_ -> this")
     public Widget onKeyPressed(InputEvent.OnKeyPressed listener) {
-        return onEvent(InputEvent.onKeyPressed, listener);
+        return onEvent(InputEvents.onKeyPressed, listener);
     }
 
-    /**
-     * @param input the input context
-     * @return whether the event is consumed.
-     */
-    public boolean mouseClicked(InputContext input) {
-        if (!interactable() || !isMouseOver(input)) return false;
-        return listeners(InputEvent.onMouseClicked).onClicked(input, common());
-    }
-
-    /**
-     * Most of the time, you should use this method to handle mouse click event.
-     *
-     * @param input the input context
-     * @return whether the event is consumed.
-     */
-    public boolean mouseReleased(InputContext input) {
-        if (!interactable() || !isMouseOver(input)) return false;
-        return listeners(InputEvent.onKeyReleased).onKeyReleased(input, common());
-    }
-
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (!interactable() || !isMouseOver(mouseX, mouseY)) return false;
-        return listeners(InputEvent.onMouseScrolled).onScrolled(mouseX, mouseY, scrollX, scrollY, common());
-    }
-
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (!interactable() || !isMouseOver(mouseX, mouseY)) return false;
-        var input = InputContext.fromMouse(mouseX, mouseY, button);
-        return listeners(InputEvent.onMouseDragged).onDragged(input, deltaX, deltaY, common());
-    }
-
-    public void mouseMoved(double mouseX, double mouseY) {
-        listeners(InputEvent.onMouseMoved).onMoved(mouseX, mouseY, interruptible());
-    }
-
-    public boolean keyPressed(InputContext input) {
-        if (!interactable()) return false;
-        return listeners(InputEvent.onKeyPressed).onKeyPressed(input, common());
-    }
-
-    public boolean keyReleased(InputContext input) {
-        if (!interactable()) return false;
-        return listeners(InputEvent.onKeyReleased).onKeyReleased(input, common());
+    public Widget onCharTyped(InputEvent.OnCharTyped listener) {
+        return onEvent(InputEvents.onCharTyped, listener);
     }
 
     //endregion
@@ -772,8 +698,8 @@ public class Widget
     public Widget setDraggable(boolean draggable) {
         this.draggable = draggable;
         if (draggable) {
-            onInitPost(self -> {
-                addWeakPerformer(DragProvider.SCENARIO, DragProvider.fromWidget(this), this);
+            onMount((Scene scene, SceneContext context) -> {
+                addWeakPerformer(DragProvider.scenario, DragProvider.fromWidget(this), this);
             });
         }
         return this;
@@ -789,35 +715,39 @@ public class Widget
         return this;
     }
 
-    //endregion
+    public boolean hovered() {
+        return hovered;
+    }
 
-    //region Animate
-    @Override
-    @Contract("_,_ -> this")
-    public Widget interpolate(Widget next, float delta) {
+    @Contract("_ -> this")
+    public Widget setHovered(boolean hovered) {
+        this.hovered = hovered;
+        return this;
+    }
+
+    public boolean focusable() {
+        return focusable;
+    }
+
+    @Contract("_ -> this")
+    public Widget setFocusable(boolean focusable) {
+        this.focusable = focusable;
+        return this;
+    }
+
+    public boolean focused() {
+        return focused;
+    }
+
+    @Contract("_ -> this")
+    public Widget setFocused(boolean focused) {
+        this.focused = focused;
         return this;
     }
 
     //endregion
 
     //region Utils
-
-    @Contract("_-> this")
-    @CanIgnoreReturnValue
-    public final <T extends Widget> Widget asChild(WidgetGroup<T> parent) {
-        if (parent == this) throw new IllegalArgumentException("Cannot add widget to itself");
-        if (parent.add(parent.size(), (T) this)) {
-            if (this.parent != null) {
-                this.parent.yogaNode.removeChild(this.yogaNode);
-            }
-            this.parent = parent;
-            this.onPositionUpdate();
-            if (layoutByParent) {
-                parent.yogaNode.addChildAt(this.yogaNode, parent.yogaNode.getChildCount());
-            }
-        }
-        return this;
-    }
 
     public <T extends WidgetEvent> Widget onEvent(EventDefinition<T> definition, T listener) {
         EventHandler.super.onEvent(definition, listener);
@@ -836,10 +766,10 @@ public class Widget
      * @return true if the mouse is over this widget
      */
     public boolean isMouseOver(double mouseX, double mouseY) {
-        return mouseX >= getAbsolute().x() &&
-               mouseX <= getAbsolute().x() + getSize().width() &&
-               mouseY >= getAbsolute().y() &&
-               mouseY <= getAbsolute().y() + getSize().height();
+        return mouseX >= absolutePos().x() &&
+               mouseX <= absolutePos().x() + size().width() &&
+               mouseY >= absolutePos().y() &&
+               mouseY <= absolutePos().y() + size().height();
     }
 
     public boolean isMouseOver(InputContext input) {
@@ -851,7 +781,7 @@ public class Widget
     }
 
     public boolean intersects(Widget boundProvider) {
-        return intersects(boundProvider.getAbsoluteBounds());
+        return intersects(boundProvider.absoluteBounds());
     }
 
     public boolean intersects(int x, int y, int width, int height) {
@@ -861,7 +791,7 @@ public class Widget
     }
 
     public boolean intersects(Rect bound) {
-        return bound.intersects(getAbsoluteBounds());
+        return bound.intersects(absoluteBounds());
     }
 
     @SuppressWarnings("unchecked")
@@ -873,17 +803,18 @@ public class Widget
     public String toString() {
         return "Widget{" +
                "key='" + (key == null ? "null" : key) + '\'' +
-               ", initialized=" + initialized +
-               ", root=" + (root == null ? "null" : root.key()) +
                ", parent=" + (parent == null ? "null" : parent.key()) +
-               ", icon=" + icon +
                ", position=" + position +
-               ", absolute=" + absolute +
+               ", absolute=" + absolutePos() +
                ", size=" + size +
                ", active=" + active +
-               ", visibility=" + visibility +
+               ", visible=" + visible +
                '}';
     }
+
+    //endregion
+
+    //region hooks
 
     //endregion
 

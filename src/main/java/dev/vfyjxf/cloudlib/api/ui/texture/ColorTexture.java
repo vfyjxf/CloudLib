@@ -5,7 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 /**
  * Solid color texture.
  */
-public record ColorTexture(int color) implements UITexture {
+public record ColorTexture(int color) implements VisualTexture {
 
     public ColorTexture(int r, int g, int b) {
         this(0xFF000000 | (r << 16) | (g << 8) | b);
