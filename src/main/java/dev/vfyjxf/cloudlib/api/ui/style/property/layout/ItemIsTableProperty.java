@@ -6,6 +6,11 @@ import dev.vfyjxf.taffy.style.TaffyStyle;
 
 /**
  * Layout property that maps to taffy {@link TaffyStyle#itemIsTable}.
+ * <p>
+ * When true, this element is treated as a table for layout purposes.
+ * This affects how size and content are calculated.
+ *
+ * @see TaffyStyle#itemIsTable
  */
 public record ItemIsTableProperty(boolean value) implements LayoutProperty {
 

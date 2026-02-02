@@ -10,6 +10,11 @@ import java.util.List;
 
 /**
  * Layout property that maps to taffy {@link TaffyStyle#gridAutoColumns}.
+ * <p>
+ * Specifies the size of implicitly-created grid columns.
+ *
+ * @see TaffyStyle#gridAutoColumns
+ * @see TrackSizingFunction
  */
 public record GridAutoColumnsProperty(List<TrackSizingFunction> columns) implements LayoutProperty {
 

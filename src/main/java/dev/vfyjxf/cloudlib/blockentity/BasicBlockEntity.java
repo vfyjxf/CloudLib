@@ -22,9 +22,9 @@ public abstract class BasicBlockEntity extends BlockEntity {
     protected static final String UPDATE_TAG = "UpdateTag";
 
     public BasicBlockEntity(
-            BlockEntityType<?> type,
-            BlockPos pos,
-            BlockState blockState
+        BlockEntityType<?> type,
+        BlockPos pos,
+        BlockState blockState
     ) {
         super(type, pos, blockState);
     }
@@ -54,7 +54,7 @@ public abstract class BasicBlockEntity extends BlockEntity {
 
     @Override
     protected final void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        //region Read Update Tag
+        //region read update tag
         if (tag.contains(UPDATE_TAG, Tag.TAG_COMPOUND)) {
             CompoundTag updateTag = tag.getCompound(UPDATE_TAG);
             if (readUpdateData(updateTag, registries)) {

@@ -12,7 +12,11 @@ import java.util.Objects;
 /**
  * Layout property that maps to taffy {@link TaffyStyle#gridTemplateColumns}.
  * <p>
+ * Defines the column track sizing functions for the grid container.
  * Applying this will also clear {@link TaffyStyle#gridTemplateColumnsWithRepeat} so the plain template takes effect.
+ *
+ * @see TaffyStyle#gridTemplateColumns
+ * @see TrackSizingFunction
  */
 public record GridTemplateColumnsProperty(List<TrackSizingFunction> columns) implements LayoutProperty {
 

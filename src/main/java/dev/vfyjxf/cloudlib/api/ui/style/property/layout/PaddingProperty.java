@@ -9,8 +9,18 @@ import dev.vfyjxf.taffy.style.TaffyStyle;
 /**
  * Built-in padding layout property.
  * <p>
- * Padding is applied to the taffy {@link TaffyStyle} for layout calculation.
+ * Padding is applied to the taffy {@link TaffyStyle#padding} for layout calculation.
+ * <p>
+ * The padding types supported by taffy include:
+ * <ul>
+ *   <li>{@link LengthPercentage#length(float)} - fixed pixel length</li>
+ *   <li>{@link LengthPercentage#percent(float)} - percentage of parent (0.0 to 1.0)</li>
+ * </ul>
+ * <p>
+ * Note: Unlike margin, padding does not support AUTO values.
  *
+ * @see TaffyStyle#padding
+ * @see LengthPercentage
  * @see UIStyles#padding(float)
  */
 public record PaddingProperty(float top, float right, float bottom, float left) implements LayoutProperty {

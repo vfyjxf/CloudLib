@@ -1,8 +1,10 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
+import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
-import net.minecraft.client.gui.GuiGraphics;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Unmodifiable;
@@ -17,7 +19,7 @@ public class CompositeWidget<T extends Widget> extends Widget {
 
     //endregion
 
-    //region Widget Basic
+    //region composite extra
 
     @MustBeInvokedByOverriders
     public void tick() {
@@ -57,8 +59,8 @@ public class CompositeWidget<T extends Widget> extends Widget {
     }
 
     @Override
-    void mount(Scene scene, SceneContext context) {
-        super.mount(scene, context);
+    void mount(Scene scene, SceneContext context, SceneHandle handle) {
+        super.mount(scene, context, handle);
     }
 
     @Override
@@ -73,7 +75,7 @@ public class CompositeWidget<T extends Widget> extends Widget {
 
     //endregion
 
-    //region Group Basic
+    //region group basic
 
     public @Unmodifiable MutableList<T> children() {
         return childrenView;
@@ -85,6 +87,9 @@ public class CompositeWidget<T extends Widget> extends Widget {
     }
 
     protected <W extends T> W addWidget(W widget) {
+        if (widget.lifecycle.destroyed()) {
+            throw new IllegalArgumentException("Cannot add a destroyed widget");
+        }
         if (widget.parent != null) {
             if (widget.parent == this) {
                 throw new IllegalArgumentException("Widget already exists in the group");
@@ -109,8 +114,14 @@ public class CompositeWidget<T extends Widget> extends Widget {
             if (context.cancelled()) return false;
             children.add(index, widget);
             if (scene != null) {
-                if (!widget.lifecycle.initialized()) {
-                    scene.addCreatedWidget(widget);
+                switch (widget.lifecycle) {
+                    case created -> scene.addCreatedWidget(widget);
+                    case unmounted -> {
+                        scene.reuse(widget);
+                        scene.addUnmountedWidget(widget);
+                    }
+                    default ->
+                        throw new IllegalArgumentException("Illegal lifecycle: " + widget.lifecycle + " for widget: " + widget);
                 }
                 scene.invalidatePathCache();
             }
@@ -132,16 +143,14 @@ public class CompositeWidget<T extends Widget> extends Widget {
         Widget child = children.get(index);
         listeners(WidgetEvent.onChildRemoved).onChildRemoved(child, interruptible());
         child.listeners(WidgetEvent.onRemove).onRemove(this, child);
-        child.parent = null;
         Widget widget = children.remove(index);
-        boolean removed = children.remove(index) != null;
-        if (removed) {
+        if (widget != null) {
             widget.unmount();
             if (scene != null) {
                 scene.invalidatePathCache();
             }
         }
-        return removed;
+        return widget != null;
     }
 
     protected void clear() {
@@ -155,43 +164,35 @@ public class CompositeWidget<T extends Widget> extends Widget {
     }
 
     @Override
-    protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        super.renderInternal(graphics, mouseX, mouseY, partialTicks);
+    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        super.renderInternal(canvas, mouseX, mouseY, partialTicks);
         for (T child : children) {
-            graphics.pose().pushPose();
-            {
-                graphics.pose().translate(child.position.x(), child.position.y(), 0);
-                int relativeX = mouseX - child.position.x();
-                int relativeY = mouseY - child.position.y();
-                child.renderWidget(graphics, relativeX, relativeY, partialTicks);
-            }
-            graphics.pose().popPose();
+            canvas.pushTransform();
+            canvas.translate(child.position.x(), child.position.y());
+            int relativeX = mouseX - child.position.x();
+            int relativeY = mouseY - child.position.y();
+            child.renderWidget(canvas, relativeX, relativeY, partialTicks);
+            canvas.popTransform();
         }
     }
 
     @Override
-    protected void renderOverlayInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        super.renderOverlayInternal(graphics, mouseX, mouseY, partialTicks);
+    protected void renderOverlayInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        super.renderOverlayInternal(canvas, mouseX, mouseY, partialTicks);
         for (T child : children) {
-            child.renderOverlay(graphics, mouseX, mouseY, partialTicks);
+            child.renderOverlay(canvas, mouseX, mouseY, partialTicks);
         }
     }
 
     //endregion
 
-    //region Group Utils
+    //region group utils
 
     @Override
-    public String toString() {
-        return "WidgetGroup{" +
-               "key='" + key + '\'' +
-               ", position=" + position +
-               ", absolute=" + absolute +
-               ", size=" + size +
-               ", active=" + active +
-               ", visible=" + visible +
-               ", richTooltip=" + richTooltip +
-               '}';
+    @MustBeInvokedByOverriders
+    public void collectInspectionInfo(InspectionInfoCollector collector) {
+        super.collectInspectionInfo(collector);
+        collector.add("childCount", children.size(), InspectionProperty.CATEGORY_BASIC);
     }
 
     //endregion

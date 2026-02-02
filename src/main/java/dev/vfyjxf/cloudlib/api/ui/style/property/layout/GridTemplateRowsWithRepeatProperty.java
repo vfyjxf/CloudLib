@@ -11,6 +11,12 @@ import java.util.List;
 
 /**
  * Layout property that maps to taffy {@link TaffyStyle#gridTemplateRowsWithRepeat}.
+ * <p>
+ * Defines grid row templates with support for repeat() notation.
+ * When set, this overrides {@link TaffyStyle#gridTemplateRows}.
+ *
+ * @see TaffyStyle#gridTemplateRowsWithRepeat
+ * @see GridTemplateComponent
  */
 public record GridTemplateRowsWithRepeatProperty(@Nullable List<GridTemplateComponent> rows) implements LayoutProperty {
 

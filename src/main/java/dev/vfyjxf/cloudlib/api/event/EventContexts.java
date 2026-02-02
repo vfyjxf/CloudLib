@@ -38,4 +38,9 @@ public final class EventContexts {
 
     private EventContexts() {throw new UnsupportedOperationException();}
 
+    static CommonContext emptyCommon = new CommonContext(null);
+    static CancelableContext emptyCancelable = new CancelableContext(null);
+    static InterruptibleContext emptyInterruptible = new InterruptibleContext(null);
+    static BubbleContext emptyBubble = new BubbleContext(null);
+
 }

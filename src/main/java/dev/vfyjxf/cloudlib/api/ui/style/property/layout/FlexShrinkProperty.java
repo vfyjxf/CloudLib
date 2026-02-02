@@ -10,7 +10,12 @@ import dev.vfyjxf.taffy.style.TaffyStyle;
  * <p>
  * Flex shrink determines how much the item should shrink relative to the rest
  * of the flexible items when there is not enough space in the container.
+ * Maps to taffy {@link TaffyStyle#flexShrink}.
+ * <p>
+ * A value of 0 means the item will not shrink. A value greater than 0 specifies
+ * the shrink factor relative to other items.
  *
+ * @see TaffyStyle#flexShrink
  * @see UIStyles#flexShrink(float)
  */
 public record FlexShrinkProperty(float shrink) implements LayoutProperty {

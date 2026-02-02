@@ -9,6 +9,20 @@ import java.util.Objects;
 
 /**
  * Layout property that maps to taffy {@link TaffyStyle#justifySelf}.
+ * <p>
+ * Justify self overrides the container's justify-items value for this specific item.
+ * <p>
+ * The alignment values supported by taffy include:
+ * <ul>
+ *   <li>{@link AlignItems#START} - align to start of inline axis</li>
+ *   <li>{@link AlignItems#END} - align to end of inline axis</li>
+ *   <li>{@link AlignItems#CENTER} - center along inline axis</li>
+ *   <li>{@link AlignItems#STRETCH} - stretch to fill inline axis</li>
+ *   <li>{@link AlignItems#BASELINE} - align baselines</li>
+ * </ul>
+ *
+ * @see TaffyStyle#justifySelf
+ * @see AlignItems
  */
 public record JustifySelfProperty(AlignItems justifySelf) implements LayoutProperty {
 

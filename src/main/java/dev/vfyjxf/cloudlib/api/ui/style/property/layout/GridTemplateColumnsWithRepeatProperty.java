@@ -11,8 +11,15 @@ import java.util.List;
 
 /**
  * Layout property that maps to taffy {@link TaffyStyle#gridTemplateColumnsWithRepeat}.
+ * <p>
+ * Defines grid column templates with support for repeat() notation.
+ * When set, this overrides {@link TaffyStyle#gridTemplateColumns}.
+ *
+ * @see TaffyStyle#gridTemplateColumnsWithRepeat
+ * @see GridTemplateComponent
  */
-public record GridTemplateColumnsWithRepeatProperty(@Nullable List<GridTemplateComponent> columns) implements LayoutProperty {
+public record GridTemplateColumnsWithRepeatProperty(
+    @Nullable List<GridTemplateComponent> columns) implements LayoutProperty {
 
     public static final StyleType<List<GridTemplateComponent>> type = StyleType.of("grid-template-columns-with-repeat", () -> null);
 

@@ -2,12 +2,13 @@ package dev.vfyjxf.cloudlib.api.ui.texture;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.resources.ResourceLocation;
 
 import java.util.function.Supplier;
 
 /**
  * Sprite texture from a texture atlas.
+ * <p>
+ * Supports batch rendering via {@link BatchableTexture}.
  */
 public class SpriteTexture implements SizedTexture, BatchableTexture {
 
@@ -44,14 +45,12 @@ public class SpriteTexture implements SizedTexture, BatchableTexture {
         graphics.blit(x, y, 0, width, height, sprite);
     }
 
-    @Override
-    public ResourceLocation textureLocation() {
-        return sprite().atlasLocation();
-    }
+    // ==================== BatchableTexture Implementation ====================
 
     @Override
-    public float[] uvCoordinates() {
-        TextureAtlasSprite s = sprite();
-        return new float[]{s.getU0(), s.getV0(), s.getU1(), s.getV1()};
+    public void emit(VertexEmitter emitter, float x, float y, float w, float h, int color) {
+        TextureAtlasSprite sprite = spriteSupplier.get();
+        emitter.textured(sprite.atlasLocation(), x, y, w, h,
+            sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), color);
     }
 }

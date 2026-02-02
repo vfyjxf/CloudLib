@@ -7,12 +7,12 @@ import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import dev.vfyjxf.cloudlib.ui.widgets.ClickableButtonWidget;
+import dev.vfyjxf.cloudlib.ui.widgets.ButtonWidget;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Blueprint for {@link ClickableButtonWidget}.
+ * Blueprint for {@link ButtonWidget}.
  * <p>
  * Usage:
  * <pre>{@code
@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
  *     .colors(0xFF555555, 0xFF777777, 0xFF333333)
  * }</pre>
  */
-public final class ButtonBlueprint implements Blueprint<ClickableButtonWidget> {
+public final class ButtonBlueprint implements Blueprint<ButtonWidget> {
 
     private final Component label;
     private @Nullable Runnable onClick;
@@ -40,7 +40,7 @@ public final class ButtonBlueprint implements Blueprint<ClickableButtonWidget> {
         this.label = label;
     }
 
-    // ==================== DSL Entry Points ====================
+    //region dsl entry points
 
     public static ButtonBlueprint Button(String label) {
         return ScopedReceiver.add(new ButtonBlueprint(Component.literal(label)));
@@ -58,7 +58,9 @@ public final class ButtonBlueprint implements Blueprint<ClickableButtonWidget> {
         return ScopedReceiver.add(new ButtonBlueprint(label).onClick(onClick));
     }
 
-    // ==================== Builder Methods ====================
+    //endregion
+
+    //region builder methods
 
     public ButtonBlueprint onClick(@Nullable Runnable onClick) {
         this.onClick = onClick;
@@ -104,7 +106,9 @@ public final class ButtonBlueprint implements Blueprint<ClickableButtonWidget> {
         return this;
     }
 
-    // ==================== Blueprint Implementation ====================
+    //endregion
+
+    //region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -112,18 +116,20 @@ public final class ButtonBlueprint implements Blueprint<ClickableButtonWidget> {
     }
 
     @Override
-    public ClickableButtonWidget createWidget(Scene scene, SceneContext context) {
-        return ClickableButtonWidget.of(label);
+    public ButtonWidget createWidget(Scene scene, SceneContext context) {
+        return ButtonWidget.of(label);
     }
 
     @Override
-    public void updateWidget(ClickableButtonWidget widget, Scene scene, SceneContext context) {
+    public void updateWidget(ButtonWidget widget, Scene scene, SceneContext context) {
         widget.setLabel(label)
-            .onClick(onClick)
-            .setEnabled(enabled)
-            .setTextures(normalTexture, hoverTexture, pressedTexture)
-            .setIconTexture(iconTexture)
-            .setTextColor(textColor)
-            .applyStyle(style);
+              .onClick(onClick)
+              .setEnabled(enabled)
+              .setTextures(normalTexture, hoverTexture, pressedTexture)
+              .setIconTexture(iconTexture)
+              .setTextColor(textColor)
+              .applyStyle(style);
     }
+
+    //endregion
 }

@@ -2,32 +2,43 @@ package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * A panel widget with optional title bar and content area.
- * <p>
- * Features:
- * <ul>
- *   <li>Optional title bar with label</li>
- *   <li>Configurable background and border</li>
- *   <li>Content padding</li>
- * </ul>
+ * Panel with optional title bar.
  */
 public class PanelWidget extends CompositeWidget<Widget> {
 
+    //region state
+
     private @Nullable String title;
-    private VisualTexture backgroundTexture = new ColorTexture(0xCC222222);
-    private VisualTexture borderTexture = new ColorTexture(0xFF555555);
-    private VisualTexture titleBarTexture = new ColorTexture(0xFF333333);
-    private int titleColor = 0xFFFFFF;
+    private boolean showTitleBar = true;
     private int borderWidth = 1;
     private int titleBarHeight = 16;
     private int contentPadding = 4;
-    private boolean showTitleBar = true;
+
+    //endregion
+
+    //region colors
+
+    private int titleColor = 0xFFFFFF;
+
+    //endregion
+
+    //region textures
+
+    private VisualTexture backgroundTexture = new ColorTexture(0xCC222222);
+    private VisualTexture borderTexture = new ColorTexture(0xFF555555);
+    private VisualTexture titleBarTexture = new ColorTexture(0xFF333333);
+
+    //endregion
+
+    //region factory
 
     public static PanelWidget create() {
         return new PanelWidget();
@@ -38,6 +49,10 @@ public class PanelWidget extends CompositeWidget<Widget> {
     }
 
     private PanelWidget() {}
+
+    //endregion
+
+    //region configuration
 
     public @Nullable String title() {
         return title;
@@ -88,55 +103,79 @@ public class PanelWidget extends CompositeWidget<Widget> {
         return this;
     }
 
+    //endregion
+
+    //region children
+
     public <T extends Widget> T addChild(T widget) {
         return addWidget(widget);
     }
 
+    //endregion
+
+    //region rendering
+
     @Override
-    protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        var graphics = canvas.graphics();
         int w = width();
         int h = height();
 
         // Background
-        backgroundTexture.render(graphics, 0, 0, w, h);
+        canvas.texture(backgroundTexture, 0, 0, w, h);
 
         // Border
         if (borderWidth > 0) {
-            borderTexture.render(graphics, 0, 0, w, borderWidth); // top
-            borderTexture.render(graphics, 0, h - borderWidth, w, borderWidth); // bottom
-            borderTexture.render(graphics, 0, 0, borderWidth, h); // left
-            borderTexture.render(graphics, w - borderWidth, 0, borderWidth, h); // right
+            canvas.texture(borderTexture, 0, 0, w, borderWidth);
+            canvas.texture(borderTexture, 0, h - borderWidth, w, borderWidth);
+            canvas.texture(borderTexture, 0, 0, borderWidth, h);
+            canvas.texture(borderTexture, w - borderWidth, 0, borderWidth, h);
         }
 
         // Title bar
         int contentY = borderWidth;
         if (showTitleBar && title != null) {
-            titleBarTexture.render(graphics, borderWidth, borderWidth, w - borderWidth * 2, titleBarHeight);
+            canvas.texture(titleBarTexture, borderWidth, borderWidth, w - borderWidth * 2, titleBarHeight);
 
-            // Title text
             var font = context().font();
             int textX = borderWidth + 4;
             int textY = borderWidth + (titleBarHeight - font.lineHeight) / 2;
-            graphics.drawString(font, title, textX, textY, titleColor);
+            canvas.text(title, textX, textY, titleColor, true);
 
             contentY = borderWidth + titleBarHeight;
         }
 
-        // Render children in content area
+        // Render children
         graphics.pose().pushPose();
         graphics.pose().translate(borderWidth + contentPadding, contentY + contentPadding, 0);
 
         for (Widget child : children()) {
             graphics.pose().pushPose();
-            {
-                graphics.pose().translate(child.pos().x(), child.pos().y(), 0);
-                int relativeX = mouseX - borderWidth - contentPadding - child.pos().x();
-                int relativeY = mouseY - contentY - contentPadding - child.pos().y();
-                child.renderWidget(graphics, relativeX, relativeY, partialTicks);
-            }
+            graphics.pose().translate(child.pos().x(), child.pos().y(), 0);
+            int relX = mouseX - borderWidth - contentPadding - child.pos().x();
+            int relY = mouseY - contentY - contentPadding - child.pos().y();
+            child.renderWidget(canvas, relX, relY, partialTicks);
             graphics.pose().popPose();
         }
 
         graphics.pose().popPose();
     }
+
+    //endregion
+
+    //region inspection
+
+    @Override
+    public void collectInspectionInfo(InspectionInfoCollector collector) {
+        super.collectInspectionInfo(collector);
+        if (title != null) {
+            collector.add("title", title, InspectionProperty.CATEGORY_DATA);
+        }
+        collector.addWithDefault("showTitleBar", showTitleBar, true, InspectionProperty.CATEGORY_VISUAL);
+        collector.addWithDefault("borderWidth", borderWidth, 1, InspectionProperty.CATEGORY_VISUAL);
+        collector.addWithDefault("contentPadding", contentPadding, 4, InspectionProperty.CATEGORY_LAYOUT);
+        collector.add("children", children().size(), InspectionProperty.CATEGORY_DATA);
+    }
+
+    //endregion
 }

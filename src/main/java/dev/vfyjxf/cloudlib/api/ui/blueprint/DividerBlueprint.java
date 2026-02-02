@@ -38,7 +38,7 @@ public final class DividerBlueprint implements Blueprint<DividerWidget> {
 
     private DividerBlueprint() {}
 
-    // ==================== DSL Entry Points ====================
+    //region dsl entry points
 
     /**
      * Creates a horizontal divider.
@@ -56,7 +56,9 @@ public final class DividerBlueprint implements Blueprint<DividerWidget> {
         return ScopedReceiver.add(new DividerBlueprint().color(color));
     }
 
-    // ==================== Builder Methods ====================
+    //endregion
+
+    //region builder methods
 
     public DividerBlueprint horizontal() {
         this.orientation = DividerWidget.Orientation.HORIZONTAL;
@@ -98,7 +100,9 @@ public final class DividerBlueprint implements Blueprint<DividerWidget> {
         return this;
     }
 
-    // ==================== Blueprint Implementation ====================
+    //endregion
+
+    //region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -113,8 +117,10 @@ public final class DividerBlueprint implements Blueprint<DividerWidget> {
     @Override
     public void updateWidget(DividerWidget widget, Scene scene, SceneContext context) {
         widget.setOrientation(orientation)
-            .setThickness(thickness)
-            .setTexture(texture)
-            .applyStyle(style);
+              .setThickness(thickness)
+              .setTexture(texture)
+              .applyStyle(style);
     }
+
+    //endregion
 }

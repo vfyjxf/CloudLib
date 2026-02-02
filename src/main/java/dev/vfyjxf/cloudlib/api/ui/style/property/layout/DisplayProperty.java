@@ -9,6 +9,18 @@ import java.util.Objects;
 
 /**
  * Layout property that maps to taffy {@link TaffyStyle#display}.
+ * <p>
+ * The display modes supported by taffy include:
+ * <ul>
+ *   <li>{@link TaffyDisplay#DEFAULT} - default display mode</li>
+ *   <li>{@link TaffyDisplay#NONE} - element is not rendered</li>
+ *   <li>{@link TaffyDisplay#BLOCK} - block-level element</li>
+ *   <li>{@link TaffyDisplay#FLEX} - flex container</li>
+ *   <li>{@link TaffyDisplay#GRID} - grid container</li>
+ * </ul>
+ *
+ * @see TaffyStyle#display
+ * @see TaffyDisplay
  */
 public record DisplayProperty(TaffyDisplay display) implements LayoutProperty {
 

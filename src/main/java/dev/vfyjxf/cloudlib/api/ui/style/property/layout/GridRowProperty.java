@@ -10,6 +10,11 @@ import java.util.Objects;
 
 /**
  * Layout property that maps to taffy {@link TaffyStyle#gridRow}.
+ * <p>
+ * Specifies a grid item's row start and end position.
+ *
+ * @see TaffyStyle#gridRow
+ * @see GridPlacement
  */
 public record GridRowProperty(GridPlacement start, GridPlacement end) implements LayoutProperty {
 

@@ -41,7 +41,7 @@ public final class ColumnBlueprint implements Blueprint.Group<ColumnWidget, Widg
         this.childrenSupplier = childrenSupplier;
     }
 
-    // ==================== DSL Entry Points ====================
+    //region dsl entry points
 
     public static ColumnBlueprint Column(Runnable content) {
         return ScopedReceiver.add(new ColumnBlueprint(() -> ScopedReceiver.buildChildren(content)));
@@ -51,7 +51,9 @@ public final class ColumnBlueprint implements Blueprint.Group<ColumnWidget, Widg
         return ScopedReceiver.add(new ColumnBlueprint(() -> ScopedReceiver.buildChildren(content)).spacing(spacing));
     }
 
-    // ==================== Builder Methods ====================
+    //endregion
+
+    //region builder methods
 
     public ColumnBlueprint spacing(int spacing) {
         this.spacing = spacing;
@@ -68,7 +70,9 @@ public final class ColumnBlueprint implements Blueprint.Group<ColumnWidget, Widg
         return this;
     }
 
-    // ==================== Blueprint Implementation ====================
+    //endregion
+
+    //region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -89,6 +93,8 @@ public final class ColumnBlueprint implements Blueprint.Group<ColumnWidget, Widg
     @Override
     public void updateWidget(ColumnWidget widget, Scene scene, SceneContext context) {
         widget.setSpacing(spacing)
-            .applyStyle(style);
+              .applyStyle(style);
     }
+
+    //endregion
 }

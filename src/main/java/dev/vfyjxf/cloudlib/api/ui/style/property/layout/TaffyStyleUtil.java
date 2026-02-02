@@ -4,7 +4,17 @@ import dev.vfyjxf.cloudlib.api.ui.style.Edge;
 import dev.vfyjxf.taffy.geometry.TaffyRect;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.JustifyContent;
+import dev.vfyjxf.taffy.style.TaffyStyle;
 
+/**
+ * Utility class for working with taffy style types.
+ * <p>
+ * Provides helper methods for setting rect edge values and converting between
+ * taffy style enum types.
+ *
+ * @see TaffyStyle
+ * @see TaffyRect
+ */
 final class TaffyStyleUtil {
 
     private TaffyStyleUtil() {

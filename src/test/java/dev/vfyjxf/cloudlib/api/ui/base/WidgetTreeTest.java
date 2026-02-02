@@ -441,41 +441,6 @@ class WidgetTreeTest {
             assertEquals(orphan, path.root());
             assertEquals(orphan, path.leaf());
         }
-
-        @Test
-        void forEachCapture_iteratesRootToTarget() {
-            List<String> visited = new ArrayList<>();
-            WidgetTree.forEachCapture(deep, w -> visited.add(w.toString()));
-
-            assertEquals(List.of("root", "panel2", "nested", "deep"), visited);
-        }
-
-        @Test
-        void forEachBubble_iteratesTargetToRoot() {
-            List<String> visited = new ArrayList<>();
-            WidgetTree.forEachBubble(deep, w -> visited.add(w.toString()));
-
-            assertEquals(List.of("deep", "nested", "panel2", "root"), visited);
-        }
-
-        @Test
-        void propagate_executesAllPhases() {
-            List<String> capture = new ArrayList<>();
-            List<String> target = new ArrayList<>();
-            List<String> bubble = new ArrayList<>();
-
-            WidgetTree.propagate(button1,
-                    w -> capture.add(w.toString()),
-                    w -> target.add(w.toString()),
-                    w -> bubble.add(w.toString()));
-
-            // Capture: root -> panel1 (excluding target)
-            assertEquals(List.of("root", "panel1"), capture);
-            // Target: button1
-            assertEquals(List.of("button1"), target);
-            // Bubble: panel1 -> root (excluding target)
-            assertEquals(List.of("panel1", "root"), bubble);
-        }
     }
 
     // ==================== Query Operations ====================

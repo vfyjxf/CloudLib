@@ -6,6 +6,11 @@ import dev.vfyjxf.taffy.style.TaffyStyle;
 
 /**
  * Layout property that maps to taffy {@link TaffyStyle#scrollbarWidth}.
+ * <p>
+ * Specifies the width of scrollbars for scrollable containers.
+ * A value of 0 indicates no scrollbars.
+ *
+ * @see TaffyStyle#scrollbarWidth
  */
 public record ScrollbarWidthProperty(float width) implements LayoutProperty {
 

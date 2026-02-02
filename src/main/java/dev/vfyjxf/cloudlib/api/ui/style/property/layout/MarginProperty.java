@@ -9,8 +9,21 @@ import dev.vfyjxf.taffy.style.TaffyStyle;
 /**
  * Built-in margin layout property.
  * <p>
- * Margin is applied to the taffy {@link TaffyStyle} for layout calculation.
+ * Margin is applied to the taffy {@link TaffyStyle#margin} for layout calculation.
+ * <p>
+ * The margin types supported by taffy include:
+ * <ul>
+ *   <li>{@link LengthPercentageAuto#AUTO} - automatic margin</li>
+ *   <li>{@link LengthPercentageAuto#length(float)} - fixed pixel length</li>
+ *   <li>{@link LengthPercentageAuto#percent(float)} - percentage of parent (0.0 to 1.0)</li>
+ *   <li>{@link LengthPercentageAuto#minContent()} - minimum content size</li>
+ *   <li>{@link LengthPercentageAuto#maxContent()} - maximum content size</li>
+ *   <li>{@link LengthPercentageAuto#fitContent()} - fit content size</li>
+ *   <li>{@link LengthPercentageAuto#stretch()} - stretch to fill available space</li>
+ * </ul>
  *
+ * @see TaffyStyle#margin
+ * @see LengthPercentageAuto
  * @see UIStyles#margin(float)
  */
 public record MarginProperty(float top, float right, float bottom, float left) implements LayoutProperty {

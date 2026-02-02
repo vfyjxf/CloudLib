@@ -2,15 +2,16 @@ package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import net.minecraft.client.gui.GuiGraphics;
+import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 
 /**
- * A stack/overlay layout container.
- * <p>
- * Overlays children on top of each other. Later children are rendered
- * on top of earlier children. Similar to Compose's Box or Flutter's Stack.
+ * Stack/overlay container. Children render on top of each other.
  */
 public class BoxWidget extends CompositeWidget<Widget> {
+
+    //region factory
 
     public static BoxWidget create() {
         return new BoxWidget();
@@ -18,12 +19,32 @@ public class BoxWidget extends CompositeWidget<Widget> {
 
     private BoxWidget() {}
 
+    //endregion
+
+    //region children
+
     public <T extends Widget> T addChild(T widget) {
         return addWidget(widget);
     }
 
+    //endregion
+
+    //region rendering
+
     @Override
-    protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        super.renderInternal(graphics, mouseX, mouseY, partialTicks);
+    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        super.renderInternal(canvas, mouseX, mouseY, partialTicks);
     }
+
+    //endregion
+
+    //region inspection
+
+    @Override
+    public void collectInspectionInfo(InspectionInfoCollector collector) {
+        super.collectInspectionInfo(collector);
+        collector.add("children", children().size(), InspectionProperty.CATEGORY_DATA);
+    }
+
+    //endregion
 }

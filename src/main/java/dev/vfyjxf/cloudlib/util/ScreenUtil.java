@@ -2,7 +2,6 @@ package dev.vfyjxf.cloudlib.util;
 
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Pos;
-import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
@@ -12,8 +11,6 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.ClientHooks;
 
 public final class ScreenUtil {
-
-    public static final Rect POINT = new Rect(0, 0, 0, 0);
 
     public static double getMouseX() {
         Minecraft minecraft = Minecraft.getInstance();

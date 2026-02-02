@@ -22,17 +22,7 @@ import java.util.function.Predicate;
  *         support for capture/bubble event propagation models</li>
  *     <li><b>Tree Traversal</b> - DFS (pre/post order), BFS, and path-based traversals</li>
  *     <li><b>Ancestry Operations</b> - Building paths from any widget to root</li>
- *     <li><b>Event Propagation</b> - Capture phase (root→target) and bubble phase (target→root)</li>
  * </ul>
- *
- * <h2>Hit Testing Model</h2>
- * <p>Similar to the W3C DOM event model, hit testing follows these phases:</p>
- * <ol>
- *     <li><b>Hit Test</b> - Find the deepest widget under a coordinate</li>
- *     <li><b>Capture Phase</b> - Events propagate from root to target</li>
- *     <li><b>Bubble Phase</b> - Events propagate from target to root</li>
- * </ol>
- *
  *
  * @see Widget
  * @see CompositeWidget
@@ -42,14 +32,13 @@ public final class WidgetTree {
 
     private WidgetTree() {}
 
-    // ==================== Constants ====================
 
     /**
      * Maximum tree depth to prevent stack overflow from cycles.
      */
     private static final int MAX_DEPTH_GUARD = 1_000_000;
 
-    // ==================== Traversal Control ====================
+    //region visitor & view
 
     /**
      * Controls the traversal flow during tree walks.
@@ -75,8 +64,6 @@ public final class WidgetTree {
          */
         TERMINATE
     }
-
-    // ==================== Visitor Interfaces ====================
 
     /**
      * Visitor for tree traversal with depth information.
@@ -134,8 +121,6 @@ public final class WidgetTree {
          */
         HitTestResult test(Widget widget, double mouseX, double mouseY);
     }
-
-    // ==================== View Interfaces ====================
 
     /**
      * A read-only view of the ancestry path during traversal.
@@ -202,7 +187,9 @@ public final class WidgetTree {
         }
     }
 
-    // ==================== Hit Testing ====================
+    //endregion
+
+    //region hit testing
 
     /**
      * Result of a hit test operation.
@@ -433,7 +420,9 @@ public final class WidgetTree {
         }
     }
 
-    // ==================== Ancestry & Path Operations ====================
+    //endregion
+
+    //region ancestry & path operations
 
     /**
      * Builds the ancestry path from a widget up to the root.
@@ -519,145 +508,9 @@ public final class WidgetTree {
         return depth;
     }
 
-    // ==================== Event Propagation ====================
+    //endregion
 
-    /**
-     * Iterates widgets in bubble order (target → root).
-     *
-     * <p>This is the standard order for event bubbling in the DOM event model.
-     * The event starts at the target widget and propagates up through each
-     * ancestor until it reaches the root.</p>
-     *
-     * @param target   the widget to start from
-     * @param consumer action to perform on each widget
-     */
-    public static void forEachBubble(Widget target, Consumer<? super Widget> consumer) {
-        Objects.requireNonNull(target, "target");
-        Objects.requireNonNull(consumer, "consumer");
-
-        Widget current = target;
-        int guard = 0;
-        while (current != null) {
-            consumer.accept(current);
-            current = current.parent();
-
-            if (++guard > MAX_DEPTH_GUARD) {
-                throw new IllegalStateException("Possible widget parent-cycle detected");
-            }
-        }
-    }
-
-    /**
-     * Iterates widgets in bubble order with early termination support.
-     *
-     * @param target    the widget to start from
-     * @param predicate returns false to stop iteration
-     */
-    public static void forEachBubbleUntil(Widget target, Predicate<? super Widget> predicate) {
-        Objects.requireNonNull(target, "target");
-        Objects.requireNonNull(predicate, "predicate");
-
-        Widget current = target;
-        int guard = 0;
-        while (current != null) {
-            if (!predicate.test(current)) {
-                return;
-            }
-            current = current.parent();
-
-            if (++guard > MAX_DEPTH_GUARD) {
-                throw new IllegalStateException("Possible widget parent-cycle detected");
-            }
-        }
-    }
-
-    /**
-     * Iterates widgets in capture order (root → target).
-     *
-     * <p>This is the standard order for event capturing in the DOM event model.
-     * The event starts at the root and propagates down through each ancestor
-     * until it reaches the target.</p>
-     *
-     * @param target   the widget to end at
-     * @param consumer action to perform on each widget
-     */
-    public static void forEachCapture(Widget target, Consumer<? super Widget> consumer) {
-        Objects.requireNonNull(target, "target");
-        Objects.requireNonNull(consumer, "consumer");
-
-        WidgetPath path = pathToRoot(target);
-        // Path is root→leaf, so iterate forward for capture
-        for (Widget widget : path) {
-            consumer.accept(widget);
-        }
-    }
-
-    /**
-     * Iterates widgets in capture order with early termination support.
-     *
-     * @param target    the widget to end at
-     * @param predicate returns false to stop iteration
-     */
-    public static void forEachCaptureUntil(Widget target, Predicate<? super Widget> predicate) {
-        Objects.requireNonNull(target, "target");
-        Objects.requireNonNull(predicate, "predicate");
-
-        WidgetPath path = pathToRoot(target);
-        // Path is root→leaf, so iterate forward for capture
-        for (Widget widget : path) {
-            if (!predicate.test(widget)) {
-                return;
-            }
-        }
-    }
-
-    /**
-     * Performs full capture-then-bubble iteration.
-     *
-     * <p>This combines both phases of DOM event propagation:</p>
-     * <ol>
-     *     <li>Capture phase: root → target (excluding target)</li>
-     *     <li>Target phase: target itself</li>
-     *     <li>Bubble phase: target → root (excluding target)</li>
-     * </ol>
-     *
-     * @param target    the target widget
-     * @param onCapture called for each widget during capture phase (root→target, excluding target)
-     * @param onTarget  called once for the target widget
-     * @param onBubble  called for each widget during bubble phase (target→root, excluding target)
-     */
-    public static void propagate(Widget target,
-                                 @Nullable Consumer<? super Widget> onCapture,
-                                 @Nullable Consumer<? super Widget> onTarget,
-                                 @Nullable Consumer<? super Widget> onBubble) {
-        Objects.requireNonNull(target, "target");
-
-        WidgetPath path = pathToRoot(target);
-        int lastIndex = path.size() - 1;
-
-        // Capture phase (root → target, excluding target)
-        // Path is root→leaf, so index 0 is root, lastIndex is target
-        if (onCapture != null) {
-            for (int i = 0; i < lastIndex; i++) {
-                onCapture.accept(path.get(i));
-            }
-        }
-
-        // Target phase
-        if (onTarget != null) {
-            onTarget.accept(target);
-        }
-
-        // Bubble phase (target → root, excluding target)
-        // Reverse order: from lastIndex-1 down to 0
-        if (onBubble != null) {
-            for (int i = lastIndex - 1; i >= 0; i--) {
-                onBubble.accept(path.get(i));
-            }
-        }
-    }
-
-    // ==================== Tree Traversal ====================
+    //region tree traversal
 
     /**
      * Depth-first pre-order traversal (visit node before children).
@@ -913,7 +766,9 @@ public final class WidgetTree {
         return TraversalControl.CONTINUE;
     }
 
-    // ==================== Query Operations ====================
+    //endregion
+
+    //region query operations
 
     /**
      * Finds the first widget matching a predicate in pre-order.
@@ -1043,7 +898,9 @@ public final class WidgetTree {
         return count(root, includeRoot, -1, w -> true);
     }
 
-    // ==================== Leaf-First Traversal ====================
+    //endregion
+
+    //region leaf-first traversal
 
     /**
      * Traverses the widget tree from leaves to root (bottom-up).
@@ -1204,6 +1061,8 @@ public final class WidgetTree {
         }
         return TraversalControl.CONTINUE;
     }
+
+    //endregion
 
     /**
      * Internal implementation of AncestryView backed by a List.

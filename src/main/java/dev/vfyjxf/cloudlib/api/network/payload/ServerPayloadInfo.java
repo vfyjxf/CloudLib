@@ -9,14 +9,14 @@ import net.neoforged.neoforge.network.handling.IPayloadHandler;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 public record ServerPayloadInfo<T extends ServerboundPayload>(
-        CustomPacketPayload.Type<T> type,
-        StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec
+    CustomPacketPayload.Type<T> type,
+    StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec
 ) {
 
 
     public static <T extends ServerboundPayload> ServerPayloadInfo<T> create(
-            StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec,
-            ResourceLocation id
+        StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec,
+        ResourceLocation id
     ) {
         return new ServerPayloadInfo<>(new CustomPacketPayload.Type<>(id), streamCodec);
     }

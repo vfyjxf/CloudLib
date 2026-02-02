@@ -1,20 +1,17 @@
 package dev.vfyjxf.cloudlib.api.ui.sync;
 
+import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.Scene;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.overlay.UIOverlay;
 import dev.vfyjxf.cloudlib.api.ui.sync.menu.BasicMenu;
-import dev.vfyjxf.cloudlib.api.ui.window.WidgetWindow;
-import dev.vfyjxf.cloudlib.ui.drag.DraggableManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 
 //TODO:Rework
@@ -24,9 +21,6 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
     protected final Player player;
     private final Scene scene;
     private final UIOverlay screenOverlay = null;
-    private final DraggableManager draggableManager;
-    private WidgetWindow displayWindow;
-    private MutableList<WidgetWindow> windows;
 
     public BasicMenuScreen(T menu, Inventory playerInventory) {
         super(menu, playerInventory, Component.empty());
@@ -46,7 +40,6 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
 //                                .size(width, height)
 //                );
 //            });
-            draggableManager = new DraggableManager(mainGroup);
         }
         scene = new Scene(mainGroup);
         //endregion
@@ -76,10 +69,7 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderTransparentBackground(graphics);
-        mainGroup.render(graphics, mouseX, mouseY, partialTick);
-        mainGroup.renderOverlay(graphics, mouseX, mouseY, partialTick);
-        mainGroup.renderTooltip(graphics, mouseX, mouseY);
-        draggableManager.renderDragging(graphics, mouseX, mouseY, partialTick);
+        scene.render(graphics, mouseX, mouseY, partialTick);
     }
 
     @Override

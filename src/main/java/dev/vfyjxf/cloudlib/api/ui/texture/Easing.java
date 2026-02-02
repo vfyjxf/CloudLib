@@ -86,7 +86,7 @@ public interface Easing {
      */
     default Easing andThen(Easing other) {
         return t -> t < 0.5f
-                ? this.apply(t * 2) * 0.5f
-                : other.apply((t - 0.5f) * 2) * 0.5f + 0.5f;
+                    ? this.apply(t * 2) * 0.5f
+                    : other.apply((t - 0.5f) * 2) * 0.5f + 0.5f;
     }
 }

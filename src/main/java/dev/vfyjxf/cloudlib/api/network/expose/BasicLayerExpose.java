@@ -10,11 +10,11 @@ import org.jetbrains.annotations.ApiStatus;
 import java.util.function.Consumer;
 
 sealed abstract class BasicLayerExpose<E>
-        implements LayerExpose<E>, Transcoder
-        permits StandardLayerExpose,
-                StandardReversedLayerExpose,
-                StandardDiffLayerExpose,
-                StandardDiffReverseLayerExpose {
+    implements LayerExpose<E>, Transcoder
+    permits StandardLayerExpose,
+            StandardReversedLayerExpose,
+            StandardDiffLayerExpose,
+            StandardDiffReverseLayerExpose {
 
     private final SimpleEvent<Consumer<E>> receiveEvent = SimpleEvent.create();
     private final String name;
@@ -23,9 +23,9 @@ sealed abstract class BasicLayerExpose<E>
     private final FlowDecoder<E> decoder;
 
     protected <T> BasicLayerExpose(
-            String name, short id,
-            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder, FlowDecoder<E> decoder
+        String name, short id,
+        Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
+        FlowEncoder<T> encoder, FlowDecoder<E> decoder
     ) {
 
         this.name = name;
@@ -101,17 +101,17 @@ sealed abstract class BasicLayerExpose<E>
     @Override
     public String toString() {
         return "BasicLayerExpose{" +
-                       "name='" + name + '\'' +
-                       ", id=" + id +
-                       ", layerSnapshot=" + layerSnapshot +
-                       '}';
+               "name='" + name + '\'' +
+               ", id=" + id +
+               ", layerSnapshot=" + layerSnapshot +
+               '}';
     }
 
     @ApiStatus.Internal
     public record LayerSnapshot<T>(
-            Snapshot<T> snapshot,
-            ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder
+        Snapshot<T> snapshot,
+        ValueSupplier<T> valueSupplier,
+        FlowEncoder<T> encoder
     ) {
         public T current() {
             return valueSupplier.get();

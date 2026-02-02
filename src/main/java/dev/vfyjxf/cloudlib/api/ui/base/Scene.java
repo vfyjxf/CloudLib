@@ -8,12 +8,14 @@ import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.performer.PerformerContainer;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree.TraversalControl;
+import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvents;
 import dev.vfyjxf.cloudlib.ui.drag.DraggableManager;
 import dev.vfyjxf.taffy.geometry.TaffySize;
 import dev.vfyjxf.taffy.style.AvailableSpace;
 import dev.vfyjxf.taffy.tree.TaffyTree;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import mezz.jei.gui.input.MouseUtil;
@@ -64,7 +66,7 @@ public final class Scene {
     private float width = Float.NaN;
     private float height = Float.NaN;
 
-    TaffyTree layoutTree() {
+    public TaffyTree layoutTree() {
         return tree;
     }
 
@@ -87,11 +89,29 @@ public final class Scene {
 
     private final ObjectSet<Widget> createdWidgets = new ObjectLinkedOpenHashSet<>();
     private final ObjectSet<Widget> unmountedWidgets = new ObjectLinkedOpenHashSet<>();
+    private final ObjectSet<Widget> destroyingWidgets = new ObjectLinkedOpenHashSet<>();
     private SceneContext context;
+
+    //region scene handle
+
+    final SceneHandle globalHandle = SceneHandle.create(this);
+    private final Object2ObjectOpenHashMap<Widget, SceneHandle> widgetHandles = new Object2ObjectOpenHashMap<>();
+
+    SceneHandle handleOf(Widget widget) {
+        return widgetHandles.computeIfAbsent(widget, k -> SceneHandle.create(this));
+    }
+
+    void cleanupHandle(Widget widget) {
+        SceneHandle handle = widgetHandles.remove(widget);
+        if (handle != null) {
+            handle.cleanup();
+        }
+    }
+    //endregion
 
     void addCreatedWidget(Widget widget) {
         if (widget.lifecycle != Lifecycle.created) {
-            throw new IllegalArgumentException("Widget is not created!");
+            throw new IllegalArgumentException("Impossible!!! Widget: " + widget + " is not created!");
         }
         createdWidgets.add(widget);
     }
@@ -114,23 +134,33 @@ public final class Scene {
         this.context = context;
         WidgetTree.walkBreadthFirst(root, true, -1, (widget, depth) -> {
             if (!widget.lifecycle.initialized()) {
-                throw new IllegalArgumentException("Widget is not initialized!");
+                throw new IllegalArgumentException("Widget: " + widget + " is not initialized!");
             }
-            widget.mount(this, context);
+            widget.mount(this, context, handleOf(widget));
             return TraversalControl.CONTINUE;
         });
     }
 
     public void reuse(Widget widget) {
-        //TODO:如何阻止Widget自救
         if (!widget.lifecycle.unmounted()) {
-            throw new IllegalArgumentException("Cannot reuse a widget that is not unmounted!");
+            throw new IllegalArgumentException("Cannot reuse widget: " + widget + " because it is not unmounted!");
         }
-        unmountedWidgets.remove(widget);
+//        if (!destroyingWidgets.remove(widget)) {
+//            throw new IllegalStateException("Widget: " + widget + " is not being destroyed!");
+//        }
+        //TODO:完善reuse的流程，让上面的检查能够工作
+        destroyingWidgets.remove(widget);
+    }
+
+    void addUnmountedWidget(Widget widget) {
+        if (!widget.lifecycle.unmounted()) {
+            throw new IllegalArgumentException("Cannot add widget: " + widget + " because it is not unmounted!");
+        }
+        unmountedWidgets.add(widget);
     }
 
     public void unmount(Widget widget) {
-        unmountedWidgets.add(widget);
+        destroyingWidgets.add(widget);
     }
 
     public void destroy() {
@@ -140,21 +170,40 @@ public final class Scene {
                 return TraversalControl.CONTINUE;
             }));
         }
-        for (Widget widget : unmountedWidgets) {
+        globalHandle.cleanup();
+        for (Widget widget : destroyingWidgets) {
             widget.destroy();
         }
-        unmountedWidgets.clear();
+        destroyingWidgets.clear();
     }
 
     private void rebuildRequired() {
-
+        if (!createdWidgets.isEmpty()) {
+            for (Widget widget : createdWidgets) {
+                widget.init();
+            }
+            for (Widget createdWidget : createdWidgets) {
+                createdWidget.mount(this, context, handleOf(createdWidget));
+            }
+            createdWidgets.clear();
+        }
+        if (!unmountedWidgets.isEmpty()) {
+            for (Widget widget : unmountedWidgets) {
+                widget.mount(this, context, handleOf(widget));
+            }
+            unmountedWidgets.clear();
+        }
+        if (tree.needsVisit(root.nodeId())) {
+            layout();
+            root.applyLayout();
+        }
     }
 
-    private void destroyUnmountedWidgets() {
-        for (Widget widget : unmountedWidgets) {
+    private void destroyWidgets() {
+        for (Widget widget : destroyingWidgets) {
             widget.destroy();
         }
-        unmountedWidgets.clear();
+        destroyingWidgets.clear();
     }
 
     //endregion
@@ -163,11 +212,12 @@ public final class Scene {
 
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         rebuildRequired();
-        root.render(graphics, mouseX, mouseY, partialTick);
-        root.renderOverlay(graphics, mouseX, mouseY, partialTick);
+        SceneCanvas canvas = SceneCanvas.create(graphics);
+        root.render(canvas, mouseX, mouseY, partialTick);
+        root.renderOverlay(canvas, mouseX, mouseY, partialTick);
         root.renderTooltip(graphics, mouseX, mouseY);
         draggableManager.renderDragging(graphics, mouseX, mouseY, partialTick);
-        destroyUnmountedWidgets();
+        destroyWidgets();
     }
 
     //endregion

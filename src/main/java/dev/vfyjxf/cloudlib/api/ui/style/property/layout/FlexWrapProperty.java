@@ -12,8 +12,16 @@ import java.util.Objects;
  * Layout property for flex wrap.
  * <p>
  * Flex wrap controls whether the flex container is single-line or multi-line,
- * and the direction of the cross-axis.
+ * and the direction of the cross-axis. Maps to taffy {@link TaffyStyle#flexWrap}.
+ * <p>
+ * The flex wrap values supported by taffy include:
+ * <ul>
+ *   <li>{@link FlexWrap#NO_WRAP} - single line, no wrapping</li>
+ *   <li>{@link FlexWrap#WRAP} - multi-line, wrap to next line</li>
+ *   <li>{@link FlexWrap#WRAP_REVERSE} - multi-line, wrap in reverse direction</li>
+ * </ul>
  *
+ * @see TaffyStyle#flexWrap
  * @see FlexWrap
  * @see UIStyles#flexWrap()
  * @see UIStyles#flexNoWrap()

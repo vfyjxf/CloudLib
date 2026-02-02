@@ -11,6 +11,11 @@ import java.util.Objects;
 
 /**
  * Layout property that maps to taffy {@link TaffyStyle#gridAutoRows}.
+ * <p>
+ * Specifies the size of implicitly-created grid rows.
+ *
+ * @see TaffyStyle#gridAutoRows
+ * @see TrackSizingFunction
  */
 public record GridAutoRowsProperty(List<TrackSizingFunction> rows) implements LayoutProperty {
 

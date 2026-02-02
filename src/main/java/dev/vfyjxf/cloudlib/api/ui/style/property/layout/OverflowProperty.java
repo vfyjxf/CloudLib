@@ -15,6 +15,17 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * In taffy overflow is stored as a 2D point: {@code x} and {@code y}.
  * This property uses a single {@link StyleType} and may update either axis independently.
+ * <p>
+ * The overflow values supported by taffy include:
+ * <ul>
+ *   <li>{@link Overflow#VISIBLE} - content is not clipped</li>
+ *   <li>{@link Overflow#HIDDEN} - content is clipped without scrollbars</li>
+ *   <li>{@link Overflow#CLIP} - content is clipped without scrollbars (same as HIDDEN in taffy)</li>
+ *   <li>{@link Overflow#SCROLL} - content is clipped with scrollbars</li>
+ * </ul>
+ *
+ * @see TaffyStyle#overflow
+ * @see Overflow
  */
 public record OverflowProperty(@Nullable Overflow x, @Nullable Overflow y) implements LayoutProperty {
 

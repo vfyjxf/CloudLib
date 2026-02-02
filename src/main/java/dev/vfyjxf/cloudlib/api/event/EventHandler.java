@@ -19,16 +19,32 @@ public interface EventHandler<T> {
         return events().common();
     }
 
+    default CommonContext ofCommon(EventDefinition<? extends T> definition) {
+        return events().get(definition).isEmpty() ? EventContexts.emptyCommon : events().common();
+    }
+
     default CancelableContext cancelable() {
         return events().cancelable();
+    }
+
+    default CancelableContext ofCancelable(EventDefinition<? extends T> definition) {
+        return events().get(definition).isEmpty() ? EventContexts.emptyCancelable : events().cancelable();
     }
 
     default InterruptibleContext interruptible() {
         return events().interruptible();
     }
 
+    default InterruptibleContext ofInterruptible(EventDefinition<? extends T> definition) {
+        return events().get(definition).isEmpty() ? EventContexts.emptyInterruptible : events().interruptible();
+    }
+
     default BubbleContext bubble() {
         return events().bubble();
+    }
+
+    default BubbleContext ofBubble(EventDefinition<? extends T> definition) {
+        return events().get(definition).isEmpty() ? EventContexts.emptyBubble : events().bubble();
     }
 
     default <E extends T> E listeners(EventDefinition<E> definition) {

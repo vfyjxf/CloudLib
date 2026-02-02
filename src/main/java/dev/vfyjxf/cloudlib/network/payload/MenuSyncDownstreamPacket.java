@@ -18,11 +18,11 @@ import java.util.function.Consumer;
 public record MenuSyncDownstreamPacket(int containerId, byte[] syncData) implements ClientboundPayload {
 
     public static final ClientPayloadInfo<MenuSyncDownstreamPacket> INFO = CloudlibPayloads.createClientInfo(
-            StreamCodec.ofMember(
-                    MenuSyncDownstreamPacket::write,
-                    MenuSyncDownstreamPacket::decode
-            ),
-            "menu_sync_downstream"
+        StreamCodec.ofMember(
+            MenuSyncDownstreamPacket::write,
+            MenuSyncDownstreamPacket::decode
+        ),
+        "menu_sync_downstream"
     );
 
     public MenuSyncDownstreamPacket(int containerId, Consumer<RegistryFriendlyByteBuf> writer, RegistryAccess registryAccess) {

@@ -5,8 +5,6 @@ import dev.vfyjxf.cloudlib.api.ui.base.Scene;
 import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
-import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import dev.vfyjxf.cloudlib.ui.widgets.LabelWidget;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
@@ -34,7 +32,7 @@ public final class LabelBlueprint implements Blueprint<LabelWidget> {
         this.text = text;
     }
 
-    // ==================== DSL Entry Points ====================
+    //region dsl entry points
 
     public static LabelBlueprint Label(String text) {
         return ScopedReceiver.add(new LabelBlueprint(Component.literal(text)));
@@ -48,7 +46,9 @@ public final class LabelBlueprint implements Blueprint<LabelWidget> {
         return ScopedReceiver.add(new LabelBlueprint(Component.literal(text)).color(color));
     }
 
-    // ==================== Builder Methods ====================
+    //endregion
+
+    //region builder methods
 
     public LabelBlueprint color(int color) {
         this.color = color;
@@ -75,7 +75,9 @@ public final class LabelBlueprint implements Blueprint<LabelWidget> {
         return this;
     }
 
-    // ==================== Blueprint Implementation ====================
+    //endregion
+
+    //region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -90,9 +92,11 @@ public final class LabelBlueprint implements Blueprint<LabelWidget> {
     @Override
     public void updateWidget(LabelWidget widget, Scene scene, SceneContext context) {
         widget.setText(text)
-            .setColor(color)
-            .setShadow(shadow)
-            .setAlign(align)
-            .applyStyle(style);
+              .setColor(color)
+              .setShadow(shadow)
+              .setAlign(align)
+              .applyStyle(style);
     }
+
+    //endregion
 }

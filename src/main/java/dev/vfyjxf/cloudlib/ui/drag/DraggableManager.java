@@ -3,8 +3,8 @@ package dev.vfyjxf.cloudlib.ui.drag;
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
-import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragConsumer;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragProvider;
@@ -54,7 +54,7 @@ public class DraggableManager {
             return EventDispatch.pass;
         }));
 
-        mainGroup.onRender(((graphics, mouseX, mouseY, partialTicks, self, context) -> {
+        mainGroup.onRender(((canvas, mouseX, mouseY, partialTicks, self, context) -> {
             if (currentContext == null) return;
             var start = currentContext.getStart();
             double deltaX = mouseX - start.x();

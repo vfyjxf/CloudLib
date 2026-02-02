@@ -36,7 +36,7 @@ public final class ToggleBlueprint implements Blueprint<ToggleWidget> {
         this.toggled = initial;
     }
 
-    // ==================== DSL Entry Points ====================
+    //region dsl entry points
 
     public static ToggleBlueprint Toggle(boolean initial) {
         return ScopedReceiver.add(new ToggleBlueprint(initial));
@@ -46,7 +46,9 @@ public final class ToggleBlueprint implements Blueprint<ToggleWidget> {
         return ScopedReceiver.add(new ToggleBlueprint(initial).onToggle(onToggle));
     }
 
-    // ==================== Builder Methods ====================
+    //endregion
+
+    //region builder methods
 
     public ToggleBlueprint toggled(boolean toggled) {
         this.toggled = toggled;
@@ -85,7 +87,9 @@ public final class ToggleBlueprint implements Blueprint<ToggleWidget> {
         return this;
     }
 
-    // ==================== Blueprint Implementation ====================
+    //endregion
+
+    //region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -100,9 +104,11 @@ public final class ToggleBlueprint implements Blueprint<ToggleWidget> {
     @Override
     public void updateWidget(ToggleWidget widget, Scene scene, SceneContext context) {
         widget.setToggled(toggled)
-            .onToggle(onToggle)
-            .setTextures(offTexture, onTexture)
-            .setHoverTexture(hoverTexture)
-            .applyStyle(style);
+              .onToggle(onToggle)
+              .setTextures(offTexture, onTexture)
+              .setHoverTexture(hoverTexture)
+              .applyStyle(style);
     }
+
+    //endregion
 }

@@ -1,11 +1,5 @@
 package dev.vfyjxf.cloudlib.api.ui.text;
 
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.world.inventory.tooltip.TooltipComponent;
-import org.eclipse.collections.api.factory.Lists;
-import org.eclipse.collections.api.list.MutableList;
-
 //TODO:Implement RichTooltipComponent
 //public class RichTooltipComponent implements TooltipComponent, ClientTooltipComponent {
 //

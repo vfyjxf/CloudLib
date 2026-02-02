@@ -1,25 +1,34 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import net.minecraft.client.gui.GuiGraphics;
 
 /**
- * A visual divider line widget.
- * <p>
- * Used to separate content visually. Supports horizontal and vertical orientations.
+ * Visual divider line.
  */
 public class DividerWidget extends Widget {
 
+    //region types
+
     public enum Orientation {
-        HORIZONTAL,
-        VERTICAL
+        HORIZONTAL, VERTICAL
     }
+
+    //endregion
+
+    //region state
 
     private Orientation orientation = Orientation.HORIZONTAL;
     private int thickness = 1;
     private VisualTexture texture = new ColorTexture(0xFFAAAAAA);
+
+    //endregion
+
+    //region factory
 
     public static DividerWidget horizontal() {
         return new DividerWidget().setOrientation(Orientation.HORIZONTAL);
@@ -34,6 +43,10 @@ public class DividerWidget extends Widget {
     }
 
     private DividerWidget() {}
+
+    //endregion
+
+    //region configuration
 
     public Orientation orientation() {
         return orientation;
@@ -63,8 +76,12 @@ public class DividerWidget extends Widget {
         return this;
     }
 
+    //endregion
+
+    //region rendering
+
     @Override
-    protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         int w, h;
         if (orientation == Orientation.HORIZONTAL) {
             w = width();
@@ -77,6 +94,19 @@ public class DividerWidget extends Widget {
         int x = (width() - w) / 2;
         int y = (height() - h) / 2;
 
-        texture.render(graphics, x, y, w, h);
+        canvas.texture(texture, x, y, w, h);
     }
+
+    //endregion
+
+    //region inspection
+
+    @Override
+    public void collectInspectionInfo(InspectionInfoCollector collector) {
+        super.collectInspectionInfo(collector);
+        collector.addWithDefault("orientation", orientation.name(), Orientation.HORIZONTAL.name(), InspectionProperty.CATEGORY_VISUAL);
+        collector.addWithDefault("thickness", thickness, 1, InspectionProperty.CATEGORY_VISUAL);
+    }
+
+    //endregion
 }

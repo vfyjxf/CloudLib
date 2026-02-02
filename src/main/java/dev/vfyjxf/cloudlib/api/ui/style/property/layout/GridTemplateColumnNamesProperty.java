@@ -16,6 +16,7 @@ import java.util.Objects;
  * Each entry maps a line name to a line index.
  * Multiple entries with the same name create multiple named lines.
  *
+ * @see TaffyStyle#gridTemplateColumnNames
  * @see NamedGridLine
  */
 public record GridTemplateColumnNamesProperty(List<NamedGridLine> columnNames) implements LayoutProperty {

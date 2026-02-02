@@ -11,8 +11,21 @@ import java.util.Objects;
 /**
  * Built-in size layout property.
  * <p>
- * Size is applied to the taffy {@link TaffyStyle} for layout calculation.
+ * Size is applied to the taffy {@link TaffyStyle#size} for layout calculation.
+ * <p>
+ * The dimension types supported by taffy include:
+ * <ul>
+ *   <li>{@link TaffyDimension#AUTO} - automatic sizing</li>
+ *   <li>{@link TaffyDimension#length(float)} - fixed pixel length</li>
+ *   <li>{@link TaffyDimension#percent(float)} - percentage of parent (0.0 to 1.0)</li>
+ *   <li>{@link TaffyDimension#minContent()} - minimum content size</li>
+ *   <li>{@link TaffyDimension#maxContent()} - maximum content size</li>
+ *   <li>{@link TaffyDimension#fitContent()} - fit content size</li>
+ *   <li>{@link TaffyDimension#stretch()} - stretch to fill available space</li>
+ * </ul>
  *
+ * @see TaffyStyle#size
+ * @see TaffyDimension
  * @see UIStyles#size(float, float)
  */
 public record SizeProperty(TaffyDimension width, TaffyDimension height) implements LayoutProperty {

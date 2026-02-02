@@ -11,10 +11,10 @@ import net.minecraft.util.StringUtil;
 import net.neoforged.neoforge.client.event.InputEvent;
 
 public record InputContext(
-        InputConstants.Key key,
-        double mouseX, double mouseY,
-        int modifiers,
-        KeyAction action
+    InputConstants.Key key,
+    double mouseX, double mouseY,
+    int modifiers,
+    KeyAction action
 ) {
 
     public static InputContext fromEvent(InputEvent.Key event) {
@@ -46,10 +46,10 @@ public record InputContext(
     }
 
     public InputContext(
-            InputConstants.Key key,
-            double mouseX, double mouseY,
-            int modifiers,
-            boolean isReleased
+        InputConstants.Key key,
+        double mouseX, double mouseY,
+        int modifiers,
+        boolean isReleased
     ) {
         this(key, mouseX, mouseY, modifiers, isReleased ? KeyAction.RELEASE : KeyAction.PRESS);
     }

@@ -63,7 +63,7 @@ public sealed interface Snapshot<T> {
 
     default boolean mutable() {
         return this instanceof MutableRef<T> ||
-                this instanceof CopyInstance<T>;
+               this instanceof CopyInstance<T>;
     }
 
     /**
@@ -202,8 +202,8 @@ public sealed interface Snapshot<T> {
         @Override
         public String toString() {
             return "Readonly{" +
-                    "value=" + value +
-                    '}';
+                   "value=" + value +
+                   '}';
         }
     }
 
@@ -248,8 +248,8 @@ public sealed interface Snapshot<T> {
         @Override
         public String toString() {
             return "ImmutableRef{" +
-                    "value=" + value +
-                    '}';
+                   "value=" + value +
+                   '}';
 
         }
 
@@ -259,7 +259,7 @@ public sealed interface Snapshot<T> {
             if (obj == null || obj.getClass() != this.getClass()) return false;
             var that = (ImmutableRef<?>) obj;
             return Objects.equals(this.value, that.value) &&
-                    Objects.equals(this.strategy, that.strategy);
+                   Objects.equals(this.strategy, that.strategy);
         }
 
         @Override
@@ -332,8 +332,8 @@ public sealed interface Snapshot<T> {
         @Override
         public String toString() {
             return "MutableRef{" +
-                    "value=" + value +
-                    '}';
+                   "value=" + value +
+                   '}';
         }
     }
 
@@ -408,8 +408,8 @@ public sealed interface Snapshot<T> {
         @Override
         public String toString() {
             return "CopyInstance{" +
-                    ", value=" + value +
-                    '}';
+                   ", value=" + value +
+                   '}';
         }
     }
 

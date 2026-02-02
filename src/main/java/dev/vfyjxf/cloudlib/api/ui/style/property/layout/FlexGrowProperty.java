@@ -10,7 +10,12 @@ import dev.vfyjxf.taffy.style.TaffyStyle;
  * <p>
  * Flex grow determines how much the item should grow relative to the rest
  * of the flexible items when there is remaining space in the container.
+ * Maps to taffy {@link TaffyStyle#flexGrow}.
+ * <p>
+ * A value of 0 means the item will not grow. A value greater than 0 specifies
+ * the grow factor relative to other items.
  *
+ * @see TaffyStyle#flexGrow
  * @see UIStyles#flexGrow(float)
  */
 public record FlexGrowProperty(float grow) implements LayoutProperty {

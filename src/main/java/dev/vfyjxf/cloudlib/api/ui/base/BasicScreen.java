@@ -80,9 +80,7 @@ public abstract class BasicScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        mainGroup.render(graphics, mouseX, mouseY, partialTick);
-        mainGroup.renderOverlay(graphics, mouseX, mouseY, partialTick);
-        mainGroup.renderTooltip(graphics, mouseX, mouseY);
+        scene.render(graphics, mouseX, mouseY, partialTick);
     }
 
     @Override

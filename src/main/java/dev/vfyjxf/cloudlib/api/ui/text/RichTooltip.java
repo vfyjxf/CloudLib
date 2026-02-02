@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-//TODO:add user controllable tooltip,like scrollable tooltip.
+//TODO:redesign tooltip and rich text
 public sealed interface RichTooltip permits EmptyRichTooltip, ListRichTooltip {
 
     //region factory

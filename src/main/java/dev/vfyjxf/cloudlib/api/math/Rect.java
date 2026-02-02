@@ -7,6 +7,8 @@ import org.jetbrains.annotations.Contract;
  */
 public record Rect(int x, int y, int width, int height) {
 
+    public static final Rect empty = new Rect(0, 0, 0, 0);
+
     public Rect(Pos pos, Size size) {
         this(pos.x(), pos.y(), size.width(), size.height());
     }
@@ -71,6 +73,22 @@ public record Rect(int x, int y, int width, int height) {
         return this.x < x + width && this.x + this.width > x && this.y < y + height && this.y + this.height > y;
     }
 
+    /**
+     * Returns the intersection of this rectangle with another.
+     *
+     * @param other the other rectangle
+     * @return the intersection, or a zero-area rect if no intersection
+     */
+    @Contract("_ -> new")
+    public Rect intersection(Rect other) {
+        int x1 = Math.max(this.x, other.x);
+        int y1 = Math.max(this.y, other.y);
+        int x2 = Math.min(this.right(), other.right());
+        int y2 = Math.min(this.bottom(), other.bottom());
+        int w = Math.max(0, x2 - x1);
+        int h = Math.max(0, y2 - y1);
+        return new Rect(x1, y1, w, h);
+    }
 
     @Contract("_ -> new")
     public Rect move(Pos pos) {

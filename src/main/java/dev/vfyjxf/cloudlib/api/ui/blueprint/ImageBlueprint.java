@@ -30,7 +30,7 @@ public final class ImageBlueprint implements Blueprint<ImageWidget> {
         this.texture = texture;
     }
 
-    // ==================== DSL Entry Points ====================
+    //region dsl entry points
 
     public static ImageBlueprint Image(VisualTexture texture) {
         return ScopedReceiver.add(new ImageBlueprint(texture));
@@ -46,7 +46,9 @@ public final class ImageBlueprint implements Blueprint<ImageWidget> {
         return ScopedReceiver.add(new ImageBlueprint(null));
     }
 
-    // ==================== Builder Methods ====================
+    //endregion
+
+    //region builder methods
 
     public ImageBlueprint texture(VisualTexture texture) {
         this.texture = texture;
@@ -68,7 +70,9 @@ public final class ImageBlueprint implements Blueprint<ImageWidget> {
         return this;
     }
 
-    // ==================== Blueprint Implementation ====================
+    //endregion
+
+    //region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -83,7 +87,9 @@ public final class ImageBlueprint implements Blueprint<ImageWidget> {
     @Override
     public void updateWidget(ImageWidget widget, Scene scene, SceneContext context) {
         widget.setTexture(texture)
-            .setPreserveAspectRatio(preserveAspectRatio)
-            .applyStyle(style);
+              .setPreserveAspectRatio(preserveAspectRatio)
+              .applyStyle(style);
     }
+
+    //endregion
 }

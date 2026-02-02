@@ -11,8 +11,8 @@ public record GatheringScenario<T, R>(ResourceLocation id, Class<T> type, Functi
     @Override
     public String toString() {
         return "GatheringScenario{" +
-                       "id=" + id +
-                       ", type=" + type +
-                       '}';
+               "id=" + id +
+               ", type=" + type +
+               '}';
     }
 }

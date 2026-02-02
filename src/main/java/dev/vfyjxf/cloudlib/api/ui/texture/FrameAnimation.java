@@ -85,7 +85,7 @@ public class FrameAnimation implements Playable<VisualTexture> {
         return Math.min(interpolatedElapsed / frame.duration, 1.0f);
     }
 
-    //region Animation 实现
+    //region animation
 
     @Override
     public VisualTexture value() {
@@ -159,7 +159,7 @@ public class FrameAnimation implements Playable<VisualTexture> {
         float dt = deltaTime * speed;
         prevElapsed = elapsed;
         prevTotalElapsed = totalElapsed;
-        
+
         elapsed += dt;
         totalElapsed += dt;
 

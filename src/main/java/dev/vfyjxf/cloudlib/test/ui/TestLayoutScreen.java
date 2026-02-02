@@ -5,8 +5,9 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
+import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
 import dev.vfyjxf.cloudlib.ui.widgets.BoxWidget;
-import dev.vfyjxf.cloudlib.ui.widgets.ClickableButtonWidget;
+import dev.vfyjxf.cloudlib.ui.widgets.ButtonWidget;
 import dev.vfyjxf.cloudlib.ui.widgets.ColumnWidget;
 import dev.vfyjxf.cloudlib.ui.widgets.DividerWidget;
 import dev.vfyjxf.cloudlib.ui.widgets.LabelWidget;
@@ -16,7 +17,8 @@ import dev.vfyjxf.cloudlib.ui.widgets.ScrollPanelWidget;
 import dev.vfyjxf.cloudlib.ui.widgets.SpacerWidget;
 import dev.vfyjxf.cloudlib.ui.widgets.TextFieldWidget;
 import dev.vfyjxf.cloudlib.ui.widgets.ToggleWidget;
-import dev.vfyjxf.taffy.style.TaffyDimension;
+
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
 
 /**
  * Test screen demonstrating all basic UI components.
@@ -28,7 +30,7 @@ import dev.vfyjxf.taffy.style.TaffyDimension;
  *   <li>Styling: backgrounds, colors, padding, gaps</li>
  * </ul>
  */
-@TestScreen
+//@TestScreen
 public class TestLayoutScreen extends BasicScreen {
 
     // State for interactive components
@@ -46,8 +48,8 @@ public class TestLayoutScreen extends BasicScreen {
         var mainContainer = ColumnWidget.create();
         mainContainer.setSpacing(8);
         mainContainer.applyStyle(UIStyle.of(
-            UIStyles.padding(16),
-            UIStyles.background(new ColorTexture(0xCC222222))
+            padding(16),
+            background(new ColorTexture(0xCC222222))
         ));
 
         // ==================== Header Section ====================
@@ -58,13 +60,13 @@ public class TestLayoutScreen extends BasicScreen {
         var headerDivider = DividerWidget.horizontal()
                                          .setColor(0xFF555555)
                                          .setThickness(2);
-        headerDivider.applyStyle(UIStyle.of(UIStyles.height(4)));
+        headerDivider.applyStyle(UIStyle.of(height(4)));
         mainContainer.addChild(headerDivider);
 
         // ==================== Main Content ====================
         var contentRow = RowWidget.create();
         contentRow.setSpacing(16);
-        contentRow.applyStyle(UIStyle.of(UIStyles.flexGrow(1)));
+        contentRow.applyStyle(UIStyle.of(flexGrow(1)));
 
         // Left Panel - Controls
         var leftPanel = createLeftPanel();
@@ -73,7 +75,7 @@ public class TestLayoutScreen extends BasicScreen {
         // Vertical Divider
         var verticalDivider = DividerWidget.vertical()
                                            .setColor(0xFF444444);
-        verticalDivider.applyStyle(UIStyle.of(UIStyles.width(2)));
+        verticalDivider.applyStyle(UIStyle.of(width(2)));
         contentRow.addChild(verticalDivider);
 
         // Right Panel - Preview
@@ -85,7 +87,7 @@ public class TestLayoutScreen extends BasicScreen {
         // ==================== Footer Section ====================
         var footerDivider = DividerWidget.horizontal()
                                          .setColor(0xFF555555);
-        footerDivider.applyStyle(UIStyle.of(UIStyles.height(2)));
+        footerDivider.applyStyle(UIStyle.of(height(2)));
         mainContainer.addChild(footerDivider);
 
         var footer = createFooter();
@@ -93,6 +95,18 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Add to main group
         mainGroup().addWidget(mainContainer);
+
+        // Add Debug Widget - tracks mouse over mainContainer
+        var debugWidget = Inspector.create()
+                                   .setTrackRoot(mainContainer)
+                                   .setTrackMouse(true)
+                                   .setShowHighlight(true)
+                                   .setShowHierarchy(true);
+        debugWidget.applyStyle(UIStyle.of(
+            UIStyles.size(280, 200),
+            UIStyles.positionStatic()
+        ));
+        mainGroup().addWidget(debugWidget);
     }
 
     /**
@@ -101,13 +115,13 @@ public class TestLayoutScreen extends BasicScreen {
     private Widget createHeader() {
         var header = RowWidget.create();
         header.setSpacing(16);
-        header.applyStyle(UIStyle.of(UIStyles.alignItemsCenter()));
+        header.applyStyle(UIStyle.of(alignItemsCenter()));
 
         // Title
         var title = LabelWidget.of("CloudLib UI Components Demo")
                                .setColor(0xFFFFAA00)
                                .setShadow(true);
-        title.applyStyle(UIStyle.of(UIStyles.size(200, 12)));
+        title.applyStyle(UIStyle.of(size(200, 12)));
         header.addChild(title);
 
         // Spacer to push elements apart
@@ -118,7 +132,7 @@ public class TestLayoutScreen extends BasicScreen {
                                          .setPlaceholder("Search...")
                                          .onTextChanged(text -> this.searchText = text);
         searchField.applyStyle(UIStyle.of(
-            UIStyles.size(150, 20)
+            size(150, 20)
         ));
         header.addChild(searchField);
 
@@ -126,7 +140,7 @@ public class TestLayoutScreen extends BasicScreen {
         var settingsToggle = ToggleWidget.create(false)
                                          .onToggle(state -> System.out.println("Settings: " + state))
                                          .setColors(0xFF666666, 0xFF00AA00);
-        settingsToggle.applyStyle(UIStyle.of(UIStyles.size(30, 16)));
+        settingsToggle.applyStyle(UIStyle.of(size(30, 16)));
         header.addChild(settingsToggle);
 
         return header;
@@ -139,9 +153,9 @@ public class TestLayoutScreen extends BasicScreen {
         var panel = ColumnWidget.create();
         panel.setSpacing(12);
         panel.applyStyle(UIStyle.of(
-            UIStyles.size(180, -1),
-            UIStyles.padding(8),
-            UIStyles.background(new ColorTexture(0x40000000))
+            size(180, -1),
+            padding(8),
+            background(new ColorTexture(0x40000000))
         ));
 
         // Section Title
@@ -178,28 +192,28 @@ public class TestLayoutScreen extends BasicScreen {
         var row1 = RowWidget.create();
         row1.setSpacing(4);
 
-        var primaryBtn = ClickableButtonWidget.of("Primary", () -> clickCount++)
-                                              .setColors(0xFF0066CC, 0xFF0088FF, 0xFF004499);
-        primaryBtn.applyStyle(UIStyle.of(UIStyles.size(80, 20)));
+        var primaryBtn = ButtonWidget.of("Primary", () -> clickCount++)
+                                     .setColors(0xFF0066CC, 0xFF0088FF, 0xFF004499);
+        primaryBtn.applyStyle(UIStyle.of(size(80, 20)));
         row1.addChild(primaryBtn);
 
-        var secondaryBtn = ClickableButtonWidget.of("Secondary", () -> System.out.println("Secondary clicked"))
-                                                .setColors(0xFF666666, 0xFF888888, 0xFF444444);
-        secondaryBtn.applyStyle(UIStyle.of(UIStyles.size(80, 20)));
+        var secondaryBtn = ButtonWidget.of("Secondary", () -> System.out.println("Secondary clicked"))
+                                       .setColors(0xFF666666, 0xFF888888, 0xFF444444);
+        secondaryBtn.applyStyle(UIStyle.of(size(80, 20)));
         row1.addChild(secondaryBtn);
 
         group.addChild(row1);
 
         // Danger Button
-        var dangerBtn = ClickableButtonWidget.of("Danger Action", () -> System.out.println("Danger!"))
-                                             .setColors(0xFFCC0000, 0xFFEE0000, 0xFFAA0000);
-        dangerBtn.applyStyle(UIStyle.of(UIStyles.size(164, 20)));
+        var dangerBtn = ButtonWidget.of("Danger Action", () -> System.out.println("Danger!"))
+                                    .setColors(0xFFCC0000, 0xFFEE0000, 0xFFAA0000);
+        dangerBtn.applyStyle(UIStyle.of(size(164, 20)));
         group.addChild(dangerBtn);
 
         // Disabled Button
-        var disabledBtn = ClickableButtonWidget.of("Disabled")
-                                               .setEnabled(false);
-        disabledBtn.applyStyle(UIStyle.of(UIStyles.size(164, 20)));
+        var disabledBtn = ButtonWidget.of("Disabled")
+                                      .setEnabled(false);
+        disabledBtn.applyStyle(UIStyle.of(size(164, 20)));
         group.addChild(disabledBtn);
 
         return group;
@@ -221,7 +235,7 @@ public class TestLayoutScreen extends BasicScreen {
         var horizontalProgress = ProgressBarWidget.create(() -> progressValue)
                                                   .setDirection(ProgressBarWidget.Direction.LEFT_TO_RIGHT)
                                                   .setColors(0xFF333333, 0xFF00AA00);
-        horizontalProgress.applyStyle(UIStyle.of(UIStyles.size(164, 12)));
+        horizontalProgress.applyStyle(UIStyle.of(size(164, 12)));
         section.addChild(horizontalProgress);
 
         // Vertical Progress (in HStack for horizontal layout)
@@ -231,19 +245,19 @@ public class TestLayoutScreen extends BasicScreen {
         var verticalProgress1 = ProgressBarWidget.create(() -> progressValue)
                                                  .setDirection(ProgressBarWidget.Direction.BOTTOM_TO_TOP)
                                                  .setColors(0xFF333333, 0xFF0066CC);
-        verticalProgress1.applyStyle(UIStyle.of(UIStyles.size(20, 40)));
+        verticalProgress1.applyStyle(UIStyle.of(size(20, 40)));
         verticalRow.addChild(verticalProgress1);
 
         var verticalProgress2 = ProgressBarWidget.create(() -> Math.min(1.0, progressValue * 1.5))
                                                  .setDirection(ProgressBarWidget.Direction.BOTTOM_TO_TOP)
                                                  .setColors(0xFF333333, 0xFFCC6600);
-        verticalProgress2.applyStyle(UIStyle.of(UIStyles.size(20, 40)));
+        verticalProgress2.applyStyle(UIStyle.of(size(20, 40)));
         verticalRow.addChild(verticalProgress2);
 
         var verticalProgress3 = ProgressBarWidget.create(() -> Math.min(1.0, progressValue * 2.0))
                                                  .setDirection(ProgressBarWidget.Direction.BOTTOM_TO_TOP)
                                                  .setColors(0xFF333333, 0xFFCC0066);
-        verticalProgress3.applyStyle(UIStyle.of(UIStyles.size(20, 40)));
+        verticalProgress3.applyStyle(UIStyle.of(size(20, 40)));
         verticalRow.addChild(verticalProgress3);
 
         section.addChild(verticalRow);
@@ -252,19 +266,19 @@ public class TestLayoutScreen extends BasicScreen {
         var controlRow = RowWidget.create();
         controlRow.setSpacing(4);
 
-        var decreaseBtn = ClickableButtonWidget.of("-", () -> progressValue = Math.max(0, progressValue - 0.1))
-                                               .setColors(0xFF555555, 0xFF777777, 0xFF333333);
-        decreaseBtn.applyStyle(UIStyle.of(UIStyles.size(30, 18)));
+        var decreaseBtn = ButtonWidget.of("-", () -> progressValue = Math.max(0, progressValue - 0.1))
+                                      .setColors(0xFF555555, 0xFF777777, 0xFF333333);
+        decreaseBtn.applyStyle(UIStyle.of(size(30, 18)));
         controlRow.addChild(decreaseBtn);
 
-        var increaseBtn = ClickableButtonWidget.of("+", () -> progressValue = Math.min(1, progressValue + 0.1))
-                                               .setColors(0xFF555555, 0xFF777777, 0xFF333333);
-        increaseBtn.applyStyle(UIStyle.of(UIStyles.size(30, 18)));
+        var increaseBtn = ButtonWidget.of("+", () -> progressValue = Math.min(1, progressValue + 0.1))
+                                      .setColors(0xFF555555, 0xFF777777, 0xFF333333);
+        increaseBtn.applyStyle(UIStyle.of(size(30, 18)));
         controlRow.addChild(increaseBtn);
 
-        var resetBtn = ClickableButtonWidget.of("Reset", () -> progressValue = 0)
-                                            .setColors(0xFF555555, 0xFF777777, 0xFF333333);
-        resetBtn.applyStyle(UIStyle.of(UIStyles.size(50, 18)));
+        var resetBtn = ButtonWidget.of("Reset", () -> progressValue = 0)
+                                   .setColors(0xFF555555, 0xFF777777, 0xFF333333);
+        resetBtn.applyStyle(UIStyle.of(size(50, 18)));
         controlRow.addChild(resetBtn);
 
         section.addChild(controlRow);
@@ -287,10 +301,10 @@ public class TestLayoutScreen extends BasicScreen {
         for (int i = 1; i <= 3; i++) {
             var row = RowWidget.create();
             row.setSpacing(8);
-            row.applyStyle(UIStyle.of(UIStyles.alignItemsCenter()));
+            row.applyStyle(UIStyle.of(alignItemsCenter()));
 
             var optionLabel = LabelWidget.of("Option " + i);
-            optionLabel.applyStyle(UIStyle.of(UIStyles.width(100)));
+            optionLabel.applyStyle(UIStyle.of(width(100)));
             row.addChild(optionLabel);
 
             row.addChild(SpacerWidget.create());
@@ -299,7 +313,7 @@ public class TestLayoutScreen extends BasicScreen {
             var toggle = ToggleWidget.create(i == 1)
                                      .onToggle(state -> System.out.println("Option " + finalI + ": " + state))
                                      .setColors(0xFF555555, 0xFF00CC66);
-            toggle.applyStyle(UIStyle.of(UIStyles.size(36, 18)));
+            toggle.applyStyle(UIStyle.of(size(36, 18)));
             row.addChild(toggle);
 
             section.addChild(row);
@@ -315,9 +329,9 @@ public class TestLayoutScreen extends BasicScreen {
         var panel = ColumnWidget.create();
         panel.setSpacing(8);
         panel.applyStyle(UIStyle.of(
-            UIStyles.flexGrow(1),
-            UIStyles.padding(8),
-            UIStyles.background(new ColorTexture(0x40000000))
+            flexGrow(1),
+            padding(8),
+            background(new ColorTexture(0x40000000))
         ));
 
         // Title
@@ -348,13 +362,13 @@ public class TestLayoutScreen extends BasicScreen {
         container.addChild(label);
 
         var zstack = BoxWidget.create();
-        zstack.applyStyle(UIStyle.of(UIStyles.size(150, 60)));
+        zstack.applyStyle(UIStyle.of(size(150, 60)));
 
         // Background layer
         var background = new Widget();
         background.applyStyle(UIStyle.of(
-            UIStyles.size(150, 60),
-            UIStyles.background(new ColorTexture(0xFF004466))
+            size(150, 60),
+            background(new ColorTexture(0xFF004466))
         ));
         zstack.addChild(background);
 
@@ -363,8 +377,8 @@ public class TestLayoutScreen extends BasicScreen {
                                      .setColor(0xFF88CCFF)
                                      .setAlign(LabelWidget.TextAlign.CENTER);
         middleLayer.applyStyle(UIStyle.of(
-            UIStyles.size(150, 20),
-            UIStyles.margin(20, 0, 0, 0)
+            size(150, 20),
+            margin(20, 0, 0, 0)
         ));
         zstack.addChild(middleLayer);
 
@@ -373,8 +387,8 @@ public class TestLayoutScreen extends BasicScreen {
                                   .setColor(0xFFFFFFFF)
                                   .setAlign(LabelWidget.TextAlign.CENTER);
         topLayer.applyStyle(UIStyle.of(
-            UIStyles.size(150, 20),
-            UIStyles.margin(5, 0, 0, 0)
+            size(150, 20),
+            margin(5, 0, 0, 0)
         ));
         zstack.addChild(topLayer);
 
@@ -388,7 +402,7 @@ public class TestLayoutScreen extends BasicScreen {
     private Widget createScrollDemo() {
         var container = ColumnWidget.create();
         container.setSpacing(4);
-        container.applyStyle(UIStyle.of(UIStyles.flexGrow(1)));
+        container.applyStyle(UIStyle.of(flexGrow(1)));
 
         var label = LabelWidget.of("Scrollable List")
                                .setColor(0xFFAAAAAA);
@@ -399,8 +413,8 @@ public class TestLayoutScreen extends BasicScreen {
         scrollPanel.setScrollSpeed(15);
         scrollPanel.setBackgroundTexture(new ColorTexture(0x40000000));
         scrollPanel.applyStyle(UIStyle.of(
-            UIStyles.flexGrow(1),
-            UIStyles.minHeight(100)
+            flexGrow(1),
+            minHeight(100)
         ));
 
         // Add items to scroll panel
@@ -425,9 +439,9 @@ public class TestLayoutScreen extends BasicScreen {
         var item = RowWidget.create();
         item.setSpacing(8);
         item.applyStyle(UIStyle.of(
-            UIStyles.padding(4, 8, 4, 8),
-            UIStyles.background(new ColorTexture(highlighted ? 0x40FFAA00 : 0x20FFFFFF)),
-            UIStyles.alignItemsCenter()
+            padding(4, 8, 4, 8),
+            background(new ColorTexture(highlighted ? 0x40FFAA00 : 0x20FFFFFF)),
+            alignItemsCenter()
         ));
 
         var itemLabel = LabelWidget.of(text)
@@ -436,9 +450,9 @@ public class TestLayoutScreen extends BasicScreen {
 
         item.addChild(SpacerWidget.create());
 
-        var selectBtn = ClickableButtonWidget.of("Select", () -> System.out.println("Selected: " + text))
-                                             .setColors(0xFF444444, 0xFF666666, 0xFF333333);
-        selectBtn.applyStyle(UIStyle.of(UIStyles.size(50, 16)));
+        var selectBtn = ButtonWidget.of("Select", () -> System.out.println("Selected: " + text))
+                                    .setColors(0xFF444444, 0xFF666666, 0xFF333333);
+        selectBtn.applyStyle(UIStyle.of(size(50, 16)));
         item.addChild(selectBtn);
 
         return item;
@@ -450,7 +464,7 @@ public class TestLayoutScreen extends BasicScreen {
     private Widget createFooter() {
         var footer = RowWidget.create();
         footer.setSpacing(16);
-        footer.applyStyle(UIStyle.of(UIStyles.alignItemsCenter()));
+        footer.applyStyle(UIStyle.of(alignItemsCenter()));
 
         // Status text
         var statusLabel = LabelWidget.of("Status: Ready")
@@ -468,9 +482,9 @@ public class TestLayoutScreen extends BasicScreen {
         footer.addChild(clickLabel);
 
         // Close button
-        var closeBtn = ClickableButtonWidget.of("Close", this::onClose)
-                                            .setColors(0xFF555555, 0xFF777777, 0xFF333333);
-        closeBtn.applyStyle(UIStyle.of(UIStyles.size(60, 20)));
+        var closeBtn = ButtonWidget.of("Close", this::onClose)
+                                   .setColors(0xFF555555, 0xFF777777, 0xFF333333);
+        closeBtn.applyStyle(UIStyle.of(size(60, 20)));
         footer.addChild(closeBtn);
 
         return footer;

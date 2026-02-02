@@ -5,7 +5,6 @@ import dev.vfyjxf.cloudlib.api.ui.base.Scene;
 import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import dev.vfyjxf.cloudlib.ui.widgets.TextFieldWidget;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,7 +38,7 @@ public final class TextFieldBlueprint implements Blueprint<TextFieldWidget> {
         this.text = text != null ? text : "";
     }
 
-    // ==================== DSL Entry Points ====================
+    //region dsl entry points
 
     public static TextFieldBlueprint TextField(String text) {
         return ScopedReceiver.add(new TextFieldBlueprint(text));
@@ -49,7 +48,9 @@ public final class TextFieldBlueprint implements Blueprint<TextFieldWidget> {
         return ScopedReceiver.add(new TextFieldBlueprint(text).onTextChanged(onTextChanged));
     }
 
-    // ==================== Builder Methods ====================
+    //endregion
+
+    //region builder methods
 
     public TextFieldBlueprint text(String text) {
         this.text = text;
@@ -101,7 +102,9 @@ public final class TextFieldBlueprint implements Blueprint<TextFieldWidget> {
         return this;
     }
 
-    // ==================== Blueprint Implementation ====================
+    //endregion
+
+    //region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -116,13 +119,15 @@ public final class TextFieldBlueprint implements Blueprint<TextFieldWidget> {
     @Override
     public void updateWidget(TextFieldWidget widget, Scene scene, SceneContext context) {
         widget.setText(text)
-            .setPlaceholder(placeholder)
-            .setMaxLength(maxLength)
-            .setEditable(editable)
-            .setTextColor(textColor)
-            .setPlaceholderColor(placeholderColor)
-            .onTextChanged(onTextChanged)
-            .onEnterPressed(onEnterPressed)
-            .applyStyle(style);
+              .setPlaceholder(placeholder)
+              .setMaxLength(maxLength)
+              .setEditable(editable)
+              .setTextColor(textColor)
+              .setPlaceholderColor(placeholderColor)
+              .onTextChanged(onTextChanged)
+              .onEnterPressed(onEnterPressed)
+              .applyStyle(style);
     }
+
+    //endregion
 }

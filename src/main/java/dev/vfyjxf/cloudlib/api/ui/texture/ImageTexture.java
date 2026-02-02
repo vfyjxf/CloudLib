@@ -5,6 +5,8 @@ import net.minecraft.resources.ResourceLocation;
 
 /**
  * Image texture - the most commonly used texture type.
+ * <p>
+ * Supports batch rendering via {@link BatchableTexture}.
  */
 public record ImageTexture(
     ResourceLocation location,
@@ -29,17 +31,14 @@ public record ImageTexture(
         return new ImageTexture(location, this.u + u, this.v + v, width, height, textureWidth, textureHeight);
     }
 
-    @Override
-    public ResourceLocation textureLocation() {
-        return location;
-    }
+    // ==================== BatchableTexture Implementation ====================
 
     @Override
-    public float[] uvCoordinates() {
+    public void emit(VertexEmitter emitter, float x, float y, float w, float h, int color) {
         float u0 = (float) this.u / textureWidth;
         float v0 = (float) this.v / textureHeight;
         float u1 = (float) (this.u + width) / textureWidth;
         float v1 = (float) (this.v + height) / textureHeight;
-        return new float[]{u0, v0, u1, v1};
+        emitter.textured(location, x, y, w, h, u0, v0, u1, v1, color);
     }
 }

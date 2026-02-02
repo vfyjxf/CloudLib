@@ -20,22 +20,22 @@ final class StandardReversed<S, R> extends BasicExpose<Void> implements Reversed
     private Maybe<S> reversedData = Maybe.empty();
 
     StandardReversed(
-            String name,
-            short id,
-            FlowEncoder<S> reversedEncoder,
-            FlowDecoder<R> reversedDecoder
+        String name,
+        short id,
+        FlowEncoder<S> reversedEncoder,
+        FlowDecoder<R> reversedDecoder
     ) {
         super(name, id,
-              Snapshot.noneOf(),
-              () -> {
-                  throw new UnsupportedOperationException("StandardReversed doesn't bound to a value");
-              },
-              (byteBuf, element) -> {
-                  throw new UnsupportedOperationException("StandardReversed can't send data to client");
-              },
-              (byteBuf -> {
-                  throw new UnsupportedOperationException("StandardReversed can't receive data from server");
-              })
+            Snapshot.noneOf(),
+            () -> {
+                throw new UnsupportedOperationException("StandardReversed doesn't bound to a value");
+            },
+            (byteBuf, element) -> {
+                throw new UnsupportedOperationException("StandardReversed can't send data to client");
+            },
+            (byteBuf -> {
+                throw new UnsupportedOperationException("StandardReversed can't receive data from server");
+            })
         );
         this.reversedEncoder = reversedEncoder;
         this.reversedDecoder = reversedDecoder;

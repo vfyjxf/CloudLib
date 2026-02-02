@@ -262,6 +262,7 @@ public final class UIStyle {
     public StyleContext createContext() {
         throw new UnsupportedOperationException("Not Implemented");
     }
+
     /**
      * Converts this style to a builder for modification.
      *

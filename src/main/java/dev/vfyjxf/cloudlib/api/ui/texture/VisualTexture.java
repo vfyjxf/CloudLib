@@ -34,7 +34,7 @@ public interface VisualTexture {
     VisualTexture empty = (graphics, x, y, width, height) -> {
     };
 
-    //region util
+    //region factory
 
     /**
      * Creates a texture from a sprite ResourceLocation.

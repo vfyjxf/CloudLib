@@ -1,14 +1,14 @@
 package dev.vfyjxf.cloudlib.concept.node.typehack;
 
-import dev.vfyjxf.cloudlib.api.data.AttachableDataContainer;
+import dev.vfyjxf.cloudlib.api.data.DataContainer;
 import dev.vfyjxf.cloudlib.api.data.DataAttachable;
-import dev.vfyjxf.cloudlib.api.data.DataType;
+import dev.vfyjxf.cloudlib.api.data.DataKey;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
+import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.concept.node.typehack.NodeBuilderConceptWithTypeHackTest.Group;
 import dev.vfyjxf.cloudlib.concept.node.typehack.NodeBuilderConceptWithTypeHackTest.Instance;
-import net.minecraft.resources.ResourceLocation;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -18,8 +18,8 @@ import java.util.function.Function;
 
 public class NodeBuilderConceptWithTypeHackTest {
 
-    private static final DataType<String> TEST_TYPE = DataType.valueOf(ResourceLocation.withDefaultNamespace("test"), "default_value");
-    private static final DataType<Integer> TEST_TYPE_2 = DataType.valueOf(ResourceLocation.withDefaultNamespace("test_2"), 42);
+    private static final DataKey<String> TEST_TYPE = DataKey.create(Namespace.ofMc("test"), "default_value");
+    private static final DataKey<Integer> TEST_TYPE_2 = DataKey.create(Namespace.ofMc("test_2"), 42);
 
     @Test
     void build() {
@@ -64,11 +64,11 @@ public class NodeBuilderConceptWithTypeHackTest {
 
 
     static class Instance implements DataAttachable {
-        private final AttachableDataContainer attachableDataContainer = new AttachableDataContainer();
+        private final DataContainer dataContainer = new DataContainer(this);
 
         @Override
-        public @NotNull AttachableDataContainer attachableDataContainer() {
-            return attachableDataContainer;
+        public @NotNull DataContainer data() {
+            return dataContainer;
         }
     }
 
@@ -89,7 +89,7 @@ public class NodeBuilderConceptWithTypeHackTest {
  */
 abstract class GroupBlueprint<R extends Group<E>, E extends Instance> {
 
-    //TODO:需要运行时检查R的类型，R必须是一个Group的子类型，由于java泛型的限制，我们无法约束R
+    //NOTE:需要运行时检查R的类型，R必须是一个Group的子类型，由于java泛型的限制，我们无法约束R
 
     abstract R construct(GroupScope<E> scope);
 
@@ -104,7 +104,7 @@ interface GroupScope<E extends Instance> {
 
     void apply(Collection<E> instances);
 
-    //FIXME:mapper实际上不参与任何运算，但是保证了类型安全
+    //NOTE:mapper实际上不参与任何运算，但是保证了类型安全
     <G extends Group<T>, T extends Instance> void group(Function<G, E> mapper, GroupBlueprint<G, T> blueprint);
 
 }

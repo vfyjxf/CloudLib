@@ -2,19 +2,24 @@ package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
-import net.minecraft.client.gui.GuiGraphics;
 
 /**
- * A horizontal layout container.
- * <p>
- * Arranges children horizontally from left to right using flexbox layout.
- * Similar to Compose's Row or Flutter's Row.
+ * Horizontal flexbox container.
  */
 public class RowWidget extends CompositeWidget<Widget> {
 
+    //region state
+
     private int spacing = 0;
+
+    //endregion
+
+    //region factory
 
     public static RowWidget create() {
         return new RowWidget();
@@ -25,10 +30,12 @@ public class RowWidget extends CompositeWidget<Widget> {
     }
 
     private RowWidget() {
-        applyStyle(UIStyle.of(
-            UIStyles.flexRow()
-        ));
+        applyStyle(UIStyle.of(UIStyles.flexRow()));
     }
+
+    //endregion
+
+    //region configuration
 
     public int spacing() {
         return spacing;
@@ -40,12 +47,33 @@ public class RowWidget extends CompositeWidget<Widget> {
         return this;
     }
 
+    //endregion
+
+    //region children
+
     public <T extends Widget> T addChild(T widget) {
         return addWidget(widget);
     }
 
+    //endregion
+
+    //region rendering
+
     @Override
-    protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        super.renderInternal(graphics, mouseX, mouseY, partialTicks);
+    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        super.renderInternal(canvas, mouseX, mouseY, partialTicks);
     }
+
+    //endregion
+
+    //region inspection
+
+    @Override
+    public void collectInspectionInfo(InspectionInfoCollector collector) {
+        super.collectInspectionInfo(collector);
+        collector.addWithDefault("spacing", spacing, 0, InspectionProperty.CATEGORY_LAYOUT);
+        collector.add("children", children().size(), InspectionProperty.CATEGORY_DATA);
+    }
+
+    //endregion
 }

@@ -12,7 +12,15 @@ import java.util.Objects;
  * <p>
  * The direction property defines the text direction (LTR or RTL) for this element.
  * Default is INHERIT which inherits from parent, or LTR if root.
+ * <p>
+ * The direction values supported by taffy include:
+ * <ul>
+ *   <li>{@link TaffyDirection#INHERIT} - inherit from parent (default)</li>
+ *   <li>{@link TaffyDirection#LTR} - left to right</li>
+ *   <li>{@link TaffyDirection#RTL} - right to left</li>
+ * </ul>
  *
+ * @see TaffyStyle#direction
  * @see TaffyDirection
  */
 public record DirectionProperty(TaffyDirection direction) implements LayoutProperty {

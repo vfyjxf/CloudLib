@@ -1,110 +1,98 @@
 package dev.vfyjxf.cloudlib.api.ui.texture;
 
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * A texture that supports batch rendering.
+ * A texture that supports batch rendering via {@link SceneCanvas}.
  * <p>
- * Textures implementing this interface can be efficiently batched by {@link TextureBatch}.
+ * Uses a "push" model where the texture emits rendering primitives into a {@link VertexEmitter}.
+ * The emitter provides only two fundamental operations: {@code textured()} and {@code colored()}.
+ * Complex effects (gradients, borders, shadows, etc.) should be built by texture implementations
+ * using these primitives.
+ *
+ * <h3>Built-in Implementations</h3>
+ * <ul>
+ *   <li>{@link ImageTexture} - Single textured quad</li>
+ *   <li>{@link SpriteTexture} - Atlas sprite quad</li>
+ *   <li>{@link NineSliceTexture} - 9 textured quads</li>
+ *   <li>{@link ColorTexture} - Single colored quad</li>
+ * </ul>
+ *
  */
 public interface BatchableTexture extends VisualTexture {
 
     /**
-     * Returns the texture's ResourceLocation.
+     * Emits rendering primitives into the emitter for batch rendering.
      * <p>
-     * For sprites, this returns the atlas location.
-     */
-    ResourceLocation textureLocation();
-
-    /**
-     * Returns normalized UV coordinates (0.0 to 1.0).
+     * Implementations should call appropriate methods on {@link VertexEmitter}
+     * one or more times to emit primitives. For example:
+     * <ul>
+     *   <li>Simple textures emit 1 textured quad</li>
+     *   <li>Nine-slice textures emit up to 9 textured quads</li>
+     *   <li>Color textures emit 1 colored quad</li>
+     *   <li>Gradient textures emit 1 gradient quad</li>
+     *   <li>Border textures emit up to 4 border primitives</li>
+     *   <li>Composite textures may emit mixed primitives</li>
+     * </ul>
      *
-     * @return [u0, v0, u1, v1]
+     * @param emitter the vertex emitter to push primitives into
+     * @param x       screen X position
+     * @param y       screen Y position
+     * @param width   render width
+     * @param height  render height
+     * @param color   tint color (ARGB format, 0xFFFFFFFF = no tint)
      */
-    float[] uvCoordinates();
+    void emit(VertexEmitter emitter, float x, float y, float width, float height, int color);
 
     /**
      * Returns whether this texture supports batching.
      * <p>
-     * Some dynamic textures may not support batching.
+     * Override to return false for dynamic textures that cannot be batched
+     * (e.g., textures with per-frame animation state).
      */
     default boolean supportsBatching() {
         return true;
     }
 
     /**
-     * Adds render data to the batch collector.
+     * Emitter interface for receiving rendering primitives.
+     * <p>
+     * Implemented by the rendering system (SceneCanvas) to collect primitive data for batched rendering.
+     * Provides only the essential primitives - complex effects should be built by textures using these.
      *
-     * @param collector the batch collector
-     * @param x         screen X position
-     * @param y         screen Y position
-     * @param width     render width
-     * @param height    render height
-     * @param color     color (ARGB)
+     * <h3>Design Principle</h3>
+     * Keep the emitter simple with only fundamental operations. Complex rendering like
+     * gradients, borders, shadows should be implemented by texture classes using these primitives.
      */
-    default void addToBatch(BatchCollector collector, int x, int y, int width, int height, int color) {
-        float[] uv = uvCoordinates();
-        collector.addQuad(textureLocation(), x, y, width, height, uv[0], uv[1], uv[2], uv[3], color);
-    }
+    interface VertexEmitter {
 
-    /**
-     * Batch collector interface.
-     */
-    interface BatchCollector {
-        void addQuad(ResourceLocation texture, int x, int y, int width, int height,
-                     float u0, float v0, float u1, float v1, int color);
-    }
+        /**
+         * Emits a textured quad with UV coordinates.
+         *
+         * @param texture the texture ResourceLocation
+         * @param x       screen X position
+         * @param y       screen Y position
+         * @param width   quad width
+         * @param height  quad height
+         * @param u0      left UV coordinate (0.0 to 1.0)
+         * @param v0      top UV coordinate (0.0 to 1.0)
+         * @param u1      right UV coordinate (0.0 to 1.0)
+         * @param v1      bottom UV coordinate (0.0 to 1.0)
+         * @param color   tint color (ARGB), 0xFFFFFFFF means no tint
+         */
+        void textured(ResourceLocation texture, float x, float y, float width, float height,
+                      float u0, float v0, float u1, float v1, int color);
 
-    /**
-     * Creates a BatchableTexture from ImageTexture parameters.
-     */
-    static BatchableTexture of(ResourceLocation location, int u, int v, int regionWidth, int regionHeight,
-                                int textureWidth, int textureHeight) {
-        float u0 = (float) u / textureWidth;
-        float v0 = (float) v / textureHeight;
-        float u1 = (float) (u + regionWidth) / textureWidth;
-        float v1 = (float) (v + regionHeight) / textureHeight;
-        float[] uv = {u0, v0, u1, v1};
-
-        return new BatchableTexture() {
-            @Override
-            public ResourceLocation textureLocation() {
-                return location;
-            }
-
-            @Override
-            public float[] uvCoordinates() {
-                return uv;
-            }
-
-            @Override
-            public void render(GuiGraphics graphics, int x, int y, int width, int height) {
-                graphics.blit(location, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
-            }
-        };
-    }
-
-    /**
-     * Creates a BatchableTexture from a TextureAtlasSprite.
-     */
-    static BatchableTexture of(TextureAtlasSprite sprite) {
-        return new BatchableTexture() {
-            @Override
-            public ResourceLocation textureLocation() {
-                return sprite.atlasLocation();
-            }
-
-            @Override
-            public float[] uvCoordinates() {
-                return new float[]{sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1()};
-            }
-
-            @Override
-            public void render(GuiGraphics graphics, int x, int y, int width, int height) {
-                graphics.blit(x, y, 0, width, height, sprite);
-            }
-        };
+        /**
+         * Emits a solid-color filled quad.
+         *
+         * @param x      screen X position
+         * @param y      screen Y position
+         * @param width  quad width
+         * @param height quad height
+         * @param color  fill color (ARGB)
+         */
+        void colored(float x, float y, float width, float height, int color);
     }
 }

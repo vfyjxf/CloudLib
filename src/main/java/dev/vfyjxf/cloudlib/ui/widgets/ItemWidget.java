@@ -1,44 +1,49 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
 /**
- * A widget for displaying Minecraft ItemStacks.
- * <p>
- * Supports:
- * <ul>
- *   <li>Static and dynamic item stacks</li>
- *   <li>Count overlay rendering</li>
- *   <li>Tooltip display</li>
- * </ul>
+ * ItemStack display with count and tooltip support.
  */
 public class ItemWidget extends Widget {
+
+    //region state
 
     private Supplier<ItemStack> itemSupplier;
     private boolean showCount = true;
     private boolean showTooltip = true;
 
+    //endregion
+
+    //region factory
+
     public static ItemWidget of(ItemStack item) {
         return new ItemWidget(() -> item);
     }
 
-    public static ItemWidget of(Supplier<ItemStack> itemSupplier) {
-        return new ItemWidget(itemSupplier);
+    public static ItemWidget of(Supplier<ItemStack> supplier) {
+        return new ItemWidget(supplier);
     }
 
     public static ItemWidget empty() {
         return new ItemWidget(() -> ItemStack.EMPTY);
     }
 
-    private ItemWidget(Supplier<ItemStack> itemSupplier) {
-        this.itemSupplier = itemSupplier;
-        setSize(16, 16); // Default item size
+    private ItemWidget(Supplier<ItemStack> supplier) {
+        this.itemSupplier = supplier;
+        setSize(16, 16);
     }
+
+    //endregion
+
+    //region configuration
 
     public ItemStack item() {
         return itemSupplier.get();
@@ -72,20 +77,22 @@ public class ItemWidget extends Widget {
         return this;
     }
 
-    @Override
-    protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        super.renderInternal(graphics, mouseX, mouseY, partialTicks);
+    //endregion
 
+    //region rendering
+
+    @Override
+    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        super.renderInternal(canvas, mouseX, mouseY, partialTicks);
         ItemStack stack = item();
         if (stack.isEmpty()) return;
 
-        // Render the item
-        graphics.renderItem(stack, 0, 0);
-
-        // Render count overlay
-        if (showCount && stack.getCount() > 1) {
-            graphics.renderItemDecorations(context().font(), stack, 0, 0);
-        }
+        canvas.render(g -> {
+            g.renderItem(stack, 0, 0);
+            if (showCount && stack.getCount() > 1) {
+                g.renderItemDecorations(context().font(), stack, 0, 0);
+            }
+        });
     }
 
     @Override
@@ -99,4 +106,22 @@ public class ItemWidget extends Widget {
         }
         super.renderTooltip(graphics, mouseX, mouseY);
     }
+
+    //endregion
+
+    //region inspection
+
+    @Override
+    public void collectInspectionInfo(InspectionInfoCollector collector) {
+        super.collectInspectionInfo(collector);
+        ItemStack stack = item();
+        collector.add("item", stack.isEmpty() ? "empty" : stack.getItem().toString(), InspectionProperty.CATEGORY_DATA);
+        if (!stack.isEmpty()) {
+            collector.addWithDefault("count", stack.getCount(), 1, InspectionProperty.CATEGORY_DATA);
+        }
+        collector.addWithDefault("showCount", showCount, true, InspectionProperty.CATEGORY_VISUAL);
+        collector.addWithDefault("showTooltip", showTooltip, true, InspectionProperty.CATEGORY_VISUAL);
+    }
+
+    //endregion
 }

@@ -9,7 +9,17 @@ import dev.vfyjxf.taffy.style.TaffyStyle;
  * Layout property for aspect ratio.
  * <p>
  * Aspect ratio controls the relationship between width and height of an element.
+ * Maps to taffy {@link TaffyStyle#aspectRatio}.
+ * <p>
+ * The ratio value represents width/height. For example:
+ * <ul>
+ *   <li>1.0 - square (1:1 ratio)</li>
+ *   <li>1.5 - 3:2 ratio (width is 1.5x height)</li>
+ *   <li>0.5 - 1:2 ratio (width is 0.5x height)</li>
+ *   <li>NaN - no aspect ratio constraint</li>
+ * </ul>
  *
+ * @see TaffyStyle#aspectRatio
  * @see UIStyles#aspectRatio(float)
  */
 public record AspectRatioProperty(float ratio) implements LayoutProperty {

@@ -2,44 +2,51 @@ package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
 /**
- * A slider widget for selecting values within a range.
- * <p>
- * Features:
- * <ul>
- *   <li>Horizontal and vertical orientations</li>
- *   <li>Customizable range and step</li>
- *   <li>Draggable thumb with visual feedback</li>
- * </ul>
+ * Draggable slider for value selection.
  */
 public class SliderWidget extends Widget {
 
+    //region types
+
     public enum Orientation {
-        HORIZONTAL,
-        VERTICAL
+        HORIZONTAL, VERTICAL
     }
+
+    //endregion
+
+    //region state
 
     private double value = 0.0;
     private double min = 0.0;
     private double max = 1.0;
-    private double step = 0.0; // 0 = continuous
+    private double step = 0.0;
     private Orientation orientation = Orientation.HORIZONTAL;
     private boolean dragging = false;
-
     private @Nullable Consumer<Double> onValueChanged;
+
+    //endregion
+
+    //region textures
 
     private VisualTexture trackTexture = new ColorTexture(0xFF444444);
     private VisualTexture filledTrackTexture = new ColorTexture(0xFF00AA00);
     private VisualTexture thumbTexture = new ColorTexture(0xFFAAAAAA);
     private VisualTexture thumbHoverTexture = new ColorTexture(0xFFCCCCCC);
     private int thumbSize = 8;
+
+    //endregion
+
+    //region factory
 
     public static SliderWidget create() {
         return new SliderWidget();
@@ -73,6 +80,10 @@ public class SliderWidget extends Widget {
         });
     }
 
+    //endregion
+
+    //region input
+
     private void updateValueFromMouse(double mouseX, double mouseY) {
         double ratio;
         if (orientation == Orientation.HORIZONTAL) {
@@ -94,6 +105,10 @@ public class SliderWidget extends Widget {
 
         setValue(newValue);
     }
+
+    //endregion
+
+    //region configuration
 
     public double value() {
         return value;
@@ -143,8 +158,8 @@ public class SliderWidget extends Widget {
         return this;
     }
 
-    public SliderWidget onValueChanged(@Nullable Consumer<Double> onValueChanged) {
-        this.onValueChanged = onValueChanged;
+    public SliderWidget onValueChanged(@Nullable Consumer<Double> callback) {
+        this.onValueChanged = callback;
         return this;
     }
 
@@ -180,53 +195,67 @@ public class SliderWidget extends Widget {
         return this;
     }
 
-    @Override
-    protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        super.renderInternal(graphics, mouseX, mouseY, partialTicks);
+    //endregion
 
+    //region rendering
+
+    @Override
+    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        super.renderInternal(canvas, mouseX, mouseY, partialTicks);
         double ratio = (value - min) / (max - min);
 
         if (orientation == Orientation.HORIZONTAL) {
-            renderHorizontal(graphics, ratio);
+            renderHorizontal(canvas, ratio);
         } else {
-            renderVertical(graphics, ratio);
+            renderVertical(canvas, ratio);
         }
     }
 
-    private void renderHorizontal(GuiGraphics graphics, double ratio) {
+    private void renderHorizontal(SceneCanvas canvas, double ratio) {
         int trackHeight = 4;
         int trackY = (height() - trackHeight) / 2;
 
-        // Background track
-        trackTexture.render(graphics, thumbSize / 2, trackY, width() - thumbSize, trackHeight);
+        canvas.texture(trackTexture, thumbSize / 2, trackY, width() - thumbSize, trackHeight);
 
-        // Filled track
         int filledWidth = (int) ((width() - thumbSize) * ratio);
-        filledTrackTexture.render(graphics, thumbSize / 2, trackY, filledWidth, trackHeight);
+        canvas.texture(filledTrackTexture, thumbSize / 2, trackY, filledWidth, trackHeight);
 
-        // Thumb
         int thumbX = (int) ((width() - thumbSize) * ratio);
         int thumbY = (height() - thumbSize) / 2;
         VisualTexture currentThumb = (hovered() || dragging) ? thumbHoverTexture : thumbTexture;
-        currentThumb.render(graphics, thumbX, thumbY, thumbSize, thumbSize);
+        canvas.texture(currentThumb, thumbX, thumbY, thumbSize, thumbSize);
     }
 
-    private void renderVertical(GuiGraphics graphics, double ratio) {
+    private void renderVertical(SceneCanvas canvas, double ratio) {
         int trackWidth = 4;
         int trackX = (width() - trackWidth) / 2;
 
-        // Background track
-        trackTexture.render(graphics, trackX, thumbSize / 2, trackWidth, height() - thumbSize);
+        canvas.texture(trackTexture, trackX, thumbSize / 2, trackWidth, height() - thumbSize);
 
-        // Filled track (from bottom)
         int filledHeight = (int) ((height() - thumbSize) * ratio);
         int filledY = height() - thumbSize / 2 - filledHeight;
-        filledTrackTexture.render(graphics, trackX, filledY, trackWidth, filledHeight);
+        canvas.texture(filledTrackTexture, trackX, filledY, trackWidth, filledHeight);
 
-        // Thumb
         int thumbX = (width() - thumbSize) / 2;
         int thumbY = (int) ((height() - thumbSize) * (1.0 - ratio));
         VisualTexture currentThumb = (hovered() || dragging) ? thumbHoverTexture : thumbTexture;
-        currentThumb.render(graphics, thumbX, thumbY, thumbSize, thumbSize);
+        canvas.texture(currentThumb, thumbX, thumbY, thumbSize, thumbSize);
     }
+
+    //endregion
+
+    //region inspection
+
+    @Override
+    public void collectInspectionInfo(InspectionInfoCollector collector) {
+        super.collectInspectionInfo(collector);
+        collector.addWithDefault("value", value, 0.0, InspectionProperty.CATEGORY_DATA);
+        collector.addWithDefault("min", min, 0.0, InspectionProperty.CATEGORY_DATA);
+        collector.addWithDefault("max", max, 1.0, InspectionProperty.CATEGORY_DATA);
+        collector.addWithDefault("step", step, 0.0, InspectionProperty.CATEGORY_DATA);
+        collector.addWithDefault("orientation", orientation.name(), Orientation.HORIZONTAL.name(), InspectionProperty.CATEGORY_VISUAL);
+        collector.addWithDefault("dragging", dragging, false, InspectionProperty.CATEGORY_STATE);
+    }
+
+    //endregion
 }

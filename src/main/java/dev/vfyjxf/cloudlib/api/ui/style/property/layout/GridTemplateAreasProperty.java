@@ -15,6 +15,7 @@ import java.util.Objects;
  * Defines named grid areas in the grid template.
  * Each area specifies a name and the row/column lines that bound it.
  *
+ * @see TaffyStyle#gridTemplateAreas
  * @see GridTemplateArea
  */
 public record GridTemplateAreasProperty(List<GridTemplateArea> areas) implements LayoutProperty {

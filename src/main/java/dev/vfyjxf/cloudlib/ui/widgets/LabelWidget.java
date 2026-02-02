@@ -1,27 +1,37 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
-import net.minecraft.client.gui.GuiGraphics;
+import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * A simple label widget for displaying static or dynamic text.
- * <p>
- * Unlike {@link TextWidget}, LabelWidget is a leaf widget without children,
- * optimized for simple text display with optional shadow and color support.
+ * Simple text label with alignment and auto-measuring.
  */
 public class LabelWidget extends Widget {
+
+    //region state
 
     private Component text;
     private int color = 0xFFFFFF;
     private boolean shadow = true;
     private @Nullable TextAlign align = TextAlign.LEFT;
 
+    //endregion
+
+    //region types
+
     public enum TextAlign {
         LEFT, CENTER, RIGHT
     }
+
+    //endregion
+
+    //region factory
 
     public static LabelWidget of(String text) {
         return new LabelWidget(Component.literal(text));
@@ -37,7 +47,17 @@ public class LabelWidget extends Widget {
 
     private LabelWidget(Component text) {
         this.text = text;
+        this.onMount((scene, context, handle) -> {
+            scene.layoutTree().setMeasureFunc(nodeId(), (style, availableSpace) -> {
+                var font = context.font();
+                return new FloatSize(font.width(this.text), font.lineHeight);
+            });
+        });
     }
+
+    //endregion
+
+    //region configuration
 
     public Component text() {
         return text;
@@ -80,9 +100,13 @@ public class LabelWidget extends Widget {
         return this;
     }
 
+    //endregion
+
+    //region rendering
+
     @Override
-    protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        super.renderInternal(graphics, mouseX, mouseY, partialTicks);
+    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        super.renderInternal(canvas, mouseX, mouseY, partialTicks);
         var font = context().font();
         int textWidth = font.width(text);
 
@@ -93,10 +117,25 @@ public class LabelWidget extends Widget {
             case null -> 0;
         };
 
-        if (shadow) {
-            graphics.drawString(font, text, x, 0, color);
-        } else {
-            graphics.drawString(font, text, x, 0, color, false);
-        }
+        canvas.text(text, x, 0, color, shadow);
     }
+
+    //endregion
+
+    //region inspection
+
+    @Override
+    public void collectInspectionInfo(InspectionInfoCollector collector) {
+        super.collectInspectionInfo(collector);
+        String content = text.getString();
+        if (content.length() > 30) {
+            content = content.substring(0, 27) + "...";
+        }
+        collector.add("text", content, InspectionProperty.CATEGORY_DATA);
+        collector.addWithDefault("color", String.format("#%06X", color & 0xFFFFFF), "#FFFFFF", InspectionProperty.CATEGORY_VISUAL);
+        collector.addWithDefault("shadow", shadow, true, InspectionProperty.CATEGORY_VISUAL);
+        collector.addWithDefault("align", align != null ? align.name() : "LEFT", "LEFT", InspectionProperty.CATEGORY_VISUAL);
+    }
+
+    //endregion
 }

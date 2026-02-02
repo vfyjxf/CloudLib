@@ -13,8 +13,8 @@ import java.util.function.Consumer;
 
 @ApiStatus.Internal
 final class StandardDiffReverseLayerExpose<E, D, S, R>
-        extends BasicLayerExpose<E>
-        implements DiffReverseLayerExpose<E, D, S, R>, ReversedTranscoder {
+    extends BasicLayerExpose<E>
+    implements DiffReverseLayerExpose<E, D, S, R>, ReversedTranscoder {
 
     private final SimpleEvent<Consumer<D>> diffReceiveEvent = SimpleEvent.create();
     private final SimpleEvent<Consumer<R>> reverseReceiveEvent = SimpleEvent.create();
@@ -26,11 +26,11 @@ final class StandardDiffReverseLayerExpose<E, D, S, R>
     private Maybe<S> reversedData = Maybe.empty();
 
     <T extends DiffObservable<D>> StandardDiffReverseLayerExpose(
-            String name, short id,
-            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder, FlowDecoder<E> decoder,
-            FlowEncoder<D> diffEncoder, FlowDecoder<D> diffDecoder,
-            FlowEncoder<S> reverseEncoder, FlowDecoder<R> reverseDecoder
+        String name, short id,
+        Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
+        FlowEncoder<T> encoder, FlowDecoder<E> decoder,
+        FlowEncoder<D> diffEncoder, FlowDecoder<D> diffDecoder,
+        FlowEncoder<S> reverseEncoder, FlowDecoder<R> reverseDecoder
     ) {
         super(name, id, snapshot, valueSupplier, encoder, decoder);
         this.diffEncoder = diffEncoder;

@@ -13,8 +13,17 @@ import java.util.Objects;
  * Layout property for absolute positioning.
  * <p>
  * Position edges control the offset from the parent's edge when using
- * absolute positioning.
+ * absolute positioning. Maps to taffy {@link TaffyStyle#inset}.
+ * <p>
+ * The inset types supported by taffy include:
+ * <ul>
+ *   <li>{@link LengthPercentageAuto#AUTO} - automatic positioning</li>
+ *   <li>{@link LengthPercentageAuto#length(float)} - fixed pixel offset</li>
+ *   <li>{@link LengthPercentageAuto#percent(float)} - percentage of parent (0.0 to 1.0)</li>
+ * </ul>
  *
+ * @see TaffyStyle#inset
+ * @see LengthPercentageAuto
  * @see Edge
  * @see UIStyles#top(float)
  * @see UIStyles#left(float)

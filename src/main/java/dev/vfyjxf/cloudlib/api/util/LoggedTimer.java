@@ -27,6 +27,7 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * From JEI
+ *
  * @author mezz
  */
 public final class LoggedTimer {

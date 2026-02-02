@@ -10,12 +10,12 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import java.util.function.Supplier;
 
 public record ServerMenuFactory<M extends AbstractContainerMenu, A, P>(
-        Supplier<Component> displayName,
-        ServerMenuFactoryDelegate<M, A> menuFactory,
-        MenuProviderType<P> providerType,
-        P provider,
-        boolean resetOnClose,
-        Class<A> accessorType
+    Supplier<Component> displayName,
+    ServerMenuFactoryDelegate<M, A> menuFactory,
+    MenuProviderType<P> providerType,
+    P provider,
+    boolean resetOnClose,
+    Class<A> accessorType
 ) implements MenuProvider {
 
     public static final Supplier<Component> EMPTY_NAME = Component::empty;

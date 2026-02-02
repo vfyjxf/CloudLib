@@ -23,9 +23,9 @@ public abstract class BasicEntityBlock<T extends BlockEntity> extends Block impl
     private final DeferredHolder<BlockEntityType<?>, BlockEntityType<T>> entityType;
 
     protected BasicEntityBlock(
-            DeferredHolder<BlockEntityType<?>, BlockEntityType<T>> entityType,
-            @Nullable MenuInfo<?, ?> menuInfo,
-            Properties properties
+        DeferredHolder<BlockEntityType<?>, BlockEntityType<T>> entityType,
+        @Nullable MenuInfo<?, ?> menuInfo,
+        Properties properties
     ) {
         super(properties);
         this.entityType = entityType;

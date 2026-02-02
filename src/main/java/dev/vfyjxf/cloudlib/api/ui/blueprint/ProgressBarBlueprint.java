@@ -35,7 +35,7 @@ public final class ProgressBarBlueprint implements Blueprint<ProgressBarWidget> 
         this.progressSupplier = progressSupplier;
     }
 
-    // ==================== DSL Entry Points ====================
+    //region dsl entry points
 
     public static ProgressBarBlueprint ProgressBar(DoubleSupplier progressSupplier) {
         return ScopedReceiver.add(new ProgressBarBlueprint(progressSupplier));
@@ -45,7 +45,9 @@ public final class ProgressBarBlueprint implements Blueprint<ProgressBarWidget> 
         return ScopedReceiver.add(new ProgressBarBlueprint(() -> progress));
     }
 
-    // ==================== Builder Methods ====================
+    //endregion
+
+    //region builder methods
 
     public ProgressBarBlueprint progress(DoubleSupplier supplier) {
         this.progressSupplier = supplier;
@@ -79,7 +81,9 @@ public final class ProgressBarBlueprint implements Blueprint<ProgressBarWidget> 
         return this;
     }
 
-    // ==================== Blueprint Implementation ====================
+    //endregion
+
+    //region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -94,9 +98,11 @@ public final class ProgressBarBlueprint implements Blueprint<ProgressBarWidget> 
     @Override
     public void updateWidget(ProgressBarWidget widget, Scene scene, SceneContext context) {
         widget.setProgressSupplier(progressSupplier)
-            .setDirection(direction)
-            .setBackgroundTexture(backgroundTexture)
-            .setFillTexture(fillTexture)
-            .applyStyle(style);
+              .setDirection(direction)
+              .setBackgroundTexture(backgroundTexture)
+              .setFillTexture(fillTexture)
+              .applyStyle(style);
     }
+
+    //endregion
 }

@@ -45,7 +45,7 @@ public final class SliderBlueprint implements Blueprint<SliderWidget> {
         this.value = value;
     }
 
-    // ==================== DSL Entry Points ====================
+    //region dsl entry points
 
     public static SliderBlueprint Slider(double min, double max) {
         return ScopedReceiver.add(new SliderBlueprint(min, max, min));
@@ -59,7 +59,9 @@ public final class SliderBlueprint implements Blueprint<SliderWidget> {
         return ScopedReceiver.add(new SliderBlueprint(min, max, min).onValueChanged(onValueChanged));
     }
 
-    // ==================== Builder Methods ====================
+    //endregion
+
+    //region builder methods
 
     public SliderBlueprint value(double value) {
         this.value = value;
@@ -119,7 +121,9 @@ public final class SliderBlueprint implements Blueprint<SliderWidget> {
         return this;
     }
 
-    // ==================== Blueprint Implementation ====================
+    //endregion
+
+    //region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -134,14 +138,16 @@ public final class SliderBlueprint implements Blueprint<SliderWidget> {
     @Override
     public void updateWidget(SliderWidget widget, Scene scene, SceneContext context) {
         widget.setRange(min, max)
-            .setValue(value)
-            .setStep(step)
-            .setOrientation(orientation)
-            .onValueChanged(onValueChanged)
-            .setTrackTexture(trackTexture)
-            .setFilledTrackTexture(filledTrackTexture)
-            .setThumbTexture(thumbTexture)
-            .setThumbSize(thumbSize)
-            .applyStyle(style);
+              .setValue(value)
+              .setStep(step)
+              .setOrientation(orientation)
+              .onValueChanged(onValueChanged)
+              .setTrackTexture(trackTexture)
+              .setFilledTrackTexture(filledTrackTexture)
+              .setThumbTexture(thumbTexture)
+              .setThumbSize(thumbSize)
+              .applyStyle(style);
     }
+
+    //endregion
 }

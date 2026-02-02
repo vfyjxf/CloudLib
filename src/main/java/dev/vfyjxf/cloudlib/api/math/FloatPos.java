@@ -65,8 +65,8 @@ public class FloatPos {
     @Override
     public String toString() {
         return "FloatPos{" +
-                       "x=" + x +
-                       ", y=" + y +
-                       '}';
+               "x=" + x +
+               ", y=" + y +
+               '}';
     }
 }

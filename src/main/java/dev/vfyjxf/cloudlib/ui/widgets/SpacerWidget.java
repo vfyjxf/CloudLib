@@ -1,19 +1,25 @@
 package dev.vfyjxf.cloudlib.ui.widgets;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
-import net.minecraft.client.gui.GuiGraphics;
 
 /**
- * A flexible space widget that expands to fill available space.
- * <p>
- * Used in stack layouts to push other widgets apart.
- * Similar to SwiftUI's Spacer.
+ * Flexible space that expands to fill available space.
  */
 public class SpacerWidget extends Widget {
 
+    //region state
+
     private float minLength = 0;
+    private float flexGrow = 1;
+
+    //endregion
+
+    //region factory
 
     public static SpacerWidget create() {
         return new SpacerWidget();
@@ -23,20 +29,17 @@ public class SpacerWidget extends Widget {
         return new SpacerWidget().setMinLength(minLength);
     }
 
-    /**
-     * Creates a fixed-size spacer.
-     */
     public static SpacerWidget fixed(float size) {
-        return new SpacerWidget()
-            .setMinLength(size)
-            .setFlexGrow(0);
+        return new SpacerWidget().setMinLength(size).setFlexGrow(0);
     }
 
     private SpacerWidget() {
-        applyStyle(UIStyle.of(
-            UIStyles.flexGrow(1)
-        ));
+        applyStyle(UIStyle.of(UIStyles.flexGrow(1)));
     }
+
+    //endregion
+
+    //region configuration
 
     public float minLength() {
         return minLength;
@@ -44,20 +47,35 @@ public class SpacerWidget extends Widget {
 
     public SpacerWidget setMinLength(float minLength) {
         this.minLength = minLength;
-        applyStyle(UIStyle.of(
-            UIStyles.minWidth(minLength),
-            UIStyles.minHeight(minLength)
-        ));
+        applyStyle(UIStyle.of(UIStyles.minWidth(minLength), UIStyles.minHeight(minLength)));
         return this;
     }
 
     public SpacerWidget setFlexGrow(float grow) {
+        this.flexGrow = grow;
         applyStyle(UIStyle.of(UIStyles.flexGrow(grow)));
         return this;
     }
 
+    //endregion
+
+    //region rendering
+
     @Override
-    protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        // Spacer renders nothing by default
+    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        // Renders nothing
     }
+
+    //endregion
+
+    //region inspection
+
+    @Override
+    public void collectInspectionInfo(InspectionInfoCollector collector) {
+        super.collectInspectionInfo(collector);
+        collector.addWithDefault("minLength", minLength, 0f, InspectionProperty.CATEGORY_LAYOUT);
+        collector.addWithDefault("flexGrow", flexGrow, 1f, InspectionProperty.CATEGORY_LAYOUT);
+    }
+
+    //endregion
 }

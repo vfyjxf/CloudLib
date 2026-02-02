@@ -115,19 +115,19 @@ repositories {
 dependencies {
     localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
     compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
-    additionalRuntimeClasspath(api("org.eclipse.collections:eclipse-collections-api:11.1.0"))
-    jarJar("org.eclipse.collections:eclipse-collections-api:[11.1.0,)") {
+    additionalRuntimeClasspath(api("org.eclipse.collections:eclipse-collections-api:13.0.0"))
+    jarJar("org.eclipse.collections:eclipse-collections-api:[13.0.0,)") {
         version {
-            prefer("11.1.0")
+            prefer("13.0.0")
         }
     }
-    additionalRuntimeClasspath(api("org.eclipse.collections:eclipse-collections:11.1.0"))
-    jarJar("org.eclipse.collections:eclipse-collections:[11.1.0,)") {
+    additionalRuntimeClasspath(api("org.eclipse.collections:eclipse-collections:13.0.0"))
+    jarJar("org.eclipse.collections:eclipse-collections:[13.0.0,)") {
         version {
-            prefer("11.1.0")
+            prefer("13.0.0")
         }
     }
-    additionalRuntimeClasspath(api 'dev.vfyjxf:taffy:1.1.0')
+    additionalRuntimeClasspath(api("dev.vfyjxf:taffy:1.1.0"))
     jarJar("dev.vfyjxf:taffy:1.1.0") {
         version {
             prefer("1.1.0")

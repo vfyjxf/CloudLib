@@ -35,7 +35,7 @@ public final class SpacerBlueprint implements Blueprint<SpacerWidget> {
 
     private SpacerBlueprint() {}
 
-    // ==================== DSL Entry Points ====================
+    //region dsl entry points
 
     /**
      * Creates a flexible spacer that expands to fill available space.
@@ -62,7 +62,9 @@ public final class SpacerBlueprint implements Blueprint<SpacerWidget> {
         return ScopedReceiver.add(new SpacerBlueprint().minLength(size).flexGrow(0));
     }
 
-    // ==================== Builder Methods ====================
+    //endregion
+
+    //region builder methods
 
     public SpacerBlueprint minLength(float minLength) {
         this.minLength = minLength;
@@ -84,7 +86,9 @@ public final class SpacerBlueprint implements Blueprint<SpacerWidget> {
         return this;
     }
 
-    // ==================== Blueprint Implementation ====================
+    //endregion
+
+    //region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -99,7 +103,9 @@ public final class SpacerBlueprint implements Blueprint<SpacerWidget> {
     @Override
     public void updateWidget(SpacerWidget widget, Scene scene, SceneContext context) {
         widget.setMinLength(minLength)
-            .setFlexGrow(flexGrow)
-            .applyStyle(style);
+              .setFlexGrow(flexGrow)
+              .applyStyle(style);
     }
+
+    //endregion
 }

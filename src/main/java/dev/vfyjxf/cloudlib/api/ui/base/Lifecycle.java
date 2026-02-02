@@ -3,6 +3,10 @@ package dev.vfyjxf.cloudlib.api.ui.base;
 public enum Lifecycle {
     created, initialized, mounted, unmounted, destroyed;
 
+    public boolean created() {
+        return this == created;
+    }
+
     public boolean initialized() {
         return this != created;
     }

@@ -12,7 +12,17 @@ import java.util.Objects;
  * Layout property for flex direction.
  * <p>
  * Flex direction determines the main axis along which flex items are placed.
+ * Maps to taffy {@link TaffyStyle#flexDirection}.
+ * <p>
+ * The flex direction values supported by taffy include:
+ * <ul>
+ *   <li>{@link FlexDirection#ROW} - horizontal left to right</li>
+ *   <li>{@link FlexDirection#ROW_REVERSE} - horizontal right to left</li>
+ *   <li>{@link FlexDirection#COLUMN} - vertical top to bottom</li>
+ *   <li>{@link FlexDirection#COLUMN_REVERSE} - vertical bottom to top</li>
+ * </ul>
  *
+ * @see TaffyStyle#flexDirection
  * @see FlexDirection
  * @see UIStyles#flexRow()
  * @see UIStyles#flexColumn()

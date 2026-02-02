@@ -12,7 +12,15 @@ import java.util.Objects;
  * Layout property for position type.
  * <p>
  * Position type controls how the element is positioned within its parent.
+ * Maps to taffy {@link TaffyStyle#position}.
+ * <p>
+ * The position types supported by taffy include:
+ * <ul>
+ *   <li>{@link TaffyPosition#RELATIVE} - positioned relative to normal flow</li>
+ *   <li>{@link TaffyPosition#ABSOLUTE} - positioned relative to nearest positioned ancestor</li>
+ * </ul>
  *
+ * @see TaffyStyle#position
  * @see TaffyPosition
  * @see UIStyles#positionRelative()
  * @see UIStyles#positionAbsolute()

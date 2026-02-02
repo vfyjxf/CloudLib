@@ -3,29 +3,27 @@ package dev.vfyjxf.cloudlib.ui.widgets;
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * A scrollable container widget.
- * <p>
- * Features:
- * <ul>
- *   <li>Vertical and horizontal scrolling</li>
- *   <li>Scroll bar with customizable appearance</li>
- *   <li>Mouse wheel support</li>
- *   <li>Content clipping</li>
- * </ul>
+ * Scrollable container with scrollbar.
  */
 public class ScrollPanelWidget extends CompositeWidget<Widget> {
 
+    //region types
+
     public enum ScrollDirection {
-        VERTICAL,
-        HORIZONTAL,
-        BOTH
+        VERTICAL, HORIZONTAL, BOTH
     }
+
+    //endregion
+
+    //region state
 
     private ScrollDirection direction = ScrollDirection.VERTICAL;
     private int scrollX = 0;
@@ -36,9 +34,17 @@ public class ScrollPanelWidget extends CompositeWidget<Widget> {
     private boolean showScrollBar = true;
     private int scrollBarWidth = 6;
 
+    //endregion
+
+    //region textures
+
     private VisualTexture scrollBarBackground = new ColorTexture(0x80000000);
     private VisualTexture scrollBarThumb = new ColorTexture(0xFFAAAAAA);
     private @Nullable VisualTexture backgroundTexture = null;
+
+    //endregion
+
+    //region factory
 
     public static ScrollPanelWidget create() {
         return new ScrollPanelWidget();
@@ -53,11 +59,12 @@ public class ScrollPanelWidget extends CompositeWidget<Widget> {
     }
 
     private ScrollPanelWidget() {
-        onMouseDragged((input, deltaX, deltaY, context) -> {
-            // Handle scroll bar dragging
-            return EventDispatch.pass;
-        });
+        onMouseDragged((input, deltaX, deltaY, context) -> EventDispatch.pass);
     }
+
+    //endregion
+
+    //region configuration
 
     public ScrollDirection direction() {
         return direction;
@@ -100,8 +107,8 @@ public class ScrollPanelWidget extends CompositeWidget<Widget> {
         return contentWidth;
     }
 
-    public ScrollPanelWidget setContentWidth(int contentWidth) {
-        this.contentWidth = contentWidth;
+    public ScrollPanelWidget setContentWidth(int width) {
+        this.contentWidth = width;
         return this;
     }
 
@@ -109,8 +116,8 @@ public class ScrollPanelWidget extends CompositeWidget<Widget> {
         return contentHeight;
     }
 
-    public ScrollPanelWidget setContentHeight(int contentHeight) {
-        this.contentHeight = contentHeight;
+    public ScrollPanelWidget setContentHeight(int height) {
+        this.contentHeight = height;
         return this;
     }
 
@@ -124,8 +131,8 @@ public class ScrollPanelWidget extends CompositeWidget<Widget> {
         return scrollSpeed;
     }
 
-    public ScrollPanelWidget setScrollSpeed(int scrollSpeed) {
-        this.scrollSpeed = scrollSpeed;
+    public ScrollPanelWidget setScrollSpeed(int speed) {
+        this.scrollSpeed = speed;
         return this;
     }
 
@@ -133,8 +140,8 @@ public class ScrollPanelWidget extends CompositeWidget<Widget> {
         return showScrollBar;
     }
 
-    public ScrollPanelWidget setShowScrollBar(boolean showScrollBar) {
-        this.showScrollBar = showScrollBar;
+    public ScrollPanelWidget setShowScrollBar(boolean show) {
+        this.showScrollBar = show;
         return this;
     }
 
@@ -142,8 +149,8 @@ public class ScrollPanelWidget extends CompositeWidget<Widget> {
         return scrollBarWidth;
     }
 
-    public ScrollPanelWidget setScrollBarWidth(int scrollBarWidth) {
-        this.scrollBarWidth = scrollBarWidth;
+    public ScrollPanelWidget setScrollBarWidth(int width) {
+        this.scrollBarWidth = width;
         return this;
     }
 
@@ -158,18 +165,26 @@ public class ScrollPanelWidget extends CompositeWidget<Widget> {
         return this;
     }
 
+    //endregion
+
+    //region children
+
     public <T extends Widget> T addChild(T widget) {
         return addWidget(widget);
     }
 
+    //endregion
+
+    //region scroll helpers
+
     private int clampScrollX(int x) {
-        int maxScroll = Math.max(0, contentWidth - width());
-        return Math.clamp(x, 0, maxScroll);
+        int max = Math.max(0, contentWidth - width());
+        return Math.clamp(x, 0, max);
     }
 
     private int clampScrollY(int y) {
-        int maxScroll = Math.max(0, contentHeight - height());
-        return Math.clamp(y, 0, maxScroll);
+        int max = Math.max(0, contentHeight - height());
+        return Math.clamp(y, 0, max);
     }
 
     private boolean canScrollVertically() {
@@ -182,63 +197,79 @@ public class ScrollPanelWidget extends CompositeWidget<Widget> {
                && contentWidth > width();
     }
 
+    //endregion
+
+    //region rendering
+
     @Override
-    protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        // Render background
+    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        var graphics = canvas.graphics();
+
         if (backgroundTexture != null) {
-            backgroundTexture.render(graphics, 0, 0, width(), height());
+            canvas.texture(backgroundTexture, 0, 0, width(), height());
         }
 
-        // Enable scissor for content clipping
         int absX = absolutePos().x();
         int absY = absolutePos().y();
-        graphics.enableScissor(absX, absY, absX + width(), absY + height());
+        canvas.pushClip(absX, absY, width(), height());
 
-        // Render children with scroll offset
         graphics.pose().pushPose();
         graphics.pose().translate(-scrollX, -scrollY, 0);
 
         for (Widget child : children()) {
             graphics.pose().pushPose();
-            {
-                graphics.pose().translate(child.pos().x(), child.pos().y(), 0);
-                int relativeX = mouseX + scrollX - child.pos().x();
-                int relativeY = mouseY + scrollY - child.pos().y();
-                child.renderWidget(graphics, relativeX, relativeY, partialTicks);
-            }
+            graphics.pose().translate(child.pos().x(), child.pos().y(), 0);
+            int relX = mouseX + scrollX - child.pos().x();
+            int relY = mouseY + scrollY - child.pos().y();
+            child.renderWidget(canvas, relX, relY, partialTicks);
             graphics.pose().popPose();
         }
 
         graphics.pose().popPose();
-        graphics.disableScissor();
+        canvas.popClip();
 
-        // Render scroll bars
         if (showScrollBar) {
-            renderScrollBars(graphics);
+            renderScrollBars(canvas);
         }
     }
 
-    private void renderScrollBars(GuiGraphics graphics) {
-        // Vertical scroll bar
+    private void renderScrollBars(SceneCanvas canvas) {
         if (canScrollVertically()) {
             int barX = width() - scrollBarWidth;
-            int barHeight = height();
-            int thumbHeight = Math.max(20, (int) ((float) height() / contentHeight * barHeight));
-            int thumbY = (int) ((float) scrollY / (contentHeight - height()) * (barHeight - thumbHeight));
+            int barH = height();
+            int thumbH = Math.max(20, (int) ((float) height() / contentHeight * barH));
+            int thumbY = (int) ((float) scrollY / (contentHeight - height()) * (barH - thumbH));
 
-            scrollBarBackground.render(graphics, barX, 0, scrollBarWidth, barHeight);
-            scrollBarThumb.render(graphics, barX, thumbY, scrollBarWidth, thumbHeight);
+            canvas.texture(scrollBarBackground, barX, 0, scrollBarWidth, barH);
+            canvas.texture(scrollBarThumb, barX, thumbY, scrollBarWidth, thumbH);
         }
 
-        // Horizontal scroll bar
         if (canScrollHorizontally()) {
             int barY = height() - scrollBarWidth;
-            int barWidth = width() - (canScrollVertically() ? scrollBarWidth : 0);
-            int thumbWidth = Math.max(20, (int) ((float) width() / contentWidth * barWidth));
-            int thumbX = (int) ((float) scrollX / (contentWidth - width()) * (barWidth - thumbWidth));
+            int barW = width() - (canScrollVertically() ? scrollBarWidth : 0);
+            int thumbW = Math.max(20, (int) ((float) width() / contentWidth * barW));
+            int thumbX = (int) ((float) scrollX / (contentWidth - width()) * (barW - thumbW));
 
-            scrollBarBackground.render(graphics, 0, barY, barWidth, scrollBarWidth);
-            scrollBarThumb.render(graphics, thumbX, barY, thumbWidth, scrollBarWidth);
+            canvas.texture(scrollBarBackground, 0, barY, barW, scrollBarWidth);
+            canvas.texture(scrollBarThumb, thumbX, barY, thumbW, scrollBarWidth);
         }
     }
+
+    //endregion
+
+    //region inspection
+
+    @Override
+    public void collectInspectionInfo(InspectionInfoCollector collector) {
+        super.collectInspectionInfo(collector);
+        collector.addWithDefault("scrollX", scrollX, 0, InspectionProperty.CATEGORY_DATA);
+        collector.addWithDefault("scrollY", scrollY, 0, InspectionProperty.CATEGORY_DATA);
+        collector.addWithDefault("contentW", contentWidth, 0, InspectionProperty.CATEGORY_DATA);
+        collector.addWithDefault("contentH", contentHeight, 0, InspectionProperty.CATEGORY_DATA);
+        collector.addWithDefault("direction", direction.name(), ScrollDirection.VERTICAL.name(), InspectionProperty.CATEGORY_VISUAL);
+        collector.addWithDefault("showScrollBar", showScrollBar, true, InspectionProperty.CATEGORY_VISUAL);
+        collector.add("children", children().size(), InspectionProperty.CATEGORY_DATA);
+    }
+
+    //endregion
 }

@@ -28,6 +28,8 @@ public sealed interface Event<T> permits Events.EventImpl {
         return Events.createEvent(combiner, type);
     }
 
+    boolean isEmpty();
+
     /**
      * @return the combined invoker of the event
      */

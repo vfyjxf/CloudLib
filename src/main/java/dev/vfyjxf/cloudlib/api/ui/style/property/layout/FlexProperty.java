@@ -15,6 +15,11 @@ import dev.vfyjxf.taffy.style.TaffyStyle;
  * </ul>
  * <p>
  * When NaN (default), the individual flexGrow/flexShrink/flexBasis values are used.
+ *
+ * @see TaffyStyle#flex
+ * @see TaffyStyle#flexGrow
+ * @see TaffyStyle#flexShrink
+ * @see TaffyStyle#flexBasis
  */
 public record FlexProperty(float flex) implements LayoutProperty {
 

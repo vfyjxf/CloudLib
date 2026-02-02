@@ -17,58 +17,58 @@ public interface ReversedLayerExpose<E, S, R> extends LayerExpose<E>, Reversed<S
 
 
     static <T, E, S, R> ReversedLayerExpose<E, S, R> create(
-            String name, short id,
-            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder, FlowDecoder<E> decoder,
-            FlowEncoder<S> reverseEncoder, FlowDecoder<R> reverseDecoder
+        String name, short id,
+        Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
+        FlowEncoder<T> encoder, FlowDecoder<E> decoder,
+        FlowEncoder<S> reverseEncoder, FlowDecoder<R> reverseDecoder
     ) {
         return new StandardReversedLayerExpose<>(
-                name, id,
-                snapshot, valueSupplier,
-                encoder, decoder,
-                reverseEncoder, reverseDecoder
+            name, id,
+            snapshot, valueSupplier,
+            encoder, decoder,
+            reverseEncoder, reverseDecoder
         );
     }
 
     static <T, E, S, R> ReversedLayerExpose<E, S, R> create(
-            String name, short id,
-            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-            FlowHandler<T, E> codec,
-            FlowEncoder<S> reverseEncoder, FlowDecoder<R> reverseDecoder
+        String name, short id,
+        Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
+        FlowHandler<T, E> codec,
+        FlowEncoder<S> reverseEncoder, FlowDecoder<R> reverseDecoder
     ) {
         return new StandardReversedLayerExpose<>(
-                name, id,
-                snapshot, valueSupplier,
-                codec, codec,
-                reverseEncoder, reverseDecoder
+            name, id,
+            snapshot, valueSupplier,
+            codec, codec,
+            reverseEncoder, reverseDecoder
         );
     }
 
     static <T, E, S, R> ReversedLayerExpose<E, S, R> create(
-            String name, short id,
-            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder, FlowDecoder<E> decoder,
-            FlowHandler<S, R> reverseCodec
+        String name, short id,
+        Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
+        FlowEncoder<T> encoder, FlowDecoder<E> decoder,
+        FlowHandler<S, R> reverseCodec
     ) {
         return new StandardReversedLayerExpose<>(
-                name, id,
-                snapshot, valueSupplier,
-                encoder, decoder,
-                reverseCodec, reverseCodec
+            name, id,
+            snapshot, valueSupplier,
+            encoder, decoder,
+            reverseCodec, reverseCodec
         );
     }
 
     static <T, E, S, R> ReversedLayerExpose<E, S, R> create(
-            String name, short id,
-            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-            FlowHandler<T, E> codec,
-            FlowHandler<S, R> reverseCodec
+        String name, short id,
+        Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
+        FlowHandler<T, E> codec,
+        FlowHandler<S, R> reverseCodec
     ) {
         return new StandardReversedLayerExpose<>(
-                name, id,
-                snapshot, valueSupplier,
-                codec, codec,
-                reverseCodec, reverseCodec
+            name, id,
+            snapshot, valueSupplier,
+            codec, codec,
+            reverseCodec, reverseCodec
         );
     }
 

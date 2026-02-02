@@ -12,34 +12,34 @@ import java.util.function.Consumer;
 public interface DiffReverseLayerExpose<E, D, S, R> extends LayerExpose<E>, Differential<D>, Reversed<S, R> {
 
     static <T extends DiffObservable<D>, E, D, S, R> DiffReverseLayerExpose<E, D, S, R> create(
-            String name, short id,
-            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder, FlowDecoder<E> decoder,
-            FlowEncoder<D> diffEncoder, FlowDecoder<D> diffDecoder,
-            FlowEncoder<S> reverseEncoder, FlowDecoder<R> reverseDecoder
+        String name, short id,
+        Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
+        FlowEncoder<T> encoder, FlowDecoder<E> decoder,
+        FlowEncoder<D> diffEncoder, FlowDecoder<D> diffDecoder,
+        FlowEncoder<S> reverseEncoder, FlowDecoder<R> reverseDecoder
     ) {
         return new StandardDiffReverseLayerExpose<>(
-                name, id,
-                snapshot, valueSupplier,
-                encoder, decoder,
-                diffEncoder, diffDecoder,
-                reverseEncoder, reverseDecoder
+            name, id,
+            snapshot, valueSupplier,
+            encoder, decoder,
+            diffEncoder, diffDecoder,
+            reverseEncoder, reverseDecoder
         );
     }
 
     static <T extends DiffObservable<D>, E, D, S, R> DiffReverseLayerExpose<E, D, S, R> create(
-            String name, short id,
-            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-            FlowHandler<T, E> codec,
-            UnaryFlowHandler<D> diffCodec,
-            FlowHandler<S, R> reverseCodec
+        String name, short id,
+        Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
+        FlowHandler<T, E> codec,
+        UnaryFlowHandler<D> diffCodec,
+        FlowHandler<S, R> reverseCodec
     ) {
         return new StandardDiffReverseLayerExpose<>(
-                name, id,
-                snapshot, valueSupplier,
-                codec, codec,
-                diffCodec, diffCodec,
-                reverseCodec, reverseCodec
+            name, id,
+            snapshot, valueSupplier,
+            codec, codec,
+            diffCodec, diffCodec,
+            reverseCodec, reverseCodec
         );
     }
 

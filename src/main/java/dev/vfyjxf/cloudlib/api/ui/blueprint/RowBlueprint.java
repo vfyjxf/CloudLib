@@ -38,7 +38,7 @@ public final class RowBlueprint implements Blueprint.Group<RowWidget, Widget> {
         this.childrenSupplier = childrenSupplier;
     }
 
-    // ==================== DSL Entry Points ====================
+    //region dsl entry points
 
     public static RowBlueprint Row(Runnable content) {
         return ScopedReceiver.add(new RowBlueprint(() -> ScopedReceiver.buildChildren(content)));
@@ -48,7 +48,9 @@ public final class RowBlueprint implements Blueprint.Group<RowWidget, Widget> {
         return ScopedReceiver.add(new RowBlueprint(() -> ScopedReceiver.buildChildren(content)).spacing(spacing));
     }
 
-    // ==================== Builder Methods ====================
+    //endregion
+
+    //region builder methods
 
     public RowBlueprint spacing(int spacing) {
         this.spacing = spacing;
@@ -65,7 +67,9 @@ public final class RowBlueprint implements Blueprint.Group<RowWidget, Widget> {
         return this;
     }
 
-    // ==================== Blueprint Implementation ====================
+    //endregion
+
+    //region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -86,6 +90,8 @@ public final class RowBlueprint implements Blueprint.Group<RowWidget, Widget> {
     @Override
     public void updateWidget(RowWidget widget, Scene scene, SceneContext context) {
         widget.setSpacing(spacing)
-            .applyStyle(style);
+              .applyStyle(style);
     }
+
+    //endregion
 }

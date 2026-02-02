@@ -1,8 +1,8 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import dev.vfyjxf.cloudlib.api.data.AttachableDataContainer;
 import dev.vfyjxf.cloudlib.api.data.DataAttachable;
+import dev.vfyjxf.cloudlib.api.data.DataContainer;
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
 import dev.vfyjxf.cloudlib.api.event.EventDefinition;
 import dev.vfyjxf.cloudlib.api.event.EventHandler;
@@ -13,7 +13,9 @@ import dev.vfyjxf.cloudlib.api.performer.Backstage;
 import dev.vfyjxf.cloudlib.api.performer.PerformerContainer;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.Renderable;
-import dev.vfyjxf.cloudlib.api.ui.drag.DragProvider;
+import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvents;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
@@ -112,8 +114,7 @@ public class Widget
 
     final VisualContext visualContext = style.visualContext();
     protected boolean visible = true;
-    @Nullable
-    protected RichTooltip richTooltip;
+    protected RichTooltip richTooltip = RichTooltip.empty();
     //endregion
 
     //region state
@@ -131,12 +132,12 @@ public class Widget
     protected boolean hovered = false;
     //endregion
 
-    //region Event
+    //region event
     protected final EventChannel<WidgetEvent> eventChannel = EventChannel.create(this);
     //endregion
 
     //region data attachment
-    protected final AttachableDataContainer dataContainer = new AttachableDataContainer();
+    protected final DataContainer dataContainer = new DataContainer(this);
     //endregion
 
     public Widget() {}
@@ -144,7 +145,7 @@ public class Widget
     //region capability
 
     @Override
-    public AttachableDataContainer attachableDataContainer() {
+    public DataContainer data() {
         return dataContainer;
     }
 
@@ -162,11 +163,11 @@ public class Widget
 
     //region basic
 
-    public Lifecycle lifecycle() {
+    public final Lifecycle lifecycle() {
         return lifecycle;
     }
 
-    public Scene scene() {
+    public final Scene scene() {
         Checks.checkArgument(lifecycle.mounted(), "Widget is not mounted!");
         return scene;
     }
@@ -176,11 +177,11 @@ public class Widget
         return context;
     }
 
-    public @Nullable Object key() {
+    public final @Nullable Object key() {
         return key;
     }
 
-    public @UnknownNullability CompositeWidget<? extends Widget> parent() {
+    public final @UnknownNullability CompositeWidget<? extends Widget> parent() {
         return parent;
     }
 
@@ -189,18 +190,8 @@ public class Widget
         return this.scene.pathOf(this);
     }
 
-    public NodeId nodeId() {
-        Checks.checkArgument(lifecycle.mounted(), "Widget is not mounted!");
+    public final NodeId nodeId() {
         return Checks.checkNotNull(nodeId, "Widget is not mounted or destroyed!");
-    }
-
-    //endregion
-
-    //region signal
-
-    @MustBeInvokedByOverriders
-    public void tick() {
-        listeners(WidgetEvent.onTick).onTick();
     }
 
     //endregion
@@ -237,7 +228,7 @@ public class Widget
         lifecycle = Lifecycle.initialized;
     }
 
-    void mount(Scene scene, SceneContext context) {
+    void mount(Scene scene, SceneContext context, SceneHandle handle) {
         if (lifecycle == Lifecycle.destroyed) {
             throw new IllegalArgumentException("Widget is already destroyed!");
         }
@@ -251,7 +242,7 @@ public class Widget
         if (parent != null) {
             scene.tree.insertChildAtIndex(parent.nodeId(), parent.children.indexOf(this), nodeId);
         }
-        listeners(WidgetEvent.onMount).onMount(scene, context);
+        listeners(WidgetEvent.onMount).onMount(scene, context, handle);
         lifecycle = Lifecycle.mounted;
     }
 
@@ -264,7 +255,9 @@ public class Widget
         scene.tree.remove(nodeId);
         this.scene = null;
         this.context = null;
-        listeners(WidgetEvent.onUnmount).onUnmount(parent, this);
+        this.parent = null;
+        scene.cleanupHandle(this);
+        listeners(WidgetEvent.onUnmount).onUnmount();
         scene.unmount(this);
         lifecycle = Lifecycle.unmounted;
     }
@@ -286,6 +279,20 @@ public class Widget
 
     public void onStateChanged() {
 
+    }
+
+    //endregion
+
+    //region activity
+
+    public Widget onTick(WidgetEvent.OnTick listener) {
+        events().register(WidgetEvent.onTick, listener);
+        return this;
+    }
+
+    @MustBeInvokedByOverriders
+    public void tick() {
+        listeners(WidgetEvent.onTick).onTick();
     }
 
     //endregion
@@ -423,42 +430,89 @@ public class Widget
 
     //endregion
 
-    //region rendering
+    //region area test
+
+    /**
+     * @param mouseX the absolute x coordinate of the mouse
+     * @param mouseY the absolute y coordinate of the mouse
+     * @return true if the mouse is over this widget
+     */
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return mouseX >= absolutePos().x() &&
+               mouseX <= absolutePos().x() + size().width() &&
+               mouseY >= absolutePos().y() &&
+               mouseY <= absolutePos().y() + size().height();
+    }
+
+    public boolean isMouseOver(InputContext input) {
+        return isMouseOver(input.mouseX(), input.mouseY());
+    }
+
+    public boolean isMouseOverRelative(double mouseX, double mouseY) {
+        return size.contains(mouseX, mouseY);
+    }
+
+    public boolean intersects(Widget boundProvider) {
+        return intersects(boundProvider.absoluteBounds());
+    }
+
+    public boolean intersects(int x, int y, int width, int height) {
+        return this.position.x() >= x && this.position.y() >= y &&
+               this.position.x() + this.size.width() <= x + width &&
+               this.position.y() + this.size.height() <= y + height;
+    }
+
+    public boolean intersects(Rect bound) {
+        return bound.intersects(absoluteBounds());
+    }
+
+    //endregion
+
+    //region render
 
     /**
      * Render the widget with condition checks.
      *
-     * @param graphics     the graphics
+     * @param canvas       the canvas
      * @param mouseX       the relative x coordinate of the mouse
      * @param mouseY       the relative y coordinate of the mouse
      * @param partialTicks the partial ticks
      */
-    public final void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public final void renderWidget(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         if (invisible() || dragging) return;
-        render(graphics, mouseX, mouseY, partialTicks);
+        render(canvas, mouseX, mouseY, partialTicks);
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        graphics.pose().pushPose();
-        {
-            var context = common();
-            listeners(WidgetEvent.onRender).onRender(graphics, mouseX, mouseY, partialTicks, this, context);
-            if (context.cancelled()) return;
-            renderInternal(graphics, mouseX, mouseY, partialTicks);
-            listeners(WidgetEvent.onRenderPost).onRender(graphics, mouseX, mouseY, partialTicks, this, interruptible());
-        }
-        graphics.pose().popPose();
+        SceneCanvas canvas = SceneCanvas.create(graphics);
+        render(canvas, mouseX, mouseY, partialTicks);
     }
 
-    protected void renderInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        visualContext.background().render(graphics, 0, 0, width(), height());
-        visualContext.icon().render(graphics, 0, 0, width(), height());
+    /**
+     * Renders this widget using the batched canvas.
+     *
+     * @param canvas       the canvas for batched rendering
+     * @param mouseX       relative mouse X
+     * @param mouseY       relative mouse Y
+     * @param partialTicks partial ticks
+     */
+    public void render(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        var eventContext = common();
+        listeners(WidgetEvent.onRender).onRender(canvas, mouseX, mouseY, partialTicks, this, eventContext);
+        if (eventContext.cancelled()) return;
+        renderInternal(canvas, mouseX, mouseY, partialTicks);
+        listeners(WidgetEvent.onRenderPost).onRender(canvas, mouseX, mouseY, partialTicks, this, interruptible());
+    }
+
+    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        canvas.texture(visualContext.background(), 0, 0, width(), height());
+        canvas.texture(visualContext.icon(), 0, 0, width(), height());
     }
 
     public void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
-        RichTooltip richTooltip = getTooltip();
-        if (isMouseOver(mouseX, mouseY) && richTooltip != null) {
+        RichTooltip richTooltip = tooltip();
+        if (isMouseOver(mouseX, mouseY) && !richTooltip.isEmpty()) {
             var mousePos = ScreenUtil.getMousePos();
             ScreenUtil.renderTooltip(graphics, richTooltip, (int) mousePos.x, (int) mousePos.y);
         }
@@ -470,31 +524,31 @@ public class Widget
      * E.g. slot highlight.
      * </p>
      *
-     * @param graphics     the graphics
+     * @param canvas       the canvas
      * @param mouseX       the relative x coordinate of the mouse
      * @param mouseY       the relative y coordinate of the mouse
      * @param partialTicks the partial ticks
      */
-    public void renderOverlay(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void renderOverlay(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         if (invisible()) return;
-        graphics.pose().pushPose();
+        canvas.pushTransform();
         {
-            graphics.pose().translate(position.x(), position.y(), 0);
+            canvas.translate(position.x(), position.y());
             int relativeX = mouseX - position.x();
             int relativeY = mouseY - position.y();
             if (isMouseOverRelative(relativeX, relativeY)) {
                 var context = common();
-                listeners(WidgetEvent.onOverlayRender).onRender(graphics, relativeX, relativeY, partialTicks, context);
+                listeners(WidgetEvent.onOverlayRender).onRender(canvas, relativeX, relativeY, partialTicks, context);
                 if (context.cancelled()) return;
-                renderOverlayInternal(graphics, relativeX, relativeY, partialTicks);
+                renderOverlayInternal(canvas, relativeX, relativeY, partialTicks);
 
-                listeners(WidgetEvent.onOverlayRenderPost).onRender(graphics, relativeX, relativeY, partialTicks, interruptible());
+                listeners(WidgetEvent.onOverlayRenderPost).onRender(canvas, relativeX, relativeY, partialTicks, interruptible());
             }
         }
-        graphics.pose().popPose();
+        canvas.popTransform();
     }
 
-    protected void renderOverlayInternal(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    protected void renderOverlayInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
 
     }
 
@@ -529,6 +583,8 @@ public class Widget
 
     //region tooltip
 
+    //TODO:rename and refactor
+
     public Widget tooltip(String text) {
         return tooltip(Component.literal(text));
     }
@@ -538,7 +594,7 @@ public class Widget
     }
 
     public Widget tooltip(Component component) {
-        if (this.richTooltip == null) {
+        if (this.richTooltip == RichTooltip.empty()) {
             this.richTooltip = RichTooltip.create();
         }
         this.richTooltip.add(component);
@@ -546,7 +602,7 @@ public class Widget
     }
 
     public Widget tooltip(Supplier<Component> supplier) {
-        if (this.richTooltip == null) {
+        if (this.richTooltip == RichTooltip.empty()) {
             this.richTooltip = RichTooltip.create();
         }
         this.richTooltip.add(supplier);
@@ -581,19 +637,19 @@ public class Widget
 
     @Contract("_ -> this")
     public Widget tooltip(RichTooltip richTooltip) {
-        if (this.richTooltip == null) {
+        if (this.richTooltip == RichTooltip.empty()) {
             this.richTooltip = RichTooltip.create();
         }
         this.richTooltip.addAll(richTooltip);
         return this;
     }
 
-    public @Nullable RichTooltip getTooltip() {
+    public RichTooltip tooltip() {
         return richTooltip;
     }
 
     @Contract("_ -> this")
-    public Widget setTooltip(@Nullable RichTooltip richTooltip) {
+    public Widget setTooltip(RichTooltip richTooltip) {
         this.richTooltip = richTooltip;
         return this;
     }
@@ -642,7 +698,7 @@ public class Widget
 
     //endregion
 
-    //region Input
+    //region input
 
     @Contract("_ -> this")
     public Widget onMouseClicked(InputEvent.OnMouseClicked listener) {
@@ -689,20 +745,21 @@ public class Widget
 
     //endregion
 
-    //region Draggable
+    //region draggable
     public boolean draggable() {
         return draggable;
     }
 
     @Contract("_ -> this")
     public Widget setDraggable(boolean draggable) {
-        this.draggable = draggable;
-        if (draggable) {
-            onMount((Scene scene, SceneContext context) -> {
-                addWeakPerformer(DragProvider.scenario, DragProvider.fromWidget(this), this);
-            });
-        }
-        return this;
+        throw new UnsupportedOperationException("Not Implemented");
+//        this.draggable = draggable;
+//        if (draggable) {
+//            onMount((Scene scene, SceneContext context, SceneHandle handle) -> {
+//                addWeakPerformer(DragProvider.scenario, DragProvider.fromWidget(this), this);
+//            });
+//        }
+//        return this;
     }
 
     public boolean dragging() {
@@ -747,7 +804,7 @@ public class Widget
 
     //endregion
 
-    //region Utils
+    //region utils
 
     public <T extends WidgetEvent> Widget onEvent(EventDefinition<T> definition, T listener) {
         EventHandler.super.onEvent(definition, listener);
@@ -761,60 +818,74 @@ public class Widget
     }
 
     /**
-     * @param mouseX the absolute x coordinate of the mouse
-     * @param mouseY the absolute y coordinate of the mouse
-     * @return true if the mouse is over this widget
+     * A magic cast method that allows you to cast the widget to a specific type.
+     *
+     * @param <O> the type of the widget.
+     * @return the widget cast to the specific type.
      */
-    public boolean isMouseOver(double mouseX, double mouseY) {
-        return mouseX >= absolutePos().x() &&
-               mouseX <= absolutePos().x() + size().width() &&
-               mouseY >= absolutePos().y() &&
-               mouseY <= absolutePos().y() + size().height();
-    }
-
-    public boolean isMouseOver(InputContext input) {
-        return isMouseOver(input.mouseX(), input.mouseY());
-    }
-
-    public boolean isMouseOverRelative(double mouseX, double mouseY) {
-        return size.contains(mouseX, mouseY);
-    }
-
-    public boolean intersects(Widget boundProvider) {
-        return intersects(boundProvider.absoluteBounds());
-    }
-
-    public boolean intersects(int x, int y, int width, int height) {
-        return this.position.x() >= x && this.position.y() >= y &&
-               this.position.x() + this.size.width() <= x + width &&
-               this.position.y() + this.size.height() <= y + height;
-    }
-
-    public boolean intersects(Rect bound) {
-        return bound.intersects(absoluteBounds());
-    }
-
-    @SuppressWarnings("unchecked")
     public <O extends Widget> O cast() {
         return (O) this;
     }
 
-    @Override
-    public String toString() {
-        return "Widget{" +
-               "key='" + (key == null ? "null" : key) + '\'' +
-               ", parent=" + (parent == null ? "null" : parent.key()) +
-               ", position=" + position +
-               ", absolute=" + absolutePos() +
-               ", size=" + size +
-               ", active=" + active +
-               ", visible=" + visible +
-               '}';
-    }
-
     //endregion
 
-    //region hooks
+    //region inspection
+
+    /**
+     * Collects inspection information for this widget.
+     * <p>
+     * Subclasses can override this method to provide Inspector-friendly properties.
+     * Always call {@code super.collectInspectionInfo(...)} first to include base widget properties.
+     *
+     * @param collector the collector to add properties to
+     */
+    @MustBeInvokedByOverriders
+    public void collectInspectionInfo(InspectionInfoCollector collector) {
+        // Basic info
+        collector.addWithDefault("key", key, null, InspectionProperty.CATEGORY_BASIC);
+        collector.addWithDefault("lifecycle", lifecycle.name(), Lifecycle.mounted.name(), InspectionProperty.CATEGORY_BASIC);
+
+        // Layout info
+        collector.add("position", position, InspectionProperty.CATEGORY_LAYOUT);
+        collector.add("size", size, InspectionProperty.CATEGORY_LAYOUT);
+        if (absolute != null && !absolute.equals(position)) {
+            collector.add("absolute", absolute, InspectionProperty.CATEGORY_LAYOUT);
+        }
+
+        // State info
+        collector.addWithDefault("active", active, true, InspectionProperty.CATEGORY_STATE);
+        collector.addWithDefault("visible", visible, true, InspectionProperty.CATEGORY_STATE);
+        collector.addWithDefault("focused", focused, false, InspectionProperty.CATEGORY_STATE);
+        collector.addWithDefault("focusable", focusable, false, InspectionProperty.CATEGORY_STATE);
+        collector.addWithDefault("hovered", hovered, false, InspectionProperty.CATEGORY_STATE);
+        collector.addWithDefault("draggable", draggable, false, InspectionProperty.CATEGORY_STATE);
+        collector.addWithDefault("dragging", dragging, false, InspectionProperty.CATEGORY_STATE);
+
+        // Tooltip info (only if non-empty)
+        if (!richTooltip.isEmpty()) {
+            collector.add("hasTooltip", true, InspectionProperty.CATEGORY_VISUAL);
+        }
+    }
+
+    /**
+     * Gets the inspection type name for this widget.
+     *
+     * @return the inspection type name
+     */
+    public String inspectionTypeName() {
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    public String toString() {
+        InspectionInfoCollector collector = InspectionInfoCollector.create();
+        collector.setWidgetType(inspectionTypeName());
+        if (key != null) {
+            collector.setWidgetId(key.toString());
+        }
+        collectInspectionInfo(collector);
+        return collector.toCompactString();
+    }
 
     //endregion
 

@@ -236,7 +236,8 @@ final class Reconciler {
         }
 
         blueprint.updateWidget(widget, scene, context);
-        widget.mount(scene, context);
+        //FIXME:give correct handle
+        widget.mount(scene, context, scene.handleOf(parent));
         return widget;
     }
 

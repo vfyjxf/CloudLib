@@ -46,7 +46,7 @@ public final class PanelBlueprint implements Blueprint.Group<PanelWidget, Widget
         this.childrenSupplier = childrenSupplier;
     }
 
-    // ==================== DSL Entry Points ====================
+    //region dsl entry points
 
     public static PanelBlueprint Panel(Runnable content) {
         return ScopedReceiver.add(new PanelBlueprint(null, () -> ScopedReceiver.buildChildren(content)));
@@ -56,7 +56,9 @@ public final class PanelBlueprint implements Blueprint.Group<PanelWidget, Widget
         return ScopedReceiver.add(new PanelBlueprint(title, () -> ScopedReceiver.buildChildren(content)));
     }
 
-    // ==================== Builder Methods ====================
+    //endregion
+
+    //region builder methods
 
     public PanelBlueprint title(@Nullable String title) {
         this.title = title;
@@ -105,7 +107,9 @@ public final class PanelBlueprint implements Blueprint.Group<PanelWidget, Widget
         return this;
     }
 
-    // ==================== Blueprint Implementation ====================
+    //endregion
+
+    //region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -126,11 +130,13 @@ public final class PanelBlueprint implements Blueprint.Group<PanelWidget, Widget
     @Override
     public void updateWidget(PanelWidget widget, Scene scene, SceneContext context) {
         widget.setTitle(title)
-            .setBackgroundTexture(backgroundTexture)
-            .setBorderTexture(borderTexture)
-            .setBorderWidth(borderWidth)
-            .setContentPadding(contentPadding)
-            .setShowTitleBar(showTitleBar)
-            .applyStyle(style);
+              .setBackgroundTexture(backgroundTexture)
+              .setBorderTexture(borderTexture)
+              .setBorderWidth(borderWidth)
+              .setContentPadding(contentPadding)
+              .setShowTitleBar(showTitleBar)
+              .applyStyle(style);
     }
+
+    //endregion
 }

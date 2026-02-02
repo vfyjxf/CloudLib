@@ -1,8 +1,8 @@
 package dev.vfyjxf.cloudlib.test.sync;
 
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.sync.BasicMenuScreen;
-import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
@@ -57,9 +57,11 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
             private final ItemStack displayItem = stack;
 
             {
-                onEvent(WidgetEvent.onRender, ((graphics, mouseX, mouseY, partialTicks, self, context) -> {
+                onEvent(WidgetEvent.onRender, ((canvas, mouseX, mouseY, partialTicks, self, context) -> {
                     if (displayItem.isEmpty()) return;
-                    graphics.renderItem(displayItem, 0, 0);
+                    canvas.render((graphics -> {
+                        graphics.renderItem(displayItem, 0, 0);
+                    }));
                 }));
             }
         };

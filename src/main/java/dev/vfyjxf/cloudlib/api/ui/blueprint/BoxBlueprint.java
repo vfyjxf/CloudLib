@@ -35,13 +35,15 @@ public final class BoxBlueprint implements Blueprint.Group<BoxWidget, Widget> {
         this.childrenSupplier = childrenSupplier;
     }
 
-    // ==================== DSL Entry Points ====================
+    //region dsl entry points
 
     public static BoxBlueprint Box(Runnable content) {
         return ScopedReceiver.add(new BoxBlueprint(() -> ScopedReceiver.buildChildren(content)));
     }
 
-    // ==================== Builder Methods ====================
+    //endregion
+
+    //region builder methods
 
     public BoxBlueprint key(@Nullable Object key) {
         this.key = key;
@@ -53,7 +55,9 @@ public final class BoxBlueprint implements Blueprint.Group<BoxWidget, Widget> {
         return this;
     }
 
-    // ==================== Blueprint Implementation ====================
+    //endregion
+
+    //region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -75,4 +79,6 @@ public final class BoxBlueprint implements Blueprint.Group<BoxWidget, Widget> {
     public void updateWidget(BoxWidget widget, Scene scene, SceneContext context) {
         widget.applyStyle(style);
     }
+
+    //endregion
 }
