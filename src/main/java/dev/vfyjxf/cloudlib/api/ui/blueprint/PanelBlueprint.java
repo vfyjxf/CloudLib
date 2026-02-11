@@ -8,7 +8,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import dev.vfyjxf.cloudlib.ui.widgets.PanelWidget;
+import dev.vfyjxf.cloudlib.ui.widget.PanelWidget;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
@@ -135,7 +135,7 @@ public final class PanelBlueprint implements Blueprint.Group<PanelWidget, Widget
               .setBorderWidth(borderWidth)
               .setContentPadding(contentPadding)
               .setShowTitleBar(showTitleBar)
-              .applyStyle(style);
+              .useStyle(style);
     }
 
     //endregion

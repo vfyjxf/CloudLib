@@ -36,6 +36,14 @@ public class VisualContext {
     private VisualTexture icon = VisualTexture.empty;
     //endregion
 
+    //region zIndex
+    /**
+     * The z-index for sibling sorting within the same parent.
+     * Lower values render first (behind), higher values render last (on top).
+     */
+    private int zIndex = 0;
+    //endregion
+
     //region border
     private float borderWidth;
     private int borderColor;
@@ -152,6 +160,28 @@ public class VisualContext {
     public void setIcon(VisualTexture texture) {
         this.icon = texture;
     }
+
+    //region zIndex accessors
+
+    /**
+     * Gets the z-index.
+     *
+     * @return the z-index
+     */
+    public int zIndex() {
+        return zIndex;
+    }
+
+    /**
+     * Sets the z-index.
+     *
+     * @param zIndex the z-index
+     */
+    public void setZIndex(int zIndex) {
+        this.zIndex = zIndex;
+    }
+
+    //endregion
 
     public float borderWidth() {
         return borderWidth;

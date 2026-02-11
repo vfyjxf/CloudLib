@@ -17,7 +17,7 @@ public record RoundedRectTexture(
         segments = Math.max(4, segments);
     }
 
-    // region Factory
+    //region factory
 
     public static RoundedRectTexture of(int fillColor, int radius) {
         return new RoundedRectTexture(fillColor, radius, radius, radius, radius, 0, 0, 8);
@@ -35,9 +35,9 @@ public record RoundedRectTexture(
         return new RoundedRectTexture(fillColor, radius, radius, radius, radius, borderColor, borderThickness, 8);
     }
 
-    // endregion
+    //endregion
 
-    // region Modification
+    //region modification
 
     public RoundedRectTexture withBorder(int color, int thickness) {
         return new RoundedRectTexture(fillColor, radiusTopLeft, radiusTopRight,
@@ -54,9 +54,9 @@ public record RoundedRectTexture(
             radiusBottomLeft, radiusBottomRight, borderColor, borderThickness, segments);
     }
 
-    // endregion
+    //endregion
 
-    // region BatchableTexture
+    //region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float width, float height, int tint) {
@@ -121,9 +121,9 @@ public record RoundedRectTexture(
         }
     }
 
-    // endregion
+    //endregion
 
-    // region Internal
+    //region internal
 
     private enum Corner {TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT}
 
@@ -185,5 +185,5 @@ public record RoundedRectTexture(
         }
     }
 
-    // endregion
+    //endregion
 }

@@ -5,7 +5,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.Scene;
 import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.ui.widgets.SpacerWidget;
+import dev.vfyjxf.cloudlib.ui.widget.SpacerWidget;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -104,7 +104,7 @@ public final class SpacerBlueprint implements Blueprint<SpacerWidget> {
     public void updateWidget(SpacerWidget widget, Scene scene, SceneContext context) {
         widget.setMinLength(minLength)
               .setFlexGrow(flexGrow)
-              .applyStyle(style);
+              .useStyle(style);
     }
 
     //endregion

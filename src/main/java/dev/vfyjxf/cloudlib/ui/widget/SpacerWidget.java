@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.ui.widgets;
+package dev.vfyjxf.cloudlib.ui.widget;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
@@ -34,7 +34,7 @@ public class SpacerWidget extends Widget {
     }
 
     private SpacerWidget() {
-        applyStyle(UIStyle.of(UIStyles.flexGrow(1)));
+        useStyle(UIStyle.of(UIStyles.flexGrow(1)));
     }
 
     //endregion
@@ -47,13 +47,13 @@ public class SpacerWidget extends Widget {
 
     public SpacerWidget setMinLength(float minLength) {
         this.minLength = minLength;
-        applyStyle(UIStyle.of(UIStyles.minWidth(minLength), UIStyles.minHeight(minLength)));
+        useStyle(UIStyle.of(UIStyles.minWidth(minLength), UIStyles.minHeight(minLength)));
         return this;
     }
 
     public SpacerWidget setFlexGrow(float grow) {
         this.flexGrow = grow;
-        applyStyle(UIStyle.of(UIStyles.flexGrow(grow)));
+        useStyle(UIStyle.of(UIStyles.flexGrow(grow)));
         return this;
     }
 

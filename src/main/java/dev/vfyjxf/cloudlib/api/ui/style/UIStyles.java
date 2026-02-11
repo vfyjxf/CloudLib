@@ -2,10 +2,14 @@ package dev.vfyjxf.cloudlib.api.ui.style;
 
 import dev.vfyjxf.cloudlib.api.ui.style.property.layout.*;
 import dev.vfyjxf.cloudlib.api.ui.style.property.visual.BackgroundProperty;
-import dev.vfyjxf.cloudlib.api.ui.style.property.visual.BorderProperty;
+import dev.vfyjxf.cloudlib.api.ui.style.property.layout.BorderProperty;
 import dev.vfyjxf.cloudlib.api.ui.style.property.visual.IconProperty;
+import dev.vfyjxf.cloudlib.api.ui.style.property.visual.SceneLayerProperty;
 import dev.vfyjxf.cloudlib.api.ui.style.property.visual.ShadowProperty;
 import dev.vfyjxf.cloudlib.api.ui.style.property.visual.TextColorProperty;
+import dev.vfyjxf.cloudlib.api.ui.style.property.visual.ScrollbarStyleProperty;
+import dev.vfyjxf.cloudlib.api.ui.style.property.visual.ZIndexProperty;
+import dev.vfyjxf.cloudlib.api.ui.base.SceneLayer;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import dev.vfyjxf.taffy.style.*;
 
@@ -51,19 +55,19 @@ public final class UIStyles {
     //region spacing properties
 
     /**
-     * Creates a padding property with equal padding on all sides.
+     * Creates a padding property with equal padding on all sides using a LengthPercentage value.
      *
      * @param all the padding value for all sides
      * @return a padding property
      * @see TaffyStyle#padding
      * @see LengthPercentage
      */
-    public static PaddingProperty padding(float all) {
+    public static PaddingProperty padding(LengthPercentage all) {
         return new PaddingProperty(all);
     }
 
     /**
-     * Creates a padding property with vertical and horizontal values.
+     * Creates a padding property with vertical and horizontal LengthPercentage values.
      *
      * @param vertical   the padding for top and bottom
      * @param horizontal the padding for left and right
@@ -71,12 +75,12 @@ public final class UIStyles {
      * @see TaffyStyle#padding
      * @see LengthPercentage
      */
-    public static PaddingProperty padding(float vertical, float horizontal) {
+    public static PaddingProperty padding(LengthPercentage vertical, LengthPercentage horizontal) {
         return new PaddingProperty(vertical, horizontal);
     }
 
     /**
-     * Creates a padding property with individual values for each side.
+     * Creates a padding property with individual LengthPercentage values for each side.
      *
      * @param top    the top padding
      * @param right  the right padding
@@ -86,24 +90,221 @@ public final class UIStyles {
      * @see TaffyStyle#padding
      * @see LengthPercentage
      */
+    public static PaddingProperty padding(LengthPercentage top, LengthPercentage right, LengthPercentage bottom, LengthPercentage left) {
+        return PaddingProperty.of(top, right, bottom, left);
+    }
+
+    /**
+     * Creates a padding property with equal pixel padding on all sides.
+     *
+     * @param all the padding value in pixels for all sides
+     * @return a padding property
+     * @see TaffyStyle#padding
+     * @see LengthPercentage
+     */
+    public static PaddingProperty padding(float all) {
+        return new PaddingProperty(all);
+    }
+
+    /**
+     * Creates a padding property with vertical and horizontal pixel values.
+     *
+     * @param vertical   the padding in pixels for top and bottom
+     * @param horizontal the padding in pixels for left and right
+     * @return a padding property
+     * @see TaffyStyle#padding
+     * @see LengthPercentage
+     */
+    public static PaddingProperty padding(float vertical, float horizontal) {
+        return new PaddingProperty(vertical, horizontal);
+    }
+
+    /**
+     * Creates a padding property with individual pixel values for each side.
+     *
+     * @param top    the top padding in pixels
+     * @param right  the right padding in pixels
+     * @param bottom the bottom padding in pixels
+     * @param left   the left padding in pixels
+     * @return a padding property
+     * @see TaffyStyle#padding
+     * @see LengthPercentage
+     */
     public static PaddingProperty padding(float top, float right, float bottom, float left) {
         return new PaddingProperty(top, right, bottom, left);
     }
 
     /**
-     * Creates a margin property with equal margin on all sides.
+     * Creates a padding property with percentage values.
+     *
+     * @param percent the percentage value (0.0 to 1.0) for all sides
+     * @return a padding property
+     * @see TaffyStyle#padding
+     * @see LengthPercentage#percent(float)
+     */
+    public static PaddingProperty paddingPercent(float percent) {
+        return PaddingProperty.percent(percent);
+    }
+
+    /**
+     * Creates a padding property with percentage values for vertical and horizontal.
+     *
+     * @param vertical   the percentage value for top and bottom
+     * @param horizontal the percentage value for left and right
+     * @return a padding property
+     * @see TaffyStyle#padding
+     * @see LengthPercentage#percent(float)
+     */
+    public static PaddingProperty paddingPercent(float vertical, float horizontal) {
+        return PaddingProperty.percent(vertical, horizontal);
+    }
+
+    /**
+     * Creates a padding property with only the top edge set.
+     *
+     * @param value the top padding in pixels
+     * @return a padding property
+     * @see TaffyStyle#padding
+     */
+    public static PaddingProperty paddingTop(float value) {
+        return PaddingProperty.top(value);
+    }
+
+    /**
+     * Creates a padding property with only the top edge set.
+     *
+     * @param value the top padding
+     * @return a padding property
+     * @see TaffyStyle#padding
+     */
+    public static PaddingProperty paddingTop(LengthPercentage value) {
+        return PaddingProperty.top(value);
+    }
+
+    /**
+     * Creates a padding property with only the right edge set.
+     *
+     * @param value the right padding in pixels
+     * @return a padding property
+     * @see TaffyStyle#padding
+     */
+    public static PaddingProperty paddingRight(float value) {
+        return PaddingProperty.right(value);
+    }
+
+    /**
+     * Creates a padding property with only the right edge set.
+     *
+     * @param value the right padding
+     * @return a padding property
+     * @see TaffyStyle#padding
+     */
+    public static PaddingProperty paddingRight(LengthPercentage value) {
+        return PaddingProperty.right(value);
+    }
+
+    /**
+     * Creates a padding property with only the bottom edge set.
+     *
+     * @param value the bottom padding in pixels
+     * @return a padding property
+     * @see TaffyStyle#padding
+     */
+    public static PaddingProperty paddingBottom(float value) {
+        return PaddingProperty.bottom(value);
+    }
+
+    /**
+     * Creates a padding property with only the bottom edge set.
+     *
+     * @param value the bottom padding
+     * @return a padding property
+     * @see TaffyStyle#padding
+     */
+    public static PaddingProperty paddingBottom(LengthPercentage value) {
+        return PaddingProperty.bottom(value);
+    }
+
+    /**
+     * Creates a padding property with only the left edge set.
+     *
+     * @param value the left padding in pixels
+     * @return a padding property
+     * @see TaffyStyle#padding
+     */
+    public static PaddingProperty paddingLeft(float value) {
+        return PaddingProperty.left(value);
+    }
+
+    /**
+     * Creates a padding property with only the left edge set.
+     *
+     * @param value the left padding
+     * @return a padding property
+     * @see TaffyStyle#padding
+     */
+    public static PaddingProperty paddingLeft(LengthPercentage value) {
+        return PaddingProperty.left(value);
+    }
+
+    /**
+     * Creates a padding property with only horizontal edges (left and right) set.
+     *
+     * @param value the horizontal padding in pixels
+     * @return a padding property
+     * @see TaffyStyle#padding
+     */
+    public static PaddingProperty paddingHorizontal(float value) {
+        return PaddingProperty.horizontal(value);
+    }
+
+    /**
+     * Creates a padding property with only horizontal edges (left and right) set.
+     *
+     * @param value the horizontal padding
+     * @return a padding property
+     * @see TaffyStyle#padding
+     */
+    public static PaddingProperty paddingHorizontal(LengthPercentage value) {
+        return PaddingProperty.horizontal(value);
+    }
+
+    /**
+     * Creates a padding property with only vertical edges (top and bottom) set.
+     *
+     * @param value the vertical padding in pixels
+     * @return a padding property
+     * @see TaffyStyle#padding
+     */
+    public static PaddingProperty paddingVertical(float value) {
+        return PaddingProperty.vertical(value);
+    }
+
+    /**
+     * Creates a padding property with only vertical edges (top and bottom) set.
+     *
+     * @param value the vertical padding
+     * @return a padding property
+     * @see TaffyStyle#padding
+     */
+    public static PaddingProperty paddingVertical(LengthPercentage value) {
+        return PaddingProperty.vertical(value);
+    }
+
+    /**
+     * Creates a margin property with equal margin on all sides using a LengthPercentageAuto value.
      *
      * @param all the margin value for all sides
      * @return a margin property
      * @see TaffyStyle#margin
      * @see LengthPercentageAuto
      */
-    public static MarginProperty margin(float all) {
+    public static MarginProperty margin(LengthPercentageAuto all) {
         return new MarginProperty(all);
     }
 
     /**
-     * Creates a margin property with vertical and horizontal values.
+     * Creates a margin property with vertical and horizontal LengthPercentageAuto values.
      *
      * @param vertical   the margin for top and bottom
      * @param horizontal the margin for left and right
@@ -111,12 +312,12 @@ public final class UIStyles {
      * @see TaffyStyle#margin
      * @see LengthPercentageAuto
      */
-    public static MarginProperty margin(float vertical, float horizontal) {
+    public static MarginProperty margin(LengthPercentageAuto vertical, LengthPercentageAuto horizontal) {
         return new MarginProperty(vertical, horizontal);
     }
 
     /**
-     * Creates a margin property with individual values for each side.
+     * Creates a margin property with individual LengthPercentageAuto values for each side.
      *
      * @param top    the top margin
      * @param right  the right margin
@@ -126,8 +327,481 @@ public final class UIStyles {
      * @see TaffyStyle#margin
      * @see LengthPercentageAuto
      */
+    public static MarginProperty margin(LengthPercentageAuto top, LengthPercentageAuto right, LengthPercentageAuto bottom, LengthPercentageAuto left) {
+        return MarginProperty.of(top, right, bottom, left);
+    }
+
+    /**
+     * Creates a margin property with equal pixel margin on all sides.
+     *
+     * @param all the margin value in pixels for all sides
+     * @return a margin property
+     * @see TaffyStyle#margin
+     * @see LengthPercentageAuto
+     */
+    public static MarginProperty margin(float all) {
+        return new MarginProperty(all);
+    }
+
+    /**
+     * Creates a margin property with vertical and horizontal pixel values.
+     *
+     * @param vertical   the margin in pixels for top and bottom
+     * @param horizontal the margin in pixels for left and right
+     * @return a margin property
+     * @see TaffyStyle#margin
+     * @see LengthPercentageAuto
+     */
+    public static MarginProperty margin(float vertical, float horizontal) {
+        return new MarginProperty(vertical, horizontal);
+    }
+
+    /**
+     * Creates a margin property with individual pixel values for each side.
+     *
+     * @param top    the top margin in pixels
+     * @param right  the right margin in pixels
+     * @param bottom the bottom margin in pixels
+     * @param left   the left margin in pixels
+     * @return a margin property
+     * @see TaffyStyle#margin
+     * @see LengthPercentageAuto
+     */
     public static MarginProperty margin(float top, float right, float bottom, float left) {
         return new MarginProperty(top, right, bottom, left);
+    }
+
+    /**
+     * Creates a margin property with auto on all sides.
+     *
+     * @return a margin property with auto margins
+     * @see TaffyStyle#margin
+     * @see LengthPercentageAuto#AUTO
+     */
+    public static MarginProperty marginAuto() {
+        return MarginProperty.auto();
+    }
+
+    /**
+     * Creates a margin property with auto on horizontal sides (left and right).
+     * Useful for centering elements horizontally.
+     *
+     * @return a margin property with auto horizontal margins
+     * @see TaffyStyle#margin
+     * @see LengthPercentageAuto#AUTO
+     */
+    public static MarginProperty marginAutoHorizontal() {
+        return MarginProperty.autoHorizontal();
+    }
+
+    /**
+     * Creates a margin property with auto on vertical sides (top and bottom).
+     * Useful for centering elements vertically.
+     *
+     * @return a margin property with auto vertical margins
+     * @see TaffyStyle#margin
+     * @see LengthPercentageAuto#AUTO
+     */
+    public static MarginProperty marginAutoVertical() {
+        return MarginProperty.autoVertical();
+    }
+
+    /**
+     * Creates a margin property with percentage values.
+     *
+     * @param percent the percentage value (0.0 to 1.0) for all sides
+     * @return a margin property
+     * @see TaffyStyle#margin
+     * @see LengthPercentageAuto#percent(float)
+     */
+    public static MarginProperty marginPercent(float percent) {
+        return MarginProperty.percent(percent);
+    }
+
+    /**
+     * Creates a margin property with percentage values for vertical and horizontal.
+     *
+     * @param vertical   the percentage value for top and bottom
+     * @param horizontal the percentage value for left and right
+     * @return a margin property
+     * @see TaffyStyle#margin
+     * @see LengthPercentageAuto#percent(float)
+     */
+    public static MarginProperty marginPercent(float vertical, float horizontal) {
+        return MarginProperty.percent(vertical, horizontal);
+    }
+
+    /**
+     * Creates a margin property with only the top edge set.
+     *
+     * @param value the top margin in pixels
+     * @return a margin property
+     * @see TaffyStyle#margin
+     */
+    public static MarginProperty marginTop(float value) {
+        return MarginProperty.top(value);
+    }
+
+    /**
+     * Creates a margin property with only the top edge set.
+     *
+     * @param value the top margin
+     * @return a margin property
+     * @see TaffyStyle#margin
+     */
+    public static MarginProperty marginTop(LengthPercentageAuto value) {
+        return MarginProperty.top(value);
+    }
+
+    /**
+     * Creates a margin property with only the right edge set.
+     *
+     * @param value the right margin in pixels
+     * @return a margin property
+     * @see TaffyStyle#margin
+     */
+    public static MarginProperty marginRight(float value) {
+        return MarginProperty.right(value);
+    }
+
+    /**
+     * Creates a margin property with only the right edge set.
+     *
+     * @param value the right margin
+     * @return a margin property
+     * @see TaffyStyle#margin
+     */
+    public static MarginProperty marginRight(LengthPercentageAuto value) {
+        return MarginProperty.right(value);
+    }
+
+    /**
+     * Creates a margin property with only the bottom edge set.
+     *
+     * @param value the bottom margin in pixels
+     * @return a margin property
+     * @see TaffyStyle#margin
+     */
+    public static MarginProperty marginBottom(float value) {
+        return MarginProperty.bottom(value);
+    }
+
+    /**
+     * Creates a margin property with only the bottom edge set.
+     *
+     * @param value the bottom margin
+     * @return a margin property
+     * @see TaffyStyle#margin
+     */
+    public static MarginProperty marginBottom(LengthPercentageAuto value) {
+        return MarginProperty.bottom(value);
+    }
+
+    /**
+     * Creates a margin property with only the left edge set.
+     *
+     * @param value the left margin in pixels
+     * @return a margin property
+     * @see TaffyStyle#margin
+     */
+    public static MarginProperty marginLeft(float value) {
+        return MarginProperty.left(value);
+    }
+
+    /**
+     * Creates a margin property with only the left edge set.
+     *
+     * @param value the left margin
+     * @return a margin property
+     * @see TaffyStyle#margin
+     */
+    public static MarginProperty marginLeft(LengthPercentageAuto value) {
+        return MarginProperty.left(value);
+    }
+
+    /**
+     * Creates a margin property with only horizontal edges (left and right) set.
+     *
+     * @param value the horizontal margin in pixels
+     * @return a margin property
+     * @see TaffyStyle#margin
+     */
+    public static MarginProperty marginHorizontal(float value) {
+        return MarginProperty.horizontal(value);
+    }
+
+    /**
+     * Creates a margin property with only horizontal edges (left and right) set.
+     *
+     * @param value the horizontal margin
+     * @return a margin property
+     * @see TaffyStyle#margin
+     */
+    public static MarginProperty marginHorizontal(LengthPercentageAuto value) {
+        return MarginProperty.horizontal(value);
+    }
+
+    /**
+     * Creates a margin property with only vertical edges (top and bottom) set.
+     *
+     * @param value the vertical margin in pixels
+     * @return a margin property
+     * @see TaffyStyle#margin
+     */
+    public static MarginProperty marginVertical(float value) {
+        return MarginProperty.vertical(value);
+    }
+
+    /**
+     * Creates a margin property with only vertical edges (top and bottom) set.
+     *
+     * @param value the vertical margin
+     * @return a margin property
+     * @see TaffyStyle#margin
+     */
+    public static MarginProperty marginVertical(LengthPercentageAuto value) {
+        return MarginProperty.vertical(value);
+    }
+
+    //endregion
+
+    //region border properties
+
+    /**
+     * Creates a border property with equal border on all sides using a LengthPercentage value.
+     *
+     * @param all the border value for all sides
+     * @return a border property
+     * @see TaffyStyle#border
+     * @see LengthPercentage
+     */
+    public static BorderProperty border(LengthPercentage all) {
+        return new BorderProperty(all);
+    }
+
+    /**
+     * Creates a border property with vertical and horizontal LengthPercentage values.
+     *
+     * @param vertical   the border for top and bottom
+     * @param horizontal the border for left and right
+     * @return a border property
+     * @see TaffyStyle#border
+     * @see LengthPercentage
+     */
+    public static BorderProperty border(LengthPercentage vertical, LengthPercentage horizontal) {
+        return new BorderProperty(vertical, horizontal);
+    }
+
+    /**
+     * Creates a border property with individual LengthPercentage values for each side.
+     *
+     * @param top    the top border
+     * @param right  the right border
+     * @param bottom the bottom border
+     * @param left   the left border
+     * @return a border property
+     * @see TaffyStyle#border
+     * @see LengthPercentage
+     */
+    public static BorderProperty border(LengthPercentage top, LengthPercentage right, LengthPercentage bottom, LengthPercentage left) {
+        return BorderProperty.of(top, right, bottom, left);
+    }
+
+    /**
+     * Creates a border property with equal pixel border on all sides.
+     *
+     * @param all the border value in pixels for all sides
+     * @return a border property
+     * @see TaffyStyle#border
+     * @see LengthPercentage
+     */
+    public static BorderProperty border(float all) {
+        return new BorderProperty(all);
+    }
+
+    /**
+     * Creates a border property with vertical and horizontal pixel values.
+     *
+     * @param vertical   the border in pixels for top and bottom
+     * @param horizontal the border in pixels for left and right
+     * @return a border property
+     * @see TaffyStyle#border
+     * @see LengthPercentage
+     */
+    public static BorderProperty border(float vertical, float horizontal) {
+        return new BorderProperty(vertical, horizontal);
+    }
+
+    /**
+     * Creates a border property with individual pixel values for each side.
+     *
+     * @param top    the top border in pixels
+     * @param right  the right border in pixels
+     * @param bottom the bottom border in pixels
+     * @param left   the left border in pixels
+     * @return a border property
+     * @see TaffyStyle#border
+     * @see LengthPercentage
+     */
+    public static BorderProperty border(float top, float right, float bottom, float left) {
+        return new BorderProperty(top, right, bottom, left);
+    }
+
+    /**
+     * Creates a border property with only the top edge set.
+     *
+     * @param value the top border in pixels
+     * @return a border property
+     * @see TaffyStyle#border
+     */
+    public static BorderProperty borderTop(float value) {
+        return BorderProperty.top(value);
+    }
+
+    /**
+     * Creates a border property with only the top edge set.
+     *
+     * @param value the top border
+     * @return a border property
+     * @see TaffyStyle#border
+     */
+    public static BorderProperty borderTop(LengthPercentage value) {
+        return BorderProperty.top(value);
+    }
+
+    /**
+     * Creates a border property with only the right edge set.
+     *
+     * @param value the right border in pixels
+     * @return a border property
+     * @see TaffyStyle#border
+     */
+    public static BorderProperty borderRight(float value) {
+        return BorderProperty.right(value);
+    }
+
+    /**
+     * Creates a border property with only the right edge set.
+     *
+     * @param value the right border
+     * @return a border property
+     * @see TaffyStyle#border
+     */
+    public static BorderProperty borderRight(LengthPercentage value) {
+        return BorderProperty.right(value);
+    }
+
+    /**
+     * Creates a border property with only the bottom edge set.
+     *
+     * @param value the bottom border in pixels
+     * @return a border property
+     * @see TaffyStyle#border
+     */
+    public static BorderProperty borderBottom(float value) {
+        return BorderProperty.bottom(value);
+    }
+
+    /**
+     * Creates a border property with only the bottom edge set.
+     *
+     * @param value the bottom border
+     * @return a border property
+     * @see TaffyStyle#border
+     */
+    public static BorderProperty borderBottom(LengthPercentage value) {
+        return BorderProperty.bottom(value);
+    }
+
+    /**
+     * Creates a border property with only the left edge set.
+     *
+     * @param value the left border in pixels
+     * @return a border property
+     * @see TaffyStyle#border
+     */
+    public static BorderProperty borderLeft(float value) {
+        return BorderProperty.left(value);
+    }
+
+    /**
+     * Creates a border property with only the left edge set.
+     *
+     * @param value the left border
+     * @return a border property
+     * @see TaffyStyle#border
+     */
+    public static BorderProperty borderLeft(LengthPercentage value) {
+        return BorderProperty.left(value);
+    }
+
+    /**
+     * Creates a border property with only horizontal edges (left and right) set.
+     *
+     * @param value the horizontal border in pixels
+     * @return a border property
+     * @see TaffyStyle#border
+     */
+    public static BorderProperty borderHorizontal(float value) {
+        return BorderProperty.horizontal(value);
+    }
+
+    /**
+     * Creates a border property with only horizontal edges (left and right) set.
+     *
+     * @param value the horizontal border
+     * @return a border property
+     * @see TaffyStyle#border
+     */
+    public static BorderProperty borderHorizontal(LengthPercentage value) {
+        return BorderProperty.horizontal(value);
+    }
+
+    /**
+     * Creates a border property with only vertical edges (top and bottom) set.
+     *
+     * @param value the vertical border in pixels
+     * @return a border property
+     * @see TaffyStyle#border
+     */
+    public static BorderProperty borderVertical(float value) {
+        return BorderProperty.vertical(value);
+    }
+
+    /**
+     * Creates a border property with only vertical edges (top and bottom) set.
+     *
+     * @param value the vertical border
+     * @return a border property
+     * @see TaffyStyle#border
+     */
+    public static BorderProperty borderVertical(LengthPercentage value) {
+        return BorderProperty.vertical(value);
+    }
+
+    /**
+     * Creates a border with percentage values for all sides.
+     *
+     * @param percent the percentage value (0.0 to 1.0) for all sides
+     * @return a border property
+     * @see TaffyStyle#border
+     * @see LengthPercentage#percent(float)
+     */
+    public static BorderProperty borderPercent(float percent) {
+        return BorderProperty.percent(percent);
+    }
+
+    /**
+     * Creates a border with percentage values for vertical and horizontal.
+     *
+     * @param vertical   the percentage value for top and bottom
+     * @param horizontal the percentage value for left and right
+     * @return a border property
+     * @see TaffyStyle#border
+     * @see LengthPercentage#percent(float)
+     */
+    public static BorderProperty borderPercent(float vertical, float horizontal) {
+        return BorderProperty.percent(vertical, horizontal);
     }
 
     //endregion
@@ -145,24 +819,30 @@ public final class UIStyles {
     }
 
     /**
-     * Creates a border property (visual only, not layout).
+     * Creates a scene layer property.
+     * <p>
+     * Scene layers control the order in which widgets are rendered.
+     * Widgets in higher priority layers render on top of widgets in lower priority layers.
      *
-     * @param width the border width
-     * @param color the border color (ARGB format)
-     * @return a border property
+     * @param layer the scene layer
+     * @return a scene layer property
+     * @see SceneLayer
      */
-    public static BorderProperty border(float width, int color) {
-        return new BorderProperty(width, color);
+    public static SceneLayerProperty sceneLayerOf(SceneLayer layer) {
+        return new SceneLayerProperty(layer);
     }
 
     /**
-     * Creates a border property with default color (black).
+     * Creates a z-index property.
+     * <p>
+     * Z-index controls the rendering order among sibling widgets (children of the same parent).
+     * Lower values render first (appear behind), higher values render last (appear on top).
      *
-     * @param width the border width
-     * @return a border property
+     * @param zIndex the z-index value
+     * @return a z-index property
      */
-    public static BorderProperty border(float width) {
-        return new BorderProperty(width, 0xFF000000);
+    public static ZIndexProperty zIndexOf(int zIndex) {
+        return new ZIndexProperty(zIndex);
     }
 
     //endregion
@@ -178,7 +858,7 @@ public final class UIStyles {
      * @see TaffyStyle#size
      * @see TaffyDimension
      */
-    public static SizeProperty size(TaffyDimension width, TaffyDimension height) {
+    public static SizeProperty sizeOf(TaffyDimension width, TaffyDimension height) {
         return new SizeProperty(width, height);
     }
 
@@ -190,7 +870,7 @@ public final class UIStyles {
      * @see TaffyStyle#size
      * @see TaffyDimension
      */
-    public static SizeProperty size(TaffyDimension size) {
+    public static SizeProperty sizeOf(TaffyDimension size) {
         return new SizeProperty(size, size);
     }
 
@@ -202,7 +882,7 @@ public final class UIStyles {
      * @see TaffyStyle#size
      * @see TaffyDimension
      */
-    public static SizeProperty size(float size) {
+    public static SizeProperty sizeOf(float size) {
         return new SizeProperty(size);
     }
 
@@ -215,7 +895,7 @@ public final class UIStyles {
      * @see TaffyStyle#size
      * @see TaffyDimension
      */
-    public static SizeProperty size(float width, float height) {
+    public static SizeProperty sizeOf(float width, float height) {
         return new SizeProperty(width, height);
     }
 
@@ -227,8 +907,20 @@ public final class UIStyles {
      * @see TaffyStyle#size
      * @see TaffyDimension
      */
-    public static SizeProperty width(float width) {
-        return new SizeProperty(width, -1);
+    public static SizeProperty widthOf(float width) {
+        return SizeProperty.width(width);
+    }
+
+    /**
+     * Creates a width property.
+     *
+     * @param width the width dimension
+     * @return a size property with only width set
+     * @see TaffyStyle#size
+     * @see TaffyDimension
+     */
+    public static SizeProperty widthOf(TaffyDimension width) {
+        return SizeProperty.width(width);
     }
 
     /**
@@ -239,14 +931,106 @@ public final class UIStyles {
      * @see TaffyStyle#size
      * @see TaffyDimension
      */
-    public static SizeProperty height(float height) {
-        return new SizeProperty(-1, height);
+    public static SizeProperty heightOf(float height) {
+        return SizeProperty.height(height);
     }
 
     /**
-     * Creates a minimum width constraint.
+     * Creates a height property.
      *
-     * @param value the minimum width
+     * @param height the height dimension
+     * @return a size property with only height set
+     * @see TaffyStyle#size
+     * @see TaffyDimension
+     */
+    public static SizeProperty heightOf(TaffyDimension height) {
+        return SizeProperty.height(height);
+    }
+
+    /**
+     * Creates a size property with percentage values for both dimensions.
+     *
+     * @param percent the percentage value (0.0 to 1.0) for width and height
+     * @return a size property
+     * @see TaffyStyle#size
+     * @see TaffyDimension#percent(float)
+     */
+    public static SizeProperty sizePercent(float percent) {
+        return SizeProperty.percent(percent);
+    }
+
+    /**
+     * Creates a size property with percentage values for width and height.
+     *
+     * @param width  the width percentage (0.0 to 1.0)
+     * @param height the height percentage (0.0 to 1.0)
+     * @return a size property
+     * @see TaffyStyle#size
+     * @see TaffyDimension#percent(float)
+     */
+    public static SizeProperty sizePercent(float width, float height) {
+        return SizeProperty.percent(width, height);
+    }
+
+    /**
+     * Creates a size property with 100% width and 100% height (full parent size).
+     *
+     * @return a size property
+     * @see TaffyStyle#size
+     */
+    public static SizeProperty sizeFull() {
+        return SizeProperty.full();
+    }
+
+    /**
+     * Creates a size property with auto sizing for both dimensions.
+     *
+     * @return a size property
+     * @see TaffyStyle#size
+     * @see TaffyDimension#AUTO
+     */
+    public static SizeProperty sizeAuto() {
+        return SizeProperty.auto();
+    }
+
+    /**
+     * Creates a size property with stretch for both dimensions.
+     *
+     * @return a size property
+     * @see TaffyStyle#size
+     * @see TaffyDimension#stretch()
+     */
+    public static SizeProperty sizeStretch() {
+        return SizeProperty.stretch();
+    }
+
+    /**
+     * Creates a size property with fit-content for both dimensions.
+     *
+     * @return a size property
+     * @see TaffyStyle#size
+     * @see TaffyDimension#fitContent()
+     */
+    public static SizeProperty sizeFitContent() {
+        return SizeProperty.fitContent();
+    }
+
+    /**
+     * Creates a minimum width constraint with a TaffyDimension value.
+     *
+     * @param value the minimum width dimension
+     * @return a size constraint property
+     * @see TaffyStyle#minSize
+     * @see TaffyDimension
+     */
+    public static SizeConstraintProperty minWidth(TaffyDimension value) {
+        return SizeConstraintProperty.minWidth(value);
+    }
+
+    /**
+     * Creates a minimum width constraint with a pixel value.
+     *
+     * @param value the minimum width in pixels
      * @return a size constraint property
      * @see TaffyStyle#minSize
      * @see TaffyDimension
@@ -256,9 +1040,21 @@ public final class UIStyles {
     }
 
     /**
-     * Creates a minimum height constraint.
+     * Creates a minimum height constraint with a TaffyDimension value.
      *
-     * @param value the minimum height
+     * @param value the minimum height dimension
+     * @return a size constraint property
+     * @see TaffyStyle#minSize
+     * @see TaffyDimension
+     */
+    public static SizeConstraintProperty minHeight(TaffyDimension value) {
+        return SizeConstraintProperty.minHeight(value);
+    }
+
+    /**
+     * Creates a minimum height constraint with a pixel value.
+     *
+     * @param value the minimum height in pixels
      * @return a size constraint property
      * @see TaffyStyle#minSize
      * @see TaffyDimension
@@ -268,9 +1064,21 @@ public final class UIStyles {
     }
 
     /**
-     * Creates a maximum width constraint.
+     * Creates a maximum width constraint with a TaffyDimension value.
      *
-     * @param value the maximum width
+     * @param value the maximum width dimension
+     * @return a size constraint property
+     * @see TaffyStyle#maxSize
+     * @see TaffyDimension
+     */
+    public static SizeConstraintProperty maxWidth(TaffyDimension value) {
+        return SizeConstraintProperty.maxWidth(value);
+    }
+
+    /**
+     * Creates a maximum width constraint with a pixel value.
+     *
+     * @param value the maximum width in pixels
      * @return a size constraint property
      * @see TaffyStyle#maxSize
      * @see TaffyDimension
@@ -280,9 +1088,21 @@ public final class UIStyles {
     }
 
     /**
-     * Creates a maximum height constraint.
+     * Creates a maximum height constraint with a TaffyDimension value.
      *
-     * @param value the maximum height
+     * @param value the maximum height dimension
+     * @return a size constraint property
+     * @see TaffyStyle#maxSize
+     * @see TaffyDimension
+     */
+    public static SizeConstraintProperty maxHeight(TaffyDimension value) {
+        return SizeConstraintProperty.maxHeight(value);
+    }
+
+    /**
+     * Creates a maximum height constraint with a pixel value.
+     *
+     * @param value the maximum height in pixels
      * @return a size constraint property
      * @see TaffyStyle#maxSize
      * @see TaffyDimension
@@ -292,10 +1112,23 @@ public final class UIStyles {
     }
 
     /**
-     * Creates minimum size constraints.
+     * Creates minimum size constraints with TaffyDimension values.
      *
-     * @param width  the minimum width
-     * @param height the minimum height
+     * @param width  the minimum width dimension
+     * @param height the minimum height dimension
+     * @return a size constraint property
+     * @see TaffyStyle#minSize
+     * @see TaffyDimension
+     */
+    public static SizeConstraintProperty minSize(TaffyDimension width, TaffyDimension height) {
+        return SizeConstraintProperty.minSize(width, height);
+    }
+
+    /**
+     * Creates minimum size constraints with pixel values.
+     *
+     * @param width  the minimum width in pixels
+     * @param height the minimum height in pixels
      * @return a size constraint property
      * @see TaffyStyle#minSize
      * @see TaffyDimension
@@ -305,16 +1138,77 @@ public final class UIStyles {
     }
 
     /**
-     * Creates maximum size constraints.
+     * Creates maximum size constraints with TaffyDimension values.
      *
-     * @param width  the maximum width
-     * @param height the maximum height
+     * @param width  the maximum width dimension
+     * @param height the maximum height dimension
+     * @return a size constraint property
+     * @see TaffyStyle#maxSize
+     * @see TaffyDimension
+     */
+    public static SizeConstraintProperty maxSize(TaffyDimension width, TaffyDimension height) {
+        return SizeConstraintProperty.maxSize(width, height);
+    }
+
+    /**
+     * Creates maximum size constraints with pixel values.
+     *
+     * @param width  the maximum width in pixels
+     * @param height the maximum height in pixels
      * @return a size constraint property
      * @see TaffyStyle#maxSize
      * @see TaffyDimension
      */
     public static SizeConstraintProperty maxSize(float width, float height) {
         return SizeConstraintProperty.maxSize(width, height);
+    }
+
+    /**
+     * Creates a minimum width constraint with a percentage value.
+     *
+     * @param percent the percentage value (0.0 to 1.0)
+     * @return a size constraint property
+     * @see TaffyStyle#minSize
+     * @see TaffyDimension#percent(float)
+     */
+    public static SizeConstraintProperty minWidthPercent(float percent) {
+        return SizeConstraintProperty.minWidthPercent(percent);
+    }
+
+    /**
+     * Creates a minimum height constraint with a percentage value.
+     *
+     * @param percent the percentage value (0.0 to 1.0)
+     * @return a size constraint property
+     * @see TaffyStyle#minSize
+     * @see TaffyDimension#percent(float)
+     */
+    public static SizeConstraintProperty minHeightPercent(float percent) {
+        return SizeConstraintProperty.minHeightPercent(percent);
+    }
+
+    /**
+     * Creates a maximum width constraint with a percentage value.
+     *
+     * @param percent the percentage value (0.0 to 1.0)
+     * @return a size constraint property
+     * @see TaffyStyle#maxSize
+     * @see TaffyDimension#percent(float)
+     */
+    public static SizeConstraintProperty maxWidthPercent(float percent) {
+        return SizeConstraintProperty.maxWidthPercent(percent);
+    }
+
+    /**
+     * Creates a maximum height constraint with a percentage value.
+     *
+     * @param percent the percentage value (0.0 to 1.0)
+     * @return a size constraint property
+     * @see TaffyStyle#maxSize
+     * @see TaffyDimension#percent(float)
+     */
+    public static SizeConstraintProperty maxHeightPercent(float percent) {
+        return SizeConstraintProperty.maxHeightPercent(percent);
     }
 
     //endregion
@@ -809,6 +1703,55 @@ public final class UIStyles {
         return GapProperty.columnGap(gap);
     }
 
+    /**
+     * Creates a gap property with a LengthPercentage value.
+     *
+     * @param gap the gap value
+     * @return a gap property
+     * @see TaffyStyle#gap
+     * @see LengthPercentage
+     */
+    public static GapProperty gap(LengthPercentage gap) {
+        return GapProperty.all(gap);
+    }
+
+    /**
+     * Creates a gap property with independent row/column LengthPercentage values.
+     *
+     * @param rowGap    the row gap (height)
+     * @param columnGap the column gap (width)
+     * @return a gap property
+     * @see TaffyStyle#gap
+     * @see LengthPercentage
+     */
+    public static GapProperty gap(LengthPercentage rowGap, LengthPercentage columnGap) {
+        return GapProperty.both(rowGap, columnGap);
+    }
+
+    /**
+     * Creates a row gap property with a LengthPercentage value.
+     *
+     * @param gap the gap value
+     * @return a gap property
+     * @see TaffyStyle#gap
+     * @see LengthPercentage
+     */
+    public static GapProperty rowGap(LengthPercentage gap) {
+        return GapProperty.rowGap(gap);
+    }
+
+    /**
+     * Creates a column gap property with a LengthPercentage value.
+     *
+     * @param gap the gap value
+     * @return a gap property
+     * @see TaffyStyle#gap
+     * @see LengthPercentage
+     */
+    public static GapProperty columnGap(LengthPercentage gap) {
+        return GapProperty.columnGap(gap);
+    }
+
     //endregion
 
     //region position properties
@@ -859,51 +1802,337 @@ public final class UIStyles {
     }
 
     /**
-     * Creates a top position edge property.
+     * Creates an inset property with equal inset on all sides.
      *
-     * @param value the position value
-     * @return a position edge property
+     * @param all the inset value in pixels for all sides
+     * @return an inset property
      * @see TaffyStyle#inset
-     * @see LengthPercentageAuto
      */
-    public static PositionEdgeProperty top(float value) {
-        return new PositionEdgeProperty(Edge.TOP, value);
+    public static InsetProperty inset(float all) {
+        return new InsetProperty(all);
     }
 
     /**
-     * Creates a right position edge property.
+     * Creates an inset property with vertical and horizontal pixel values.
      *
-     * @param value the position value
-     * @return a position edge property
+     * @param vertical   the inset for top and bottom
+     * @param horizontal the inset for left and right
+     * @return an inset property
      * @see TaffyStyle#inset
-     * @see LengthPercentageAuto
      */
-    public static PositionEdgeProperty right(float value) {
-        return new PositionEdgeProperty(Edge.RIGHT, value);
+    public static InsetProperty inset(float vertical, float horizontal) {
+        return new InsetProperty(vertical, horizontal);
     }
 
     /**
-     * Creates a bottom position edge property.
+     * Creates an inset property with individual pixel values for each side.
      *
-     * @param value the position value
-     * @return a position edge property
+     * @param top    the top inset
+     * @param right  the right inset
+     * @param bottom the bottom inset
+     * @param left   the left inset
+     * @return an inset property
      * @see TaffyStyle#inset
-     * @see LengthPercentageAuto
      */
-    public static PositionEdgeProperty bottom(float value) {
-        return new PositionEdgeProperty(Edge.BOTTOM, value);
+    public static InsetProperty inset(float top, float right, float bottom, float left) {
+        return new InsetProperty(top, right, bottom, left);
     }
 
     /**
-     * Creates a left position edge property.
+     * Creates an inset property with equal inset on all sides.
      *
-     * @param value the position value
-     * @return a position edge property
+     * @param all the inset value for all sides
+     * @return an inset property
      * @see TaffyStyle#inset
-     * @see LengthPercentageAuto
      */
-    public static PositionEdgeProperty left(float value) {
-        return new PositionEdgeProperty(Edge.LEFT, value);
+    public static InsetProperty inset(LengthPercentageAuto all) {
+        return new InsetProperty(all);
+    }
+
+    /**
+     * Creates an inset property with vertical and horizontal values.
+     *
+     * @param vertical   the inset for top and bottom
+     * @param horizontal the inset for left and right
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty inset(LengthPercentageAuto vertical, LengthPercentageAuto horizontal) {
+        return new InsetProperty(vertical, horizontal);
+    }
+
+    /**
+     * Creates an inset property with individual values for each side.
+     *
+     * @param top    the top inset
+     * @param right  the right inset
+     * @param bottom the bottom inset
+     * @param left   the left inset
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty inset(LengthPercentageAuto top, LengthPercentageAuto right, LengthPercentageAuto bottom, LengthPercentageAuto left) {
+        return InsetProperty.of(top, right, bottom, left);
+    }
+
+    /**
+     * Creates a top inset property.
+     *
+     * @param value the inset value in pixels
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetTop(float value) {
+        return InsetProperty.top(value);
+    }
+
+    /**
+     * Creates a top inset property.
+     *
+     * @param value the inset value
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetTop(LengthPercentageAuto value) {
+        return InsetProperty.top(value);
+    }
+
+    /**
+     * Creates a top inset property with a percentage value.
+     *
+     * @param percent the inset percentage (0.0 to 1.0)
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetTopPercent(float percent) {
+        return InsetProperty.topPercent(percent);
+    }
+
+    /**
+     * Creates a top inset property with auto value.
+     *
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetTopAuto() {
+        return InsetProperty.topAuto();
+    }
+
+    /**
+     * Creates a right inset property.
+     *
+     * @param value the inset value in pixels
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetRight(float value) {
+        return InsetProperty.right(value);
+    }
+
+    /**
+     * Creates a right inset property.
+     *
+     * @param value the inset value
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetRight(LengthPercentageAuto value) {
+        return InsetProperty.right(value);
+    }
+
+    /**
+     * Creates a right inset property with a percentage value.
+     *
+     * @param percent the inset percentage (0.0 to 1.0)
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetRightPercent(float percent) {
+        return InsetProperty.rightPercent(percent);
+    }
+
+    /**
+     * Creates a right inset property with auto value.
+     *
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetRightAuto() {
+        return InsetProperty.rightAuto();
+    }
+
+    /**
+     * Creates a bottom inset property.
+     *
+     * @param value the inset value in pixels
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetBottom(float value) {
+        return InsetProperty.bottom(value);
+    }
+
+    /**
+     * Creates a bottom inset property.
+     *
+     * @param value the inset value
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetBottom(LengthPercentageAuto value) {
+        return InsetProperty.bottom(value);
+    }
+
+    /**
+     * Creates a bottom inset property with a percentage value.
+     *
+     * @param percent the inset percentage (0.0 to 1.0)
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetBottomPercent(float percent) {
+        return InsetProperty.bottomPercent(percent);
+    }
+
+    /**
+     * Creates a bottom inset property with auto value.
+     *
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetBottomAuto() {
+        return InsetProperty.bottomAuto();
+    }
+
+    /**
+     * Creates a left inset property.
+     *
+     * @param value the inset value in pixels
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetLeft(float value) {
+        return InsetProperty.left(value);
+    }
+
+    /**
+     * Creates a left inset property.
+     *
+     * @param value the inset value
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetLeft(LengthPercentageAuto value) {
+        return InsetProperty.left(value);
+    }
+
+    /**
+     * Creates a left inset property with a percentage value.
+     *
+     * @param percent the inset percentage (0.0 to 1.0)
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetLeftPercent(float percent) {
+        return InsetProperty.leftPercent(percent);
+    }
+
+    /**
+     * Creates a left inset property with auto value.
+     *
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetLeftAuto() {
+        return InsetProperty.leftAuto();
+    }
+
+    /**
+     * Creates an inset property for a specific edge.
+     *
+     * @param edge  the edge to set
+     * @param value the inset value in pixels
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetEdge(Edge edge, float value) {
+        return InsetProperty.edge(edge, value);
+    }
+
+    /**
+     * Creates an inset property for a specific edge.
+     *
+     * @param edge  the edge to set
+     * @param value the inset value
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetEdge(Edge edge, LengthPercentageAuto value) {
+        return InsetProperty.edge(edge, value);
+    }
+
+    /**
+     * Creates an inset property with horizontal edges (left and right) set.
+     *
+     * @param value the inset value in pixels
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetHorizontal(float value) {
+        return InsetProperty.horizontal(value);
+    }
+
+    /**
+     * Creates an inset property with horizontal edges (left and right) set.
+     *
+     * @param value the inset value
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetHorizontal(LengthPercentageAuto value) {
+        return InsetProperty.horizontal(value);
+    }
+
+    /**
+     * Creates an inset property with vertical edges (top and bottom) set.
+     *
+     * @param value the inset value in pixels
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetVertical(float value) {
+        return InsetProperty.vertical(value);
+    }
+
+    /**
+     * Creates an inset property with vertical edges (top and bottom) set.
+     *
+     * @param value the inset value
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetVertical(LengthPercentageAuto value) {
+        return InsetProperty.vertical(value);
+    }
+
+    /**
+     * Creates an inset property with auto on all sides.
+     *
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetAuto() {
+        return InsetProperty.auto();
+    }
+
+    /**
+     * Creates an inset property with zero on all sides.
+     *
+     * @return an inset property
+     * @see TaffyStyle#inset
+     */
+    public static InsetProperty insetZero() {
+        return InsetProperty.zero();
     }
 
     /**
@@ -1090,6 +2319,49 @@ public final class UIStyles {
     public static ScrollbarWidthProperty scrollbarWidth(float width) {
         return new ScrollbarWidthProperty(width);
     }
+
+    //region scrollbar style
+
+    /**
+     * Creates a scrollbar style property with track and thumb textures.
+     *
+     * @param track the scrollbar track (background) texture
+     * @param thumb the scrollbar thumb (handle) texture
+     * @return a scrollbar style property
+     * @see ScrollbarStyleProperty
+     */
+    public static ScrollbarStyleProperty scrollbarStyle(VisualTexture track, VisualTexture thumb) {
+        return new ScrollbarStyleProperty(track, thumb);
+    }
+
+    /**
+     * Creates a scrollbar style property with track, thumb, and width.
+     *
+     * @param track the scrollbar track (background) texture
+     * @param thumb the scrollbar thumb (handle) texture
+     * @param width the scrollbar width in pixels
+     * @return a scrollbar style property
+     * @see ScrollbarStyleProperty
+     */
+    public static ScrollbarStyleProperty scrollbarStyle(VisualTexture track, VisualTexture thumb, int width) {
+        return new ScrollbarStyleProperty(track, thumb, width);
+    }
+
+    /**
+     * Creates a scrollbar style property with all parameters.
+     *
+     * @param track        the scrollbar track (background) texture
+     * @param thumb        the scrollbar thumb (handle) texture
+     * @param width        the scrollbar width in pixels
+     * @param minThumbSize the minimum thumb size in pixels
+     * @return a scrollbar style property
+     * @see ScrollbarStyleProperty
+     */
+    public static ScrollbarStyleProperty scrollbarStyle(VisualTexture track, VisualTexture thumb, int width, int minThumbSize) {
+        return new ScrollbarStyleProperty(track, thumb, width, minThumbSize);
+    }
+
+    //endregion
 
     /**
      * Creates a text align property.

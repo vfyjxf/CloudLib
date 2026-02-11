@@ -85,7 +85,9 @@ public class FrameAnimation implements Playable<VisualTexture> {
         return Math.min(interpolatedElapsed / frame.duration, 1.0f);
     }
 
-    //region animation
+    //endregion
+
+    //region playable
 
     @Override
     public VisualTexture value() {
@@ -221,4 +223,6 @@ public class FrameAnimation implements Playable<VisualTexture> {
     public void setLooping(boolean loop) {
         this.loop = loop;
     }
+
+    //endregion
 }

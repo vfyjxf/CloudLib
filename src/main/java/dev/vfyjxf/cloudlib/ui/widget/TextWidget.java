@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.ui.widgets;
+package dev.vfyjxf.cloudlib.ui.widget;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
@@ -7,45 +7,35 @@ import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.Nullable;
 
 /**
- * Simple text label with alignment and auto-measuring.
+ * Text display with auto-measuring for layout.
  */
-public class LabelWidget extends Widget {
+public class TextWidget extends Widget {
 
     //region state
 
     private Component text;
     private int color = 0xFFFFFF;
-    private boolean shadow = true;
-    private @Nullable TextAlign align = TextAlign.LEFT;
-
-    //endregion
-
-    //region types
-
-    public enum TextAlign {
-        LEFT, CENTER, RIGHT
-    }
+    private boolean shadow = false;
 
     //endregion
 
     //region factory
 
-    public static LabelWidget of(String text) {
-        return new LabelWidget(Component.literal(text));
+    public static TextWidget of(Component text) {
+        return new TextWidget(text);
     }
 
-    public static LabelWidget of(Component text) {
-        return new LabelWidget(text);
+    public static TextWidget of(String text) {
+        return new TextWidget(Component.literal(text));
     }
 
-    public static LabelWidget of(LangEntry entry) {
-        return new LabelWidget(entry.get());
+    public static TextWidget of(LangEntry entry) {
+        return new TextWidget(entry.get());
     }
 
-    private LabelWidget(Component text) {
+    private TextWidget(Component text) {
         this.text = text;
         this.onMount((scene, context, handle) -> {
             scene.layoutTree().setMeasureFunc(nodeId(), (style, availableSpace) -> {
@@ -63,12 +53,12 @@ public class LabelWidget extends Widget {
         return text;
     }
 
-    public LabelWidget setText(Component text) {
+    public TextWidget setText(Component text) {
         this.text = text;
         return this;
     }
 
-    public LabelWidget setText(String text) {
+    public TextWidget setText(String text) {
         this.text = Component.literal(text);
         return this;
     }
@@ -77,7 +67,7 @@ public class LabelWidget extends Widget {
         return color;
     }
 
-    public LabelWidget setColor(int color) {
+    public TextWidget setColor(int color) {
         this.color = color;
         return this;
     }
@@ -86,17 +76,8 @@ public class LabelWidget extends Widget {
         return shadow;
     }
 
-    public LabelWidget setShadow(boolean shadow) {
+    public TextWidget setShadow(boolean shadow) {
         this.shadow = shadow;
-        return this;
-    }
-
-    public @Nullable TextAlign align() {
-        return align;
-    }
-
-    public LabelWidget setAlign(@Nullable TextAlign align) {
-        this.align = align;
         return this;
     }
 
@@ -106,18 +87,7 @@ public class LabelWidget extends Widget {
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        super.renderInternal(canvas, mouseX, mouseY, partialTicks);
-        var font = context().font();
-        int textWidth = font.width(text);
-
-        int x = switch (align) {
-            case LEFT -> 0;
-            case CENTER -> (width() - textWidth) / 2;
-            case RIGHT -> width() - textWidth;
-            case null -> 0;
-        };
-
-        canvas.text(text, x, 0, color, shadow);
+        canvas.text(text, 0, 0, color, shadow);
     }
 
     //endregion
@@ -133,8 +103,7 @@ public class LabelWidget extends Widget {
         }
         collector.add("text", content, InspectionProperty.CATEGORY_DATA);
         collector.addWithDefault("color", String.format("#%06X", color & 0xFFFFFF), "#FFFFFF", InspectionProperty.CATEGORY_VISUAL);
-        collector.addWithDefault("shadow", shadow, true, InspectionProperty.CATEGORY_VISUAL);
-        collector.addWithDefault("align", align != null ? align.name() : "LEFT", "LEFT", InspectionProperty.CATEGORY_VISUAL);
+        collector.addWithDefault("shadow", shadow, false, InspectionProperty.CATEGORY_VISUAL);
     }
 
     //endregion

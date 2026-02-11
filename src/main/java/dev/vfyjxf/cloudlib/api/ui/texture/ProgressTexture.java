@@ -15,7 +15,7 @@ import java.util.function.Supplier;
  */
 public class ProgressTexture implements SizedTexture {
 
-    //region factory methods
+    //region factory
 
     public static ProgressTexture horizontal(VisualTexture bg, VisualTexture fg, int w, int h, Supplier<Float> progress) {
         return new ProgressTexture(bg, fg, w, h, Direction.LEFT_TO_RIGHT, progress);
@@ -35,12 +35,18 @@ public class ProgressTexture implements SizedTexture {
 
     //endregion
 
+    //region types
+
     public enum Direction {
         LEFT_TO_RIGHT,
         RIGHT_TO_LEFT,
         BOTTOM_TO_TOP,
         TOP_TO_BOTTOM
     }
+
+    //endregion
+
+    //region state
 
     private final VisualTexture background;
     private final VisualTexture foreground;
@@ -74,6 +80,10 @@ public class ProgressTexture implements SizedTexture {
         this(background, foreground, width, height, Direction.LEFT_TO_RIGHT, progressSupplier);
     }
 
+    //endregion
+
+    //region query
+
     @Override
     public int width() {
         return width;
@@ -83,6 +93,10 @@ public class ProgressTexture implements SizedTexture {
     public int height() {
         return height;
     }
+
+    //endregion
+
+    //region rendering
 
     @Override
     public void render(GuiGraphics graphics, int x, int y, int width, int height) {
@@ -108,4 +122,6 @@ public class ProgressTexture implements SizedTexture {
             graphics.disableScissor();
         }
     }
+
+    //endregion
 }

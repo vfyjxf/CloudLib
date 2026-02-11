@@ -5,7 +5,9 @@ import dev.vfyjxf.cloudlib.api.data.DataAttachable;
 import dev.vfyjxf.cloudlib.api.data.DataContainer;
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
 import dev.vfyjxf.cloudlib.api.event.EventDefinition;
+import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.event.EventHandler;
+import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.math.Size;
@@ -16,16 +18,19 @@ import dev.vfyjxf.cloudlib.api.ui.Renderable;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
+import dev.vfyjxf.cloudlib.api.ui.effect.Effect;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvents;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.style.StyleContext;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.VisualContext;
+import dev.vfyjxf.cloudlib.api.ui.style.property.layout.StyleProperty;
+import dev.vfyjxf.cloudlib.api.ui.style.property.visual.ZIndexProperty;
 import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
+
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
 import dev.vfyjxf.cloudlib.util.Checks;
-import dev.vfyjxf.cloudlib.util.ScreenUtil;
 import dev.vfyjxf.taffy.tree.Layout;
 import dev.vfyjxf.taffy.tree.NodeId;
 import dev.vfyjxf.taffy.tree.TaffyTree;
@@ -36,6 +41,7 @@ import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 
@@ -100,17 +106,32 @@ public class Widget
     //region area & visual
 
     /**
-     * Relative position of the widget, relative to its parent.
-     */
-    Pos position = Pos.origin;
-    /**
-     * Cached absolute position of the widget, relative to the root widget.
-     */
-    @Nullable Pos absolute = null;
-    /**
      * Size of the widget.
      */
     Size size = Size.point;
+
+    /**
+     * The viewport managing this widget's coordinate transform pipeline.
+     * Layout, content offset and user transforms are all managed by the viewport.
+     */
+    final Viewport viewport = Viewport.create();
+    {
+        // When this widget's viewport is invalidated, clear the absolute-pos cache
+        // for this widget AND all its descendants.
+        viewport.onInvalidate = this::invalidateAbsolutePos;
+    }
+
+    /**
+     * Cached absolute (scene-space) position of this widget.
+     * Cleared when this widget's or any ancestor's viewport is invalidated.
+     */
+    @Nullable Pos cachedAbsolutePos;
+
+    /**
+     * The scene layer this widget belongs to.
+     * content layer is the default, widgets in higher layers are rendered on top.
+     */
+    SceneLayer sceneLayer = SceneLayer.content;
 
     final VisualContext visualContext = style.visualContext();
     protected boolean visible = true;
@@ -121,15 +142,15 @@ public class Widget
 
     //region draggable
     protected boolean draggable = false;
-    protected boolean dragging = false;
+    boolean dragging = false;
 
     //region fucus
     protected boolean focusable = false;
-    protected boolean focused = false;
+    boolean focused = false;
 
 
     //region hover
-    protected boolean hovered = false;
+    boolean hovered = false;
     //endregion
 
     //region event
@@ -140,7 +161,23 @@ public class Widget
     protected final DataContainer dataContainer = new DataContainer(this);
     //endregion
 
-    public Widget() {}
+    //region z-index management
+    {
+        // Register listener for zIndex changes
+        style.addChangeListener(ZIndexProperty.type, (oldValue, newValue) -> {
+            if (!Objects.equals(oldValue, newValue)) {
+                if (parent instanceof CompositeWidget<?> composite) {
+                    composite.markChildrenOrderDirty();
+                }
+                // Notify scene to re-sort the layer this widget belongs to
+                if (scene != null && sceneLayer != SceneLayer.content) {
+                    scene.resortLayer(sceneLayer);
+                }
+            }
+        });
+    }
+
+    //endregion
 
     //region capability
 
@@ -242,6 +279,10 @@ public class Widget
         if (parent != null) {
             scene.tree.insertChildAtIndex(parent.nodeId(), parent.children.indexOf(this), nodeId);
         }
+        // Register with layer if not in content layer
+        if (sceneLayer != SceneLayer.content) {
+            scene.addToLayer(sceneLayer, this);
+        }
         listeners(WidgetEvent.onMount).onMount(scene, context, handle);
         lifecycle = Lifecycle.mounted;
     }
@@ -253,12 +294,12 @@ public class Widget
             scene.tree.removeChild(parent.nodeId(), nodeId);
         }
         scene.tree.remove(nodeId);
+        scene.removeFromAllLayers(this);
         this.scene = null;
         this.context = null;
         this.parent = null;
         scene.cleanupHandle(this);
         listeners(WidgetEvent.onUnmount).onUnmount();
-        scene.unmount(this);
         lifecycle = Lifecycle.unmounted;
     }
 
@@ -300,21 +341,79 @@ public class Widget
     //region area
 
     /**
-     * @return the relative position of the widget, relative to its parent.
+     * Returns this widget's viewport for coordinate transform management.
+     *
+     * @return the viewport
      */
-    public Pos pos() {
-        return position;
+    public final Viewport viewport() {
+        return viewport;
     }
 
     /**
-     * @return the absolute position of the widget, relative to the root widget.
+     * @return the layout position of the widget, relative to its parent.
      */
-    public Pos absolutePos() {
-        if (absolute == null) {
-            if (parent == null) absolute = position;
-            else absolute = parent.absolutePos().translate(position.x(), position.y());
+    public final Pos pos() {
+        return viewport.layoutPos();
+    }
+
+    /**
+     * @return the scene position of the widget, computed by chaining viewport transforms
+     *         from root to this widget.
+     */
+    public final Pos absolutePos() {
+        Pos cached = cachedAbsolutePos;
+        if (cached != null) return cached;
+        FloatPos scene = localToScene(0, 0);
+        cached = new Pos((int) scene.x, (int) scene.y);
+        cachedAbsolutePos = cached;
+        return cached;
+    }
+
+    /**
+     * Converts a scene-space position to this widget's local space.
+     * Walks from the root down through each ancestor's viewport inverse transform.
+     */
+    public FloatPos sceneToLocal(double x, double y) {
+        WidgetPath path = path();
+        double cx = x;
+        double cy = y;
+        for (int i = 0; i < path.size(); i++) {
+            Widget w = path.get(i);
+            FloatPos local = w.viewport.parentToLocal(cx, cy);
+            cx = local.x;
+            cy = local.y;
+            // After transforming to w's local space, apply content offset to get
+            // to content space (children's parent space) — but only if there are
+            // more widgets to descend into.
+            if (i < path.size() - 1) {
+                cx += w.viewport.contentOffsetX;
+                cy += w.viewport.contentOffsetY;
+            }
         }
-        return absolute;
+        return new FloatPos(cx, cy);
+    }
+
+    /**
+     * Converts a local position to scene space.
+     * Walks from this widget up through each ancestor's viewport forward transform.
+     */
+    public FloatPos localToScene(double x, double y) {
+        double cx = x;
+        double cy = y;
+        Widget w = this;
+        while (w != null) {
+            // viewport.localToParent transforms from w's local space to w's parent's content space
+            FloatPos p = w.viewport.localToParent(cx, cy);
+            cx = p.x;
+            cy = p.y;
+            // Undo parent's content offset to get from parent's content space to parent's local space
+            if (w.parent != null) {
+                cx -= w.parent.viewport.contentOffsetX;
+                cy -= w.parent.viewport.contentOffsetY;
+            }
+            w = w.parent;
+        }
+        return new FloatPos(cx, cy);
     }
 
     @Contract("_ -> this")
@@ -322,19 +421,31 @@ public class Widget
         var context = common();
         listeners(WidgetEvent.onPositionChanged).onPositionChanged(position, context);
         if (context.cancelled()) return this;
-        this.position = position;
-        onPositionChanged();
+        viewport.setLayout(position);
         return this;
     }
 
     /**
-     * Invalidates the cached absolute position.
+     * Called when the position changes. Override to react to position updates.
      */
     protected void onPositionChanged() {
-        this.absolute = null;
+        // no-op — viewport.invalidate() triggers invalidateAbsolutePos() via callback
     }
 
-    public Size size() {
+    /**
+     * Clears the cached absolute position for this widget and recursively
+     * for all descendants. Called when this widget's viewport is invalidated.
+     */
+    void invalidateAbsolutePos() {
+        cachedAbsolutePos = null;
+        if (this instanceof CompositeWidget<?> composite) {
+            for (int i = 0; i < composite.children.size(); i++) {
+                composite.children.get(i).invalidateAbsolutePos();
+            }
+        }
+    }
+
+    public final Size size() {
         return size;
     }
 
@@ -347,11 +458,11 @@ public class Widget
         return this;
     }
 
-    public int posX() {
+    public final int posX() {
         return pos().x();
     }
 
-    public int posY() {
+    public final int posY() {
         return pos().y();
     }
 
@@ -371,23 +482,23 @@ public class Widget
     }
 
     @Contract("_,_ -> this")
-    protected Widget translate(int dx, int dy) {
+    protected final Widget translate(int dx, int dy) {
         return setPos(pos().x() + dx, pos().y() + dy);
     }
 
-    public int width() {
+    public final int width() {
         return size().width();
     }
 
-    public int height() {
+    public final int height() {
         return size().height();
     }
 
-    public int right() {
+    public final int right() {
         return posX() + width();
     }
 
-    public int bottom() {
+    public final int bottom() {
         return posY() + height();
     }
 
@@ -410,7 +521,7 @@ public class Widget
         return setBound(rect.x(), rect.y(), rect.width(), rect.height());
     }
 
-    public Rect bounds() {
+    public final Rect bounds() {
         return new Rect(pos().x(), pos().y(), size().width(), size().height());
     }
 
@@ -433,23 +544,21 @@ public class Widget
     //region area test
 
     /**
-     * @param mouseX the absolute x coordinate of the mouse
-     * @param mouseY the absolute y coordinate of the mouse
-     * @return true if the mouse is over this widget
+     * Tests whether the given scene-space mouse position is over this widget.
+     * Uses sceneToLocal to handle non-trivial transforms (scroll, zoom, rotation).
+     *
+     * @param mouseX the absolute x coordinate of the mouse (scene space)
+     * @param mouseY the absolute y coordinate of the mouse (scene space)
+     * @return true if the mouse maps into this widget's local bounds
      */
     public boolean isMouseOver(double mouseX, double mouseY) {
-        return mouseX >= absolutePos().x() &&
-               mouseX <= absolutePos().x() + size().width() &&
-               mouseY >= absolutePos().y() &&
-               mouseY <= absolutePos().y() + size().height();
+        FloatPos local = sceneToLocal(mouseX, mouseY);
+        return local.x >= 0 && local.x <= size.width()
+               && local.y >= 0 && local.y <= size.height();
     }
 
     public boolean isMouseOver(InputContext input) {
         return isMouseOver(input.mouseX(), input.mouseY());
-    }
-
-    public boolean isMouseOverRelative(double mouseX, double mouseY) {
-        return size.contains(mouseX, mouseY);
     }
 
     public boolean intersects(Widget boundProvider) {
@@ -457,9 +566,10 @@ public class Widget
     }
 
     public boolean intersects(int x, int y, int width, int height) {
-        return this.position.x() >= x && this.position.y() >= y &&
-               this.position.x() + this.size.width() <= x + width &&
-               this.position.y() + this.size.height() <= y + height;
+        Pos p = pos();
+        return p.x() >= x && p.y() >= y &&
+               p.x() + this.size.width() <= x + width &&
+               p.y() + this.size.height() <= y + height;
     }
 
     public boolean intersects(Rect bound) {
@@ -470,19 +580,6 @@ public class Widget
 
     //region render
 
-    /**
-     * Render the widget with condition checks.
-     *
-     * @param canvas       the canvas
-     * @param mouseX       the relative x coordinate of the mouse
-     * @param mouseY       the relative y coordinate of the mouse
-     * @param partialTicks the partial ticks
-     */
-    public final void renderWidget(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        if (invisible() || dragging) return;
-        render(canvas, mouseX, mouseY, partialTicks);
-    }
-
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         SceneCanvas canvas = SceneCanvas.create(graphics);
@@ -490,7 +587,13 @@ public class Widget
     }
 
     /**
-     * Renders this widget using the batched canvas.
+     * Renders this widget completely.
+     * <p>
+     * As a {@link Renderable} implementation, this method renders the entire widget
+     * without checking visibility or dragging state. Those checks should be done
+     * by the caller (e.g., {@link SceneCanvas#renderWidgets}).
+     * <p>
+     * This method fires render events and delegates to {@link #renderInternal}.
      *
      * @param canvas       the canvas for batched rendering
      * @param mouseX       relative mouse X
@@ -505,51 +608,31 @@ public class Widget
         listeners(WidgetEvent.onRenderPost).onRender(canvas, mouseX, mouseY, partialTicks, this, interruptible());
     }
 
-    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        canvas.texture(visualContext.background(), 0, 0, width(), height());
-        canvas.texture(visualContext.icon(), 0, 0, width(), height());
-    }
-
-    public void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
-        RichTooltip richTooltip = tooltip();
-        if (isMouseOver(mouseX, mouseY) && !richTooltip.isEmpty()) {
-            var mousePos = ScreenUtil.getMousePos();
-            ScreenUtil.renderTooltip(graphics, richTooltip, (int) mousePos.x, (int) mousePos.y);
-        }
+    /**
+     * Checks if this widget should be rendered.
+     * <p>
+     * Used by {@link SceneCanvas#renderWidgets} to skip invisible or dragging widgets.
+     *
+     * @return true if the widget should be rendered
+     */
+    public boolean shouldRender() {
+        return visible && !dragging;
     }
 
     /**
-     * Render the overlay of the widget.
+     * Internal rendering of this widget.
      * <p>
-     * E.g. slot highlight.
-     * </p>
+     * Override this method to customize widget rendering.
+     * Default implementation renders background and icon textures.
      *
-     * @param canvas       the canvas
-     * @param mouseX       the relative x coordinate of the mouse
-     * @param mouseY       the relative y coordinate of the mouse
-     * @param partialTicks the partial ticks
+     * @param canvas       the canvas for batched rendering
+     * @param mouseX       relative mouse X
+     * @param mouseY       relative mouse Y
+     * @param partialTicks partial ticks
      */
-    public void renderOverlay(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        if (invisible()) return;
-        canvas.pushTransform();
-        {
-            canvas.translate(position.x(), position.y());
-            int relativeX = mouseX - position.x();
-            int relativeY = mouseY - position.y();
-            if (isMouseOverRelative(relativeX, relativeY)) {
-                var context = common();
-                listeners(WidgetEvent.onOverlayRender).onRender(canvas, relativeX, relativeY, partialTicks, context);
-                if (context.cancelled()) return;
-                renderOverlayInternal(canvas, relativeX, relativeY, partialTicks);
-
-                listeners(WidgetEvent.onOverlayRenderPost).onRender(canvas, relativeX, relativeY, partialTicks, interruptible());
-            }
-        }
-        canvas.popTransform();
-    }
-
-    protected void renderOverlayInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-
+    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        canvas.texture(visualContext.background(), 0, 0, width(), height());
+        canvas.texture(visualContext.icon(), 0, 0, width(), height());
     }
 
     //endregion
@@ -562,6 +645,17 @@ public class Widget
 
     public boolean invisible() {
         return !visible;
+    }
+
+    /**
+     * Sets the visibility of this widget.
+     *
+     * @param visible true to show, false to hide
+     * @return this widget for chaining
+     */
+    public Widget setVisible(boolean visible) {
+        this.visible = visible;
+        return this;
     }
 
     public boolean active() {
@@ -578,8 +672,60 @@ public class Widget
     }
 
     public boolean interactable() {
-        return active && visible();
+        return active && visible;
     }
+
+    //endregion
+
+    //region scene layer & zIndex
+
+    /**
+     * Gets the scene layer this widget belongs to.
+     *
+     * @return the scene layer
+     */
+    public SceneLayer sceneLayer() {
+        return sceneLayer;
+    }
+
+    /**
+     * Sets the scene layer for this widget and registers with the Scene.
+     * <p>
+     * Changing the layer will move this widget to a different rendering layer.
+     * The widget must be mounted for this to take effect.
+     *
+     * @param layer the scene layer
+     * @return this widget for chaining
+     */
+    public Widget setSceneLayer(SceneLayer layer) {
+        if (sceneLayer != layer) {
+            SceneLayer oldLayer = sceneLayer;
+            sceneLayer = layer;
+            // If mounted, update the scene's layer registrations
+            if (scene != null) {
+                scene.removeFromLayer(oldLayer, this);
+                if (layer != SceneLayer.content) {
+                    scene.addToLayer(layer, this);
+                }
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Gets the z-index of this widget.
+     * <p>
+     * Z-index only affects ordering among siblings (children of the same parent)
+     * and among widgets in the same layer.
+     * Lower values render first (appear behind), higher values render last (appear on top).
+     *
+     * @return the z-index
+     */
+    public int zIndex() {
+        return visualContext.zIndex();
+    }
+
+    //endregion
 
     //region tooltip
 
@@ -680,20 +826,63 @@ public class Widget
         return style;
     }
 
-    public Widget applyStyle(UIStyle style) {
+    public final Widget useStyle(UIStyle style) {
         style.apply(this.style);
+        if (scene != null) {
+            scene.tree.markDirty(nodeId);
+        }
         return this;
     }
 
+    public final Widget useStyle(StyleProperty... properties) {
+        for (StyleProperty property : properties) {
+            property.apply(this.style);
+        }
+        if (scene != null) {
+            scene.tree.markDirty(nodeId);
+        }
+        return this;
+    }
+
+    //region effect
+
+    /**
+     * Applies multiple effects to this widget.
+     *
+     * @param effects the effects to apply
+     * @return this widget for chaining
+     */
+    public final Widget useEffect(Effect... effects) {
+        for (Effect effect : effects) {
+            effect.apply(this);
+        }
+        return this;
+    }
+
+    //endregion
+
+    public Layout layout() {
+        Checks.checkArgument(layout != null, "layout is not applied");
+        return layout;
+    }
+
     public void applyLayout() {
-        TaffyTree taffyTree = scene.layoutTree();
+        TaffyTree taffyTree = scene().layoutTree();
         if (nodeId != null && taffyTree.needsVisit(nodeId)) {
             Layout layout = taffyTree.getLayout(nodeId);
             this.layout = layout;
-            setPos(new Pos(layout.location().x, layout.location().y));
-            setSize(layout.size().width, layout.size().height);
+            Pos newPos = new Pos(layout.location().x, layout.location().y);
+            Size newSize = new Size((int) layout.size().width, (int) layout.size().height);
+            // Update viewport layout and widget size
+            viewport.setLayout(newPos);
+            viewport.setViewportSize(newSize);
+            setSize(newSize);
             taffyTree.acknowledgeLayout(nodeId);
         }
+    }
+
+    public boolean needsLayout() {
+        return scene().layoutTree().needsVisit(nodeId());
     }
 
     //endregion
@@ -702,22 +891,70 @@ public class Widget
 
     @Contract("_ -> this")
     public Widget onMouseClicked(InputEvent.OnMouseClicked listener) {
-        return onEvent(InputEvents.onMouseClicked, listener);
+        return onEvent(InputEvents.onMouseClicked, (input, context) -> {
+            if (context.bubbling() || context.targeting()) listener.onClicked(input, context);
+            return EventDispatch.pass;
+        });
+    }
+
+    @Contract("_,_ -> this")
+    public Widget onMouseClicked(InputEvent.OnMouseClicked listener, boolean capture) {
+        return onEvent(InputEvents.onMouseClicked, ((input, context) -> {
+            if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
+                return EventDispatch.pass;
+            return listener.onClicked(input, context);
+        }));
     }
 
     @Contract("_ -> this")
     public Widget onMouseClick(InputEvent.OnMouseClick listener) {
-        return onEvent(InputEvents.onMouseClick, listener);
+        return onEvent(InputEvents.onMouseClick, (input, clickCount, context) -> {
+            if (context.targeting() || context.bubbling()) listener.onClick(input, clickCount, context);
+            return EventDispatch.pass;
+        });
+    }
+
+    @Contract("_,_ -> this")
+    public Widget onMouseClick(InputEvent.OnMouseClick listener, boolean capture) {
+        return onEvent(InputEvents.onMouseClick, ((input, clickCount, context) -> {
+            if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
+                return EventDispatch.pass;
+            return listener.onClick(input, clickCount, context);
+        }));
     }
 
     @Contract("_ -> this")
     public Widget onMouseReleased(InputEvent.OnMouseReleased listener) {
-        return onEvent(InputEvents.onMouseReleased, listener);
+        return onEvent(InputEvents.onMouseReleased, (input, context) -> {
+            if (context.targeting() || context.bubbling()) listener.onReleased(input, context);
+            return EventDispatch.pass;
+        });
+    }
+
+    @Contract("_,_ -> this")
+    public Widget onMouseReleased(InputEvent.OnMouseReleased listener, boolean capture) {
+        return onEvent(InputEvents.onMouseReleased, ((input, context) -> {
+            if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
+                return EventDispatch.pass;
+            return listener.onReleased(input, context);
+        }));
     }
 
     @Contract("_ -> this")
     public Widget onMouseDragged(InputEvent.OnMouseDragged listener) {
-        return onEvent(InputEvents.onMouseDragged, listener);
+        return onEvent(InputEvents.onMouseDragged, ((input, deltaX, deltaY, context) -> {
+            if (context.targeting() || context.bubbling()) listener.onDragged(input, deltaX, deltaY, context);
+            return EventDispatch.pass;
+        }));
+    }
+
+    @Contract("_,_ -> this")
+    public Widget onMouseDragged(InputEvent.OnMouseDragged listener, boolean capture) {
+        return onEvent(InputEvents.onMouseDragged, ((input, deltaX, deltaY, context) -> {
+            if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
+                return EventDispatch.pass;
+            return listener.onDragged(input, deltaX, deltaY, context);
+        }));
     }
 
     public Widget onMouseEnter(InputEvent.OnMouseEnter listener) {
@@ -728,19 +965,90 @@ public class Widget
         return onEvent(InputEvents.onMouseLeave, listener);
     }
 
+    public Widget onMouseScrolled(InputEvent.OnMouseScrolled listener) {
+        return onEvent(InputEvents.onMouseScrolled, (mouseX, mouseY, scrollX, scrollY, context) -> {
+            if (context.bubbling() || context.targeting())
+                listener.onScrolled(mouseX, mouseY, scrollX, scrollY, context);
+            return EventDispatch.pass;
+        });
+    }
+
+    public Widget onMouseScrolled(InputEvent.OnMouseScrolled listener, boolean capture) {
+        return onEvent(InputEvents.onMouseScrolled, ((mouseX, mouseY, scrollX, scrollY, context) -> {
+            if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
+                return EventDispatch.pass;
+            return listener.onScrolled(mouseX, mouseY, scrollX, scrollY, context);
+        }));
+    }
 
     @Contract("_ -> this")
     public Widget onKeyReleased(InputEvent.OnKeyReleased listener) {
-        return onEvent(InputEvents.onKeyReleased, listener);
+        return onEvent(InputEvents.onKeyReleased, (input, context) -> {
+            if (context.targeting() || context.bubbling()) listener.onKeyReleased(input, context);
+            return EventDispatch.pass;
+        });
+    }
+
+    @Contract("_,_ -> this")
+    public Widget onKeyReleased(InputEvent.OnKeyReleased listener, boolean capture) {
+        return onEvent(InputEvents.onKeyReleased, ((input, context) -> {
+            if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
+                return EventDispatch.pass;
+            return listener.onKeyReleased(input, context);
+        }));
     }
 
     @Contract("_ -> this")
     public Widget onKeyPressed(InputEvent.OnKeyPressed listener) {
-        return onEvent(InputEvents.onKeyPressed, listener);
+        return onEvent(InputEvents.onKeyPressed, (input, context) -> {
+            if (context.targeting() || context.bubbling()) listener.onKeyPressed(input, context);
+            return EventDispatch.pass;
+        });
+    }
+
+    @Contract("_,_ -> this")
+    public Widget onKeyPressed(InputEvent.OnKeyPressed listener, boolean capture) {
+        return onEvent(InputEvents.onKeyPressed, ((input, context) -> {
+            if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
+                return EventDispatch.pass;
+            return listener.onKeyPressed(input, context);
+        }));
     }
 
     public Widget onCharTyped(InputEvent.OnCharTyped listener) {
-        return onEvent(InputEvents.onCharTyped, listener);
+        return onEvent(InputEvents.onCharTyped, (codePoint, modifiers, context) -> {
+            if (context.targeting() || context.bubbling()) listener.onCharTyped(codePoint, modifiers, context);
+            return EventDispatch.pass;
+        });
+    }
+
+    @Contract("_,_ -> this")
+    public Widget onCharTyped(InputEvent.OnCharTyped listener, boolean capture) {
+        return onEvent(InputEvents.onCharTyped, ((codePoint, modifiers, context) -> {
+            if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
+                return EventDispatch.pass;
+            return listener.onCharTyped(codePoint, modifiers, context);
+        }));
+    }
+
+    //endregion
+
+    //region focus
+
+    public final Widget onFocus(WidgetEvent.OnFocus listener) {
+        return onEvent(WidgetEvent.onFocus, listener);
+    }
+
+    public final Widget onFocusLost(WidgetEvent.OnFocusLost listener) {
+        return onEvent(WidgetEvent.onFocusLost, listener);
+    }
+
+    public final Widget onFocusIn(WidgetEvent.OnFocusIn listener) {
+        return onEvent(WidgetEvent.onFocusIn, listener);
+    }
+
+    public final Widget onFocusOut(WidgetEvent.OnFocusOut listener) {
+        return onEvent(WidgetEvent.onFocusOut, listener);
     }
 
     //endregion
@@ -766,6 +1074,7 @@ public class Widget
         return dragging;
     }
 
+    //TODO:set this by framework
     @Contract("_ -> this")
     public Widget setDragging(boolean dragging) {
         this.dragging = dragging;
@@ -776,30 +1085,18 @@ public class Widget
         return hovered;
     }
 
-    @Contract("_ -> this")
-    public Widget setHovered(boolean hovered) {
-        this.hovered = hovered;
-        return this;
-    }
-
     public boolean focusable() {
         return focusable;
     }
 
     @Contract("_ -> this")
-    public Widget setFocusable(boolean focusable) {
+    protected Widget setFocusable(boolean focusable) {
         this.focusable = focusable;
         return this;
     }
 
     public boolean focused() {
         return focused;
-    }
-
-    @Contract("_ -> this")
-    public Widget setFocused(boolean focused) {
-        this.focused = focused;
-        return this;
     }
 
     //endregion
@@ -846,10 +1143,11 @@ public class Widget
         collector.addWithDefault("lifecycle", lifecycle.name(), Lifecycle.mounted.name(), InspectionProperty.CATEGORY_BASIC);
 
         // Layout info
-        collector.add("position", position, InspectionProperty.CATEGORY_LAYOUT);
+        collector.add("position", pos(), InspectionProperty.CATEGORY_LAYOUT);
         collector.add("size", size, InspectionProperty.CATEGORY_LAYOUT);
-        if (absolute != null && !absolute.equals(position)) {
-            collector.add("absolute", absolute, InspectionProperty.CATEGORY_LAYOUT);
+        Pos abs = absolutePos();
+        if (!abs.equals(pos())) {
+            collector.add("absolute", abs, InspectionProperty.CATEGORY_LAYOUT);
         }
 
         // State info
@@ -861,9 +1159,28 @@ public class Widget
         collector.addWithDefault("draggable", draggable, false, InspectionProperty.CATEGORY_STATE);
         collector.addWithDefault("dragging", dragging, false, InspectionProperty.CATEGORY_STATE);
 
+        // Render info
+        collector.addWithDefault("sceneLayer", sceneLayer().name(), SceneLayer.content.name(), InspectionProperty.CATEGORY_VISUAL);
+        collector.addWithDefault("zIndex", zIndex(), 0, InspectionProperty.CATEGORY_VISUAL);
+
         // Tooltip info (only if non-empty)
         if (!richTooltip.isEmpty()) {
             collector.add("hasTooltip", true, InspectionProperty.CATEGORY_VISUAL);
+        }
+
+        // Style info - collect all applied style properties with "style-" prefix
+        InspectionInfoCollector styleCollector = InspectionInfoCollector.create();
+        style.collectStyleInspection(styleCollector);
+
+        // Re-categorize style properties with "style-" prefix
+        for (var property : styleCollector.getAll()) {
+            String newCategory = "style-" + property.category();
+            collector.add(InspectionProperty.withDefault(
+                property.name(),
+                property.value(),
+                property.defaultValue(),
+                newCategory
+            ));
         }
     }
 

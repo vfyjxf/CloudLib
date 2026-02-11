@@ -86,16 +86,6 @@ public final class Blueprints {
         return ButtonBlueprint.Button(label, onClick);
     }
 
-    // ==================== Progress Bar ====================
-
-    public static ProgressBarBlueprint ProgressBar(DoubleSupplier progressSupplier) {
-        return ProgressBarBlueprint.ProgressBar(progressSupplier);
-    }
-
-    public static ProgressBarBlueprint ProgressBar(double progress) {
-        return ProgressBarBlueprint.ProgressBar(progress);
-    }
-
     // ==================== Slider ====================
 
     public static SliderBlueprint Slider(double min, double max) {

@@ -3,13 +3,14 @@ package dev.vfyjxf.cloudlib.api.ui.base;
 import dev.vfyjxf.cloudlib.api.ui.base.host.ScreenSceneHost;
 import dev.vfyjxf.cloudlib.api.ui.overlay.UIOverlay;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.ui.overlay.UIOverlayImpl;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
+
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
 
 public abstract class BasicScreen extends Screen {
 
@@ -24,6 +25,9 @@ public abstract class BasicScreen extends Screen {
         super(Component.empty());
         //region setup main panel
         mainGroup = new WidgetGroup<>();
+        {
+            mainGroup.focusable = true;
+        }
         scene = new Scene(mainGroup);
 
         //endregion
@@ -48,9 +52,8 @@ public abstract class BasicScreen extends Screen {
     @MustBeInvokedByOverriders
     @Override
     protected void init() {
-        mainGroup.applyStyle(UIStyle.of(
-            UIStyles.maxWidth(width),
-            UIStyles.maxHeight(height)
+        mainGroup.useStyle(UIStyle.of(
+            sizeOf(width, height)
         ));
         scene.init();
         scene.mount(SceneContext.create(new ScreenSceneHost(this)));
@@ -69,9 +72,8 @@ public abstract class BasicScreen extends Screen {
     public void resize(Minecraft minecraft, int width, int height) {
         this.width = width;
         this.height = height;
-        mainGroup.applyStyle(UIStyle.of(
-            UIStyles.maxWidth(width),
-            UIStyles.maxHeight(height)
+        mainGroup.useStyle(UIStyle.of(
+            sizeOf(width, height)
         ));
         scene.setLayoutArea(width, height);
         scene.layout();

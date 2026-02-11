@@ -1,10 +1,15 @@
 package dev.vfyjxf.cloudlib.api.ui.style.property.layout;
 
+import dev.vfyjxf.cloudlib.api.ui.style.StyleContext;
 import dev.vfyjxf.cloudlib.api.ui.style.StyleType;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.style.property.LayoutProperty;
+import dev.vfyjxf.taffy.geometry.TaffySize;
 import dev.vfyjxf.taffy.style.TaffyDimension;
 import dev.vfyjxf.taffy.style.TaffyStyle;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 /**
  * Built-in min/max size constraint layout property.
@@ -26,38 +31,104 @@ import dev.vfyjxf.taffy.style.TaffyStyle;
  * @see TaffyStyle#minSize
  * @see TaffyStyle#maxSize
  * @see TaffyDimension
- * @see UIStyles#minWidth(float)
- * @see UIStyles#maxWidth(float)
+ * @see UIStyles#minWidth(TaffyDimension)
+ * @see UIStyles#maxWidth(TaffyDimension)
  */
 public record SizeConstraintProperty(
-    float minWidth, float minHeight,
-    float maxWidth, float maxHeight
+        @Nullable TaffyDimension minWidth,
+        @Nullable TaffyDimension minHeight,
+        @Nullable TaffyDimension maxWidth,
+        @Nullable TaffyDimension maxHeight
 ) implements LayoutProperty {
 
     public static final StyleType<SizeConstraintProperty> type = StyleType.of("size-constraint", () -> null);
 
+    // Static factory methods with TaffyDimension
+
+    public static SizeConstraintProperty minWidth(TaffyDimension value) {
+        Objects.requireNonNull(value, "value");
+        return new SizeConstraintProperty(value, null, null, null);
+    }
+
+    public static SizeConstraintProperty minHeight(TaffyDimension value) {
+        Objects.requireNonNull(value, "value");
+        return new SizeConstraintProperty(null, value, null, null);
+    }
+
+    public static SizeConstraintProperty maxWidth(TaffyDimension value) {
+        Objects.requireNonNull(value, "value");
+        return new SizeConstraintProperty(null, null, value, null);
+    }
+
+    public static SizeConstraintProperty maxHeight(TaffyDimension value) {
+        Objects.requireNonNull(value, "value");
+        return new SizeConstraintProperty(null, null, null, value);
+    }
+
+    public static SizeConstraintProperty minSize(TaffyDimension width, TaffyDimension height) {
+        Objects.requireNonNull(width, "width");
+        Objects.requireNonNull(height, "height");
+        return new SizeConstraintProperty(width, height, null, null);
+    }
+
+    public static SizeConstraintProperty minSize(TaffySize<TaffyDimension> size) {
+        Objects.requireNonNull(size, "size");
+        return new SizeConstraintProperty(size.width, size.height, null, null);
+    }
+
+    public static SizeConstraintProperty maxSize(TaffyDimension width, TaffyDimension height) {
+        Objects.requireNonNull(width, "width");
+        Objects.requireNonNull(height, "height");
+        return new SizeConstraintProperty(null, null, width, height);
+    }
+
+    public static SizeConstraintProperty maxSize(TaffySize<TaffyDimension> size) {
+        Objects.requireNonNull(size, "size");
+        return new SizeConstraintProperty(null, null, size.width, size.height);
+    }
+
+    // Convenience methods with float (pixel) values
+
     public static SizeConstraintProperty minWidth(float value) {
-        return new SizeConstraintProperty(value, 0.0f, Float.MAX_VALUE, Float.MAX_VALUE);
+        return minWidth(TaffyDimension.length(value));
     }
 
     public static SizeConstraintProperty minHeight(float value) {
-        return new SizeConstraintProperty(0.0f, value, Float.MAX_VALUE, Float.MAX_VALUE);
+        return minHeight(TaffyDimension.length(value));
     }
 
     public static SizeConstraintProperty maxWidth(float value) {
-        return new SizeConstraintProperty(0.0f, 0.0f, value, Float.MAX_VALUE);
+        return maxWidth(TaffyDimension.length(value));
     }
 
     public static SizeConstraintProperty maxHeight(float value) {
-        return new SizeConstraintProperty(0.0f, 0.0f, Float.MAX_VALUE, value);
+        return maxHeight(TaffyDimension.length(value));
     }
 
     public static SizeConstraintProperty minSize(float width, float height) {
-        return new SizeConstraintProperty(width, height, Float.MAX_VALUE, Float.MAX_VALUE);
+        return minSize(TaffyDimension.length(width), TaffyDimension.length(height));
     }
 
     public static SizeConstraintProperty maxSize(float width, float height) {
-        return new SizeConstraintProperty(0.0f, 0.0f, width, height);
+        return maxSize(TaffyDimension.length(width), TaffyDimension.length(height));
+    }
+
+    // Percentage convenience methods
+
+    public static SizeConstraintProperty minWidthPercent(float percent) {
+        return minWidth(TaffyDimension.percent(percent));
+    }
+
+    public static SizeConstraintProperty minHeightPercent(float percent) {
+        return minHeight(TaffyDimension.percent(percent));
+    }
+
+    public static SizeConstraintProperty maxWidthPercent(float percent) {
+        return maxWidth(TaffyDimension.percent(percent));
+    }
+
+    public static SizeConstraintProperty maxHeightPercent(float percent) {
+        return maxHeight(TaffyDimension.percent(percent));
     }
 
     @Override
@@ -67,27 +138,27 @@ public record SizeConstraintProperty(
 
     @Override
     public void applyToStyle(TaffyStyle style) {
-        if (minWidth > 0) {
-            style.minSize.width = TaffyDimension.length(minWidth);
+        if (minWidth != null) {
+            style.minSize.width = minWidth;
         }
-        if (minHeight > 0) {
-            style.minSize.height = TaffyDimension.length(minHeight);
+        if (minHeight != null) {
+            style.minSize.height = minHeight;
         }
-        if (maxWidth < Float.MAX_VALUE) {
-            style.maxSize.width = TaffyDimension.length(maxWidth);
+        if (maxWidth != null) {
+            style.maxSize.width = maxWidth;
         }
-        if (maxHeight < Float.MAX_VALUE) {
-            style.maxSize.height = TaffyDimension.length(maxHeight);
+        if (maxHeight != null) {
+            style.maxSize.height = maxHeight;
         }
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if (minWidth > 0) sb.append("minWidth=").append(minWidth).append(" ");
-        if (minHeight > 0) sb.append("minHeight=").append(minHeight).append(" ");
-        if (maxWidth < Float.MAX_VALUE) sb.append("maxWidth=").append(maxWidth).append(" ");
-        if (maxHeight < Float.MAX_VALUE) sb.append("maxHeight=").append(maxHeight);
+        if (minWidth != null) sb.append("minWidth=").append(minWidth).append(" ");
+        if (minHeight != null) sb.append("minHeight=").append(minHeight).append(" ");
+        if (maxWidth != null) sb.append("maxWidth=").append(maxWidth).append(" ");
+        if (maxHeight != null) sb.append("maxHeight=").append(maxHeight);
         return sb.toString().trim();
     }
 }

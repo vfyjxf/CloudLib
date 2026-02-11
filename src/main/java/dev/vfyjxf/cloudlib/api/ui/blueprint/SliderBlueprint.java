@@ -7,7 +7,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import dev.vfyjxf.cloudlib.ui.widgets.SliderWidget;
+import dev.vfyjxf.cloudlib.ui.widget.SliderWidget;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
@@ -146,7 +146,7 @@ public final class SliderBlueprint implements Blueprint<SliderWidget> {
               .setFilledTrackTexture(filledTrackTexture)
               .setThumbTexture(thumbTexture)
               .setThumbSize(thumbSize)
-              .applyStyle(style);
+              .useStyle(style);
     }
 
     //endregion

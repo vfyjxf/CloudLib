@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
+import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
@@ -115,11 +116,11 @@ public final class WidgetTree {
          * Tests if a widget should be considered a hit and if traversal should continue.
          *
          * @param widget the widget to test
-         * @param mouseX absolute x coordinate
-         * @param mouseY absolute y coordinate
+         * @param localX x coordinate in widget's local space (after viewport transform)
+         * @param localY y coordinate in widget's local space (after viewport transform)
          * @return {@link HitTestResult} indicating whether this is a hit and if children should be tested
          */
-        HitTestResult test(Widget widget, double mouseX, double mouseY);
+        HitTestResult test(Widget widget, double localX, double localY);
     }
 
     /**
@@ -218,37 +219,116 @@ public final class WidgetTree {
     /**
      * Performs hit testing to find the deepest widget at the given coordinates.
      *
-     * <p>This method traverses the widget tree in depth-first order, testing each
-     * widget's bounds. It returns the deepest (most specific) widget that contains
+     * <p>This method traverses the widget tree in depth-first order, transforming
+     * mouse coordinates through each widget's viewport as it descends.
+     * It returns the deepest (most specific) widget that contains
      * the coordinate, similar to how DOM event targeting works.</p>
      *
      * <h3>Algorithm</h3>
      * <ol>
-     *     <li>Start at the root widget</li>
-     *     <li>For each widget, check if the coordinate is within bounds</li>
-     *     <li>If hit, recursively check children (later children overlay earlier ones)</li>
+     *     <li>Start at the root widget with scene-space coordinates</li>
+     *     <li>For each widget, inverse-transform coords via viewport to get local coords</li>
+     *     <li>Check if local coords are within bounds (0,0 → w×h)</li>
+     *     <li>If hit, recursively check children using the local coords</li>
      *     <li>Return the deepest hit widget</li>
      * </ol>
      *
      * @param root   the root widget to start hit testing from
-     * @param mouseX absolute x coordinate
-     * @param mouseY absolute y coordinate
+     * @param mouseX x coordinate in the root's parent space (scene space)
+     * @param mouseY y coordinate in the root's parent space (scene space)
      * @return the deepest widget containing the coordinate, or null if none
      */
     public static @Nullable Widget hitTest(Widget root, double mouseX, double mouseY) {
-        return hitTest(root, mouseX, mouseY, (widget, x, y) -> {
-            if (!widget.visible()) return HitTestResult.MISS;
-            if (widget.isMouseOver(x, y)) {
-                return HitTestResult.HIT_CONTINUE;
+        return hitTestViewport(root, mouseX, mouseY);
+    }
+
+    /**
+     * Viewport-aware hit testing. Coordinates are transformed through each widget's
+     * viewport as we descend the tree.
+     *
+     * @param root     the root widget to test
+     * @param parentX  x in the root's parent coordinate space
+     * @param parentY  y in the root's parent coordinate space
+     * @return the deepest hit widget, or null
+     */
+    private static @Nullable Widget hitTestViewport(Widget root, double parentX, double parentY) {
+        Deque<ViewportHitFrame> stack = new ArrayDeque<>();
+        stack.push(new ViewportHitFrame(root, parentX, parentY));
+
+        while (!stack.isEmpty()) {
+            ViewportHitFrame frame = stack.peek();
+
+            // First visit: transform coords through viewport, check bounds
+            if (!frame.evaluated) {
+                frame.evaluated = true;
+
+                if (!frame.widget.visible()) {
+                    stack.pop();
+                    continue;
+                }
+
+                // Transform parent-space coords to this widget's local space
+                FloatPos local = frame.widget.viewport.parentToLocal(frame.parentX, frame.parentY);
+                frame.localX = local.x;
+                frame.localY = local.y;
+
+                // Check if local coords are within widget bounds
+                if (local.x < 0 || local.x > frame.widget.width()
+                    || local.y < 0 || local.y > frame.widget.height()) {
+                    stack.pop();
+                    continue;
+                }
+
+                frame.hit = true;
+                // Will check children using local coords
             }
-            return HitTestResult.MISS;
-        });
+
+            // Try next child (reverse order: later children have priority)
+            if (frame.children != null && frame.childIndex >= 0) {
+                Widget child = frame.children.get(frame.childIndex--);
+                // Child's "parentX/Y" = this widget's local coords + content offset
+                double contentX = frame.localX + frame.widget.viewport.contentOffsetX;
+                double contentY = frame.localY + frame.widget.viewport.contentOffsetY;
+                stack.push(new ViewportHitFrame(child, contentX, contentY));
+            } else {
+                stack.pop();
+                if (frame.hit) {
+                    return frame.widget;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Stack frame for viewport-aware hit testing.
+     */
+    private static final class ViewportHitFrame {
+        final Widget widget;
+        final List<? extends Widget> children;
+        final double parentX;
+        final double parentY;
+        double localX;
+        double localY;
+        int childIndex;
+        boolean evaluated;
+        boolean hit;
+
+        ViewportHitFrame(Widget widget, double parentX, double parentY) {
+            this.widget = widget;
+            this.parentX = parentX;
+            this.parentY = parentY;
+            this.children = widget instanceof CompositeWidget<?> g ? g.children() : null;
+            this.childIndex = children != null ? children.size() - 1 : -1;
+        }
     }
 
     /**
      * Performs hit testing with a custom predicate for fine-grained control.
+     * Coordinates are transformed through each widget's viewport as the tree is descended.
      *
-     * <p>The predicate can control:</p>
+     * <p>The predicate receives <b>local</b> coordinates (after viewport transform)
+     * and can control:</p>
      * <ul>
      *     <li>Whether a widget counts as a "hit"</li>
      *     <li>Whether to continue testing children</li>
@@ -256,25 +336,31 @@ public final class WidgetTree {
      * </ul>
      *
      * @param root      the root widget to start hit testing from
-     * @param mouseX    absolute x coordinate
-     * @param mouseY    absolute y coordinate
-     * @param predicate custom hit test logic
+     * @param mouseX    x coordinate in root's parent space (scene space)
+     * @param mouseY    y coordinate in root's parent space (scene space)
+     * @param predicate custom hit test logic — receives local coordinates
      * @return the deepest widget that was hit, or null if none
      */
     public static @Nullable Widget hitTest(Widget root, double mouseX, double mouseY, HitTestPredicate predicate) {
         Objects.requireNonNull(root, "root");
         Objects.requireNonNull(predicate, "predicate");
 
-        Deque<HitFrame> stack = new ArrayDeque<>();
-        stack.push(new HitFrame(root));
+        Deque<PredicateHitFrame> stack = new ArrayDeque<>();
+        stack.push(new PredicateHitFrame(root, mouseX, mouseY));
 
         while (!stack.isEmpty()) {
-            HitFrame frame = stack.peek();
+            PredicateHitFrame frame = stack.peek();
 
-            // First visit: evaluate hit test
+            // First visit: transform coords and evaluate predicate
             if (!frame.evaluated) {
                 frame.evaluated = true;
-                frame.result = predicate.test(frame.widget, mouseX, mouseY);
+
+                // Transform parent-space coords to local space
+                FloatPos local = frame.widget.viewport.parentToLocal(frame.parentX, frame.parentY);
+                frame.localX = local.x;
+                frame.localY = local.y;
+
+                frame.result = predicate.test(frame.widget, local.x, local.y);
 
                 if (frame.result == HitTestResult.MISS) {
                     stack.pop();
@@ -289,7 +375,9 @@ public final class WidgetTree {
             // Try next child (reverse order: later children have priority)
             if (frame.children != null && frame.childIndex >= 0) {
                 Widget child = frame.children.get(frame.childIndex--);
-                stack.push(new HitFrame(child));
+                double contentX = frame.localX + frame.widget.viewport.contentOffsetX;
+                double contentY = frame.localY + frame.widget.viewport.contentOffsetY;
+                stack.push(new PredicateHitFrame(child, contentX, contentY));
             } else {
                 // All children processed, none deeper hit found
                 stack.pop();
@@ -302,17 +390,23 @@ public final class WidgetTree {
     }
 
     /**
-     * Stack frame for hit testing.
+     * Stack frame for predicate-based viewport-aware hit testing.
      */
-    private static final class HitFrame {
+    private static final class PredicateHitFrame {
         final Widget widget;
         final List<? extends Widget> children;
+        final double parentX;
+        final double parentY;
+        double localX;
+        double localY;
         int childIndex;
         boolean evaluated;
         HitTestResult result;
 
-        HitFrame(Widget widget) {
+        PredicateHitFrame(Widget widget, double parentX, double parentY) {
             this.widget = widget;
+            this.parentX = parentX;
+            this.parentY = parentY;
             this.children = widget instanceof CompositeWidget<?> g ? g.children() : null;
             this.childIndex = children != null ? children.size() - 1 : -1;
         }
@@ -320,23 +414,16 @@ public final class WidgetTree {
 
     /**
      * Performs hit testing and returns the full path from root to the hit widget.
-     *
-     * <p>This is useful when you need to know not just which widget was hit,
-     * but also all its ancestors for event propagation.</p>
+     * Uses viewport-aware coordinate transformation.
      *
      * @param root   the root widget to start hit testing from
-     * @param mouseX absolute x coordinate
-     * @param mouseY absolute y coordinate
-     * @return path from hit widget to root (leaf→root order), or empty path if no hit
+     * @param mouseX x coordinate in root's parent space
+     * @param mouseY y coordinate in root's parent space
+     * @return path from root to hit widget (root→leaf order), or empty path if no hit
      */
     public static WidgetPath hitTestPath(Widget root, double mouseX, double mouseY) {
-        return hitTestPath(root, mouseX, mouseY, (widget, x, y) -> {
-            if (!widget.visible()) return HitTestResult.MISS;
-            if (widget.isMouseOver(x, y)) {
-                return HitTestResult.HIT_CONTINUE;
-            }
-            return HitTestResult.MISS;
-        });
+        Widget hit = hitTest(root, mouseX, mouseY);
+        return hit == null ? WidgetPath.empty() : pathToRoot(hit);
     }
 
     /**
@@ -359,14 +446,11 @@ public final class WidgetTree {
 
     /**
      * Collects all widgets at the given coordinates, from deepest to shallowest.
-     *
-     * <p>Unlike {@link #hitTest}, this returns ALL widgets that contain the
-     * coordinate, not just the deepest one. Useful for debugging or when
-     * multiple overlapping widgets need to respond to an event.</p>
+     * Uses viewport-aware coordinate transformation.
      *
      * @param root   the root widget to start from
-     * @param mouseX absolute x coordinate
-     * @param mouseY absolute y coordinate
+     * @param mouseX x coordinate in root's parent space
+     * @param mouseY y coordinate in root's parent space
      * @param out    list to collect hit widgets into (deepest first)
      * @return number of widgets collected
      */
@@ -374,17 +458,25 @@ public final class WidgetTree {
         Objects.requireNonNull(root, "root");
         Objects.requireNonNull(out, "out");
 
-        Deque<HitAllFrame> stack = new ArrayDeque<>();
-        stack.push(new HitAllFrame(root));
+        Deque<ViewportHitAllFrame> stack = new ArrayDeque<>();
+        stack.push(new ViewportHitAllFrame(root, mouseX, mouseY));
         int count = 0;
 
         while (!stack.isEmpty()) {
-            HitAllFrame frame = stack.peek();
+            ViewportHitAllFrame frame = stack.peek();
 
-            // First visit: check if this widget is hit
+            // First visit: transform and check bounds
             if (!frame.entered) {
                 frame.entered = true;
-                if (!frame.widget.visible() || !frame.widget.isMouseOver(mouseX, mouseY)) {
+                if (!frame.widget.visible()) {
+                    stack.pop();
+                    continue;
+                }
+                FloatPos local = frame.widget.viewport.parentToLocal(frame.parentX, frame.parentY);
+                frame.localX = local.x;
+                frame.localY = local.y;
+                if (local.x < 0 || local.x > frame.widget.width()
+                    || local.y < 0 || local.y > frame.widget.height()) {
                     stack.pop();
                     continue;
                 }
@@ -393,7 +485,9 @@ public final class WidgetTree {
             // Try next child (reverse order)
             if (frame.children != null && frame.childIndex >= 0) {
                 Widget child = frame.children.get(frame.childIndex--);
-                stack.push(new HitAllFrame(child));
+                double contentX = frame.localX + frame.widget.viewport.contentOffsetX;
+                double contentY = frame.localY + frame.widget.viewport.contentOffsetY;
+                stack.push(new ViewportHitAllFrame(child, contentX, contentY));
             } else {
                 // Post-order: collect after children
                 out.add(frame.widget);
@@ -405,16 +499,22 @@ public final class WidgetTree {
     }
 
     /**
-     * Stack frame for hitTestAll.
+     * Stack frame for viewport-aware hitTestAll.
      */
-    private static final class HitAllFrame {
+    private static final class ViewportHitAllFrame {
         final Widget widget;
         final List<? extends Widget> children;
+        final double parentX;
+        final double parentY;
+        double localX;
+        double localY;
         int childIndex;
         boolean entered;
 
-        HitAllFrame(Widget widget) {
+        ViewportHitAllFrame(Widget widget, double parentX, double parentY) {
             this.widget = widget;
+            this.parentX = parentX;
+            this.parentY = parentY;
             this.children = widget instanceof CompositeWidget<?> g ? g.children() : null;
             this.childIndex = children != null ? children.size() - 1 : -1;
         }

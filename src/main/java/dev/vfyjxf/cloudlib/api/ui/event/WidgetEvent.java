@@ -1,7 +1,9 @@
 package dev.vfyjxf.cloudlib.api.ui.event;
 
 import dev.vfyjxf.cloudlib.api.event.EventDefinition;
+import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.event.Events;
+import dev.vfyjxf.cloudlib.api.event.context.BubbleContext;
 import dev.vfyjxf.cloudlib.api.event.context.CommonContext;
 import dev.vfyjxf.cloudlib.api.event.context.InterruptibleContext;
 import dev.vfyjxf.cloudlib.api.math.Pos;
@@ -16,7 +18,7 @@ import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
 import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
 
-//TODO:move all definition to WidgetEvents
+//TODO:对事件进行分类，而不是所有的都堆积在这里
 public interface WidgetEvent {
 
 
@@ -117,6 +119,44 @@ public interface WidgetEvent {
     EventDefinition<OnTick> onTick = Events.define(OnTick.class, listeners -> () -> {
         for (var listener : listeners) {
             listener.onTick();
+        }
+    });
+
+    //endregion
+
+    //region focus
+
+    EventDefinition<OnFocusIn> onFocusIn = Events.define(OnFocusIn.class, listeners -> (widget, context) -> {
+        EventDispatch result = EventDispatch.pass;
+        for (var listener : listeners) {
+            result = EventDispatch.max(result, listener.onFocusIn(widget, context));
+            if (result == EventDispatch.consumed) context.consume();
+            if (context.interrupted()) return result;
+        }
+        return result;
+    });
+
+    EventDefinition<OnFocusOut> onFocusOut = Events.define(OnFocusOut.class, listeners -> (widget, context) -> {
+        EventDispatch result = EventDispatch.pass;
+        for (var listener : listeners) {
+            result = EventDispatch.max(result, listener.onFocusOut(widget, context));
+            if (result == EventDispatch.consumed) context.consume();
+            if (context.interrupted()) return result;
+        }
+        return result;
+    });
+
+    EventDefinition<OnFocus> onFocus = Events.define(OnFocus.class, listeners -> (context) -> {
+        for (var listener : listeners) {
+            if (context.interrupted()) return;
+            listener.onFocus(context);
+        }
+    });
+
+    EventDefinition<OnFocusLost> onFocusLost = Events.define(OnFocusLost.class, listeners -> (context) -> {
+        for (var listener : listeners) {
+            if (context.interrupted()) return;
+            listener.onFocusLost(context);
         }
     });
 
@@ -314,6 +354,31 @@ public interface WidgetEvent {
     @FunctionalInterface
     interface OnTick extends WidgetEvent {
         void onTick();
+    }
+
+    //endregion
+
+
+    //region focus
+
+    @FunctionalInterface
+    interface OnFocusIn extends WidgetEvent {
+        EventDispatch onFocusIn(Widget widget, BubbleContext context);
+    }
+
+    @FunctionalInterface
+    interface OnFocusOut extends WidgetEvent {
+        EventDispatch onFocusOut(Widget widget, BubbleContext context);
+    }
+
+    @FunctionalInterface
+    interface OnFocus extends WidgetEvent {
+        void onFocus(InterruptibleContext context);
+    }
+
+    @FunctionalInterface
+    interface OnFocusLost extends WidgetEvent {
+        void onFocusLost(InterruptibleContext context);
     }
 
     //endregion

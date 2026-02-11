@@ -7,7 +7,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import dev.vfyjxf.cloudlib.ui.widgets.DividerWidget;
+import dev.vfyjxf.cloudlib.ui.widget.DividerWidget;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -119,7 +119,7 @@ public final class DividerBlueprint implements Blueprint<DividerWidget> {
         widget.setOrientation(orientation)
               .setThickness(thickness)
               .setTexture(texture)
-              .applyStyle(style);
+              .useStyle(style);
     }
 
     //endregion

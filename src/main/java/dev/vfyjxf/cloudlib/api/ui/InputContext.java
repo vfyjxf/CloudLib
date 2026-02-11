@@ -58,6 +58,10 @@ public record InputContext(
         return isKeyboard() && StringUtil.isAllowedChatCharacter((char) this.key.getValue());
     }
 
+    public boolean isKey(int glfwKey) {
+        return this.key.getValue() == glfwKey;
+    }
+
     public boolean is(KeyMapping keyMapping) {
         return keyMapping.isActiveAndMatches(this.key);
     }
@@ -131,13 +135,7 @@ public record InputContext(
      * @return the mouse position relative to the widget
      */
     public FloatPos mouseRelative(Widget coordinate) {
-        var parent = coordinate.parent();
-        var pos = new FloatPos(mouseX, mouseY);
-        while (parent != null) {
-            pos.translate(-parent.posX(), -parent.posY());
-            parent = parent.parent();
-        }
-        return pos;
+        return coordinate.sceneToLocal(mouseX, mouseY);
     }
 
     public enum KeyAction {

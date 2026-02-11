@@ -3,6 +3,7 @@ package dev.vfyjxf.cloudlib.api.event;
 import dev.vfyjxf.cloudlib.api.event.context.BubbleContext;
 import dev.vfyjxf.cloudlib.api.event.context.CancelableContext;
 import dev.vfyjxf.cloudlib.api.event.context.CommonContext;
+import dev.vfyjxf.cloudlib.api.event.context.IntentContext;
 import dev.vfyjxf.cloudlib.api.event.context.InterruptibleContext;
 
 /**
@@ -36,11 +37,16 @@ public final class EventContexts {
         return new BubbleContext(source);
     }
 
+    public static IntentContext createIntent(EventChannel<?> source) {
+        return new IntentContext(source);
+    }
+
     private EventContexts() {throw new UnsupportedOperationException();}
 
     static CommonContext emptyCommon = new CommonContext(null);
     static CancelableContext emptyCancelable = new CancelableContext(null);
     static InterruptibleContext emptyInterruptible = new InterruptibleContext(null);
     static BubbleContext emptyBubble = new BubbleContext(null);
+    static IntentContext emptyIntent = new IntentContext(null);
 
 }

@@ -7,7 +7,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import dev.vfyjxf.cloudlib.ui.widgets.ProgressBarWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ProgressBarWidget;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.DoubleSupplier;
@@ -101,7 +101,7 @@ public final class ProgressBarBlueprint implements Blueprint<ProgressBarWidget> 
               .setDirection(direction)
               .setBackgroundTexture(backgroundTexture)
               .setFillTexture(fillTexture)
-              .applyStyle(style);
+              .useStyle(style);
     }
 
     //endregion

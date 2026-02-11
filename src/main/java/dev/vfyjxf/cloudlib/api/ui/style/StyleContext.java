@@ -1,16 +1,19 @@
 package dev.vfyjxf.cloudlib.api.ui.style;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.style.property.LayoutProperty;
 import dev.vfyjxf.cloudlib.api.ui.style.property.VisualProperty;
 import dev.vfyjxf.cloudlib.api.ui.style.property.layout.StyleProperty;
 import dev.vfyjxf.taffy.style.TaffyStyle;
 import dev.vfyjxf.taffy.tree.NodeId;
+import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -52,6 +55,12 @@ public class StyleContext {
     private final VisualContext visualContext;
     private final List<StyleProperty> appliedProperties;
     private final LinkedHashMap<StyleType<?>, Object> valuesByType;
+
+    /**
+     * Change listeners registered for specific style types.
+     */
+    @Nullable
+    private Map<StyleType<?>, MutableList<StyleChangeListener<?>>> changeListeners;
 
     /**
      * Creates a StyleContext for a taffy layout node.
@@ -120,13 +129,87 @@ public class StyleContext {
     public <T> void set(StyleType<T> type, T value) {
         Objects.requireNonNull(type, "type");
 
+        // Capture old value for change notification
+        @SuppressWarnings("unchecked")
+        T oldValue = (T) valuesByType.get(type);
+
         valuesByType.put(type, value);
 
         StyleType.Applier<T> applier = type.applier();
         if (applier != null) {
             applier.apply(this, value);
         }
+
+        // Notify change listeners
+        notifyChangeListeners(type, oldValue, value);
     }
+
+    //region change listeners
+
+    /**
+     * Registers a change listener for a specific style type.
+     * <p>
+     * The listener will be called whenever the property value changes via {@link #set(StyleType, Object)}.
+     *
+     * @param type     the style type to listen for
+     * @param listener the listener to register
+     * @param <T>      the type of the property value
+     * @return this context for chaining
+     */
+    @SuppressWarnings("unchecked")
+    public <T> StyleContext addChangeListener(StyleType<T> type, StyleChangeListener<T> listener) {
+        Objects.requireNonNull(type, "type");
+        Objects.requireNonNull(listener, "listener");
+
+        if (changeListeners == null) {
+            changeListeners = new LinkedHashMap<>();
+        }
+        changeListeners.computeIfAbsent(type, k -> org.eclipse.collections.impl.factory.Lists.mutable.empty())
+                       .add(listener);
+        return this;
+    }
+
+    /**
+     * Removes a change listener for a specific style type.
+     *
+     * @param type     the style type
+     * @param listener the listener to remove
+     * @param <T>      the type of the property value
+     * @return true if the listener was removed
+     */
+    public <T> boolean removeChangeListener(StyleType<T> type, StyleChangeListener<T> listener) {
+        if (changeListeners == null) return false;
+        MutableList<StyleChangeListener<?>> listeners = changeListeners.get(type);
+        if (listeners == null) return false;
+        return listeners.remove(listener);
+    }
+
+    /**
+     * Removes all change listeners for a specific style type.
+     *
+     * @param type the style type
+     */
+    public void removeChangeListeners(StyleType<?> type) {
+        if (changeListeners != null) {
+            changeListeners.remove(type);
+        }
+    }
+
+    /**
+     * Notifies all registered listeners about a property change.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private <T> void notifyChangeListeners(StyleType<T> type, @Nullable T oldValue, T newValue) {
+        if (changeListeners == null) return;
+        MutableList<StyleChangeListener<?>> listeners = changeListeners.get(type);
+        if (listeners == null || listeners.isEmpty()) return;
+
+        for (StyleChangeListener listener : listeners) {
+            listener.onChanged(oldValue, newValue);
+        }
+    }
+
+    //endregion
 
     /**
      * Applies a layout property to the taffy style.
@@ -168,6 +251,20 @@ public class StyleContext {
      */
     public List<StyleProperty> getAppliedProperties() {
         return appliedProperties;
+    }
+
+    /**
+     * Collects style information for inspection/debugging.
+     * <p>
+     * This method iterates through all applied properties and collects
+     * their inspection information using StyleProperty.collectInspection().
+     *
+     * @param collector the collector to add style properties to
+     */
+    public void collectStyleInspection(InspectionInfoCollector collector) {
+        for (StyleProperty property : appliedProperties) {
+            property.collectInspection(collector);
+        }
     }
 
     /**

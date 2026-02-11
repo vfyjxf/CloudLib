@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.ui.widgets;
+package dev.vfyjxf.cloudlib.ui.widget;
 
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;

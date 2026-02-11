@@ -22,7 +22,7 @@ public final class Widgets {
             alignItems(verticalArrangement)
 
         );
-        widget.applyStyle(style);
+        widget.useStyle(style);
         return widget;
     }
 
@@ -36,7 +36,7 @@ public final class Widgets {
             justifyContent(horizontalArrangement),
             alignItems(verticalArrangement)
         );
-        widget.applyStyle(style);
+        widget.useStyle(style);
         return widget;
     }
 
@@ -45,7 +45,7 @@ public final class Widgets {
         UIStyle style = UIStyle.of(
             displayGrid()
         );
-        widget.applyStyle(style);
+        widget.useStyle(style);
         throw new UnsupportedOperationException("Not Implemented");
     }
 
@@ -53,7 +53,7 @@ public final class Widgets {
         UIStyle style
     ) {
         WidgetGroup<T> widget = new WidgetGroup<>();
-        widget.applyStyle(style);
+        widget.useStyle(style);
         return widget;
 
     }
@@ -63,7 +63,7 @@ public final class Widgets {
         InputEvent.OnMouseClick onClick
     ) {
         Widget widget = new Widget();
-        widget.applyStyle(style);
+        widget.useStyle(style);
         widget.onMouseClick(onClick);
         return widget;
     }

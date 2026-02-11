@@ -6,7 +6,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.ui.widgets.BoxWidget;
+import dev.vfyjxf.cloudlib.ui.widget.BoxWidget;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
@@ -77,7 +77,7 @@ public final class BoxBlueprint implements Blueprint.Group<BoxWidget, Widget> {
 
     @Override
     public void updateWidget(BoxWidget widget, Scene scene, SceneContext context) {
-        widget.applyStyle(style);
+        widget.useStyle(style);
     }
 
     //endregion

@@ -7,7 +7,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import dev.vfyjxf.cloudlib.ui.widgets.ToggleWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ToggleWidget;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
@@ -107,7 +107,7 @@ public final class ToggleBlueprint implements Blueprint<ToggleWidget> {
               .onToggle(onToggle)
               .setTextures(offTexture, onTexture)
               .setHoverTexture(hoverTexture)
-              .applyStyle(style);
+              .useStyle(style);
     }
 
     //endregion

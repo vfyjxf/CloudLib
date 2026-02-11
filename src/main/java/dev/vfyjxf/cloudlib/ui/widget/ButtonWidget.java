@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.ui.widgets;
+package dev.vfyjxf.cloudlib.ui.widget;
 
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
@@ -67,12 +67,7 @@ public class ButtonWidget extends Widget {
             return EventDispatch.pass;
         });
 
-        onMouseEnter((mouseX, mouseY, context) -> {
-            if (enabled) setHovered(true);
-        });
-
         onMouseLeave((mouseX, mouseY, context) -> {
-            setHovered(false);
             pressed = false;
         });
 

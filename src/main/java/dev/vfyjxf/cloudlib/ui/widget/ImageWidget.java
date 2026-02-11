@@ -1,13 +1,16 @@
-package dev.vfyjxf.cloudlib.ui.widgets;
+package dev.vfyjxf.cloudlib.ui.widget;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.texture.ImageTexture;
+import dev.vfyjxf.cloudlib.api.ui.texture.SizedTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
+
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
 
 /**
  * Image/texture display widget.
@@ -16,7 +19,7 @@ public class ImageWidget extends Widget {
 
     //region state
 
-    private @Nullable VisualTexture texture;
+    private VisualTexture texture;
     private boolean preserveAspectRatio = false;
 
     //endregion
@@ -32,11 +35,14 @@ public class ImageWidget extends Widget {
     }
 
     public static ImageWidget empty() {
-        return new ImageWidget(null);
+        return new ImageWidget(VisualTexture.empty);
     }
 
-    private ImageWidget(@Nullable VisualTexture texture) {
+    private ImageWidget(VisualTexture texture) {
         this.texture = texture;
+        if (texture instanceof SizedTexture sizedTexture) {
+            useStyle(sizeOf(sizedTexture.width(), sizedTexture.height()));
+        }
     }
 
     //endregion
@@ -67,10 +73,7 @@ public class ImageWidget extends Widget {
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        super.renderInternal(canvas, mouseX, mouseY, partialTicks);
-        if (texture != null) {
-            canvas.texture(texture, 0, 0, width(), height());
-        }
+        canvas.texture(texture, 0, 0, width(), height());
     }
 
     //endregion

@@ -221,9 +221,13 @@ class WidgetTreeTest {
         @Test
         void hitTest_withCustomPredicate_HIT_STOP() {
             // Use HIT_STOP to stop at panel2 without checking children
-            Widget hit = WidgetTree.hitTest(root, 230, 70, (w, x, y) -> {
+            // The predicate receives LOCAL coordinates (after viewport transform)
+            Widget hit = WidgetTree.hitTest(root, 230, 70, (w, localX, localY) -> {
                 if (!w.visible()) return WidgetTree.HitTestResult.MISS;
-                if (!w.isMouseOver(x, y)) return WidgetTree.HitTestResult.MISS;
+                // Check bounds in local space: (0,0) to (w,h)
+                if (localX < 0 || localX > w.width() || localY < 0 || localY > w.height()) {
+                    return WidgetTree.HitTestResult.MISS;
+                }
                 if (w == panel2) return WidgetTree.HitTestResult.HIT_STOP;
                 return WidgetTree.HitTestResult.HIT_CONTINUE;
             });

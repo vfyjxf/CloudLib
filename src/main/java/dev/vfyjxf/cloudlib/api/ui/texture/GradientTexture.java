@@ -15,7 +15,7 @@ public record GradientTexture(
         segments = Math.max(1, segments);
     }
 
-    // region Factory
+    //region factory
 
     public static GradientTexture horizontal(int colorLeft, int colorRight) {
         return new GradientTexture(colorLeft, colorRight, colorLeft, colorRight, 16);
@@ -41,9 +41,9 @@ public record GradientTexture(
         return new GradientTexture(topLeft, topRight, bottomLeft, bottomRight, segments);
     }
 
-    // endregion
+    //endregion
 
-    // region BatchableTexture
+    //region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float width, float height, int tint) {
@@ -69,9 +69,9 @@ public record GradientTexture(
         }
     }
 
-    // endregion
+    //endregion
 
-    // region Internal
+    //region internal
 
     private void emitHorizontal(VertexEmitter emitter, float x, float y, float width, float height) {
         float segmentWidth = width / segments;
@@ -142,5 +142,5 @@ public record GradientTexture(
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
 
-    // endregion
+    //endregion
 }

@@ -7,13 +7,13 @@ import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
-import dev.vfyjxf.cloudlib.ui.widgets.BoxWidget;
-import dev.vfyjxf.cloudlib.ui.widgets.ButtonWidget;
-import dev.vfyjxf.cloudlib.ui.widgets.ColumnWidget;
-import dev.vfyjxf.cloudlib.ui.widgets.DividerWidget;
-import dev.vfyjxf.cloudlib.ui.widgets.LabelWidget;
-import dev.vfyjxf.cloudlib.ui.widgets.RowWidget;
-import dev.vfyjxf.cloudlib.ui.widgets.SpacerWidget;
+import dev.vfyjxf.cloudlib.ui.widget.BoxWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ButtonWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
+import dev.vfyjxf.cloudlib.ui.widget.DividerWidget;
+import dev.vfyjxf.cloudlib.ui.widget.LabelWidget;
+import dev.vfyjxf.cloudlib.ui.widget.RowWidget;
+import dev.vfyjxf.cloudlib.ui.widget.SpacerWidget;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 
@@ -29,7 +29,7 @@ import org.eclipse.collections.api.list.MutableList;
  *   <li><b>Destroy</b> - Bottom-up destruction using WidgetTree</li>
  * </ul>
  */
-@TestScreen
+//@TestScreen
 public class TestWidgetManipulationScreen extends BasicScreen {
 
     // ==================== State ====================
@@ -56,32 +56,32 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
     private void buildUI() {
         var mainContainer = ColumnWidget.create(8);
-        mainContainer.applyStyle(UIStyle.of(
+        mainContainer.useStyle(UIStyle.of(
             UIStyles.padding(16),
             UIStyles.background(new ColorTexture(0xCC222222))
         ));
 
         // Header
         var header = createHeader();
-        mainContainer.addChild(header);
+        mainContainer.addWidget(header);
 
-        mainContainer.addChild(createDivider());
+        mainContainer.addWidget(createDivider());
 
         // Control Panel
         var controlPanel = createControlPanel();
-        mainContainer.addChild(controlPanel);
+        mainContainer.addWidget(controlPanel);
 
-        mainContainer.addChild(createDivider());
+        mainContainer.addWidget(createDivider());
 
         // Container Area
         var containerArea = createContainerArea();
-        mainContainer.addChild(containerArea);
+        mainContainer.addWidget(containerArea);
 
-        mainContainer.addChild(createDivider());
+        mainContainer.addWidget(createDivider());
 
         // Status Bar
         var statusBar = createStatusBar();
-        mainContainer.addChild(statusBar);
+        mainContainer.addWidget(statusBar);
 
         mainGroup().addWidget(mainContainer);
 
@@ -91,9 +91,9 @@ public class TestWidgetManipulationScreen extends BasicScreen {
                                    .setTrackMouse(true)
                                    .setShowHighlight(true)
                                    .setShowHierarchy(true)
-                                   .setCompactMode(false);
-        debugWidget.applyStyle(UIStyle.of(
-            UIStyles.size(280, 180),
+                                   .setDisplayMode(Inspector.DisplayMode.FULL);
+        debugWidget.useStyle(UIStyle.of(
+            UIStyles.sizeOf(280, 180),
             UIStyles.positionStatic()
         ));
         mainGroup().addWidget(debugWidget);
@@ -107,6 +107,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         });
         reusableWidget.onMount(((scene, context, handle) -> {
             System.out.println("Reusable widget mounted");
+            reuseCount++;
             reusableWidget.setText("★ REUSABLE ★ #" + reuseCount);
             handle.onCleanup(() -> System.out.println("Reusable widget cleaned up"));
         }));
@@ -116,7 +117,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         reusableWidget.onDestroy((self) -> {
             System.out.println("Reusable widget destroyed");
         });
-        reusableWidget.applyStyle(UIStyle.of(
+        reusableWidget.useStyle(UIStyle.of(
             UIStyles.padding(4),
             UIStyles.background(new ColorTexture(0x80FF00FF))
         ));
@@ -126,176 +127,176 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
     private Widget createHeader() {
         var header = RowWidget.create(16);
-        header.applyStyle(UIStyle.of(UIStyles.alignItemsCenter()));
+        header.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
         var title = LabelWidget.of("Widget Manipulation Test")
                                .setColor(0xFFFFAA00)
                                .setShadow(true);
-        title.applyStyle(UIStyle.of(UIStyles.size(200, 12)));
-        header.addChild(title);
+        title.useStyle(UIStyle.of(UIStyles.sizeOf(200, 12)));
+        header.addWidget(title);
 
-        header.addChild(SpacerWidget.create());
+        header.addWidget(SpacerWidget.create());
 
         statsLabel = LabelWidget.of("Widgets: 0")
                                 .setColor(0xFF88FF88);
-        statsLabel.applyStyle(UIStyle.of(UIStyles.size(100, 12)));
-        header.addChild(statsLabel);
+        statsLabel.useStyle(UIStyle.of(UIStyles.sizeOf(100, 12)));
+        header.addWidget(statsLabel);
 
         return header;
     }
 
     private Widget createControlPanel() {
         var panel = ColumnWidget.create(8);
-        panel.applyStyle(UIStyle.of(
+        panel.useStyle(UIStyle.of(
             UIStyles.padding(8),
             UIStyles.background(new ColorTexture(0x40000000))
         ));
 
         // Row 1: Add Operations
         var addRow = RowWidget.create(4);
-        addRow.addChild(LabelWidget.of("Add:").setColor(0xFFAAAA00));
+        addRow.addWidget(LabelWidget.of("Add:").setColor(0xFFAAAA00));
 
-        addRow.addChild(createButton("Add to A", this::addWidgetToA, 0xFF0066CC));
-        addRow.addChild(createButton("Add to B", this::addWidgetToB, 0xFF006600));
-        addRow.addChild(createButton("Add 5 to A", () -> {
+        addRow.addWidget(createButton("Add to A", this::addWidgetToA, 0xFF0066CC));
+        addRow.addWidget(createButton("Add to B", this::addWidgetToB, 0xFF006600));
+        addRow.addWidget(createButton("Add 5 to A", () -> {
             for (int i = 0; i < 5; i++) addWidgetToA();
         }, 0xFF0088FF));
-        addRow.addChild(createButton("Add 5 to B", () -> {
+        addRow.addWidget(createButton("Add 5 to B", () -> {
             for (int i = 0; i < 5; i++) addWidgetToB();
         }, 0xFF00AA00));
-        panel.addChild(addRow);
+        panel.addWidget(addRow);
 
         // Row 2: Remove Operations
         var removeRow = RowWidget.create(4);
-        removeRow.addChild(LabelWidget.of("Remove:").setColor(0xFFAA0000));
+        removeRow.addWidget(LabelWidget.of("Remove:").setColor(0xFFAA0000));
 
-        removeRow.addChild(createButton("Remove First A", this::removeFirstFromA, 0xFFCC6600));
-        removeRow.addChild(createButton("Remove Last B", this::removeLastFromB, 0xFFCC6600));
-        removeRow.addChild(createButton("Clear A", this::clearA, 0xFFCC0000));
-        removeRow.addChild(createButton("Clear B", this::clearB, 0xFFCC0000));
-        removeRow.addChild(createButton("Clear All", this::clearAll, 0xFF990000));
-        panel.addChild(removeRow);
+        removeRow.addWidget(createButton("Remove First A", this::removeFirstFromA, 0xFFCC6600));
+        removeRow.addWidget(createButton("Remove Last B", this::removeLastFromB, 0xFFCC6600));
+        removeRow.addWidget(createButton("Clear A", this::clearA, 0xFFCC0000));
+        removeRow.addWidget(createButton("Clear B", this::clearB, 0xFFCC0000));
+        removeRow.addWidget(createButton("Clear All", this::clearAll, 0xFF990000));
+        panel.addWidget(removeRow);
 
         // Row 3: Move Operations
         var moveRow = RowWidget.create(4);
-        moveRow.addChild(LabelWidget.of("Move:").setColor(0xFF00AAAA));
+        moveRow.addWidget(LabelWidget.of("Move:").setColor(0xFF00AAAA));
 
-        moveRow.addChild(createButton("Move First A→B", this::moveFirstAToB, 0xFF008888));
-        moveRow.addChild(createButton("Move Last B→A", this::moveLastBToA, 0xFF008888));
-        moveRow.addChild(createButton("Swap All A↔B", this::swapContainers, 0xFF00AAAA));
-        panel.addChild(moveRow);
+        moveRow.addWidget(createButton("Move First A→B", this::moveFirstAToB, 0xFF008888));
+        moveRow.addWidget(createButton("Move Last B→A", this::moveLastBToA, 0xFF008888));
+        moveRow.addWidget(createButton("Swap All A↔B", this::swapContainers, 0xFF00AAAA));
+        panel.addWidget(moveRow);
 
         // Row 4: Reuse Operations
         var reuseRow = RowWidget.create(4);
-        reuseRow.addChild(LabelWidget.of("Reuse:").setColor(0xFFFF00FF));
+        reuseRow.addWidget(LabelWidget.of("Reuse:").setColor(0xFFFF00FF));
 
-        reuseRow.addChild(createButton("Toggle Reusable", this::toggleReusableWidget, 0xFFAA00AA));
-        reuseRow.addChild(createButton("Detach Reusable", this::detachReusableWidget, 0xFF880088));
-        reuseRow.addChild(createButton("Attach to A", this::attachReusableToA, 0xFF660066));
-        reuseRow.addChild(createButton("Attach to B", this::attachReusableToB, 0xFF660066));
-        panel.addChild(reuseRow);
+        reuseRow.addWidget(createButton("Toggle Reusable", this::toggleReusableWidget, 0xFFAA00AA));
+        reuseRow.addWidget(createButton("Detach Reusable", this::detachReusableWidget, 0xFF880088));
+        reuseRow.addWidget(createButton("Attach to A", this::attachReusableToA, 0xFF660066));
+        reuseRow.addWidget(createButton("Attach to B", this::attachReusableToB, 0xFF660066));
+        panel.addWidget(reuseRow);
 
         // Row 5: Destroy Operations
         var destroyRow = RowWidget.create(4);
-        destroyRow.addChild(LabelWidget.of("Destroy:").setColor(0xFFFF4444));
+        destroyRow.addWidget(LabelWidget.of("Destroy:").setColor(0xFFFF4444));
 
-        destroyRow.addChild(createButton("Destroy A (bottomUp)", this::destroyContainerA, 0xFFAA0000));
-        destroyRow.addChild(createButton("Destroy B (deepestFirst)", this::destroyContainerB, 0xFFAA0000));
-        panel.addChild(destroyRow);
+        destroyRow.addWidget(createButton("Destroy A (bottomUp)", this::destroyContainerA, 0xFFAA0000));
+        destroyRow.addWidget(createButton("Destroy B (deepestFirst)", this::destroyContainerB, 0xFFAA0000));
+        panel.addWidget(destroyRow);
 
         return panel;
     }
 
     private Widget createContainerArea() {
         var row = RowWidget.create(16);
-        row.applyStyle(UIStyle.of(UIStyles.flexGrow(1)));
+        row.useStyle(UIStyle.of(UIStyles.flexGrow(1)));
 
         // Container A
         var boxA = BoxWidget.create();
-        boxA.applyStyle(UIStyle.of(
+        boxA.useStyle(UIStyle.of(
             UIStyles.flexGrow(1),
             UIStyles.padding(12),
             UIStyles.background(new ColorTexture(0x30336699))
         ));
 
         var columnA = ColumnWidget.create(8);
-        columnA.applyStyle(UIStyle.of(UIStyles.size(-1, -1)));
+        columnA.useStyle(UIStyle.of(UIStyles.sizeOf(-1, -1)));
 
         var labelA = LabelWidget.of("▼ Container A")
                                 .setColor(0xFF88AAFF)
                                 .setShadow(true);
-        labelA.applyStyle(UIStyle.of(UIStyles.height(14)));
-        columnA.addChild(labelA);
+        labelA.useStyle(UIStyle.of(UIStyles.heightOf(14)));
+        columnA.addWidget(labelA);
 
         containerA = TestContainerWidget.create(4);
-        containerA.applyStyle(UIStyle.of(
+        containerA.useStyle(UIStyle.of(
             UIStyles.flexGrow(1),
             UIStyles.padding(8),
             UIStyles.background(new ColorTexture(0x18FFFFFF))
         ));
-        columnA.addChild(containerA);
+        columnA.addWidget(containerA);
 
         boxA.addChild(columnA);
-        row.addChild(boxA);
+        row.addWidget(boxA);
 
         // Vertical Divider
         var divider = DividerWidget.vertical().setColor(0xFF666666);
-        divider.applyStyle(UIStyle.of(UIStyles.width(2)));
-        row.addChild(divider);
+        divider.useStyle(UIStyle.of(UIStyles.widthOf(2)));
+        row.addWidget(divider);
 
         // Container B
         var boxB = BoxWidget.create();
-        boxB.applyStyle(UIStyle.of(
+        boxB.useStyle(UIStyle.of(
             UIStyles.flexGrow(1),
             UIStyles.padding(12),
             UIStyles.background(new ColorTexture(0x30336633))
         ));
 
         var columnB = ColumnWidget.create(8);
-        columnB.applyStyle(UIStyle.of(UIStyles.size(-1, -1)));
+        columnB.useStyle(UIStyle.of(UIStyles.sizeOf(-1, -1)));
 
         var labelB = LabelWidget.of("▼ Container B")
                                 .setColor(0xFF88FF88)
                                 .setShadow(true);
-        labelB.applyStyle(UIStyle.of(UIStyles.height(14)));
-        columnB.addChild(labelB);
+        labelB.useStyle(UIStyle.of(UIStyles.heightOf(14)));
+        columnB.addWidget(labelB);
 
         containerB = TestContainerWidget.create(4);
-        containerB.applyStyle(UIStyle.of(
+        containerB.useStyle(UIStyle.of(
             UIStyles.flexGrow(1),
             UIStyles.padding(8),
             UIStyles.background(new ColorTexture(0x18FFFFFF))
         ));
-        columnB.addChild(containerB);
+        columnB.addWidget(containerB);
 
         boxB.addChild(columnB);
-        row.addChild(boxB);
+        row.addWidget(boxB);
 
         return row;
     }
 
     private Widget createStatusBar() {
         var statusBar = RowWidget.create(8);
-        statusBar.applyStyle(UIStyle.of(UIStyles.alignItemsCenter()));
+        statusBar.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
         statusLabel = LabelWidget.of("Ready")
                                  .setColor(0xFFAAAAAA);
-        statusLabel.applyStyle(UIStyle.of(UIStyles.flexGrow(1)));
-        statusBar.addChild(statusLabel);
+        statusLabel.useStyle(UIStyle.of(UIStyles.flexGrow(1)));
+        statusBar.addWidget(statusLabel);
 
         return statusBar;
     }
 
     private Widget createDivider() {
         var divider = DividerWidget.horizontal().setColor(0xFF555555);
-        divider.applyStyle(UIStyle.of(UIStyles.height(2)));
+        divider.useStyle(UIStyle.of(UIStyles.heightOf(2)));
         return divider;
     }
 
     private ButtonWidget createButton(String label, Runnable action, int color) {
         var btn = ButtonWidget.of(label, action)
                               .setColors(color, lighten(color), darken(color));
-        btn.applyStyle(UIStyle.of(UIStyles.minWidth(90), UIStyles.height(18), UIStyles.padding(2)));
+        btn.useStyle(UIStyle.of(UIStyles.minWidth(90), UIStyles.heightOf(18), UIStyles.padding(2)));
         return btn;
     }
 
@@ -321,7 +322,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         var widget = LabelWidget.of("#" + number)
                                 .setColor(color)
                                 .setShadow(true);
-        widget.applyStyle(UIStyle.of(
+        widget.useStyle(UIStyle.of(
             UIStyles.padding(4, 8),
             UIStyles.background(new ColorTexture(0x30000000))
         ));

@@ -17,7 +17,7 @@ public final class BubbleContext {
     public BubbleContext(EventChannel<?> source) {this.source = source;}
 
 
-    public EventChannel<?> source() {
+    public EventChannel<?> target() {
         return source;
     }
 
@@ -31,6 +31,18 @@ public final class BubbleContext {
 
     public Phase phase() {
         return phase;
+    }
+
+    public boolean capturing() {
+        return phase == Phase.capture;
+    }
+
+    public boolean targeting() {
+        return phase == Phase.target;
+    }
+
+    public boolean bubbling() {
+        return phase == Phase.bubble;
     }
 
     public void setPhase(Phase phase) {

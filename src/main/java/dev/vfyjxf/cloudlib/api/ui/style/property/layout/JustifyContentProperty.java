@@ -53,10 +53,6 @@ public record JustifyContentProperty(JustifyContent justify) implements LayoutPr
         style.justifyContent = TaffyStyleUtil.toAlignContent(justify);
     }
 
-    public JustifyContent getJustify() {
-        return justify;
-    }
-
     @Override
     public String toString() {
         return justify.name().toLowerCase().replace("_", "-");

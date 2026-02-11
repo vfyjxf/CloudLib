@@ -10,7 +10,7 @@ public record BorderTexture(
     int thicknessTop, int thicknessRight, int thicknessBottom, int thicknessLeft
 ) implements BatchableTexture {
 
-    // region Factory
+    //region factory
 
     public static BorderTexture of(int color, int thickness) {
         return new BorderTexture(color, color, color, color, thickness, thickness, thickness, thickness);
@@ -53,9 +53,9 @@ public record BorderTexture(
         return new BorderTexture(0, color, 0, 0, 0, thickness, 0, 0);
     }
 
-    // endregion
+    //endregion
 
-    // region Modification
+    //region modification
 
     public BorderTexture withColor(int color) {
         return new BorderTexture(color, color, color, color,
@@ -79,9 +79,9 @@ public record BorderTexture(
         return (color & 0x00FFFFFF) | ((alpha & 0xFF) << 24);
     }
 
-    // endregion
+    //endregion
 
-    // region Query
+    //region query
 
     public boolean isEmpty() {
         return thicknessTop == 0 && thicknessRight == 0 && thicknessBottom == 0 && thicknessLeft == 0;
@@ -95,9 +95,9 @@ public record BorderTexture(
         return thicknessTop == thicknessRight && thicknessTop == thicknessBottom && thicknessTop == thicknessLeft;
     }
 
-    // endregion
+    //endregion
 
-    // region BatchableTexture
+    //region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float width, float height, int tint) {
@@ -139,5 +139,5 @@ public record BorderTexture(
         }
     }
 
-    // endregion
+    //endregion
 }

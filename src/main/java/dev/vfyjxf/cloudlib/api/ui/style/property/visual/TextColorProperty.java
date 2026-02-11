@@ -14,7 +14,13 @@ import dev.vfyjxf.cloudlib.api.ui.style.property.VisualProperty;
  */
 public record TextColorProperty(int color) implements VisualProperty {
 
+    //region types
+
     public static final StyleType<Integer> type = StyleType.of("textColor", () -> 0);
+
+    //endregion
+
+    //region VisualProperty implementation
 
     @Override
     public StyleType<?> type() {
@@ -26,9 +32,15 @@ public record TextColorProperty(int color) implements VisualProperty {
         context.textColor(color);
     }
 
+    //endregion
+
+    //region accessors
+
     public int getColor() {
         return color;
     }
+
+    //endregion
 
     @Override
     public String toString() {

@@ -6,7 +6,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import dev.vfyjxf.cloudlib.ui.widgets.ImageWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ImageWidget;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
@@ -88,7 +88,7 @@ public final class ImageBlueprint implements Blueprint<ImageWidget> {
     public void updateWidget(ImageWidget widget, Scene scene, SceneContext context) {
         widget.setTexture(texture)
               .setPreserveAspectRatio(preserveAspectRatio)
-              .applyStyle(style);
+              .useStyle(style);
     }
 
     //endregion

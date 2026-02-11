@@ -14,7 +14,7 @@ public record CircleTexture(
         segments = Math.max(8, segments);
     }
 
-    // region Factory
+    //region factory
 
     public static CircleTexture of(int fillColor) {
         return new CircleTexture(fillColor, 0, 0, 32, true);
@@ -36,9 +36,9 @@ public record CircleTexture(
         return new CircleTexture(0, color, thickness, segments, false);
     }
 
-    // endregion
+    //endregion
 
-    // region Modification
+    //region modification
 
     public CircleTexture withBorder(int color, int thickness) {
         return new CircleTexture(fillColor, color, thickness, segments, filled);
@@ -52,9 +52,9 @@ public record CircleTexture(
         return new CircleTexture(fillColor, borderColor, borderThickness, segments, filled);
     }
 
-    // endregion
+    //endregion
 
-    // region BatchableTexture
+    //region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float width, float height, int tint) {
@@ -99,9 +99,9 @@ public record CircleTexture(
         }
     }
 
-    // endregion
+    //endregion
 
-    // region Internal
+    //region internal
 
     private void emitFilledEllipse(VertexEmitter emitter, float cx, float cy, float rx, float ry, int color) {
         for (int i = 0; i < segments; i++) {
@@ -140,5 +140,5 @@ public record CircleTexture(
         }
     }
 
-    // endregion
+    //endregion
 }

@@ -4,7 +4,10 @@ import dev.vfyjxf.cloudlib.api.ui.style.Edge;
 import dev.vfyjxf.taffy.geometry.TaffyRect;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.JustifyContent;
+import dev.vfyjxf.taffy.style.LengthPercentage;
+import dev.vfyjxf.taffy.style.LengthPercentageAuto;
 import dev.vfyjxf.taffy.style.TaffyStyle;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Utility class for working with taffy style types.
@@ -20,6 +23,8 @@ final class TaffyStyleUtil {
     private TaffyStyleUtil() {
     }
 
+    //region rect operations
+
     static <T> void setRectEdge(TaffyRect<T> rect, Edge edge, T value) {
         switch (edge) {
             case TOP -> rect.top = value;
@@ -28,6 +33,10 @@ final class TaffyStyleUtil {
             case LEFT -> rect.left = value;
         }
     }
+
+    //endregion
+
+    //region conversions
 
     static AlignContent toAlignContent(JustifyContent justify) {
         return switch (justify) {
@@ -42,4 +51,39 @@ final class TaffyStyleUtil {
             case STRETCH -> AlignContent.STRETCH;
         };
     }
+
+    //endregion
+
+    //region formatting
+
+    /**
+     * Formats a LengthPercentage value for display.
+     */
+    static String formatLengthPercentage(@Nullable LengthPercentage value) {
+        if (value == null) {
+            return "null";
+        }
+        if (value == LengthPercentage.ZERO) {
+            return "0";
+        }
+        return value.toString();
+    }
+
+    /**
+     * Formats a LengthPercentageAuto value for display.
+     */
+    static String formatLengthPercentageAuto(@Nullable LengthPercentageAuto value) {
+        if (value == null) {
+            return "null";
+        }
+        if (value == LengthPercentageAuto.ZERO) {
+            return "0";
+        }
+        if (value == LengthPercentageAuto.AUTO) {
+            return "auto";
+        }
+        return value.toString();
+    }
+
+    //endregion
 }

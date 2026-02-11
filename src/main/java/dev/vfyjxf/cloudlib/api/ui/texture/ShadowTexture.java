@@ -16,7 +16,7 @@ public record ShadowTexture(
         layers = Math.max(1, layers);
     }
 
-    // region Factory
+    //region factory
 
     public static ShadowTexture of(int color, int blur) {
         return new ShadowTexture(color, blur, blur / 2, blur / 2, blur);
@@ -34,9 +34,9 @@ public record ShadowTexture(
         return new ShadowTexture(color, blur, 0, 0, blur);
     }
 
-    // endregion
+    //endregion
 
-    // region Modification
+    //region modification
 
     public ShadowTexture withOffset(int x, int y) {
         return new ShadowTexture(color, blur, x, y, layers);
@@ -50,9 +50,9 @@ public record ShadowTexture(
         return new ShadowTexture(color, blur, offsetX, offsetY, layers);
     }
 
-    // endregion
+    //endregion
 
-    // region BatchableTexture
+    //region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float width, float height, int tint) {
@@ -92,5 +92,5 @@ public record ShadowTexture(
         }
     }
 
-    // endregion
+    //endregion
 }

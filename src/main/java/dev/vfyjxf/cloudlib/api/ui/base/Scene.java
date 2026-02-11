@@ -4,24 +4,36 @@ import dev.vfyjxf.cloudlib.api.event.EventDefinition;
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.event.context.BubbleContext;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
-import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.performer.PerformerContainer;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree.TraversalControl;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
+import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvents;
+import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
+import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import dev.vfyjxf.cloudlib.ui.drag.DraggableManager;
+import dev.vfyjxf.cloudlib.util.Checks;
+import dev.vfyjxf.cloudlib.util.ScreenUtil;
 import dev.vfyjxf.taffy.geometry.TaffySize;
 import dev.vfyjxf.taffy.style.AvailableSpace;
 import dev.vfyjxf.taffy.tree.TaffyTree;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import mezz.jei.gui.input.MouseUtil;
 import net.minecraft.client.gui.GuiGraphics;
+import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayDeque;
+import java.util.Comparator;
+import java.util.Deque;
+import java.util.Map;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -48,6 +60,354 @@ public final class Scene {
     private final PerformerContainer performers = new PerformerContainer();
     //endregion
 
+    //region scheduler task
+
+    private final Deque<Runnable> deferredTasks = new ArrayDeque<>();
+    private MutableList<Runnable> postLayoutTasks = MutableLists.empty();
+    private MutableList<Runnable> postRenderTasks = MutableLists.empty();
+    private final MutableList<RecurringTask> perRenderTasks = MutableLists.empty();
+    private final Deque<Runnable> nextTickTasks = new ArrayDeque<>();
+    private final MutableList<TimedTask> timedTasks = MutableLists.empty();
+
+    /**
+     * Creates a cancellation flag and passes the cancel action to the given disposer.
+     *
+     * @return a supplier that returns {@code true} while the task is active
+     */
+    private static BooleanSupplier bindDisposer(Consumer<Runnable> disposer) {
+        boolean[] active = {true};
+        disposer.accept(() -> active[0] = false);
+        return () -> active[0];
+    }
+
+    private record RecurringTask(Runnable callback, BooleanSupplier active) {
+        void runIfActive() {
+            if (active.getAsBoolean()) callback.run();
+        }
+
+        boolean isCancelled() {
+            return !active.getAsBoolean();
+        }
+    }
+
+    private static final class TimedTask {
+        final Runnable callback;
+        final BooleanSupplier active;
+        final int intervalTicks; // 0 = one-shot, >0 = repeating
+        int remainingTicks;
+
+        TimedTask(Runnable callback, BooleanSupplier active, int delayTicks, int intervalTicks) {
+            this.callback = callback;
+            this.active = active;
+            this.remainingTicks = delayTicks;
+            this.intervalTicks = intervalTicks;
+        }
+
+        boolean isCancelled() {
+            return !active.getAsBoolean();
+        }
+    }
+
+    //region One-shot callbacks
+
+    /**
+     * Runs a callback <b>once</b> after the current (or next) frame
+     * has finished rendering.
+     *
+     * <p>The callback executes after all layers are rendered and before widget cleanup,
+     * guaranteeing that every widget has its final layout and visual state.</p>
+     *
+     * <h4>Typical use cases</h4>
+     * <ul>
+     *   <li>Measuring a widget's computed size/position after first layout</li>
+     *   <li>Scrolling to a specific widget once it is visible</li>
+     *   <li>Triggering an entrance animation after the first paint</li>
+     * </ul>
+     *
+     * @param task the action to execute
+     */
+    public void postRender(Runnable task) {
+        postRenderTasks.add(task);
+    }
+
+    /**
+     * Runs a callback <b>once</b> after the current (or next) frame
+     * has finished rendering, with a cancel action passed to {@code disposer}.
+     *
+     * @param task     the action to execute
+     * @param disposer receives a {@link Runnable} that cancels this task when invoked;
+     *                 typically {@code handle::onCleanup}
+     */
+    public void postRender(Runnable task, Consumer<Runnable> disposer) {
+        var active = bindDisposer(disposer);
+        postRenderTasks.add(() -> {
+            if (active.getAsBoolean()) task.run();
+        });
+    }
+
+    /**
+     * Runs a callback <b>once</b> after the next layout pass completes
+     * (i.e., after widget tree rebuild and Taffy layout finishes).
+     *
+     * <p>At this point every widget has valid layout information but the frame
+     * has not been rendered yet. This is ideal for reading computed positions
+     * and sizes without waiting for a full render.</p>
+     *
+     * <h4>Typical use cases</h4>
+     * <ul>
+     *   <li>Reading a widget's absolute position after dynamic content changes</li>
+     *   <li>Adjusting overlay positions based on the target widget's layout</li>
+     *   <li>Validating layout constraints are met (e.g., no overflow)</li>
+     * </ul>
+     *
+     * @param task the action to execute
+     */
+    public void postLayout(Runnable task) {
+        postLayoutTasks.add(task);
+    }
+
+    /**
+     * Runs a callback <b>once</b> after the next layout pass completes,
+     * with a cancel action passed to {@code disposer}.
+     *
+     * @param task     the action to execute
+     * @param disposer receives a {@link Runnable} that cancels this task when invoked
+     */
+    public void postLayout(Runnable task, Consumer<Runnable> disposer) {
+        var active = bindDisposer(disposer);
+        postLayoutTasks.add(() -> {
+            if (active.getAsBoolean()) task.run();
+        });
+    }
+
+    /**
+     * Defers a task to run at the <b>beginning</b> of the next render frame,
+     * before layout and rendering.
+     *
+     * <p>Deferred tasks are executed in FIFO order and are useful for batching
+     * state mutations so that only a single layout/render pass is triggered.
+     * Tasks deferred during execution are drained in the same batch
+     * (be careful not to create infinite loops).</p>
+     *
+     * <h4>Typical use cases</h4>
+     * <ul>
+     *   <li>Batching multiple state changes into a single layout pass</li>
+     *   <li>Deferring work that must happen before the next paint</li>
+     *   <li>Ensuring a piece of code runs after the current event handler completes
+     *       but before the frame is built</li>
+     * </ul>
+     *
+     * @param task the action to execute
+     */
+    public void defer(Runnable task) {
+        deferredTasks.addLast(task);
+    }
+
+    /**
+     * Runs a callback <b>once</b> at the start of the next game tick.
+     *
+     * <p>In Minecraft, ticks run at a fixed 20 Hz rate. This is useful for
+     * deferring mutations that should not happen during the current event
+     * dispatch (e.g., avoiding re-entrant modifications).</p>
+     *
+     * <h4>Typical use cases</h4>
+     * <ul>
+     *   <li>Deferring a widget tree mutation triggered by an event handler</li>
+     *   <li>Ensuring an action runs outside the current input handling stack</li>
+     *   <li>Coordinating with game-tick–bound logic (recipes, inventories)</li>
+     * </ul>
+     *
+     * @param task the action to execute
+     */
+    public void nextTick(Runnable task) {
+        nextTickTasks.addLast(task);
+    }
+
+    /**
+     * Runs a callback <b>once</b> at the start of the next game tick,
+     * with a cancel action passed to {@code disposer}.
+     *
+     * @param task     the action to execute
+     * @param disposer receives a {@link Runnable} that cancels this task when invoked
+     */
+    public void nextTick(Runnable task, Consumer<Runnable> disposer) {
+        var active = bindDisposer(disposer);
+        nextTickTasks.addLast(() -> {
+            if (active.getAsBoolean()) task.run();
+        });
+    }
+
+    //endregion
+
+    //region Persistent (recurring) callbacks
+
+    /**
+     * Registers a callback that runs <b>every frame</b> after rendering,
+     * until canceled via the cancel action passed to {@code disposer}.
+     *
+     * <h4>Typical use cases</h4>
+     * <ul>
+     *   <li>Driving animations that need per-frame updates</li>
+     *   <li>Continuous layout monitoring (e.g., sticky headers)</li>
+     *   <li>Debug overlays that update every frame</li>
+     * </ul>
+     *
+     * @param task     the action to execute each frame
+     * @param disposer receives a {@link Runnable} that stops this recurring task
+     *                 when invoked; typically {@code handle::onCleanup}
+     */
+    public void everyRender(Runnable task, Consumer<Runnable> disposer) {
+        var active = bindDisposer(disposer);
+        perRenderTasks.add(new RecurringTask(task, active));
+    }
+
+    //endregion
+
+    //region Delayed & periodic tasks
+
+    /**
+     * Runs a one-shot callback after a specified number of game ticks.
+     *
+     * <h4>Typical use cases</h4>
+     * <ul>
+     *   <li>Delayed tooltip display (e.g., show after hovering 20 ticks)</li>
+     *   <li>Auto-dismiss notifications after a timeout</li>
+     *   <li>Debouncing rapid inputs (cancel &amp; reschedule on each keystroke)</li>
+     * </ul>
+     *
+     * @param delayTicks number of ticks to wait before execution (1 tick ≈ 50ms)
+     * @param task       the action to execute
+     */
+    public void delay(int delayTicks, Runnable task) {
+        Checks.checkArgument(delayTicks > 0, "delayTicks must be > 0");
+        timedTasks.add(new TimedTask(task, () -> true, delayTicks, 0));
+    }
+
+    /**
+     * Runs a one-shot callback after a specified number of game ticks,
+     * with a cancel action passed to {@code disposer}.
+     *
+     * @param delayTicks number of ticks to wait before execution (1 tick ≈ 50ms)
+     * @param task       the action to execute
+     * @param disposer   receives a {@link Runnable} that cancels this task when invoked
+     */
+    public void delay(int delayTicks, Runnable task, Consumer<Runnable> disposer) {
+        Checks.checkArgument(delayTicks > 0, "delayTicks must be > 0");
+        var active = bindDisposer(disposer);
+        timedTasks.add(new TimedTask(task, active, delayTicks, 0));
+    }
+
+    /**
+     * Runs a repeating callback every {@code intervalTicks} game ticks.
+     *
+     * <p>The first invocation happens after {@code intervalTicks} ticks.
+     * Use {@link #interval(int, int, Runnable, Consumer)} for a custom initial delay.</p>
+     *
+     * <h4>Typical use cases</h4>
+     * <ul>
+     *   <li>Polling server data at a fixed rate</li>
+     *   <li>Periodic progress bar updates</li>
+     *   <li>Blinking cursor / flashing indicator</li>
+     * </ul>
+     *
+     * @param intervalTicks ticks between each invocation
+     * @param task          the action to execute
+     * @param disposer      receives a {@link Runnable} that stops this repeating task;
+     *                      typically {@code handle::onCleanup}
+     */
+    public void interval(int intervalTicks, Runnable task, Consumer<Runnable> disposer) {
+        interval(intervalTicks, intervalTicks, task, disposer);
+    }
+
+    /**
+     * Runs a repeating callback with a custom initial delay.
+     *
+     * @param initialDelay  ticks before the first invocation
+     * @param intervalTicks ticks between subsequent invocations
+     * @param task          the action to execute
+     * @param disposer      receives a {@link Runnable} that stops this repeating task
+     */
+    public void interval(int initialDelay, int intervalTicks, Runnable task, Consumer<Runnable> disposer) {
+        Checks.checkArgument(initialDelay > 0, "initialDelay must be > 0");
+        Checks.checkArgument(intervalTicks > 0, "intervalTicks must be > 0");
+        var active = bindDisposer(disposer);
+        timedTasks.add(new TimedTask(task, active, initialDelay, intervalTicks));
+    }
+
+    //endregion
+
+    //region Internal execution hooks
+
+    /**
+     * Drains all deferred tasks. Called at the start of each frame before layout.
+     */
+    private void drainDeferred() {
+        int safetyLimit = 1000;
+        while (!deferredTasks.isEmpty() && safetyLimit-- > 0) {
+            Runnable task = deferredTasks.pollFirst();
+            if (task != null) task.run();
+        }
+    }
+
+    /**
+     * Executes and clears one-shot post-layout tasks.
+     */
+    private void runPostLayout() {
+        if (postLayoutTasks.isEmpty()) return;
+        MutableList<Runnable> batch = postLayoutTasks;
+        postLayoutTasks = MutableLists.empty();
+        batch.forEach(Runnable::run);
+    }
+
+    /**
+     * Executes one-shot and persistent post-render tasks.
+     */
+    private void runPostRender() {
+        // One-shot
+        if (!postRenderTasks.isEmpty()) {
+            MutableList<Runnable> batch = postRenderTasks;
+            postRenderTasks = MutableLists.empty();
+            batch.forEach(Runnable::run);
+        }
+        // Persistent — prune cancelled entries
+        if (!perRenderTasks.isEmpty()) {
+            perRenderTasks.removeIf(RecurringTask::isCancelled);
+            perRenderTasks.forEach(RecurringTask::runIfActive);
+        }
+    }
+
+    /**
+     * Processes tick-based scheduling: next-tick tasks, delayed tasks,
+     * and interval tasks.
+     */
+    private void runTickTasks() {
+        // Next-tick one-shots
+        while (!nextTickTasks.isEmpty()) {
+            Runnable task = nextTickTasks.pollFirst();
+            if (task != null) task.run();
+        }
+        // Delayed & interval tasks
+        if (!timedTasks.isEmpty()) {
+            timedTasks.removeIf(TimedTask::isCancelled);
+            for (int i = timedTasks.size() - 1; i >= 0; i--) {
+                TimedTask task = timedTasks.get(i);
+                if (--task.remainingTicks <= 0) {
+                    if (task.active.getAsBoolean()) {
+                        task.callback.run();
+                    }
+                    if (task.intervalTicks > 0 && task.active.getAsBoolean()) {
+                        task.remainingTicks = task.intervalTicks;
+                    } else {
+                        timedTasks.remove(i);
+                    }
+                }
+            }
+        }
+    }
+
+    //endregion
+
+    //endregion
 
     //region activity
 
@@ -55,6 +415,7 @@ public final class Scene {
         if (!root.lifecycle.mounted()) {
             throw new IllegalStateException("Widget is not mounted!");
         }
+        runTickTasks();
         root.tick();
         context.tick();
     }
@@ -88,7 +449,7 @@ public final class Scene {
     //region lifecycle management
 
     private final ObjectSet<Widget> createdWidgets = new ObjectLinkedOpenHashSet<>();
-    private final ObjectSet<Widget> unmountedWidgets = new ObjectLinkedOpenHashSet<>();
+    private final ObjectSet<Widget> remountWidgets = new ObjectLinkedOpenHashSet<>();
     private final ObjectSet<Widget> destroyingWidgets = new ObjectLinkedOpenHashSet<>();
     private SceneContext context;
 
@@ -136,7 +497,7 @@ public final class Scene {
             if (!widget.lifecycle.initialized()) {
                 throw new IllegalArgumentException("Widget: " + widget + " is not initialized!");
             }
-            widget.mount(this, context, handleOf(widget));
+            widget.mount(this, this.context, handleOf(widget));
             return TraversalControl.CONTINUE;
         });
     }
@@ -152,21 +513,29 @@ public final class Scene {
         destroyingWidgets.remove(widget);
     }
 
-    void addUnmountedWidget(Widget widget) {
+    void remountWidget(Widget widget) {
         if (!widget.lifecycle.unmounted()) {
             throw new IllegalArgumentException("Cannot add widget: " + widget + " because it is not unmounted!");
         }
-        unmountedWidgets.add(widget);
+        remountWidgets.add(widget);
     }
 
-    public void unmount(Widget widget) {
-        destroyingWidgets.add(widget);
+    void unmountWidget(Widget widget) {
+        if (!widget.lifecycle.mounted()) {
+            throw new IllegalArgumentException("Cannot unmount widget: " + widget + " because it is not mounted!");
+        }
+        WidgetTree.walkBottomUp(widget, true, -1, (w, depth) -> {
+            w.unmount();
+            destroyingWidgets.add(w);
+            return TraversalControl.CONTINUE;
+        });
     }
 
     public void destroy() {
         if (!root.lifecycle.unmounted()) {
             WidgetTree.walkBottomUp(root, true, -1, ((widget, depth) -> {
                 widget.unmount();
+                destroyingWidgets.add(widget);
                 return TraversalControl.CONTINUE;
             }));
         }
@@ -179,19 +548,26 @@ public final class Scene {
 
     private void rebuildRequired() {
         if (!createdWidgets.isEmpty()) {
-            for (Widget widget : createdWidgets) {
-                widget.init();
+            for (Widget created : createdWidgets) {
+                WidgetTree.walkBreadthFirst(created, true, -1, (widget, depth) -> {
+                    widget.init();
+                    return TraversalControl.CONTINUE;
+                });
             }
-            for (Widget createdWidget : createdWidgets) {
-                createdWidget.mount(this, context, handleOf(createdWidget));
+            for (Widget created : createdWidgets) {
+                if (created.lifecycle.mounted()) continue;
+                WidgetTree.walkBreadthFirst(created, true, -1, (widget, depth) -> {
+                    widget.mount(this, this.context, handleOf(widget));
+                    return TraversalControl.CONTINUE;
+                });
             }
             createdWidgets.clear();
         }
-        if (!unmountedWidgets.isEmpty()) {
-            for (Widget widget : unmountedWidgets) {
+        if (!remountWidgets.isEmpty()) {
+            for (Widget widget : remountWidgets) {
                 widget.mount(this, context, handleOf(widget));
             }
-            unmountedWidgets.clear();
+            remountWidgets.clear();
         }
         if (tree.needsVisit(root.nodeId())) {
             layout();
@@ -199,7 +575,7 @@ public final class Scene {
         }
     }
 
-    private void destroyWidgets() {
+    private void cleanWidgets() {
         for (Widget widget : destroyingWidgets) {
             widget.destroy();
         }
@@ -210,14 +586,131 @@ public final class Scene {
 
     //region render
 
+    //region layer management
+
+    private final Map<SceneLayer, MutableList<Widget>> extraLayers = new Object2ObjectLinkedOpenHashMap<>();
+
+    {
+        for (SceneLayer layer : SceneLayer.values()) {
+            extraLayers.put(layer, MutableLists.empty());
+        }
+    }
+
+    private @Nullable Inspector inspector;
+
+    /**
+     * Adds a widget to the specified layer.
+     * <p>
+     * The widget will be rendered in this layer and sorted by zIndex within the layer.
+     * Widget must be mounted to this scene.
+     *
+     * @param layer  the layer to add the widget to
+     * @param widget the widget to add
+     */
+    public void addToLayer(SceneLayer layer, Widget widget) {
+        if (widget.scene != this) {
+            throw new IllegalArgumentException("Widget must be mounted to this scene");
+        }
+        if (layer == SceneLayer.debug) {
+            if (!(widget instanceof Inspector debugger)) {
+                throw new IllegalArgumentException("Only Inspector can be added to debug layer");
+            }
+            this.inspector = debugger;
+            return;
+        }
+        removeFromAllLayers(widget);
+        var layerWidgets = extraLayers.get(layer);
+        if (!layerWidgets.contains(widget)) {
+            layerWidgets.add(widget);
+            layerWidgets.sortThis(Comparator.comparingInt(Widget::zIndex));
+        }
+    }
+
+    /**
+     * Removes a widget from the specified layer.
+     *
+     * @param layer  the layer to remove the widget from
+     * @param widget the widget to remove
+     */
+    public void removeFromLayer(SceneLayer layer, Widget widget) {
+        extraLayers.get(layer).remove(widget);
+    }
+
+    /**
+     * Removes a widget from all layers.
+     *
+     * @param widget the widget to remove
+     */
+    void removeFromAllLayers(Widget widget) {
+        for (var layerWidgets : extraLayers.values()) {
+            layerWidgets.remove(widget);
+        }
+    }
+
+    /**
+     * Re-sorts the specified layer by zIndex.
+     * Called when a widget's zIndex changes.
+     *
+     * @param layer the layer to re-sort
+     */
+    void resortLayer(SceneLayer layer) {
+        extraLayers.get(layer).sortThis(Comparator.comparingInt(Widget::zIndex));
+    }
+
+
+    //endregion
+
+    //region hover tooltip
+
+    private RichTooltip hoverTooltip = RichTooltip.empty();
+
+    public void setHoverTooltip(RichTooltip tooltip) {
+        this.hoverTooltip = Checks.checkNotNull(tooltip, "tooltip");
+    }
+
+    //endregion
+
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        drainDeferred();
         rebuildRequired();
+        runPostLayout();
         SceneCanvas canvas = SceneCanvas.create(graphics);
-        root.render(canvas, mouseX, mouseY, partialTick);
-        root.renderOverlay(canvas, mouseX, mouseY, partialTick);
-        root.renderTooltip(graphics, mouseX, mouseY);
+        {
+            // Root widget: apply its full viewport transform (includes layout position)
+            canvas.pushViewport(root.viewport());
+            FloatPos localMouse = root.viewport().parentToLocal(mouseX, mouseY);
+            root.render(canvas, (int) localMouse.x, (int) localMouse.y, partialTick);
+            canvas.popViewport();
+        }
+        for (SceneLayer layer : SceneLayer.extraLayers) {
+            var layerWidgets = extraLayers.get(layer);
+            for (int i = 0; i < layerWidgets.size(); i++) {
+                Widget widget = layerWidgets.get(i);
+                if (!widget.shouldRender()) continue;
+                canvas.pushViewport(widget.viewport());
+                FloatPos localMouse = widget.viewport().parentToLocal(mouseX, mouseY);
+                widget.render(canvas, (int) localMouse.x, (int) localMouse.y, partialTick);
+                canvas.popViewport();
+            }
+        }
+
+        canvas.flushBatch();
+
+        if (hoverTooltip != RichTooltip.empty()) {
+            ScreenUtil.renderTooltip(graphics, hoverTooltip, mouseX, mouseY);
+        }
+
+        if (inspector != null) {
+            canvas.pushViewport(inspector.viewport());
+            FloatPos localMouse = inspector.viewport().parentToLocal(mouseX, mouseY);
+            inspector.render(canvas, (int) localMouse.x, (int) localMouse.y, partialTick);
+            canvas.popViewport();
+            canvas.flushBatch();
+        }
+
         draggableManager.renderDragging(graphics, mouseX, mouseY, partialTick);
-        destroyWidgets();
+        runPostRender();
+        cleanWidgets();
     }
 
     //endregion
@@ -239,8 +732,21 @@ public final class Scene {
     private Widget focusWidget;
     private FloatPos lastClickPos;
 
-    public void focus(Widget widget) {
-        focusWidget = widget;
+
+    public @Nullable Widget focusingWidget() {
+        return focusWidget;
+    }
+
+    public void requestFocus(Widget widget) {
+        if (widget.lifecycle.mounted()) {
+            focus(widget);
+        } else {
+
+        }
+    }
+
+    public void requestUnfocus(Widget widget) {
+
     }
 
     /**
@@ -253,7 +759,7 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        Widget target = WidgetTree.hitTest(root, mouseX, mouseY);
+        Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             Widget focusable = findFocusable(target, mouseX, mouseY);
             if (focusable != null) {
@@ -294,7 +800,8 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        Widget target = WidgetTree.hitTest(root, mouseX, mouseY);
+        Widget target = hitTest(mouseX, mouseY);
+        //TODO:should we skip inactive widget?
         if (target != null) {
             InputContext input = InputContext.fromMouse(mouseX, mouseY, button);
             var releaseContext = target.bubble();
@@ -341,7 +848,7 @@ public final class Scene {
      * @param mouseY the Y coordinate of the mouse.
      */
     public void mouseMoved(double mouseX, double mouseY) {
-        Widget target = WidgetTree.hitTest(root, mouseX, mouseY);
+        Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             target.listeners(InputEvents.onMouseMoved).onMoved(mouseX, mouseY, target.interruptible());
         }
@@ -357,10 +864,12 @@ public final class Scene {
                 int forkIndex = currentPath.commonAncestorIndex(lastHoveredPath);
                 for (int i = lastHoveredPath.size() - 1; i > forkIndex; i--) {
                     Widget widget = lastHoveredPath.get(i);
+                    widget.hovered = false;
                     widget.listeners(InputEvents.onMouseLeave).onLeave(mouseX, mouseY, widget.interruptible());
                 }
                 for (int i = forkIndex + 1; i < currentPath.size(); i++) {
                     Widget widget = currentPath.get(i);
+                    widget.hovered = true;
                     widget.listeners(InputEvents.onMouseEnter).onEnter(mouseX, mouseY, widget.interruptible());
                 }
             }
@@ -368,6 +877,8 @@ public final class Scene {
         } else if (lastHoveredPath != null) {
             for (int i = lastHoveredPath.size() - 1; i >= 0; i--) {
                 Widget widget = lastHoveredPath.get(i);
+                if (!widget.lifecycle.mounted()) continue;
+                widget.hovered = false;
                 widget.listeners(InputEvents.onMouseLeave).onLeave(mouseX, mouseY, widget.interruptible());
             }
             lastHoveredPath = null;
@@ -387,7 +898,7 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        Widget target = WidgetTree.hitTest(root, mouseX, mouseY);
+        Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             var input = InputContext.fromMouse(mouseX, mouseY, button);
             var bubble = target.bubble();
@@ -400,7 +911,7 @@ public final class Scene {
     }
 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        Widget target = WidgetTree.hitTest(root, mouseX, mouseY);
+        Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             var bubble = target.bubble();
             return handleBubbleEvent(
@@ -421,10 +932,10 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (focusWidget == null) return false;
-        Pos pos = root.absolutePos();
-        double mouseX = MouseUtil.getX() - pos.x();
-        double mouseY = MouseUtil.getY() - pos.y();
+        if (focusWidget == null || !focusWidget.lifecycle.mounted()) return false;
+        var localMouse = root.sceneToLocal(MouseUtil.getX(), MouseUtil.getY());
+        double mouseX = localMouse.x;
+        double mouseY = localMouse.y;
         var input = InputContext.fromKeyboard(keyCode, scanCode, modifiers, mouseX, mouseY);
         var bubble = focusWidget.bubble();
         return handleBubbleEvent(
@@ -443,10 +954,10 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if (focusWidget == null) return false;
-        Pos pos = root.absolutePos();
-        double mouseX = MouseUtil.getX() - pos.x();
-        double mouseY = MouseUtil.getY() - pos.y();
+        if (focusWidget == null || !focusWidget.lifecycle.mounted()) return false;
+        var localMouse = root.sceneToLocal(MouseUtil.getX(), MouseUtil.getY());
+        double mouseX = localMouse.x;
+        double mouseY = localMouse.y;
         var input = InputContext.fromKeyboard(keyCode, scanCode, modifiers, mouseX, mouseY);
         var bubble = focusWidget.bubble();
         return handleBubbleEvent(
@@ -501,14 +1012,51 @@ public final class Scene {
         pathCache.invalidate();
     }
 
-    private static <E extends InputEvent> boolean handleBubbleEvent(Widget target, BubbleContext bubble, EventDefinition<E> event, Function<E, EventDispatch> listenerInvoke) {
+    private void focus(Widget widget) {
+        if (focusWidget != null && focusWidget != widget && focusWidget.lifecycle.mounted()) {
+            focusWidget.focused = false;
+            var bubble = focusWidget.bubble();
+            handleBubbleEvent(focusWidget, bubble, WidgetEvent.onFocusOut,
+                (listener) -> listener.onFocusOut(focusWidget, bubble)
+            );
+            focusWidget.listeners(WidgetEvent.onFocusLost).onFocusLost(focusWidget.interruptible());
+        }
+        focusWidget = widget;
+        focusWidget.focused = true;
+        var bubble = widget.bubble();
+        handleBubbleEvent(
+            widget, bubble, WidgetEvent.onFocusIn,
+            (listener) -> listener.onFocusIn(focusWidget, bubble)
+        );
+        focusWidget.listeners(WidgetEvent.onFocus).onFocus(focusWidget.interruptible());
+    }
+
+    private @Nullable Widget hitTest(double mouseX, double mouseY) {
+        for (int i = SceneLayer.extraLayers.size() - 1; i >= 0; i--) {
+            SceneLayer layer = SceneLayer.extraLayers.get(i);
+            if (layer.hitTestMode() != HitTestAction.enabled) continue;
+
+            var widgets = extraLayers.get(layer);
+            for (int j = widgets.size() - 1; j >= 0; j--) {
+                Widget hit = WidgetTree.hitTest(widgets.get(j), mouseX, mouseY);
+                if (hit != null) return hit;
+            }
+        }
+
+        return WidgetTree.hitTest(root, mouseX, mouseY);
+    }
+
+    private static <E extends WidgetEvent> boolean handleBubbleEvent(
+        Widget target, BubbleContext bubble,
+        EventDefinition<E> event, Function<E, EventDispatch> listenerInvoke
+    ) {
         WidgetPath path = target.path();
         EventDispatch action = EventDispatch.pass;
         //NOTE:target index is path.size() - 1
         //stage 1: capture
+        bubble.setPhase(BubbleContext.Phase.capture);
         for (int i = 0; i < path.size() - 1; i++) {
             Widget widget = path.get(i);
-            bubble.setPhase(BubbleContext.Phase.capture);
             bubble.setCurrent(widget.events());
             action = EventDispatch.max(listenerInvoke.apply(widget.listeners(event)), action);
             if (bubble.consumed() || bubble.cancelled()) return action.handled();

@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.performer;
 
+import dev.vfyjxf.cloudlib.api.util.Namespace;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.testframework.junit.EphemeralTestServerProvider;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,7 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class PerformerSystemTest {
 
     private static final CompositeScenario<TestPerformer> CHAINED_SCENARIO = new CompositeScenario<>(
-            ResourceLocation.fromNamespaceAndPath("test", "mergeable"),
+            Namespace.of("test", "mergeable"),
             TestPerformer.class,
             performers -> new TestPerformer() {
                 @Override

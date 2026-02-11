@@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
  * you may create a row-only gap or column-only gap.
  *
  * @param rowGap    row gap (height) or null to leave unchanged
- * @param columnGap row gap (width) or null to leave unchanged
+ * @param columnGap column gap (width) or null to leave unchanged
  * @see LengthPercentage
  * @see UIStyles#gap(float)
  * @see UIStyles#gap(float, float)
@@ -30,6 +30,8 @@ public record GapProperty(
     @Nullable LengthPercentage rowGap,
     @Nullable LengthPercentage columnGap
 ) implements LayoutProperty {
+
+    //region types
 
     /**
      * Type-safe gap value.
@@ -45,10 +47,9 @@ public record GapProperty(
         }
     );
 
-    @Override
-    public StyleType<?> type() {
-        return type;
-    }
+    //endregion
+
+    //region factory methods
 
     public static GapProperty all(float gap) {
         return new GapProperty(LengthPercentage.length(gap), LengthPercentage.length(gap));
@@ -94,6 +95,15 @@ public record GapProperty(
         return new GapProperty(null, gap);
     }
 
+    //endregion
+
+    //region LayoutProperty implementation
+
+    @Override
+    public StyleType<?> type() {
+        return type;
+    }
+
     @Override
     public void apply(StyleContext context) {
         TaffySize<LengthPercentage> current = context.get(type);
@@ -116,6 +126,8 @@ public record GapProperty(
             style.gap.height = rowGap;
         }
     }
+
+    //endregion
 
     @Override
     public String toString() {

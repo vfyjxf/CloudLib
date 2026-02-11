@@ -7,7 +7,10 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
+import dev.vfyjxf.cloudlib.api.ui.base.Viewport;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.texture.BatchableTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.SizedTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
@@ -42,7 +45,7 @@ public final class SceneCanvas {
     private final GuiGraphics graphics;
     private final ClipStack clipStack = new ClipStack();
 
-    // Transform stack
+    // Render transform stack (render-only effects)
     private final Deque<Matrix4f> transformStack = new ArrayDeque<>();
     private Matrix4f currentTransform = new Matrix4f();
 
@@ -63,12 +66,23 @@ public final class SceneCanvas {
     //region batch
 
     private static final class BatchState {
+        /**
+         * Stores a textured quad with pre-transformed vertex positions.
+         * Vertices are stored in order: bottom-left, bottom-right, top-right, top-left.
+         */
         private record TexturedQuad(
-            float x, float y, float width, float height,
+            float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3,
             float u0, float v0, float u1, float v1, int color
         ) {}
 
-        private record ColoredQuad(float x, float y, float width, float height, int color) {}
+        /**
+         * Stores a colored quad with pre-transformed vertex positions.
+         * Vertices are stored in order: bottom-left, bottom-right, top-right, top-left.
+         */
+        private record ColoredQuad(
+            float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3,
+            int color
+        ) {}
 
         // Current textured batch
         private @Nullable ResourceLocation currentTexture = null;
@@ -80,7 +94,16 @@ public final class SceneCanvas {
         // Whether we have pending colored quads (they break textured batches)
         private boolean hasColoredPending = false;
 
-        void addTextured(ResourceLocation texture, float x, float y, float width, float height,
+        /**
+         * Adds a textured quad with pre-transformed vertices.
+         *
+         * @param x0,y0 bottom-left vertex
+         * @param x1,y1 bottom-right vertex
+         * @param x2,y2 top-right vertex
+         * @param x3,y3 top-left vertex
+         */
+        void addTextured(ResourceLocation texture,
+                         float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3,
                          float u0, float v0, float u1, float v1, int color) {
             // If texture changed, signal that previous batch should be flushed
             if (currentTexture != null && !currentTexture.equals(texture)) {
@@ -89,11 +112,19 @@ public final class SceneCanvas {
             }
 
             currentTexture = texture;
-            texturedQuads.add(new TexturedQuad(x, y, width, height, u0, v0, u1, v1, color));
+            texturedQuads.add(new TexturedQuad(x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, color));
         }
 
-        void addColored(float x, float y, float width, float height, int color) {
-            coloredQuads.add(new ColoredQuad(x, y, width, height, color));
+        /**
+         * Adds a colored quad with pre-transformed vertices.
+         *
+         * @param x0,y0 bottom-left vertex
+         * @param x1,y1 bottom-right vertex
+         * @param x2,y2 top-right vertex
+         * @param x3,y3 top-left vertex
+         */
+        void addColored(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, int color) {
+            coloredQuads.add(new ColoredQuad(x0, y0, x1, y1, x2, y2, x3, y3, color));
             hasColoredPending = true;
         }
 
@@ -131,7 +162,14 @@ public final class SceneCanvas {
             if (batchState.needsFlushForTexture(texture)) {
                 flushBatch();
             }
-            batchState.addTextured(texture, x, y, width, height, u0, v0, u1, v1, color);
+            // Transform all 4 corners using current transform
+            // Order: bottom-left, bottom-right, top-right, top-left
+            float[] bl = transformPointLocal(x, y + height);
+            float[] br = transformPointLocal(x + width, y + height);
+            float[] tr = transformPointLocal(x + width, y);
+            float[] tl = transformPointLocal(x, y);
+            batchState.addTextured(texture, bl[0], bl[1], br[0], br[1], tr[0], tr[1], tl[0], tl[1],
+                u0, v0, u1, v1, color);
         }
 
         @Override
@@ -140,7 +178,13 @@ public final class SceneCanvas {
             if (batchState.needsFlushForColored()) {
                 flushBatch();
             }
-            batchState.addColored(x, y, width, height, color);
+            // Transform all 4 corners using current transform
+            // Order: bottom-left, bottom-right, top-right, top-left
+            float[] bl = transformPointLocal(x, y + height);
+            float[] br = transformPointLocal(x + width, y + height);
+            float[] tr = transformPointLocal(x + width, y);
+            float[] tl = transformPointLocal(x, y);
+            batchState.addColored(bl[0], bl[1], br[0], br[1], tr[0], tr[1], tl[0], tl[1], color);
         }
     };
 
@@ -155,7 +199,7 @@ public final class SceneCanvas {
 
         applyScissor();
         graphics.pose().pushPose();
-        graphics.pose().mulPose(currentTransform);
+        // Don't apply currentTransform here - vertices are already transformed
         graphics.pose().translate(0, 0, zOffset);
 
         // Flush textured quads
@@ -169,18 +213,18 @@ public final class SceneCanvas {
             Matrix4f matrix = graphics.pose().last().pose();
 
             for (var quad : batchState.texturedQuads) {
-                float x0 = quad.x, y0 = quad.y;
-                float x1 = quad.x + quad.width, y1 = quad.y + quad.height;
+                // Vertices are pre-transformed, use them directly
+                // Order: bottom-left, bottom-right, top-right, top-left
                 int c = quad.color;
                 float a = ((c >> 24) & 0xFF) / 255f;
                 float r = ((c >> 16) & 0xFF) / 255f;
                 float g = ((c >> 8) & 0xFF) / 255f;
                 float b = (c & 0xFF) / 255f;
 
-                buffer.addVertex(matrix, x0, y1, 0).setUv(quad.u0, quad.v1).setColor(r, g, b, a);
-                buffer.addVertex(matrix, x1, y1, 0).setUv(quad.u1, quad.v1).setColor(r, g, b, a);
-                buffer.addVertex(matrix, x1, y0, 0).setUv(quad.u1, quad.v0).setColor(r, g, b, a);
-                buffer.addVertex(matrix, x0, y0, 0).setUv(quad.u0, quad.v0).setColor(r, g, b, a);
+                buffer.addVertex(matrix, quad.x0, quad.y0, 0).setUv(quad.u0, quad.v1).setColor(r, g, b, a); // bottom-left
+                buffer.addVertex(matrix, quad.x1, quad.y1, 0).setUv(quad.u1, quad.v1).setColor(r, g, b, a); // bottom-right
+                buffer.addVertex(matrix, quad.x2, quad.y2, 0).setUv(quad.u1, quad.v0).setColor(r, g, b, a); // top-right
+                buffer.addVertex(matrix, quad.x3, quad.y3, 0).setUv(quad.u0, quad.v0).setColor(r, g, b, a); // top-left
             }
 
             MeshData meshData = buffer.build();
@@ -199,18 +243,18 @@ public final class SceneCanvas {
             Matrix4f matrix = graphics.pose().last().pose();
 
             for (var quad : batchState.coloredQuads) {
-                float x0 = quad.x, y0 = quad.y;
-                float x1 = quad.x + quad.width, y1 = quad.y + quad.height;
+                // Vertices are pre-transformed, use them directly
+                // Order: bottom-left, bottom-right, top-right, top-left
                 int c = quad.color;
                 float a = ((c >> 24) & 0xFF) / 255f;
                 float r = ((c >> 16) & 0xFF) / 255f;
                 float g = ((c >> 8) & 0xFF) / 255f;
                 float b = (c & 0xFF) / 255f;
 
-                buffer.addVertex(matrix, x0, y1, 0).setColor(r, g, b, a);
-                buffer.addVertex(matrix, x1, y1, 0).setColor(r, g, b, a);
-                buffer.addVertex(matrix, x1, y0, 0).setColor(r, g, b, a);
-                buffer.addVertex(matrix, x0, y0, 0).setColor(r, g, b, a);
+                buffer.addVertex(matrix, quad.x0, quad.y0, 0).setColor(r, g, b, a); // bottom-left
+                buffer.addVertex(matrix, quad.x1, quad.y1, 0).setColor(r, g, b, a); // bottom-right
+                buffer.addVertex(matrix, quad.x2, quad.y2, 0).setColor(r, g, b, a); // top-right
+                buffer.addVertex(matrix, quad.x3, quad.y3, 0).setColor(r, g, b, a); // top-left
             }
 
             MeshData meshData = buffer.build();
@@ -260,7 +304,7 @@ public final class SceneCanvas {
         flushBatch();
         applyScissor();
         graphics.pose().pushPose();
-        graphics.pose().mulPose(currentTransform);
+        graphics.pose().mulPose(localTransform());
         graphics.pose().translate(0, 0, zOffset);
         drawCall.run();
         graphics.pose().popPose();
@@ -274,8 +318,12 @@ public final class SceneCanvas {
 
     public Matrix4f combinedPose() {
         Matrix4f combined = new Matrix4f(graphics.pose().last().pose());
-        combined.mul(currentTransform);
+        combined.mul(localTransform());
         return combined;
+    }
+
+    private Matrix4f localTransform() {
+        return new Matrix4f(currentTransform);
     }
 
     //region texture
@@ -289,9 +337,20 @@ public final class SceneCanvas {
             flushBatch();
             applyScissor();
             graphics.pose().pushPose();
-            graphics.pose().mulPose(currentTransform);
+            graphics.pose().mulPose(localTransform());
             graphics.pose().translate(0, 0, zOffset);
-            applyColorTint(() -> texture.render(graphics, x, y, width, height));
+            if (currentColor != 0xFFFFFFFF) {
+                float a = ((currentColor >> 24) & 0xFF) / 255f;
+                float r = ((currentColor >> 16) & 0xFF) / 255f;
+                float g = ((currentColor >> 8) & 0xFF) / 255f;
+                float b = (currentColor & 0xFF) / 255f;
+                RenderSystem.enableBlend();
+                RenderSystem.setShaderColor(r, g, b, a);
+                texture.render(graphics, x, y, width, height);
+                RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+            } else {
+                texture.render(graphics, x, y, width, height);
+            }
             graphics.pose().popPose();
             restoreScissor();
         }
@@ -366,7 +425,7 @@ public final class SceneCanvas {
         flushBatch(); // Gradient cannot be batched
         applyScissor();
         graphics.pose().pushPose();
-        graphics.pose().mulPose(currentTransform);
+        graphics.pose().mulPose(localTransform());
         graphics.pose().translate(0, 0, zOffset);
         graphics.fillGradient(x, y, x + width, y + height, colorTop, colorBottom);
         graphics.pose().popPose();
@@ -422,7 +481,7 @@ public final class SceneCanvas {
         flushBatch();
         applyScissor();
         graphics.pose().pushPose();
-        graphics.pose().mulPose(currentTransform);
+        graphics.pose().mulPose(localTransform());
         graphics.pose().translate(0, 0, zOffset);
         graphics.drawString(font(), text, x, y, color, dropShadow);
         graphics.pose().popPose();
@@ -438,7 +497,7 @@ public final class SceneCanvas {
         flushBatch();
         applyScissor();
         graphics.pose().pushPose();
-        graphics.pose().mulPose(currentTransform);
+        graphics.pose().mulPose(localTransform());
         graphics.pose().translate(0, 0, zOffset);
         graphics.drawString(font(), text, x, y, color, dropShadow);
         graphics.pose().popPose();
@@ -482,7 +541,7 @@ public final class SceneCanvas {
         flushBatch();
         applyScissor();
         graphics.pose().pushPose();
-        graphics.pose().mulPose(currentTransform);
+        graphics.pose().mulPose(localTransform());
         graphics.pose().translate(0, 0, zOffset);
         graphics.renderItem(stack, x, y);
         graphics.pose().popPose();
@@ -496,7 +555,7 @@ public final class SceneCanvas {
         flushBatch();
         applyScissor();
         graphics.pose().pushPose();
-        graphics.pose().mulPose(currentTransform);
+        graphics.pose().mulPose(localTransform());
         graphics.pose().translate(0, 0, zOffset);
         graphics.renderItemDecorations(font(), stack, x, y, text);
         graphics.pose().popPose();
@@ -522,7 +581,7 @@ public final class SceneCanvas {
         flushBatch();
         applyScissor();
         graphics.pose().pushPose();
-        graphics.pose().mulPose(currentTransform);
+        graphics.pose().mulPose(localTransform());
         graphics.pose().translate(0, 0, zOffset);
         draw.accept(graphics);
         graphics.pose().popPose();
@@ -541,7 +600,7 @@ public final class SceneCanvas {
         flushBatch();
         applyScissor();
         graphics.pose().pushPose();
-        graphics.pose().mulPose(currentTransform);
+        graphics.pose().mulPose(localTransform());
         graphics.pose().translate(0, 0, zOffset);
         draw.accept(graphics);
         graphics.pose().popPose();
@@ -609,21 +668,6 @@ public final class SceneCanvas {
         return Minecraft.getInstance().font;
     }
 
-    private void applyColorTint(Runnable action) {
-        if (currentColor != 0xFFFFFFFF) {
-            float a = ((currentColor >> 24) & 0xFF) / 255f;
-            float r = ((currentColor >> 16) & 0xFF) / 255f;
-            float g = ((currentColor >> 8) & 0xFF) / 255f;
-            float b = (currentColor & 0xFF) / 255f;
-            RenderSystem.enableBlend();
-            RenderSystem.setShaderColor(r, g, b, a);
-            action.run();
-            RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-        } else {
-            action.run();
-        }
-    }
-
     private void applyScissor() {
         Rect clip = clipStack.current();
         if (clip != null) {
@@ -652,6 +696,10 @@ public final class SceneCanvas {
         }
         currentTransform = transformStack.pop();
         return this;
+    }
+
+    public SceneCanvas translate(Pos pos) {
+        return translate(pos.x(), pos.y());
     }
 
     public SceneCanvas translate(float x, float y) {
@@ -692,9 +740,7 @@ public final class SceneCanvas {
     }
 
     public Matrix4f combinedTransform() {
-        Matrix4f combined = new Matrix4f(graphics.pose().last().pose());
-        combined.mul(currentTransform);
-        return combined;
+        return localTransform();
     }
 
     public float[] transformPoint(int x, int y) {
@@ -703,7 +749,7 @@ public final class SceneCanvas {
 
     public float[] transformPoint(float x, float y) {
         transformTemp.set(x, y, 0, 1);
-        currentTransform.transform(transformTemp);
+        localTransform().transform(transformTemp);
         float px = transformTemp.x;
         float py = transformTemp.y;
         Matrix4f matrix = graphics.pose().last().pose();
@@ -714,8 +760,97 @@ public final class SceneCanvas {
 
     public float[] transformPointLocal(float x, float y) {
         transformTemp.set(x, y, 0, 1);
-        currentTransform.transform(transformTemp);
+        localTransform().transform(transformTemp);
         return new float[]{transformTemp.x, transformTemp.y};
+    }
+
+    //endregion
+
+    //region widget rendering
+
+    /**
+     * Renders a list of widgets with proper viewport-aware transform handling.
+     * <p>
+     * Each widget's full viewport forward matrix (including layout position and all
+     * user transforms) is applied via the canvas transform stack. The mouse coordinates
+     * are transformed through the viewport's inverse matrix so that each widget
+     * receives coordinates in its own local space.
+     *
+     * @param widgets      the widgets to render
+     * @param mouseX       relative mouse X (relative to parent)
+     * @param mouseY       relative mouse Y (relative to parent)
+     * @param partialTicks partial ticks
+     * @param <T>          widget type
+     */
+    public <T extends Widget> void renderWidgets(List<T> widgets, int mouseX, int mouseY, float partialTicks) {
+        //noinspection ForLoopReplaceableByForEach
+        for (int i = 0; i < widgets.size(); i++) {
+            T widget = widgets.get(i);
+            if (!widget.shouldRender()) continue;
+            Viewport vp = widget.viewport();
+            pushViewport(vp);
+            var local = vp.parentToLocal(mouseX, mouseY);
+            widget.render(this, (int) local.x, (int) local.y, partialTicks);
+            popViewport();
+        }
+    }
+
+    /**
+     * Renders a list of child widgets using their viewport transforms.
+     *
+     * @param widgets      the widgets to render
+     * @param mouseX       relative mouse X (relative to parent)
+     * @param mouseY       relative mouse Y (relative to parent)
+     * @param partialTicks partial ticks
+     * @param <T>          widget type
+     */
+    public <T extends Widget> void renderChildren(List<T> widgets, int mouseX, int mouseY, float partialTicks) {
+        //noinspection ForLoopReplaceableByForEach
+        for (int i = 0; i < widgets.size(); i++) {
+            T widget = widgets.get(i);
+            if (!widget.shouldRender()) continue;
+            Viewport vp = widget.viewport();
+            pushViewport(vp);
+            var local = vp.parentToLocal(mouseX, mouseY);
+            widget.render(this, (int) local.x, (int) local.y, partialTicks);
+            popViewport();
+        }
+    }
+
+    //endregion
+
+    //region viewport
+
+    /**
+     * Pushes the given viewport's forward matrix onto the canvas transform stack.
+     *
+     * @param viewport the viewport whose transform to apply
+     */
+    public SceneCanvas pushViewport(Viewport viewport) {
+        pushTransform();
+        currentTransform.mul(viewport.toMatrix4f());
+        return this;
+    }
+
+    /**
+     * Pushes only the <em>view</em> portion of the viewport (user transforms, indices 1…n,
+     * excludes layout position). Use this when the layout translation is already applied
+     * by other means and you only want scroll/zoom/rotation.
+     *
+     * @param viewport the viewport whose view matrix to apply
+     */
+    public SceneCanvas pushViewMatrix(Viewport viewport) {
+        pushTransform();
+        currentTransform.mul(viewport.viewMatrix4f());
+        return this;
+    }
+
+    /**
+     * Pops the viewport transform. This is simply an alias for {@link #popTransform()}
+     * for readability.
+     */
+    public SceneCanvas popViewport() {
+        return popTransform();
     }
 
     //endregion

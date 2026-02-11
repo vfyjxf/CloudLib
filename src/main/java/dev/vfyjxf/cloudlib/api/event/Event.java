@@ -20,6 +20,7 @@ import java.util.function.Function;
  *
  * @param <T> the invoker type,it <b>must</b> be a functional interface.
  */
+//TODO:should we add bubble event??
 @ApiStatus.NonExtendable
 public sealed interface Event<T> permits Events.EventImpl {
 

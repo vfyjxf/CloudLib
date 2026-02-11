@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.ui.widgets;
+package dev.vfyjxf.cloudlib.ui.widget;
 
 import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
@@ -30,7 +30,7 @@ public class ColumnWidget extends CompositeWidget<Widget> {
     }
 
     private ColumnWidget() {
-        applyStyle(UIStyle.of(UIStyles.flexColumn()));
+        useStyle(UIStyle.of(UIStyles.flexColumn()));
     }
 
     //endregion
@@ -43,7 +43,7 @@ public class ColumnWidget extends CompositeWidget<Widget> {
 
     public ColumnWidget setSpacing(int spacing) {
         this.spacing = spacing;
-        applyStyle(UIStyle.of(UIStyles.rowGap(spacing)));
+        useStyle(UIStyle.of(UIStyles.rowGap(spacing)));
         return this;
     }
 
@@ -51,8 +51,9 @@ public class ColumnWidget extends CompositeWidget<Widget> {
 
     //region children
 
-    public <T extends Widget> T addChild(T widget) {
-        return addWidget(widget);
+    @Override
+    public <T extends Widget> T addWidget(T widget) {
+        return super.addWidget(widget);
     }
 
     //endregion

@@ -31,7 +31,7 @@
  *       {@link dev.vfyjxf.cloudlib.api.ui.style.property.layout.AlignContentProperty},
  *       {@link dev.vfyjxf.cloudlib.api.ui.style.property.layout.JustifyContentProperty}</li>
  *   <li><b>Position Properties:</b> {@link dev.vfyjxf.cloudlib.api.ui.style.property.layout.PositionTypeProperty},
- *       {@link dev.vfyjxf.cloudlib.api.ui.style.property.layout.PositionEdgeProperty}</li>
+ *       {@link dev.vfyjxf.cloudlib.api.ui.style.property.layout.InsetProperty}</li>
  *   <li><b>Grid Properties:</b> {@link dev.vfyjxf.cloudlib.api.ui.style.property.layout.GridTemplateRowsProperty},
  *       {@link dev.vfyjxf.cloudlib.api.ui.style.property.layout.GridTemplateColumnsProperty},
  *       {@link dev.vfyjxf.cloudlib.api.ui.style.property.layout.GridAutoFlowProperty}, etc.</li>

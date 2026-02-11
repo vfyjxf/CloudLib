@@ -3,7 +3,6 @@ package dev.vfyjxf.cloudlib.api.ui.style.property;
 import dev.vfyjxf.cloudlib.api.ui.style.StyleContext;
 import dev.vfyjxf.cloudlib.api.ui.style.VisualContext;
 import dev.vfyjxf.cloudlib.api.ui.style.property.layout.StyleProperty;
-import dev.vfyjxf.cloudlib.api.ui.style.property.visual.BorderProperty;
 
 /**
  * A style property that applies visual styling to UI elements.
@@ -15,7 +14,7 @@ import dev.vfyjxf.cloudlib.api.ui.style.property.visual.BorderProperty;
  * Common visual properties include:
  * <ul>
  *   <li>Background: color, image, gradient</li>
- *   <li>Border: color, radius (often visual; some properties like {@link BorderProperty} may also affect layout)</li>
+ *   <li>Border: visual border styling (color, etc.) - for layout border, use layout properties</li>
  *   <li>Text: color, font style</li>
  *   <li>Opacity: transparency</li>
  *   <li>Shadow: drop shadows (if your renderer supports it)</li>

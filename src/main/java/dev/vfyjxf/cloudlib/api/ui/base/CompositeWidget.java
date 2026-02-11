@@ -9,13 +9,25 @@ import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Unmodifiable;
 
-//TODO:Refactor subWidget and GroupWidget
+import java.util.Comparator;
+
 public class CompositeWidget<T extends Widget> extends Widget {
 
     //region child
 
     final MutableList<T> children = MutableLists.empty();
     protected final MutableList<T> childrenView = children.asUnmodifiable();
+
+    /**
+     * Lazily created sorted children list for rendering.
+     * Only created when children have non-zero zIndex values.
+     */
+    private MutableList<T> renderOrderChildren;
+
+    /**
+     * Flag indicating whether the sorted children list needs to be rebuilt.
+     */
+    boolean childrenOrderDirty = true;
 
     //endregion
 
@@ -38,18 +50,7 @@ public class CompositeWidget<T extends Widget> extends Widget {
         }
     }
 
-    /**
-     * Invalidates the cached absolute position of this widget and all descendants.
-     */
-    @Override
-    protected void onPositionChanged() {
-        super.onPositionChanged();
-        for (T child : children) {
-            child.onPositionChanged();
-        }
-    }
-
-//endregion
+    //endregion
 
     //region lifecycle
 
@@ -82,7 +83,7 @@ public class CompositeWidget<T extends Widget> extends Widget {
     }
 
     protected CompositeWidget<T> add(T widget) {
-        this.add(children.size(), widget);
+        addWidget(widget);
         return this;
     }
 
@@ -113,12 +114,13 @@ public class CompositeWidget<T extends Widget> extends Widget {
             listeners(WidgetEvent.onChildAdded).onChildAdded(widget, context);
             if (context.cancelled()) return false;
             children.add(index, widget);
+            childrenOrderDirty = true;
             if (scene != null) {
                 switch (widget.lifecycle) {
                     case created -> scene.addCreatedWidget(widget);
                     case unmounted -> {
                         scene.reuse(widget);
-                        scene.addUnmountedWidget(widget);
+                        scene.remountWidget(widget);
                     }
                     default ->
                         throw new IllegalArgumentException("Illegal lifecycle: " + widget.lifecycle + " for widget: " + widget);
@@ -129,6 +131,10 @@ public class CompositeWidget<T extends Widget> extends Widget {
             return true;
         }
         return false;
+    }
+
+    protected final boolean removeWidget(Widget widget) {
+        return remove(widget);
     }
 
     protected boolean remove(Widget widget) {
@@ -145,8 +151,9 @@ public class CompositeWidget<T extends Widget> extends Widget {
         child.listeners(WidgetEvent.onRemove).onRemove(this, child);
         Widget widget = children.remove(index);
         if (widget != null) {
-            widget.unmount();
+            childrenOrderDirty = true;
             if (scene != null) {
+                scene.unmountWidget(widget);
                 scene.invalidatePathCache();
             }
         }
@@ -163,30 +170,117 @@ public class CompositeWidget<T extends Widget> extends Widget {
         return children.contains(widget);
     }
 
-    @Override
-    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        super.renderInternal(canvas, mouseX, mouseY, partialTicks);
-        for (T child : children) {
-            canvas.pushTransform();
-            canvas.translate(child.position.x(), child.position.y());
-            int relativeX = mouseX - child.position.x();
-            int relativeY = mouseY - child.position.y();
-            child.renderWidget(canvas, relativeX, relativeY, partialTicks);
-            canvas.popTransform();
+    /**
+     * Gets the children list to use for rendering, sorted by zIndex if needed.
+     * <p>
+     * The sorted list is lazily created and cached. It's only created when
+     * at least one child has a non-zero zIndex or is in a non-content layer.
+     * <p>
+     * Widgets in non-content layers are excluded from this list as they are
+     * rendered separately by Scene in their respective layers.
+     *
+     * @return the children list for rendering (only content layer widgets)
+     * @implNote This is only for internal component implementations, and the rendering of some special components does not fully obey this list
+     */
+    protected MutableList<T> renderOrderChildren() {
+        if (!childrenOrderDirty && renderOrderChildren != null) {
+            return renderOrderChildren;
         }
+
+        // Check if any child needs special handling (non-content layer or non-zero zIndex)
+        boolean hasNonContentLayer = hasNonContentLayerChildren(children);
+        boolean needsSorting = needsZIndexSorting(children);
+
+        // If no special handling needed, return original list
+        if (!hasNonContentLayer && !needsSorting) {
+            renderOrderChildren = null;
+            return children;
+        }
+
+        // Create or update the sorted list
+        if (renderOrderChildren == null) {
+            renderOrderChildren = MutableLists.empty();
+        } else {
+            renderOrderChildren.clear();
+        }
+
+        // Filter and sort: only include content layer widgets
+        for (T child : children) {
+            if (child.sceneLayer() == SceneLayer.content) {
+                renderOrderChildren.add(child);
+            } else if (scene != null) {
+                // Ensure non-content layer widgets are added to the correct layer
+                scene.addToLayer(child.sceneLayer(), child);
+            }
+        }
+
+        if (needsSorting) {
+            renderOrderChildren.sortThis(Comparator.comparingInt(Widget::zIndex));
+        }
+        childrenOrderDirty = false;
+        return renderOrderChildren;
     }
 
-    @Override
-    protected void renderOverlayInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        super.renderOverlayInternal(canvas, mouseX, mouseY, partialTicks);
+
+    protected static <T extends Widget> boolean needsZIndexSorting(MutableList<T> children) {
+        if (children.size() <= 1) return false;
         for (T child : children) {
-            child.renderOverlay(canvas, mouseX, mouseY, partialTicks);
+            if (child.zIndex() != 0) return true;
         }
+        return false;
+    }
+
+    protected static <T extends Widget> boolean hasNonContentLayerChildren(MutableList<T> children) {
+        for (T child : children) {
+            if (child.sceneLayer() != SceneLayer.content) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Marks the children render order as dirty, requiring a rebuild on next render.
+     * Package-private: only Widget can call this through onRenderOrderChanged().
+     */
+    void markChildrenOrderDirty() {
+        childrenOrderDirty = true;
+    }
+
+    /**
+     * Renders this composite widget completely.
+     * <p>
+     * First renders this widget's own content via {@link #renderInternal},
+     * then renders all children via {@link #renderChildren}.
+     * Subclasses can override this to change the rendering order or add intermediate steps.
+     */
+    @Override
+    public void render(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        var eventContext = common();
+        listeners(WidgetEvent.onRender).onRender(canvas, mouseX, mouseY, partialTicks, this, eventContext);
+        if (eventContext.cancelled()) return;
+        renderInternal(canvas, mouseX, mouseY, partialTicks);
+        renderChildren(canvas, mouseX, mouseY, partialTicks);
+        listeners(WidgetEvent.onRenderPost).onRender(canvas, mouseX, mouseY, partialTicks, this, interruptible());
+    }
+
+    /**
+     * Renders all children of this composite widget.
+     * <p>
+     * Children are rendered in zIndex order. Each child is rendered with proper transform applied.
+     * Widgets in non-content layers are managed separately by Scene.
+     * Subclasses can override this to customize how children are rendered (e.g., scrolling, clipping).
+     *
+     * @param canvas       the canvas for batched rendering
+     * @param mouseX       relative mouse X (relative to this widget)
+     * @param mouseY       relative mouse Y (relative to this widget)
+     * @param partialTicks partial ticks
+     */
+    protected void renderChildren(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        canvas.renderChildren(renderOrderChildren(), mouseX, mouseY, partialTicks);
     }
 
     //endregion
 
-    //region group utils
+    //region debug
 
     @Override
     @MustBeInvokedByOverriders

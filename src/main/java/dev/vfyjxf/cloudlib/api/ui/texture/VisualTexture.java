@@ -1,7 +1,9 @@
 package dev.vfyjxf.cloudlib.api.ui.texture;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.function.IntSupplier;
@@ -31,8 +33,7 @@ public interface VisualTexture {
     /**
      * An empty texture that renders nothing.
      */
-    VisualTexture empty = (graphics, x, y, width, height) -> {
-    };
+    VisualTexture empty = (graphics, x, y, width, height) -> {};
 
     //region factory
 
@@ -40,7 +41,12 @@ public interface VisualTexture {
      * Creates a texture from a sprite ResourceLocation.
      */
     static VisualTexture sprite(ResourceLocation spriteLocation) {
-        return (graphics, x, y, w, h) -> graphics.blitSprite(spriteLocation, x, y, w, h);
+        return (graphics, x, y, w, h) -> {
+            var minecraft = Minecraft.getInstance();
+            var guiSprites = minecraft.getGuiSprites();
+            TextureAtlasSprite sprite = guiSprites.getSprite(spriteLocation);
+            graphics.blit(x, y, 0, w, h, sprite);
+        };
     }
 
     /**

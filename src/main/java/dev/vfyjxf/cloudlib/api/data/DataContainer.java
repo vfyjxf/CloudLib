@@ -263,32 +263,4 @@ public class DataContainer {
     }
 
     //endregion
-
-    //region legacy api
-
-    /**
-     * @deprecated Use {@link #set(DataKey, Object)}
-     */
-    @Deprecated(forRemoval = true)
-    public <T> void attach(DataKey<T> key, T value) {
-        set(key, value);
-    }
-
-    /**
-     * @deprecated Use {@link #get(DataKey)}
-     */
-    @Deprecated(forRemoval = true)
-    public <T> @Nullable T getNullable(DataKey<T> key) {
-        return get(key);
-    }
-
-    /**
-     * @deprecated Use {@link #remove(DataKey)}
-     */
-    @Deprecated(forRemoval = true)
-    public <T> @Nullable T detach(DataKey<T> key) {
-        return remove(key);
-    }
-
-    //endregion
 }

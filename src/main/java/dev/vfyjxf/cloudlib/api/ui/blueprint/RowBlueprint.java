@@ -6,7 +6,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.ui.widgets.RowWidget;
+import dev.vfyjxf.cloudlib.ui.widget.RowWidget;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
@@ -90,7 +90,7 @@ public final class RowBlueprint implements Blueprint.Group<RowWidget, Widget> {
     @Override
     public void updateWidget(RowWidget widget, Scene scene, SceneContext context) {
         widget.setSpacing(spacing)
-              .applyStyle(style);
+              .useStyle(style);
     }
 
     //endregion

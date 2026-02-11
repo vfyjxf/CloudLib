@@ -5,7 +5,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.Scene;
 import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.ui.widgets.TextFieldWidget;
+import dev.vfyjxf.cloudlib.ui.widget.TextFieldWidget;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
@@ -126,7 +126,7 @@ public final class TextFieldBlueprint implements Blueprint<TextFieldWidget> {
               .setPlaceholderColor(placeholderColor)
               .onTextChanged(onTextChanged)
               .onEnterPressed(onEnterPressed)
-              .applyStyle(style);
+              .useStyle(style);
     }
 
     //endregion

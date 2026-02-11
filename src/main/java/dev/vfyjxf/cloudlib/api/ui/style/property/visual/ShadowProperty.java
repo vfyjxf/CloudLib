@@ -16,7 +16,13 @@ import dev.vfyjxf.cloudlib.api.ui.style.property.VisualProperty;
  */
 public record ShadowProperty(float offsetX, float offsetY, float blurRadius, int color) implements VisualProperty {
 
+    //region types
+
     public static final StyleType<ShadowProperty> type = StyleType.of("shadow", () -> null);
+
+    //endregion
+
+    //region constructors
 
     /**
      * Creates a simple shadow with default offsets.
@@ -37,6 +43,10 @@ public record ShadowProperty(float offsetX, float offsetY, float blurRadius, int
         this.blurRadius = Math.max(0.0f, blurRadius);
         this.color = color;
     }
+
+    //endregion
+
+    //region factory methods
 
     /**
      * Creates a no-shadow (clear shadow).
@@ -66,6 +76,10 @@ public record ShadowProperty(float offsetX, float offsetY, float blurRadius, int
         return new ShadowProperty(4, 4, 8, 0x80000000);
     }
 
+    //endregion
+
+    //region VisualProperty implementation
+
     @Override
     public StyleType<?> type() {
         return type;
@@ -76,9 +90,15 @@ public record ShadowProperty(float offsetX, float offsetY, float blurRadius, int
         context.setShadow(offsetX, offsetY, blurRadius, color);
     }
 
+    //endregion
+
+    //region accessors
+
     public boolean hasShadow() {
         return (color & 0xFF000000) != 0 && (blurRadius > 0 || offsetX != 0 || offsetY != 0);
     }
+
+    //endregion
 
     @Override
     public String toString() {

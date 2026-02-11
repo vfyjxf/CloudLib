@@ -7,7 +7,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import dev.vfyjxf.cloudlib.ui.widgets.ButtonWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ButtonWidget;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
@@ -128,7 +128,7 @@ public final class ButtonBlueprint implements Blueprint<ButtonWidget> {
               .setTextures(normalTexture, hoverTexture, pressedTexture)
               .setIconTexture(iconTexture)
               .setTextColor(textColor)
-              .applyStyle(style);
+              .useStyle(style);
     }
 
     //endregion

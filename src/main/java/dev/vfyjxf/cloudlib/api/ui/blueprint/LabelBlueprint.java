@@ -5,7 +5,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.Scene;
 import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.ui.widgets.LabelWidget;
+import dev.vfyjxf.cloudlib.ui.widget.LabelWidget;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
@@ -95,7 +95,7 @@ public final class LabelBlueprint implements Blueprint<LabelWidget> {
               .setColor(color)
               .setShadow(shadow)
               .setAlign(align)
-              .applyStyle(style);
+              .useStyle(style);
     }
 
     //endregion
