@@ -8,23 +8,23 @@ public enum ScrollDirection {
     /**
      * Only vertical scrolling.
      */
-    VERTICAL,
+    vertical,
 
     /**
      * Only horizontal scrolling.
      */
-    HORIZONTAL,
+    horizontal,
 
     /**
      * Both horizontal and vertical scrolling.
      */
-    BOTH;
+    both;
 
     public boolean allowsVertical() {
-        return this == VERTICAL || this == BOTH;
+        return this == vertical || this == both;
     }
 
     public boolean allowsHorizontal() {
-        return this == HORIZONTAL || this == BOTH;
+        return this == horizontal || this == both;
     }
 }

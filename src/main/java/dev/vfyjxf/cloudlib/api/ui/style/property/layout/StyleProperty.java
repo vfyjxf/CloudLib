@@ -63,6 +63,7 @@ public interface StyleProperty {
      *
      * @param collector the collector to add properties to
      */
+    @SuppressWarnings("unchecked")
     default void collectInspection(InspectionInfoCollector collector) {
         StyleType<?> type = type();
         Object value = inspectionValue();

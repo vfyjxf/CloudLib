@@ -11,7 +11,7 @@ import org.jetbrains.annotations.UnknownNullability;
 public interface DragProvider {
 
     CompositeScenario<DragProvider> scenario = new CompositeScenario<>(
-        Namespace.of(Constants.MOD_ID, "drag_provider"),
+        Namespace.of(Constants.modId, "drag_provider"),
         DragProvider.class,
         listeners -> new DragProvider() {
             @Override

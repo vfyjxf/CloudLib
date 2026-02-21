@@ -101,9 +101,9 @@ public class TextWidget extends Widget {
         if (content.length() > 30) {
             content = content.substring(0, 27) + "...";
         }
-        collector.add("text", content, InspectionProperty.CATEGORY_DATA);
-        collector.addWithDefault("color", String.format("#%06X", color & 0xFFFFFF), "#FFFFFF", InspectionProperty.CATEGORY_VISUAL);
-        collector.addWithDefault("shadow", shadow, false, InspectionProperty.CATEGORY_VISUAL);
+        collector.add("text", content, InspectionProperty.categoryData);
+        collector.addWithDefault("color", String.format("#%06X", color & 0xFFFFFF), "#FFFFFF", InspectionProperty.categoryVisual);
+        collector.addWithDefault("shadow", shadow, false, InspectionProperty.categoryVisual);
     }
 
     //endregion

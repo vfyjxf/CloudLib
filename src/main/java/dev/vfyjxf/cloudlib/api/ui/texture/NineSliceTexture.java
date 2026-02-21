@@ -110,77 +110,116 @@ public record NineSliceTexture(
 
     @Override
     public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+        ResourceLocation textureLocation;
+        float uMin, vMin, uMax, vMax;
+
         if (atlasSprite) {
-            // For atlas sprites, get the actual sprite and manually render nine-slice
             var minecraft = Minecraft.getInstance();
             var guiSprites = minecraft.getGuiSprites();
             TextureAtlasSprite sprite = guiSprites.getSprite(location);
-
-            int centerWidth = w - left - right;
-            int centerHeight = h - top - bottom;
-
-            // Calculate UV coordinates from sprite
-            float spriteU0 = sprite.getU0();
-            float spriteV0 = sprite.getV0();
-            float spriteU1 = sprite.getU1();
-            float spriteV1 = sprite.getV1();
-            float spriteWidth = spriteU1 - spriteU0;
-            float spriteHeight = spriteV1 - spriteV0;
-
-            // UV coordinates for nine-slice regions
-            float uLeft = spriteU0 + spriteWidth * ((float) left / width);
-            float uRight = spriteU0 + spriteWidth * ((float) (width - right) / width);
-            float vTop = spriteV0 + spriteHeight * ((float) top / height);
-            float vBottom = spriteV0 + spriteHeight * ((float) (height - bottom) / height);
-
-            // Top row
-            innerBlit(graphics, sprite.atlasLocation(), x, y, left, top, spriteU0, spriteV0, uLeft, vTop);
-            innerBlit(graphics, sprite.atlasLocation(), x + left, y, centerWidth, top, uLeft, spriteV0, uRight, vTop);
-            innerBlit(graphics, sprite.atlasLocation(), x + w - right, y, right, top, uRight, spriteV0, spriteU1, vTop);
-
-            // Middle row
-            innerBlit(graphics, sprite.atlasLocation(), x, y + top, left, centerHeight, spriteU0, vTop, uLeft, vBottom);
-            innerBlit(graphics, sprite.atlasLocation(), x + left, y + top, centerWidth, centerHeight, uLeft, vTop, uRight, vBottom);
-            innerBlit(graphics, sprite.atlasLocation(), x + w - right, y + top, right, centerHeight, uRight, vTop, spriteU1, vBottom);
-
-            // Bottom row
-            innerBlit(graphics, sprite.atlasLocation(), x, y + h - bottom, left, bottom, spriteU0, vBottom, uLeft, spriteV1);
-            innerBlit(graphics, sprite.atlasLocation(), x + left, y + h - bottom, centerWidth, bottom, uLeft, vBottom, uRight, spriteV1);
-            innerBlit(graphics, sprite.atlasLocation(), x + w - right, y + h - bottom, right, bottom, uRight, vBottom, spriteU1, spriteV1);
+            textureLocation = sprite.atlasLocation();
+            uMin = sprite.getU0();
+            vMin = sprite.getV0();
+            uMax = sprite.getU1();
+            vMax = sprite.getV1();
         } else {
-            // Fallback to individual blit calls for standard textures
-            int centerWidth = w - left - right;
-            int centerHeight = h - top - bottom;
-            int texCenterW = width - left - right;
-            int texCenterH = height - top - bottom;
+            textureLocation = location;
+            uMin = 0;
+            vMin = 0;
+            uMax = 1;
+            vMax = 1;
+        }
 
-            // Top row
-            graphics.blit(location, x, y, left, top, 0, 0, left, top, width, height);
-            graphics.blit(location, x + left, y, centerWidth, top, left, 0, texCenterW, top, width, height);
-            graphics.blit(location, x + w - right, y, right, top, width - right, 0, right, top, width, height);
+        float uSize = uMax - uMin;
+        float vSize = vMax - vMin;
 
-            // Middle row
-            graphics.blit(location, x, y + top, left, centerHeight, 0, top, left, texCenterH, width, height);
-            graphics.blit(location, x + left, y + top, centerWidth, centerHeight, left, top, texCenterW, texCenterH, width, height);
-            graphics.blit(location, x + w - right, y + top, right, centerHeight, width - right, top, right, texCenterH, width, height);
+        float uLeft = uMin + uSize * (left / (float) width);
+        float uRight = uMax - uSize * (right / (float) width);
+        float vTop = vMin + vSize * (top / (float) height);
+        float vBottom = vMax - vSize * (bottom / (float) height);
 
-            // Bottom row
-            graphics.blit(location, x, y + h - bottom, left, bottom, 0, height - bottom, left, bottom, width, height);
-            graphics.blit(location, x + left, y + h - bottom, centerWidth, bottom, left, height - bottom, texCenterW, bottom, width, height);
-            graphics.blit(location, x + w - right, y + h - bottom, right, bottom, width - right, height - bottom, right, bottom, width, height);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderTexture(0, textureLocation);
+
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        Matrix4f matrix = graphics.pose().last().pose();
+
+        int middleWidth = width - left - right;
+        int middleHeight = height - top - bottom;
+        int tiledMiddleWidth = w - left - right;
+        int tiledMiddleHeight = h - top - bottom;
+
+        // Four corners (fixed size, never tiled)
+        addQuad(buffer, matrix, uMin, vMin, uLeft, vTop, x, y, left, top);
+        addQuad(buffer, matrix, uRight, vMin, uMax, vTop, x + w - right, y, right, top);
+        addQuad(buffer, matrix, uMin, vBottom, uLeft, vMax, x, y + h - bottom, left, bottom);
+        addQuad(buffer, matrix, uRight, vBottom, uMax, vMax, x + w - right, y + h - bottom, right, bottom);
+
+        if (tiledMiddleWidth > 0) {
+            // Top edge
+            addTiled(buffer, matrix, uLeft, vMin, uRight, vTop, x + left, y, tiledMiddleWidth, top, middleWidth, top);
+            // Bottom edge
+            addTiled(buffer, matrix, uLeft, vBottom, uRight, vMax, x + left, y + h - bottom, tiledMiddleWidth, bottom, middleWidth, bottom);
+        }
+        if (tiledMiddleHeight > 0) {
+            // Left edge
+            addTiled(buffer, matrix, uMin, vTop, uLeft, vBottom, x, y + top, left, tiledMiddleHeight, left, middleHeight);
+            // Right edge
+            addTiled(buffer, matrix, uRight, vTop, uMax, vBottom, x + w - right, y + top, right, tiledMiddleHeight, right, middleHeight);
+        }
+        if (tiledMiddleWidth > 0 && tiledMiddleHeight > 0) {
+            // Center
+            addTiled(buffer, matrix, uLeft, vTop, uRight, vBottom, x + left, y + top, tiledMiddleWidth, tiledMiddleHeight, middleWidth, middleHeight);
+        }
+
+        BufferUploader.drawWithShader(buffer.buildOrThrow());
+    }
+
+    /**
+     * Adds tiled quads to the buffer, repeating the texture region to fill the target area.
+     */
+    private static void addTiled(BufferBuilder buffer, Matrix4f matrix,
+                                 float uMin, float vMin, float uMax, float vMax,
+                                 int xOffset, int yOffset, int tiledWidth, int tiledHeight,
+                                 int tileWidth, int tileHeight) {
+        int xTileCount = tiledWidth / tileWidth;
+        int xRemainder = tiledWidth - (xTileCount * tileWidth);
+        int yTileCount = tiledHeight / tileHeight;
+        int yRemainder = tiledHeight - (yTileCount * tileHeight);
+
+        float uSize = uMax - uMin;
+        float vSize = vMax - vMin;
+
+        int yStart = yOffset + tiledHeight;
+
+        for (int xTile = 0; xTile <= xTileCount; xTile++) {
+            for (int yTile = 0; yTile <= yTileCount; yTile++) {
+                int tw = (xTile == xTileCount) ? xRemainder : tileWidth;
+                int th = (yTile == yTileCount) ? yRemainder : tileHeight;
+                int tx = xOffset + (xTile * tileWidth);
+                int ty = yStart - ((yTile + 1) * tileHeight);
+                if (tw > 0 && th > 0) {
+                    int maskRight = tileWidth - tw;
+                    int maskTop = tileHeight - th;
+                    float uOffset = (maskRight / (float) tileWidth) * uSize;
+                    float vOffset = (maskTop / (float) tileHeight) * vSize;
+                    addQuad(buffer, matrix, uMin, vMin + vOffset, uMax - uOffset, vMax, tx, ty + maskTop, tw, th);
+                }
+            }
         }
     }
 
-    private static void innerBlit(GuiGraphics graphics, ResourceLocation texture, int x, int y, int width, int height, float u0, float v0, float u1, float v1) {
-        RenderSystem.setShaderTexture(0, texture);
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        Matrix4f matrix = graphics.pose().last().pose();
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        buffer.addVertex(matrix, x, y, 0).setUv(u0, v0);
-        buffer.addVertex(matrix, x, y + height, 0).setUv(u0, v1);
-        buffer.addVertex(matrix, x + width, y + height, 0).setUv(u1, v1);
-        buffer.addVertex(matrix, x + width, y, 0).setUv(u1, v0);
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
+    /**
+     * Adds a single textured quad to the buffer.
+     */
+    private static void addQuad(BufferBuilder buffer, Matrix4f matrix,
+                                float uMin, float vMin, float uMax, float vMax,
+                                int x, int y, int w, int h) {
+        buffer.addVertex(matrix, x, y + h, 0).setUv(uMin, vMax);
+        buffer.addVertex(matrix, x + w, y + h, 0).setUv(uMax, vMax);
+        buffer.addVertex(matrix, x + w, y, 0).setUv(uMax, vMin);
+        buffer.addVertex(matrix, x, y, 0).setUv(uMin, vMin);
     }
 
     //endregion
@@ -189,68 +228,94 @@ public record NineSliceTexture(
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float w, float h, int color) {
+        ResourceLocation textureLocation;
+        float uMin, vMin, uMax, vMax;
+
         if (atlasSprite) {
-            // For atlas sprites, get the actual sprite and calculate UV coordinates
             var minecraft = Minecraft.getInstance();
             var guiSprites = minecraft.getGuiSprites();
             TextureAtlasSprite sprite = guiSprites.getSprite(location);
-            ResourceLocation atlasLocation = sprite.atlasLocation();
-
-            float centerWidth = w - left - right;
-            float centerHeight = h - top - bottom;
-
-            // Calculate UV coordinates from sprite
-            float spriteU0 = sprite.getU0();
-            float spriteV0 = sprite.getV0();
-            float spriteU1 = sprite.getU1();
-            float spriteV1 = sprite.getV1();
-            float spriteWidth = spriteU1 - spriteU0;
-            float spriteHeight = spriteV1 - spriteV0;
-
-            // UV coordinates for nine-slice regions
-            float uLeft = spriteU0 + spriteWidth * ((float) left / width);
-            float uRight = spriteU0 + spriteWidth * ((float) (width - right) / width);
-            float vTop = spriteV0 + spriteHeight * ((float) top / height);
-            float vBottom = spriteV0 + spriteHeight * ((float) (height - bottom) / height);
-
-            // Top row
-            emitter.textured(atlasLocation, x, y, left, top, spriteU0, spriteV0, uLeft, vTop, color);
-            emitter.textured(atlasLocation, x + left, y, centerWidth, top, uLeft, spriteV0, uRight, vTop, color);
-            emitter.textured(atlasLocation, x + w - right, y, right, top, uRight, spriteV0, spriteU1, vTop, color);
-
-            // Middle row
-            emitter.textured(atlasLocation, x, y + top, left, centerHeight, spriteU0, vTop, uLeft, vBottom, color);
-            emitter.textured(atlasLocation, x + left, y + top, centerWidth, centerHeight, uLeft, vTop, uRight, vBottom, color);
-            emitter.textured(atlasLocation, x + w - right, y + top, right, centerHeight, uRight, vTop, spriteU1, vBottom, color);
-
-            // Bottom row
-            emitter.textured(atlasLocation, x, y + h - bottom, left, bottom, spriteU0, vBottom, uLeft, spriteV1, color);
-            emitter.textured(atlasLocation, x + left, y + h - bottom, centerWidth, bottom, uLeft, vBottom, uRight, spriteV1, color);
-            emitter.textured(atlasLocation, x + w - right, y + h - bottom, right, bottom, uRight, vBottom, spriteU1, spriteV1, color);
+            textureLocation = sprite.atlasLocation();
+            uMin = sprite.getU0();
+            vMin = sprite.getV0();
+            uMax = sprite.getU1();
+            vMax = sprite.getV1();
         } else {
-            float centerWidth = w - left - right;
-            float centerHeight = h - top - bottom;
+            textureLocation = location;
+            uMin = 0;
+            vMin = 0;
+            uMax = 1;
+            vMax = 1;
+        }
 
-            // UV coordinates
-            float uLeft = (float) left / width;
-            float uRight = (float) (width - right) / width;
-            float vTop = (float) top / height;
-            float vBottom = (float) (height - bottom) / height;
+        float uSize = uMax - uMin;
+        float vSize = vMax - vMin;
 
-            // Top row
-            emitter.textured(location, x, y, left, top, 0, 0, uLeft, vTop, color);
-            emitter.textured(location, x + left, y, centerWidth, top, uLeft, 0, uRight, vTop, color);
-            emitter.textured(location, x + w - right, y, right, top, uRight, 0, 1, vTop, color);
+        float uLeft = uMin + uSize * (left / (float) width);
+        float uRight = uMax - uSize * (right / (float) width);
+        float vTop = vMin + vSize * (top / (float) height);
+        float vBottom = vMax - vSize * (bottom / (float) height);
 
-            // Middle row
-            emitter.textured(location, x, y + top, left, centerHeight, 0, vTop, uLeft, vBottom, color);
-            emitter.textured(location, x + left, y + top, centerWidth, centerHeight, uLeft, vTop, uRight, vBottom, color);
-            emitter.textured(location, x + w - right, y + top, right, centerHeight, uRight, vTop, 1, vBottom, color);
+        int middleWidth = width - left - right;
+        int middleHeight = height - top - bottom;
+        float tiledMiddleWidth = w - left - right;
+        float tiledMiddleHeight = h - top - bottom;
 
-            // Bottom row
-            emitter.textured(location, x, y + h - bottom, left, bottom, 0, vBottom, uLeft, 1, color);
-            emitter.textured(location, x + left, y + h - bottom, centerWidth, bottom, uLeft, vBottom, uRight, 1, color);
-            emitter.textured(location, x + w - right, y + h - bottom, right, bottom, uRight, vBottom, 1, 1, color);
+        // Four corners
+        emitter.textured(textureLocation, x, y, left, top, uMin, vMin, uLeft, vTop, color);
+        emitter.textured(textureLocation, x + w - right, y, right, top, uRight, vMin, uMax, vTop, color);
+        emitter.textured(textureLocation, x, y + h - bottom, left, bottom, uMin, vBottom, uLeft, vMax, color);
+        emitter.textured(textureLocation, x + w - right, y + h - bottom, right, bottom, uRight, vBottom, uMax, vMax, color);
+
+        if (tiledMiddleWidth > 0) {
+            // Top edge
+            emitTiled(emitter, textureLocation, uLeft, vMin, uRight, vTop, x + left, y, tiledMiddleWidth, top, middleWidth, top, color);
+            // Bottom edge
+            emitTiled(emitter, textureLocation, uLeft, vBottom, uRight, vMax, x + left, y + h - bottom, tiledMiddleWidth, bottom, middleWidth, bottom, color);
+        }
+        if (tiledMiddleHeight > 0) {
+            // Left edge
+            emitTiled(emitter, textureLocation, uMin, vTop, uLeft, vBottom, x, y + top, left, tiledMiddleHeight, left, middleHeight, color);
+            // Right edge
+            emitTiled(emitter, textureLocation, uRight, vTop, uMax, vBottom, x + w - right, y + top, right, tiledMiddleHeight, right, middleHeight, color);
+        }
+        if (tiledMiddleWidth > 0 && tiledMiddleHeight > 0) {
+            // Center
+            emitTiled(emitter, textureLocation, uLeft, vTop, uRight, vBottom, x + left, y + top, tiledMiddleWidth, tiledMiddleHeight, middleWidth, middleHeight, color);
+        }
+    }
+
+    /**
+     * Emits tiled quads via the emitter, repeating the texture region to fill the target area.
+     */
+    private static void emitTiled(VertexEmitter emitter, ResourceLocation texture,
+                                  float uMin, float vMin, float uMax, float vMax,
+                                  float xOffset, float yOffset, float tiledWidth, float tiledHeight,
+                                  int tileWidth, int tileHeight, int color) {
+        int xTileCount = (int) (tiledWidth / tileWidth);
+        float xRemainder = tiledWidth - (xTileCount * tileWidth);
+        int yTileCount = (int) (tiledHeight / tileHeight);
+        float yRemainder = tiledHeight - (yTileCount * tileHeight);
+
+        float uSize = uMax - uMin;
+        float vSize = vMax - vMin;
+
+        float yStart = yOffset + tiledHeight;
+
+        for (int xTile = 0; xTile <= xTileCount; xTile++) {
+            for (int yTile = 0; yTile <= yTileCount; yTile++) {
+                float tw = (xTile == xTileCount) ? xRemainder : tileWidth;
+                float th = (yTile == yTileCount) ? yRemainder : tileHeight;
+                float tx = xOffset + (xTile * tileWidth);
+                float ty = yStart - ((yTile + 1) * tileHeight);
+                if (tw > 0 && th > 0) {
+                    float maskRight = tileWidth - tw;
+                    float maskTop = tileHeight - th;
+                    float uOffset = (maskRight / tileWidth) * uSize;
+                    float vOffset = (maskTop / tileHeight) * vSize;
+                    emitter.textured(texture, tx, ty + maskTop, tw, th, uMin, vMin + vOffset, uMax - uOffset, vMax, color);
+                }
+            }
         }
     }
 

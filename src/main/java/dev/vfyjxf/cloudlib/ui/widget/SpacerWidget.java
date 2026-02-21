@@ -73,8 +73,8 @@ public class SpacerWidget extends Widget {
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
-        collector.addWithDefault("minLength", minLength, 0f, InspectionProperty.CATEGORY_LAYOUT);
-        collector.addWithDefault("flexGrow", flexGrow, 1f, InspectionProperty.CATEGORY_LAYOUT);
+        collector.addWithDefault("minLength", minLength, 0f, InspectionProperty.categoryLayout);
+        collector.addWithDefault("flexGrow", flexGrow, 1f, InspectionProperty.categoryLayout);
     }
 
     //endregion

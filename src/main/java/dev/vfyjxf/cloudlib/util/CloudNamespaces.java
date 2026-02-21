@@ -6,7 +6,7 @@ import dev.vfyjxf.cloudlib.api.util.Namespace;
 public final class CloudNamespaces {
 
     public static Namespace ofMod(String path) {
-        return Namespace.of(Constants.MOD_ID, path);
+        return Namespace.of(Constants.modId, path);
     }
 
 }

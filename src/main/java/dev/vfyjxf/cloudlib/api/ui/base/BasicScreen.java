@@ -26,7 +26,7 @@ public abstract class BasicScreen extends Screen {
         //region setup main panel
         mainGroup = new WidgetGroup<>();
         {
-            mainGroup.focusable = true;
+            mainGroup.setFocusNode(new FocusScopeNode());
         }
         scene = new Scene(mainGroup);
 

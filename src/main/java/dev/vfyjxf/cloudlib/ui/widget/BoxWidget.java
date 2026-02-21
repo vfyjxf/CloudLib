@@ -43,7 +43,7 @@ public class BoxWidget extends CompositeWidget<Widget> {
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
-        collector.add("children", children().size(), InspectionProperty.CATEGORY_DATA);
+        collector.add("children", children().size(), InspectionProperty.categoryData);
     }
 
     //endregion

@@ -26,8 +26,8 @@ import java.util.function.Supplier;
 
 public final class TestRegistry {
 
-    private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(Constants.MOD_ID);
-    private static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(Constants.MOD_ID);
+    private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(Constants.modId);
+    private static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(Constants.modId);
 
     public static final DeferredBlock<TestBlock> testBlock = block(
         "test_block",
@@ -35,7 +35,7 @@ public final class TestRegistry {
         BlockItem::new
     );
 
-    private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, Constants.MOD_ID);
+    private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, Constants.modId);
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TestBlockEntity>> testBlockEntity =
         BLOCK_ENTITIES.register(
@@ -68,7 +68,7 @@ public final class TestRegistry {
     }
 
     private static class CreativeTabValues {
-        public static final DeferredRegister<CreativeModeTab> CREATIVE_TAB = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Constants.MOD_ID);
+        public static final DeferredRegister<CreativeModeTab> CREATIVE_TAB = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Constants.modId);
         public static final MutableList<DeferredItem<?>> creativeTagItems = MutableLists.empty();
         public static final DeferredHolder<CreativeModeTab, CreativeModeTab> creativeTab = CREATIVE_TAB.register(
             "conduit_tab",

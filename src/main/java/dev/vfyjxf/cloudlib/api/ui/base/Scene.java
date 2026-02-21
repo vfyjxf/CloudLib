@@ -11,7 +11,7 @@ import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvents;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
-import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
+import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import dev.vfyjxf.cloudlib.ui.drag.DraggableManager;
 import dev.vfyjxf.cloudlib.util.Checks;
@@ -25,6 +25,7 @@ import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import mezz.jei.gui.input.MouseUtil;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,6 +45,11 @@ public final class Scene {
     public Scene(WidgetGroup<? extends Widget> root) {
         this.root = root;
         this.draggableManager = new DraggableManager(root);
+        // Ensure root has a FocusScopeNode as the root focus scope
+        if (!(root.focusNode instanceof FocusScopeNode)) {
+            root.setFocusNode(new FocusScopeNode());
+        }
+        this.rootScope = (FocusScopeNode) root.focusNode;
     }
 
     //region tree
@@ -524,6 +530,8 @@ public final class Scene {
         if (!widget.lifecycle.mounted()) {
             throw new IllegalArgumentException("Cannot unmount widget: " + widget + " because it is not mounted!");
         }
+        // Clean up focus state if the unmounting widget or its descendants had focus
+        handleFocusWidgetUnmount(widget);
         WidgetTree.walkBottomUp(widget, true, -1, (w, depth) -> {
             w.unmount();
             destroyingWidgets.add(w);
@@ -660,13 +668,15 @@ public final class Scene {
 
     //endregion
 
-    //region hover tooltip
+    //region tooltip
 
-    private RichTooltip hoverTooltip = RichTooltip.empty();
+    private Tooltip hoverTooltip = new Tooltip();
 
-    public void setHoverTooltip(RichTooltip tooltip) {
+    public void setHoverTooltip(Tooltip tooltip) {
         this.hoverTooltip = Checks.checkNotNull(tooltip, "tooltip");
     }
+
+    private record TooltipInstance(Tooltip tooltip, ClientTooltipPositioner positioner) {}
 
     //endregion
 
@@ -696,7 +706,7 @@ public final class Scene {
 
         canvas.flushBatch();
 
-        if (hoverTooltip != RichTooltip.empty()) {
+        if (hoverTooltip.notEmpty()) {
             ScreenUtil.renderTooltip(graphics, hoverTooltip, mouseX, mouseY);
         }
 
@@ -729,25 +739,145 @@ public final class Scene {
     private long lastClickTime;
     private WidgetPath lastHoveredPath;
 
-    private Widget focusWidget;
     private FloatPos lastClickPos;
 
+    //region click region
 
-    public @Nullable Widget focusingWidget() {
-        return focusWidget;
+    /**
+     * Registry of click-region groups.
+     * Key: the group identifier passed to {@link Widget#setClickGroup(Object)}.
+     * Value: all currently-mounted widgets that share that group key.
+     */
+    private final Map<Object, MutableList<Widget>> clickGroups = new Object2ObjectOpenHashMap<>();
+
+    /**
+     * Registers a widget with a click-region group.
+     * Called from {@link Widget#setClickGroup(Object)} and {@link Widget#mount}.
+     */
+    void registerClickGroup(Widget widget, Object groupKey) {
+        clickGroups.computeIfAbsent(groupKey, k -> MutableLists.of()).add(widget);
     }
 
-    public void requestFocus(Widget widget) {
-        if (widget.lifecycle.mounted()) {
-            focus(widget);
-        } else {
-
+    /**
+     * Removes a widget from a click-region group.
+     * Called from {@link Widget#setClickGroup(Object)} and {@link Widget#unmount}.
+     */
+    void unregisterClickGroup(Widget widget, Object groupKey) {
+        var list = clickGroups.get(groupKey);
+        if (list != null) {
+            list.remove(widget);
+            if (list.isEmpty()) {
+                clickGroups.remove(groupKey);
+            }
         }
     }
 
-    public void requestUnfocus(Widget widget) {
-
+    /**
+     * After a mouse click is dispatched normally, checks every click-region group.
+     * If the click target (or any of its ancestors) is not a member of a group,
+     * fires {@link WidgetEvent#onClickOutside} on all members of that group.
+     */
+    private void dispatchClickOutside(Widget target) {
+        if (clickGroups.isEmpty()) return;
+        for (var entry : clickGroups.entrySet()) {
+            MutableList<Widget> members = entry.getValue();
+            boolean inside = false;
+            for (int i = 0; i < members.size(); i++) {
+                Widget member = members.get(i);
+                if (member == target || isDescendantOf(target, member)) {
+                    inside = true;
+                    break;
+                }
+            }
+            if (!inside) {
+                // Snapshot to protect against concurrent modification
+                // (an onClickOutside handler might change click groups)
+                var snapshot = MutableLists.ofAll(members);
+                for (int i = 0; i < snapshot.size(); i++) {
+                    Widget member = snapshot.get(i);
+                    if (member.lifecycle.mounted()) {
+                        member.listeners(WidgetEvent.onClickOutside)
+                            .onClickOutside(member.interruptible());
+                    }
+                }
+            }
+        }
     }
+
+    //endregion
+
+    //region focus
+
+    private final FocusScopeNode rootScope;
+    private @Nullable FocusNode primaryFocus;
+
+    /**
+     * @return the root focus scope for this scene.
+     */
+    public FocusScopeNode rootScope() {
+        return rootScope;
+    }
+
+    /**
+     * @return the current primary focus node, or null if nothing is focused.
+     */
+    public @Nullable FocusNode primaryFocus() {
+        return primaryFocus;
+    }
+
+    /**
+     * @return the widget that currently holds primary focus, or null.
+     */
+    public @Nullable Widget focusingWidget() {
+        return primaryFocus != null ? primaryFocus.owner : null;
+    }
+
+    /**
+     * Requests primary focus for the given node.
+     */
+    public void requestFocus(FocusNode node) {
+        if (node.owner == null || !node.owner.lifecycle.mounted()) return;
+        if (!node.canRequestFocus) return;
+        doFocus(node);
+    }
+
+    /**
+     * Convenience: requests focus for the widget's focus node.
+     */
+    public void requestFocus(Widget widget) {
+        if (widget.lifecycle.mounted() && widget.focusNode != null) {
+            requestFocus(widget.focusNode);
+        }
+    }
+
+    /**
+     * Removes focus from the given node.
+     * If the node is the primary focus or an ancestor of it, focus is cleared.
+     */
+    public void unfocus(FocusNode node) {
+        if (primaryFocus == null) return;
+        if (primaryFocus == node || node.hasFocus) {
+            doClearFocus();
+        }
+    }
+
+    /**
+     * Convenience: removes focus from the widget's focus node.
+     */
+    public void requestUnfocus(Widget widget) {
+        if (widget.focusNode != null) {
+            unfocus(widget.focusNode);
+        }
+    }
+
+    /**
+     * Clears all focus in this scene.
+     */
+    public void clearFocus() {
+        if (primaryFocus != null) doClearFocus();
+    }
+
+    //endregion
 
     /**
      * Called when a mouse button is clicked within the GUI element.
@@ -762,27 +892,31 @@ public final class Scene {
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             Widget focusable = findFocusable(target, mouseX, mouseY);
-            if (focusable != null) {
-                focus(focusable);
+            if (focusable != null && focusable.focusNode != null) {
+                requestFocus(focusable.focusNode);
             }
             var input = InputContext.fromMouse(mouseX, mouseY, button);
             var bubble = target.bubble();
             currentClickWidget = target;
             lastClickButton = button;
-            return handleBubbleEvent(
+            boolean result = handleBubbleEvent(
                 target, bubble, InputEvents.onMouseClicked,
                 (listener) -> listener.onClicked(input, bubble)
             );
+            // After normal dispatch, fire onClickOutside for each group
+            // whose members do not contain the target (or its ancestors).
+            dispatchClickOutside(target);
+            return result;
         }
         return false;
     }
 
     private static @Nullable Widget findFocusable(Widget widget, double mouseX, double mouseY) {
-        if (widget.focusable) return widget;
+        if (widget.focusable()) return widget;
         Widget focusable = null;
         CompositeWidget<?> parent = widget.parent();
         while (parent != null && focusable == null) {
-            if (parent.focusable && parent.isMouseOver(mouseX, mouseY)) {
+            if (parent.focusable() && parent.isMouseOver(mouseX, mouseY)) {
                 focusable = parent;
             }
             parent = parent.parent();
@@ -932,14 +1066,15 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (focusWidget == null || !focusWidget.lifecycle.mounted()) return false;
+        Widget fw = focusingWidget();
+        if (fw == null || !fw.lifecycle.mounted()) return false;
         var localMouse = root.sceneToLocal(MouseUtil.getX(), MouseUtil.getY());
         double mouseX = localMouse.x;
         double mouseY = localMouse.y;
         var input = InputContext.fromKeyboard(keyCode, scanCode, modifiers, mouseX, mouseY);
-        var bubble = focusWidget.bubble();
+        var bubble = fw.bubble();
         return handleBubbleEvent(
-            focusWidget, bubble, InputEvents.onKeyPressed,
+            fw, bubble, InputEvents.onKeyPressed,
             (listener) -> listener.onKeyPressed(input, bubble)
         );
     }
@@ -954,14 +1089,15 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if (focusWidget == null || !focusWidget.lifecycle.mounted()) return false;
+        Widget fw = focusingWidget();
+        if (fw == null || !fw.lifecycle.mounted()) return false;
         var localMouse = root.sceneToLocal(MouseUtil.getX(), MouseUtil.getY());
         double mouseX = localMouse.x;
         double mouseY = localMouse.y;
         var input = InputContext.fromKeyboard(keyCode, scanCode, modifiers, mouseX, mouseY);
-        var bubble = focusWidget.bubble();
+        var bubble = fw.bubble();
         return handleBubbleEvent(
-            focusWidget, bubble, InputEvents.onKeyReleased,
+            fw, bubble, InputEvents.onKeyReleased,
             (listener) -> listener.onKeyReleased(input, bubble)
         );
     }
@@ -975,10 +1111,11 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean charTyped(char codePoint, int modifiers) {
-        if (focusWidget != null) {
-            var bubble = focusWidget.bubble();
+        Widget fw = focusingWidget();
+        if (fw != null && fw.lifecycle.mounted()) {
+            var bubble = fw.bubble();
             return handleBubbleEvent(
-                focusWidget, bubble, InputEvents.onCharTyped,
+                fw, bubble, InputEvents.onCharTyped,
                 (listener) -> listener.onCharTyped(codePoint, modifiers, bubble)
             );
         }
@@ -1012,29 +1149,135 @@ public final class Scene {
         pathCache.invalidate();
     }
 
-    private void focus(Widget widget) {
-        if (focusWidget != null && focusWidget != widget && focusWidget.lifecycle.mounted()) {
-            focusWidget.focused = false;
-            var bubble = focusWidget.bubble();
-            handleBubbleEvent(focusWidget, bubble, WidgetEvent.onFocusOut,
-                (listener) -> listener.onFocusOut(focusWidget, bubble)
-            );
-            focusWidget.listeners(WidgetEvent.onFocusLost).onFocusLost(focusWidget.interruptible());
+    //region focus internals
+
+    private void handleFocusWidgetUnmount(Widget widget) {
+        if (primaryFocus == null) return;
+        FocusNode node = widget.focusNode;
+        if (node != null && (primaryFocus == node || node.hasFocus)) {
+            doClearFocus();
+            return;
         }
-        focusWidget = widget;
-        focusWidget.focused = true;
-        var bubble = widget.bubble();
-        handleBubbleEvent(
-            widget, bubble, WidgetEvent.onFocusIn,
-            (listener) -> listener.onFocusIn(focusWidget, bubble)
-        );
-        focusWidget.listeners(WidgetEvent.onFocus).onFocus(focusWidget.interruptible());
+        if (primaryFocus.owner != null && isDescendantOf(primaryFocus.owner, widget)) {
+            doClearFocus();
+        }
     }
+
+    /**
+     * Focus transitions follow this event sequence:
+     * <ol>
+     *     <li>Old focus path: clear {@code hasFocus} on diverging branch</li>
+     *     <li>Old focus: {@code hasPrimaryFocus = false}</li>
+     *     <li>Old focus: fire {@link WidgetEvent#onFocusOut} (bubbling)</li>
+     *     <li>Old focus: fire {@link WidgetEvent#onFocusLost} (local)</li>
+     *     <li>New focus path: set {@code hasFocus} on diverging branch</li>
+     *     <li>New focus: {@code hasPrimaryFocus = true}</li>
+     *     <li>New focus: fire {@link WidgetEvent#onFocusIn} (bubbling)</li>
+     *     <li>New focus: fire {@link WidgetEvent#onFocus} (local)</li>
+     * </ol>
+     */
+    private void doFocus(FocusNode node) {
+        FocusNode oldFocus = primaryFocus;
+        if (oldFocus == node) return;
+
+        Widget newWidget = node.owner;
+        WidgetPath newPath = newWidget.path();
+
+        if (oldFocus != null && oldFocus.owner != null && oldFocus.owner.lifecycle.mounted()) {
+            Widget oldWidget = oldFocus.owner;
+            WidgetPath oldPath = oldWidget.path();
+            int forkIndex = newPath.commonAncestorIndex(oldPath);
+
+            for (int i = oldPath.size() - 1; i > forkIndex; i--) {
+                FocusNode fn = oldPath.get(i).focusNode;
+                if (fn != null) fn.hasFocus = false;
+            }
+
+            oldFocus.hasPrimaryFocus = false;
+
+            var bubble = oldWidget.bubble();
+            handleBubbleEvent(oldWidget, bubble, WidgetEvent.onFocusOut,
+                (listener) -> listener.onFocusOut(oldWidget, bubble)
+            );
+            oldWidget.listeners(WidgetEvent.onFocusLost).onFocusLost(oldWidget.interruptible());
+
+            for (int i = forkIndex + 1; i < newPath.size(); i++) {
+                FocusNode fn = newPath.get(i).focusNode;
+                if (fn != null) fn.hasFocus = true;
+            }
+        } else {
+            if (oldFocus != null) {
+                oldFocus.hasPrimaryFocus = false;
+                oldFocus.hasFocus = false;
+            }
+            for (int i = 0; i < newPath.size(); i++) {
+                FocusNode fn = newPath.get(i).focusNode;
+                if (fn != null) fn.hasFocus = true;
+            }
+        }
+
+        primaryFocus = node;
+        node.hasPrimaryFocus = true;
+        node.hasFocus = true;
+
+        updateScopeFocusedChild(node);
+
+        var bubble = newWidget.bubble();
+        handleBubbleEvent(
+            newWidget, bubble, WidgetEvent.onFocusIn,
+            (listener) -> listener.onFocusIn(newWidget, bubble)
+        );
+        newWidget.listeners(WidgetEvent.onFocus).onFocus(newWidget.interruptible());
+    }
+
+    private void doClearFocus() {
+        if (primaryFocus == null) return;
+        FocusNode oldFocus = primaryFocus;
+        Widget oldWidget = oldFocus.owner;
+        primaryFocus = null;
+
+        if (oldWidget != null && oldWidget.lifecycle.mounted()) {
+            WidgetPath oldPath = oldWidget.path();
+            for (int i = 0; i < oldPath.size(); i++) {
+                FocusNode fn = oldPath.get(i).focusNode;
+                if (fn != null) fn.hasFocus = false;
+            }
+            oldFocus.hasPrimaryFocus = false;
+
+            var bubble = oldWidget.bubble();
+            handleBubbleEvent(oldWidget, bubble, WidgetEvent.onFocusOut,
+                (listener) -> listener.onFocusOut(oldWidget, bubble)
+            );
+            oldWidget.listeners(WidgetEvent.onFocusLost).onFocusLost(oldWidget.interruptible());
+        } else {
+            oldFocus.hasPrimaryFocus = false;
+            oldFocus.hasFocus = false;
+        }
+    }
+
+    private void updateScopeFocusedChild(FocusNode node) {
+        FocusScopeNode scope = node.enclosingScope();
+        while (scope != null) {
+            scope.focusedChild = node;
+            scope = scope.enclosingScope();
+        }
+    }
+
+    private static boolean isDescendantOf(Widget descendant, Widget ancestor) {
+        Widget current = descendant.parent;
+        while (current != null) {
+            if (current == ancestor) return true;
+            current = current.parent;
+        }
+        return false;
+    }
+
+    //endregion
 
     private @Nullable Widget hitTest(double mouseX, double mouseY) {
         for (int i = SceneLayer.extraLayers.size() - 1; i >= 0; i--) {
             SceneLayer layer = SceneLayer.extraLayers.get(i);
-            if (layer.hitTestMode() != HitTestAction.enabled) continue;
+            if (layer.hitTestMode() == HitTestAction.none) continue;
 
             var widgets = extraLayers.get(layer);
             for (int j = widgets.size() - 1; j >= 0; j--) {

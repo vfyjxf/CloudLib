@@ -127,10 +127,10 @@ dependencies {
             prefer("13.0.0")
         }
     }
-    additionalRuntimeClasspath(api("dev.vfyjxf:taffy:1.1.0"))
-    jarJar("dev.vfyjxf:taffy:1.1.0") {
+    additionalRuntimeClasspath(api("dev.vfyjxf:taffy:1.1.3"))
+    jarJar("dev.vfyjxf:taffy:1.1.3") {
         version {
-            prefer("1.1.0")
+            prefer("1.1.3")
         }
     }
     additionalRuntimeClasspath(api("net.lenni0451:Reflect:1.4.0"))

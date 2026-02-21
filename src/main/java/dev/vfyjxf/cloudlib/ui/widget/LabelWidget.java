@@ -131,10 +131,10 @@ public class LabelWidget extends Widget {
         if (content.length() > 30) {
             content = content.substring(0, 27) + "...";
         }
-        collector.add("text", content, InspectionProperty.CATEGORY_DATA);
-        collector.addWithDefault("color", String.format("#%06X", color & 0xFFFFFF), "#FFFFFF", InspectionProperty.CATEGORY_VISUAL);
-        collector.addWithDefault("shadow", shadow, true, InspectionProperty.CATEGORY_VISUAL);
-        collector.addWithDefault("align", align != null ? align.name() : "LEFT", "LEFT", InspectionProperty.CATEGORY_VISUAL);
+        collector.add("text", content, InspectionProperty.categoryData);
+        collector.addWithDefault("color", String.format("#%06X", color & 0xFFFFFF), "#FFFFFF", InspectionProperty.categoryVisual);
+        collector.addWithDefault("shadow", shadow, true, InspectionProperty.categoryVisual);
+        collector.addWithDefault("align", align != null ? align.name() : "LEFT", "LEFT", InspectionProperty.categoryVisual);
     }
 
     //endregion

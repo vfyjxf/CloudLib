@@ -140,8 +140,8 @@ public class ProgressBarWidget extends Widget {
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
-        collector.add("progress", String.format("%.1f%%", progress() * 100), InspectionProperty.CATEGORY_DATA);
-        collector.addWithDefault("direction", direction.name(), Direction.LEFT_TO_RIGHT.name(), InspectionProperty.CATEGORY_VISUAL);
+        collector.add("progress", String.format("%.1f%%", progress() * 100), InspectionProperty.categoryData);
+        collector.addWithDefault("direction", direction.name(), Direction.LEFT_TO_RIGHT.name(), InspectionProperty.categoryVisual);
     }
 
     //endregion

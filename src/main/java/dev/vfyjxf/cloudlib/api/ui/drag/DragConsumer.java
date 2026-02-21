@@ -11,7 +11,7 @@ import java.util.function.BiPredicate;
 public interface DragConsumer {
 
     CompositeScenario<DragConsumer> scenario = new CompositeScenario<>(
-        Namespace.of(Constants.MOD_ID, "drag_consumer"),
+        Namespace.of(Constants.modId, "drag_consumer"),
         DragConsumer.class,
         listeners -> new DragConsumer() {
 

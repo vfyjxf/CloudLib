@@ -196,7 +196,7 @@ public class TestScrollScreen extends BasicScreen {
         column.addWidget(label);
 
         // Scrollable container
-        verticalState = ScrollState.create(ScrollDirection.VERTICAL)
+        verticalState = ScrollState.create(ScrollDirection.vertical)
             .scrollSpeed(12)
             .smooth(true)
             .smoothSpeed(0.35f)
@@ -243,7 +243,7 @@ public class TestScrollScreen extends BasicScreen {
         column.addWidget(label);
 
         // Scrollable container
-        horizontalState = ScrollState.create(ScrollDirection.HORIZONTAL)
+        horizontalState = ScrollState.create(ScrollDirection.horizontal)
             .scrollSpeed(15)
             .smooth(true)
             .smoothSpeed(0.3f)

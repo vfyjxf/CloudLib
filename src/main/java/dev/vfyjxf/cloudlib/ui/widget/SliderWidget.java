@@ -249,12 +249,12 @@ public class SliderWidget extends Widget {
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
-        collector.addWithDefault("value", value, 0.0, InspectionProperty.CATEGORY_DATA);
-        collector.addWithDefault("min", min, 0.0, InspectionProperty.CATEGORY_DATA);
-        collector.addWithDefault("max", max, 1.0, InspectionProperty.CATEGORY_DATA);
-        collector.addWithDefault("step", step, 0.0, InspectionProperty.CATEGORY_DATA);
-        collector.addWithDefault("orientation", orientation.name(), Orientation.HORIZONTAL.name(), InspectionProperty.CATEGORY_VISUAL);
-        collector.addWithDefault("dragging", dragging, false, InspectionProperty.CATEGORY_STATE);
+        collector.addWithDefault("value", value, 0.0, InspectionProperty.categoryData);
+        collector.addWithDefault("min", min, 0.0, InspectionProperty.categoryData);
+        collector.addWithDefault("max", max, 1.0, InspectionProperty.categoryData);
+        collector.addWithDefault("step", step, 0.0, InspectionProperty.categoryData);
+        collector.addWithDefault("orientation", orientation.name(), Orientation.HORIZONTAL.name(), InspectionProperty.categoryVisual);
+        collector.addWithDefault("dragging", dragging, false, InspectionProperty.categoryState);
     }
 
     //endregion

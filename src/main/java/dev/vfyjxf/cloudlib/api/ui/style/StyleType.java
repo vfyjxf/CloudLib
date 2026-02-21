@@ -109,7 +109,7 @@ public final class StyleType<T> {
      * @return a new StyleType
      */
     public static <T> StyleType<T> of(String id, @Nullable Supplier<T> initValue) {
-        return new StyleType<>(id, id, InspectionProperty.CATEGORY_LAYOUT, initValue, null, null);
+        return new StyleType<>(id, id, InspectionProperty.categoryLayout, initValue, null, null);
     }
 
     /**
@@ -123,7 +123,7 @@ public final class StyleType<T> {
      * @return a new StyleType
      */
     public static <T> StyleType<T> of(String id, @Nullable Supplier<T> initValue, @Nullable Applier<T> applier) {
-        return new StyleType<>(id, id, InspectionProperty.CATEGORY_LAYOUT, initValue, applier, null);
+        return new StyleType<>(id, id, InspectionProperty.categoryLayout, initValue, applier, null);
     }
 
     /**
@@ -135,7 +135,7 @@ public final class StyleType<T> {
      * @return a new StyleType
      */
     public static <T> StyleType<T> visual(String id, @Nullable Supplier<T> initValue) {
-        return new StyleType<>(id, id, InspectionProperty.CATEGORY_VISUAL, initValue, null, null);
+        return new StyleType<>(id, id, InspectionProperty.categoryVisual, initValue, null, null);
     }
 
     /**
@@ -148,7 +148,7 @@ public final class StyleType<T> {
      * @return a new StyleType
      */
     public static <T> StyleType<T> visual(String id, @Nullable Supplier<T> initValue, @Nullable Applier<T> applier) {
-        return new StyleType<>(id, id, InspectionProperty.CATEGORY_VISUAL, initValue, applier, null);
+        return new StyleType<>(id, id, InspectionProperty.categoryVisual, initValue, applier, null);
     }
 
     //endregion
@@ -277,7 +277,7 @@ public final class StyleType<T> {
     public static final class Builder<T> {
         private final String id;
         private String displayName;
-        private String category = InspectionProperty.CATEGORY_LAYOUT;
+        private String category = InspectionProperty.categoryLayout;
         private @Nullable Supplier<T> initValue;
         private @Nullable Applier<T> applier;
         private @Nullable Function<T, String> formatter;

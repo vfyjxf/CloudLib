@@ -18,19 +18,19 @@ public record InspectionProperty(
 ) {
 
     /** Default category for basic widget properties. */
-    public static final String CATEGORY_BASIC = "basic";
+    public static final String categoryBasic = "basic";
     /** Category for layout-related properties. */
-    public static final String CATEGORY_LAYOUT = "layout";
+    public static final String categoryLayout = "layout";
     /** Category for state-related properties. */
-    public static final String CATEGORY_STATE = "state";
+    public static final String categoryState = "state";
     /** Category for visual-related properties. */
-    public static final String CATEGORY_VISUAL = "visual";
+    public static final String categoryVisual = "visual";
     /** Category for data-related properties. */
-    public static final String CATEGORY_DATA = "data";
+    public static final String categoryData = "data";
 
     /** Creates a property with default category. */
     public static InspectionProperty of(String name, @Nullable Object value) {
-        return new InspectionProperty(name, value, null, CATEGORY_BASIC);
+        return new InspectionProperty(name, value, null, categoryBasic);
     }
 
     /** Creates a property with specified category. */
@@ -40,7 +40,7 @@ public record InspectionProperty(
 
     /** Creates a property with default value for comparison. */
     public static InspectionProperty withDefault(String name, @Nullable Object value, @Nullable Object defaultValue) {
-        return new InspectionProperty(name, value, defaultValue, CATEGORY_BASIC);
+        return new InspectionProperty(name, value, defaultValue, categoryBasic);
     }
 
     /** Creates a property with default value and category. */
@@ -65,7 +65,6 @@ public record InspectionProperty(
         return switch (value) {
             case null -> "null";
             case String s -> "\"" + s + "\"";
-            case Number n -> value.toString();
             case Boolean b -> b.toString();
             case Enum<?> e -> e.name();
             default -> value.toString();

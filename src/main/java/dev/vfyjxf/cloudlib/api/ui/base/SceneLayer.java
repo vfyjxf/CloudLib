@@ -36,13 +36,6 @@ public enum SceneLayer {
     overlay(HitTestAction.none),
 
     /**
-     * Layer for tooltip content.
-     * <p>
-     * HitTest: {@link HitTestAction#enabled} - tooltips can receive input.
-     */
-    tooltip(HitTestAction.enabled),
-
-    /**
      * Debug layer for development tools and overlays.
      * <p>
      * HitTest: {@link HitTestAction#enabled} - debug UI can receive input when enabled.

@@ -2,7 +2,6 @@ package dev.vfyjxf.cloudlib.api.ui.debug;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
-import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
@@ -752,14 +751,14 @@ public class Inspector extends Widget {
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
-        collector.addWithDefault("trackMouse", trackMouse, false, InspectionProperty.CATEGORY_STATE);
-        collector.addWithDefault("showAllProperties", showAllProperties, false, InspectionProperty.CATEGORY_STATE);
-        collector.addWithDefault("showHierarchy", showHierarchy, true, InspectionProperty.CATEGORY_STATE);
-        collector.addWithDefault("showHighlight", showHighlight, true, InspectionProperty.CATEGORY_STATE);
-        collector.add("displayMode", displayMode.name(), InspectionProperty.CATEGORY_STATE);
-        collector.add("hasTarget", getTarget() != null, InspectionProperty.CATEGORY_STATE);
-        collector.add("scrollOffset", scrollOffset, InspectionProperty.CATEGORY_STATE);
-        collector.add("maxScrollOffset", maxScrollOffset, InspectionProperty.CATEGORY_STATE);
+        collector.addWithDefault("trackMouse", trackMouse, false, InspectionProperty.categoryState);
+        collector.addWithDefault("showAllProperties", showAllProperties, false, InspectionProperty.categoryState);
+        collector.addWithDefault("showHierarchy", showHierarchy, true, InspectionProperty.categoryState);
+        collector.addWithDefault("showHighlight", showHighlight, true, InspectionProperty.categoryState);
+        collector.add("displayMode", displayMode.name(), InspectionProperty.categoryState);
+        collector.add("hasTarget", getTarget() != null, InspectionProperty.categoryState);
+        collector.add("scrollOffset", scrollOffset, InspectionProperty.categoryState);
+        collector.add("maxScrollOffset", maxScrollOffset, InspectionProperty.categoryState);
     }
 
     //endregion

@@ -20,7 +20,7 @@ import org.objectweb.asm.Type;
 
 import java.util.function.Supplier;
 
-@EventBusSubscriber(value = Dist.CLIENT, modid = Constants.MOD_ID)
+@EventBusSubscriber(value = Dist.CLIENT, modid = Constants.modId)
 public class TestScreenEventHandler {
 
     public static final KeyMapping openTestScreen = new KeyMapping(

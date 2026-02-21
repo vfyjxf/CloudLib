@@ -20,7 +20,8 @@ public class CloudlibPayloads {
     public static final Logger log = LoggerFactory.getLogger("CloudlibNetworkPayloads");
 
     public static void register(RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar registrar = event.registrar(Constants.MOD_ID);
+        //TODO:provide a meaningful version.
+        PayloadRegistrar registrar = event.registrar(Constants.modId);
         //region play 2 client
         MenuSyncDownstreamPacket.INFO.registerPlay(registrar);
         MenuDataReversedPacket.INFO.registerPlay(registrar);

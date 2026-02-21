@@ -1,5 +1,9 @@
 package dev.vfyjxf.cloudlib.api.ui.effect;
 
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.floating.FloatingEffect;
+import dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddleware;
+import dev.vfyjxf.cloudlib.api.ui.floating.FloatingPlacement;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollDirection;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollEffect;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollState;
@@ -107,5 +111,49 @@ public final class UIEffects {
     }
 
     //endregion
-}
 
+    //region floating
+
+    /**
+     * Creates a floating effect that positions the target widget relative to a reference widget.
+     * <p>
+     * The floating widget will be absolutely positioned and its coordinates will be
+     * recomputed every frame using the configured middleware pipeline.
+     *
+     * <pre>{@code
+     * import static dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares.*;
+     *
+     * Widget button = ButtonWidget.of("Click me", () -> {});
+     * Widget tooltip = LabelWidget.of("Tooltip text");
+     *
+     * tooltip.useEffect(floating(button, FloatingPlacement.bottom,
+     *     offset(8),
+     *     flip(),
+     *     shift(4)
+     * ));
+     * }</pre>
+     *
+     * @param reference  the reference widget to anchor to
+     * @param placement  the preferred placement relative to the reference
+     * @param middleware ordered middleware to apply (offset, flip, shift, etc.)
+     * @return a floating effect
+     * @see FloatingEffect
+     * @see dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares
+     */
+    public static FloatingEffect floating(Widget reference, FloatingPlacement placement, FloatingMiddleware... middleware) {
+        return FloatingEffect.create(reference, placement, middleware);
+    }
+
+    /**
+     * Creates a floating effect using the default {@link FloatingPlacement#bottom} placement.
+     *
+     * @param reference  the reference widget to anchor to
+     * @param middleware ordered middleware to apply
+     * @return a floating effect
+     */
+    public static FloatingEffect floating(Widget reference, FloatingMiddleware... middleware) {
+        return FloatingEffect.create(reference, FloatingPlacement.bottom, middleware);
+    }
+
+    //endregion
+}

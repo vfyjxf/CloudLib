@@ -9,10 +9,10 @@ import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.client.settings.KeyModifier;
 import org.lwjgl.glfw.GLFW;
 
-@LangProvider(Constants.MOD_ID)
+@LangProvider(Constants.modId)
 public final class KeyMappings {
 
-    private final static LangBuilder builder = LangBuilder.create(Constants.NAMESPACE, "keys");
+    private final static LangBuilder builder = LangBuilder.create(Constants.namespace, "keys");
     private static final String debug = builder.define("debug", "Debug").key();
     private static final String general = builder.define("general", "General").key();
     public static final KeyMapping refreshUI = new KeyMapping(

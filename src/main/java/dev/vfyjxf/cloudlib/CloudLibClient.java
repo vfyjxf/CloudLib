@@ -19,7 +19,7 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Mod(value = Constants.MOD_ID, dist = Dist.CLIENT)
+@Mod(value = Constants.modId, dist = Dist.CLIENT)
 public final class CloudLibClient extends CloudLib {
 
     public static final Logger logger = LoggerFactory.getLogger("CloudLib Client");
@@ -48,7 +48,7 @@ public final class CloudLibClient extends CloudLib {
     private void gatherData(GatherDataEvent event) {
         event.getGenerator().addProvider(
             event.includeClient(),
-            (DataProvider.Factory<DataProvider>) (output) -> new LangKeyProvider(Constants.MOD_ID, output)
+            (DataProvider.Factory<DataProvider>) (output) -> new LangKeyProvider(Constants.modId, output)
         );
     }
 

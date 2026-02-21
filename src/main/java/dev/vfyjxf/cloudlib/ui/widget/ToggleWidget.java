@@ -116,7 +116,7 @@ public class ToggleWidget extends Widget {
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
-        collector.addWithDefault("toggled", toggled, false, InspectionProperty.CATEGORY_STATE);
+        collector.addWithDefault("toggled", toggled, false, InspectionProperty.categoryState);
     }
 
     //endregion

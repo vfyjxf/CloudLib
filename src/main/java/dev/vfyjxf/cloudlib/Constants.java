@@ -2,9 +2,9 @@ package dev.vfyjxf.cloudlib;
 
 public final class Constants {
 
-    public static final String MOD_ID = "cloudlib";
-    public static final String NAMESPACE = "cloudlib";
+    public static final String modId = "cloudlib";
+    public static final String namespace = "cloudlib";
 
-    public static final String MC_ID = "minecraft";
+    public static final String mcId = "minecraft";
 
 }

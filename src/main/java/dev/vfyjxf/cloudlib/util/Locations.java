@@ -38,7 +38,7 @@ public final class Locations {
     }
 
     public static ResourceLocation ofMod(String path) {
-        return ResourceLocation.fromNamespaceAndPath(Constants.NAMESPACE, path);
+        return ResourceLocation.fromNamespaceAndPath(Constants.namespace, path);
     }
 
     private Locations() {}

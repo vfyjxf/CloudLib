@@ -72,8 +72,8 @@ public class ColumnWidget extends CompositeWidget<Widget> {
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
-        collector.addWithDefault("spacing", spacing, 0, InspectionProperty.CATEGORY_LAYOUT);
-        collector.add("children", children().size(), InspectionProperty.CATEGORY_DATA);
+        collector.addWithDefault("spacing", spacing, 0, InspectionProperty.categoryLayout);
+        collector.add("children", children().size(), InspectionProperty.categoryData);
     }
 
     //endregion

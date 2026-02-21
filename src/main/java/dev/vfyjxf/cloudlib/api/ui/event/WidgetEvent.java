@@ -16,7 +16,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.SceneHandle;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
-import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
+import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 
 //TODO:对事件进行分类，而不是所有的都堆积在这里
 public interface WidgetEvent {
@@ -157,6 +157,23 @@ public interface WidgetEvent {
         for (var listener : listeners) {
             if (context.interrupted()) return;
             listener.onFocusLost(context);
+        }
+    });
+
+    //endregion
+
+    //region click region
+
+    /**
+     * Fired on each member of a click group when a mouse click
+     * lands outside all widgets that share the same group key.
+     * <p>
+     * Non-bubbling, local event (same semantics as {@link #onFocusLost}).
+     */
+    EventDefinition<OnClickOutside> onClickOutside = Events.define(OnClickOutside.class, listeners -> (context) -> {
+        for (var listener : listeners) {
+            if (context.interrupted()) return;
+            listener.onClickOutside(context);
         }
     });
 
@@ -344,7 +361,7 @@ public interface WidgetEvent {
 
     @FunctionalInterface
     interface OnTooltip extends WidgetEvent {
-        void onTooltip(RichTooltip richTooltip, CommonContext context);
+        void onTooltip(Tooltip tooltip, CommonContext context);
     }
 
     //endregion
@@ -379,6 +396,15 @@ public interface WidgetEvent {
     @FunctionalInterface
     interface OnFocusLost extends WidgetEvent {
         void onFocusLost(InterruptibleContext context);
+    }
+
+    //endregion
+
+    //region click region
+
+    @FunctionalInterface
+    interface OnClickOutside extends WidgetEvent {
+        void onClickOutside(InterruptibleContext context);
     }
 
     //endregion

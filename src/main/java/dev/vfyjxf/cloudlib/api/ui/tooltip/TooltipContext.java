@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.api.ui.widget;
+package dev.vfyjxf.cloudlib.api.ui.tooltip;
 
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.util.ScreenUtil;

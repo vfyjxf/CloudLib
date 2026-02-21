@@ -286,7 +286,7 @@ public class CompositeWidget<T extends Widget> extends Widget {
     @MustBeInvokedByOverriders
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
-        collector.add("childCount", children.size(), InspectionProperty.CATEGORY_BASIC);
+        collector.add("childCount", children.size(), InspectionProperty.categoryBasic);
     }
 
     //endregion

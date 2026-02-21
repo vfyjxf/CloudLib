@@ -83,11 +83,11 @@ public class ImageWidget extends Widget {
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
-        collector.add("hasTexture", texture != null, InspectionProperty.CATEGORY_VISUAL);
+        collector.add("hasTexture", texture != null, InspectionProperty.categoryVisual);
         if (texture != null) {
-            collector.add("textureType", texture.getClass().getSimpleName(), InspectionProperty.CATEGORY_VISUAL);
+            collector.add("textureType", texture.getClass().getSimpleName(), InspectionProperty.categoryVisual);
         }
-        collector.addWithDefault("preserveAspect", preserveAspectRatio, false, InspectionProperty.CATEGORY_VISUAL);
+        collector.addWithDefault("preserveAspect", preserveAspectRatio, false, InspectionProperty.categoryVisual);
     }
 
     //endregion

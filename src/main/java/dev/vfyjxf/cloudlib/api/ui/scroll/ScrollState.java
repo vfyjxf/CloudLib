@@ -44,7 +44,7 @@ public final class ScrollState {
 
     //region scroll state
 
-    private ScrollDirection direction = ScrollDirection.VERTICAL;
+    private ScrollDirection direction = ScrollDirection.vertical;
 
     /**
      * The actual (rendered) scroll position, interpolated toward target when smooth scrolling.

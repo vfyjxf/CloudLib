@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.scroll;
 
+import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
@@ -10,7 +11,6 @@ import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.style.property.visual.ScrollbarStyleProperty;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import dev.vfyjxf.taffy.style.Overflow;
 import dev.vfyjxf.taffy.tree.Layout;
@@ -67,13 +67,21 @@ public final class ScrollEffect implements Effect {
 
     //region drag state
 
-    /** Whether the user is currently dragging the vertical scrollbar thumb. */
+    /**
+     * Whether the user is currently dragging the vertical scrollbar thumb.
+     */
     private boolean draggingVertical = false;
-    /** Whether the user is currently dragging the horizontal scrollbar thumb. */
+    /**
+     * Whether the user is currently dragging the horizontal scrollbar thumb.
+     */
     private boolean draggingHorizontal = false;
-    /** The mouse Y offset within the thumb when drag started (vertical). */
+    /**
+     * The mouse Y offset within the thumb when drag started (vertical).
+     */
     private double dragOffsetY = 0;
-    /** The mouse X offset within the thumb when drag started (horizontal). */
+    /**
+     * The mouse X offset within the thumb when drag started (horizontal).
+     */
     private double dragOffsetX = 0;
 
     //endregion
@@ -106,7 +114,7 @@ public final class ScrollEffect implements Effect {
      * @return a new vertical scroll effect
      */
     public static ScrollEffect vertical() {
-        return of(ScrollDirection.VERTICAL);
+        return of(ScrollDirection.vertical);
     }
 
     /**
@@ -115,7 +123,7 @@ public final class ScrollEffect implements Effect {
      * @return a new horizontal scroll effect
      */
     public static ScrollEffect horizontal() {
-        return of(ScrollDirection.HORIZONTAL);
+        return of(ScrollDirection.horizontal);
     }
 
     private ScrollEffect(ScrollState state) {
@@ -186,6 +194,12 @@ public final class ScrollEffect implements Effect {
             }
             return handleMouseDragged(composite, input.mouseX(), input.mouseY());
         });
+
+        widget.onMouseScrolled((mouseX, mouseY, scrollX, scrollY, context) -> {
+            state.scrollBy(0, (float) (-scrollY * state.scrollSpeed()));
+            return EventDispatch.consumed;
+        });
+
 
         widget.onMouseReleased((input, context) -> {
             if (draggingVertical || draggingHorizontal) {

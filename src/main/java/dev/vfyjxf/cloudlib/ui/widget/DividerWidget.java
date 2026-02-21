@@ -104,8 +104,8 @@ public class DividerWidget extends Widget {
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
-        collector.addWithDefault("orientation", orientation.name(), Orientation.HORIZONTAL.name(), InspectionProperty.CATEGORY_VISUAL);
-        collector.addWithDefault("thickness", thickness, 1, InspectionProperty.CATEGORY_VISUAL);
+        collector.addWithDefault("orientation", orientation.name(), Orientation.HORIZONTAL.name(), InspectionProperty.categoryVisual);
+        collector.addWithDefault("thickness", thickness, 1, InspectionProperty.categoryVisual);
     }
 
     //endregion

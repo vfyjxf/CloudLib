@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.ui.widget;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
@@ -81,44 +82,42 @@ public class TextFieldWidget extends Widget {
 
     private void setupInputHandlers() {
         onMouseClick((input, clickCount, context) -> {
-            if (editable) {
-                var font = context().font();
-                int clickX = (int) input.mouseX() - 4;
-                int pos = 0;
-                int width = 0;
-                for (int i = 0; i < text.length(); i++) {
-                    int charWidth = font.width(String.valueOf(text.charAt(i)));
-                    if (width + charWidth / 2 > clickX) break;
-                    width += charWidth;
-                    pos++;
-                }
-                cursorPos = pos;
-                selectionStart = -1;
-                return EventDispatch.consumed;
+            if (!editable) return EventDispatch.pass;
+            var font = context().font();
+            int clickX = (int) input.mouseX() - 4;
+            int pos = 0;
+            int width = 0;
+            for (int i = 0; i < text.length(); i++) {
+                int charWidth = font.width(String.valueOf(text.charAt(i)));
+                if (width + charWidth / 2 > clickX) break;
+                width += charWidth;
+                pos++;
             }
-            return EventDispatch.pass;
+            cursorPos = pos;
+            selectionStart = -1;
+            return EventDispatch.consumed;
         });
 
         onKeyPressed((input, context) -> {
             if (!editable || !focused()) return EventDispatch.pass;
             int keyCode = input.key().getValue();
 
-            if (keyCode == 259 && cursorPos > 0) { // Backspace
+            if (keyCode == InputConstants.KEY_BACKSPACE && cursorPos > 0) {
                 text = text.substring(0, cursorPos - 1) + text.substring(cursorPos);
                 cursorPos--;
                 notifyTextChanged();
-            } else if (keyCode == 261 && cursorPos < text.length()) { // Delete
+            } else if (keyCode == InputConstants.KEY_DELETE && cursorPos < text.length()) {
                 text = text.substring(0, cursorPos) + text.substring(cursorPos + 1);
                 notifyTextChanged();
-            } else if (keyCode == 263 && cursorPos > 0) { // Left
+            } else if (keyCode == InputConstants.KEY_LEFT && cursorPos > 0) {
                 cursorPos--;
-            } else if (keyCode == 262 && cursorPos < text.length()) { // Right
+            } else if (keyCode == InputConstants.KEY_RIGHT && cursorPos < text.length()) {
                 cursorPos++;
-            } else if (keyCode == 268) { // Home
+            } else if (keyCode == InputConstants.KEY_HOME) {
                 cursorPos = 0;
-            } else if (keyCode == 269) { // End
+            } else if (keyCode == InputConstants.KEY_END) {
                 cursorPos = text.length();
-            } else if (keyCode == 257 && onEnterPressed != null) { // Enter
+            } else if ((keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) && onEnterPressed != null) { // Enter
                 onEnterPressed.accept(text);
             }
             return EventDispatch.consumed;
@@ -265,13 +264,13 @@ public class TextFieldWidget extends Widget {
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
-        collector.addWithDefault("text", text.isEmpty() ? "(empty)" : truncate(text, 20), "(empty)", InspectionProperty.CATEGORY_DATA);
-        collector.addWithDefault("textLength", text.length(), 0, InspectionProperty.CATEGORY_DATA);
-        collector.addWithDefault("cursorPos", cursorPos, 0, InspectionProperty.CATEGORY_DATA);
-        collector.addWithDefault("maxLength", maxLength, 256, InspectionProperty.CATEGORY_DATA);
-        collector.addWithDefault("editable", editable, true, InspectionProperty.CATEGORY_STATE);
+        collector.addWithDefault("text", text.isEmpty() ? "(empty)" : truncate(text, 20), "(empty)", InspectionProperty.categoryData);
+        collector.addWithDefault("textLength", text.length(), 0, InspectionProperty.categoryData);
+        collector.addWithDefault("cursorPos", cursorPos, 0, InspectionProperty.categoryData);
+        collector.addWithDefault("maxLength", maxLength, 256, InspectionProperty.categoryData);
+        collector.addWithDefault("editable", editable, true, InspectionProperty.categoryState);
         if (!placeholder.isEmpty()) {
-            collector.add("placeholder", placeholder, InspectionProperty.CATEGORY_VISUAL);
+            collector.add("placeholder", placeholder, InspectionProperty.categoryVisual);
         }
     }
 

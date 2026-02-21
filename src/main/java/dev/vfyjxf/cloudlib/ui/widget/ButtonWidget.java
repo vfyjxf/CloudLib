@@ -194,11 +194,11 @@ public class ButtonWidget extends Widget {
         if (text.length() > 20) {
             text = text.substring(0, 17) + "...";
         }
-        collector.add("label", text, InspectionProperty.CATEGORY_DATA);
-        collector.addWithDefault("enabled", enabled, true, InspectionProperty.CATEGORY_STATE);
-        collector.addWithDefault("pressed", pressed, false, InspectionProperty.CATEGORY_STATE);
+        collector.add("label", text, InspectionProperty.categoryData);
+        collector.addWithDefault("enabled", enabled, true, InspectionProperty.categoryState);
+        collector.addWithDefault("pressed", pressed, false, InspectionProperty.categoryState);
         if (iconTexture != null) {
-            collector.add("hasIcon", true, InspectionProperty.CATEGORY_VISUAL);
+            collector.add("hasIcon", true, InspectionProperty.categoryVisual);
         }
     }
 

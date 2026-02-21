@@ -11,6 +11,8 @@ import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.math.Size;
+import dev.vfyjxf.cloudlib.api.ui.layout.LayoutHandler;
+import dev.vfyjxf.cloudlib.api.ui.layout.LayoutScope;
 import dev.vfyjxf.cloudlib.api.performer.Backstage;
 import dev.vfyjxf.cloudlib.api.performer.PerformerContainer;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
@@ -27,22 +29,18 @@ import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.VisualContext;
 import dev.vfyjxf.cloudlib.api.ui.style.property.layout.StyleProperty;
 import dev.vfyjxf.cloudlib.api.ui.style.property.visual.ZIndexProperty;
-import dev.vfyjxf.cloudlib.api.ui.text.RichTooltip;
-
-import dev.vfyjxf.cloudlib.data.lang.LangEntry;
+import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 import dev.vfyjxf.cloudlib.util.Checks;
 import dev.vfyjxf.taffy.tree.Layout;
 import dev.vfyjxf.taffy.tree.NodeId;
 import dev.vfyjxf.taffy.tree.TaffyTree;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.Objects;
-import java.util.function.Supplier;
 
 
 /**
@@ -83,6 +81,7 @@ public class Widget
 
     @Nullable Object key;
 
+    //TODO:WIP
     /**
      * The blueprint of the widget.
      */
@@ -101,6 +100,18 @@ public class Widget
 
     Layout layout;
 
+    /**
+     * Optional handler that controls how this widget's layout is resolved.
+     * <p>
+     * When {@code null} (the default), the taffy-computed result is applied
+     * directly. When set, the handler receives a {@link LayoutScope} and
+     * decides the widget's position and size.
+     *
+     * @see LayoutHandler
+     * @see #applyLayout()
+     */
+    @Nullable LayoutHandler layoutHandler;
+
     //endregion
 
     //region area & visual
@@ -115,6 +126,7 @@ public class Widget
      * Layout, content offset and user transforms are all managed by the viewport.
      */
     final Viewport viewport = Viewport.create();
+
     {
         // When this widget's viewport is invalidated, clear the absolute-pos cache
         // for this widget AND all its descendants.
@@ -134,20 +146,28 @@ public class Widget
     SceneLayer sceneLayer = SceneLayer.content;
 
     final VisualContext visualContext = style.visualContext();
-    protected boolean visible = true;
-    protected RichTooltip richTooltip = RichTooltip.empty();
+    boolean visible = true;
+    Tooltip tooltip = new Tooltip();
     //endregion
 
     //region state
 
     //region draggable
-    protected boolean draggable = false;
+    boolean draggable = false;
     boolean dragging = false;
 
-    //region fucus
-    protected boolean focusable = false;
-    boolean focused = false;
+    //region focus
+    @Nullable FocusNode focusNode;
+    //endregion
 
+    //region click region
+    /**
+     * An arbitrary key identifying which click-region group this widget belongs to.
+     * All widgets sharing the same non-null key form a group: when a click lands
+     * outside every member of the group, {@link WidgetEvent#onClickOutside} fires on each member.
+     */
+    @Nullable Object clickGroup;
+    //endregion
 
     //region hover
     boolean hovered = false;
@@ -283,6 +303,10 @@ public class Widget
         if (sceneLayer != SceneLayer.content) {
             scene.addToLayer(sceneLayer, this);
         }
+        // Register with click region group
+        if (clickGroup != null) {
+            scene.registerClickGroup(this, clickGroup);
+        }
         listeners(WidgetEvent.onMount).onMount(scene, context, handle);
         lifecycle = Lifecycle.mounted;
     }
@@ -295,6 +319,9 @@ public class Widget
         }
         scene.tree.remove(nodeId);
         scene.removeFromAllLayers(this);
+        if (clickGroup != null) {
+            scene.unregisterClickGroup(this, clickGroup);
+        }
         this.scene = null;
         this.context = null;
         this.parent = null;
@@ -358,7 +385,7 @@ public class Widget
 
     /**
      * @return the scene position of the widget, computed by chaining viewport transforms
-     *         from root to this widget.
+     * from root to this widget.
      */
     public final Pos absolutePos() {
         Pos cached = cachedAbsolutePos;
@@ -423,13 +450,6 @@ public class Widget
         if (context.cancelled()) return this;
         viewport.setLayout(position);
         return this;
-    }
-
-    /**
-     * Called when the position changes. Override to react to position updates.
-     */
-    protected void onPositionChanged() {
-        // no-op — viewport.invalidate() triggers invalidateAbsolutePos() via callback
     }
 
     /**
@@ -729,74 +749,13 @@ public class Widget
 
     //region tooltip
 
-    //TODO:rename and refactor
-
-    public Widget tooltip(String text) {
-        return tooltip(Component.literal(text));
-    }
-
-    public Widget tooltip(LangEntry key) {
-        return tooltip(key.get());
-    }
-
-    public Widget tooltip(Component component) {
-        if (this.richTooltip == RichTooltip.empty()) {
-            this.richTooltip = RichTooltip.create();
-        }
-        this.richTooltip.add(component);
-        return this;
-    }
-
-    public Widget tooltip(Supplier<Component> supplier) {
-        if (this.richTooltip == RichTooltip.empty()) {
-            this.richTooltip = RichTooltip.create();
-        }
-        this.richTooltip.add(supplier);
-        return this;
-    }
-
-
-    /**
-     * NOTE: key must be without format args, if you want to use format args,use {@link #tooltip(LangEntry, Object...)}
-     *
-     * @param keys the keys to be translated.
-     */
-    @Contract("_ -> this")
-    public Widget tooltips(LangEntry... keys) {
-        for (LangEntry key : keys) {
-            tooltip(key);
-        }
-        return this;
-    }
-
-    public Widget tooltip(LangEntry key, Object... args) {
-        return tooltip(key.get(args));
+    public final Tooltip tooltip() {
+        return tooltip;
     }
 
     @Contract("_ -> this")
-    public Widget tooltips(Component... components) {
-        for (Component component : components) {
-            tooltip(component);
-        }
-        return this;
-    }
-
-    @Contract("_ -> this")
-    public Widget tooltip(RichTooltip richTooltip) {
-        if (this.richTooltip == RichTooltip.empty()) {
-            this.richTooltip = RichTooltip.create();
-        }
-        this.richTooltip.addAll(richTooltip);
-        return this;
-    }
-
-    public RichTooltip tooltip() {
-        return richTooltip;
-    }
-
-    @Contract("_ -> this")
-    public Widget setTooltip(RichTooltip richTooltip) {
-        this.richTooltip = richTooltip;
+    public Widget setTooltip(Tooltip tooltip) {
+        this.tooltip = tooltip;
         return this;
     }
 
@@ -866,14 +825,61 @@ public class Widget
         return layout;
     }
 
+    /**
+     * Registers a {@link LayoutHandler} that controls how this widget's layout
+     * is resolved.
+     * <p>
+     * Pass {@code null} to remove the handler (taffy result applied as-is).
+     *
+     * @param handler the handler, or {@code null}
+     * @return this widget for chaining
+     * @see LayoutHandler
+     */
+    @Contract("_ -> this")
+    public Widget onLayout(@Nullable LayoutHandler handler) {
+        this.layoutHandler = handler;
+        return this;
+    }
+
+    /**
+     * Reads the taffy-computed layout for this node, delegates to the
+     * optional {@link LayoutHandler} if set, and applies the resolved
+     * bounds to the widget's viewport and size.
+     * <p>
+     * When a handler is set, it receives a {@link LayoutScope} with access
+     * to the taffy result. If the scope is {@linkplain LayoutScope#isResolved()
+     * resolved} after the handler returns, those values are applied.
+     * Otherwise the framework falls back to the raw taffy result.
+     * <p>
+     * The taffy node is always acknowledged regardless of whether a handler
+     * is present or what it writes.
+     */
     public void applyLayout() {
         TaffyTree taffyTree = scene().layoutTree();
         if (nodeId != null && taffyTree.needsVisit(nodeId)) {
             Layout layout = taffyTree.getLayout(nodeId);
             this.layout = layout;
-            Pos newPos = new Pos(layout.location().x, layout.location().y);
-            Size newSize = new Size((int) layout.size().width, (int) layout.size().height);
-            // Update viewport layout and widget size
+
+            Pos newPos;
+            Size newSize;
+
+            if (layoutHandler != null) {
+                LayoutScope scope = LayoutScope.create(layout);
+                layoutHandler.layout(this, scope);
+                if (scope.isResolved()) {
+                    newPos = scope.pos();
+                    newSize = scope.size();
+                } else {
+                    // Handler did not resolve — fall back to taffy
+                    newPos = new Pos(layout.location().x, layout.location().y);
+                    newSize = new Size((int) layout.size().width, (int) layout.size().height);
+                }
+            } else {
+                // No handler — apply taffy directly
+                newPos = new Pos(layout.location().x, layout.location().y);
+                newSize = new Size((int) layout.size().width, (int) layout.size().height);
+            }
+
             viewport.setLayout(newPos);
             viewport.setViewportSize(newSize);
             setSize(newSize);
@@ -1035,6 +1041,68 @@ public class Widget
 
     //region focus
 
+    /**
+     * @return the focus node attached to this widget, or null if not focusable.
+     */
+    public @Nullable FocusNode focusNode() {
+        return focusNode;
+    }
+
+    /**
+     * Attaches a {@link FocusNode} (or {@link FocusScopeNode}) to this widget.
+     * Pass null to detach the current focus node.
+     */
+    @Contract("_ -> this")
+    public Widget setFocusNode(@Nullable FocusNode node) {
+        if (this.focusNode != null) {
+            this.focusNode.owner = null;
+        }
+        this.focusNode = node;
+        if (node != null) {
+            node.owner = this;
+        }
+        return this;
+    }
+
+    /**
+     * @return true if this widget can receive focus (has a focus node that allows it).
+     */
+    public boolean focusable() {
+        return focusNode != null && focusNode.canRequestFocus;
+    }
+
+    /**
+     * Convenience: creates a {@link FocusNode} if none exists, or toggles
+     * {@link FocusNode#canRequestFocus}.
+     */
+    @Contract("_ -> this")
+    protected Widget setFocusable(boolean focusable) {
+        if (focusable) {
+            if (this.focusNode == null) {
+                setFocusNode(new FocusNode());
+            } else {
+                this.focusNode.canRequestFocus = true;
+            }
+        } else if (this.focusNode != null) {
+            this.focusNode.setCanRequestFocus(false);
+        }
+        return this;
+    }
+
+    /**
+     * @return true if this widget is the primary focus holder.
+     */
+    public boolean focused() {
+        return focusNode != null && focusNode.hasPrimaryFocus;
+    }
+
+    /**
+     * Returns true if this widget or any descendant currently has the primary focus.
+     */
+    public boolean hasFocus() {
+        return focusNode != null && focusNode.hasFocus;
+    }
+
     public final Widget onFocus(WidgetEvent.OnFocus listener) {
         return onEvent(WidgetEvent.onFocus, listener);
     }
@@ -1049,6 +1117,41 @@ public class Widget
 
     public final Widget onFocusOut(WidgetEvent.OnFocusOut listener) {
         return onEvent(WidgetEvent.onFocusOut, listener);
+    }
+
+    //endregion
+
+    //region click region
+
+    /**
+     * @return the click-region group key, or null if this widget is not in any group.
+     */
+    public @Nullable Object clickGroup() {
+        return clickGroup;
+    }
+
+    /**
+     * Assigns this widget to a click-region group.
+     * Widgets sharing the same non-null key form a group: when a click lands
+     * outside every member, {@link WidgetEvent#onClickOutside} fires on each member.
+     * <p>
+     * Pass {@code null} to remove from the current group.
+     */
+    @Contract("_ -> this")
+    public Widget setClickGroup(@Nullable Object groupKey) {
+        if (this.clickGroup == groupKey) return this;
+        if (this.clickGroup != null && scene != null) {
+            scene.unregisterClickGroup(this, this.clickGroup);
+        }
+        this.clickGroup = groupKey;
+        if (groupKey != null && scene != null) {
+            scene.registerClickGroup(this, groupKey);
+        }
+        return this;
+    }
+
+    public final Widget onClickOutside(WidgetEvent.OnClickOutside listener) {
+        return onEvent(WidgetEvent.onClickOutside, listener);
     }
 
     //endregion
@@ -1083,20 +1186,6 @@ public class Widget
 
     public boolean hovered() {
         return hovered;
-    }
-
-    public boolean focusable() {
-        return focusable;
-    }
-
-    @Contract("_ -> this")
-    protected Widget setFocusable(boolean focusable) {
-        this.focusable = focusable;
-        return this;
-    }
-
-    public boolean focused() {
-        return focused;
     }
 
     //endregion
@@ -1139,33 +1228,37 @@ public class Widget
     @MustBeInvokedByOverriders
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         // Basic info
-        collector.addWithDefault("key", key, null, InspectionProperty.CATEGORY_BASIC);
-        collector.addWithDefault("lifecycle", lifecycle.name(), Lifecycle.mounted.name(), InspectionProperty.CATEGORY_BASIC);
+        collector.addWithDefault("key", key, null, InspectionProperty.categoryBasic);
+        collector.addWithDefault("lifecycle", lifecycle.name(), Lifecycle.mounted.name(), InspectionProperty.categoryBasic);
 
         // Layout info
-        collector.add("position", pos(), InspectionProperty.CATEGORY_LAYOUT);
-        collector.add("size", size, InspectionProperty.CATEGORY_LAYOUT);
+        collector.add("position", pos(), InspectionProperty.categoryLayout);
+        collector.add("size", size, InspectionProperty.categoryLayout);
         Pos abs = absolutePos();
         if (!abs.equals(pos())) {
-            collector.add("absolute", abs, InspectionProperty.CATEGORY_LAYOUT);
+            collector.add("absolute", abs, InspectionProperty.categoryLayout);
         }
+        collector.addWithDefault("layoutHandler", layoutHandler != null, false, InspectionProperty.categoryLayout);
 
         // State info
-        collector.addWithDefault("active", active, true, InspectionProperty.CATEGORY_STATE);
-        collector.addWithDefault("visible", visible, true, InspectionProperty.CATEGORY_STATE);
-        collector.addWithDefault("focused", focused, false, InspectionProperty.CATEGORY_STATE);
-        collector.addWithDefault("focusable", focusable, false, InspectionProperty.CATEGORY_STATE);
-        collector.addWithDefault("hovered", hovered, false, InspectionProperty.CATEGORY_STATE);
-        collector.addWithDefault("draggable", draggable, false, InspectionProperty.CATEGORY_STATE);
-        collector.addWithDefault("dragging", dragging, false, InspectionProperty.CATEGORY_STATE);
+        collector.addWithDefault("active", active, true, InspectionProperty.categoryState);
+        collector.addWithDefault("visible", visible, true, InspectionProperty.categoryState);
+        collector.addWithDefault("focused", focused(), false, InspectionProperty.categoryState);
+        collector.addWithDefault("hasFocus", hasFocus(), false, InspectionProperty.categoryState);
+        collector.addWithDefault("focusable", focusable(), false, InspectionProperty.categoryState);
+        collector.addWithDefault("focusScope", focusNode instanceof FocusScopeNode, false, InspectionProperty.categoryState);
+        collector.addWithDefault("hovered", hovered, false, InspectionProperty.categoryState);
+        collector.addWithDefault("draggable", draggable, false, InspectionProperty.categoryState);
+        collector.addWithDefault("dragging", dragging, false, InspectionProperty.categoryState);
+        collector.addWithDefault("clickGroup", clickGroup, null, InspectionProperty.categoryState);
 
         // Render info
-        collector.addWithDefault("sceneLayer", sceneLayer().name(), SceneLayer.content.name(), InspectionProperty.CATEGORY_VISUAL);
-        collector.addWithDefault("zIndex", zIndex(), 0, InspectionProperty.CATEGORY_VISUAL);
+        collector.addWithDefault("sceneLayer", sceneLayer().name(), SceneLayer.content.name(), InspectionProperty.categoryVisual);
+        collector.addWithDefault("zIndex", zIndex(), 0, InspectionProperty.categoryVisual);
 
         // Tooltip info (only if non-empty)
-        if (!richTooltip.isEmpty()) {
-            collector.add("hasTooltip", true, InspectionProperty.CATEGORY_VISUAL);
+        if (!tooltip.isEmpty()) {
+            collector.add("hasTooltip", true, InspectionProperty.categoryVisual);
         }
 
         // Style info - collect all applied style properties with "style-" prefix

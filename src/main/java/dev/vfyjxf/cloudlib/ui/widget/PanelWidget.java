@@ -162,12 +162,12 @@ public class PanelWidget extends CompositeWidget<Widget> {
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
         if (title != null) {
-            collector.add("title", title, InspectionProperty.CATEGORY_DATA);
+            collector.add("title", title, InspectionProperty.categoryData);
         }
-        collector.addWithDefault("showTitleBar", showTitleBar, true, InspectionProperty.CATEGORY_VISUAL);
-        collector.addWithDefault("borderWidth", borderWidth, 1, InspectionProperty.CATEGORY_VISUAL);
-        collector.addWithDefault("contentPadding", contentPadding, 4, InspectionProperty.CATEGORY_LAYOUT);
-        collector.add("children", children().size(), InspectionProperty.CATEGORY_DATA);
+        collector.addWithDefault("showTitleBar", showTitleBar, true, InspectionProperty.categoryVisual);
+        collector.addWithDefault("borderWidth", borderWidth, 1, InspectionProperty.categoryVisual);
+        collector.addWithDefault("contentPadding", contentPadding, 4, InspectionProperty.categoryLayout);
+        collector.add("children", children().size(), InspectionProperty.categoryData);
     }
 
     //endregion

@@ -2,10 +2,10 @@ package dev.vfyjxf.cloudlib.test.ui;
 
 import dev.vfyjxf.cloudlib.api.ui.base.BasicScreen;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
-import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
 import dev.vfyjxf.cloudlib.ui.widget.BoxWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ButtonWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
@@ -13,7 +13,6 @@ import dev.vfyjxf.cloudlib.ui.widget.DividerWidget;
 import dev.vfyjxf.cloudlib.ui.widget.LabelWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ProgressBarWidget;
 import dev.vfyjxf.cloudlib.ui.widget.RowWidget;
-import dev.vfyjxf.cloudlib.ui.widget.ScrollPanelWidget;
 import dev.vfyjxf.cloudlib.ui.widget.SpacerWidget;
 import dev.vfyjxf.cloudlib.ui.widget.TextFieldWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ToggleWidget;
@@ -343,10 +342,6 @@ public class TestLayoutScreen extends BasicScreen {
         var zstackDemo = createZStackDemo();
         panel.addWidget(zstackDemo);
 
-        // Scrollable List Demo
-        var scrollDemo = createScrollDemo();
-        panel.addWidget(scrollDemo);
-
         return panel;
     }
 
@@ -393,42 +388,6 @@ public class TestLayoutScreen extends BasicScreen {
         zstack.addChild(topLayer);
 
         container.addWidget(zstack);
-        return container;
-    }
-
-    /**
-     * Creates a scrollable list demonstration.
-     */
-    private Widget createScrollDemo() {
-        var container = ColumnWidget.create();
-        container.setSpacing(4);
-        container.useStyle(UIStyle.of(flexGrow(1)));
-
-        var label = LabelWidget.of("Scrollable List")
-                               .setColor(0xFFAAAAAA);
-        container.addWidget(label);
-
-        var scrollPanel = ScrollPanelWidget.vertical();
-        scrollPanel.setContentHeight(300);
-        scrollPanel.setScrollSpeed(15);
-        scrollPanel.setBackgroundTexture(new ColorTexture(0x40000000));
-        scrollPanel.useStyle(UIStyle.of(
-            flexGrow(1),
-            minHeight(100)
-        ));
-
-        // Add items to scroll panel
-        var listContent = ColumnWidget.create();
-        listContent.setSpacing(2);
-
-        for (int i = 1; i <= 20; i++) {
-            var listItem = createListItem("Item " + i, i % 3 == 0);
-            listContent.addWidget(listItem);
-        }
-
-        scrollPanel.addChild(listContent);
-        container.addWidget(scrollPanel);
-
         return container;
     }
 
