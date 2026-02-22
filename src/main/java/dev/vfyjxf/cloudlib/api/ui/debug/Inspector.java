@@ -27,7 +27,7 @@ import java.util.function.Supplier;
  */
 public class Inspector extends Widget {
 
-    public enum DisplayMode { MINIMIZED, COMPACT, FULL }
+    public enum DisplayMode {MINIMIZED, COMPACT, FULL}
 
     //region constants
 
@@ -296,8 +296,8 @@ public class Inspector extends Widget {
 
         for (String category : collector.getCategories().toSortedList()) {
             MutableList<InspectionProperty> props = showAllProperties
-                ? collector.getByCategory(category)
-                : collector.getByCategory(category).select(InspectionProperty::isNonDefault);
+                                                    ? collector.getByCategory(category)
+                                                    : collector.getByCategory(category).select(InspectionProperty::isNonDefault);
             if (props.isEmpty()) continue;
 
             if (y >= minY && y <= maxY) {
@@ -331,7 +331,7 @@ public class Inspector extends Widget {
 
     private int renderHierarchy(SceneCanvas canvas, Widget target, int x, int y, int maxY, int minY, Font font) {
         List<Widget> ancestors = new ArrayList<>();
-        for (Widget w = target; w != null; w = w.parent()) ancestors.add(0, w);
+        for (Widget w = target; w != null; w = w.parent()) ancestors.addFirst(w);
 
         int maxX = x + width() - PADDING * 2;
         List<String> segments = new ArrayList<>(ancestors.size());
@@ -362,7 +362,7 @@ public class Inspector extends Widget {
                 tw = font.width(text);
             }
 
-            if (cy >= minY && cy <= maxY) canvas.drawString(text, cx, cy, color, last);
+            if (cy >= minY) canvas.drawString(text, cx, cy, color, last);
             cx += tw;
         }
 
@@ -418,12 +418,19 @@ public class Inspector extends Widget {
 
     private EventDispatch handleScrollKey(InputContext input, BubbleContext context) {
         int amount = 0;
-        if      (input.isKey(InputConstants.KEY_UP))       amount = -LINE_HEIGHT;
-        else if (input.isKey(InputConstants.KEY_DOWN))     amount = LINE_HEIGHT;
-        else if (input.isKey(InputConstants.KEY_PAGEUP))   amount = -(height() - TITLE_BAR_HEIGHT - PADDING * 2);
+        if (input.isKey(InputConstants.KEY_UP)) amount = -LINE_HEIGHT;
+        else if (input.isKey(InputConstants.KEY_DOWN)) amount = LINE_HEIGHT;
+        else if (input.isKey(InputConstants.KEY_PAGEUP)) amount = -(height() - TITLE_BAR_HEIGHT - PADDING * 2);
         else if (input.isKey(InputConstants.KEY_PAGEDOWN)) amount = height() - TITLE_BAR_HEIGHT - PADDING * 2;
-        else if (input.isKey(InputConstants.KEY_HOME))     { scrollOffset = 0;              context.consume(); return EventDispatch.consumed; }
-        else if (input.isKey(InputConstants.KEY_END))      { scrollOffset = maxScrollOffset; context.consume(); return EventDispatch.consumed; }
+        else if (input.isKey(InputConstants.KEY_HOME)) {
+            scrollOffset = 0;
+            context.consume();
+            return EventDispatch.consumed;
+        } else if (input.isKey(InputConstants.KEY_END)) {
+            scrollOffset = maxScrollOffset;
+            context.consume();
+            return EventDispatch.consumed;
+        }
 
         if (amount != 0) {
             scrollOffset = Math.max(0, Math.min(maxScrollOffset, scrollOffset + amount));
@@ -437,13 +444,13 @@ public class Inspector extends Widget {
         DisplayMode prev = displayMode;
         displayMode = switch (displayMode) {
             case MINIMIZED -> DisplayMode.COMPACT;
-            case COMPACT   -> DisplayMode.FULL;
-            case FULL      -> DisplayMode.MINIMIZED;
+            case COMPACT -> DisplayMode.FULL;
+            case FULL -> DisplayMode.MINIMIZED;
         };
         switch (displayMode) {
             case MINIMIZED -> setSize(width(), TITLE_BAR_HEIGHT + 4);
-            case COMPACT   -> { if (prev == DisplayMode.MINIMIZED) setSize(COMPACT_W, COMPACT_H); }
-            case FULL      -> { if (prev != DisplayMode.FULL) setSize(FULL_W, FULL_H); }
+            case COMPACT -> setSize(COMPACT_W, COMPACT_H);
+            case FULL -> setSize(FULL_W, FULL_H);
         }
         scrollOffset = 0;
         maxScrollOffset = 0;

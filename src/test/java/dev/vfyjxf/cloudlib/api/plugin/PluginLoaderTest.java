@@ -53,8 +53,8 @@ public class PluginLoaderTest {
             return Set.of(
                 new PluginDependency(
                     CloudNamespaces.ofMod("test_plugin_a"),
-                    PluginDependency.Order.AFTER,
-                    PluginDependency.Constraint.REQUIRED
+                    PluginDependency.Order.after,
+                    PluginDependency.Constraint.required
                 )
             );
         }
@@ -73,8 +73,8 @@ public class PluginLoaderTest {
             return Set.of(
                 new PluginDependency(
                     CloudNamespaces.ofMod("test_plugin_b"),
-                    PluginDependency.Order.AFTER,
-                    PluginDependency.Constraint.OPTIONAL_REQUIRED
+                    PluginDependency.Order.after,
+                    PluginDependency.Constraint.optionalRequired
                 )
             );
         }
@@ -93,8 +93,8 @@ public class PluginLoaderTest {
             return Set.of(
                 new PluginDependency(
                     CloudNamespaces.ofMod("test_plugin_c"),
-                    PluginDependency.Order.AFTER,
-                    PluginDependency.Constraint.OPTIONAL_REQUIRED
+                    PluginDependency.Order.after,
+                    PluginDependency.Constraint.optionalRequired
                 )
             );
         }
@@ -113,8 +113,8 @@ public class PluginLoaderTest {
             return Set.of(
                 new PluginDependency(
                     CloudNamespaces.ofMod("test_plugin_c"),
-                    PluginDependency.Order.AFTER,
-                    PluginDependency.Constraint.REQUIRED
+                    PluginDependency.Order.after,
+                    PluginDependency.Constraint.required
                 )
             );
         }

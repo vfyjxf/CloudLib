@@ -9,35 +9,35 @@ public record PluginDependency(
 ) {
 
     public enum Order {
-        BEFORE,
-        AFTER,
-        NONE
+        before,
+        after,
+        none
     }
 
     public enum Constraint {
         /**
          * The plugin dependency is required,when the dependency plugin is not found,the game will crash.
          */
-        REQUIRED,
+        required,
         /**
          * The plugin dependency is optional,when the dependency plugin is not found,the game will continue.
          */
-        OPTIONAL,
+        optional,
         /**
          * The plugin dependency is optional,when the dependency plugin is not found,this plugin will be skipped.
          */
-        OPTIONAL_REQUIRED
+        optionalRequired
     }
 
     public boolean required() {
-        return constraint == Constraint.REQUIRED;
+        return constraint == Constraint.required;
     }
 
     public boolean optional() {
-        return constraint == Constraint.OPTIONAL;
+        return constraint == Constraint.optional;
     }
 
     public boolean optionalRequired() {
-        return constraint == Constraint.OPTIONAL_REQUIRED;
+        return constraint == Constraint.optionalRequired;
     }
 }

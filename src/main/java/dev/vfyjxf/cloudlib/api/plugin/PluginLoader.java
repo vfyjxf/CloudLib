@@ -58,13 +58,13 @@ public final class PluginLoader {
         for (var loadingPlugin : loadingPlugins) {
             for (var dependency : loadingPlugin.plugin.dependencies()) {
 
-                if (dependency.order() == PluginDependency.Order.NONE) continue;
+                if (dependency.order() == PluginDependency.Order.none) continue;
                 var maybePlugin = id2Plugin.get(dependency.pluginId());
                 if (maybePlugin == null) continue;
 
                 switch (dependency.order()) {
-                    case BEFORE -> graph.putEdge(loadingPlugin, maybePlugin);
-                    case AFTER -> graph.putEdge(maybePlugin, loadingPlugin);
+                    case before -> graph.putEdge(loadingPlugin, maybePlugin);
+                    case after -> graph.putEdge(maybePlugin, loadingPlugin);
                 }
             }
         }
@@ -82,18 +82,18 @@ public final class PluginLoader {
                              .filter(dep -> !id2Plugin.containsKey(dep.pluginId()))
                              .collect(Collectors2.groupBy(PluginDependency::constraint, Multimaps.mutable.list::empty));
 
-            var required = missingTargetDeps.get(PluginDependency.Constraint.REQUIRED);
-            var ignorable = missingTargetDeps.get(PluginDependency.Constraint.OPTIONAL_REQUIRED);
+            var required = missingTargetDeps.get(PluginDependency.Constraint.required);
+            var ignorable = missingTargetDeps.get(PluginDependency.Constraint.optionalRequired);
             if (required.isEmpty() && ignorable.isEmpty()) {
                 plugins.add(plugin);
             } else {
-                var loadingFailures = ignorable.collect(dep -> new LoadingFailure<>(plugin, FailureType.WARNING, "Missing optional dependency: " + dep.pluginId()));
+                var loadingFailures = ignorable.collect(dep -> new LoadingFailure<>(plugin, FailureType.warning, "Missing optional dependency: " + dep.pluginId()));
                 failures.addAll(loadingFailures);
             }
 
             var pluginFailures =
                 required.select(dep -> !id2Plugin.containsKey(dep.pluginId()))
-                        .collect(dep -> new LoadingFailure<>(plugin, FailureType.FATAL, "Missing required dependency: " + dep.pluginId()));
+                        .collect(dep -> new LoadingFailure<>(plugin, FailureType.fatal, "Missing required dependency: " + dep.pluginId()));
 
             failures.addAll(pluginFailures);
         }
@@ -109,11 +109,11 @@ public final class PluginLoader {
             var failureByType =
                 loadingResult.failures()
                              .groupBy(PluginLoader.LoadingFailure::type);
-            var warnings = failureByType.get(PluginLoader.FailureType.WARNING);
+            var warnings = failureByType.get(PluginLoader.FailureType.warning);
             for (var warning : warnings) {
                 logger.warn("{}: {} is skipped because : {}", pluginCategory, warning.instance().pluginId(), warning.reason());
             }
-            var fatal = failureByType.get(PluginLoader.FailureType.FATAL);
+            var fatal = failureByType.get(PluginLoader.FailureType.fatal);
             if (fatal.notEmpty()) {
                 String errorString = fatal.makeString("", ",\n", "");
                 throw new IllegalStateException("Fatal error when loading " + pluginCategory + "s: " + errorString);
@@ -122,14 +122,16 @@ public final class PluginLoader {
         return loadingResult.plugins();
     }
 
+    /**
+     * Loads plugins synchronously and returns a {@link PluginDispatcher} for parallel event dispatch.
+     */
+    public static <T extends ModPlugin> PluginDispatcher<T> loadAndDispatcher(Logger logger, String pluginCategory, Class<T> pluginClass) throws CyclePresentException, IllegalStateException {
+        MutableList<T> plugins = loadPlugin(logger, pluginCategory, pluginClass);
+        return PluginDispatcher.create(plugins);
+    }
+
     //endregion
 
-    /**
-     *
-     * @param plugins  unloaded plugins
-     * @param failures loading failures
-     * @param <T>      plugin type
-     */
     public record LoadingResult<T extends ModPlugin>(MutableList<T> plugins, MutableList<LoadingFailure<T>> failures) {}
 
     public record LoadingFailure<T extends ModPlugin>(T instance, FailureType type, String reason) {
@@ -140,8 +142,8 @@ public final class PluginLoader {
     }
 
     public enum FailureType {
-        FATAL,
-        WARNING
+        fatal,
+        warning
     }
 
     private record LoadingPlugin<T extends ModPlugin>(T plugin, Namespace id) {
