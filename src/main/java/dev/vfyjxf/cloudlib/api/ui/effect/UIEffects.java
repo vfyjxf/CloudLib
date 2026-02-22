@@ -8,7 +8,6 @@ import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollDirection;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollEffect;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollState;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
-import org.eclipse.collections.api.list.MutableList;
 
 /**
  * Static DSL entry point for creating {@link Effect} instances.

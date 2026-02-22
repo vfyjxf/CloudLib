@@ -1,8 +1,8 @@
 package dev.vfyjxf.cloudlib.api.ui.floating;
 
-import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
+import dev.vfyjxf.cloudlib.api.ui.base.CoordinateSpace;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.effect.Effect;
 import dev.vfyjxf.cloudlib.api.ui.layout.LayoutScope;
@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * An {@link Effect} that positions a widget relative to a reference widget using
@@ -80,7 +81,7 @@ public final class FloatingEffect implements Effect {
      */
     public static FloatingEffect create(Widget reference, FloatingPlacement placement, FloatingMiddleware... middleware) {
         return new FloatingEffect(reference, placement,
-            Arrays.stream(middleware).filter(m -> m != null).toList());
+            Arrays.stream(middleware).filter(Objects::nonNull).toList());
     }
 
     /**
@@ -132,6 +133,7 @@ public final class FloatingEffect implements Effect {
     @Override
     public void apply(Widget widget) {
         widget.useStyle(UIStyles.positionAbsolute());
+        widget.setCoordinateSpace(CoordinateSpace.scene);
         widget.onLayout(this::resolveLayout);
     }
 
@@ -162,17 +164,10 @@ public final class FloatingEffect implements Effect {
         );
         lastResult = result;
 
-        // Convert scene-space result to parent-relative layout position
-        var parent = widget.parent();
-        if (parent != null) {
-            FloatPos parentLocal = parent.sceneToLocal(result.x(), result.y());
-            scope.setPosition(
-                (float) (parentLocal.x + parent.viewport().contentOffsetX()),
-                (float) (parentLocal.y + parent.viewport().contentOffsetY())
-            );
-        } else {
-            scope.setPosition((float) result.x(), (float) result.y());
-        }
+        // Set position directly in scene space — extra-layer rendering
+        // only pushes the widget's own viewport, so the layout position
+        // must already be relative to the scene origin.
+        scope.setPosition((float) result.x(), (float) result.y());
     }
 
     //endregion

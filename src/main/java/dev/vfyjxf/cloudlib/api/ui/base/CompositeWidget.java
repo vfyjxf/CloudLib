@@ -36,10 +36,8 @@ public class CompositeWidget<T extends Widget> extends Widget {
     @MustBeInvokedByOverriders
     public void tick() {
         super.tick();
-        for (T child : children) {
-            if (child.active())
-                child.tick();
-        }
+        // Children ticking is handled non-recursively by Scene.
+        // A child can be tickable without requiring its parent to be tickable.
     }
 
     @Override

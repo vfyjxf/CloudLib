@@ -326,6 +326,28 @@ public final class WidgetPath implements Iterable<Widget> {
     }
 
     /**
+     * Checks if the given widget is an ancestor of this path's leaf widget.
+     * <p>
+     * A widget is considered an ancestor if it appears in this path at any position
+     * <b>before</b> the leaf (i.e., index 0 to size-2). The leaf itself is not
+     * considered its own ancestor.
+     * </p>
+     *
+     * @param widget the widget to check
+     * @return true if {@code widget} is an ancestor of this path's leaf
+     */
+    public boolean isAncestor(Widget widget) {
+        Objects.requireNonNull(widget, "widget");
+        // Exclude last element (the leaf itself)
+        for (int i = 0; i < size - 1; i++) {
+            if (nodes[i] == widget) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Computes the length of the common head (root-side prefix) shared by this path and {@code other}.
      *
      * <p>Because {@link WidgetPath} is stored in root→leaf order, the shared ancestor chain

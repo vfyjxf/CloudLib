@@ -62,10 +62,6 @@ public final class Scene {
     }
     //endregion
 
-    //region performer
-    private final PerformerContainer performers = new PerformerContainer();
-    //endregion
-
     //region scheduler task
 
     private final Deque<Runnable> deferredTasks = new ArrayDeque<>();
@@ -422,7 +418,14 @@ public final class Scene {
             throw new IllegalStateException("Widget is not mounted!");
         }
         runTickTasks();
-        root.tick();
+        // Non-recursive tick: collect and tick all tickable widgets in the tree
+        // so that a child can be tickable without requiring its parent to also be tickable.
+        WidgetTree.walkBreadthFirst(root, true, -1, (widget, depth) -> {
+            if (widget.tickable()) {
+                widget.tick();
+            }
+            return WidgetTree.TraversalControl.proceed;
+        });
         context.tick();
     }
 
@@ -450,7 +453,6 @@ public final class Scene {
     }
 
     //endregion
-
 
     //region lifecycle management
 
@@ -487,7 +489,7 @@ public final class Scene {
         if (!root.lifecycle.initialized()) {
             WidgetTree.walkBreadthFirst(root, true, -1, (widget, depth) -> {
                 widget.init();
-                return TraversalControl.CONTINUE;
+                return TraversalControl.proceed;
             });
         } else {
             for (Widget createdWidget : createdWidgets) {
@@ -504,7 +506,7 @@ public final class Scene {
                 throw new IllegalArgumentException("Widget: " + widget + " is not initialized!");
             }
             widget.mount(this, this.context, handleOf(widget));
-            return TraversalControl.CONTINUE;
+            return TraversalControl.proceed;
         });
     }
 
@@ -535,7 +537,7 @@ public final class Scene {
         WidgetTree.walkBottomUp(widget, true, -1, (w, depth) -> {
             w.unmount();
             destroyingWidgets.add(w);
-            return TraversalControl.CONTINUE;
+            return TraversalControl.proceed;
         });
     }
 
@@ -544,7 +546,7 @@ public final class Scene {
             WidgetTree.walkBottomUp(root, true, -1, ((widget, depth) -> {
                 widget.unmount();
                 destroyingWidgets.add(widget);
-                return TraversalControl.CONTINUE;
+                return TraversalControl.proceed;
             }));
         }
         globalHandle.cleanup();
@@ -559,14 +561,14 @@ public final class Scene {
             for (Widget created : createdWidgets) {
                 WidgetTree.walkBreadthFirst(created, true, -1, (widget, depth) -> {
                     widget.init();
-                    return TraversalControl.CONTINUE;
+                    return TraversalControl.proceed;
                 });
             }
             for (Widget created : createdWidgets) {
                 if (created.lifecycle.mounted()) continue;
                 WidgetTree.walkBreadthFirst(created, true, -1, (widget, depth) -> {
                     widget.mount(this, this.context, handleOf(widget));
-                    return TraversalControl.CONTINUE;
+                    return TraversalControl.proceed;
                 });
             }
             createdWidgets.clear();
@@ -697,10 +699,28 @@ public final class Scene {
             for (int i = 0; i < layerWidgets.size(); i++) {
                 Widget widget = layerWidgets.get(i);
                 if (!widget.shouldRender()) continue;
-                canvas.pushViewport(widget.viewport());
-                FloatPos localMouse = widget.viewport().parentToLocal(mouseX, mouseY);
-                widget.render(canvas, (int) localMouse.x, (int) localMouse.y, partialTick);
-                canvas.popViewport();
+
+                if (widget.coordinateSpace == CoordinateSpace.scene) {
+                    // Scene-positioned: layout is in scene space,
+                    // only push the widget's own viewport.
+                    canvas.pushViewport(widget.viewport());
+                    FloatPos localMouse = widget.viewport().parentToLocal(mouseX, mouseY);
+                    widget.render(canvas, (int) localMouse.x, (int) localMouse.y, partialTick);
+                    canvas.popViewport();
+                } else {
+                    // Parent-relative: push the full ancestor viewport chain
+                    // so the widget renders at the correct position.
+                    WidgetPath path = widget.path();
+                    int pathSize = path.size();
+                    for (int p = 0; p < pathSize; p++) {
+                        canvas.pushViewport(path.get(p).viewport());
+                    }
+                    FloatPos localMouse = widget.sceneToLocal(mouseX, mouseY);
+                    widget.render(canvas, (int) localMouse.x, (int) localMouse.y, partialTick);
+                    for (int p = 0; p < pathSize; p++) {
+                        canvas.popViewport();
+                    }
+                }
             }
         }
 
@@ -784,7 +804,7 @@ public final class Scene {
             boolean inside = false;
             for (int i = 0; i < members.size(); i++) {
                 Widget member = members.get(i);
-                if (member == target || isDescendantOf(target, member)) {
+                if (member == target || target.path().isAncestor(member)) {
                     inside = true;
                     break;
                 }
@@ -797,7 +817,7 @@ public final class Scene {
                     Widget member = snapshot.get(i);
                     if (member.lifecycle.mounted()) {
                         member.listeners(WidgetEvent.onClickOutside)
-                            .onClickOutside(member.interruptible());
+                              .onClickOutside(member.interruptible());
                     }
                 }
             }
@@ -899,14 +919,10 @@ public final class Scene {
             var bubble = target.bubble();
             currentClickWidget = target;
             lastClickButton = button;
-            boolean result = handleBubbleEvent(
+            return handleBubbleEvent(
                 target, bubble, InputEvents.onMouseClicked,
                 (listener) -> listener.onClicked(input, bubble)
             );
-            // After normal dispatch, fire onClickOutside for each group
-            // whose members do not contain the target (or its ancestors).
-            dispatchClickOutside(target);
-            return result;
         }
         return false;
     }
@@ -935,7 +951,6 @@ public final class Scene {
      */
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         Widget target = hitTest(mouseX, mouseY);
-        //TODO:should we skip inactive widget?
         if (target != null) {
             InputContext input = InputContext.fromMouse(mouseX, mouseY, button);
             var releaseContext = target.bubble();
@@ -962,6 +977,7 @@ public final class Scene {
                 lastClickPos = new FloatPos(mouseX, mouseY);
                 lastClickButton = button;
                 lastClickTime = System.currentTimeMillis();
+                dispatchClickOutside(target);
             }
             currentClickWidget = null;
             return result;
@@ -1124,11 +1140,77 @@ public final class Scene {
 
     //endregion
 
+    //region hit test & bubble event
+
+    public @Nullable Widget hitTest(double mouseX, double mouseY) {
+
+        for (int i = SceneLayer.extraLayers.size() - 1; i >= 0; i--) {
+            SceneLayer layer = SceneLayer.extraLayers.get(i);
+            if (layer.hitTestMode() == HitTestAction.none) continue;
+            var widgets = extraLayers.get(layer);
+
+            for (int j = widgets.size() - 1; j >= 0; j--) {
+                Widget layerWidget = widgets.get(j);
+                double hitX, hitY;
+                boolean inSceneSpace = layerWidget.coordinateSpace == CoordinateSpace.scene || layerWidget.parent() == null;
+                if (inSceneSpace) {
+                    hitX = mouseX;
+                    hitY = mouseY;
+                } else {
+                    var parent = layerWidget.parent();
+                    FloatPos local = parent.sceneToLocal(mouseX, mouseY);
+                    hitX = local.x + parent.viewport().contentOffsetX();
+                    hitY = local.y + parent.viewport().contentOffsetY();
+                }
+
+                Widget hit = WidgetTree.hitTest(layerWidget, hitX, hitY);
+                if (hit != null) return hit;
+            }
+        }
+
+        return WidgetTree.hitTest(root, mouseX, mouseY);
+    }
+
+    public static <E extends WidgetEvent> boolean handleBubbleEvent(
+        Widget target, BubbleContext bubble,
+        EventDefinition<E> event, Function<E, EventDispatch> listenerInvoke
+    ) {
+        WidgetPath path = target.path();
+        EventDispatch action = EventDispatch.pass;
+        //NOTE:target index is path.size() - 1
+        //stage 1: capture — skip inactive widgets
+        bubble.setPhase(BubbleContext.Phase.capture);
+        for (int i = 0; i < path.size() - 1; i++) {
+            Widget widget = path.get(i);
+            if (widget.inactive()) continue;
+            bubble.setCurrent(widget.events());
+            action = EventDispatch.max(listenerInvoke.apply(widget.listeners(event)), action);
+            if (bubble.consumed() || bubble.cancelled()) return action.handled();
+        }
+        //stage 2: target — skip if inactive
+        if (target.active()) {
+            bubble.setPhase(BubbleContext.Phase.target);
+            bubble.setCurrent(target.events());
+            action = EventDispatch.max(listenerInvoke.apply(target.listeners(event)), action);
+            if (bubble.consumed() || bubble.cancelled()) return action.handled();
+        }
+        //stage 3: bubble — skip inactive widgets
+        bubble.setPhase(BubbleContext.Phase.bubble);
+        for (int i = path.size() - 2; i >= 0; i--) {
+            Widget widget = path.get(i);
+            if (widget.inactive()) continue;
+            bubble.setCurrent(widget.events());
+            action = EventDispatch.max(listenerInvoke.apply(widget.listeners(event)), action);
+            if (bubble.consumed() || bubble.cancelled()) return action.handled();
+        }
+        return action.handled();
+    }
+
+    //endregion
+
     //region internal
 
-    PerformerContainer performers() {
-        return performers;
-    }
+    final PerformerContainer performers = new PerformerContainer();
 
     /**
      * Gets the cached path for a widget in this tree.
@@ -1158,7 +1240,7 @@ public final class Scene {
             doClearFocus();
             return;
         }
-        if (primaryFocus.owner != null && isDescendantOf(primaryFocus.owner, widget)) {
+        if (primaryFocus.owner != null && primaryFocus.owner.path().isAncestor(widget)) {
             doClearFocus();
         }
     }
@@ -1181,6 +1263,7 @@ public final class Scene {
         if (oldFocus == node) return;
 
         Widget newWidget = node.owner;
+        if (newWidget == null || !newWidget.lifecycle.mounted()) return;
         WidgetPath newPath = newWidget.path();
 
         if (oldFocus != null && oldFocus.owner != null && oldFocus.owner.lifecycle.mounted()) {
@@ -1263,64 +1346,7 @@ public final class Scene {
         }
     }
 
-    private static boolean isDescendantOf(Widget descendant, Widget ancestor) {
-        Widget current = descendant.parent;
-        while (current != null) {
-            if (current == ancestor) return true;
-            current = current.parent;
-        }
-        return false;
-    }
-
     //endregion
-
-    private @Nullable Widget hitTest(double mouseX, double mouseY) {
-        for (int i = SceneLayer.extraLayers.size() - 1; i >= 0; i--) {
-            SceneLayer layer = SceneLayer.extraLayers.get(i);
-            if (layer.hitTestMode() == HitTestAction.none) continue;
-
-            var widgets = extraLayers.get(layer);
-            for (int j = widgets.size() - 1; j >= 0; j--) {
-                Widget hit = WidgetTree.hitTest(widgets.get(j), mouseX, mouseY);
-                if (hit != null) return hit;
-            }
-        }
-
-        return WidgetTree.hitTest(root, mouseX, mouseY);
-    }
-
-    private static <E extends WidgetEvent> boolean handleBubbleEvent(
-        Widget target, BubbleContext bubble,
-        EventDefinition<E> event, Function<E, EventDispatch> listenerInvoke
-    ) {
-        WidgetPath path = target.path();
-        EventDispatch action = EventDispatch.pass;
-        //NOTE:target index is path.size() - 1
-        //stage 1: capture
-        bubble.setPhase(BubbleContext.Phase.capture);
-        for (int i = 0; i < path.size() - 1; i++) {
-            Widget widget = path.get(i);
-            bubble.setCurrent(widget.events());
-            action = EventDispatch.max(listenerInvoke.apply(widget.listeners(event)), action);
-            if (bubble.consumed() || bubble.cancelled()) return action.handled();
-        }
-        //stage 2: target
-        {
-            bubble.setPhase(BubbleContext.Phase.target);
-            bubble.setCurrent(target.events());
-            action = EventDispatch.max(listenerInvoke.apply(target.listeners(event)), action);
-            if (bubble.consumed() || bubble.cancelled()) return action.handled();
-        }
-        //stage 3: bubble
-        bubble.setPhase(BubbleContext.Phase.bubble);
-        for (int i = path.size() - 2; i >= 0; i--) {
-            Widget widget = path.get(i);
-            bubble.setCurrent(widget.events());
-            action = EventDispatch.max(listenerInvoke.apply(widget.listeners(event)), action);
-            if (bubble.consumed() || bubble.cancelled()) return action.handled();
-        }
-        return action.handled();
-    }
 
     //endregion
 

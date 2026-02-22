@@ -11,8 +11,6 @@ import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.math.Size;
-import dev.vfyjxf.cloudlib.api.ui.layout.LayoutHandler;
-import dev.vfyjxf.cloudlib.api.ui.layout.LayoutScope;
 import dev.vfyjxf.cloudlib.api.performer.Backstage;
 import dev.vfyjxf.cloudlib.api.performer.PerformerContainer;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
@@ -24,6 +22,8 @@ import dev.vfyjxf.cloudlib.api.ui.effect.Effect;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvents;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
+import dev.vfyjxf.cloudlib.api.ui.layout.LayoutHandler;
+import dev.vfyjxf.cloudlib.api.ui.layout.LayoutScope;
 import dev.vfyjxf.cloudlib.api.ui.style.StyleContext;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.VisualContext;
@@ -55,7 +55,7 @@ import java.util.Objects;
  *     <li>{@code Event}: Implemented {@link EventHandler<WidgetEvent>} to allow combining different events to create complex widgets. </li>
  *     <li>{@code Render}: Provides events for rendering the widget itself, the widget's tooltip, the widget's overlay.</li>
  *     <li>{@code Data}: {@link DataAttachable} is implemented to allow components to attach additional data.</li>
- *     <li>{@code Performer}: {@link PerformerContainer} bound to the {@link Scene#performers()} by default.</li>
+ *     <li>{@code Performer}: {@link PerformerContainer} bound to the {@link Scene#performers} by default.</li>
  *   <ul>
  */
 @SuppressWarnings("unchecked")
@@ -89,7 +89,8 @@ public class Widget
 
     final StateSlot.StateContext stateContext = new StateSlot.StateContext();
 
-    protected boolean active = true;
+    boolean tickable = false;
+
     //endregion
 
     //region layout & style
@@ -102,13 +103,6 @@ public class Widget
 
     /**
      * Optional handler that controls how this widget's layout is resolved.
-     * <p>
-     * When {@code null} (the default), the taffy-computed result is applied
-     * directly. When set, the handler receives a {@link LayoutScope} and
-     * decides the widget's position and size.
-     *
-     * @see LayoutHandler
-     * @see #applyLayout()
      */
     @Nullable LayoutHandler layoutHandler;
 
@@ -145,6 +139,11 @@ public class Widget
      */
     SceneLayer sceneLayer = SceneLayer.content;
 
+    /**
+     * The coordinate space this widget's layout position is expressed in.
+     */
+    CoordinateSpace coordinateSpace = CoordinateSpace.parent;
+
     final VisualContext visualContext = style.visualContext();
     boolean visible = true;
     Tooltip tooltip = new Tooltip();
@@ -160,13 +159,17 @@ public class Widget
     @Nullable FocusNode focusNode;
     //endregion
 
-    //region click region
+    //region click
     /**
      * An arbitrary key identifying which click-region group this widget belongs to.
      * All widgets sharing the same non-null key form a group: when a click lands
      * outside every member of the group, {@link WidgetEvent#onClickOutside} fires on each member.
      */
     @Nullable Object clickGroup;
+
+    boolean active = true;
+    boolean interactive = true;
+
     //endregion
 
     //region hover
@@ -208,7 +211,7 @@ public class Widget
 
     @Override
     public PerformerContainer performers() {
-        return scene().performers();
+        return scene().performers;
     }
 
     @Override
@@ -399,12 +402,26 @@ public class Widget
     /**
      * Converts a scene-space position to this widget's local space.
      * Walks from the root down through each ancestor's viewport inverse transform.
+     * <p>
+     * For widgets with {@link CoordinateSpace#scene} (e.g. floating popups),
+     * the layout position is already in scene space, so the ancestor transforms
+     * above the boundary are skipped — only the widget's own viewport (and its
+     * descendants) are applied.
      */
     public FloatPos sceneToLocal(double x, double y) {
         WidgetPath path = path();
+        // Find the deepest scene-space widget in the path.
+        // That widget's layout is in scene space, so ancestors above it are skipped.
+        int startIdx = 0;
+        for (int i = path.size() - 1; i >= 0; i--) {
+            if (path.get(i).coordinateSpace != CoordinateSpace.parent) {
+                startIdx = i;
+                break;
+            }
+        }
         double cx = x;
         double cy = y;
-        for (int i = 0; i < path.size(); i++) {
+        for (int i = startIdx; i < path.size(); i++) {
             Widget w = path.get(i);
             FloatPos local = w.viewport.parentToLocal(cx, cy);
             cx = local.x;
@@ -423,6 +440,11 @@ public class Widget
     /**
      * Converts a local position to scene space.
      * Walks from this widget up through each ancestor's viewport forward transform.
+     * <p>
+     * For widgets with {@link CoordinateSpace#scene} (e.g. floating popups),
+     * the layout position is already in scene space, so the walk stops at the
+     * boundary — the result of {@code localToParent} on that widget is already
+     * scene-space.
      */
     public FloatPos localToScene(double x, double y) {
         double cx = x;
@@ -433,6 +455,9 @@ public class Widget
             FloatPos p = w.viewport.localToParent(cx, cy);
             cx = p.x;
             cy = p.y;
+            // If this widget uses scene coordinates, its localToParent already
+            // yields scene-space coordinates — stop walking the ancestor chain.
+            if (w.coordinateSpace != CoordinateSpace.parent) break;
             // Undo parent's content offset to get from parent's content space to parent's local space
             if (w.parent != null) {
                 cx -= w.parent.viewport.contentOffsetX;
@@ -678,6 +703,14 @@ public class Widget
         return this;
     }
 
+    /**
+     * Whether this widget should respond to events.
+     * <p>
+     * An inactive widget still participates in hit testing (see {@link #interactive()}),
+     * but events will not be dispatched to it during the bubble phase.
+     *
+     * @return true if this widget is active
+     */
     public boolean active() {
         return active;
     }
@@ -686,13 +719,50 @@ public class Widget
         return !active;
     }
 
+    /**
+     * Sets whether this widget should respond to events.
+     *
+     * @param active true to enable event response
+     * @return this widget for chaining
+     */
     public Widget setActive(boolean active) {
         this.active = active;
         return this;
     }
 
-    public boolean interactable() {
-        return active && visible;
+    /**
+     * Whether this widget should receive tick updates.
+     * <p>
+     * Tick is collected non-recursively by the Scene: a child can be tickable
+     * without requiring its parent to also be tickable.
+     *
+     * @return true if this widget is tickable
+     */
+    public boolean tickable() {
+        return tickable;
+    }
+
+    public Widget setTickable(boolean tickable) {
+        this.tickable = tickable;
+        return this;
+    }
+
+    /**
+     * Whether this widget participates in hit testing.
+     * <p>
+     * A non-interactive widget and its entire subtree will be skipped during hit testing.
+     * This is stricter than {@link #active}: an inactive widget is still hit-testable,
+     * but a non-interactive widget is invisible to the pointer.
+     *
+     * @return true if this widget is interactive
+     */
+    public boolean interactive() {
+        return interactive;
+    }
+
+    public Widget setInteractive(boolean interactive) {
+        this.interactive = interactive;
+        return this;
     }
 
     //endregion
@@ -733,6 +803,39 @@ public class Widget
     }
 
     /**
+     * Gets the coordinate space this widget's layout position is expressed in.
+     *
+     * @return the coordinate space
+     * @see CoordinateSpace
+     * @see #setCoordinateSpace(CoordinateSpace)
+     */
+    public CoordinateSpace coordinateSpace() {
+        return coordinateSpace;
+    }
+
+    /**
+     * Sets the coordinate space for this widget's layout position.
+     * <p>
+     * Changing to {@link CoordinateSpace#scene} means this widget's layout
+     * position is relative to the scene origin. Coordinate conversion methods
+     * ({@link #sceneToLocal}, {@link #localToScene}, {@link #absolutePos()})
+     * will treat this widget as a coordinate boundary — ancestor viewport
+     * transforms above it are skipped.
+     *
+     * @param space the coordinate space
+     * @return this widget for chaining
+     * @see CoordinateSpace
+     */
+    @Contract("_ -> this")
+    public Widget setCoordinateSpace(CoordinateSpace space) {
+        if (this.coordinateSpace != space) {
+            this.coordinateSpace = space;
+            invalidateAbsolutePos();
+        }
+        return this;
+    }
+
+    /**
      * Gets the z-index of this widget.
      * <p>
      * Z-index only affects ordering among siblings (children of the same parent)
@@ -764,16 +867,16 @@ public class Widget
     //region render hooks
 
     @Contract("_ -> this")
-    public Widget onRender(WidgetEvent.OnRender listener) {
+    public final Widget onRender(WidgetEvent.OnRender listener) {
         return onEvent(WidgetEvent.onRender, listener);
     }
 
-    public Widget onRenderPost(WidgetEvent.OnRenderPost listener) {
+    public final Widget onRenderPost(WidgetEvent.OnRenderPost listener) {
         return onEvent(WidgetEvent.onRenderPost, listener);
     }
 
     @Contract("_ -> this")
-    public Widget onOverlayRender(WidgetEvent.OnOverlayRender listener) {
+    public final Widget onOverlayRender(WidgetEvent.OnOverlayRender listener) {
         return onEvent(WidgetEvent.onOverlayRender, listener);
     }
 
@@ -896,7 +999,7 @@ public class Widget
     //region input
 
     @Contract("_ -> this")
-    public Widget onMouseClicked(InputEvent.OnMouseClicked listener) {
+    public final Widget onMouseClicked(InputEvent.OnMouseClicked listener) {
         return onEvent(InputEvents.onMouseClicked, (input, context) -> {
             if (context.bubbling() || context.targeting()) listener.onClicked(input, context);
             return EventDispatch.pass;
@@ -904,7 +1007,7 @@ public class Widget
     }
 
     @Contract("_,_ -> this")
-    public Widget onMouseClicked(InputEvent.OnMouseClicked listener, boolean capture) {
+    public final Widget onMouseClicked(InputEvent.OnMouseClicked listener, boolean capture) {
         return onEvent(InputEvents.onMouseClicked, ((input, context) -> {
             if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
                 return EventDispatch.pass;
@@ -913,7 +1016,7 @@ public class Widget
     }
 
     @Contract("_ -> this")
-    public Widget onMouseClick(InputEvent.OnMouseClick listener) {
+    public final Widget onMouseClick(InputEvent.OnMouseClick listener) {
         return onEvent(InputEvents.onMouseClick, (input, clickCount, context) -> {
             if (context.targeting() || context.bubbling()) listener.onClick(input, clickCount, context);
             return EventDispatch.pass;
@@ -921,7 +1024,7 @@ public class Widget
     }
 
     @Contract("_,_ -> this")
-    public Widget onMouseClick(InputEvent.OnMouseClick listener, boolean capture) {
+    public final Widget onMouseClick(InputEvent.OnMouseClick listener, boolean capture) {
         return onEvent(InputEvents.onMouseClick, ((input, clickCount, context) -> {
             if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
                 return EventDispatch.pass;
@@ -930,7 +1033,7 @@ public class Widget
     }
 
     @Contract("_ -> this")
-    public Widget onMouseReleased(InputEvent.OnMouseReleased listener) {
+    public final Widget onMouseReleased(InputEvent.OnMouseReleased listener) {
         return onEvent(InputEvents.onMouseReleased, (input, context) -> {
             if (context.targeting() || context.bubbling()) listener.onReleased(input, context);
             return EventDispatch.pass;
@@ -938,7 +1041,7 @@ public class Widget
     }
 
     @Contract("_,_ -> this")
-    public Widget onMouseReleased(InputEvent.OnMouseReleased listener, boolean capture) {
+    public final Widget onMouseReleased(InputEvent.OnMouseReleased listener, boolean capture) {
         return onEvent(InputEvents.onMouseReleased, ((input, context) -> {
             if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
                 return EventDispatch.pass;
@@ -947,7 +1050,7 @@ public class Widget
     }
 
     @Contract("_ -> this")
-    public Widget onMouseDragged(InputEvent.OnMouseDragged listener) {
+    public final Widget onMouseDragged(InputEvent.OnMouseDragged listener) {
         return onEvent(InputEvents.onMouseDragged, ((input, deltaX, deltaY, context) -> {
             if (context.targeting() || context.bubbling()) listener.onDragged(input, deltaX, deltaY, context);
             return EventDispatch.pass;
@@ -955,7 +1058,7 @@ public class Widget
     }
 
     @Contract("_,_ -> this")
-    public Widget onMouseDragged(InputEvent.OnMouseDragged listener, boolean capture) {
+    public final Widget onMouseDragged(InputEvent.OnMouseDragged listener, boolean capture) {
         return onEvent(InputEvents.onMouseDragged, ((input, deltaX, deltaY, context) -> {
             if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
                 return EventDispatch.pass;
@@ -963,15 +1066,15 @@ public class Widget
         }));
     }
 
-    public Widget onMouseEnter(InputEvent.OnMouseEnter listener) {
+    public final Widget onMouseEnter(InputEvent.OnMouseEnter listener) {
         return onEvent(InputEvents.onMouseEnter, listener);
     }
 
-    public Widget onMouseLeave(InputEvent.OnMouseLeave listener) {
+    public final Widget onMouseLeave(InputEvent.OnMouseLeave listener) {
         return onEvent(InputEvents.onMouseLeave, listener);
     }
 
-    public Widget onMouseScrolled(InputEvent.OnMouseScrolled listener) {
+    public final Widget onMouseScrolled(InputEvent.OnMouseScrolled listener) {
         return onEvent(InputEvents.onMouseScrolled, (mouseX, mouseY, scrollX, scrollY, context) -> {
             if (context.bubbling() || context.targeting())
                 listener.onScrolled(mouseX, mouseY, scrollX, scrollY, context);
@@ -979,7 +1082,7 @@ public class Widget
         });
     }
 
-    public Widget onMouseScrolled(InputEvent.OnMouseScrolled listener, boolean capture) {
+    public final Widget onMouseScrolled(InputEvent.OnMouseScrolled listener, boolean capture) {
         return onEvent(InputEvents.onMouseScrolled, ((mouseX, mouseY, scrollX, scrollY, context) -> {
             if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
                 return EventDispatch.pass;
@@ -988,7 +1091,7 @@ public class Widget
     }
 
     @Contract("_ -> this")
-    public Widget onKeyReleased(InputEvent.OnKeyReleased listener) {
+    public final Widget onKeyReleased(InputEvent.OnKeyReleased listener) {
         return onEvent(InputEvents.onKeyReleased, (input, context) -> {
             if (context.targeting() || context.bubbling()) listener.onKeyReleased(input, context);
             return EventDispatch.pass;
@@ -996,7 +1099,7 @@ public class Widget
     }
 
     @Contract("_,_ -> this")
-    public Widget onKeyReleased(InputEvent.OnKeyReleased listener, boolean capture) {
+    public final Widget onKeyReleased(InputEvent.OnKeyReleased listener, boolean capture) {
         return onEvent(InputEvents.onKeyReleased, ((input, context) -> {
             if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
                 return EventDispatch.pass;
@@ -1005,7 +1108,7 @@ public class Widget
     }
 
     @Contract("_ -> this")
-    public Widget onKeyPressed(InputEvent.OnKeyPressed listener) {
+    public final Widget onKeyPressed(InputEvent.OnKeyPressed listener) {
         return onEvent(InputEvents.onKeyPressed, (input, context) -> {
             if (context.targeting() || context.bubbling()) listener.onKeyPressed(input, context);
             return EventDispatch.pass;
@@ -1013,7 +1116,7 @@ public class Widget
     }
 
     @Contract("_,_ -> this")
-    public Widget onKeyPressed(InputEvent.OnKeyPressed listener, boolean capture) {
+    public final Widget onKeyPressed(InputEvent.OnKeyPressed listener, boolean capture) {
         return onEvent(InputEvents.onKeyPressed, ((input, context) -> {
             if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
                 return EventDispatch.pass;
@@ -1021,7 +1124,7 @@ public class Widget
         }));
     }
 
-    public Widget onCharTyped(InputEvent.OnCharTyped listener) {
+    public final Widget onCharTyped(InputEvent.OnCharTyped listener) {
         return onEvent(InputEvents.onCharTyped, (codePoint, modifiers, context) -> {
             if (context.targeting() || context.bubbling()) listener.onCharTyped(codePoint, modifiers, context);
             return EventDispatch.pass;
@@ -1029,7 +1132,7 @@ public class Widget
     }
 
     @Contract("_,_ -> this")
-    public Widget onCharTyped(InputEvent.OnCharTyped listener, boolean capture) {
+    public final Widget onCharTyped(InputEvent.OnCharTyped listener, boolean capture) {
         return onEvent(InputEvents.onCharTyped, ((codePoint, modifiers, context) -> {
             if ((capture && context.capturing()) || (!capture && (context.bubbling() || context.targeting())))
                 return EventDispatch.pass;
@@ -1192,13 +1295,13 @@ public class Widget
 
     //region utils
 
-    public <T extends WidgetEvent> Widget onEvent(EventDefinition<T> definition, T listener) {
+    public final  <T extends WidgetEvent> Widget onEvent(EventDefinition<T> definition, T listener) {
         EventHandler.super.onEvent(definition, listener);
         return this;
     }
 
     @Override
-    public <E extends WidgetEvent> Widget when(EventDefinition<E> definition, E listener) {
+    public final <E extends WidgetEvent> Widget when(EventDefinition<E> definition, E listener) {
         EventHandler.super.when(definition, listener);
         return this;
     }
@@ -1241,7 +1344,9 @@ public class Widget
         collector.addWithDefault("layoutHandler", layoutHandler != null, false, InspectionProperty.categoryLayout);
 
         // State info
+        collector.addWithDefault("tickable", tickable, false, InspectionProperty.categoryState);
         collector.addWithDefault("active", active, true, InspectionProperty.categoryState);
+        collector.addWithDefault("interactive", interactive, true, InspectionProperty.categoryState);
         collector.addWithDefault("visible", visible, true, InspectionProperty.categoryState);
         collector.addWithDefault("focused", focused(), false, InspectionProperty.categoryState);
         collector.addWithDefault("hasFocus", hasFocus(), false, InspectionProperty.categoryState);

@@ -4,6 +4,9 @@ import dev.vfyjxf.cloudlib.api.ui.base.SceneHost;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 
+/**
+ * A scene host for a Minecraft screen.
+ */
 public final class ScreenSceneHost implements SceneHost {
 
     private final Screen screen;

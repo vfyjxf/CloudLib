@@ -223,13 +223,13 @@ class WidgetTreeTest {
             // Use HIT_STOP to stop at panel2 without checking children
             // The predicate receives LOCAL coordinates (after viewport transform)
             Widget hit = WidgetTree.hitTest(root, 230, 70, (w, localX, localY) -> {
-                if (!w.visible()) return WidgetTree.HitTestResult.MISS;
+                if (!w.visible()) return WidgetTree.HitTestResult.miss;
                 // Check bounds in local space: (0,0) to (w,h)
                 if (localX < 0 || localX > w.width() || localY < 0 || localY > w.height()) {
-                    return WidgetTree.HitTestResult.MISS;
+                    return WidgetTree.HitTestResult.miss;
                 }
-                if (w == panel2) return WidgetTree.HitTestResult.HIT_STOP;
-                return WidgetTree.HitTestResult.HIT_CONTINUE;
+                if (w == panel2) return WidgetTree.HitTestResult.stop;
+                return WidgetTree.HitTestResult.descend;
             });
 
             assertEquals(panel2, hit, "HIT_STOP should prevent checking children");
@@ -246,7 +246,7 @@ class WidgetTreeTest {
             List<String> visited = new ArrayList<>();
             WidgetTree.walkPreOrder(root, true, -1, (widget, depth) -> {
                 visited.add(widget.toString());
-                return WidgetTree.TraversalControl.CONTINUE;
+                return WidgetTree.TraversalControl.proceed;
             });
 
             assertEquals(List.of("root", "panel1", "button1", "button2",
@@ -258,7 +258,7 @@ class WidgetTreeTest {
             List<String> visited = new ArrayList<>();
             WidgetTree.walkPreOrder(root, false, -1, (widget, depth) -> {
                 visited.add(widget.toString());
-                return WidgetTree.TraversalControl.CONTINUE;
+                return WidgetTree.TraversalControl.proceed;
             });
 
             assertFalse(visited.contains("root"));
@@ -270,7 +270,7 @@ class WidgetTreeTest {
             List<String> visited = new ArrayList<>();
             WidgetTree.walkPreOrder(root, true, 1, (widget, depth) -> {
                 visited.add(widget.toString());
-                return WidgetTree.TraversalControl.CONTINUE;
+                return WidgetTree.TraversalControl.proceed;
             });
 
             // depth 0: root, depth 1: panel1, panel2
@@ -283,9 +283,9 @@ class WidgetTreeTest {
             WidgetTree.walkPreOrder(root, true, -1, (widget, depth) -> {
                 visited.add(widget.toString());
                 if (widget.toString().equals("panel1")) {
-                    return WidgetTree.TraversalControl.SKIP_CHILDREN;
+                    return WidgetTree.TraversalControl.skipChildren;
                 }
-                return WidgetTree.TraversalControl.CONTINUE;
+                return WidgetTree.TraversalControl.proceed;
             });
 
             // panel1's children (button1, button2) should be skipped
@@ -300,12 +300,12 @@ class WidgetTreeTest {
             WidgetTree.TraversalControl result = WidgetTree.walkPreOrder(root, true, -1, (widget, depth) -> {
                 visited.add(widget.toString());
                 if (widget.toString().equals("button1")) {
-                    return WidgetTree.TraversalControl.TERMINATE;
+                    return WidgetTree.TraversalControl.terminate;
                 }
-                return WidgetTree.TraversalControl.CONTINUE;
+                return WidgetTree.TraversalControl.proceed;
             });
 
-            assertEquals(WidgetTree.TraversalControl.TERMINATE, result);
+            assertEquals(WidgetTree.TraversalControl.terminate, result);
             assertEquals(List.of("root", "panel1", "button1"), visited);
         }
 
@@ -314,7 +314,7 @@ class WidgetTreeTest {
             List<Integer> depths = new ArrayList<>();
             WidgetTree.walkPreOrder(root, true, -1, (widget, depth) -> {
                 depths.add(depth);
-                return WidgetTree.TraversalControl.CONTINUE;
+                return WidgetTree.TraversalControl.proceed;
             });
 
             // root=0, panel1=1, button1=2, button2=2, panel2=1, label1=2, nested=2, deep=3
@@ -326,7 +326,7 @@ class WidgetTreeTest {
             List<String> visited = new ArrayList<>();
             WidgetTree.walkPostOrder(root, true, -1, (widget, depth) -> {
                 visited.add(widget.toString());
-                return WidgetTree.TraversalControl.CONTINUE;
+                return WidgetTree.TraversalControl.proceed;
             });
 
             // Children before parents
@@ -339,7 +339,7 @@ class WidgetTreeTest {
             List<String> visited = new ArrayList<>();
             WidgetTree.walkPostOrder(root, false, -1, (widget, depth) -> {
                 visited.add(widget.toString());
-                return WidgetTree.TraversalControl.CONTINUE;
+                return WidgetTree.TraversalControl.proceed;
             });
 
             assertFalse(visited.contains("root"));
@@ -350,7 +350,7 @@ class WidgetTreeTest {
             List<String> visited = new ArrayList<>();
             WidgetTree.walkBreadthFirst(root, true, -1, (widget, depth) -> {
                 visited.add(widget.toString());
-                return WidgetTree.TraversalControl.CONTINUE;
+                return WidgetTree.TraversalControl.proceed;
             });
 
             // Level 0: root
@@ -366,7 +366,7 @@ class WidgetTreeTest {
             List<Integer> depths = new ArrayList<>();
             WidgetTree.walkBreadthFirst(root, true, -1, (widget, depth) -> {
                 depths.add(depth);
-                return WidgetTree.TraversalControl.CONTINUE;
+                return WidgetTree.TraversalControl.proceed;
             });
 
             assertEquals(List.of(0, 1, 1, 2, 2, 2, 2, 3), depths);
@@ -377,7 +377,7 @@ class WidgetTreeTest {
             List<String> visited = new ArrayList<>();
             WidgetTree.walkBreadthFirst(root, true, 2, (widget, depth) -> {
                 visited.add(widget.toString());
-                return WidgetTree.TraversalControl.CONTINUE;
+                return WidgetTree.TraversalControl.proceed;
             });
 
             // depth 0, 1, 2 only - no "deep" (depth 3)
@@ -395,7 +395,7 @@ class WidgetTreeTest {
                     sb.append(ancestry.get(i).toString());
                 }
                 paths.add(sb.toString());
-                return WidgetTree.TraversalControl.CONTINUE;
+                return WidgetTree.TraversalControl.proceed;
             });
 
             assertTrue(paths.contains("root"));
@@ -409,7 +409,7 @@ class WidgetTreeTest {
             List<String> visited = new ArrayList<>();
             WidgetTree.walkChildrenReverse(panel1, (widget, depth) -> {
                 visited.add(widget.toString());
-                return WidgetTree.TraversalControl.CONTINUE;
+                return WidgetTree.TraversalControl.proceed;
             });
 
             // button2 was added after button1, so should come first in reverse
