@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.test.ui;
 
 import dev.vfyjxf.cloudlib.api.ui.base.BasicScreen;
+import dev.vfyjxf.cloudlib.api.ui.base.SceneLayer;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
@@ -85,18 +86,13 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
         mainGroup().addWidget(mainContainer);
 
-        // Add Debug Widget - tracks mouse over mainContainer
-        var debugWidget = Inspector.create()
-                                   .setTrackRoot(mainContainer)
-                                   .setTrackMouse(true)
-                                   .setShowHighlight(true)
-                                   .setShowHierarchy(true)
-                                   .setDisplayMode(Inspector.DisplayMode.FULL);
-        debugWidget.useStyle(UIStyle.of(
-            UIStyles.sizeOf(280, 180),
-            UIStyles.positionStatic()
-        ));
-        mainGroup().addWidget(debugWidget);
+        mainGroup().addWidget(
+            Inspector.create()
+                     .setTrackMouse(true)
+                     .setDisplayMode(Inspector.DisplayMode.FULL)
+                     .useStyle(UIStyles.positionAbsolute(), UIStyles.sizeOf(280, 180))
+                     .setSceneLayer(SceneLayer.debug)
+        );
 
         // Create the reusable widget
         reusableWidget = LabelWidget.of("★ REUSABLE ★")

@@ -68,14 +68,10 @@ public interface StyleProperty {
         StyleType<?> type = type();
         Object value = inspectionValue();
         if (value != null) {
-            @SuppressWarnings("unchecked")
             String formatted = ((StyleType<Object>) type).format(value);
-            collector.addWithDefault(
-                type.displayName(),
-                formatted,
-                type.defaultValue() != null ? ((StyleType<Object>) type).format(type.defaultValue()) : null,
-                type.category()
-            );
+            String defaultFormatted = type.defaultValue() != null
+                ? ((StyleType<Object>) type).format(type.defaultValue()) : null;
+            collector.addFormatted(type.displayName(), formatted, defaultFormatted, type.category());
         }
     }
 }

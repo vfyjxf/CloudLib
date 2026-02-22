@@ -1008,6 +1008,7 @@ public final class Scene {
             if (lastHoveredPath == null) {
                 for (int i = 0; i < currentPath.size(); i++) {
                     Widget widget = currentPath.get(i);
+                    widget.hovered = true;
                     widget.listeners(InputEvents.onMouseEnter).onEnter(mouseX, mouseY, widget.interruptible());
                 }
             } else {
@@ -1143,7 +1144,7 @@ public final class Scene {
     //region hit test & bubble event
 
     public @Nullable Widget hitTest(double mouseX, double mouseY) {
-
+        // Extra layers (floating, overlay, …) — highest priority, checked in reverse order
         for (int i = SceneLayer.extraLayers.size() - 1; i >= 0; i--) {
             SceneLayer layer = SceneLayer.extraLayers.get(i);
             if (layer.hitTestMode() == HitTestAction.none) continue;
@@ -1168,7 +1169,18 @@ public final class Scene {
             }
         }
 
-        return WidgetTree.hitTest(root, mouseX, mouseY);
+        // Content layer (root tree)
+        Widget rootHit = WidgetTree.hitTest(root, mouseX, mouseY);
+        if (rootHit != null) return rootHit;
+
+        // Debug layer — inspector has the lowest priority so it never shadows
+        // other widgets during mouse tracking.
+        if (inspector != null) {
+            Widget hit = WidgetTree.hitTest(inspector, mouseX, mouseY);
+            return hit;
+        }
+
+        return null;
     }
 
     public static <E extends WidgetEvent> boolean handleBubbleEvent(
@@ -1263,7 +1275,7 @@ public final class Scene {
         if (oldFocus == node) return;
 
         Widget newWidget = node.owner;
-        if (newWidget == null || !newWidget.lifecycle.mounted()) return;
+        assert newWidget != null && newWidget.lifecycle.mounted();
         WidgetPath newPath = newWidget.path();
 
         if (oldFocus != null && oldFocus.owner != null && oldFocus.owner.lifecycle.mounted()) {

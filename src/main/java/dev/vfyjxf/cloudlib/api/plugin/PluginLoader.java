@@ -130,8 +130,7 @@ public final class PluginLoader {
      * @param failures loading failures
      * @param <T>      plugin type
      */
-    public record LoadingResult<T extends ModPlugin>(MutableList<T> plugins, MutableList<LoadingFailure<T>> failures) {
-    }
+    public record LoadingResult<T extends ModPlugin>(MutableList<T> plugins, MutableList<LoadingFailure<T>> failures) {}
 
     public record LoadingFailure<T extends ModPlugin>(T instance, FailureType type, String reason) {
         @Override

@@ -208,6 +208,7 @@ public final class WidgetTree {
             // Try next child (reverse order: later children have priority)
             if (frame.children != null && frame.childIndex >= 0) {
                 Widget child = frame.children.get(frame.childIndex--);
+                if (child.coordinateSpace != CoordinateSpace.parent) continue;
                 // Child's "parentX/Y" = this widget's local coords + content offset
                 double contentX = frame.localX + frame.widget.viewport.contentOffsetX;
                 double contentY = frame.localY + frame.widget.viewport.contentOffsetY;
@@ -288,6 +289,7 @@ public final class WidgetTree {
             // Try next child (reverse order: later children have priority)
             if (frame.children != null && frame.childIndex >= 0) {
                 Widget child = frame.children.get(frame.childIndex--);
+                if (child.coordinateSpace != CoordinateSpace.parent) continue;
                 double contentX = frame.localX + frame.widget.viewport.contentOffsetX;
                 double contentY = frame.localY + frame.widget.viewport.contentOffsetY;
                 stack.push(new PredicateHitFrame(child, contentX, contentY));
@@ -393,6 +395,7 @@ public final class WidgetTree {
             // Try next child (reverse order)
             if (frame.children != null && frame.childIndex >= 0) {
                 Widget child = frame.children.get(frame.childIndex--);
+                if (child.coordinateSpace != CoordinateSpace.parent) continue;
                 double contentX = frame.localX + frame.widget.viewport.contentOffsetX;
                 double contentY = frame.localY + frame.widget.viewport.contentOffsetY;
                 stack.push(new ViewportHitAllFrame(child, contentX, contentY));

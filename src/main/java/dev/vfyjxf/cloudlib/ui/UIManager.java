@@ -10,6 +10,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import org.jetbrains.annotations.Nullable;
 
+//TODO:Refactor UIManager
 public class UIManager {
 
     private static final UIManager INSTANCE = new UIManager();

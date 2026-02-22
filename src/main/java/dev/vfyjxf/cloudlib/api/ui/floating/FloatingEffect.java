@@ -3,6 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.floating;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.base.CoordinateSpace;
+import dev.vfyjxf.cloudlib.api.ui.base.SceneLayer;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.effect.Effect;
 import dev.vfyjxf.cloudlib.api.ui.layout.LayoutScope;
@@ -134,6 +135,7 @@ public final class FloatingEffect implements Effect {
     public void apply(Widget widget) {
         widget.useStyle(UIStyles.positionAbsolute());
         widget.setCoordinateSpace(CoordinateSpace.scene);
+        widget.setSceneLayer(SceneLayer.floating);
         widget.onLayout(this::resolveLayout);
     }
 

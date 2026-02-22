@@ -102,7 +102,7 @@ public class TextWidget extends Widget {
             content = content.substring(0, 27) + "...";
         }
         collector.add("text", content, InspectionProperty.categoryData);
-        collector.addWithDefault("color", String.format("#%06X", color & 0xFFFFFF), "#FFFFFF", InspectionProperty.categoryVisual);
+        collector.addFormatted("color", String.format("#%06X", color & 0xFFFFFF), "#FFFFFF", InspectionProperty.categoryVisual);
         collector.addWithDefault("shadow", shadow, false, InspectionProperty.categoryVisual);
     }
 

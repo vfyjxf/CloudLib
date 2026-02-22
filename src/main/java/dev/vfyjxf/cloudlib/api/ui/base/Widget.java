@@ -1320,21 +1320,11 @@ public class Widget
 
     //region inspection
 
-    /**
-     * Collects inspection information for this widget.
-     * <p>
-     * Subclasses can override this method to provide Inspector-friendly properties.
-     * Always call {@code super.collectInspectionInfo(...)} first to include base widget properties.
-     *
-     * @param collector the collector to add properties to
-     */
     @MustBeInvokedByOverriders
     public void collectInspectionInfo(InspectionInfoCollector collector) {
-        // Basic info
         collector.addWithDefault("key", key, null, InspectionProperty.categoryBasic);
-        collector.addWithDefault("lifecycle", lifecycle.name(), Lifecycle.mounted.name(), InspectionProperty.categoryBasic);
+        collector.addWithDefault("lifecycle", lifecycle, Lifecycle.mounted, InspectionProperty.categoryBasic);
 
-        // Layout info
         collector.add("position", pos(), InspectionProperty.categoryLayout);
         collector.add("size", size, InspectionProperty.categoryLayout);
         Pos abs = absolutePos();
@@ -1343,7 +1333,6 @@ public class Widget
         }
         collector.addWithDefault("layoutHandler", layoutHandler != null, false, InspectionProperty.categoryLayout);
 
-        // State info
         collector.addWithDefault("tickable", tickable, false, InspectionProperty.categoryState);
         collector.addWithDefault("active", active, true, InspectionProperty.categoryState);
         collector.addWithDefault("interactive", interactive, true, InspectionProperty.categoryState);
@@ -1357,49 +1346,32 @@ public class Widget
         collector.addWithDefault("dragging", dragging, false, InspectionProperty.categoryState);
         collector.addWithDefault("clickGroup", clickGroup, null, InspectionProperty.categoryState);
 
-        // Render info
-        collector.addWithDefault("sceneLayer", sceneLayer().name(), SceneLayer.content.name(), InspectionProperty.categoryVisual);
+        collector.addWithDefault("sceneLayer", sceneLayer(), SceneLayer.content, InspectionProperty.categoryVisual);
         collector.addWithDefault("zIndex", zIndex(), 0, InspectionProperty.categoryVisual);
-
-        // Tooltip info (only if non-empty)
         if (!tooltip.isEmpty()) {
             collector.add("hasTooltip", true, InspectionProperty.categoryVisual);
         }
 
-        // Style info - collect all applied style properties with "style-" prefix
-        InspectionInfoCollector styleCollector = InspectionInfoCollector.create();
+        // Style properties — re-categorize with "style-" prefix
+        var styleCollector = InspectionInfoCollector.create();
         style.collectStyleInspection(styleCollector);
-
-        // Re-categorize style properties with "style-" prefix
-        for (var property : styleCollector.getAll()) {
-            String newCategory = "style-" + property.category();
-            collector.add(InspectionProperty.withDefault(
-                property.name(),
-                property.value(),
-                property.defaultValue(),
-                newCategory
+        for (var prop : styleCollector.getAll()) {
+            collector.addProperty(new InspectionProperty(
+                prop.name(), prop.value(), prop.defaultValue(),
+                "style-" + prop.category()
             ));
         }
     }
 
-    /**
-     * Gets the inspection type name for this widget.
-     *
-     * @return the inspection type name
-     */
     public String inspectionTypeName() {
         return getClass().getSimpleName();
     }
 
     @Override
     public String toString() {
-        InspectionInfoCollector collector = InspectionInfoCollector.create();
-        collector.setWidgetType(inspectionTypeName());
-        if (key != null) {
-            collector.setWidgetId(key.toString());
-        }
-        collectInspectionInfo(collector);
-        return collector.toCompactString();
+        String name = inspectionTypeName();
+        if (key != null) name += "[" + key + "]";
+        return name + "@" + Integer.toHexString(System.identityHashCode(this));
     }
 
     //endregion

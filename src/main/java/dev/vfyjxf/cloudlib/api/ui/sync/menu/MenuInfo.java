@@ -42,8 +42,8 @@ public record MenuInfo<M extends BasicMenu<?>, A>(
 
     static {
         PROVIDER_TYPES.put(
-            BlockEntityProviderType.INSTANCE.id(),
-            BlockEntityProviderType.INSTANCE
+            BlockEntityProviderType.instance.id(),
+            BlockEntityProviderType.instance
         );
     }
 
@@ -69,7 +69,7 @@ public record MenuInfo<M extends BasicMenu<?>, A>(
     ) {
         return createProvider(
             ServerMenuFactory.EMPTY_NAME,
-            BlockEntityProviderType.INSTANCE,
+            BlockEntityProviderType.instance,
             blockEntity,
             resetOnClose
         );

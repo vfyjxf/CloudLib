@@ -18,7 +18,6 @@ import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 
-//TODO:对事件进行分类，而不是所有的都堆积在这里
 public interface WidgetEvent {
 
 

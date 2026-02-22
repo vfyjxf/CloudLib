@@ -19,104 +19,46 @@ import java.util.List;
  * <p>
  * A {@code Viewport} maps between two coordinate spaces:
  * <ul>
- *   <li><b>Local space</b> — the widget's own coordinate system, where rendering
- *       happens (origin {@code (0, 0)} at the widget's top-left).</li>
- *   <li><b>Parent space</b> — the coordinate system of the widget's parent (or the scene
- *       for the root widget).</li>
+ *   <li>Local space — the widget's own coordinate system (origin at top-left).</li>
+ *   <li>Parent space — the coordinate system of the widget's parent (or the scene for the root).</li>
  * </ul>
  * <p>
- * Internally, three concepts are stored as <b>dedicated fields</b> rather than in the
- * user-transform list:
+ * Three concepts are stored as dedicated fields:
  * <ol>
- *   <li><b>Layout</b> — the widget's position within its parent, managed by the framework.</li>
- *   <li><b>Content offset</b> — an additional translation between this widget's local space
- *       and its <em>content space</em> (where children reside). Used by scroll containers.</li>
- *   <li><b>User transforms</b> — scroll, zoom, rotation, etc. stored in the list.</li>
+ *   <li>Layout — the widget's position within its parent, managed by the framework.</li>
+ *   <li>Content offset — an additional translation for scroll containers.</li>
+ *   <li>User transforms — scroll, zoom, rotation, etc.</li>
  * </ol>
  * <p>
- * When exposed externally via {@link #transforms()}, layout and user transforms are
- * composed into a single list ({@code [Layout, userT0, userT1, …]}).
- * Content offset is a separate property accessible via {@link #contentOffsetX()} /
- * {@link #contentOffsetY()}.
- * <p>
- * The full forward matrix (local → parent) is built as:
- * <pre>{@code
- *   M = Layout · T(origin) · userTransforms · T(-origin)
- * }</pre>
- * The optional {@linkplain #origin() origin} wrapping causes scale and rotation to
- * operate around the specified point. Translations (including {@code Layout}) are
- * unaffected by origin wrapping because {@code T(o) · T(t) · T(-o) = T(t)}.
- *
- * <h3>Index Convention (external)</h3>
- * <table>
- *   <tr><th>Index 0</th><td>{@code Layout(x, y)} — layout position, managed by the framework</td></tr>
- *   <tr><th>Index 1…n</th><td>User transforms — scroll, scale, rotate, etc.</td></tr>
- * </table>
- *
- * <h3>Typical use cases</h3>
- * <pre>{@code
- * // Plain widget (layout-only, default)
- * Viewport vp = Viewport.create();
- *
- * // Scroll panel — content offset shifts children without moving the container
- * vp.setContentOffset(scrollX, scrollY);
- *
- * // Zoomable editor
- * vp.addTransform(ViewportTransform.scale(1, 1));
- * vp.addTransform(ViewportTransform.translate(0, 0));
- *
- * // Full transform (rotate + scale around center, then translate)
- * vp.setOriginCenter()
- *   .addTransform(ViewportTransform.rotate(0))
- *   .addTransform(ViewportTransform.scale(1, 1))
- *   .addTransform(ViewportTransform.translate(0, 0));
- * }</pre>
- *
- * <h3>Coordinate Naming Convention</h3>
- * <table>
- *   <tr><th>Method pattern</th><th>Direction</th></tr>
- *   <tr><td>{@code localToParent}</td><td>local → parent (forward matrix)</td></tr>
- *   <tr><td>{@code parentToLocal}</td><td>parent → local (inverse matrix)</td></tr>
- *   <tr><td>{@code contentToViewport}</td><td>content → viewport (view matrix, excludes layout)</td></tr>
- *   <tr><td>{@code viewportToContent}</td><td>viewport → content (inverse view matrix)</td></tr>
- * </table>
+ * The full forward matrix (local → parent) is:
+ * {@code M = Layout · T(origin) · userTransforms · T(-origin)}
  *
  * @see ViewportTransform
- * @see dev.vfyjxf.cloudlib.api.ui.scroll.ScrollState
- * @see dev.vfyjxf.cloudlib.api.ui.scroll.ScrollEffect
  */
 public final class Viewport {
 
     //region transform pipeline
 
     /**
-     * The layout position, stored as a dedicated field (not in the user-transform list).
-     * Composed into the full pipeline when building matrices or exposing via {@link #transforms()}.
+     * The layout position, stored as a dedicated field.
      */
     private ViewportTransform.Layout layout = ViewportTransform.layout(0, 0);
 
     /**
-     * Content offset: an additional translation applied between this widget's local space
-     * and its content space (where children reside). Used by scroll containers to
-     * shift children without moving the container itself.
-     * <p>
-     * Default is {@code (0, 0)} — no offset.
+     * Content offset applied between local space and content space (where children reside).
+     * Used by scroll containers.
      */
     float contentOffsetX;
     float contentOffsetY;
 
     /**
      * User transforms (scroll, zoom, rotation, etc.).
-     * Layout and contentOffset are stored as dedicated fields, NOT in this list.
-     * <p>
-     * Package-private so that classes in the same package (Widget, SceneCanvas) can
-     * read the pipeline without a defensive copy.
+     * Layout and contentOffset are stored as dedicated fields, not in this list.
      */
     final List<ViewportTransform> transforms = new ArrayList<>();
 
     /**
-     * Optional callback invoked whenever the viewport's cached matrices are invalidated.
-     * Used by Widget to propagate absolute-position cache invalidation to descendants.
+     * Callback invoked whenever cached matrices are invalidated.
      */
     @Nullable Runnable onInvalidate;
 
@@ -142,11 +84,7 @@ public final class Viewport {
 
     /**
      * Transform origin expressed as a ratio of the viewport dimensions (0–1).
-     * {@code (0, 0)} means top-left (the default); {@code (0.5, 0.5)} means center.
-     * <p>
-     * The origin wraps the <em>entire</em> pipeline:
-     * {@code M = T(origin) · pipeline · T(-origin)}.
-     * This only affects non-translation transforms (scale, rotate, affine).
+     * {@code (0, 0)} = top-left (default); {@code (0.5, 0.5)} = center.
      */
     private double originX;
     private double originY;
@@ -164,12 +102,11 @@ public final class Viewport {
 
     /**
      * Forward: local → parent.
-     * Package-private for direct access from SceneCanvas / Widget without defensive copy.
      */
     @Nullable Matrix3x2f forwardMatrix;
 
     /**
-     * Forward matrix as Matrix4f for GPU use. Cached alongside forwardMatrix.
+     * Forward matrix as Matrix4f for GPU use.
      */
     @Nullable Matrix4f forwardMatrix4f;
 
@@ -179,13 +116,12 @@ public final class Viewport {
     @Nullable Matrix3x2f inverseMatrix;
 
     /**
-     * View matrix: user transforms only (indices 1…n), excludes layout.
-     * Cached alongside forwardMatrix.
+     * View matrix: user transforms only (excludes layout).
      */
     @Nullable Matrix3x2f viewMatrixCache;
 
     /**
-     * View matrix as Matrix4f for GPU use. Cached alongside viewMatrix.
+     * View matrix as Matrix4f for GPU use.
      */
     @Nullable Matrix4f viewMatrix4fCache;
 
@@ -295,22 +231,14 @@ public final class Viewport {
     //region content offset
 
     /**
-     * Returns the content offset X (horizontal scroll amount).
-     * This offset is applied between this widget's local space and its
-     * content space (where children reside).
-     *
-     * @return content offset X, default 0
+     * @return content offset X (horizontal scroll amount), default 0
      */
     public float contentOffsetX() {
         return contentOffsetX;
     }
 
     /**
-     * Returns the content offset Y (vertical scroll amount).
-     * This offset is applied between this widget's local space and its
-     * content space (where children reside).
-     *
-     * @return content offset Y, default 0
+     * @return content offset Y (vertical scroll amount), default 0
      */
     public float contentOffsetY() {
         return contentOffsetY;
@@ -320,11 +248,8 @@ public final class Viewport {
      * Sets the content offset. This shifts the coordinate space that children live in
      * relative to this widget's own local space, without moving the widget itself.
      * <p>
-     * Typically set by scroll effects: {@code viewport.setContentOffset(scrollX, scrollY)}.
-     * <p>
-     * This does <b>not</b> invalidate cached matrices (contentOffset is not part of the
-     * forward / view matrix pipeline) but <b>does</b> fire the {@link #onInvalidate} callback
-     * so that absolute-position caches in descendant widgets are cleared.
+     * Does not invalidate cached matrices (contentOffset is not part of the
+     * matrix pipeline) but does fire {@link #onInvalidate} to clear absolute-position caches.
      *
      * @param x horizontal content offset (scroll X)
      * @param y vertical content offset (scroll Y)
@@ -344,15 +269,8 @@ public final class Viewport {
     //region pipeline access
 
     /**
-     * Returns a composed, unmodifiable view of the full transform pipeline.
-     * <p>
-     * Internally, layout is stored as a dedicated field and user transforms
-     * in a separate list. This method composes them into a single list for
-     * external consumption:
-     * <pre>
-     * [Layout(x,y), userTransform0, userTransform1, …]
-     * </pre>
-     * Index 0 is always the {@link ViewportTransform.Layout} step.
+     * Returns the full transform pipeline as an unmodifiable list.
+     * Index 0 is the layout step; 1+ are user transforms.
      */
     public List<ViewportTransform> transforms() {
         List<ViewportTransform> composed = new ArrayList<>(transforms.size() + 1);
@@ -466,15 +384,6 @@ public final class Viewport {
 
     /**
      * Returns the index of the first transform assignable to the given type, or {@code -1}.
-     * <p>
-     * Useful for finding and updating a specific transform step:
-     * <pre>{@code
-     * int scaleIdx = vp.indexOf(ViewportTransform.Scale.class);
-     * if (scaleIdx >= 0) {
-     *     ViewportTransform.Scale old = (ViewportTransform.Scale) vp.getTransform(scaleIdx);
-     *     vp.setTransform(scaleIdx, ViewportTransform.scale(old.sx() * 1.1, old.sy() * 1.1));
-     * }
-     * }</pre>
      */
     public <T extends ViewportTransform> int indexOf(Class<T> type) {
         if (type.isInstance(layout)) return 0;
@@ -640,11 +549,7 @@ public final class Viewport {
     //region coordinate transform — local ↔ parent
 
     /**
-     * Transforms a point from <b>local space</b> to <b>parent space</b>.
-     *
-     * @param localX x in local space
-     * @param localY y in local space
-     * @return the corresponding position in parent space
+     * Transforms a point from local space to parent space.
      */
     public FloatPos localToParent(double localX, double localY) {
         Matrix3x2f m = forwardMatrix();
@@ -668,15 +573,7 @@ public final class Viewport {
     }
 
     /**
-     * Transforms a point from <b>parent space</b> to <b>local space</b>.
-     * This is the inverse of {@link #localToParent}.
-     * <p>
-     * Essential for hit-testing: given a mouse position in the parent's coordinate
-     * space, compute the corresponding local coordinate.
-     *
-     * @param parentX x in parent space
-     * @param parentY y in parent space
-     * @return the corresponding position in local space
+     * Transforms a point from parent space to local space (inverse of {@link #localToParent}).
      */
     public FloatPos parentToLocal(double parentX, double parentY) {
         Matrix3x2f m = inverseMatrix();
@@ -700,10 +597,7 @@ public final class Viewport {
     }
 
     /**
-     * Transforms a <em>delta</em> (direction/distance) vector from local space to parent space.
-     * Unlike point transforms, this ignores the translation component.
-     *
-     * @return the delta in parent space
+     * Transforms a delta vector from local space to parent space, ignoring translation.
      */
     public FloatPos localToParentDelta(double dx, double dy) {
         Matrix3x2f m = forwardMatrix();
@@ -729,16 +623,12 @@ public final class Viewport {
     //region view matrix (excludes layout)
 
     /**
-     * Builds the <em>view matrix</em> — the sub-pipeline that excludes the layout step.
+     * Builds the view matrix — user transforms only, excludes the layout step.
      * <p>
-     * If the pipeline is {@code [Layout, S, R, T]}, the view matrix is
-     * {@code T(origin) · S · R · T · T(-origin)}.
-     * <p>
-     * This is useful for rendering: the layout position is already handled by the
-     * widget tree traversal, and the view matrix captures only the "extra" transforms
-     * (scroll, zoom, rotation) applied to the widget's content.
+     * Useful for rendering: the layout position is handled by the widget tree traversal,
+     * and the view matrix captures only the extra transforms (scroll, zoom, rotation).
      *
-     * @return the view matrix as {@link Matrix3x2f}, or identity if only the layout step exists
+     * @return the view matrix, or identity if only the layout step exists
      */
     public Matrix3x2f viewMatrix() {
         if (viewMatrixCache != null) return new Matrix3x2f(viewMatrixCache);
@@ -748,9 +638,7 @@ public final class Viewport {
     }
 
     /**
-     * Returns the view matrix as a {@link Matrix4f} suitable for use with
-     * {@link dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas SceneCanvas}.
-     * The Z components are identity.
+     * Returns the view matrix as a {@link Matrix4f} for GPU use.
      */
     public Matrix4f viewMatrix4f() {
         if (viewMatrix4fCache != null) return new Matrix4f(viewMatrix4fCache);
@@ -762,7 +650,6 @@ public final class Viewport {
 
     /**
      * Package-private: returns the cached view Matrix4f without defensive copy.
-     * For use by SceneCanvas in the same package.
      */
     Matrix4f viewMatrix4fDirect() {
         if (viewMatrix4fCache == null) {
@@ -773,19 +660,13 @@ public final class Viewport {
 
     /**
      * Returns whether the view (non-layout) portion of the pipeline is identity.
-     * When this is {@code true}, the widget has no extra transforms (no scroll, zoom, rotation).
      */
     public boolean isViewIdentity() {
         return transforms.isEmpty();
     }
 
     /**
-     * Transforms a point from the widget's <b>local/content space</b> to the widget's
-     * <b>viewport space</b> (after user transforms, before layout offset).
-     *
-     * @param localX x in local/content space
-     * @param localY y in local/content space
-     * @return the corresponding position in viewport space (pre-layout)
+     * Transforms a point from content space to viewport space (user transforms only, no layout).
      */
     public FloatPos contentToViewport(double localX, double localY) {
         Matrix3x2f m = viewMatrix();
@@ -795,12 +676,7 @@ public final class Viewport {
     }
 
     /**
-     * Transforms a point from the widget's <b>viewport space</b> to the widget's
-     * <b>local/content space</b>.
-     *
-     * @param viewportX x in viewport space
-     * @param viewportY y in viewport space
-     * @return the corresponding position in local/content space
+     * Transforms a point from viewport space to content space (inverse of {@link #contentToViewport}).
      */
     public FloatPos viewportToContent(double viewportX, double viewportY) {
         Matrix3x2f m = viewMatrix();
@@ -825,12 +701,6 @@ public final class Viewport {
 
     /**
      * Tests whether a parent-space point hits this widget's visible area.
-     * The point is inverse-transformed into local space, then checked against
-     * the viewport bounds.
-     *
-     * @param parentX x in parent space (e.g. mouse position)
-     * @param parentY y in parent space
-     * @return {@code true} if the point maps into the viewport bounds
      */
     public boolean hitTest(double parentX, double parentY) {
         FloatPos local = parentToLocal(parentX, parentY);
@@ -839,14 +709,6 @@ public final class Viewport {
 
     /**
      * Tests whether a parent-space point hits a local-space rectangle.
-     *
-     * @param parentX x in parent space
-     * @param parentY y in parent space
-     * @param cx      local-space rectangle x
-     * @param cy      local-space rectangle y
-     * @param cw      local-space rectangle width
-     * @param ch      local-space rectangle height
-     * @return {@code true} if the point maps into the rectangle
      */
     public boolean hitTest(double parentX, double parentY,
                            int cx, int cy, int cw, int ch) {
@@ -867,14 +729,7 @@ public final class Viewport {
     }
 
     /**
-     * Computes the axis-aligned bounding box in parent space for a local-space rect.
-     * Useful for scissor/clip testing and culling.
-     *
-     * @param cx local-space rectangle x
-     * @param cy local-space rectangle y
-     * @param cw local-space rectangle width
-     * @param ch local-space rectangle height
-     * @return enclosing AABB in parent space (may be larger than the original due to rotation)
+     * Computes the AABB in parent space for a local-space rect.
      */
     public Rect localRectToParentBounds(int cx, int cy, int cw, int ch) {
         double x0 = cx;
@@ -899,7 +754,7 @@ public final class Viewport {
     }
 
     /**
-     * Computes the axis-aligned bounding box in parent space for a local-space rect.
+     * Computes the AABB in parent space for a local-space rect.
      *
      * @see #localRectToParentBounds(int, int, int, int)
      */
@@ -1029,14 +884,8 @@ public final class Viewport {
     //region pivot adjustment
 
     /**
-     * Adjusts the {@link ViewportTransform.Translate} at the given pipeline index so
-     * that the given local-space point maps to the given parent-space point.
-     *
-     * @param translateIndex pipeline index of the Translate to adjust
-     * @param localX         target local-space x
-     * @param localY         target local-space y
-     * @param parentX        target parent-space x
-     * @param parentY        target parent-space y
+     * Adjusts the Translate at the given pipeline index so that
+     * the local-space point maps to the given parent-space point.
      */
     @Contract("_,_,_,_,_ -> this")
     public Viewport adjustTranslateForPivot(int translateIndex,
@@ -1074,8 +923,8 @@ public final class Viewport {
     }
 
     /**
-     * Zoom-to-cursor: multiplies the Scale at {@code scaleIndex} and adjusts Translate
-     * at {@code translateIndex} to keep the local point under the cursor stationary.
+     * Zoom-to-cursor: scales at {@code scaleIndex} and adjusts translation to
+     * keep the cursor point stationary.
      */
     @Contract("_,_,_,_,_ -> this")
     public Viewport zoomAt(int scaleIndex, int translateIndex,
@@ -1162,9 +1011,7 @@ public final class Viewport {
     //region matrix access
 
     /**
-     * Returns the forward (local → parent) affine matrix.
-     * This is the full pipeline including the layout step.
-     * The returned matrix is a defensive copy.
+     * Returns the forward (local → parent) affine matrix. Defensive copy.
      */
     public Matrix3x2f forwardMatrix() {
         if (forwardMatrix == null) {
@@ -1175,7 +1022,6 @@ public final class Viewport {
 
     /**
      * Package-private: returns the cached forward matrix without defensive copy.
-     * For use by SceneCanvas / Widget in the same package.
      */
     Matrix3x2f forwardMatrixDirect() {
         if (forwardMatrix == null) {
@@ -1208,7 +1054,6 @@ public final class Viewport {
 
     /**
      * Returns the forward transform as a {@link Matrix4f} for GPU rendering.
-     * The Z components are identity.
      */
     public Matrix4f toMatrix4f() {
         if (forwardMatrix4f == null) {
@@ -1229,7 +1074,6 @@ public final class Viewport {
 
     /**
      * Returns whether the full composed transform is identity.
-     * This is only true when the widget is at (0,0) with no extra transforms.
      */
     public boolean isIdentity() {
         Matrix3x2f m = forwardMatrixDirect();
@@ -1243,8 +1087,7 @@ public final class Viewport {
     //region reset / copy
 
     /**
-     * Resets to a clean state: only the {@code Layout(0, 0)} step, origin at top-left.
-     * Dimensions are preserved.
+     * Resets to a clean state: only {@code Layout(0,0)}, origin at top-left.
      */
     @Contract("-> this")
     public Viewport reset() {
@@ -1321,8 +1164,7 @@ public final class Viewport {
     }
 
     /**
-     * Builds the forward (local → parent) affine matrix.
-     * {@code M = Layout · T(origin) · userTransforms · T(-origin)}
+     * Builds the forward (local → parent) affine matrix from the full pipeline.
      */
     private Matrix3x2f buildForwardMatrix() {
         float ox = (float) (originX * viewportWidth);

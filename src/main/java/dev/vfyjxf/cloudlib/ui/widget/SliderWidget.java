@@ -253,7 +253,7 @@ public class SliderWidget extends Widget {
         collector.addWithDefault("min", min, 0.0, InspectionProperty.categoryData);
         collector.addWithDefault("max", max, 1.0, InspectionProperty.categoryData);
         collector.addWithDefault("step", step, 0.0, InspectionProperty.categoryData);
-        collector.addWithDefault("orientation", orientation.name(), Orientation.HORIZONTAL.name(), InspectionProperty.categoryVisual);
+        collector.addWithDefault("orientation", orientation, Orientation.HORIZONTAL, InspectionProperty.categoryVisual);
         collector.addWithDefault("dragging", dragging, false, InspectionProperty.categoryState);
     }
 

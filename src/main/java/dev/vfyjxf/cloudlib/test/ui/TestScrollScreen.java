@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.test.ui;
 
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.ui.base.BasicScreen;
+import dev.vfyjxf.cloudlib.api.ui.base.SceneLayer;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollDirection;
@@ -75,18 +76,13 @@ public class TestScrollScreen extends BasicScreen {
         // Status bar
         root.addWidget(createStatusBar());
 
-        // Inspector (added before root so it appears on the left in ROW layout)
-        var inspector = Inspector.create()
-                                 .setTrackRoot(root)
-                                 .setTrackMouse(true)
-                                 .setShowHighlight(true)
-                                 .setShowHierarchy(true)
-                                 .setDisplayMode(Inspector.DisplayMode.FULL);
-        inspector.useStyle(UIStyle.of(
-            UIStyles.sizeOf(280, 180),
-            UIStyles.positionStatic()
-        ));
-        mainGroup().addWidget(inspector);
+        mainGroup().addWidget(
+            Inspector.create()
+                     .setTrackMouse(true)
+                     .setDisplayMode(Inspector.DisplayMode.FULL)
+                     .useStyle(UIStyles.positionAbsolute(), UIStyles.sizeOf(280, 180))
+                     .setSceneLayer(SceneLayer.debug)
+        );
 
         mainGroup().addWidget(root);
 

@@ -179,41 +179,36 @@ public abstract class EdgeStyleProperty<T> implements LayoutProperty {
     public void collectInspection(InspectionInfoCollector collector) {
         String category = type().category();
 
-        // For ALL mask, show as single property
         if (mask == EdgeMask.ALL && edges.hasAll()) {
             T top = edges.top();
             T right = edges.right();
             T bottom = edges.bottom();
             T left = edges.left();
 
-            // Check if all same value
+            String formatted;
             if (Objects.equals(top, right) && Objects.equals(right, bottom) && Objects.equals(bottom, left)) {
-                collector.add(baseName(), formatValue(top), category);
+                formatted = formatValue(top);
             } else if (Objects.equals(top, bottom) && Objects.equals(left, right)) {
-                // Vertical/horizontal shorthand
-                collector.add(baseName(), formatValue(top) + " " + formatValue(right), category);
+                formatted = formatValue(top) + " " + formatValue(right);
             } else {
-                // Full form
-                collector.add(baseName(),
-                    formatValue(top) + " " + formatValue(right) + " " +
-                    formatValue(bottom) + " " + formatValue(left),
-                    category);
+                formatted = formatValue(top) + " " + formatValue(right) + " " +
+                    formatValue(bottom) + " " + formatValue(left);
             }
+            collector.addFormatted(baseName(), formatted, null, category);
             return;
         }
 
-        // Otherwise, show individual edges that are set
         if (mask.affectsTop() && edges.top() != null) {
-            collector.add(baseName() + "-top", formatValue(edges.top()), category);
+            collector.addFormatted(baseName() + "-top", formatValue(edges.top()), null, category);
         }
         if (mask.affectsRight() && edges.right() != null) {
-            collector.add(baseName() + "-right", formatValue(edges.right()), category);
+            collector.addFormatted(baseName() + "-right", formatValue(edges.right()), null, category);
         }
         if (mask.affectsBottom() && edges.bottom() != null) {
-            collector.add(baseName() + "-bottom", formatValue(edges.bottom()), category);
+            collector.addFormatted(baseName() + "-bottom", formatValue(edges.bottom()), null, category);
         }
         if (mask.affectsLeft() && edges.left() != null) {
-            collector.add(baseName() + "-left", formatValue(edges.left()), category);
+            collector.addFormatted(baseName() + "-left", formatValue(edges.left()), null, category);
         }
     }
 

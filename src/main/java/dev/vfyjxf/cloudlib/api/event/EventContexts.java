@@ -18,7 +18,6 @@ import dev.vfyjxf.cloudlib.api.event.context.InterruptibleContext;
  * <p>
  * {@link BubbleContext}:Event context supporting hierarchical propagation, enabling events to flow through Capturing, Target, and Bubbling phases.
  */
-//TODO:Add EmptyContext to avoid create new context for empty event listener list
 public final class EventContexts {
 
     public static CommonContext createCommon(EventChannel<?> channel) {
