@@ -17,7 +17,8 @@ public class BoxWidget extends CompositeWidget<Widget> {
         return new BoxWidget();
     }
 
-    private BoxWidget() {}
+    private BoxWidget() {
+    }
 
     //endregion
 

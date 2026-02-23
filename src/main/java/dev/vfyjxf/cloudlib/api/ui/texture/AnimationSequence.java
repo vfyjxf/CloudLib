@@ -27,7 +27,8 @@ public class AnimationSequence<T> implements Playable<T> {
     private boolean playing = false;
     private boolean loop = false;
 
-    public AnimationSequence() {}
+    public AnimationSequence() {
+    }
 
     @SafeVarargs
     public AnimationSequence(Playable<T>... animations) {

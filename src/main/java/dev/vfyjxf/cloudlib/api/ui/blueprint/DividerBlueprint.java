@@ -36,7 +36,8 @@ public final class DividerBlueprint implements Blueprint<DividerWidget> {
     private @Nullable Object key;
     private UIStyle style = UIStyle.EMPTY;
 
-    private DividerBlueprint() {}
+    private DividerBlueprint() {
+    }
 
     //region dsl entry points
 
@@ -117,9 +118,9 @@ public final class DividerBlueprint implements Blueprint<DividerWidget> {
     @Override
     public void updateWidget(DividerWidget widget, Scene scene, SceneContext context) {
         widget.setOrientation(orientation)
-              .setThickness(thickness)
-              .setTexture(texture)
-              .useStyle(style);
+                .setThickness(thickness)
+                .setTexture(texture)
+                .useStyle(style);
     }
 
     //endregion

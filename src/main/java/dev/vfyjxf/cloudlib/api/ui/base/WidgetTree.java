@@ -3,11 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.base;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -24,7 +20,8 @@ import java.util.function.Predicate;
  */
 public final class WidgetTree {
 
-    private WidgetTree() {}
+    private WidgetTree() {
+    }
 
     /**
      * Maximum tree depth to prevent stack overflow from cycles.
@@ -196,7 +193,7 @@ public final class WidgetTree {
 
                 // Check if local coords are within widget bounds
                 if (local.x < 0 || local.x > frame.widget.width()
-                    || local.y < 0 || local.y > frame.widget.height()) {
+                        || local.y < 0 || local.y > frame.widget.height()) {
                     stack.pop();
                     continue;
                 }
@@ -386,7 +383,7 @@ public final class WidgetTree {
                 frame.localX = local.x;
                 frame.localY = local.y;
                 if (local.x < 0 || local.x > frame.widget.width()
-                    || local.y < 0 || local.y > frame.widget.height()) {
+                        || local.y < 0 || local.y > frame.widget.height()) {
                     stack.pop();
                     continue;
                 }

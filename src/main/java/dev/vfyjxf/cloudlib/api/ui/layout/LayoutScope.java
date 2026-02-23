@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
  *   <li>If {@link #isResolved()}, the framework applies the values to the
  *       widget's viewport. Otherwise the widget manages layout itself.</li>
  * </ol>
+ *
  * @see LayoutHandler
  */
 public final class LayoutScope {

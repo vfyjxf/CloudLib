@@ -65,12 +65,12 @@ public final class StyleType<T> {
     //region constructors
 
     private StyleType(
-        String id,
-        String displayName,
-        String category,
-        @Nullable Supplier<T> initValue,
-        @Nullable Applier<T> applier,
-        @Nullable Function<T, String> formatter
+            String id,
+            String displayName,
+            String category,
+            @Nullable Supplier<T> initValue,
+            @Nullable Applier<T> applier,
+            @Nullable Function<T, String> formatter
     ) {
         this.id = Objects.requireNonNull(id, "id");
         this.displayName = Objects.requireNonNull(displayName, "displayName");
@@ -91,7 +91,7 @@ public final class StyleType<T> {
     /**
      * Creates a new StyleType builder.
      *
-     * @param id the unique identifier
+     * @param id  the unique identifier
      * @param <T> the value type
      * @return a new builder
      */

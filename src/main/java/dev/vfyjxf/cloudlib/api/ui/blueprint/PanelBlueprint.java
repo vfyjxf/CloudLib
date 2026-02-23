@@ -1,10 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.blueprint;
 
-import dev.vfyjxf.cloudlib.api.ui.base.Blueprint;
-import dev.vfyjxf.cloudlib.api.ui.base.Scene;
-import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
-import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
-import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.base.*;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
@@ -130,12 +126,12 @@ public final class PanelBlueprint implements Blueprint.Group<PanelWidget, Widget
     @Override
     public void updateWidget(PanelWidget widget, Scene scene, SceneContext context) {
         widget.setTitle(title)
-              .setBackgroundTexture(backgroundTexture)
-              .setBorderTexture(borderTexture)
-              .setBorderWidth(borderWidth)
-              .setContentPadding(contentPadding)
-              .setShowTitleBar(showTitleBar)
-              .useStyle(style);
+                .setBackgroundTexture(backgroundTexture)
+                .setBorderTexture(borderTexture)
+                .setBorderWidth(borderWidth)
+                .setContentPadding(contentPadding)
+                .setShowTitleBar(showTitleBar)
+                .useStyle(style);
     }
 
     //endregion

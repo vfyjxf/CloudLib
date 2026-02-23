@@ -10,11 +10,7 @@ import dev.vfyjxf.taffy.tree.NodeId;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Context provided to {@link StyleProperty} implementations for applying styles.
@@ -156,7 +152,6 @@ public class StyleContext {
      * @param <T>      the type of the property value
      * @return this context for chaining
      */
-    @SuppressWarnings("unchecked")
     public <T> StyleContext addChangeListener(StyleType<T> type, StyleChangeListener<T> listener) {
         Objects.requireNonNull(type, "type");
         Objects.requireNonNull(listener, "listener");
@@ -165,7 +160,7 @@ public class StyleContext {
             changeListeners = new LinkedHashMap<>();
         }
         changeListeners.computeIfAbsent(type, k -> org.eclipse.collections.impl.factory.Lists.mutable.empty())
-                       .add(listener);
+                .add(listener);
         return this;
     }
 
@@ -275,8 +270,8 @@ public class StyleContext {
      */
     public boolean hasProperty(StyleType<?> type) {
         return valuesByType.containsKey(type)
-               || appliedProperties.stream()
-                                   .anyMatch(p -> p.type().equals(type));
+                || appliedProperties.stream()
+                .anyMatch(p -> p.type().equals(type));
     }
 
     /**

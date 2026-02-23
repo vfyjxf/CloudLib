@@ -22,9 +22,9 @@ public abstract class BasicBlockEntity extends BlockEntity {
     protected static final String UPDATE_TAG = "UpdateTag";
 
     public BasicBlockEntity(
-        BlockEntityType<?> type,
-        BlockPos pos,
-        BlockState blockState
+            BlockEntityType<?> type,
+            BlockPos pos,
+            BlockState blockState
     ) {
         super(type, pos, blockState);
     }

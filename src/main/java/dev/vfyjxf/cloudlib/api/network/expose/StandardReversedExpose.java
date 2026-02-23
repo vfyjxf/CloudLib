@@ -12,8 +12,8 @@ import java.util.function.Consumer;
 
 @ApiStatus.Internal
 final class StandardReversedExpose<T, S, R>
-    extends BasicDownstreamExpose<T>
-    implements ReversedExpose<T, S, R>, ReversedTranscoder {
+        extends BasicDownstreamExpose<T>
+        implements ReversedExpose<T, S, R>, ReversedTranscoder {
 
     private final SimpleEvent<Consumer<R>> reverseReceiveEvent = SimpleEvent.create();
     private final FlowEncoder<S> reverseEncoder;
@@ -21,10 +21,10 @@ final class StandardReversedExpose<T, S, R>
     private Maybe<S> reversedData = Maybe.empty();
 
     StandardReversedExpose(
-        String name, short id,
-        Snapshot<T> snapshot, ValueSupplier<T> supplier,
-        FlowEncoder<T> encoder, FlowDecoder<T> decoder,
-        FlowEncoder<S> reverseEncoder, FlowDecoder<R> reverseDecoder
+            String name, short id,
+            Snapshot<T> snapshot, ValueSupplier<T> supplier,
+            FlowEncoder<T> encoder, FlowDecoder<T> decoder,
+            FlowEncoder<S> reverseEncoder, FlowDecoder<R> reverseDecoder
     ) {
         super(name, id, snapshot, supplier, encoder, decoder);
         this.reverseEncoder = reverseEncoder;

@@ -13,16 +13,7 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Dependency graph with topological ordering and level decomposition.
@@ -40,10 +31,10 @@ public final class DependencyGraph<T extends ModPlugin> {
     private final Map<Namespace, T> pluginById;
 
     private DependencyGraph(
-        ImmutableGraph<Namespace> graph,
-        ImmutableList<T> sorted,
-        ImmutableList<LoadingLevel<T>> levels,
-        Map<Namespace, T> pluginById
+            ImmutableGraph<Namespace> graph,
+            ImmutableList<T> sorted,
+            ImmutableList<LoadingLevel<T>> levels,
+            Map<Namespace, T> pluginById
     ) {
         this.graph = graph;
         this.sorted = sorted;
@@ -69,10 +60,10 @@ public final class DependencyGraph<T extends ModPlugin> {
         }
 
         return new DependencyGraph<>(
-            ImmutableGraph.copyOf(mutableGraph),
-            sorted.toImmutable(),
-            computeLevels(sortedIds, mutableGraph, id2Plugin).toImmutable(),
-            Collections.unmodifiableMap(id2Plugin)
+                ImmutableGraph.copyOf(mutableGraph),
+                sorted.toImmutable(),
+                computeLevels(sortedIds, mutableGraph, id2Plugin).toImmutable(),
+                Collections.unmodifiableMap(id2Plugin)
         );
     }
 
@@ -86,10 +77,10 @@ public final class DependencyGraph<T extends ModPlugin> {
         var sortedIds = new ArrayList<>(id2Plugin.keySet());
 
         return new DependencyGraph<>(
-            ImmutableGraph.copyOf(mutableGraph),
-            MutableLists.withAll(id2Plugin.values()).toImmutable(),
-            computeLevels(sortedIds, mutableGraph, id2Plugin).toImmutable(),
-            Collections.unmodifiableMap(id2Plugin)
+                ImmutableGraph.copyOf(mutableGraph),
+                MutableLists.withAll(id2Plugin.values()).toImmutable(),
+                computeLevels(sortedIds, mutableGraph, id2Plugin).toImmutable(),
+                Collections.unmodifiableMap(id2Plugin)
         );
     }
 
@@ -151,7 +142,7 @@ public final class DependencyGraph<T extends ModPlugin> {
         Checks.checkNotNull(a, "a");
         Checks.checkNotNull(b, "b");
         return !transitiveDependenciesOf(a).contains(b)
-               && !transitiveDependenciesOf(b).contains(a);
+                && !transitiveDependenciesOf(b).contains(a);
     }
 
     //endregion
@@ -189,9 +180,9 @@ public final class DependencyGraph<T extends ModPlugin> {
     }
 
     private static <T extends ModPlugin> MutableList<LoadingLevel<T>> computeLevels(
-        List<Namespace> sortedIds,
-        MutableGraph<Namespace> graph,
-        Map<Namespace, T> id2Plugin
+            List<Namespace> sortedIds,
+            MutableGraph<Namespace> graph,
+            Map<Namespace, T> id2Plugin
     ) {
         var levelMap = new Object2IntOpenHashMap<Namespace>();
         int maxLevel = -1;
@@ -231,6 +222,7 @@ public final class DependencyGraph<T extends ModPlugin> {
      * @param depth   the level depth (0 = root, no dependencies)
      * @param plugins the plugins at this level
      */
-    public record LoadingLevel<T extends ModPlugin>(int depth, ImmutableList<T> plugins) {}
+    public record LoadingLevel<T extends ModPlugin>(int depth, ImmutableList<T> plugins) {
+    }
 
 }

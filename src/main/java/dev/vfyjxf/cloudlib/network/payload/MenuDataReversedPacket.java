@@ -18,11 +18,11 @@ import java.util.function.Consumer;
 public record MenuDataReversedPacket(int containerId, byte[] syncData) implements ServerboundPayload {
 
     public static final ServerPayloadInfo<MenuDataReversedPacket> INFO = CloudlibPayloads.createServerInfo(
-        StreamCodec.ofMember(
-            MenuDataReversedPacket::encode,
-            MenuDataReversedPacket::decode
-        ),
-        "menu_sync_reversed"
+            StreamCodec.ofMember(
+                    MenuDataReversedPacket::encode,
+                    MenuDataReversedPacket::decode
+            ),
+            "menu_sync_reversed"
     );
 
     public MenuDataReversedPacket(int containerId, Consumer<RegistryFriendlyByteBuf> writer, RegistryAccess registryAccess) {

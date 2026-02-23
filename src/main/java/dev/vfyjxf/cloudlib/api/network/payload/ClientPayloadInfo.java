@@ -8,13 +8,13 @@ import net.neoforged.neoforge.network.handling.IPayloadHandler;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 public record ClientPayloadInfo<T extends ClientboundPayload>(
-    CustomPacketPayload.Type<T> type,
-    StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec
+        CustomPacketPayload.Type<T> type,
+        StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec
 ) {
 
     public static <T extends ClientboundPayload> ClientPayloadInfo<T> create(
-        StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec,
-        ResourceLocation id
+            StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec,
+            ResourceLocation id
     ) {
 
         return new ClientPayloadInfo<>(new CustomPacketPayload.Type<>(id), streamCodec);

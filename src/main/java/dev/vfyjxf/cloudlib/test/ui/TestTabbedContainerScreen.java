@@ -19,7 +19,7 @@
 //
 //import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
 //
-///**
+/// **
 // * Test screen demonstrating the TabbedContainerWidget.
 // * <p>
 // * This screen showcases:
@@ -30,7 +30,7 @@
 // *   <li>Tab change callbacks</li>
 // * </ul>
 // */
-////@TestScreen
+/// /@TestScreen
 //public class TestTabbedContainerScreen extends BasicScreen {
 //
 //    // State for testing state preservation

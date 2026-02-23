@@ -1,10 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.blueprint;
 
-import dev.vfyjxf.cloudlib.api.ui.base.Blueprint;
-import dev.vfyjxf.cloudlib.api.ui.base.Scene;
-import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
-import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
-import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.base.*;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
 import org.eclipse.collections.api.factory.Lists;
@@ -93,7 +89,7 @@ public final class ColumnBlueprint implements Blueprint.Group<ColumnWidget, Widg
     @Override
     public void updateWidget(ColumnWidget widget, Scene scene, SceneContext context) {
         widget.setSpacing(spacing)
-              .useStyle(style);
+                .useStyle(style);
     }
 
     //endregion

@@ -143,7 +143,7 @@ public final class ScrollEffect implements Effect {
     public void apply(Widget widget) {
         if (!(widget instanceof CompositeWidget<?> composite)) {
             throw new IllegalArgumentException(
-                "ScrollEffect can only be applied to CompositeWidget, got: " + widget.getClass().getSimpleName()
+                    "ScrollEffect can only be applied to CompositeWidget, got: " + widget.getClass().getSimpleName()
             );
         }
 
@@ -237,9 +237,9 @@ public final class ScrollEffect implements Effect {
                 // contentSize reports the content box extent; add padding/border back
                 // since viewport (widget.width/height) includes padding+border
                 int contentWidth = (int) Math.ceil(contentSize.width + layout.padding().left + layout.padding().right
-                                                   + layout.border().left + layout.border().right);
+                        + layout.border().left + layout.border().right);
                 int contentHeight = (int) Math.ceil(contentSize.height + layout.padding().top + layout.padding().bottom
-                                                    + layout.border().top + layout.border().bottom);
+                        + layout.border().top + layout.border().bottom);
                 state.updateContentSize(contentWidth, contentHeight);
                 return;
             }
@@ -461,8 +461,8 @@ public final class ScrollEffect implements Effect {
 
         // Thumb
         int thumbHeight = Math.max(
-            state.minThumbSize(),
-            (int) ((float) viewHeight / state.contentHeight() * barHeight)
+                state.minThumbSize(),
+                (int) ((float) viewHeight / state.contentHeight() * barHeight)
         );
         int maxThumbY = barHeight - thumbHeight;
         int thumbY = (int) (state.scrollProgressY() * maxThumbY);
@@ -480,8 +480,8 @@ public final class ScrollEffect implements Effect {
 
         // Thumb
         int thumbWidth = Math.max(
-            state.minThumbSize(),
-            (int) ((float) viewWidth / state.contentWidth() * barLength)
+                state.minThumbSize(),
+                (int) ((float) viewWidth / state.contentWidth() * barLength)
         );
         int maxThumbX = barLength - thumbWidth;
         int thumbX = (int) (state.scrollProgressX() * maxThumbX);

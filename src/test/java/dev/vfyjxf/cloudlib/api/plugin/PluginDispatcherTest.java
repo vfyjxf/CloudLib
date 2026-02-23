@@ -5,12 +5,15 @@ import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.CloudNamespaces;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -42,7 +45,7 @@ public class PluginDispatcherTest {
 
         var graph = DependencyGraph.build(List.of(a, b, c));
         var dispatcher = PluginDispatcher.fromGraph(graph);
-        var order = Collections.synchronizedList(new java.util.ArrayList<String>());
+        var order = Collections.synchronizedList(new ArrayList<String>());
 
         dispatcher.dispatch(plugin -> order.add(plugin.pluginId().path()));
 
@@ -56,7 +59,7 @@ public class PluginDispatcherTest {
 
         var graph = DependencyGraph.build(List.of(a, b));
         var dispatcher = PluginDispatcher.fromGraph(graph);
-        var log = Collections.synchronizedList(new java.util.ArrayList<String>());
+        var log = Collections.synchronizedList(new ArrayList<String>());
 
         dispatcher.dispatchAll(
             plugin -> log.add("phase1:" + plugin.pluginId().path()),
@@ -78,7 +81,7 @@ public class PluginDispatcherTest {
 
         var graph = DependencyGraph.build(List.of(a, b, c));
         var dispatcher = PluginDispatcher.fromGraph(graph);
-        var order = new java.util.ArrayList<String>();
+        var order = new ArrayList<String>();
 
         dispatcher.dispatchSequential(plugin -> order.add(plugin.pluginId().path()));
 
@@ -228,7 +231,7 @@ public class PluginDispatcherTest {
 
         var graph = DependencyGraph.build(List.of(a, b, c, d));
         var dispatcher = PluginDispatcher.fromGraph(graph);
-        var log = Collections.synchronizedList(new java.util.ArrayList<String>());
+        var log = Collections.synchronizedList(new ArrayList<String>());
 
         dispatcher.dispatchAll(
             plugin -> log.add("register:" + plugin.pluginId().path()),
@@ -244,6 +247,135 @@ public class PluginDispatcherTest {
         }
         assertTrue(lastRegister < firstInit,
             "All register events should complete before init starts. Log: " + log);
+    }
+
+    @Test
+    void testSameLevelPluginsRunConcurrently() throws InterruptedException {
+        // 4 independent plugins → all at level 0 → must run in parallel.
+        // Each plugin waits on a latch that only releases when ALL 4 are running.
+        // If not parallel, this deadlocks → timeout fails the test.
+        var a = plugin("a");
+        var b = plugin("b");
+        var c = plugin("c");
+        var d = plugin("d");
+
+        var graph = DependencyGraph.build(List.of(a, b, c, d));
+        assertEquals(1, graph.depth(), "All plugins should be at the same level");
+
+        ExecutorService executor = Executors.newFixedThreadPool(4);
+        var dispatcher = PluginDispatcher.fromGraph(graph, executor);
+        var allArrived = new CountDownLatch(4);
+        var proceed = new CountDownLatch(1);
+
+        try {
+            dispatcher.dispatch(plugin -> {
+                allArrived.countDown();
+                try {
+                    // Wait for all 4 to arrive — proves they are running concurrently
+                    assertTrue(allArrived.await(5, TimeUnit.SECONDS),
+                        "Timed out waiting for parallel execution: not all plugins arrived");
+                    proceed.await(5, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            });
+        } finally {
+            proceed.countDown();
+            executor.shutdown();
+        }
+    }
+
+    @Test
+    void testDifferentLevelsRunSequentially() {
+        // A → B → C: three levels, must run in strict order, not parallel across levels.
+        var a = plugin("a");
+        var b = plugin("b", dep("a", PluginDependency.Order.after));
+        var c = plugin("c", dep("b", PluginDependency.Order.after));
+
+        var graph = DependencyGraph.build(List.of(a, b, c));
+        assertEquals(3, graph.depth());
+
+        var dispatcher = PluginDispatcher.fromGraph(graph);
+        var timestamps = Collections.synchronizedList(new ArrayList<long[]>());
+
+        dispatcher.dispatch(plugin -> {
+            long start = System.nanoTime();
+            try { Thread.sleep(30); } catch (InterruptedException ignored) {}
+            long end = System.nanoTime();
+            timestamps.add(new long[]{start, end});
+        });
+
+        assertEquals(3, timestamps.size());
+        // Each level's start must be after the previous level's end
+        for (int i = 1; i < timestamps.size(); i++) {
+            assertTrue(timestamps.get(i)[0] >= timestamps.get(i - 1)[1],
+                "Level " + i + " started before level " + (i - 1) + " finished");
+        }
+    }
+
+    @Test
+    void testDiamondParallelismAndOrdering() throws InterruptedException {
+        // Diamond: A → {B, C} → D
+        // Level 0: A, Level 1: B+C (parallel), Level 2: D
+        var a = plugin("a");
+        var b = plugin("b", dep("a", PluginDependency.Order.after));
+        var c = plugin("c", dep("a", PluginDependency.Order.after));
+        var d = plugin("d", dep("b", PluginDependency.Order.after), dep("c", PluginDependency.Order.after));
+
+        var graph = DependencyGraph.build(List.of(a, b, c, d));
+        assertEquals(3, graph.depth());
+
+        ExecutorService executor = Executors.newFixedThreadPool(4);
+        var dispatcher = PluginDispatcher.fromGraph(graph, executor);
+
+        // B and C must run concurrently (level 1)
+        var bothArrived = new CountDownLatch(2);
+        var order = Collections.synchronizedList(new ArrayList<String>());
+
+        try {
+            dispatcher.dispatch(plugin -> {
+                String name = plugin.pluginId().path();
+                if (name.equals("b") || name.equals("c")) {
+                    bothArrived.countDown();
+                    try {
+                        assertTrue(bothArrived.await(5, TimeUnit.SECONDS),
+                            "B and C should run in parallel but timed out");
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+                order.add(name);
+            });
+        } finally {
+            executor.shutdown();
+        }
+
+        // A must be first, D must be last
+        assertEquals("a", order.getFirst());
+        assertEquals("d", order.getLast());
+        assertEquals(4, order.size());
+    }
+
+    @Test
+    void testAsyncDispatchParallelWithinLevel() throws Exception {
+        var a = plugin("a");
+        var b = plugin("b");
+        var c = plugin("c");
+
+        var graph = DependencyGraph.build(List.of(a, b, c));
+        var dispatcher = PluginDispatcher.fromGraph(graph);
+
+        var allArrived = new CountDownLatch(3);
+
+        dispatcher.dispatchAsync(plugin -> CompletableFuture.runAsync(() -> {
+            allArrived.countDown();
+            try {
+                assertTrue(allArrived.await(5, TimeUnit.SECONDS),
+                    "Async dispatch should run same-level plugins concurrently");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        })).get(10, TimeUnit.SECONDS);
     }
 
     //region helpers

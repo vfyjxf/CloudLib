@@ -26,7 +26,8 @@ public final class InspectionInfoCollector {
         return collector;
     }
 
-    private InspectionInfoCollector() {}
+    private InspectionInfoCollector() {
+    }
 
     //region add
 
@@ -36,11 +37,13 @@ public final class InspectionInfoCollector {
 
     public InspectionInfoCollector add(String name, @Nullable Object value, String category) {
         return addProperty(new InspectionProperty(
-            name, InspectionProperty.format(value), null, category
+                name, InspectionProperty.format(value), null, category
         ));
     }
 
-    /** Adds a property with a pre-formatted string value. */
+    /**
+     * Adds a property with a pre-formatted string value.
+     */
     public InspectionInfoCollector addFormatted(String name, String value, @Nullable String defaultValue, String category) {
         return addProperty(new InspectionProperty(name, value, defaultValue, category));
     }
@@ -51,14 +54,16 @@ public final class InspectionInfoCollector {
 
     public InspectionInfoCollector addWithDefault(String name, @Nullable Object value, @Nullable Object defaultValue, String category) {
         return addProperty(new InspectionProperty(
-            name,
-            InspectionProperty.format(value),
-            InspectionProperty.format(defaultValue),
-            category
+                name,
+                InspectionProperty.format(value),
+                InspectionProperty.format(defaultValue),
+                category
         ));
     }
 
-    /** Adds a pre-built property directly. */
+    /**
+     * Adds a pre-built property directly.
+     */
     public InspectionInfoCollector addProperty(InspectionProperty property) {
         properties.add(property);
         byCategory.put(property.category(), property);

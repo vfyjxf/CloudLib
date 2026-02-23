@@ -47,7 +47,8 @@ public class ProgressBarWidget extends Widget {
         return new ProgressBarWidget().setProgressSupplier(progressSupplier);
     }
 
-    private ProgressBarWidget() {}
+    private ProgressBarWidget() {
+    }
 
     //endregion
 

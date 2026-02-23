@@ -7,10 +7,10 @@ import org.jetbrains.annotations.Nullable;
  * to avoid recursive {@code toString()} calls on complex objects.
  */
 public record InspectionProperty(
-    String name,
-    String value,
-    @Nullable String defaultValue,
-    String category
+        String name,
+        String value,
+        @Nullable String defaultValue,
+        String category
 ) {
 
     public static final String categoryBasic = "basic";
@@ -19,7 +19,9 @@ public record InspectionProperty(
     public static final String categoryVisual = "visual";
     public static final String categoryData = "data";
 
-    /** Whether the current value differs from the default. */
+    /**
+     * Whether the current value differs from the default.
+     */
     public boolean isNonDefault() {
         if (defaultValue == null) return true;
         return !defaultValue.equals(value);

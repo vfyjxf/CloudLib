@@ -17,11 +17,11 @@ import net.minecraft.resources.ResourceLocation;
  * </ul>
  */
 public record ImageTexture(
-    ResourceLocation location,
-    int u, int v,
-    int width, int height,
-    int textureWidth, int textureHeight,
-    boolean atlasSprite
+        ResourceLocation location,
+        int u, int v,
+        int width, int height,
+        int textureWidth, int textureHeight,
+        boolean atlasSprite
 ) implements SizedTexture, BatchableTexture {
 
     /**
@@ -130,7 +130,7 @@ public record ImageTexture(
             var guiSprites = minecraft.getGuiSprites();
             TextureAtlasSprite sprite = guiSprites.getSprite(location);
             emitter.textured(sprite.atlasLocation(), x, y, w, h,
-                sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), color);
+                    sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), color);
         } else {
             float u0 = (float) this.u / textureWidth;
             float v0 = (float) this.v / textureHeight;

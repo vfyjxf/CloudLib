@@ -33,7 +33,8 @@ public interface VisualTexture {
     /**
      * An empty texture that renders nothing.
      */
-    VisualTexture empty = (graphics, x, y, width, height) -> {};
+    VisualTexture empty = (graphics, x, y, width, height) -> {
+    };
 
     //region factory
 
@@ -113,7 +114,7 @@ public interface VisualTexture {
      */
     static VisualTexture offset(VisualTexture texture, int offsetX, int offsetY) {
         return (graphics, x, y, width, height) ->
-            texture.render(graphics, x + offsetX, y + offsetY, width, height);
+                texture.render(graphics, x + offsetX, y + offsetY, width, height);
     }
 
     /**
@@ -153,10 +154,14 @@ public interface VisualTexture {
     static SizedTexture sized(VisualTexture texture, int width, int height) {
         return new SizedTexture() {
             @Override
-            public int width() {return width;}
+            public int width() {
+                return width;
+            }
 
             @Override
-            public int height() {return height;}
+            public int height() {
+                return height;
+            }
 
             @Override
             public void render(GuiGraphics graphics, int x, int y, int w, int h) {

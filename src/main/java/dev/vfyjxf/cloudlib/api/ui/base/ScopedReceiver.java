@@ -26,7 +26,8 @@ public final class ScopedReceiver {
 
     private final List<Blueprint<?>> blueprints = new ArrayList<>();
 
-    private ScopedReceiver() {}
+    private ScopedReceiver() {
+    }
 
     /**
      * Adds a blueprint to the current scope.

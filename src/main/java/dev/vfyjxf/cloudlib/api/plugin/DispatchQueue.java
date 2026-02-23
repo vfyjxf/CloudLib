@@ -91,8 +91,14 @@ public final class DispatchQueue<T extends ModPlugin> {
             logger.debug("DispatchQueue: executing {} tasks [{}]", batch.size(), taskNames.makeString(", "));
         }
 
+        long batchStart = System.nanoTime();
+
         if (batch.size() == 1) {
             dispatchSingle(batch.getFirst(), tracker, logger);
+            if (logger != null) {
+                long batchMs = (System.nanoTime() - batchStart) / 1_000_000;
+                logger.debug("DispatchQueue: completed in {}ms", batchMs);
+            }
             return;
         }
 
@@ -115,7 +121,10 @@ public final class DispatchQueue<T extends ModPlugin> {
 
         CompletableFuture.allOf(futures).join();
 
-        if (logger != null) logger.debug("DispatchQueue: batch completed");
+        if (logger != null) {
+            long batchMs = (System.nanoTime() - batchStart) / 1_000_000;
+            logger.debug("DispatchQueue: batch completed in {}ms", batchMs);
+        }
         if (failures.notEmpty()) throw new PluginLoadingException(failures);
     }
 
@@ -140,6 +149,7 @@ public final class DispatchQueue<T extends ModPlugin> {
 
     //endregion
 
-    private record NamedTask<T extends ModPlugin>(@Nullable String name, Consumer<T> event) {}
+    private record NamedTask<T extends ModPlugin>(@Nullable String name, Consumer<T> event) {
+    }
 
 }

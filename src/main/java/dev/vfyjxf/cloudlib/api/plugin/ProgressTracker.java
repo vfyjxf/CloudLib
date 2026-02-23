@@ -3,8 +3,10 @@ package dev.vfyjxf.cloudlib.api.plugin;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.Checks;
+import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -34,8 +36,22 @@ public final class ProgressTracker {
      * Creates a {@link DispatchProgress} that contributes {@code weight} to the overall percentage.
      */
     public DispatchProgress phase(float weight) {
+        return phase(null, weight);
+    }
+
+    /**
+     * Creates a named {@link DispatchProgress} with equal weight (1). The name appears in {@link #logTimings}.
+     */
+    public DispatchProgress phase(String name) {
+        return phase(name, 1);
+    }
+
+    /**
+     * Creates a named {@link DispatchProgress} with timing. The name appears in {@link #logTimings}.
+     */
+    public DispatchProgress phase(@Nullable String name, float weight) {
         Checks.checkArgument(weight > 0, "weight must be positive, got: %s", weight);
-        var phase = new Phase(weight);
+        var phase = new Phase(name, weight);
         synchronized (phases) {
             phases.add(phase);
             totalWeight += weight;
@@ -82,6 +98,92 @@ public final class ProgressTracker {
         }
     }
 
+    /**
+     * Returns timing information for all completed phases.
+     */
+    public ImmutableList<PhaseTiming> timings() {
+        synchronized (phases) {
+            return phases.collect(Phase::toTiming).toImmutable();
+        }
+    }
+
+    /**
+     * Total wall-clock time across all phases in milliseconds.
+     */
+    public long totalElapsedMs() {
+        synchronized (phases) {
+            long total = 0;
+            for (var phase : phases) {
+                total += phase.elapsedMs();
+            }
+            return total;
+        }
+    }
+
+    /**
+     * Logs timing for each phase and the total.
+     */
+    public void logTimings(Logger logger) {
+        logTimings(logger, null);
+    }
+
+    /**
+     * Logs a formatted summary with cumulative percentage, per-phase timing and an optional title.
+     * <pre>
+     * ──────────────────── Loading ───────────────────────
+     *   [  3%] Content Types                          12ms
+     *   [ 51%] Recipe Systems                        156ms
+     *   [100%] Storage Types                          89ms
+     * ──────────────────── 3 phases in 257ms ─────────────
+     * </pre>
+     */
+    public void logTimings(Logger logger, @Nullable String title) {
+        synchronized (phases) {
+            if (phases.isEmpty()) return;
+
+            int lineWidth = 58;
+
+            // header
+            if (title != null) {
+                int contentLen = title.length() + 2; // " title "
+                int remaining = Math.max(0, lineWidth - contentLen);
+                int left = remaining / 2;
+                int right = remaining - left;
+                logger.info("{}", "─".repeat(left) + " " + title + " " + "─".repeat(right));
+            }
+
+            // column widths
+            int maxNameLen = 0;
+            long maxMs = 0;
+            for (int i = 0; i < phases.size(); i++) {
+                maxNameLen = Math.max(maxNameLen, nameOf(i).length());
+                maxMs = Math.max(maxMs, phases.get(i).elapsedMs());
+            }
+            int msWidth = Long.toString(maxMs).length();
+
+            // phase rows
+            float cumulativeWeight = 0;
+            float tw = totalWeight;
+            for (int i = 0; i < phases.size(); i++) {
+                var phase = phases.get(i);
+                cumulativeWeight += phase.weight;
+                int pct = tw > 0 ? Math.round(cumulativeWeight / tw * 100f) : 0;
+                logger.info("{}", String.format("  [%3d%%] %-" + maxNameLen + "s  %" + msWidth + "dms",
+                        pct, nameOf(i), phase.elapsedMs()));
+            }
+
+            // footer
+            var summary = String.format("%d phases in %dms", phases.size(), totalElapsedMs());
+            int pad = Math.max(3, (lineWidth - summary.length() - 2) / 2);
+            logger.info("{}", "─".repeat(pad) + " " + summary + " " + "─".repeat(pad));
+        }
+    }
+
+    private String nameOf(int index) {
+        var name = phases.get(index).name;
+        return name != null ? name : "phase-" + index;
+    }
+
     //endregion
 
     //region internal
@@ -93,17 +195,22 @@ public final class ProgressTracker {
 
     private final class Phase implements DispatchProgress {
 
+        final @Nullable String name;
         final float weight;
         volatile int total;
         final AtomicInteger completed = new AtomicInteger();
+        volatile long startNanos;
+        volatile long endNanos;
 
-        Phase(float weight) {
+        Phase(@Nullable String name, float weight) {
+            this.name = name;
             this.weight = weight;
         }
 
         @Override
         public void begin(int totalSteps) {
             this.total = totalSteps;
+            this.startNanos = System.nanoTime();
         }
 
         @Override
@@ -114,6 +221,7 @@ public final class ProgressTracker {
 
         @Override
         public void complete() {
+            this.endNanos = System.nanoTime();
             completed.set(total);
             notifyListener();
         }
@@ -127,6 +235,23 @@ public final class ProgressTracker {
             int t = total;
             return t > 0 && completed.get() >= t;
         }
+
+        long elapsedMs() {
+            long s = startNanos, e = endNanos;
+            if (s == 0) return 0;
+            long end = e != 0 ? e : System.nanoTime();
+            return (end - s) / 1_000_000;
+        }
+
+        PhaseTiming toTiming() {
+            return new PhaseTiming(name, elapsedMs(), isDone());
+        }
+    }
+
+    /**
+     * Timing snapshot for a single phase.
+     */
+    public record PhaseTiming(@Nullable String name, long elapsedMs, boolean complete) {
     }
 
     //endregion

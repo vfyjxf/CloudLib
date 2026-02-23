@@ -40,7 +40,7 @@ public final class UIEffects {
      */
     public static Effect autoFocus() {
         return widget -> widget.onMount(
-            (scene, context, handle) -> scene.postRender(() -> scene.requestFocus(widget))
+                (scene, context, handle) -> scene.postRender(() -> scene.requestFocus(widget))
         );
     }
 

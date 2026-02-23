@@ -74,8 +74,8 @@ public final class OffsetMiddleware implements FloatingMiddleware {
         double effectiveCrossAxis = this.crossAxis;
         if (alignment != null && alignmentAxis != null) {
             effectiveCrossAxis = alignment == FloatingPlacement.Alignment.end
-                ? -alignmentAxis
-                : alignmentAxis;
+                    ? -alignmentAxis
+                    : alignmentAxis;
         }
 
         double dx;

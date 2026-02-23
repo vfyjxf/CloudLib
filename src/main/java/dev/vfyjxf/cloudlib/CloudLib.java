@@ -46,11 +46,14 @@ public sealed abstract class CloudLib permits CloudLibClient, CloudLibServer {
         //endregion
     }
 
-    protected void constructMod(FMLConstructModEvent event) {}
+    protected void constructMod(FMLConstructModEvent event) {
+    }
 
-    protected void commonSetup(FMLCommonSetupEvent event) {}
+    protected void commonSetup(FMLCommonSetupEvent event) {
+    }
 
-    protected void loadComplete(FMLLoadCompleteEvent event) {}
+    protected void loadComplete(FMLLoadCompleteEvent event) {
+    }
 
     public static ResourceLocation of(String path) {
         return Locations.ofMod(path);

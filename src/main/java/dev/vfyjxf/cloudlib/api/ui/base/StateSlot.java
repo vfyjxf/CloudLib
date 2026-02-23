@@ -15,7 +15,8 @@ public final class StateSlot {
 
     private static final ThreadLocal<StateContext> CURRENT_CONTEXT = new ThreadLocal<>();
 
-    private StateSlot() {}
+    private StateSlot() {
+    }
 
     /**
      * Get or create state. Must be called within StateContext. Slot is determined by call order.
@@ -24,7 +25,7 @@ public final class StateSlot {
         StateContext context = CURRENT_CONTEXT.get();
         if (context == null) {
             throw new IllegalStateException(
-                "useState must be called during blueprint evaluation within a StateContext"
+                    "useState must be called during blueprint evaluation within a StateContext"
             );
         }
         return context.getOrCreateState(initialValue);
@@ -140,7 +141,8 @@ public final class StateSlot {
         /**
          * Creates a new StateContext.
          */
-        public StateContext() {}
+        public StateContext() {
+        }
 
         //TODO:决定是否保留这个
 
@@ -258,8 +260,10 @@ public final class StateSlot {
             return true;
         }
 
-        private record MemoEntry(Object value, Object[] dependencies) {}
+        private record MemoEntry(Object value, Object[] dependencies) {
+        }
 
-        private record EffectEntry(Runnable effect, Object[] dependencies, boolean shouldRun) {}
+        private record EffectEntry(Runnable effect, Object[] dependencies, boolean shouldRun) {
+        }
     }
 }

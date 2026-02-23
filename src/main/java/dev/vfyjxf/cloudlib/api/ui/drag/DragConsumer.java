@@ -11,41 +11,41 @@ import java.util.function.BiPredicate;
 public interface DragConsumer {
 
     CompositeScenario<DragConsumer> scenario = new CompositeScenario<>(
-        Namespace.of(Constants.modId, "drag_consumer"),
-        DragConsumer.class,
-        listeners -> new DragConsumer() {
+            Namespace.of(Constants.modId, "drag_consumer"),
+            DragConsumer.class,
+            listeners -> new DragConsumer() {
 
-            @Override
-            public void dragStart(DraggableElement<?> element, DragContext context) {
-                for (DragConsumer listener : listeners) {
-                    listener.dragStart(element, context);
-                }
-            }
-
-            @Override
-            public void onDrag(DraggableElement<?> element, DragContext context, double deltaX, double deltaY) {
-                for (DragConsumer listener : listeners) {
-                    listener.onDrag(element, context, deltaX, deltaY);
-                }
-            }
-
-            @Override
-            public void dragEnd(DraggableElement<?> element, DragContext context, double deltaX, double deltaY) {
-                for (DragConsumer listener : listeners) {
-                    listener.dragEnd(element, context, deltaX, deltaY);
-                }
-            }
-
-            @Override
-            public boolean consume(DraggableElement<?> widget, DragContext context) {
-                for (DragConsumer listener : listeners) {
-                    if (listener.consume(widget, context)) {
-                        return true;
+                @Override
+                public void dragStart(DraggableElement<?> element, DragContext context) {
+                    for (DragConsumer listener : listeners) {
+                        listener.dragStart(element, context);
                     }
                 }
-                return false;
+
+                @Override
+                public void onDrag(DraggableElement<?> element, DragContext context, double deltaX, double deltaY) {
+                    for (DragConsumer listener : listeners) {
+                        listener.onDrag(element, context, deltaX, deltaY);
+                    }
+                }
+
+                @Override
+                public void dragEnd(DraggableElement<?> element, DragContext context, double deltaX, double deltaY) {
+                    for (DragConsumer listener : listeners) {
+                        listener.dragEnd(element, context, deltaX, deltaY);
+                    }
+                }
+
+                @Override
+                public boolean consume(DraggableElement<?> widget, DragContext context) {
+                    for (DragConsumer listener : listeners) {
+                        if (listener.consume(widget, context)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
             }
-        }
     );
 
     static DragConsumer consumeWidget(BiFunction<DraggableElement<?>, DragContext, Boolean> consumer) {
@@ -59,8 +59,8 @@ public interface DragConsumer {
 
     @SuppressWarnings("unchecked")
     static DragConsumer consumeSpecificWidget(
-        BiPredicate<Widget, DragContext> predicate,
-        BiFunction<DraggableElement<Widget>, DragContext, Boolean> consumer
+            BiPredicate<Widget, DragContext> predicate,
+            BiFunction<DraggableElement<Widget>, DragContext, Boolean> consumer
 
     ) {
         return new DragConsumer() {
@@ -77,8 +77,8 @@ public interface DragConsumer {
 
     @SuppressWarnings("unchecked")
     static DragConsumer forGroupConsumer(
-        BiPredicate<DraggableElement<?>, DragContext> predicate,
-        BiFunction<DraggableElement<Widget>, DragContext, Boolean> consumer
+            BiPredicate<DraggableElement<?>, DragContext> predicate,
+            BiFunction<DraggableElement<Widget>, DragContext, Boolean> consumer
     ) {
         return new DragConsumer() {
             @Override

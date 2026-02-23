@@ -30,12 +30,12 @@ import static java.util.Objects.requireNonNull;
 public record OverflowProperty(@Nullable Overflow x, @Nullable Overflow y) implements LayoutProperty {
 
     public static final StyleType<TaffyPoint<Overflow>> type = StyleType.of(
-        "overflow",
-        () -> TaffyPoint.all(Overflow.VISIBLE),
-        (context, overflow) -> {
-            context.layoutStyle().overflow.x = overflow.x;
-            context.layoutStyle().overflow.y = overflow.y;
-        }
+            "overflow",
+            () -> TaffyPoint.all(Overflow.VISIBLE),
+            (context, overflow) -> {
+                context.layoutStyle().overflow.x = overflow.x;
+                context.layoutStyle().overflow.y = overflow.y;
+            }
     );
 
     @Override

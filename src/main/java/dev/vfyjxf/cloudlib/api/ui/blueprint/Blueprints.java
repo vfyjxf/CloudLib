@@ -1,17 +1,12 @@
 package dev.vfyjxf.cloudlib.api.ui.blueprint;
 
-import dev.vfyjxf.cloudlib.api.ui.base.Blueprint;
-import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
-import dev.vfyjxf.cloudlib.api.ui.base.Scene;
-import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
-import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.base.*;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.eclipse.collections.api.list.MutableList;
 
 import java.util.function.Consumer;
-import java.util.function.DoubleSupplier;
 
 /**
  * Central DSL for building UI declaratively.
@@ -38,7 +33,8 @@ import java.util.function.DoubleSupplier;
  */
 public final class Blueprints {
 
-    private Blueprints() {}
+    private Blueprints() {
+    }
 
     // ==================== Text ====================
 

@@ -82,7 +82,7 @@ public final class ExposeManagement {
 
     public boolean anyToServer() {
         return exposes.selectInstancesOf(Reversed.class)
-                      .anySatisfy(Reversed::hasReversedData);
+                .anySatisfy(Reversed::hasReversedData);
     }
 
     public void writeAllToClient(RegistryFriendlyByteBuf byteBuf) {
@@ -113,8 +113,8 @@ public final class ExposeManagement {
                     if (!expose.changed()) continue;
                     byteBuf.writeShort(expose.id());
                     if (strategy == SyncStrategy.DIFFERENCE &&
-                        expose instanceof Transcoder transcoder &&
-                        expose instanceof Differential<?> differential
+                            expose instanceof Transcoder transcoder &&
+                            expose instanceof Differential<?> differential
                     ) {
                         writeDiff(transcoder, differential, byteBuf);
                     } else {

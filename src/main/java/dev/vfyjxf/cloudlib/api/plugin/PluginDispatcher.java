@@ -164,15 +164,14 @@ public final class PluginDispatcher<T extends ModPlugin> {
         Checks.checkNotNull(eventName, "eventName");
 
         logger.debug("{}: dispatching to {} plugins ({} levels)",
-            eventName, plugins.size(), graph.depth());
+                eventName, plugins.size(), graph.depth());
 
         progress.begin(plugins.size());
         var completed = new AtomicInteger(0);
         int total = plugins.size();
 
         for (var level : graph.levels()) {
-            logger.debug("{}: level {} ({} plugins)",
-                eventName, level.depth(), level.plugins().size());
+            logger.debug("{}: level {} ({} plugins)", eventName, level.depth(), level.plugins().size());
             dispatchLevel(level, event, progress, completed, total);
         }
 
@@ -210,11 +209,11 @@ public final class PluginDispatcher<T extends ModPlugin> {
     //region internal
 
     private void dispatchLevel(
-        DependencyGraph.LoadingLevel<T> level,
-        Consumer<T> event,
-        DispatchProgress progress,
-        AtomicInteger completed,
-        int total
+            DependencyGraph.LoadingLevel<T> level,
+            Consumer<T> event,
+            DispatchProgress progress,
+            AtomicInteger completed,
+            int total
     ) throws PluginLoadingException {
         var plugins = level.plugins();
 
@@ -225,7 +224,7 @@ public final class PluginDispatcher<T extends ModPlugin> {
                 progress.advance(plugin.pluginId(), completed.incrementAndGet(), total);
             } catch (Exception e) {
                 throw new PluginLoadingException(
-                    MutableLists.of(new PluginLoadingException.Failure(plugin.pluginId(), e))
+                        MutableLists.of(new PluginLoadingException.Failure(plugin.pluginId(), e))
                 );
             }
             return;

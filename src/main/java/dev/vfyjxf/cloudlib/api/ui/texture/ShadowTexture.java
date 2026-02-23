@@ -6,9 +6,9 @@ import net.minecraft.client.gui.GuiGraphics;
  * Shadow texture using multi-layer alpha falloff.
  */
 public record ShadowTexture(
-    int color, int blur,
-    int offsetX, int offsetY,
-    int layers
+        int color, int blur,
+        int offsetX, int offsetY,
+        int layers
 ) implements BatchableTexture {
 
     public ShadowTexture {
@@ -66,9 +66,9 @@ public record ShadowTexture(
 
             float expand = i;
             emitter.colored(
-                x + offsetX - expand, y + offsetY - expand,
-                width + expand * 2, height + expand * 2,
-                layerColor
+                    x + offsetX - expand, y + offsetY - expand,
+                    width + expand * 2, height + expand * 2,
+                    layerColor
             );
         }
     }
@@ -85,9 +85,9 @@ public record ShadowTexture(
 
             int expand = i;
             graphics.fill(
-                x + offsetX - expand, y + offsetY - expand,
-                x + offsetX + width + expand, y + offsetY + height + expand,
-                layerColor
+                    x + offsetX - expand, y + offsetY - expand,
+                    x + offsetX + width + expand, y + offsetY + height + expand,
+                    layerColor
             );
         }
     }

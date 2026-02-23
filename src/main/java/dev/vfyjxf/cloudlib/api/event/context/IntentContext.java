@@ -6,7 +6,9 @@ public final class IntentContext {
 
     private final EventChannel<?> source;
 
-    public IntentContext(EventChannel<?> source) {this.source = source;}
+    public IntentContext(EventChannel<?> source) {
+        this.source = source;
+    }
 
     public EventChannel<?> source() {
         return source;

@@ -6,8 +6,8 @@ import net.minecraft.client.gui.GuiGraphics;
  * Rectangular border texture with configurable sides.
  */
 public record BorderTexture(
-    int colorTop, int colorRight, int colorBottom, int colorLeft,
-    int thicknessTop, int thicknessRight, int thicknessBottom, int thicknessLeft
+        int colorTop, int colorRight, int colorBottom, int colorLeft,
+        int thicknessTop, int thicknessRight, int thicknessBottom, int thicknessLeft
 ) implements BatchableTexture {
 
     //region factory
@@ -59,19 +59,19 @@ public record BorderTexture(
 
     public BorderTexture withColor(int color) {
         return new BorderTexture(color, color, color, color,
-            thicknessTop, thicknessRight, thicknessBottom, thicknessLeft);
+                thicknessTop, thicknessRight, thicknessBottom, thicknessLeft);
     }
 
     public BorderTexture withThickness(int thickness) {
         return new BorderTexture(colorTop, colorRight, colorBottom, colorLeft,
-            thickness, thickness, thickness, thickness);
+                thickness, thickness, thickness, thickness);
     }
 
     public BorderTexture withAlpha(int alpha) {
         return new BorderTexture(
-            setAlpha(colorTop, alpha), setAlpha(colorRight, alpha),
-            setAlpha(colorBottom, alpha), setAlpha(colorLeft, alpha),
-            thicknessTop, thicknessRight, thicknessBottom, thicknessLeft
+                setAlpha(colorTop, alpha), setAlpha(colorRight, alpha),
+                setAlpha(colorBottom, alpha), setAlpha(colorLeft, alpha),
+                thicknessTop, thicknessRight, thicknessBottom, thicknessLeft
         );
     }
 

@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.register.ui.UIOverlayRegister;
 
 public interface CloudLibClientPlugin extends ModPlugin {
 
-    default void registerOverlay(UIOverlayRegister register) {}
+    default void registerOverlay(UIOverlayRegister register) {
+    }
 
 }

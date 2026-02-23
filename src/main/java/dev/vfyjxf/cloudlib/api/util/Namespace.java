@@ -23,17 +23,17 @@ import java.util.Objects;
 public final class Namespace implements Comparable<Namespace> {
 
     public static final Codec<Namespace> codec = Codec.STRING.comapFlatMap(
-        str -> {
-            Namespace namespace = maybe(str);
-            if (namespace == null) return DataResult.error(() -> "Invalid namespace: " + str);
-            else return DataResult.success(namespace);
-        },
-        namespace -> namespace.root + ":" + namespace.path
+            str -> {
+                Namespace namespace = maybe(str);
+                if (namespace == null) return DataResult.error(() -> "Invalid namespace: " + str);
+                else return DataResult.success(namespace);
+            },
+            namespace -> namespace.root + ":" + namespace.path
     ).stable();
 
     public static final StreamCodec<ByteBuf, Namespace> streamCodec = ByteBufCodecs.STRING_UTF8.map(
-        Namespace::parse,
-        namespace -> namespace.root + ":" + namespace.path
+            Namespace::parse,
+            namespace -> namespace.root + ":" + namespace.path
     );
 
     public static Namespace ofMc(String path) {
@@ -69,11 +69,17 @@ public final class Namespace implements Comparable<Namespace> {
     private final String path;
     private final int hash;
 
-    public String root() {return root;}
+    public String root() {
+        return root;
+    }
 
-    public String path() {return path;}
+    public String path() {
+        return path;
+    }
 
-    public int hash() {return hash;}
+    public int hash() {
+        return hash;
+    }
 
     private Namespace(String root, String path) {
         Checks.checkNotNull(root, "root");

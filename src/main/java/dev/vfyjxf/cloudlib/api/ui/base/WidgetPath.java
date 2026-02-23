@@ -2,12 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.base;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -200,7 +195,7 @@ public final class WidgetPath implements Iterable<Widget> {
     @Override
     public Spliterator<Widget> spliterator() {
         return Spliterators.spliterator(nodes, 0, size,
-            Spliterator.ORDERED | Spliterator.SIZED | Spliterator.NONNULL | Spliterator.IMMUTABLE);
+                Spliterator.ORDERED | Spliterator.SIZED | Spliterator.NONNULL | Spliterator.IMMUTABLE);
     }
 
     /**
@@ -313,7 +308,7 @@ public final class WidgetPath implements Iterable<Widget> {
     public WidgetPath subPath(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException(
-                "fromIndex: " + fromIndex + ", toIndex: " + toIndex + ", size: " + size);
+                    "fromIndex: " + fromIndex + ", toIndex: " + toIndex + ", size: " + size);
         }
 
         int newSize = toIndex - fromIndex;

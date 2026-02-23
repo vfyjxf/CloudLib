@@ -2,11 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.base;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Reconciler implements the core diffing algorithm for updating the Widget tree.
@@ -31,7 +27,8 @@ import java.util.Objects;
  */
 final class Reconciler {
 
-    private Reconciler() {}
+    private Reconciler() {
+    }
 
     /**
      * Reconciles a widget with a new blueprint.
@@ -44,11 +41,11 @@ final class Reconciler {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T extends Widget> T reconcile(
-        Scene scene,
-        SceneContext context,
-        @Nullable T oldWidget,
-        Blueprint<T> newBlueprint,
-        @Nullable CompositeWidget<T> parent
+            Scene scene,
+            SceneContext context,
+            @Nullable T oldWidget,
+            Blueprint<T> newBlueprint,
+            @Nullable CompositeWidget<T> parent
     ) {
         //create if there is no existing widget
         if (oldWidget == null) {
@@ -62,9 +59,9 @@ final class Reconciler {
             if (oldWidget instanceof CompositeWidget<?> group && newBlueprint instanceof Blueprint.Group groupBlueprint) {
                 var stateContext = oldWidget.stateContext;
                 var children =
-                    StateSlot.currentContext() == stateContext ?
-                    groupBlueprint.children() :
-                    StateSlot.withContext(stateContext, groupBlueprint::children);
+                        StateSlot.currentContext() == stateContext ?
+                                groupBlueprint.children() :
+                                StateSlot.withContext(stateContext, groupBlueprint::children);
                 reconcileChildren(group, children, scene, context);
                 stateContext.runEffects();
             }
@@ -120,11 +117,11 @@ final class Reconciler {
      * Full reconciliation algorithm with key matching support.
      */
     private static <T extends Widget> void reconcileChildrenFull(
-        CompositeWidget<T> parent,
-        List<? extends T> oldChildren,
-        List<? extends Blueprint<T>> childrenBlueprints,
-        Scene scene,
-        SceneContext context
+            CompositeWidget<T> parent,
+            List<? extends T> oldChildren,
+            List<? extends Blueprint<T>> childrenBlueprints,
+            Scene scene,
+            SceneContext context
     ) {
         List<T> newChildren = new ArrayList<>(childrenBlueprints.size());
 
@@ -218,9 +215,9 @@ final class Reconciler {
                 widget.onStateChanged();
                 var stateContext = widget.stateContext;
                 var children =
-                    StateSlot.currentContext() == stateContext ?
-                    groupBlueprint.children() :
-                    StateSlot.withContext(stateContext, groupBlueprint::children);
+                        StateSlot.currentContext() == stateContext ?
+                                groupBlueprint.children() :
+                                StateSlot.withContext(stateContext, groupBlueprint::children);
                 Reconciler.reconcileChildren(group, children, scene, context);
                 stateContext.runEffects();
             });

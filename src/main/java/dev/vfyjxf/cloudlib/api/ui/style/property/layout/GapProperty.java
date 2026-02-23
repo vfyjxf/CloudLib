@@ -27,8 +27,8 @@ import org.jetbrains.annotations.Nullable;
  * @see UIStyles#columnGap(float)
  */
 public record GapProperty(
-    @Nullable LengthPercentage rowGap,
-    @Nullable LengthPercentage columnGap
+        @Nullable LengthPercentage rowGap,
+        @Nullable LengthPercentage columnGap
 ) implements LayoutProperty {
 
     //region types
@@ -39,12 +39,12 @@ public record GapProperty(
      * Note: in taffy {@link TaffyStyle#gap}, {@code width = column-gap} and {@code height = row-gap}.
      */
     public static final StyleType<TaffySize<LengthPercentage>> type = StyleType.of(
-        "gap",
-        () -> TaffySize.all(LengthPercentage.ZERO),
-        (context, gap) -> {
-            context.layoutStyle().gap.width = gap.width;
-            context.layoutStyle().gap.height = gap.height;
-        }
+            "gap",
+            () -> TaffySize.all(LengthPercentage.ZERO),
+            (context, gap) -> {
+                context.layoutStyle().gap.width = gap.width;
+                context.layoutStyle().gap.height = gap.height;
+            }
     );
 
     //endregion

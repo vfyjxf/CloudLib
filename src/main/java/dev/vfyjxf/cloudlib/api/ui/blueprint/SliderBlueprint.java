@@ -138,15 +138,15 @@ public final class SliderBlueprint implements Blueprint<SliderWidget> {
     @Override
     public void updateWidget(SliderWidget widget, Scene scene, SceneContext context) {
         widget.setRange(min, max)
-              .setValue(value)
-              .setStep(step)
-              .setOrientation(orientation)
-              .onValueChanged(onValueChanged)
-              .setTrackTexture(trackTexture)
-              .setFilledTrackTexture(filledTrackTexture)
-              .setThumbTexture(thumbTexture)
-              .setThumbSize(thumbSize)
-              .useStyle(style);
+                .setValue(value)
+                .setStep(step)
+                .setOrientation(orientation)
+                .onValueChanged(onValueChanged)
+                .setTrackTexture(trackTexture)
+                .setFilledTrackTexture(filledTrackTexture)
+                .setThumbTexture(thumbTexture)
+                .setThumbSize(thumbSize)
+                .useStyle(style);
     }
 
     //endregion

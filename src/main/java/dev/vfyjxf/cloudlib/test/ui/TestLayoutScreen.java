@@ -7,16 +7,7 @@ import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
-import dev.vfyjxf.cloudlib.ui.widget.BoxWidget;
-import dev.vfyjxf.cloudlib.ui.widget.ButtonWidget;
-import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
-import dev.vfyjxf.cloudlib.ui.widget.DividerWidget;
-import dev.vfyjxf.cloudlib.ui.widget.LabelWidget;
-import dev.vfyjxf.cloudlib.ui.widget.ProgressBarWidget;
-import dev.vfyjxf.cloudlib.ui.widget.RowWidget;
-import dev.vfyjxf.cloudlib.ui.widget.SpacerWidget;
-import dev.vfyjxf.cloudlib.ui.widget.TextFieldWidget;
-import dev.vfyjxf.cloudlib.ui.widget.ToggleWidget;
+import dev.vfyjxf.cloudlib.ui.widget.*;
 
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
 
@@ -48,8 +39,8 @@ public class TestLayoutScreen extends BasicScreen {
         var mainContainer = ColumnWidget.create();
         mainContainer.setSpacing(8);
         mainContainer.useStyle(UIStyle.of(
-            padding(16),
-            background(new ColorTexture(0xCC222222))
+                padding(16),
+                background(new ColorTexture(0xCC222222))
         ));
 
         // ==================== Header Section ====================
@@ -58,8 +49,8 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Divider
         var headerDivider = DividerWidget.horizontal()
-                                         .setColor(0xFF555555)
-                                         .setThickness(2);
+                .setColor(0xFF555555)
+                .setThickness(2);
         headerDivider.useStyle(UIStyle.of(heightOf(4)));
         mainContainer.addWidget(headerDivider);
 
@@ -74,7 +65,7 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Vertical Divider
         var verticalDivider = DividerWidget.vertical()
-                                           .setColor(0xFF444444);
+                .setColor(0xFF444444);
         verticalDivider.useStyle(UIStyle.of(widthOf(2)));
         contentRow.addWidget(verticalDivider);
 
@@ -86,7 +77,7 @@ public class TestLayoutScreen extends BasicScreen {
 
         // ==================== Footer Section ====================
         var footerDivider = DividerWidget.horizontal()
-                                         .setColor(0xFF555555);
+                .setColor(0xFF555555);
         footerDivider.useStyle(UIStyle.of(heightOf(2)));
         mainContainer.addWidget(footerDivider);
 
@@ -97,10 +88,10 @@ public class TestLayoutScreen extends BasicScreen {
         mainGroup().addWidget(mainContainer);
 
         mainGroup().addWidget(
-            Inspector.create()
-                     .setTrackMouse(true)
-                     .useStyle(UIStyles.positionAbsolute(), UIStyles.sizeOf(280, 200))
-                     .setSceneLayer(SceneLayer.debug)
+                Inspector.create()
+                        .setTrackMouse(true)
+                        .useStyle(UIStyles.positionAbsolute(), UIStyles.sizeOf(280, 200))
+                        .setSceneLayer(SceneLayer.debug)
         );
     }
 
@@ -114,8 +105,8 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Title
         var title = LabelWidget.of("CloudLib UI Components Demo")
-                               .setColor(0xFFFFAA00)
-                               .setShadow(true);
+                .setColor(0xFFFFAA00)
+                .setShadow(true);
         title.useStyle(UIStyle.of(sizeOf(200, 12)));
         header.addWidget(title);
 
@@ -124,17 +115,17 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Search Field
         var searchField = TextFieldWidget.create()
-                                         .setPlaceholder("Search...")
-                                         .onTextChanged(text -> this.searchText = text);
+                .setPlaceholder("Search...")
+                .onTextChanged(text -> this.searchText = text);
         searchField.useStyle(UIStyle.of(
-            sizeOf(150, 20)
+                sizeOf(150, 20)
         ));
         header.addWidget(searchField);
 
         // Settings Toggle
         var settingsToggle = ToggleWidget.create(false)
-                                         .onToggle(state -> System.out.println("Settings: " + state))
-                                         .setColors(0xFF666666, 0xFF00AA00);
+                .onToggle(state -> System.out.println("Settings: " + state))
+                .setColors(0xFF666666, 0xFF00AA00);
         settingsToggle.useStyle(UIStyle.of(sizeOf(30, 16)));
         header.addWidget(settingsToggle);
 
@@ -148,14 +139,14 @@ public class TestLayoutScreen extends BasicScreen {
         var panel = ColumnWidget.create();
         panel.setSpacing(12);
         panel.useStyle(UIStyle.of(
-            sizeOf(180, -1),
-            padding(8),
-            background(new ColorTexture(0x40000000))
+                sizeOf(180, -1),
+                padding(8),
+                background(new ColorTexture(0x40000000))
         ));
 
         // Section Title
         var controlsTitle = LabelWidget.of("Controls")
-                                       .setColor(0xFFFFFF00);
+                .setColor(0xFFFFFF00);
         panel.addWidget(controlsTitle);
 
         // Button Group
@@ -188,12 +179,12 @@ public class TestLayoutScreen extends BasicScreen {
         row1.setSpacing(4);
 
         var primaryBtn = ButtonWidget.of("Primary", () -> clickCount++)
-                                     .setColors(0xFF0066CC, 0xFF0088FF, 0xFF004499);
+                .setColors(0xFF0066CC, 0xFF0088FF, 0xFF004499);
         primaryBtn.useStyle(UIStyle.of(sizeOf(80, 20)));
         row1.addWidget(primaryBtn);
 
         var secondaryBtn = ButtonWidget.of("Secondary", () -> System.out.println("Secondary clicked"))
-                                       .setColors(0xFF666666, 0xFF888888, 0xFF444444);
+                .setColors(0xFF666666, 0xFF888888, 0xFF444444);
         secondaryBtn.useStyle(UIStyle.of(sizeOf(80, 20)));
         row1.addWidget(secondaryBtn);
 
@@ -201,13 +192,13 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Danger Button
         var dangerBtn = ButtonWidget.of("Danger Action", () -> System.out.println("Danger!"))
-                                    .setColors(0xFFCC0000, 0xFFEE0000, 0xFFAA0000);
+                .setColors(0xFFCC0000, 0xFFEE0000, 0xFFAA0000);
         dangerBtn.useStyle(UIStyle.of(sizeOf(164, 20)));
         group.addWidget(dangerBtn);
 
         // Disabled Button
         var disabledBtn = ButtonWidget.of("Disabled")
-                                      .setEnabled(false);
+                .setEnabled(false);
         disabledBtn.useStyle(UIStyle.of(sizeOf(164, 20)));
         group.addWidget(disabledBtn);
 
@@ -223,13 +214,13 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Label
         var label = LabelWidget.of("Progress Bars")
-                               .setColor(0xFFAAAAAA);
+                .setColor(0xFFAAAAAA);
         section.addWidget(label);
 
         // Horizontal Progress
         var horizontalProgress = ProgressBarWidget.create(() -> progressValue)
-                                                  .setDirection(ProgressBarWidget.Direction.LEFT_TO_RIGHT)
-                                                  .setColors(0xFF333333, 0xFF00AA00);
+                .setDirection(ProgressBarWidget.Direction.LEFT_TO_RIGHT)
+                .setColors(0xFF333333, 0xFF00AA00);
         horizontalProgress.useStyle(UIStyle.of(sizeOf(164, 12)));
         section.addWidget(horizontalProgress);
 
@@ -238,20 +229,20 @@ public class TestLayoutScreen extends BasicScreen {
         verticalRow.setSpacing(4);
 
         var verticalProgress1 = ProgressBarWidget.create(() -> progressValue)
-                                                 .setDirection(ProgressBarWidget.Direction.BOTTOM_TO_TOP)
-                                                 .setColors(0xFF333333, 0xFF0066CC);
+                .setDirection(ProgressBarWidget.Direction.BOTTOM_TO_TOP)
+                .setColors(0xFF333333, 0xFF0066CC);
         verticalProgress1.useStyle(UIStyle.of(sizeOf(20, 40)));
         verticalRow.addWidget(verticalProgress1);
 
         var verticalProgress2 = ProgressBarWidget.create(() -> Math.min(1.0, progressValue * 1.5))
-                                                 .setDirection(ProgressBarWidget.Direction.BOTTOM_TO_TOP)
-                                                 .setColors(0xFF333333, 0xFFCC6600);
+                .setDirection(ProgressBarWidget.Direction.BOTTOM_TO_TOP)
+                .setColors(0xFF333333, 0xFFCC6600);
         verticalProgress2.useStyle(UIStyle.of(sizeOf(20, 40)));
         verticalRow.addWidget(verticalProgress2);
 
         var verticalProgress3 = ProgressBarWidget.create(() -> Math.min(1.0, progressValue * 2.0))
-                                                 .setDirection(ProgressBarWidget.Direction.BOTTOM_TO_TOP)
-                                                 .setColors(0xFF333333, 0xFFCC0066);
+                .setDirection(ProgressBarWidget.Direction.BOTTOM_TO_TOP)
+                .setColors(0xFF333333, 0xFFCC0066);
         verticalProgress3.useStyle(UIStyle.of(sizeOf(20, 40)));
         verticalRow.addWidget(verticalProgress3);
 
@@ -262,17 +253,17 @@ public class TestLayoutScreen extends BasicScreen {
         controlRow.setSpacing(4);
 
         var decreaseBtn = ButtonWidget.of("-", () -> progressValue = Math.max(0, progressValue - 0.1))
-                                      .setColors(0xFF555555, 0xFF777777, 0xFF333333);
+                .setColors(0xFF555555, 0xFF777777, 0xFF333333);
         decreaseBtn.useStyle(UIStyle.of(sizeOf(30, 18)));
         controlRow.addWidget(decreaseBtn);
 
         var increaseBtn = ButtonWidget.of("+", () -> progressValue = Math.min(1, progressValue + 0.1))
-                                      .setColors(0xFF555555, 0xFF777777, 0xFF333333);
+                .setColors(0xFF555555, 0xFF777777, 0xFF333333);
         increaseBtn.useStyle(UIStyle.of(sizeOf(30, 18)));
         controlRow.addWidget(increaseBtn);
 
         var resetBtn = ButtonWidget.of("Reset", () -> progressValue = 0)
-                                   .setColors(0xFF555555, 0xFF777777, 0xFF333333);
+                .setColors(0xFF555555, 0xFF777777, 0xFF333333);
         resetBtn.useStyle(UIStyle.of(sizeOf(50, 18)));
         controlRow.addWidget(resetBtn);
 
@@ -289,7 +280,7 @@ public class TestLayoutScreen extends BasicScreen {
         section.setSpacing(4);
 
         var label = LabelWidget.of("Toggles")
-                               .setColor(0xFFAAAAAA);
+                .setColor(0xFFAAAAAA);
         section.addWidget(label);
 
         // Toggle rows
@@ -306,8 +297,8 @@ public class TestLayoutScreen extends BasicScreen {
 
             int finalI = i;
             var toggle = ToggleWidget.create(i == 1)
-                                     .onToggle(state -> System.out.println("Option " + finalI + ": " + state))
-                                     .setColors(0xFF555555, 0xFF00CC66);
+                    .onToggle(state -> System.out.println("Option " + finalI + ": " + state))
+                    .setColors(0xFF555555, 0xFF00CC66);
             toggle.useStyle(UIStyle.of(sizeOf(36, 18)));
             row.addWidget(toggle);
 
@@ -324,14 +315,14 @@ public class TestLayoutScreen extends BasicScreen {
         var panel = ColumnWidget.create();
         panel.setSpacing(8);
         panel.useStyle(UIStyle.of(
-            flexGrow(1),
-            padding(8),
-            background(new ColorTexture(0x40000000))
+                flexGrow(1),
+                padding(8),
+                background(new ColorTexture(0x40000000))
         ));
 
         // Title
         var previewTitle = LabelWidget.of("Preview Panel")
-                                      .setColor(0xFFFFFF00);
+                .setColor(0xFFFFFF00);
         panel.addWidget(previewTitle);
 
         // ZStack Demo - Layered content
@@ -349,7 +340,7 @@ public class TestLayoutScreen extends BasicScreen {
         container.setSpacing(4);
 
         var label = LabelWidget.of("ZStack Layering")
-                               .setColor(0xFFAAAAAA);
+                .setColor(0xFFAAAAAA);
         container.addWidget(label);
 
         var zstack = BoxWidget.create();
@@ -358,28 +349,28 @@ public class TestLayoutScreen extends BasicScreen {
         // Background layer
         var background = new Widget();
         background.useStyle(UIStyle.of(
-            sizeOf(150, 60),
-            background(new ColorTexture(0xFF004466))
+                sizeOf(150, 60),
+                background(new ColorTexture(0xFF004466))
         ));
         zstack.addChild(background);
 
         // Middle layer
         var middleLayer = LabelWidget.of("Background")
-                                     .setColor(0xFF88CCFF)
-                                     .setAlign(LabelWidget.TextAlign.CENTER);
+                .setColor(0xFF88CCFF)
+                .setAlign(LabelWidget.TextAlign.CENTER);
         middleLayer.useStyle(UIStyle.of(
-            sizeOf(150, 20),
-            margin(20, 0, 0, 0)
+                sizeOf(150, 20),
+                margin(20, 0, 0, 0)
         ));
         zstack.addChild(middleLayer);
 
         // Top layer
         var topLayer = LabelWidget.of("Overlay Text")
-                                  .setColor(0xFFFFFFFF)
-                                  .setAlign(LabelWidget.TextAlign.CENTER);
+                .setColor(0xFFFFFFFF)
+                .setAlign(LabelWidget.TextAlign.CENTER);
         topLayer.useStyle(UIStyle.of(
-            sizeOf(150, 20),
-            margin(5, 0, 0, 0)
+                sizeOf(150, 20),
+                margin(5, 0, 0, 0)
         ));
         zstack.addChild(topLayer);
 
@@ -394,19 +385,19 @@ public class TestLayoutScreen extends BasicScreen {
         var item = RowWidget.create();
         item.setSpacing(8);
         item.useStyle(UIStyle.of(
-            padding(4, 8, 4, 8),
-            background(new ColorTexture(highlighted ? 0x40FFAA00 : 0x20FFFFFF)),
-            alignItemsCenter()
+                padding(4, 8, 4, 8),
+                background(new ColorTexture(highlighted ? 0x40FFAA00 : 0x20FFFFFF)),
+                alignItemsCenter()
         ));
 
         var itemLabel = LabelWidget.of(text)
-                                   .setColor(highlighted ? 0xFFFFAA00 : 0xFFCCCCCC);
+                .setColor(highlighted ? 0xFFFFAA00 : 0xFFCCCCCC);
         item.addWidget(itemLabel);
 
         item.addWidget(SpacerWidget.create());
 
         var selectBtn = ButtonWidget.of("Select", () -> System.out.println("Selected: " + text))
-                                    .setColors(0xFF444444, 0xFF666666, 0xFF333333);
+                .setColors(0xFF444444, 0xFF666666, 0xFF333333);
         selectBtn.useStyle(UIStyle.of(sizeOf(50, 16)));
         item.addWidget(selectBtn);
 
@@ -423,14 +414,14 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Status text
         var statusLabel = LabelWidget.of("Status: Ready")
-                                     .setColor(0xFF00FF00);
+                .setColor(0xFF00FF00);
         footer.addWidget(statusLabel);
 
         footer.addWidget(SpacerWidget.create());
 
         // Click counter
         var clickLabel = LabelWidget.of("Clicks: " + clickCount)
-                                    .setColor(0xFFAAAAAA);
+                .setColor(0xFFAAAAAA);
         clickLabel.onInit(self -> {
             // This would ideally update dynamically
         });
@@ -438,7 +429,7 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Close button
         var closeBtn = ButtonWidget.of("Close", this::onClose)
-                                   .setColors(0xFF555555, 0xFF777777, 0xFF333333);
+                .setColors(0xFF555555, 0xFF777777, 0xFF333333);
         closeBtn.useStyle(UIStyle.of(sizeOf(60, 20)));
         footer.addWidget(closeBtn);
 

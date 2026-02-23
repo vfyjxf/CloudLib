@@ -1,11 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.texture;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
@@ -23,11 +19,11 @@ import org.joml.Matrix4f;
  * </ul>
  */
 public record TiledTexture(
-    ResourceLocation texture,
-    int tileWidth, int tileHeight,
-    int textureWidth, int textureHeight,
-    TileMode horizontalMode, TileMode verticalMode,
-    boolean atlasSprite
+        ResourceLocation texture,
+        int tileWidth, int tileHeight,
+        int textureWidth, int textureHeight,
+        TileMode horizontalMode, TileMode verticalMode,
+        boolean atlasSprite
 ) implements BatchableTexture {
 
     public enum TileMode {
@@ -43,7 +39,7 @@ public record TiledTexture(
      */
     public static TiledTexture of(ResourceLocation texture, int tileWidth, int tileHeight) {
         return new TiledTexture(texture, tileWidth, tileHeight, tileWidth, tileHeight,
-            TileMode.REPEAT, TileMode.REPEAT, false);
+                TileMode.REPEAT, TileMode.REPEAT, false);
     }
 
     /**
@@ -52,7 +48,7 @@ public record TiledTexture(
     public static TiledTexture of(ResourceLocation texture, int tileWidth, int tileHeight,
                                   int textureWidth, int textureHeight) {
         return new TiledTexture(texture, tileWidth, tileHeight, textureWidth, textureHeight,
-            TileMode.REPEAT, TileMode.REPEAT, false);
+                TileMode.REPEAT, TileMode.REPEAT, false);
     }
 
     /**
@@ -60,7 +56,7 @@ public record TiledTexture(
      */
     public static TiledTexture horizontal(ResourceLocation texture, int tileWidth, int tileHeight) {
         return new TiledTexture(texture, tileWidth, tileHeight, tileWidth, tileHeight,
-            TileMode.REPEAT, TileMode.STRETCH, false);
+                TileMode.REPEAT, TileMode.STRETCH, false);
     }
 
     /**
@@ -68,7 +64,7 @@ public record TiledTexture(
      */
     public static TiledTexture vertical(ResourceLocation texture, int tileWidth, int tileHeight) {
         return new TiledTexture(texture, tileWidth, tileHeight, tileWidth, tileHeight,
-            TileMode.STRETCH, TileMode.REPEAT, false);
+                TileMode.STRETCH, TileMode.REPEAT, false);
     }
 
     /**
@@ -77,7 +73,7 @@ public record TiledTexture(
      */
     public static TiledTexture sprite(ResourceLocation spriteLocation, int tileWidth, int tileHeight) {
         return new TiledTexture(spriteLocation, tileWidth, tileHeight, tileWidth, tileHeight,
-            TileMode.REPEAT, TileMode.REPEAT, true);
+                TileMode.REPEAT, TileMode.REPEAT, true);
     }
 
     /**
@@ -85,7 +81,7 @@ public record TiledTexture(
      */
     public static TiledTexture spriteHorizontal(ResourceLocation spriteLocation, int tileWidth, int tileHeight) {
         return new TiledTexture(spriteLocation, tileWidth, tileHeight, tileWidth, tileHeight,
-            TileMode.REPEAT, TileMode.STRETCH, true);
+                TileMode.REPEAT, TileMode.STRETCH, true);
     }
 
     /**
@@ -93,7 +89,7 @@ public record TiledTexture(
      */
     public static TiledTexture spriteVertical(ResourceLocation spriteLocation, int tileWidth, int tileHeight) {
         return new TiledTexture(spriteLocation, tileWidth, tileHeight, tileWidth, tileHeight,
-            TileMode.STRETCH, TileMode.REPEAT, true);
+                TileMode.STRETCH, TileMode.REPEAT, true);
     }
 
     //endregion
@@ -102,12 +98,12 @@ public record TiledTexture(
 
     public TiledTexture withModes(TileMode horizontal, TileMode vertical) {
         return new TiledTexture(texture, tileWidth, tileHeight, textureWidth, textureHeight,
-            horizontal, vertical, atlasSprite);
+                horizontal, vertical, atlasSprite);
     }
 
     public TiledTexture withTileSize(int width, int height) {
         return new TiledTexture(texture, width, height, textureWidth, textureHeight,
-            horizontalMode, verticalMode, atlasSprite);
+                horizontalMode, verticalMode, atlasSprite);
     }
 
     /**
@@ -122,7 +118,7 @@ public record TiledTexture(
      */
     public TiledTexture asAtlasSprite() {
         return atlasSprite ? this : new TiledTexture(texture, tileWidth, tileHeight, textureWidth, textureHeight,
-            horizontalMode, verticalMode, true);
+                horizontalMode, verticalMode, true);
     }
 
     /**
@@ -130,7 +126,7 @@ public record TiledTexture(
      */
     public TiledTexture asStandardTexture() {
         return atlasSprite ? new TiledTexture(texture, tileWidth, tileHeight, textureWidth, textureHeight,
-            horizontalMode, verticalMode, false) : this;
+                horizontalMode, verticalMode, false) : this;
     }
 
     //endregion

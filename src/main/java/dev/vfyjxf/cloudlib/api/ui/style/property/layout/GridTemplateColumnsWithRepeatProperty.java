@@ -19,7 +19,7 @@ import java.util.List;
  * @see GridTemplateComponent
  */
 public record GridTemplateColumnsWithRepeatProperty(
-    @Nullable List<GridTemplateComponent> columns) implements LayoutProperty {
+        @Nullable List<GridTemplateComponent> columns) implements LayoutProperty {
 
     public static final StyleType<List<GridTemplateComponent>> type = StyleType.of("grid-template-columns-with-repeat", () -> null);
 

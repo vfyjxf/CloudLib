@@ -1,11 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.texture;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
@@ -36,9 +32,9 @@ import org.joml.Matrix4f;
  * </ul>
  */
 public record NineSliceTexture(
-    ResourceLocation location, int width, int height,
-    int left, int right, int top, int bottom,
-    boolean atlasSprite
+        ResourceLocation location, int width, int height,
+        int left, int right, int top, int bottom,
+        boolean atlasSprite
 ) implements SizedTexture, BatchableTexture {
 
     /**

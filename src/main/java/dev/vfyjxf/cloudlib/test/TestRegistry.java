@@ -30,20 +30,20 @@ public final class TestRegistry {
     private static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(Constants.modId);
 
     public static final DeferredBlock<TestBlock> testBlock = block(
-        "test_block",
-        TestBlock::new,
-        BlockItem::new
+            "test_block",
+            TestBlock::new,
+            BlockItem::new
     );
 
     private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, Constants.modId);
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TestBlockEntity>> testBlockEntity =
-        BLOCK_ENTITIES.register(
-            "test_block_entity",
-            () -> BlockEntityType.Builder
-                .of(TestBlockEntity::new, testBlock.get())
-                .build(null)
-        );
+            BLOCK_ENTITIES.register(
+                    "test_block_entity",
+                    () -> BlockEntityType.Builder
+                            .of(TestBlockEntity::new, testBlock.get())
+                            .build(null)
+            );
 
     public static void register(IEventBus modBus) {
         BLOCKS.register(modBus);
@@ -71,16 +71,16 @@ public final class TestRegistry {
         public static final DeferredRegister<CreativeModeTab> CREATIVE_TAB = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Constants.modId);
         public static final MutableList<DeferredItem<?>> creativeTagItems = MutableLists.empty();
         public static final DeferredHolder<CreativeModeTab, CreativeModeTab> creativeTab = CREATIVE_TAB.register(
-            "conduit_tab",
-            () -> CreativeModeTab.builder()
-                                 .title(Component.literal("Debug Entries"))
-                                 .icon(() -> Blocks.DARK_OAK_DOOR.asItem().getDefaultInstance())
-                                 .displayItems((parameters, output) -> {
-                                     for (DeferredItem<?> creativeTagItem : creativeTagItems) {
-                                         output.accept(creativeTagItem.get());
-                                     }
-                                 })
-                                 .build()
+                "conduit_tab",
+                () -> CreativeModeTab.builder()
+                        .title(Component.literal("Debug Entries"))
+                        .icon(() -> Blocks.DARK_OAK_DOOR.asItem().getDefaultInstance())
+                        .displayItems((parameters, output) -> {
+                            for (DeferredItem<?> creativeTagItem : creativeTagItems) {
+                                output.accept(creativeTagItem.get());
+                            }
+                        })
+                        .build()
         );
     }
 

@@ -25,11 +25,14 @@ public sealed interface TooltipEntry {
 
     //region types
 
-    record TextEntry(Component text) implements TooltipEntry {}
+    record TextEntry(Component text) implements TooltipEntry {
+    }
 
-    record ComponentEntry(TooltipComponent component) implements TooltipEntry {}
+    record ComponentEntry(TooltipComponent component) implements TooltipEntry {
+    }
 
-    record DynamicEntry(Supplier<Component> provider) implements TooltipEntry {}
+    record DynamicEntry(Supplier<Component> provider) implements TooltipEntry {
+    }
 
     //endregion
 

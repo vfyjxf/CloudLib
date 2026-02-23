@@ -33,7 +33,8 @@ public final class SpacerBlueprint implements Blueprint<SpacerWidget> {
     private @Nullable Object key;
     private UIStyle style = UIStyle.EMPTY;
 
-    private SpacerBlueprint() {}
+    private SpacerBlueprint() {
+    }
 
     //region dsl entry points
 
@@ -103,8 +104,8 @@ public final class SpacerBlueprint implements Blueprint<SpacerWidget> {
     @Override
     public void updateWidget(SpacerWidget widget, Scene scene, SceneContext context) {
         widget.setMinLength(minLength)
-              .setFlexGrow(flexGrow)
-              .useStyle(style);
+                .setFlexGrow(flexGrow)
+                .useStyle(style);
     }
 
     //endregion

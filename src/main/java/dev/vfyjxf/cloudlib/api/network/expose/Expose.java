@@ -17,32 +17,32 @@ public non-sealed interface Expose<T> extends ExposeCommon {
     //region factory
 
     static <T> Expose<T> create(
-        String name, short id,
-        Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-        UnaryFlowHandler<T> exposeCodec
+            String name, short id,
+            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
+            UnaryFlowHandler<T> exposeCodec
     ) {
         return new StandardExpose<>(
-            name,
-            id,
-            snapshot,
-            valueSupplier,
-            exposeCodec,
-            exposeCodec
+                name,
+                id,
+                snapshot,
+                valueSupplier,
+                exposeCodec,
+                exposeCodec
         );
     }
 
     static <T> Expose<T> create(
-        String name, short id,
-        Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-        FlowEncoder<T> encoder, FlowDecoder<T> decoder
+            String name, short id,
+            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
+            FlowEncoder<T> encoder, FlowDecoder<T> decoder
     ) {
         return new StandardExpose<>(
-            name,
-            id,
-            snapshot,
-            valueSupplier,
-            encoder,
-            decoder
+                name,
+                id,
+                snapshot,
+                valueSupplier,
+                encoder,
+                decoder
         );
     }
 

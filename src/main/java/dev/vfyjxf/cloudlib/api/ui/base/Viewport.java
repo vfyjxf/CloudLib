@@ -151,9 +151,7 @@ public final class Viewport {
      */
     public static Viewport create(int viewportWidth, int viewportHeight,
                                   int contentWidth, int contentHeight) {
-        Viewport vp = new Viewport();
-        vp.viewportWidth = viewportWidth;
-        vp.viewportHeight = viewportHeight;
+        Viewport vp = create(viewportWidth, viewportHeight);
         vp.contentWidth = contentWidth;
         vp.contentHeight = contentHeight;
         return vp;
@@ -171,7 +169,7 @@ public final class Viewport {
      */
     public static Viewport create(Size viewportSize, Size contentSize) {
         return create(viewportSize.width(), viewportSize.height(),
-            contentSize.width(), contentSize.height());
+                contentSize.width(), contentSize.height());
     }
 
     private Viewport() {
@@ -696,7 +694,7 @@ public final class Viewport {
      */
     public boolean isInsideViewport(double localX, double localY) {
         return localX >= 0 && localX < viewportWidth
-               && localY >= 0 && localY < viewportHeight;
+                && localY >= 0 && localY < viewportHeight;
     }
 
     /**
@@ -714,7 +712,7 @@ public final class Viewport {
                            int cx, int cy, int cw, int ch) {
         FloatPos local = parentToLocal(parentX, parentY);
         return local.x >= cx && local.x < cx + cw
-               && local.y >= cy && local.y < cy + ch;
+                && local.y >= cy && local.y < cy + ch;
     }
 
     /**
@@ -724,8 +722,8 @@ public final class Viewport {
      */
     public boolean hitTest(double parentX, double parentY, Rect localRect) {
         return hitTest(parentX, parentY,
-            localRect.x(), localRect.y(),
-            localRect.width(), localRect.height());
+                localRect.x(), localRect.y(),
+                localRect.width(), localRect.height());
     }
 
     /**
@@ -748,8 +746,8 @@ public final class Viewport {
         double maxY = Math.max(Math.max(tl.y, tr.y), Math.max(bl.y, br.y));
 
         return new Rect(
-            (int) Math.floor(minX), (int) Math.floor(minY),
-            (int) Math.ceil(maxX - minX), (int) Math.ceil(maxY - minY)
+                (int) Math.floor(minX), (int) Math.floor(minY),
+                (int) Math.ceil(maxX - minX), (int) Math.ceil(maxY - minY)
         );
     }
 
@@ -760,8 +758,8 @@ public final class Viewport {
      */
     public Rect localRectToParentBounds(Rect localRect) {
         return localRectToParentBounds(
-            localRect.x(), localRect.y(),
-            localRect.width(), localRect.height());
+                localRect.x(), localRect.y(),
+                localRect.width(), localRect.height());
     }
 
     /**
@@ -779,8 +777,8 @@ public final class Viewport {
         double maxY = Math.max(Math.max(tl.y, tr.y), Math.max(bl.y, br.y));
 
         return new Rect(
-            (int) Math.floor(minX), (int) Math.floor(minY),
-            (int) Math.ceil(maxX - minX), (int) Math.ceil(maxY - minY)
+                (int) Math.floor(minX), (int) Math.floor(minY),
+                (int) Math.ceil(maxX - minX), (int) Math.ceil(maxY - minY)
         );
     }
 
@@ -949,7 +947,7 @@ public final class Viewport {
         invalidate();
 
         adjustTranslateForPivot(translateIndex,
-            localPt.x, localPt.y, parentX, parentY);
+                localPt.x, localPt.y, parentX, parentY);
         return this;
     }
 
@@ -969,7 +967,7 @@ public final class Viewport {
         invalidate();
 
         adjustTranslateForPivot(translateIndex,
-            localPt.x, localPt.y, parentX, parentY);
+                localPt.x, localPt.y, parentX, parentY);
         return this;
     }
 
@@ -981,7 +979,7 @@ public final class Viewport {
         if (contentWidth <= 0 && contentHeight <= 0) return this;
 
         ViewportTransform.Translate t =
-            (ViewportTransform.Translate) pipelineGet(translateIndex);
+                (ViewportTransform.Translate) pipelineGet(translateIndex);
         double dx = t.dx();
         double dy = t.dy();
 
@@ -1078,8 +1076,8 @@ public final class Viewport {
     public boolean isIdentity() {
         Matrix3x2f m = forwardMatrixDirect();
         return m.m00 == 1 && m.m01 == 0
-               && m.m10 == 0 && m.m11 == 1
-               && m.m20 == 0 && m.m21 == 0;
+                && m.m10 == 0 && m.m11 == 1
+                && m.m20 == 0 && m.m21 == 0;
     }
 
     //endregion
@@ -1211,10 +1209,10 @@ public final class Viewport {
 
     private static Matrix4f to4f(Matrix3x2f m) {
         return new Matrix4f(
-            m.m00, m.m01, 0, 0,
-            m.m10, m.m11, 0, 0,
-            0, 0, 1, 0,
-            m.m20, m.m21, 0, 1
+                m.m00, m.m01, 0, 0,
+                m.m10, m.m11, 0, 0,
+                0, 0, 1, 0,
+                m.m20, m.m21, 0, 1
         );
     }
 
@@ -1234,12 +1232,12 @@ public final class Viewport {
     @Override
     public String toString() {
         return "Viewport{" +
-               "layout=" + layout +
-               ", contentOffset=(" + contentOffsetX + ", " + contentOffsetY + ")" +
-               ", userTransforms=" + transforms +
-               ", viewport=" + viewportWidth + "x" + viewportHeight +
-               ", content=" + contentWidth + "x" + contentHeight +
-               ", origin=(" + originX + ", " + originY + ")" +
-               '}';
+                "layout=" + layout +
+                ", contentOffset=(" + contentOffsetX + ", " + contentOffsetY + ")" +
+                ", userTransforms=" + transforms +
+                ", viewport=" + viewportWidth + "x" + viewportHeight +
+                ", content=" + contentWidth + "x" + contentHeight +
+                ", origin=(" + originX + ", " + originY + ")" +
+                '}';
     }
 }

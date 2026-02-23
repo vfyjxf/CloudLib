@@ -8,14 +8,14 @@ public interface MenuEvent {
 
 
     EventDefinition<QuickMove> onQuickMove = Events.define(
-        QuickMove.class, (listeners) -> (player, from) -> {
-            for (QuickMove listener : listeners) {
-                if (listener.onQuickMove(player, from)) {
-                    return true;
+            QuickMove.class, (listeners) -> (player, from) -> {
+                for (QuickMove listener : listeners) {
+                    if (listener.onQuickMove(player, from)) {
+                        return true;
+                    }
                 }
+                return false;
             }
-            return false;
-        }
     );
 
     interface QuickMove extends MenuEvent {

@@ -6,8 +6,8 @@ import net.minecraft.client.gui.GuiGraphics;
  * Circle/ellipse texture with horizontal strip approximation.
  */
 public record CircleTexture(
-    int fillColor, int borderColor, int borderThickness,
-    int segments, boolean filled
+        int fillColor, int borderColor, int borderThickness,
+        int segments, boolean filled
 ) implements BatchableTexture {
 
     public CircleTexture {

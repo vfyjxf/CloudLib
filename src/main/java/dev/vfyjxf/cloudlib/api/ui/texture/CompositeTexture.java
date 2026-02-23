@@ -40,16 +40,16 @@ public class CompositeTexture implements BatchableTexture {
 
     public static CompositeTexture panel(int backgroundColor, int borderColor, int borderThickness) {
         return builder()
-            .add(new ColorTexture(backgroundColor))
-            .add(BorderTexture.of(borderColor, borderThickness))
-            .build();
+                .add(new ColorTexture(backgroundColor))
+                .add(BorderTexture.of(borderColor, borderThickness))
+                .build();
     }
 
     public static CompositeTexture gradientPanel(int colorTop, int colorBottom, int borderColor, int borderThickness) {
         return builder()
-            .add(GradientTexture.vertical(colorTop, colorBottom))
-            .add(BorderTexture.of(borderColor, borderThickness))
-            .build();
+                .add(GradientTexture.vertical(colorTop, colorBottom))
+                .add(BorderTexture.of(borderColor, borderThickness))
+                .build();
     }
 
     //endregion
@@ -123,7 +123,8 @@ public class CompositeTexture implements BatchableTexture {
     public static class Builder {
         private final List<BatchableTexture> layers = new ArrayList<>();
 
-        private Builder() {}
+        private Builder() {
+        }
 
         public Builder add(BatchableTexture layer) {
             layers.add(layer);

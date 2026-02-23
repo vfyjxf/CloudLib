@@ -19,9 +19,9 @@ import dev.vfyjxf.cloudlib.api.ui.style.property.layout.StyleProperty;
 public record SceneLayerProperty(SceneLayer layer) implements StyleProperty {
 
     public static final StyleType<SceneLayer> type = StyleType.of(
-        "sceneLayer",
-        () -> SceneLayer.content,
-        (ctx, value) -> ctx.widget().setSceneLayer(value)
+            "sceneLayer",
+            () -> SceneLayer.content,
+            (ctx, value) -> ctx.widget().setSceneLayer(value)
     );
 
     @Override

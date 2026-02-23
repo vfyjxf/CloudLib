@@ -48,7 +48,8 @@ public class PanelWidget extends CompositeWidget<Widget> {
         return new PanelWidget().setTitle(title);
     }
 
-    private PanelWidget() {}
+    private PanelWidget() {
+    }
 
     //endregion
 

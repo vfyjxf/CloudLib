@@ -276,6 +276,84 @@ public class ProgressTrackerTest {
 
     //endregion
 
+    //region timing
+
+    @Test
+    void testPhaseTimingRecorded() {
+        var a = plugin("a");
+        var graph = DependencyGraph.build(List.of(a));
+        var dispatcher = PluginDispatcher.fromGraph(graph);
+        var tracker = new ProgressTracker();
+
+        dispatcher.dispatch(plugin -> {
+            try { Thread.sleep(30); } catch (InterruptedException ignored) {}
+        }, tracker.phase("slow-phase", 1));
+
+        var timings = tracker.timings();
+        assertEquals(1, timings.size());
+        assertEquals("slow-phase", timings.getFirst().name());
+        assertTrue(timings.getFirst().complete());
+        assertTrue(timings.getFirst().elapsedMs() >= 20,
+            "Expected >= 20ms, got " + timings.getFirst().elapsedMs() + "ms");
+    }
+
+    @Test
+    void testMultiPhaseTimings() {
+        var a = plugin("a");
+        var graph = DependencyGraph.build(List.of(a));
+        var dispatcher = PluginDispatcher.fromGraph(graph);
+        var tracker = new ProgressTracker();
+
+        dispatcher.dispatch(plugin -> {
+            try { Thread.sleep(20); } catch (InterruptedException ignored) {}
+        }, tracker.phase("phase-a", 50));
+
+        dispatcher.dispatch(plugin -> {
+            try { Thread.sleep(20); } catch (InterruptedException ignored) {}
+        }, tracker.phase("phase-b", 50));
+
+        var timings = tracker.timings();
+        assertEquals(2, timings.size());
+        assertEquals("phase-a", timings.get(0).name());
+        assertEquals("phase-b", timings.get(1).name());
+        assertTrue(timings.get(0).elapsedMs() >= 15);
+        assertTrue(timings.get(1).elapsedMs() >= 15);
+        assertTrue(tracker.totalElapsedMs() >= 30);
+    }
+
+    @Test
+    void testUnnamedPhaseTimingHasNullName() {
+        var a = plugin("a");
+        var graph = DependencyGraph.build(List.of(a));
+        var dispatcher = PluginDispatcher.fromGraph(graph);
+        var tracker = new ProgressTracker();
+
+        dispatcher.dispatch(plugin -> {}, tracker.phase(1));
+
+        var timings = tracker.timings();
+        assertEquals(1, timings.size());
+        assertNull(timings.getFirst().name());
+        assertTrue(timings.getFirst().complete());
+    }
+
+    @Test
+    void testNotStartedPhaseHasZeroElapsed() {
+        var tracker = new ProgressTracker();
+        tracker.phase("pending", 1);
+
+        var timings = tracker.timings();
+        assertEquals(0, timings.getFirst().elapsedMs());
+        assertFalse(timings.getFirst().complete());
+    }
+
+    @Test
+    void testTotalElapsedMsEmpty() {
+        var tracker = new ProgressTracker();
+        assertEquals(0, tracker.totalElapsedMs());
+    }
+
+    //endregion
+
     //region helpers
 
     private static ModPlugin plugin(String name, PluginDependency... deps) {

@@ -53,6 +53,8 @@ public final class Games {
         return server.registryAccess();
     }
 
-    private Games() {throw new AssertionError("This class should not be instantiated!");}
+    private Games() {
+        throw new AssertionError("This class should not be instantiated!");
+    }
 
 }

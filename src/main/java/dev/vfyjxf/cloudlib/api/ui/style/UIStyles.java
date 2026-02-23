@@ -1,15 +1,8 @@
 package dev.vfyjxf.cloudlib.api.ui.style;
 
-import dev.vfyjxf.cloudlib.api.ui.style.property.layout.*;
-import dev.vfyjxf.cloudlib.api.ui.style.property.visual.BackgroundProperty;
-import dev.vfyjxf.cloudlib.api.ui.style.property.layout.BorderProperty;
-import dev.vfyjxf.cloudlib.api.ui.style.property.visual.IconProperty;
-import dev.vfyjxf.cloudlib.api.ui.style.property.visual.SceneLayerProperty;
-import dev.vfyjxf.cloudlib.api.ui.style.property.visual.ShadowProperty;
-import dev.vfyjxf.cloudlib.api.ui.style.property.visual.TextColorProperty;
-import dev.vfyjxf.cloudlib.api.ui.style.property.visual.ScrollbarStyleProperty;
-import dev.vfyjxf.cloudlib.api.ui.style.property.visual.ZIndexProperty;
 import dev.vfyjxf.cloudlib.api.ui.base.SceneLayer;
+import dev.vfyjxf.cloudlib.api.ui.style.property.layout.*;
+import dev.vfyjxf.cloudlib.api.ui.style.property.visual.*;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import dev.vfyjxf.taffy.style.*;
 
@@ -50,7 +43,8 @@ import java.util.List;
  */
 public final class UIStyles {
 
-    private UIStyles() {}
+    private UIStyles() {
+    }
 
     //region spacing properties
 

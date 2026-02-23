@@ -94,7 +94,7 @@ public class SpriteTexture implements SizedTexture, BatchableTexture {
     public void emit(VertexEmitter emitter, float x, float y, float w, float h, int color) {
         TextureAtlasSprite sprite = spriteSupplier.get();
         emitter.textured(sprite.atlasLocation(), x, y, w, h,
-            sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), color);
+                sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), color);
     }
 
     //endregion

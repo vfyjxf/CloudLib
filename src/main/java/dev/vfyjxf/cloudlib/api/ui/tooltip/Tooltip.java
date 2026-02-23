@@ -15,11 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static dev.vfyjxf.cloudlib.api.ui.tooltip.TooltipLocator.At;
-import static dev.vfyjxf.cloudlib.api.ui.tooltip.TooltipLocator.Head;
-import static dev.vfyjxf.cloudlib.api.ui.tooltip.TooltipLocator.MatchPriority;
-import static dev.vfyjxf.cloudlib.api.ui.tooltip.TooltipLocator.Relative;
-import static dev.vfyjxf.cloudlib.api.ui.tooltip.TooltipLocator.Tail;
+import static dev.vfyjxf.cloudlib.api.ui.tooltip.TooltipLocator.*;
 
 /**
  * A flat, ordered list of tooltip entries, each tagged with a marker.
@@ -84,7 +80,8 @@ public final class Tooltip {
 
     //region sentinel
 
-    private record TaggedEntry(TooltipEntry entry, Namespace marker) {}
+    private record TaggedEntry(TooltipEntry entry, Namespace marker) {
+    }
 
     //endregion
 
@@ -104,9 +101,9 @@ public final class Tooltip {
     }
 
     private Tooltip(
-        MutableList<TaggedEntry> entries,
-        MutableList<Consumer<Tooltip>> transforms,
-        @Nullable TooltipStack<?> stack
+            MutableList<TaggedEntry> entries,
+            MutableList<Consumer<Tooltip>> transforms,
+            @Nullable TooltipStack<?> stack
     ) {
         this.entries = entries;
         this.transforms = transforms;

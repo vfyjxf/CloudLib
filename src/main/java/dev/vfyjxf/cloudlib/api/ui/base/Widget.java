@@ -61,10 +61,10 @@ import java.util.Objects;
 @SuppressWarnings("unchecked")
 @CanIgnoreReturnValue
 public class Widget
-    implements Renderable,
-               EventHandler<WidgetEvent>,
-               DataAttachable,
-               Backstage {
+        implements Renderable,
+        EventHandler<WidgetEvent>,
+        DataAttachable,
+        Backstage {
 
     //region core
 
@@ -559,7 +559,7 @@ public class Widget
 
     protected Widget setBound(int x, int y, int width, int height) {
         return setPos(x, y)
-            .setSize(width, height);
+                .setSize(width, height);
     }
 
     protected Widget setBound(Rect rect) {
@@ -599,7 +599,7 @@ public class Widget
     public boolean isMouseOver(double mouseX, double mouseY) {
         FloatPos local = sceneToLocal(mouseX, mouseY);
         return local.x >= 0 && local.x <= size.width()
-               && local.y >= 0 && local.y <= size.height();
+                && local.y >= 0 && local.y <= size.height();
     }
 
     public boolean isMouseOver(InputContext input) {
@@ -613,8 +613,8 @@ public class Widget
     public boolean intersects(int x, int y, int width, int height) {
         Pos p = pos();
         return p.x() >= x && p.y() >= y &&
-               p.x() + this.size.width() <= x + width &&
-               p.y() + this.size.height() <= y + height;
+                p.x() + this.size.width() <= x + width &&
+                p.y() + this.size.height() <= y + height;
     }
 
     public boolean intersects(Rect bound) {
@@ -1295,7 +1295,7 @@ public class Widget
 
     //region utils
 
-    public final  <T extends WidgetEvent> Widget onEvent(EventDefinition<T> definition, T listener) {
+    public final <T extends WidgetEvent> Widget onEvent(EventDefinition<T> definition, T listener) {
         EventHandler.super.onEvent(definition, listener);
         return this;
     }
@@ -1357,8 +1357,8 @@ public class Widget
         style.collectStyleInspection(styleCollector);
         for (var prop : styleCollector.getAll()) {
             collector.addProperty(new InspectionProperty(
-                prop.name(), prop.value(), prop.defaultValue(),
-                "style-" + prop.category()
+                    prop.name(), prop.value(), prop.defaultValue(),
+                    "style-" + prop.category()
             ));
         }
     }

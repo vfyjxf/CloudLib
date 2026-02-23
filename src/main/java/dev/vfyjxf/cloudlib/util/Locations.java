@@ -41,5 +41,6 @@ public final class Locations {
         return ResourceLocation.fromNamespaceAndPath(Constants.namespace, path);
     }
 
-    private Locations() {}
+    private Locations() {
+    }
 }

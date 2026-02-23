@@ -91,13 +91,13 @@ public final class FloatingMiddlewares {
      * @see FlipMiddleware#create(boolean, boolean, List, FlipMiddleware.FallbackStrategy, FlipMiddleware.FallbackAxisSideDirection, boolean, double)
      */
     public static FlipMiddleware flip(
-        boolean checkMainAxis,
-        boolean checkCrossAxis,
-        @Nullable List<FloatingPlacement> fallbackPlacements,
-        FlipMiddleware.FallbackStrategy fallbackStrategy,
-        FlipMiddleware.FallbackAxisSideDirection fallbackAxisSideDirection,
-        boolean flipAlignment,
-        int padding
+            boolean checkMainAxis,
+            boolean checkCrossAxis,
+            @Nullable List<FloatingPlacement> fallbackPlacements,
+            FlipMiddleware.FallbackStrategy fallbackStrategy,
+            FlipMiddleware.FallbackAxisSideDirection fallbackAxisSideDirection,
+            boolean flipAlignment,
+            int padding
     ) {
         return FlipMiddleware.create(checkMainAxis, checkCrossAxis, fallbackPlacements, fallbackStrategy, fallbackAxisSideDirection, flipAlignment, padding);
     }

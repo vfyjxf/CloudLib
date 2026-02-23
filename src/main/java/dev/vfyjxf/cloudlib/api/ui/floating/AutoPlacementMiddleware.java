@@ -51,21 +51,21 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
      * @param padding           the padding for overflow detection
      */
     public static AutoPlacementMiddleware create(
-        boolean crossAxis,
-        @Nullable FloatingPlacement.Alignment alignment,
-        boolean autoAlignment,
-        @Nullable List<FloatingPlacement> allowedPlacements,
-        int padding
+            boolean crossAxis,
+            @Nullable FloatingPlacement.Alignment alignment,
+            boolean autoAlignment,
+            @Nullable List<FloatingPlacement> allowedPlacements,
+            int padding
     ) {
         return new AutoPlacementMiddleware(crossAxis, alignment, autoAlignment, allowedPlacements, padding);
     }
 
     private AutoPlacementMiddleware(
-        boolean crossAxis,
-        @Nullable FloatingPlacement.Alignment alignment,
-        boolean autoAlignment,
-        @Nullable List<FloatingPlacement> allowedPlacements,
-        int padding
+            boolean crossAxis,
+            @Nullable FloatingPlacement.Alignment alignment,
+            boolean autoAlignment,
+            @Nullable List<FloatingPlacement> allowedPlacements,
+            int padding
     ) {
         this.crossAxis = crossAxis;
         this.alignment = alignment;
@@ -93,8 +93,8 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
         if (currentIndex == null) currentIndex = 0;
 
         FloatingPlacement currentPlacement = currentIndex < candidates.size()
-            ? candidates.get(currentIndex)
-            : null;
+                ? candidates.get(currentIndex)
+                : null;
 
         if (currentPlacement == null) {
             return Result.done();
@@ -102,7 +102,7 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
 
         // If our current placement doesn't match, reset to the first candidate
         if (placement != currentPlacement) {
-            return Result.reset(candidates.get(0));
+            return Result.reset(candidates.getFirst());
         }
 
         // Detect overflow at this placement
@@ -111,9 +111,9 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
         int[] alignmentOverflow = FloatingPositioning.alignmentSides(overflow, placement, state.referenceRect(), state.floatingRect());
 
         int[] currentOverflows = {
-            FloatingPositioning.getSide(overflow, side),
-            alignmentOverflow[0],
-            alignmentOverflow[1]
+                FloatingPositioning.getSide(overflow, side),
+                alignmentOverflow[0],
+                alignmentOverflow[1]
         };
 
         @SuppressWarnings("unchecked")
@@ -147,8 +147,8 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
 
     private List<FloatingPlacement> buildPlacementList() {
         FloatingPlacement[] all = allowedPlacements != null
-            ? allowedPlacements.toArray(FloatingPlacement[]::new)
-            : FloatingPlacement.all();
+                ? allowedPlacements.toArray(FloatingPlacement[]::new)
+                : FloatingPlacement.all();
 
         List<FloatingPlacement> result = new ArrayList<>();
 
@@ -199,7 +199,7 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
         if (fitting != null) return fitting;
 
         // Fallback: placement with least total overflow
-        FloatingPlacement best = allOverflows.get(0).placement;
+        FloatingPlacement best = allOverflows.getFirst().placement;
         double bestScore = Double.MAX_VALUE;
         for (OverflowEntry entry : allOverflows) {
             double score = computeScore(entry);

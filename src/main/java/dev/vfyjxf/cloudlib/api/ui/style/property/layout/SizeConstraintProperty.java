@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.ui.style.property.layout;
 
-import dev.vfyjxf.cloudlib.api.ui.style.StyleContext;
 import dev.vfyjxf.cloudlib.api.ui.style.StyleType;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.style.property.LayoutProperty;

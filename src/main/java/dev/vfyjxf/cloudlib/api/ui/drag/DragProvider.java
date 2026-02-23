@@ -11,28 +11,28 @@ import org.jetbrains.annotations.UnknownNullability;
 public interface DragProvider {
 
     CompositeScenario<DragProvider> scenario = new CompositeScenario<>(
-        Namespace.of(Constants.modId, "drag_provider"),
-        DragProvider.class,
-        listeners -> new DragProvider() {
-            @Override
-            public boolean draggable(@UnknownNullability Scene scene, InputContext input, DragContext dragContext) {
-                for (DragProvider listener : listeners) {
-                    if (listener.draggable(scene, input, dragContext)) {
-                        return true;
+            Namespace.of(Constants.modId, "drag_provider"),
+            DragProvider.class,
+            listeners -> new DragProvider() {
+                @Override
+                public boolean draggable(@UnknownNullability Scene scene, InputContext input, DragContext dragContext) {
+                    for (DragProvider listener : listeners) {
+                        if (listener.draggable(scene, input, dragContext)) {
+                            return true;
+                        }
                     }
+                    return false;
                 }
-                return false;
-            }
 
-            @Override
-            public DraggableElement<?> getDraggableElement(@UnknownNullability Scene scene, InputContext input, DragContext dragContext) {
-                for (DragProvider listener : listeners) {
-                    DraggableElement<?> element = listener.getDraggableElement(scene, input, dragContext);
-                    if (!element.isEmpty()) return element;
+                @Override
+                public DraggableElement<?> getDraggableElement(@UnknownNullability Scene scene, InputContext input, DragContext dragContext) {
+                    for (DragProvider listener : listeners) {
+                        DraggableElement<?> element = listener.getDraggableElement(scene, input, dragContext);
+                        if (!element.isEmpty()) return element;
+                    }
+                    return DraggableElement.empty();
                 }
-                return DraggableElement.empty();
             }
-        }
     );
 
     static DragProvider fromWidget(Widget widget) {

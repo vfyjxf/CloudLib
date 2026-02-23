@@ -70,7 +70,7 @@ public interface StyleProperty {
         if (value != null) {
             String formatted = ((StyleType<Object>) type).format(value);
             String defaultFormatted = type.defaultValue() != null
-                ? ((StyleType<Object>) type).format(type.defaultValue()) : null;
+                    ? ((StyleType<Object>) type).format(type.defaultValue()) : null;
             collector.addFormatted(type.displayName(), formatted, defaultFormatted, type.category());
         }
     }

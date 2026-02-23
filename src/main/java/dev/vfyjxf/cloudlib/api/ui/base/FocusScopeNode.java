@@ -66,9 +66,9 @@ public class FocusScopeNode extends FocusNode {
     @Override
     public void requestFocus() {
         if (focusedChild != null
-            && focusedChild.owner != null
-            && focusedChild.owner.lifecycle.mounted()
-            && focusedChild.canRequestFocus) {
+                && focusedChild.owner != null
+                && focusedChild.owner.lifecycle.mounted()
+                && focusedChild.canRequestFocus) {
             focusedChild.requestFocus();
         } else {
             super.requestFocus();

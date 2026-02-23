@@ -18,9 +18,9 @@ public record ZIndexProperty(int zIndex) implements VisualProperty {
     //region types
 
     public static final StyleType<Integer> type = StyleType.of(
-        "zIndex",
-        () -> 0,
-        (ctx, value) -> ctx.visualContext().setZIndex(value)
+            "zIndex",
+            () -> 0,
+            (ctx, value) -> ctx.visualContext().setZIndex(value)
     );
 
     //endregion

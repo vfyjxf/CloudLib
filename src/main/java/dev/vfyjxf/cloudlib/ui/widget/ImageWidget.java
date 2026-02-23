@@ -10,7 +10,7 @@ import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
-import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.sizeOf;
 
 /**
  * Image/texture display widget.

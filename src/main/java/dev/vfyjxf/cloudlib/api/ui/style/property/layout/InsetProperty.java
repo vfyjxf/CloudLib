@@ -119,14 +119,14 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
      */
     public InsetProperty(float top, float right, float bottom, float left) {
         this(
-            EdgeRect.of(
-                LengthPercentageAuto.length(top),
-                LengthPercentageAuto.length(right),
-                LengthPercentageAuto.length(bottom),
-                LengthPercentageAuto.length(left)
-            ),
-            EdgeMask.ALL,
-            TYPE_ALL
+                EdgeRect.of(
+                        LengthPercentageAuto.length(top),
+                        LengthPercentageAuto.length(right),
+                        LengthPercentageAuto.length(bottom),
+                        LengthPercentageAuto.length(left)
+                ),
+                EdgeMask.ALL,
+                TYPE_ALL
         );
     }
 
@@ -303,14 +303,14 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
      */
     public static InsetProperty percent(float top, float right, float bottom, float left) {
         return new InsetProperty(
-            EdgeRect.of(
-                LengthPercentageAuto.percent(top),
-                LengthPercentageAuto.percent(right),
-                LengthPercentageAuto.percent(bottom),
-                LengthPercentageAuto.percent(left)
-            ),
-            EdgeMask.ALL,
-            TYPE_ALL
+                EdgeRect.of(
+                        LengthPercentageAuto.percent(top),
+                        LengthPercentageAuto.percent(right),
+                        LengthPercentageAuto.percent(bottom),
+                        LengthPercentageAuto.percent(left)
+                ),
+                EdgeMask.ALL,
+                TYPE_ALL
         );
     }
 
@@ -421,9 +421,9 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
     public static InsetProperty of(TaffyRect<LengthPercentageAuto> rect) {
         Objects.requireNonNull(rect, "rect");
         return new InsetProperty(
-            EdgeRect.of(rect.top, rect.right, rect.bottom, rect.left),
-            EdgeMask.ALL,
-            TYPE_ALL
+                EdgeRect.of(rect.top, rect.right, rect.bottom, rect.left),
+                EdgeMask.ALL,
+                TYPE_ALL
         );
     }
 
@@ -432,25 +432,39 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
     //region EdgeStyleProperty implementation
 
     @Override
-    protected StyleType<?> typeAll() { return TYPE_ALL; }
+    protected StyleType<?> typeAll() {
+        return TYPE_ALL;
+    }
 
     @Override
-    protected StyleType<?> typeTop() { return TYPE_TOP; }
+    protected StyleType<?> typeTop() {
+        return TYPE_TOP;
+    }
 
     @Override
-    protected StyleType<?> typeRight() { return TYPE_RIGHT; }
+    protected StyleType<?> typeRight() {
+        return TYPE_RIGHT;
+    }
 
     @Override
-    protected StyleType<?> typeBottom() { return TYPE_BOTTOM; }
+    protected StyleType<?> typeBottom() {
+        return TYPE_BOTTOM;
+    }
 
     @Override
-    protected StyleType<?> typeLeft() { return TYPE_LEFT; }
+    protected StyleType<?> typeLeft() {
+        return TYPE_LEFT;
+    }
 
     @Override
-    protected StyleType<?> typeHorizontal() { return TYPE_HORIZONTAL; }
+    protected StyleType<?> typeHorizontal() {
+        return TYPE_HORIZONTAL;
+    }
 
     @Override
-    protected StyleType<?> typeVertical() { return TYPE_VERTICAL; }
+    protected StyleType<?> typeVertical() {
+        return TYPE_VERTICAL;
+    }
 
     @Override
     protected String formatValue(LengthPercentageAuto value) {
@@ -469,20 +483,20 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
     @Override
     public void applyToStyle(TaffyStyle style) {
         applyEdges(
-            edge -> switch (edge) {
-                case TOP -> style.inset.top;
-                case RIGHT -> style.inset.right;
-                case BOTTOM -> style.inset.bottom;
-                case LEFT -> style.inset.left;
-            },
-            (edge, value) -> {
-                switch (edge) {
-                    case TOP -> style.inset.top = value;
-                    case RIGHT -> style.inset.right = value;
-                    case BOTTOM -> style.inset.bottom = value;
-                    case LEFT -> style.inset.left = value;
+                edge -> switch (edge) {
+                    case TOP -> style.inset.top;
+                    case RIGHT -> style.inset.right;
+                    case BOTTOM -> style.inset.bottom;
+                    case LEFT -> style.inset.left;
+                },
+                (edge, value) -> {
+                    switch (edge) {
+                        case TOP -> style.inset.top = value;
+                        case RIGHT -> style.inset.right = value;
+                        case BOTTOM -> style.inset.bottom = value;
+                        case LEFT -> style.inset.left = value;
+                    }
                 }
-            }
         );
     }
 
@@ -496,10 +510,10 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
     public TaffyRect<LengthPercentageAuto> toRect() {
         EdgeRect<LengthPercentageAuto> e = edges();
         return new TaffyRect<>(
-            e.top() != null ? e.top() : LengthPercentageAuto.AUTO,
-            e.right() != null ? e.right() : LengthPercentageAuto.AUTO,
-            e.bottom() != null ? e.bottom() : LengthPercentageAuto.AUTO,
-            e.left() != null ? e.left() : LengthPercentageAuto.AUTO
+                e.top() != null ? e.top() : LengthPercentageAuto.AUTO,
+                e.right() != null ? e.right() : LengthPercentageAuto.AUTO,
+                e.bottom() != null ? e.bottom() : LengthPercentageAuto.AUTO,
+                e.left() != null ? e.left() : LengthPercentageAuto.AUTO
         );
     }
 

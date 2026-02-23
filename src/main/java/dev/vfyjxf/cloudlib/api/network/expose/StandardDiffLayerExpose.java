@@ -13,18 +13,18 @@ import java.util.function.Consumer;
 
 @ApiStatus.Internal
 final class StandardDiffLayerExpose<E, D>
-    extends BasicLayerExpose<E>
-    implements DiffLayerExpose<E, D> {
+        extends BasicLayerExpose<E>
+        implements DiffLayerExpose<E, D> {
 
     private final SimpleEvent<Consumer<D>> diffReceiveEvent = SimpleEvent.create();
     private final FlowEncoder<D> diffEncoder;
     private final FlowDecoder<D> diffDecoder;
 
     <T extends DiffObservable<D>> StandardDiffLayerExpose(
-        String name, short id,
-        Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-        FlowEncoder<T> encoder, FlowDecoder<E> decoder,
-        FlowEncoder<D> diffEncoder, FlowDecoder<D> diffDecoder
+            String name, short id,
+            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
+            FlowEncoder<T> encoder, FlowDecoder<E> decoder,
+            FlowEncoder<D> diffEncoder, FlowDecoder<D> diffDecoder
     ) {
         super(name, id, snapshot, valueSupplier, encoder, decoder);
         this.diffEncoder = diffEncoder;

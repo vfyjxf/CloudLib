@@ -10,13 +10,7 @@ import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollState;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
-import dev.vfyjxf.cloudlib.ui.widget.BoxWidget;
-import dev.vfyjxf.cloudlib.ui.widget.ButtonWidget;
-import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
-import dev.vfyjxf.cloudlib.ui.widget.DividerWidget;
-import dev.vfyjxf.cloudlib.ui.widget.LabelWidget;
-import dev.vfyjxf.cloudlib.ui.widget.RowWidget;
-import dev.vfyjxf.cloudlib.ui.widget.SpacerWidget;
+import dev.vfyjxf.cloudlib.ui.widget.*;
 
 import static dev.vfyjxf.cloudlib.api.ui.effect.UIEffects.scrollable;
 
@@ -32,7 +26,7 @@ import static dev.vfyjxf.cloudlib.api.ui.effect.UIEffects.scrollable;
  *   <li>Custom scrollbar textures</li>
  * </ul>
  */
-@TestScreen
+//@TestScreen
 public class TestScrollScreen extends BasicScreen {
 
     // ========== State ==========
@@ -55,10 +49,10 @@ public class TestScrollScreen extends BasicScreen {
         // Root layout: vertical column
         var root = ColumnWidget.create(8);
         root.useStyle(UIStyle.of(
-            UIStyles.flex(1),
-            UIStyles.minSize(0, 0),
-            UIStyles.padding(12),
-            UIStyles.background(new ColorTexture(0xCC222222))
+                UIStyles.flex(1),
+                UIStyles.minSize(0, 0),
+                UIStyles.padding(12),
+                UIStyles.background(new ColorTexture(0xCC222222))
         ));
 
         // Title
@@ -77,11 +71,11 @@ public class TestScrollScreen extends BasicScreen {
         root.addWidget(createStatusBar());
 
         mainGroup().addWidget(
-            Inspector.create()
-                     .setTrackMouse(true)
-                     .setDisplayMode(Inspector.DisplayMode.FULL)
-                     .useStyle(UIStyles.positionAbsolute(), UIStyles.sizeOf(280, 180))
-                     .setSceneLayer(SceneLayer.debug)
+                Inspector.create()
+                        .setTrackMouse(true)
+                        .setDisplayMode(Inspector.DisplayMode.FULL)
+                        .useStyle(UIStyles.positionAbsolute(), UIStyles.sizeOf(280, 180))
+                        .setSceneLayer(SceneLayer.debug)
         );
 
         mainGroup().addWidget(root);
@@ -102,8 +96,8 @@ public class TestScrollScreen extends BasicScreen {
         header.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
         var title = LabelWidget.of("ScrollEffect Test")
-                               .setColor(0xFFFFAA00)
-                               .setShadow(true);
+                .setColor(0xFFFFAA00)
+                .setShadow(true);
         title.useStyle(UIStyle.of(UIStyles.sizeOf(200, 12)));
         header.addWidget(title);
 
@@ -115,8 +109,8 @@ public class TestScrollScreen extends BasicScreen {
     private Widget createControlPanel() {
         var panel = ColumnWidget.create(6);
         panel.useStyle(UIStyle.of(
-            UIStyles.padding(8),
-            UIStyles.background(new ColorTexture(0x40000000))
+                UIStyles.padding(8),
+                UIStyles.background(new ColorTexture(0x40000000))
         ));
 
         // Row 1: Add/Remove items
@@ -176,9 +170,9 @@ public class TestScrollScreen extends BasicScreen {
     private Widget createVerticalScrollPanel() {
         var box = BoxWidget.create();
         box.useStyle(UIStyle.of(
-            UIStyles.flex(1),
-            UIStyles.minSize(0, 0),
-            UIStyles.padding(0)
+                UIStyles.flex(1),
+                UIStyles.minSize(0, 0),
+                UIStyles.padding(0)
         ));
 
         var column = ColumnWidget.create(4);
@@ -186,26 +180,26 @@ public class TestScrollScreen extends BasicScreen {
 
         // Header
         var label = LabelWidget.of("▼ Vertical Scroll (mouse wheel)")
-                               .setColor(0xFF88AAFF)
-                               .setShadow(true);
+                .setColor(0xFF88AAFF)
+                .setShadow(true);
         label.useStyle(UIStyle.of(UIStyles.heightOf(14)));
         column.addWidget(label);
 
         // Scrollable container
         verticalState = ScrollState.create(ScrollDirection.vertical)
-            .scrollSpeed(12)
-            .smooth(true)
-            .smoothSpeed(0.35f)
-            .trackTexture(new ColorTexture(0x60000000))
-            .thumbTexture(new ColorTexture(0xCC8888FF))
-            .scrollbarWidth(6);
+                .scrollSpeed(12)
+                .smooth(true)
+                .smoothSpeed(0.35f)
+                .trackTexture(new ColorTexture(0x60000000))
+                .thumbTexture(new ColorTexture(0xCC8888FF))
+                .scrollbarWidth(6);
 
         verticalContent = TestContainerWidget.create(4);
         verticalContent.useStyle(UIStyle.of(
-            UIStyles.flexGrow(1),
-            UIStyles.minHeight(0),
-            UIStyles.padding(4),
-            UIStyles.background(new ColorTexture(0x20336699))
+                UIStyles.flexGrow(1),
+                UIStyles.minHeight(0),
+                UIStyles.padding(4),
+                UIStyles.background(new ColorTexture(0x20336699))
         ));
         verticalContent.useEffect(scrollable(verticalState));
 
@@ -223,9 +217,9 @@ public class TestScrollScreen extends BasicScreen {
     private Widget createHorizontalScrollPanel() {
         var box = BoxWidget.create();
         box.useStyle(UIStyle.of(
-            UIStyles.flex(1),
-            UIStyles.minSize(0, 0),
-            UIStyles.padding(0)
+                UIStyles.flex(1),
+                UIStyles.minSize(0, 0),
+                UIStyles.padding(0)
         ));
 
         var column = ColumnWidget.create(4);
@@ -233,28 +227,28 @@ public class TestScrollScreen extends BasicScreen {
 
         // Header
         var label = LabelWidget.of("▶ Horizontal Scroll (shift + wheel)")
-                               .setColor(0xFF88FF88)
-                               .setShadow(true);
+                .setColor(0xFF88FF88)
+                .setShadow(true);
         label.useStyle(UIStyle.of(UIStyles.heightOf(14)));
         column.addWidget(label);
 
         // Scrollable container
         horizontalState = ScrollState.create(ScrollDirection.horizontal)
-            .scrollSpeed(15)
-            .smooth(true)
-            .smoothSpeed(0.3f)
-            .trackTexture(new ColorTexture(0x60000000))
-            .thumbTexture(new ColorTexture(0xCC88FF88))
-            .scrollbarWidth(6);
+                .scrollSpeed(15)
+                .smooth(true)
+                .smoothSpeed(0.3f)
+                .trackTexture(new ColorTexture(0x60000000))
+                .thumbTexture(new ColorTexture(0xCC88FF88))
+                .scrollbarWidth(6);
 
         horizontalContent = TestContainerWidget.create(0);
         horizontalContent.useStyle(UIStyle.of(
-            UIStyles.flexGrow(1),
-            UIStyles.minSize(0, 0),
-            UIStyles.flexRow(),
-            UIStyles.padding(4),
-            UIStyles.columnGap(4),
-            UIStyles.background(new ColorTexture(0x20336633))
+                UIStyles.flexGrow(1),
+                UIStyles.minSize(0, 0),
+                UIStyles.flexRow(),
+                UIStyles.padding(4),
+                UIStyles.columnGap(4),
+                UIStyles.background(new ColorTexture(0x20336633))
         ));
         horizontalContent.useEffect(scrollable(horizontalState));
 
@@ -277,7 +271,7 @@ public class TestScrollScreen extends BasicScreen {
         bar.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
         statusLabel = LabelWidget.of("Ready — scroll inside the panels")
-                                 .setColor(0xFFAAAAAA);
+                .setColor(0xFFAAAAAA);
         statusLabel.useStyle(UIStyle.of(UIStyles.flexGrow(1)));
         bar.addWidget(statusLabel);
 
@@ -293,13 +287,13 @@ public class TestScrollScreen extends BasicScreen {
         int color = 0xFF000000 | (0x44 + colorVariant / 2) << 16 | (0x66 + colorVariant / 3) << 8 | 0xFF;
 
         var item = LabelWidget.of("Item #" + idx)
-                              .setColor(0xFFDDDDFF)
-                              .setShadow(true);
+                .setColor(0xFFDDDDFF)
+                .setShadow(true);
         int height = 18 + (idx % 3) * 4; // 18, 22, 26 px alternating
         item.useStyle(UIStyle.of(
-            UIStyles.padding(4, 8),
-            UIStyles.heightOf(height),
-            UIStyles.background(new ColorTexture(color & 0x40FFFFFF))
+                UIStyles.padding(4, 8),
+                UIStyles.heightOf(height),
+                UIStyles.background(new ColorTexture(color & 0x40FFFFFF))
         ));
         verticalContent.addChild(item);
         updateStatus("Added vertical item #" + idx + " (h=" + height + ")");
@@ -311,13 +305,13 @@ public class TestScrollScreen extends BasicScreen {
         int color = 0xFF000000 | 0x44 << 16 | (0x88 + colorVariant / 3) << 8 | (0x44 + colorVariant / 2);
 
         var item = LabelWidget.of("H#" + idx)
-                              .setColor(0xFFDDFFDD)
-                              .setShadow(true);
+                .setColor(0xFFDDFFDD)
+                .setShadow(true);
         int width = 50 + (idx % 4) * 10; // 50, 60, 70, 80 px
         item.useStyle(UIStyle.of(
-            UIStyles.padding(4, 6),
-            UIStyles.widthOf(width),
-            UIStyles.background(new ColorTexture(color & 0x40FFFFFF))
+                UIStyles.padding(4, 6),
+                UIStyles.widthOf(width),
+                UIStyles.background(new ColorTexture(color & 0x40FFFFFF))
         ));
         horizontalContent.addChild(item);
         updateStatus("Added horizontal item #" + idx + " (w=" + width + ")");
@@ -383,7 +377,7 @@ public class TestScrollScreen extends BasicScreen {
 
     private ButtonWidget createButton(String label, Runnable action, int color) {
         var btn = ButtonWidget.of(label, action)
-                              .setColors(color, lighten(color), darken(color));
+                .setColors(color, lighten(color), darken(color));
         btn.useStyle(UIStyle.of(UIStyles.minWidth(70), UIStyles.heightOf(16), UIStyles.padding(2)));
         return btn;
     }

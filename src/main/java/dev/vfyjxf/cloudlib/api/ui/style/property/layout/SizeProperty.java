@@ -35,12 +35,12 @@ public record SizeProperty(TaffyDimension width, TaffyDimension height) implemen
     //region types
 
     public static final StyleType<TaffySize<TaffyDimension>> type = StyleType.of(
-        "size",
-        () -> TaffySize.of(TaffyDimension.AUTO, TaffyDimension.AUTO),
-        (context, size) -> {
-            context.layoutStyle().size.width = size.width;
-            context.layoutStyle().size.height = size.height;
-        }
+            "size",
+            () -> TaffySize.of(TaffyDimension.AUTO, TaffyDimension.AUTO),
+            (context, size) -> {
+                context.layoutStyle().size.width = size.width;
+                context.layoutStyle().size.height = size.height;
+            }
     );
 
     //endregion
@@ -209,8 +209,8 @@ public record SizeProperty(TaffyDimension width, TaffyDimension height) implemen
         TaffySize<TaffyDimension> current = context.get(type);
 
         TaffySize<TaffyDimension> merged = TaffySize.of(
-            width != null ? width : current.width,
-            height != null ? height : current.height
+                width != null ? width : current.width,
+                height != null ? height : current.height
         );
 
         context.set(type, merged);

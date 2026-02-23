@@ -11,7 +11,9 @@ public final class ScreenSceneHost implements SceneHost {
 
     private final Screen screen;
 
-    public ScreenSceneHost(Screen screen) {this.screen = screen;}
+    public ScreenSceneHost(Screen screen) {
+        this.screen = screen;
+    }
 
     @Override
     public Font font() {

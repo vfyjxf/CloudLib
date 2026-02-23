@@ -6,9 +6,9 @@ import net.minecraft.client.gui.GuiGraphics;
  * Linear gradient texture using strip-based rendering.
  */
 public record GradientTexture(
-    int colorTopLeft, int colorTopRight,
-    int colorBottomLeft, int colorBottomRight,
-    int segments
+        int colorTopLeft, int colorTopRight,
+        int colorBottomLeft, int colorBottomRight,
+        int segments
 ) implements BatchableTexture {
 
     public GradientTexture {
@@ -125,9 +125,9 @@ public record GradientTexture(
                     float tx = (j + 0.5f) / segments;
                     int color = lerpColor(leftColor, rightColor, tx);
                     graphics.fill(
-                        x + (j * width / segments), y + (i * height / segments),
-                        x + ((j + 1) * width / segments), y + ((i + 1) * height / segments),
-                        color
+                            x + (j * width / segments), y + (i * height / segments),
+                            x + ((j + 1) * width / segments), y + ((i + 1) * height / segments),
+                            color
                     );
                 }
             }

@@ -447,8 +447,8 @@ public final class Scene {
 
     public void layout() {
         tree.computeLayout(root.nodeId(), new TaffySize<>(
-            Float.isNaN(width) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(width),
-            Float.isNaN(height) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(height)
+                Float.isNaN(width) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(width),
+                Float.isNaN(height) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(height)
         ));
     }
 
@@ -678,7 +678,8 @@ public final class Scene {
         this.hoverTooltip = Checks.checkNotNull(tooltip, "tooltip");
     }
 
-    private record TooltipInstance(Tooltip tooltip, ClientTooltipPositioner positioner) {}
+    private record TooltipInstance(Tooltip tooltip, ClientTooltipPositioner positioner) {
+    }
 
     //endregion
 
@@ -817,7 +818,7 @@ public final class Scene {
                     Widget member = snapshot.get(i);
                     if (member.lifecycle.mounted()) {
                         member.listeners(WidgetEvent.onClickOutside)
-                              .onClickOutside(member.interruptible());
+                                .onClickOutside(member.interruptible());
                     }
                 }
             }
@@ -920,8 +921,8 @@ public final class Scene {
             currentClickWidget = target;
             lastClickButton = button;
             return handleBubbleEvent(
-                target, bubble, InputEvents.onMouseClicked,
-                (listener) -> listener.onClicked(input, bubble)
+                    target, bubble, InputEvents.onMouseClicked,
+                    (listener) -> listener.onClicked(input, bubble)
             );
         }
         return false;
@@ -955,23 +956,23 @@ public final class Scene {
             InputContext input = InputContext.fromMouse(mouseX, mouseY, button);
             var releaseContext = target.bubble();
             var result = handleBubbleEvent(
-                target, releaseContext, InputEvents.onMouseReleased,
-                (listener) -> listener.onReleased(input, releaseContext)
+                    target, releaseContext, InputEvents.onMouseReleased,
+                    (listener) -> listener.onReleased(input, releaseContext)
             );
 
             if (currentClickWidget == target && target.isMouseOver(mouseX, mouseY)) {
                 boolean isContinuousClick = lastClickedWidget == target
-                                            && lastClickButton == button
-                                            && System.currentTimeMillis() - lastClickTime <= doubleClickThreshold
-                                            && lastClickPos != null
-                                            && Math.sqrt(Math.pow(mouseX - lastClickPos.x(), 2) + Math.pow(mouseY - lastClickPos.y(), 2)) <= doubleClickRadius;
+                        && lastClickButton == button
+                        && System.currentTimeMillis() - lastClickTime <= doubleClickThreshold
+                        && lastClickPos != null
+                        && Math.sqrt(Math.pow(mouseX - lastClickPos.x(), 2) + Math.pow(mouseY - lastClickPos.y(), 2)) <= doubleClickRadius;
 
                 clickCount = isContinuousClick ? clickCount + 1 : 1;
 
                 var clickContext = target.bubble();
                 result |= handleBubbleEvent(
-                    target, clickContext, InputEvents.onMouseClick,
-                    (listener) -> listener.onClick(input, clickCount, clickContext)
+                        target, clickContext, InputEvents.onMouseClick,
+                        (listener) -> listener.onClick(input, clickCount, clickContext)
                 );
                 lastClickedWidget = target;
                 lastClickPos = new FloatPos(mouseX, mouseY);
@@ -1054,8 +1055,8 @@ public final class Scene {
             var input = InputContext.fromMouse(mouseX, mouseY, button);
             var bubble = target.bubble();
             return handleBubbleEvent(
-                target, bubble, InputEvents.onMouseDragged,
-                (listener) -> listener.onDragged(input, dragX, dragY, bubble)
+                    target, bubble, InputEvents.onMouseDragged,
+                    (listener) -> listener.onDragged(input, dragX, dragY, bubble)
             );
         }
         return false;
@@ -1066,8 +1067,8 @@ public final class Scene {
         if (target != null) {
             var bubble = target.bubble();
             return handleBubbleEvent(
-                target, bubble, InputEvents.onMouseScrolled,
-                (listener) -> listener.onScrolled(mouseX, mouseY, scrollX, scrollY, bubble)
+                    target, bubble, InputEvents.onMouseScrolled,
+                    (listener) -> listener.onScrolled(mouseX, mouseY, scrollX, scrollY, bubble)
             );
         }
         return false;
@@ -1091,8 +1092,8 @@ public final class Scene {
         var input = InputContext.fromKeyboard(keyCode, scanCode, modifiers, mouseX, mouseY);
         var bubble = fw.bubble();
         return handleBubbleEvent(
-            fw, bubble, InputEvents.onKeyPressed,
-            (listener) -> listener.onKeyPressed(input, bubble)
+                fw, bubble, InputEvents.onKeyPressed,
+                (listener) -> listener.onKeyPressed(input, bubble)
         );
     }
 
@@ -1114,8 +1115,8 @@ public final class Scene {
         var input = InputContext.fromKeyboard(keyCode, scanCode, modifiers, mouseX, mouseY);
         var bubble = fw.bubble();
         return handleBubbleEvent(
-            fw, bubble, InputEvents.onKeyReleased,
-            (listener) -> listener.onKeyReleased(input, bubble)
+                fw, bubble, InputEvents.onKeyReleased,
+                (listener) -> listener.onKeyReleased(input, bubble)
         );
     }
 
@@ -1132,8 +1133,8 @@ public final class Scene {
         if (fw != null && fw.lifecycle.mounted()) {
             var bubble = fw.bubble();
             return handleBubbleEvent(
-                fw, bubble, InputEvents.onCharTyped,
-                (listener) -> listener.onCharTyped(codePoint, modifiers, bubble)
+                    fw, bubble, InputEvents.onCharTyped,
+                    (listener) -> listener.onCharTyped(codePoint, modifiers, bubble)
             );
         }
         return false;
@@ -1176,16 +1177,15 @@ public final class Scene {
         // Debug layer — inspector has the lowest priority so it never shadows
         // other widgets during mouse tracking.
         if (inspector != null) {
-            Widget hit = WidgetTree.hitTest(inspector, mouseX, mouseY);
-            return hit;
+            return WidgetTree.hitTest(inspector, mouseX, mouseY);
         }
 
         return null;
     }
 
     public static <E extends WidgetEvent> boolean handleBubbleEvent(
-        Widget target, BubbleContext bubble,
-        EventDefinition<E> event, Function<E, EventDispatch> listenerInvoke
+            Widget target, BubbleContext bubble,
+            EventDefinition<E> event, Function<E, EventDispatch> listenerInvoke
     ) {
         WidgetPath path = target.path();
         EventDispatch action = EventDispatch.pass;
@@ -1292,7 +1292,7 @@ public final class Scene {
 
             var bubble = oldWidget.bubble();
             handleBubbleEvent(oldWidget, bubble, WidgetEvent.onFocusOut,
-                (listener) -> listener.onFocusOut(oldWidget, bubble)
+                    (listener) -> listener.onFocusOut(oldWidget, bubble)
             );
             oldWidget.listeners(WidgetEvent.onFocusLost).onFocusLost(oldWidget.interruptible());
 
@@ -1319,8 +1319,8 @@ public final class Scene {
 
         var bubble = newWidget.bubble();
         handleBubbleEvent(
-            newWidget, bubble, WidgetEvent.onFocusIn,
-            (listener) -> listener.onFocusIn(newWidget, bubble)
+                newWidget, bubble, WidgetEvent.onFocusIn,
+                (listener) -> listener.onFocusIn(newWidget, bubble)
         );
         newWidget.listeners(WidgetEvent.onFocus).onFocus(newWidget.interruptible());
     }
@@ -1341,7 +1341,7 @@ public final class Scene {
 
             var bubble = oldWidget.bubble();
             handleBubbleEvent(oldWidget, bubble, WidgetEvent.onFocusOut,
-                (listener) -> listener.onFocusOut(oldWidget, bubble)
+                    (listener) -> listener.onFocusOut(oldWidget, bubble)
             );
             oldWidget.listeners(WidgetEvent.onFocusLost).onFocusLost(oldWidget.interruptible());
         } else {

@@ -25,10 +25,11 @@ public class PluginLoadingException extends RuntimeException {
 
     private static String formatMessage(MutableList<Failure> failures) {
         return "Plugin loading failed: " +
-               failures.collect(f -> f.pluginId() + ": " + f.cause().getMessage())
-                       .makeString(", ");
+                failures.collect(f -> f.pluginId() + ": " + f.cause().getMessage())
+                        .makeString(", ");
     }
 
-    public record Failure(Namespace pluginId, Throwable cause) {}
+    public record Failure(Namespace pluginId, Throwable cause) {
+    }
 
 }

@@ -21,21 +21,21 @@ public class LangKeyProvider extends LanguageProvider {
         super(output, modid, "en_us");
         for (ModFileScanData data : ModList.get().getAllScanData()) {
             data.getAnnotatedBy(LangProvider.class, ElementType.TYPE)
-                .filter(annotation -> modid.equals(annotation.annotationData().get("value")))
-                .forEach(annotation -> {
-                    try {
-                        var clazz = Class.forName(annotation.memberName());
-                        //if clazz impl ILangProvider
-                        if (CustomLangProvider.class.isAssignableFrom(clazz)) {
-                            CustomLangProvider provider = (CustomLangProvider) clazz.getDeclaredConstructor().newInstance();
-                            providers.add(provider);
+                    .filter(annotation -> modid.equals(annotation.annotationData().get("value")))
+                    .forEach(annotation -> {
+                        try {
+                            var clazz = Class.forName(annotation.memberName());
+                            //if clazz impl ILangProvider
+                            if (CustomLangProvider.class.isAssignableFrom(clazz)) {
+                                CustomLangProvider provider = (CustomLangProvider) clazz.getDeclaredConstructor().newInstance();
+                                providers.add(provider);
+                            }
+                        } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException |
+                                 IllegalAccessException |
+                                 InstantiationException e) {
+                            LOGGER.error("Failed to load lang handler: {}", annotation.memberName(), e);
                         }
-                    } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException |
-                             IllegalAccessException |
-                             InstantiationException e) {
-                        LOGGER.error("Failed to load lang handler: {}", annotation.memberName(), e);
-                    }
-                });
+                    });
         }
     }
 

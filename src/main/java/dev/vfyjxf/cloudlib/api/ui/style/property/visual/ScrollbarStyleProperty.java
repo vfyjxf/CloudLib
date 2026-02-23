@@ -45,8 +45,8 @@ public record ScrollbarStyleProperty(ScrollbarStyleData data) implements VisualP
      * The style type key for scrollbar styling.
      */
     public static final StyleType<ScrollbarStyleData> type = StyleType.visual(
-        "scrollbar-style",
-        ScrollbarStyleData::empty
+            "scrollbar-style",
+            ScrollbarStyleData::empty
     );
 
     /**
@@ -132,10 +132,10 @@ public record ScrollbarStyleProperty(ScrollbarStyleData data) implements VisualP
      * @param minThumbSize the minimum thumb size (-1 means keep existing/default)
      */
     public record ScrollbarStyleData(
-        @Nullable VisualTexture track,
-        @Nullable VisualTexture thumb,
-        int width,
-        int minThumbSize
+            @Nullable VisualTexture track,
+            @Nullable VisualTexture thumb,
+            int width,
+            int minThumbSize
     ) {
 
         public static ScrollbarStyleData empty() {

@@ -88,25 +88,25 @@ public final class SizeMiddleware implements FloatingMiddleware {
             heightSide = side;
             FloatingPlacement.Alignment alignment = placement.alignment();
             widthSide = alignment == FloatingPlacement.Alignment.end
-                ? FloatingPlacement.Side.left
-                : FloatingPlacement.Side.right;
+                    ? FloatingPlacement.Side.left
+                    : FloatingPlacement.Side.right;
         } else {
             widthSide = side;
             heightSide = placement.alignment() == FloatingPlacement.Alignment.end
-                ? FloatingPlacement.Side.top
-                : FloatingPlacement.Side.bottom;
+                    ? FloatingPlacement.Side.top
+                    : FloatingPlacement.Side.bottom;
         }
 
         double maxClipHeight = floatingHeight - overflow.top() - overflow.bottom();
         double maxClipWidth = floatingWidth - overflow.left() - overflow.right();
 
         double availableHeight = Math.min(
-            floatingHeight - FloatingPositioning.getSide(overflow, heightSide),
-            maxClipHeight
+                floatingHeight - FloatingPositioning.getSide(overflow, heightSide),
+                maxClipHeight
         );
         double availableWidth = Math.min(
-            floatingWidth - FloatingPositioning.getSide(overflow, widthSide),
-            maxClipWidth
+                floatingWidth - FloatingPositioning.getSide(overflow, widthSide),
+                maxClipWidth
         );
 
         // Clamp to non-negative

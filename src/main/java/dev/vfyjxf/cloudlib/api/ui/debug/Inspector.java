@@ -165,15 +165,15 @@ public class Inspector extends Widget {
         }
 
         canvas.fill(0, 0, width(), height(), BG);
-        canvas.border(0, 0, width(), height(), BORDER, 1);
+        canvas.strokeRect(0, 0, width(), height(), BORDER, 1);
 
         int contentY = renderTitleBar(canvas, currentTarget);
         if (displayMode == DisplayMode.MINIMIZED) return;
 
         if (currentTarget == null) {
             canvas.drawString(
-                trackMouse ? "Hover over a widget..." : "No target set",
-                PADDING, contentY + 2, DIM, false
+                    trackMouse ? "Hover over a widget..." : "No target set",
+                    PADDING, contentY + 2, DIM, false
             );
             return;
         }
@@ -220,7 +220,7 @@ public class Inspector extends Widget {
         if (font.width(title) > maxW) title = truncate(title, font, maxW);
         canvas.drawString(title, x, y, CATEGORY, false);
 
-        canvas.hLine(0, width(), TITLE_BAR_HEIGHT, BORDER);
+        canvas.line(0, TITLE_BAR_HEIGHT, width(), TITLE_BAR_HEIGHT, 1f, BORDER);
         return TITLE_BAR_HEIGHT + 2;
     }
 
@@ -245,8 +245,8 @@ public class Inspector extends Widget {
         var pos = target.pos();
         var size = target.size();
         canvas.drawString(
-            String.format("pos(%d,%d) size(%d,%d)", pos.x(), pos.y(), size.width(), size.height()),
-            x, y, VALUE, false
+                String.format("pos(%d,%d) size(%d,%d)", pos.x(), pos.y(), size.width(), size.height()),
+                x, y, VALUE, false
         );
         y += LINE_HEIGHT;
 
@@ -290,14 +290,14 @@ public class Inspector extends Widget {
             y = endY;
         }
 
-        if (y >= minY && y <= maxY) canvas.hLine(x, x + width() - PADDING * 2, y, BORDER);
+        if (y >= minY && y <= maxY) canvas.line(x, y, x + width() - PADDING * 2, y, 1f, BORDER);
         y += 4;
         totalH += 4;
 
         for (String category : collector.getCategories().toSortedList()) {
             MutableList<InspectionProperty> props = showAllProperties
-                                                    ? collector.getByCategory(category)
-                                                    : collector.getByCategory(category).select(InspectionProperty::isNonDefault);
+                    ? collector.getByCategory(category)
+                    : collector.getByCategory(category).select(InspectionProperty::isNonDefault);
             if (props.isEmpty()) continue;
 
             if (y >= minY && y <= maxY) {
@@ -406,8 +406,8 @@ public class Inspector extends Widget {
 
         events().register(InputEvents.onMouseClicked, (input, context) -> {
             if (input.key().getType() == InputConstants.Type.MOUSE
-                && input.key().getValue() == 0
-                && input.mouseY() < TITLE_BAR_HEIGHT) {
+                    && input.key().getValue() == 0
+                    && input.mouseY() < TITLE_BAR_HEIGHT) {
                 cycleDisplayMode();
                 context.consume();
                 return EventDispatch.consumed;

@@ -47,8 +47,8 @@ public final class CloudLibClient extends CloudLib {
 
     private void gatherData(GatherDataEvent event) {
         event.getGenerator().addProvider(
-            event.includeClient(),
-            (DataProvider.Factory<DataProvider>) (output) -> new LangKeyProvider(Constants.modId, output)
+                event.includeClient(),
+                (DataProvider.Factory<DataProvider>) (output) -> new LangKeyProvider(Constants.modId, output)
         );
     }
 

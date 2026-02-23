@@ -32,12 +32,14 @@ public sealed interface TooltipFinder {
     /**
      * Matches entries by their {@link Namespace} marker.
      */
-    record ByMarker(Namespace marker) implements TooltipFinder {}
+    record ByMarker(Namespace marker) implements TooltipFinder {
+    }
 
     /**
      * Matches entries by a predicate applied to the {@link TooltipEntry} content.
      */
-    record ByEntry(Predicate<TooltipEntry> matcher) implements TooltipFinder {}
+    record ByEntry(Predicate<TooltipEntry> matcher) implements TooltipFinder {
+    }
 
     //region factory
 

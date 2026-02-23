@@ -27,10 +27,10 @@ import java.util.function.Function;
  * @param <T> the type of value stored in each edge
  */
 public record EdgeRect<T>(
-    @Nullable T top,
-    @Nullable T right,
-    @Nullable T bottom,
-    @Nullable T left
+        @Nullable T top,
+        @Nullable T right,
+        @Nullable T bottom,
+        @Nullable T left
 ) {
 
     //region constants
@@ -322,10 +322,10 @@ public record EdgeRect<T>(
             return this;
         }
         return new EdgeRect<>(
-            other.top != null ? other.top : this.top,
-            other.right != null ? other.right : this.right,
-            other.bottom != null ? other.bottom : this.bottom,
-            other.left != null ? other.left : this.left
+                other.top != null ? other.top : this.top,
+                other.right != null ? other.right : this.right,
+                other.bottom != null ? other.bottom : this.bottom,
+                other.left != null ? other.left : this.left
         );
     }
 
@@ -339,10 +339,10 @@ public record EdgeRect<T>(
     public <R> EdgeRect<R> map(Function<T, R> mapper) {
         Objects.requireNonNull(mapper, "mapper");
         return new EdgeRect<>(
-            top != null ? mapper.apply(top) : null,
-            right != null ? mapper.apply(right) : null,
-            bottom != null ? mapper.apply(bottom) : null,
-            left != null ? mapper.apply(left) : null
+                top != null ? mapper.apply(top) : null,
+                right != null ? mapper.apply(right) : null,
+                bottom != null ? mapper.apply(bottom) : null,
+                left != null ? mapper.apply(left) : null
         );
     }
 

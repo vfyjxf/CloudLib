@@ -25,10 +25,10 @@ public final class FloatingPositioning {
      * @param middlewareData all data produced by middleware
      */
     public record PositionResult(
-        double x,
-        double y,
-        FloatingPlacement placement,
-        Map<String, Map<String, Object>> middlewareData
+            double x,
+            double y,
+            FloatingPlacement placement,
+            Map<String, Map<String, Object>> middlewareData
     ) {
     }
 
@@ -48,15 +48,15 @@ public final class FloatingPositioning {
      * @return the computed position result
      */
     public static PositionResult compute(
-        Rect referenceRect,
-        Rect floatingRect,
-        Rect boundary,
-        FloatingPlacement placement,
-        List<@Nullable FloatingMiddleware> middleware
+            Rect referenceRect,
+            Rect floatingRect,
+            Rect boundary,
+            FloatingPlacement placement,
+            List<@Nullable FloatingMiddleware> middleware
     ) {
         List<FloatingMiddleware> validMiddleware = middleware.stream()
-            .filter(m -> m != null)
-            .toList();
+                .filter(m -> m != null)
+                .toList();
 
         // Compute initial coords from placement
         double[] coords = computeCoordsFromPlacement(referenceRect, floatingRect, placement);
@@ -65,10 +65,10 @@ public final class FloatingPositioning {
 
         FloatingPlacement currentPlacement = placement;
         FloatingState state = new FloatingState(
-            x, y,
-            placement, currentPlacement,
-            referenceRect, floatingRect,
-            boundary
+                x, y,
+                placement, currentPlacement,
+                referenceRect, floatingRect,
+                boundary
         );
 
         int resetCount = 0;
@@ -128,9 +128,9 @@ public final class FloatingPositioning {
      * @return {x, y} coordinates
      */
     public static double[] computeCoordsFromPlacement(
-        Rect reference,
-        Rect floating,
-        FloatingPlacement placement
+            Rect reference,
+            Rect floating,
+            FloatingPlacement placement
     ) {
         FloatingPlacement.Side side = placement.side();
         FloatingPlacement.Alignment alignment = placement.alignment();
@@ -225,12 +225,12 @@ public final class FloatingPositioning {
         FloatingPlacement.Side mainAlignmentSide;
         if (alignmentAxis == FloatingPlacement.Axis.x) {
             mainAlignmentSide = alignment == FloatingPlacement.Alignment.start
-                ? FloatingPlacement.Side.right
-                : FloatingPlacement.Side.left;
+                    ? FloatingPlacement.Side.right
+                    : FloatingPlacement.Side.left;
         } else {
             mainAlignmentSide = alignment == FloatingPlacement.Alignment.start
-                ? FloatingPlacement.Side.bottom
-                : FloatingPlacement.Side.top;
+                    ? FloatingPlacement.Side.bottom
+                    : FloatingPlacement.Side.top;
         }
 
         if (length(reference, alignmentAxis) > length(floating, alignmentAxis)) {

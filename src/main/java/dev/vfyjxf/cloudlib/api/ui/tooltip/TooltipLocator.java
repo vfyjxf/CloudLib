@@ -86,7 +86,8 @@ public sealed interface TooltipLocator {
     /**
      * Insert at a specific index. Clamped to {@code [0, size]}.
      */
-    record At(int index) implements TooltipLocator {}
+    record At(int index) implements TooltipLocator {
+    }
 
     /**
      * Insert relative to entries found by a {@link TooltipFinder}.
@@ -99,10 +100,10 @@ public sealed interface TooltipLocator {
      * @param matchPriority which match to use when multiple entries are found
      */
     record Relative(
-        Anchor anchor,
-        TooltipFinder finder,
-        int offset,
-        MatchPriority matchPriority
+            Anchor anchor,
+            TooltipFinder finder,
+            int offset,
+            MatchPriority matchPriority
     ) implements TooltipLocator {
 
         /**

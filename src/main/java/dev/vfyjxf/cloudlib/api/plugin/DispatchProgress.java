@@ -41,13 +41,16 @@ public interface DispatchProgress {
         instance;
 
         @Override
-        public void begin(int totalSteps) {}
+        public void begin(int totalSteps) {
+        }
 
         @Override
-        public void advance(Namespace pluginId, int completed, int total) {}
+        public void advance(Namespace pluginId, int completed, int total) {
+        }
 
         @Override
-        public void complete() {}
+        public void complete() {
+        }
     }
 
 }

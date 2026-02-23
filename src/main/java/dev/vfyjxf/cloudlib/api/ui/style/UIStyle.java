@@ -3,13 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.style;
 import dev.vfyjxf.cloudlib.api.ui.style.property.layout.StyleProperty;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
@@ -172,8 +166,8 @@ public final class UIStyle {
      */
     public UIStyle without(String propertyName) {
         List<StyleProperty> filtered = properties.stream()
-                                                 .filter(p -> !p.type().id().equals(propertyName))
-                                                 .collect(Collectors.toList());
+                .filter(p -> !p.type().id().equals(propertyName))
+                .collect(Collectors.toList());
         return new UIStyle(filtered);
     }
 
@@ -332,7 +326,8 @@ public final class UIStyle {
 
         private final List<StyleProperty> properties = new ArrayList<>();
 
-        private Builder() {}
+        private Builder() {
+        }
 
         /**
          * Adds a property to the builder.

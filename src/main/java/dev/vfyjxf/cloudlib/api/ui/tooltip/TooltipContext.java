@@ -16,11 +16,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 public record TooltipContext(
-    HolderLookup.Provider registries,
-    Level level,
-    Player player,
-    TooltipFlag flag,
-    float tickRate
+        HolderLookup.Provider registries,
+        Level level,
+        Player player,
+        TooltipFlag flag,
+        float tickRate
 ) implements AttributeTooltipContext {
 
     public static TooltipContext create(@Nullable Level level, @Nullable Player player, @Nullable TooltipFlag tooltipFlag) {
@@ -29,7 +29,7 @@ public record TooltipContext(
         player = player == null ? Objects.requireNonNull(minecraft.player) : player;
         var advancedItemTooltips = minecraft.options.advancedItemTooltips;
         tooltipFlag = tooltipFlag == null ? (
-            advancedItemTooltips ? TooltipFlag.ADVANCED : TooltipFlag.NORMAL
+                advancedItemTooltips ? TooltipFlag.ADVANCED : TooltipFlag.NORMAL
         ) : tooltipFlag;
         var registryAccess = level.registryAccess();
         float tickRate = level.tickRateManager().tickrate();

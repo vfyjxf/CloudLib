@@ -118,14 +118,14 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public PaddingProperty(float top, float right, float bottom, float left) {
         this(
-            EdgeRect.of(
-                LengthPercentage.length(top),
-                LengthPercentage.length(right),
-                LengthPercentage.length(bottom),
-                LengthPercentage.length(left)
-            ),
-            EdgeMask.ALL,
-            TYPE_ALL
+                EdgeRect.of(
+                        LengthPercentage.length(top),
+                        LengthPercentage.length(right),
+                        LengthPercentage.length(bottom),
+                        LengthPercentage.length(left)
+                ),
+                EdgeMask.ALL,
+                TYPE_ALL
         );
     }
 
@@ -302,14 +302,14 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public static PaddingProperty percent(float top, float right, float bottom, float left) {
         return new PaddingProperty(
-            EdgeRect.of(
-                LengthPercentage.percent(top),
-                LengthPercentage.percent(right),
-                LengthPercentage.percent(bottom),
-                LengthPercentage.percent(left)
-            ),
-            EdgeMask.ALL,
-            TYPE_ALL
+                EdgeRect.of(
+                        LengthPercentage.percent(top),
+                        LengthPercentage.percent(right),
+                        LengthPercentage.percent(bottom),
+                        LengthPercentage.percent(left)
+                ),
+                EdgeMask.ALL,
+                TYPE_ALL
         );
     }
 
@@ -329,25 +329,39 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
     //region EdgeStyleProperty implementation
 
     @Override
-    protected StyleType<?> typeAll() { return TYPE_ALL; }
+    protected StyleType<?> typeAll() {
+        return TYPE_ALL;
+    }
 
     @Override
-    protected StyleType<?> typeTop() { return TYPE_TOP; }
+    protected StyleType<?> typeTop() {
+        return TYPE_TOP;
+    }
 
     @Override
-    protected StyleType<?> typeRight() { return TYPE_RIGHT; }
+    protected StyleType<?> typeRight() {
+        return TYPE_RIGHT;
+    }
 
     @Override
-    protected StyleType<?> typeBottom() { return TYPE_BOTTOM; }
+    protected StyleType<?> typeBottom() {
+        return TYPE_BOTTOM;
+    }
 
     @Override
-    protected StyleType<?> typeLeft() { return TYPE_LEFT; }
+    protected StyleType<?> typeLeft() {
+        return TYPE_LEFT;
+    }
 
     @Override
-    protected StyleType<?> typeHorizontal() { return TYPE_HORIZONTAL; }
+    protected StyleType<?> typeHorizontal() {
+        return TYPE_HORIZONTAL;
+    }
 
     @Override
-    protected StyleType<?> typeVertical() { return TYPE_VERTICAL; }
+    protected StyleType<?> typeVertical() {
+        return TYPE_VERTICAL;
+    }
 
     @Override
     protected String formatValue(LengthPercentage value) {
@@ -366,20 +380,20 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
     @Override
     public void applyToStyle(TaffyStyle style) {
         applyEdges(
-            edge -> switch (edge) {
-                case TOP -> style.padding.top;
-                case RIGHT -> style.padding.right;
-                case BOTTOM -> style.padding.bottom;
-                case LEFT -> style.padding.left;
-            },
-            (edge, value) -> {
-                switch (edge) {
-                    case TOP -> style.padding.top = value;
-                    case RIGHT -> style.padding.right = value;
-                    case BOTTOM -> style.padding.bottom = value;
-                    case LEFT -> style.padding.left = value;
+                edge -> switch (edge) {
+                    case TOP -> style.padding.top;
+                    case RIGHT -> style.padding.right;
+                    case BOTTOM -> style.padding.bottom;
+                    case LEFT -> style.padding.left;
+                },
+                (edge, value) -> {
+                    switch (edge) {
+                        case TOP -> style.padding.top = value;
+                        case RIGHT -> style.padding.right = value;
+                        case BOTTOM -> style.padding.bottom = value;
+                        case LEFT -> style.padding.left = value;
+                    }
                 }
-            }
         );
     }
 

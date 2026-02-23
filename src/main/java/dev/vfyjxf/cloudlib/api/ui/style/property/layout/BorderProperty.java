@@ -120,14 +120,14 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public BorderProperty(float top, float right, float bottom, float left) {
         this(
-            EdgeRect.of(
-                LengthPercentage.length(top),
-                LengthPercentage.length(right),
-                LengthPercentage.length(bottom),
-                LengthPercentage.length(left)
-            ),
-            EdgeMask.ALL,
-            TYPE_ALL
+                EdgeRect.of(
+                        LengthPercentage.length(top),
+                        LengthPercentage.length(right),
+                        LengthPercentage.length(bottom),
+                        LengthPercentage.length(left)
+                ),
+                EdgeMask.ALL,
+                TYPE_ALL
         );
     }
 
@@ -304,14 +304,14 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public static BorderProperty percent(float top, float right, float bottom, float left) {
         return new BorderProperty(
-            EdgeRect.of(
-                LengthPercentage.percent(top),
-                LengthPercentage.percent(right),
-                LengthPercentage.percent(bottom),
-                LengthPercentage.percent(left)
-            ),
-            EdgeMask.ALL,
-            TYPE_ALL
+                EdgeRect.of(
+                        LengthPercentage.percent(top),
+                        LengthPercentage.percent(right),
+                        LengthPercentage.percent(bottom),
+                        LengthPercentage.percent(left)
+                ),
+                EdgeMask.ALL,
+                TYPE_ALL
         );
     }
 
@@ -331,25 +331,39 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
     //region EdgeStyleProperty implementation
 
     @Override
-    protected StyleType<?> typeAll() { return TYPE_ALL; }
+    protected StyleType<?> typeAll() {
+        return TYPE_ALL;
+    }
 
     @Override
-    protected StyleType<?> typeTop() { return TYPE_TOP; }
+    protected StyleType<?> typeTop() {
+        return TYPE_TOP;
+    }
 
     @Override
-    protected StyleType<?> typeRight() { return TYPE_RIGHT; }
+    protected StyleType<?> typeRight() {
+        return TYPE_RIGHT;
+    }
 
     @Override
-    protected StyleType<?> typeBottom() { return TYPE_BOTTOM; }
+    protected StyleType<?> typeBottom() {
+        return TYPE_BOTTOM;
+    }
 
     @Override
-    protected StyleType<?> typeLeft() { return TYPE_LEFT; }
+    protected StyleType<?> typeLeft() {
+        return TYPE_LEFT;
+    }
 
     @Override
-    protected StyleType<?> typeHorizontal() { return TYPE_HORIZONTAL; }
+    protected StyleType<?> typeHorizontal() {
+        return TYPE_HORIZONTAL;
+    }
 
     @Override
-    protected StyleType<?> typeVertical() { return TYPE_VERTICAL; }
+    protected StyleType<?> typeVertical() {
+        return TYPE_VERTICAL;
+    }
 
     @Override
     protected String formatValue(LengthPercentage value) {
@@ -368,20 +382,20 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
     @Override
     public void applyToStyle(TaffyStyle style) {
         applyEdges(
-            edge -> switch (edge) {
-                case TOP -> style.border.top;
-                case RIGHT -> style.border.right;
-                case BOTTOM -> style.border.bottom;
-                case LEFT -> style.border.left;
-            },
-            (edge, value) -> {
-                switch (edge) {
-                    case TOP -> style.border.top = value;
-                    case RIGHT -> style.border.right = value;
-                    case BOTTOM -> style.border.bottom = value;
-                    case LEFT -> style.border.left = value;
+                edge -> switch (edge) {
+                    case TOP -> style.border.top;
+                    case RIGHT -> style.border.right;
+                    case BOTTOM -> style.border.bottom;
+                    case LEFT -> style.border.left;
+                },
+                (edge, value) -> {
+                    switch (edge) {
+                        case TOP -> style.border.top = value;
+                        case RIGHT -> style.border.right = value;
+                        case BOTTOM -> style.border.bottom = value;
+                        case LEFT -> style.border.left = value;
+                    }
                 }
-            }
         );
     }
 

@@ -42,7 +42,8 @@ public class DividerWidget extends Widget {
         return new DividerWidget();
     }
 
-    private DividerWidget() {}
+    private DividerWidget() {
+    }
 
     //endregion
 

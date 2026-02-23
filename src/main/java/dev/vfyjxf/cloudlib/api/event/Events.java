@@ -41,19 +41,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static org.objectweb.asm.Opcodes.ACC_FINAL;
-import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
-import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static org.objectweb.asm.Opcodes.ACC_SUPER;
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.GETFIELD;
-import static org.objectweb.asm.Opcodes.INVOKEINTERFACE;
-import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
-import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
-import static org.objectweb.asm.Opcodes.POP;
-import static org.objectweb.asm.Opcodes.PUTFIELD;
-import static org.objectweb.asm.Opcodes.RETURN;
-import static org.objectweb.asm.Opcodes.V16;
+import static org.objectweb.asm.Opcodes.*;
 
 /**
  * The Events class defines
@@ -74,7 +62,8 @@ public final class Events {
     private static final String FACTORY_CLASS = Events.class.getName().replace('.', '/');
     private static final MutableMap<Class<?>, MethodHandle> WRAPPER_CONSTRUCTORS = Maps.mutable.empty();
 
-    private Events() {}
+    private Events() {
+    }
 
     public static <T> EventDefinition<T> define(Class<T> type, Function<List<T>, ? extends T> merger) {
         Checks.checkArgument(ClassUtils.isFunctionalInterface(type), "type must be a functional interface");
@@ -133,8 +122,8 @@ public final class Events {
         @Override
         public String toString() {
             return "EventDefinitionImpl{" +
-                   "type=" + type.getSimpleName() +
-                   '}';
+                    "type=" + type.getSimpleName() +
+                    '}';
         }
     }
 

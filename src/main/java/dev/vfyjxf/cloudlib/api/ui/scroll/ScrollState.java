@@ -410,7 +410,7 @@ public final class ScrollState {
      */
     public boolean isAnimating() {
         return smooth && (Math.abs(targetScrollX - scrollX) >= SNAP_THRESHOLD
-                          || Math.abs(targetScrollY - scrollY) >= SNAP_THRESHOLD);
+                || Math.abs(targetScrollY - scrollY) >= SNAP_THRESHOLD);
     }
 
     //endregion
@@ -589,12 +589,12 @@ public final class ScrollState {
     @Override
     public String toString() {
         return "ScrollState{" +
-               "direction=" + direction +
-               ", scroll=(" + scrollX + ", " + scrollY + ")" +
-               ", target=(" + targetScrollX + ", " + targetScrollY + ")" +
-               ", content=(" + contentWidth + "x" + contentHeight + ")" +
-               ", viewport=(" + viewportWidth + "x" + viewportHeight + ")" +
-               ", smooth=" + smooth +
-               '}';
+                "direction=" + direction +
+                ", scroll=(" + scrollX + ", " + scrollY + ")" +
+                ", target=(" + targetScrollX + ", " + targetScrollY + ")" +
+                ", content=(" + contentWidth + "x" + contentHeight + ")" +
+                ", viewport=(" + viewportWidth + "x" + viewportHeight + ")" +
+                ", smooth=" + smooth +
+                '}';
     }
 }

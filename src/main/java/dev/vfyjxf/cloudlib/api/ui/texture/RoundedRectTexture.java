@@ -6,11 +6,11 @@ import net.minecraft.client.gui.GuiGraphics;
  * Rounded rectangle texture with corner approximation.
  */
 public record RoundedRectTexture(
-    int fillColor,
-    int radiusTopLeft, int radiusTopRight,
-    int radiusBottomLeft, int radiusBottomRight,
-    int borderColor, int borderThickness,
-    int segments
+        int fillColor,
+        int radiusTopLeft, int radiusTopRight,
+        int radiusBottomLeft, int radiusBottomRight,
+        int borderColor, int borderThickness,
+        int segments
 ) implements BatchableTexture {
 
     public RoundedRectTexture {
@@ -41,17 +41,17 @@ public record RoundedRectTexture(
 
     public RoundedRectTexture withBorder(int color, int thickness) {
         return new RoundedRectTexture(fillColor, radiusTopLeft, radiusTopRight,
-            radiusBottomLeft, radiusBottomRight, color, thickness, segments);
+                radiusBottomLeft, radiusBottomRight, color, thickness, segments);
     }
 
     public RoundedRectTexture withColor(int color) {
         return new RoundedRectTexture(color, radiusTopLeft, radiusTopRight,
-            radiusBottomLeft, radiusBottomRight, borderColor, borderThickness, segments);
+                radiusBottomLeft, radiusBottomRight, borderColor, borderThickness, segments);
     }
 
     public RoundedRectTexture withSegments(int segments) {
         return new RoundedRectTexture(fillColor, radiusTopLeft, radiusTopRight,
-            radiusBottomLeft, radiusBottomRight, borderColor, borderThickness, segments);
+                radiusBottomLeft, radiusBottomRight, borderColor, borderThickness, segments);
     }
 
     //endregion
@@ -103,7 +103,7 @@ public record RoundedRectTexture(
     public void render(GuiGraphics graphics, int x, int y, int width, int height) {
         float maxRadius = Math.min(width, height) / 2f;
         int r = (int) Math.min(Math.max(radiusTopLeft, Math.max(radiusTopRight,
-            Math.max(radiusBottomLeft, radiusBottomRight))), maxRadius);
+                Math.max(radiusBottomLeft, radiusBottomRight))), maxRadius);
 
         graphics.fill(x + r, y, x + width - r, y + height, fillColor);
         graphics.fill(x, y + r, x + width, y + height - r, fillColor);

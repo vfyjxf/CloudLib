@@ -123,12 +123,12 @@ public final class ButtonBlueprint implements Blueprint<ButtonWidget> {
     @Override
     public void updateWidget(ButtonWidget widget, Scene scene, SceneContext context) {
         widget.setLabel(label)
-              .onClick(onClick)
-              .setEnabled(enabled)
-              .setTextures(normalTexture, hoverTexture, pressedTexture)
-              .setIconTexture(iconTexture)
-              .setTextColor(textColor)
-              .useStyle(style);
+                .onClick(onClick)
+                .setEnabled(enabled)
+                .setTextures(normalTexture, hoverTexture, pressedTexture)
+                .setIconTexture(iconTexture)
+                .setTextColor(textColor)
+                .useStyle(style);
     }
 
     //endregion

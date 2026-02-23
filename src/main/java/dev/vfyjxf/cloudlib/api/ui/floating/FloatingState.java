@@ -75,13 +75,13 @@ public final class FloatingState {
     //region constructor
 
     public FloatingState(
-        double x,
-        double y,
-        FloatingPlacement initialPlacement,
-        FloatingPlacement placement,
-        Rect referenceRect,
-        Rect floatingRect,
-        Rect boundary
+            double x,
+            double y,
+            FloatingPlacement initialPlacement,
+            FloatingPlacement placement,
+            Rect referenceRect,
+            Rect floatingRect,
+            Rect boundary
     ) {
         this.x = x;
         this.y = y;
@@ -156,8 +156,8 @@ public final class FloatingState {
      * Stores a value in the named middleware data.
      *
      * @param middlewareName the middleware name (e.g. "offset", "flip")
-     * @param key           the data key
-     * @param value         the data value
+     * @param key            the data key
+     * @param value          the data value
      */
     public void putData(String middlewareName, String key, Object value) {
         middlewareData.computeIfAbsent(middlewareName, k -> new HashMap<>()).put(key, value);
@@ -167,7 +167,7 @@ public final class FloatingState {
      * Reads a value from the named middleware data.
      *
      * @param middlewareName the middleware name
-     * @param key           the data key
+     * @param key            the data key
      * @return the value, or null if not present
      */
     @SuppressWarnings("unchecked")
@@ -207,10 +207,10 @@ public final class FloatingState {
         double boundBottom = boundary.bottom() - padding;
 
         return new Insets(
-            (int) Math.round(boundTop - floatTop),         // top overflow (positive = overflowing)
-            (int) Math.round(floatRight - boundRight),     // right overflow
-            (int) Math.round(floatBottom - boundBottom),   // bottom overflow
-            (int) Math.round(boundLeft - floatLeft)        // left overflow
+                (int) Math.round(boundTop - floatTop),         // top overflow (positive = overflowing)
+                (int) Math.round(floatRight - boundRight),     // right overflow
+                (int) Math.round(floatBottom - boundBottom),   // bottom overflow
+                (int) Math.round(boundLeft - floatLeft)        // left overflow
         );
     }
 

@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.data;
 
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.Checks;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -23,8 +24,8 @@ import java.util.function.Supplier;
  * @see DataAttachable
  */
 public record DataKey<T>(
-    Namespace id,
-    @Nullable Function<@Nullable DataAttachable, T> defaultValueFunction
+        Namespace id,
+        @Nullable Function<@Nullable DataAttachable, T> defaultValueFunction
 ) {
 
     /**
@@ -119,7 +120,7 @@ public record DataKey<T>(
     }
 
     @Override
-    public String toString() {
+    public @NotNull String toString() {
         return "DataKey[" + id + "]";
     }
 }

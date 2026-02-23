@@ -192,7 +192,7 @@ public abstract class EdgeStyleProperty<T> implements LayoutProperty {
                 formatted = formatValue(top) + " " + formatValue(right);
             } else {
                 formatted = formatValue(top) + " " + formatValue(right) + " " +
-                    formatValue(bottom) + " " + formatValue(left);
+                        formatValue(bottom) + " " + formatValue(left);
             }
             collector.addFormatted(baseName(), formatted, null, category);
             return;
@@ -254,10 +254,22 @@ public abstract class EdgeStyleProperty<T> implements LayoutProperty {
             this.suffix = suffix;
         }
 
-        public boolean affectsTop() { return top; }
-        public boolean affectsRight() { return right; }
-        public boolean affectsBottom() { return bottom; }
-        public boolean affectsLeft() { return left; }
+        public boolean affectsTop() {
+            return top;
+        }
+
+        public boolean affectsRight() {
+            return right;
+        }
+
+        public boolean affectsBottom() {
+            return bottom;
+        }
+
+        public boolean affectsLeft() {
+            return left;
+        }
+
         public boolean affects(Edge edge) {
             return switch (edge) {
                 case TOP -> top;
@@ -266,7 +278,10 @@ public abstract class EdgeStyleProperty<T> implements LayoutProperty {
                 case LEFT -> left;
             };
         }
-        public String suffix() { return suffix; }
+
+        public String suffix() {
+            return suffix;
+        }
 
         /**
          * Gets the EdgeMask for a specific Edge.
@@ -290,13 +305,13 @@ public abstract class EdgeStyleProperty<T> implements LayoutProperty {
      * <p>
      * Only edges that are affected by the mask AND have non-null values will be applied.
      *
-     * @param existing  the existing edge values from TaffyStyle
-     * @param getter    function to get the current value for an edge
-     * @param setter    function to set the new value for an edge
+     * @param existing the existing edge values from TaffyStyle
+     * @param getter   function to get the current value for an edge
+     * @param setter   function to set the new value for an edge
      */
     protected void applyEdges(
-        Function<Edge, T> getter,
-        EdgeSetter<T> setter
+            Function<Edge, T> getter,
+            EdgeSetter<T> setter
     ) {
         if (mask.affectsTop() && edges.top() != null) {
             setter.set(Edge.TOP, edges.top());

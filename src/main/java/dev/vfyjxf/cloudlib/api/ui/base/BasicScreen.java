@@ -10,7 +10,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 
-import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.sizeOf;
 
 public abstract class BasicScreen extends Screen {
 
@@ -53,7 +53,7 @@ public abstract class BasicScreen extends Screen {
     @Override
     protected void init() {
         mainGroup.useStyle(UIStyle.of(
-            sizeOf(width, height)
+                sizeOf(width, height)
         ));
         scene.init();
         scene.mount(SceneContext.create(new ScreenSceneHost(this)));
@@ -73,7 +73,7 @@ public abstract class BasicScreen extends Screen {
         this.width = width;
         this.height = height;
         mainGroup.useStyle(UIStyle.of(
-            sizeOf(width, height)
+                sizeOf(width, height)
         ));
         scene.setLayoutArea(width, height);
         scene.layout();

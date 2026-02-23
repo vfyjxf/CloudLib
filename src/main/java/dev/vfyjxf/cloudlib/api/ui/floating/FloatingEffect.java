@@ -82,7 +82,7 @@ public final class FloatingEffect implements Effect {
      */
     public static FloatingEffect create(Widget reference, FloatingPlacement placement, FloatingMiddleware... middleware) {
         return new FloatingEffect(reference, placement,
-            Arrays.stream(middleware).filter(Objects::nonNull).toList());
+                Arrays.stream(middleware).filter(Objects::nonNull).toList());
     }
 
     /**
@@ -118,7 +118,7 @@ public final class FloatingEffect implements Effect {
      * Reads a value from the last middleware data.
      *
      * @param middlewareName the middleware name (e.g. "offset", "flip", "arrow")
-     * @param key           the data key
+     * @param key            the data key
      * @return the value, or null
      */
     @SuppressWarnings("unchecked")
@@ -161,8 +161,8 @@ public final class FloatingEffect implements Effect {
 
         // Run the positioning engine
         FloatingPositioning.PositionResult result = FloatingPositioning.compute(
-            referenceRect, floatingRect, boundary,
-            placement, middleware
+                referenceRect, floatingRect, boundary,
+                placement, middleware
         );
         lastResult = result;
 

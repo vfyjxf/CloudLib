@@ -12,14 +12,14 @@ import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
 public final class Widgets {
 
     public static <T extends Widget> WidgetGroup<T> column(
-        JustifyContent horizontalArrangement,
-        AlignItems verticalArrangement
+            JustifyContent horizontalArrangement,
+            AlignItems verticalArrangement
     ) {
         WidgetGroup<T> widget = new WidgetGroup<>();
         UIStyle style = UIStyle.of(
-            flexColumn(),
-            justifyContent(horizontalArrangement),
-            alignItems(verticalArrangement)
+                flexColumn(),
+                justifyContent(horizontalArrangement),
+                alignItems(verticalArrangement)
 
         );
         widget.useStyle(style);
@@ -27,14 +27,14 @@ public final class Widgets {
     }
 
     public static <T extends Widget> WidgetGroup<T> row(
-        JustifyContent horizontalArrangement,
-        AlignItems verticalArrangement
+            JustifyContent horizontalArrangement,
+            AlignItems verticalArrangement
     ) {
         WidgetGroup<T> widget = new WidgetGroup<>();
         UIStyle style = UIStyle.of(
-            flexRow(),
-            justifyContent(horizontalArrangement),
-            alignItems(verticalArrangement)
+                flexRow(),
+                justifyContent(horizontalArrangement),
+                alignItems(verticalArrangement)
         );
         widget.useStyle(style);
         return widget;
@@ -43,14 +43,14 @@ public final class Widgets {
     public static <T extends Widget> WidgetGroup<T> grid() {
         WidgetGroup<T> widget = new WidgetGroup<>();
         UIStyle style = UIStyle.of(
-            displayGrid()
+                displayGrid()
         );
         widget.useStyle(style);
         throw new UnsupportedOperationException("Not Implemented");
     }
 
     public static <T extends Widget> WidgetGroup<T> group(
-        UIStyle style
+            UIStyle style
     ) {
         WidgetGroup<T> widget = new WidgetGroup<>();
         widget.useStyle(style);
@@ -59,8 +59,8 @@ public final class Widgets {
     }
 
     public static Widget button(
-        UIStyle style,
-        InputEvent.OnMouseClick onClick
+            UIStyle style,
+            InputEvent.OnMouseClick onClick
     ) {
         Widget widget = new Widget();
         widget.useStyle(style);
@@ -69,5 +69,7 @@ public final class Widgets {
     }
 
 
-    private Widgets() {throw new AssertionError("This class should not be instantiated!");}
+    private Widgets() {
+        throw new AssertionError("This class should not be instantiated!");
+    }
 }
