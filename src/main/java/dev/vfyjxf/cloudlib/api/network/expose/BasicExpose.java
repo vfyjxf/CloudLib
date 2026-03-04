@@ -8,7 +8,7 @@ import org.jetbrains.annotations.ApiStatus;
 @ApiStatus.Internal
 sealed abstract class BasicExpose<T> implements Expose<T>
         permits BasicDownstreamExpose,
-        StandardReversed {
+                StandardReversed {
 
     private final String name;
     private final short id;

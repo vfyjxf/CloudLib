@@ -54,8 +54,9 @@ public class ProgressTexture implements SizedTexture {
     private final Direction direction;
     private final Supplier<Float> progressSupplier;
 
-    public ProgressTexture(VisualTexture background, VisualTexture foreground, int width, int height,
-                           Direction direction, Supplier<Float> progressSupplier) {
+    public ProgressTexture(
+            VisualTexture background, VisualTexture foreground, int width, int height,
+            Direction direction, Supplier<Float> progressSupplier) {
         this.background = background;
         this.foreground = foreground;
         this.width = width;
@@ -67,16 +68,18 @@ public class ProgressTexture implements SizedTexture {
     /**
      * Creates with progress from an Animation.
      */
-    public ProgressTexture(VisualTexture background, VisualTexture foreground, int width, int height,
-                           Direction direction, Animation<?> animation) {
+    public ProgressTexture(
+            VisualTexture background, VisualTexture foreground, int width, int height,
+            Direction direction, Animation<?> animation) {
         this(background, foreground, width, height, direction, animation::progress);
     }
 
     /**
      * Creates with horizontal direction (left to right).
      */
-    public ProgressTexture(VisualTexture background, VisualTexture foreground, int width, int height,
-                           Supplier<Float> progressSupplier) {
+    public ProgressTexture(
+            VisualTexture background, VisualTexture foreground, int width, int height,
+            Supplier<Float> progressSupplier) {
         this(background, foreground, width, height, Direction.LEFT_TO_RIGHT, progressSupplier);
     }
 

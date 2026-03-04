@@ -87,8 +87,8 @@ public final class ImageBlueprint implements Blueprint<ImageWidget> {
     @Override
     public void updateWidget(ImageWidget widget, Scene scene, SceneContext context) {
         widget.setTexture(texture)
-                .setPreserveAspectRatio(preserveAspectRatio)
-                .useStyle(style);
+              .setPreserveAspectRatio(preserveAspectRatio)
+              .useStyle(style);
     }
 
     //endregion

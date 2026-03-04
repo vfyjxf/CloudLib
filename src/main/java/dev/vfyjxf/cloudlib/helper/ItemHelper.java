@@ -35,9 +35,9 @@ public final class ItemHelper {
      */
     public static final Codec<ItemStack> optionalCodec =
             ExtraCodecs.optionalEmptyMap(codec)
-                    .xmap(op -> op.orElse(ItemStack.EMPTY),
-                            stack -> stack.isEmpty() ? Optional.empty() : Optional.of(stack)
-                    );
+                       .xmap(op -> op.orElse(ItemStack.EMPTY),
+                               stack -> stack.isEmpty() ? Optional.empty() : Optional.of(stack)
+                       );
 
 }
 

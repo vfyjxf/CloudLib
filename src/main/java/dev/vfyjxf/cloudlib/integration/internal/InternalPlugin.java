@@ -1,11 +1,11 @@
 package dev.vfyjxf.cloudlib.integration.internal;
 
-import com.google.auto.service.AutoService;
 import dev.vfyjxf.cloudlib.api.plugin.CloudLibPlugin;
+import dev.vfyjxf.cloudlib.api.plugin.PluginMarker;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.CloudNamespaces;
 
-@AutoService(CloudLibPlugin.class)
+@PluginMarker
 public class InternalPlugin implements CloudLibPlugin {
 
     public static final Namespace id = CloudNamespaces.ofMod("builtin");

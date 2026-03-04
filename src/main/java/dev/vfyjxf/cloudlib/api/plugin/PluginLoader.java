@@ -13,7 +13,6 @@ import org.eclipse.collections.impl.factory.Multimaps;
 import org.slf4j.Logger;
 
 import java.util.Collection;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
@@ -21,38 +20,32 @@ import java.util.stream.Collectors;
 @SuppressWarnings("UnstableApiUsage")
 public final class PluginLoader {
 
-    public static <T extends ModPlugin> LoadingResult<T> load(Class<T> pluginClass) throws CyclePresentException, IllegalStateException {
-        return load(pluginClass, PluginLoader.class.getClassLoader());
-    }
+    public static <T extends ModPlugin> LoadingResult<T> load(PluginLookup<T> lookup) throws CyclePresentException, IllegalStateException {
+        Checks.checkNotNull(lookup, "lookup");
 
-    public static <T extends ModPlugin> LoadingResult<T> load(Class<T> pluginClass, ClassLoader classLoader) throws CyclePresentException, IllegalStateException {
-        Checks.checkNotNull(pluginClass, "pluginClass");
-        Checks.checkNotNull(classLoader, "classLoader");
-
-        ServiceLoader<T> loader = ServiceLoader.load(pluginClass, classLoader);
-        var pluginsList = loader.stream()
-                .map(ServiceLoader.Provider::get)
-                .map(LoadingPlugin::of)
-                .collect(Collectors.groupingBy(LoadingPlugin::id, Collectors.toList()));
+        var pluginsList = lookup.findPlugins()
+                                .stream()
+                                .map(LoadingPlugin::of)
+                                .collect(Collectors.groupingBy(LoadingPlugin::id, Collectors.toList()));
         var duplicatePlugins = pluginsList.values()
-                .stream()
-                .filter(plugins -> plugins.size() > 1)
-                .toList();
+                                          .stream()
+                                          .filter(plugins -> plugins.size() > 1)
+                                          .toList();
         if (!duplicatePlugins.isEmpty()) {
             String errorMessage = duplicatePlugins.stream()
-                    .flatMap(Collection::stream)
-                    .map(LoadingPlugin::id)
-                    .distinct()
-                    .map(Namespace::toString)
-                    .collect(Collectors.joining(", "));
+                                                  .flatMap(Collection::stream)
+                                                  .map(LoadingPlugin::id)
+                                                  .distinct()
+                                                  .map(Namespace::toString)
+                                                  .collect(Collectors.joining(", "));
             throw new IllegalStateException("Duplicate plugins: " + errorMessage);
         }
         var loadingPlugins = pluginsList.values()
-                .stream()
-                .flatMap(Collection::stream)
-                .collect(Collectors.toSet());
+                                        .stream()
+                                        .flatMap(Collection::stream)
+                                        .collect(Collectors.toSet());
         var id2Plugin = loadingPlugins.stream()
-                .collect(Collectors.toMap(LoadingPlugin::id, plugin -> plugin));
+                                      .collect(Collectors.toMap(LoadingPlugin::id, plugin -> plugin));
 
         MutableGraph<LoadingPlugin<T>> graph = GraphBuilder.directed().build();
         loadingPlugins.forEach(graph::addNode);
@@ -79,9 +72,9 @@ public final class PluginLoader {
 
             var missingTargetDeps =
                     loadingPlugin.dependencies()
-                            .stream()
-                            .filter(dep -> !id2Plugin.containsKey(dep.pluginId()))
-                            .collect(Collectors2.groupBy(PluginDependency::constraint, Multimaps.mutable.list::empty));
+                                 .stream()
+                                 .filter(dep -> !id2Plugin.containsKey(dep.pluginId()))
+                                 .collect(Collectors2.groupBy(PluginDependency::constraint, Multimaps.mutable.list::empty));
 
             var required = missingTargetDeps.get(PluginDependency.Constraint.required);
             var ignorable = missingTargetDeps.get(PluginDependency.Constraint.optionalRequired);
@@ -104,12 +97,11 @@ public final class PluginLoader {
 
     //region util
 
-    public static <T extends ModPlugin> MutableList<T> loadPlugin(Logger logger, String pluginCategory, Class<T> pluginClass) throws CyclePresentException, IllegalStateException {
-        PluginLoader.LoadingResult<T> loadingResult = PluginLoader.load(pluginClass);
+    public static <T extends ModPlugin> MutableList<T> loadPlugin(Logger logger, String pluginCategory, PluginLookup<T> lookup) throws CyclePresentException, IllegalStateException {
+        PluginLoader.LoadingResult<T> loadingResult = PluginLoader.load(lookup);
         if (loadingResult.failures().notEmpty()) {
-            var failureByType =
-                    loadingResult.failures()
-                            .groupBy(PluginLoader.LoadingFailure::type);
+            var failureByType = loadingResult.failures()
+                                             .groupBy(PluginLoader.LoadingFailure::type);
             var warnings = failureByType.get(PluginLoader.FailureType.warning);
             for (var warning : warnings) {
                 logger.warn("{}: {} is skipped because : {}", pluginCategory, warning.instance().pluginId(), warning.reason());
@@ -126,16 +118,16 @@ public final class PluginLoader {
     /**
      * Loads plugins synchronously and returns a {@link PluginDispatcher} for parallel event dispatch.
      */
-    public static <T extends ModPlugin> PluginDispatcher<T> loadAndDispatcher(Logger logger, String pluginCategory, Class<T> pluginClass) throws CyclePresentException, IllegalStateException {
-        MutableList<T> plugins = loadPlugin(logger, pluginCategory, pluginClass);
+    public static <T extends ModPlugin> PluginDispatcher<T> loadAndDispatcher(Logger logger, String pluginCategory, PluginLookup<T> lookup) throws CyclePresentException, IllegalStateException {
+        MutableList<T> plugins = loadPlugin(logger, pluginCategory, lookup);
         return PluginDispatcher.create(plugins);
     }
 
     /**
      * Loads plugins synchronously and returns a {@link PluginDispatcher} using the given executor.
      */
-    public static <T extends ModPlugin> PluginDispatcher<T> loadAndDispatcher(Logger logger, String pluginCategory, Class<T> pluginClass, Executor executor) throws CyclePresentException, IllegalStateException {
-        MutableList<T> plugins = loadPlugin(logger, pluginCategory, pluginClass);
+    public static <T extends ModPlugin> PluginDispatcher<T> loadAndDispatcher(Logger logger, String pluginCategory, PluginLookup<T> lookup, Executor executor) throws CyclePresentException, IllegalStateException {
+        MutableList<T> plugins = loadPlugin(logger, pluginCategory, lookup);
         return PluginDispatcher.create(plugins, executor);
     }
 

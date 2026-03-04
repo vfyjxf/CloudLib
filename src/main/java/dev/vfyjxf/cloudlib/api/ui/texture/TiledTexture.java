@@ -45,8 +45,9 @@ public record TiledTexture(
     /**
      * Creates a standard tiled texture with custom texture size.
      */
-    public static TiledTexture of(ResourceLocation texture, int tileWidth, int tileHeight,
-                                  int textureWidth, int textureHeight) {
+    public static TiledTexture of(
+            ResourceLocation texture, int tileWidth, int tileHeight,
+            int textureWidth, int textureHeight) {
         return new TiledTexture(texture, tileWidth, tileHeight, textureWidth, textureHeight,
                 TileMode.REPEAT, TileMode.REPEAT, false);
     }

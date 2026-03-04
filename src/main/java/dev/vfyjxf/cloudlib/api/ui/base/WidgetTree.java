@@ -812,8 +812,9 @@ public final class WidgetTree {
      * @param out         list to collect results into
      * @return number of widgets collected
      */
-    public static int collectInto(Widget root, boolean includeRoot, int maxDepth,
-                                  Predicate<? super Widget> predicate, List<? super Widget> out) {
+    public static int collectInto(
+            Widget root, boolean includeRoot, int maxDepth,
+            Predicate<? super Widget> predicate, List<? super Widget> out) {
         Objects.requireNonNull(root, "root");
         Objects.requireNonNull(predicate, "predicate");
         Objects.requireNonNull(out, "out");

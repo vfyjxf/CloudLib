@@ -14,7 +14,7 @@ import java.util.List;
 
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.sizeOf;
 
-@TestScreen
+//@TestScreen
 public class TestShaderScreen extends BasicScreen {
 
     public TestShaderScreen() {
@@ -47,9 +47,10 @@ public class TestShaderScreen extends BasicScreen {
 
         float x, y;
 
-        GraphNode(String title, float x, float y, int w, int headerColor,
-                  String[] inputs, int[] inputColors,
-                  String[] outputs, int[] outputColors) {
+        GraphNode(
+                String title, float x, float y, int w, int headerColor,
+                String[] inputs, int[] inputColors,
+                String[] outputs, int[] outputColors) {
             this.title = title;
             this.x = x;
             this.y = y;
@@ -486,8 +487,9 @@ public class TestShaderScreen extends BasicScreen {
             }
         }
 
-        private void drawPin(SceneCanvas canvas, float px, float py, String label, int color,
-                             boolean isInput, boolean hovered) {
+        private void drawPin(
+                SceneCanvas canvas, float px, float py, String label, int color,
+                boolean isInput, boolean hovered) {
             int radius = hovered ? GraphNode.PIN_R + 2 : GraphNode.PIN_R;
             canvas.circle(px, py, radius, color);
             if (hovered) {

@@ -70,99 +70,109 @@ public final class SceneCanvas {
         private record TexturedQuad(
                 float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3,
                 float u0, float v0, float u1, float v1, int color
-        ) {
-        }
+        ) {}
 
         /**
-         * Stores a colored quad with pre-transformed vertex positions.
+         * Stores a colored quad with pre-transformed vertex positions
+         * and per-vertex colours (for gradients, lines, etc.).
          * Vertices are stored in order: bottom-left, bottom-right, top-right, top-left.
          */
         private record ColoredQuad(
                 float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3,
-                int color
+                int c0, int c1, int c2, int c3
         ) {
+            /**
+             * Uniform-colour convenience.
+             */
+            ColoredQuad(
+                    float x0, float y0, float x1, float y1,
+                    float x2, float y2, float x3, float y3, int color) {
+                this(x0, y0, x1, y1, x2, y2, x3, y3, color, color, color, color);
+            }
         }
 
-        // Current textured batch
-        private @Nullable ResourceLocation currentTexture = null;
-        private final List<TexturedQuad> texturedQuads = new ArrayList<>();
-
-        // Current colored batch (no texture)
-        private final List<ColoredQuad> coloredQuads = new ArrayList<>();
-
-        // Whether we have pending colored quads (they break textured batches)
-        private boolean hasColoredPending = false;
+        // ── Command-based batch ────────────────────────────────────────
+        // Quads are stored in submission order, grouped into consecutive
+        // runs of the same type.  At flush time each run becomes one GPU
+        // draw call, but we never force an intermediate flush when
+        // switching between colored ↔ textured quads.
 
         /**
-         * Adds a textured quad with pre-transformed vertices.
-         *
-         * @param x0,y0 bottom-left vertex
-         * @param x1,y1 bottom-right vertex
-         * @param x2,y2 top-right vertex
-         * @param x3,y3 top-left vertex
+         * Marker interface for submission-ordered draw commands.
          */
-        void addTextured(ResourceLocation texture,
-                         float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3,
-                         float u0, float v0, float u1, float v1, int color) {
-            // If texture changed, signal that previous batch should be flushed
-            if (currentTexture != null && !currentTexture.equals(texture)) {
-                // Caller should flush before adding
-                return;
+        private interface BatchCommand {}
+
+        private static final class TexturedBatch implements BatchCommand {
+            final ResourceLocation texture;
+            final List<TexturedQuad> quads = new ArrayList<>();
+
+            TexturedBatch(ResourceLocation texture) {this.texture = texture;}
+        }
+
+        private static final class ColoredBatch implements BatchCommand {
+            final List<ColoredQuad> quads = new ArrayList<>();
+        }
+
+        final List<BatchCommand> commands = new ArrayList<>();
+
+        void addTextured(
+                ResourceLocation texture,
+                float x0, float y0, float x1, float y1,
+                float x2, float y2, float x3, float y3,
+                float u0, float v0, float u1, float v1, int color) {
+            var quad = new TexturedQuad(x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, color);
+            if (!commands.isEmpty()) {
+                var last = commands.get(commands.size() - 1);
+                if (last instanceof TexturedBatch tb && tb.texture.equals(texture)) {
+                    tb.quads.add(quad);
+                    return;
+                }
             }
-
-            currentTexture = texture;
-            texturedQuads.add(new TexturedQuad(x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, color));
+            var batch = new TexturedBatch(texture);
+            batch.quads.add(quad);
+            commands.add(batch);
         }
 
-        /**
-         * Adds a colored quad with pre-transformed vertices.
-         *
-         * @param x0,y0 bottom-left vertex
-         * @param x1,y1 bottom-right vertex
-         * @param x2,y2 top-right vertex
-         * @param x3,y3 top-left vertex
-         */
-        void addColored(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, int color) {
-            coloredQuads.add(new ColoredQuad(x0, y0, x1, y1, x2, y2, x3, y3, color));
-            hasColoredPending = true;
+        void addColored(
+                float x0, float y0, float x1, float y1,
+                float x2, float y2, float x3, float y3, int color) {
+            addColoredQuad(new ColoredQuad(x0, y0, x1, y1, x2, y2, x3, y3, color));
         }
 
-        boolean needsFlushForTexture(ResourceLocation texture) {
-            // Need to flush if we have colored quads pending
-            if (hasColoredPending && !coloredQuads.isEmpty()) {
-                return true;
+        void addColoredGradient(
+                float x0, float y0, float x1, float y1,
+                float x2, float y2, float x3, float y3,
+                int c0, int c1, int c2, int c3) {
+            addColoredQuad(new ColoredQuad(x0, y0, x1, y1, x2, y2, x3, y3, c0, c1, c2, c3));
+        }
+
+        private void addColoredQuad(ColoredQuad quad) {
+            if (!commands.isEmpty()) {
+                var last = commands.get(commands.size() - 1);
+                if (last instanceof ColoredBatch cb) {
+                    cb.quads.add(quad);
+                    return;
+                }
             }
-            // Need to flush if texture changed
-            return currentTexture != null && !currentTexture.equals(texture);
-        }
-
-        boolean needsFlushForColored() {
-            // Need to flush textured batch before drawing colored
-            return !texturedQuads.isEmpty();
+            var batch = new ColoredBatch();
+            batch.quads.add(quad);
+            commands.add(batch);
         }
 
         boolean isEmpty() {
-            return texturedQuads.isEmpty() && coloredQuads.isEmpty();
+            return commands.isEmpty();
         }
 
         void clear() {
-            currentTexture = null;
-            texturedQuads.clear();
-            coloredQuads.clear();
-            hasColoredPending = false;
+            commands.clear();
         }
     }
 
     private final BatchableTexture.VertexEmitter batchEmitter = new BatchableTexture.VertexEmitter() {
         @Override
-        public void textured(ResourceLocation texture, float x, float y, float width, float height,
-                             float u0, float v0, float u1, float v1, int color) {
-            // Auto-flush if texture changed
-            if (batchState.needsFlushForTexture(texture)) {
-                flushBatch();
-            }
-            // Transform all 4 corners using current transform
-            // Order: bottom-left, bottom-right, top-right, top-left
+        public void textured(
+                ResourceLocation texture, float x, float y, float width, float height,
+                float u0, float v0, float u1, float v1, int color) {
             float[] bl = transformPointLocal(x, y + height);
             float[] br = transformPointLocal(x + width, y + height);
             float[] tr = transformPointLocal(x + width, y);
@@ -173,12 +183,6 @@ public final class SceneCanvas {
 
         @Override
         public void colored(float x, float y, float width, float height, int color) {
-            // Auto-flush textured batch if needed
-            if (batchState.needsFlushForColored()) {
-                flushBatch();
-            }
-            // Transform all 4 corners using current transform
-            // Order: bottom-left, bottom-right, top-right, top-left
             float[] bl = transformPointLocal(x, y + height);
             float[] br = transformPointLocal(x + width, y + height);
             float[] tr = transformPointLocal(x + width, y);
@@ -194,12 +198,15 @@ public final class SceneCanvas {
     /**
      * Flushes all pending batch operations and submits them to the GPU.
      * <p>
-     * Also flushes the underlying {@link GuiGraphics} buffer (text drawn via
-     * {@code Font.drawInBatch}) and clears the depth buffer to ensure correct
-     * draw ordering between layers.
+     * Iterates over the submission-ordered command list, emitting one draw call
+     * per consecutive run of same-type quads.  This avoids the previous
+     * flush-on-type-switch overhead while preserving correct painter's-algorithm
+     * draw order.
      */
     public void flushBatch() {
-        // Submit any buffered text from drawString calls
+        // Flush MC's internal text/sprite buffer first — text was already
+        // rendered under the correct scissor during textDraw's restoreScissor()
+        // (which triggers graphics.flush before removing the scissor).
         graphics.flush();
 
         if (batchState.isEmpty()) return;
@@ -210,61 +217,48 @@ public final class SceneCanvas {
         applyScissor();
         graphics.pose().pushPose();
         graphics.pose().translate(0, 0, zOffset);
+        Matrix4f matrix = graphics.pose().last().pose();
 
-        // Flush textured quads
-        if (!batchState.texturedQuads.isEmpty() && batchState.currentTexture != null) {
-            RenderSystem.setShaderTexture(0, batchState.currentTexture);
-            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-            RenderSystem.enableBlend();
+        for (var cmd : batchState.commands) {
+            if (cmd instanceof BatchState.TexturedBatch tb) {
+                RenderSystem.setShaderTexture(0, tb.texture);
+                RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+                RenderSystem.enableBlend();
 
-            BufferBuilder buffer = Tesselator.getInstance().begin(
-                    VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-            Matrix4f matrix = graphics.pose().last().pose();
+                BufferBuilder buffer = Tesselator.getInstance().begin(
+                        VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
-            for (var quad : batchState.texturedQuads) {
-                int c = quad.color;
-                float a = ((c >> 24) & 0xFF) / 255f;
-                float r = ((c >> 16) & 0xFF) / 255f;
-                float g = ((c >> 8) & 0xFF) / 255f;
-                float b = (c & 0xFF) / 255f;
+                for (var quad : tb.quads) {
+                    int c = quad.color;
+                    float a = ((c >> 24) & 0xFF) / 255f;
+                    float r = ((c >> 16) & 0xFF) / 255f;
+                    float g = ((c >> 8) & 0xFF) / 255f;
+                    float b = (c & 0xFF) / 255f;
 
-                buffer.addVertex(matrix, quad.x0, quad.y0, 0).setUv(quad.u0, quad.v1).setColor(r, g, b, a); // bottom-left
-                buffer.addVertex(matrix, quad.x1, quad.y1, 0).setUv(quad.u1, quad.v1).setColor(r, g, b, a); // bottom-right
-                buffer.addVertex(matrix, quad.x2, quad.y2, 0).setUv(quad.u1, quad.v0).setColor(r, g, b, a); // top-right
-                buffer.addVertex(matrix, quad.x3, quad.y3, 0).setUv(quad.u0, quad.v0).setColor(r, g, b, a); // top-left
-            }
+                    buffer.addVertex(matrix, quad.x0, quad.y0, 0).setUv(quad.u0, quad.v1).setColor(r, g, b, a);
+                    buffer.addVertex(matrix, quad.x1, quad.y1, 0).setUv(quad.u1, quad.v1).setColor(r, g, b, a);
+                    buffer.addVertex(matrix, quad.x2, quad.y2, 0).setUv(quad.u1, quad.v0).setColor(r, g, b, a);
+                    buffer.addVertex(matrix, quad.x3, quad.y3, 0).setUv(quad.u0, quad.v0).setColor(r, g, b, a);
+                }
 
-            MeshData meshData = buffer.build();
-            if (meshData != null) {
-                BufferUploader.drawWithShader(meshData);
-            }
-        }
+                MeshData meshData = buffer.build();
+                if (meshData != null) BufferUploader.drawWithShader(meshData);
+            } else if (cmd instanceof BatchState.ColoredBatch cb) {
+                RenderSystem.setShader(GameRenderer::getPositionColorShader);
+                RenderSystem.enableBlend();
 
-        // Flush colored quads
-        if (!batchState.coloredQuads.isEmpty()) {
-            RenderSystem.setShader(GameRenderer::getPositionColorShader);
-            RenderSystem.enableBlend();
+                BufferBuilder buffer = Tesselator.getInstance().begin(
+                        VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
-            BufferBuilder buffer = Tesselator.getInstance().begin(
-                    VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-            Matrix4f matrix = graphics.pose().last().pose();
+                for (var quad : cb.quads) {
+                    addColorVertex(buffer, matrix, quad.x0, quad.y0, quad.c0);
+                    addColorVertex(buffer, matrix, quad.x1, quad.y1, quad.c1);
+                    addColorVertex(buffer, matrix, quad.x2, quad.y2, quad.c2);
+                    addColorVertex(buffer, matrix, quad.x3, quad.y3, quad.c3);
+                }
 
-            for (var quad : batchState.coloredQuads) {
-                int c = quad.color;
-                float a = ((c >> 24) & 0xFF) / 255f;
-                float r = ((c >> 16) & 0xFF) / 255f;
-                float g = ((c >> 8) & 0xFF) / 255f;
-                float b = (c & 0xFF) / 255f;
-
-                buffer.addVertex(matrix, quad.x0, quad.y0, 0).setColor(r, g, b, a);
-                buffer.addVertex(matrix, quad.x1, quad.y1, 0).setColor(r, g, b, a);
-                buffer.addVertex(matrix, quad.x2, quad.y2, 0).setColor(r, g, b, a);
-                buffer.addVertex(matrix, quad.x3, quad.y3, 0).setColor(r, g, b, a);
-            }
-
-            MeshData meshData = buffer.build();
-            if (meshData != null) {
-                BufferUploader.drawWithShader(meshData);
+                MeshData meshData = buffer.build();
+                if (meshData != null) BufferUploader.drawWithShader(meshData);
             }
         }
 
@@ -272,6 +266,17 @@ public final class SceneCanvas {
         restoreScissor();
 
         batchState.clear();
+    }
+
+    /**
+     * Adds a single colour vertex to the buffer.
+     */
+    private static void addColorVertex(BufferBuilder buffer, Matrix4f matrix, float x, float y, int c) {
+        float a = ((c >> 24) & 0xFF) / 255f;
+        float r = ((c >> 16) & 0xFF) / 255f;
+        float g = ((c >> 8) & 0xFF) / 255f;
+        float b = (c & 0xFF) / 255f;
+        buffer.addVertex(matrix, x, y, 0).setColor(r, g, b, a);
     }
 
     //endregion
@@ -351,15 +356,17 @@ public final class SceneCanvas {
         return texture(texture, x, y, texture.width(), texture.height());
     }
 
-    public SceneCanvas quad(ResourceLocation texture, int x, int y, int width, int height,
-                            float u0, float v0, float u1, float v1) {
+    public SceneCanvas quad(
+            ResourceLocation texture, int x, int y, int width, int height,
+            float u0, float v0, float u1, float v1) {
         batchEmitter.textured(texture, x, y, width, height, u0, v0, u1, v1, currentColor);
         return this;
     }
 
-    public SceneCanvas quad(ResourceLocation texture, int x, int y, int width, int height,
-                            int u, int v, int regionWidth, int regionHeight,
-                            int textureWidth, int textureHeight) {
+    public SceneCanvas quad(
+            ResourceLocation texture, int x, int y, int width, int height,
+            int u, int v, int regionWidth, int regionHeight,
+            int textureWidth, int textureHeight) {
         float u0 = (float) u / textureWidth;
         float v0 = (float) v / textureHeight;
         float u1 = (float) (u + regionWidth) / textureWidth;
@@ -380,14 +387,16 @@ public final class SceneCanvas {
         return this;
     }
 
-    public SceneCanvas blit(ResourceLocation texture, int x, int y, int width, int height,
-                            int u, int v, int regionWidth, int regionHeight,
-                            int textureWidth, int textureHeight) {
+    public SceneCanvas blit(
+            ResourceLocation texture, int x, int y, int width, int height,
+            int u, int v, int regionWidth, int regionHeight,
+            int textureWidth, int textureHeight) {
         return quad(texture, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
     }
 
-    public SceneCanvas blit(ResourceLocation texture, int x, int y, int u, int v,
-                            int width, int height, int textureWidth, int textureHeight) {
+    public SceneCanvas blit(
+            ResourceLocation texture, int x, int y, int u, int v,
+            int width, int height, int textureWidth, int textureHeight) {
         return quad(texture, x, y, width, height, u, v, width, height, textureWidth, textureHeight);
     }
 
@@ -409,28 +418,25 @@ public final class SceneCanvas {
     }
 
     /**
-     * Fills a rectangle with a four-corner gradient. Not batchable.
+     * Fills a rectangle with a four-corner gradient.  <strong>Batchable</strong>
+     * — the quad is placed into the coloured batch with per-vertex colours.
      *
      * @param colorTL top-left color (ARGB)
      * @param colorTR top-right color (ARGB)
      * @param colorBL bottom-left color (ARGB)
      * @param colorBR bottom-right color (ARGB)
      */
-    public SceneCanvas fillGradient(int x, int y, int width, int height,
-                                    int colorTL, int colorTR, int colorBL, int colorBR) {
-        directDraw(() -> {
-            RenderSystem.setShader(GameRenderer::getPositionColorShader);
-            RenderSystem.enableBlend();
-            BufferBuilder buffer = Tesselator.getInstance().begin(
-                    VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-            Matrix4f matrix = graphics.pose().last().pose();
-            buffer.addVertex(matrix, x, y + height, 0).setColor(colorBL);
-            buffer.addVertex(matrix, x + width, y + height, 0).setColor(colorBR);
-            buffer.addVertex(matrix, x + width, y, 0).setColor(colorTR);
-            buffer.addVertex(matrix, x, y, 0).setColor(colorTL);
-            MeshData meshData = buffer.build();
-            if (meshData != null) BufferUploader.drawWithShader(meshData);
-        });
+    public SceneCanvas fillGradient(
+            int x, int y, int width, int height,
+            int colorTL, int colorTR, int colorBL, int colorBR) {
+        // Transform corners: bottom-left, bottom-right, top-right, top-left
+        float[] bl = transformPointLocal(x, y + height);
+        float[] br = transformPointLocal(x + width, y + height);
+        float[] tr = transformPointLocal(x + width, y);
+        float[] tl = transformPointLocal(x, y);
+        batchState.addColoredGradient(
+                bl[0], bl[1], br[0], br[1], tr[0], tr[1], tl[0], tl[1],
+                colorBL, colorBR, colorTR, colorTL);
         return this;
     }
 
@@ -465,7 +471,9 @@ public final class SceneCanvas {
     }
 
     /**
-     * Draws a straight line between two points with the given thickness. Not batchable.
+     * Draws a straight line between two points with the given thickness.
+     * <strong>Batchable</strong> — the rotated quad is placed into the coloured
+     * batch alongside regular {@link #fill} quads.
      */
     public SceneCanvas line(float x1, float y1, float x2, float y2, float thickness, int color) {
         float dx = x2 - x1;
@@ -474,19 +482,12 @@ public final class SceneCanvas {
         if (len < 1e-6f) return this;
         float nx = -dy / len * thickness * 0.5f;
         float ny = dx / len * thickness * 0.5f;
-        directDraw(() -> {
-            RenderSystem.setShader(GameRenderer::getPositionColorShader);
-            RenderSystem.enableBlend();
-            BufferBuilder buffer = Tesselator.getInstance().begin(
-                    VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-            Matrix4f matrix = graphics.pose().last().pose();
-            buffer.addVertex(matrix, x1 + nx, y1 + ny, 0).setColor(color);
-            buffer.addVertex(matrix, x2 + nx, y2 + ny, 0).setColor(color);
-            buffer.addVertex(matrix, x2 - nx, y2 - ny, 0).setColor(color);
-            buffer.addVertex(matrix, x1 - nx, y1 - ny, 0).setColor(color);
-            MeshData meshData = buffer.build();
-            if (meshData != null) BufferUploader.drawWithShader(meshData);
-        });
+        // Transform the four line-quad corners and add as a colored quad
+        float[] v0 = transformPointLocal(x1 + nx, y1 + ny);
+        float[] v1 = transformPointLocal(x2 + nx, y2 + ny);
+        float[] v2 = transformPointLocal(x2 - nx, y2 - ny);
+        float[] v3 = transformPointLocal(x1 - nx, y1 - ny);
+        batchState.addColored(v0[0], v0[1], v1[0], v1[1], v2[0], v2[1], v3[0], v3[1], color);
         return this;
     }
 
@@ -646,8 +647,9 @@ public final class SceneCanvas {
     /**
      * Draws a circle with optional border.
      */
-    public SceneCanvas circle(float centerX, float centerY, float radius,
-                              int fillColor, float borderWidth, int borderColor) {
+    public SceneCanvas circle(
+            float centerX, float centerY, float radius,
+            int fillColor, float borderWidth, int borderColor) {
         return ellipse(centerX - radius, centerY - radius, radius * 2, radius * 2,
                 fillColor, borderWidth, borderColor);
     }
@@ -883,7 +885,7 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas drawString(String text, int x, int y, int color, boolean dropShadow) {
-        directDraw(() -> graphics.drawString(font(), text, x, y, color, dropShadow));
+        textDraw(() -> graphics.drawString(font(), text, x, y, color, dropShadow));
         return this;
     }
 
@@ -892,7 +894,7 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas drawString(Component text, int x, int y, int color, boolean dropShadow) {
-        directDraw(() -> graphics.drawString(font(), text, x, y, color, dropShadow));
+        textDraw(() -> graphics.drawString(font(), text, x, y, color, dropShadow));
         return this;
     }
 
@@ -1047,6 +1049,29 @@ public final class SceneCanvas {
      */
     private void directDraw(Runnable action) {
         flushBatch();
+        applyScissor();
+        graphics.pose().pushPose();
+        graphics.pose().mulPose(localTransform());
+        graphics.pose().translate(0, 0, zOffset);
+        action.run();
+        graphics.pose().popPose();
+        restoreScissor();
+    }
+
+    /**
+     * Lightweight draw path for text: only flushes the batch when there are
+     * pending quads.  Consecutive {@code drawString} calls with no intervening
+     * geometry therefore skip the expensive batch flush entirely.
+     * <p>
+     * Scissor is still applied around the text draw — MC's
+     * {@code graphics.disableScissor()} internally calls {@code graphics.flush()}
+     * which submits the buffered text vertices while the GL scissor is still
+     * active, ensuring correct clipping.
+     */
+    private void textDraw(Runnable action) {
+        if (!batchState.isEmpty()) {
+            flushBatch();
+        }
         applyScissor();
         graphics.pose().pushPose();
         graphics.pose().mulPose(localTransform());
@@ -1227,16 +1252,21 @@ public final class SceneCanvas {
     //region clipping
 
     public SceneCanvas pushClip(int x, int y, int width, int height) {
+        // Flush pending text + batch under the current clip before changing it
+        flushBatch();
         clipStack.push(x, y, width, height);
         return this;
     }
 
     public SceneCanvas pushClip(Rect rect) {
+        flushBatch();
         clipStack.push(rect);
         return this;
     }
 
     public SceneCanvas popClip() {
+        // Flush pending text + batch under the current clip before restoring
+        flushBatch();
         clipStack.pop();
         return this;
     }

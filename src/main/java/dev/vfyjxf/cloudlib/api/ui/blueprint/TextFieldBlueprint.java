@@ -119,14 +119,14 @@ public final class TextFieldBlueprint implements Blueprint<TextFieldWidget> {
     @Override
     public void updateWidget(TextFieldWidget widget, Scene scene, SceneContext context) {
         widget.setText(text)
-                .setPlaceholder(placeholder)
-                .setMaxLength(maxLength)
-                .setEditable(editable)
-                .setTextColor(textColor)
-                .setPlaceholderColor(placeholderColor)
-                .onTextChanged(onTextChanged)
-                .onEnterPressed(onEnterPressed)
-                .useStyle(style);
+              .setPlaceholder(placeholder)
+              .setMaxLength(maxLength)
+              .setEditable(editable)
+              .setTextColor(textColor)
+              .setPlaceholderColor(placeholderColor)
+              .onTextChanged(onTextChanged)
+              .onEnterPressed(onEnterPressed)
+              .useStyle(style);
     }
 
     //endregion

@@ -89,7 +89,7 @@ public final class ColumnBlueprint implements Blueprint.Group<ColumnWidget, Widg
     @Override
     public void updateWidget(ColumnWidget widget, Scene scene, SceneContext context) {
         widget.setSpacing(spacing)
-                .useStyle(style);
+              .useStyle(style);
     }
 
     //endregion

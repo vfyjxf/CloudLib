@@ -1,7 +1,9 @@
 package dev.vfyjxf.cloudlib;
 
+import dev.vfyjxf.cloudlib.api.plugin.AnnotationPluginLookup;
 import dev.vfyjxf.cloudlib.api.plugin.CloudLibPlugin;
 import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
+import dev.vfyjxf.cloudlib.api.plugin.SpiPluginLookup;
 import dev.vfyjxf.cloudlib.debug.DebugConfig;
 import dev.vfyjxf.cloudlib.network.CloudlibPayloads;
 import dev.vfyjxf.cloudlib.test.TestRegistry;
@@ -25,7 +27,7 @@ public sealed abstract class CloudLib permits CloudLibClient, CloudLibServer {
     //TODO:Move thread unsafe operations to constructModEvent
     public CloudLib(ModContainer container, IEventBus modBus, Dist dist) {
         //region internal init
-        plugins = PluginLoader.loadPlugin(logger, "CloudLib Plugin", CloudLibPlugin.class).toImmutable();
+        plugins = PluginLoader.loadPlugin(logger, "CloudLib Plugin", AnnotationPluginLookup.of(CloudLibPlugin.class)).toImmutable();
         //endregion
 
         //region debug & test init

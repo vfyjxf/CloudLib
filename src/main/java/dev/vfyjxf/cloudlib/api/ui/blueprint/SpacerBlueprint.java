@@ -104,8 +104,8 @@ public final class SpacerBlueprint implements Blueprint<SpacerWidget> {
     @Override
     public void updateWidget(SpacerWidget widget, Scene scene, SceneContext context) {
         widget.setMinLength(minLength)
-                .setFlexGrow(flexGrow)
-                .useStyle(style);
+              .setFlexGrow(flexGrow)
+              .useStyle(style);
     }
 
     //endregion

@@ -15,7 +15,7 @@ sealed abstract class BasicDownstreamExpose<T>
         extends BasicExpose<T>
         implements Transcoder
         permits StandardExpose,
-        StandardReversedExpose {
+                StandardReversedExpose {
 
     private final SimpleEvent<Consumer<T>> receiveEvent = SimpleEvent.create();
 

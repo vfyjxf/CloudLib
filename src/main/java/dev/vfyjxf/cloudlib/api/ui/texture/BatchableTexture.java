@@ -81,8 +81,9 @@ public interface BatchableTexture extends VisualTexture {
          * @param v1      bottom UV coordinate (0.0 to 1.0)
          * @param color   tint color (ARGB), 0xFFFFFFFF means no tint
          */
-        void textured(ResourceLocation texture, float x, float y, float width, float height,
-                      float u0, float v0, float u1, float v1, int color);
+        void textured(
+                ResourceLocation texture, float x, float y, float width, float height,
+                float u0, float v0, float u1, float v1, int color);
 
         /**
          * Emits a solid-color filled quad.

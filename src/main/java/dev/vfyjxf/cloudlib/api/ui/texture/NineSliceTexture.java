@@ -175,10 +175,11 @@ public record NineSliceTexture(
     /**
      * Adds tiled quads to the buffer, repeating the texture region to fill the target area.
      */
-    private static void addTiled(BufferBuilder buffer, Matrix4f matrix,
-                                 float uMin, float vMin, float uMax, float vMax,
-                                 int xOffset, int yOffset, int tiledWidth, int tiledHeight,
-                                 int tileWidth, int tileHeight) {
+    private static void addTiled(
+            BufferBuilder buffer, Matrix4f matrix,
+            float uMin, float vMin, float uMax, float vMax,
+            int xOffset, int yOffset, int tiledWidth, int tiledHeight,
+            int tileWidth, int tileHeight) {
         int xTileCount = tiledWidth / tileWidth;
         int xRemainder = tiledWidth - (xTileCount * tileWidth);
         int yTileCount = tiledHeight / tileHeight;
@@ -209,9 +210,10 @@ public record NineSliceTexture(
     /**
      * Adds a single textured quad to the buffer.
      */
-    private static void addQuad(BufferBuilder buffer, Matrix4f matrix,
-                                float uMin, float vMin, float uMax, float vMax,
-                                int x, int y, int w, int h) {
+    private static void addQuad(
+            BufferBuilder buffer, Matrix4f matrix,
+            float uMin, float vMin, float uMax, float vMax,
+            int x, int y, int w, int h) {
         buffer.addVertex(matrix, x, y + h, 0).setUv(uMin, vMax);
         buffer.addVertex(matrix, x + w, y + h, 0).setUv(uMax, vMax);
         buffer.addVertex(matrix, x + w, y, 0).setUv(uMax, vMin);
@@ -284,10 +286,11 @@ public record NineSliceTexture(
     /**
      * Emits tiled quads via the emitter, repeating the texture region to fill the target area.
      */
-    private static void emitTiled(VertexEmitter emitter, ResourceLocation texture,
-                                  float uMin, float vMin, float uMax, float vMax,
-                                  float xOffset, float yOffset, float tiledWidth, float tiledHeight,
-                                  int tileWidth, int tileHeight, int color) {
+    private static void emitTiled(
+            VertexEmitter emitter, ResourceLocation texture,
+            float uMin, float vMin, float uMax, float vMax,
+            float xOffset, float yOffset, float tiledWidth, float tiledHeight,
+            int tileWidth, int tileHeight, int color) {
         int xTileCount = (int) (tiledWidth / tileWidth);
         float xRemainder = tiledWidth - (xTileCount * tileWidth);
         int yTileCount = (int) (tiledHeight / tileHeight);

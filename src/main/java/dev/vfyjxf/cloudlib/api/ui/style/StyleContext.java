@@ -160,7 +160,7 @@ public class StyleContext {
             changeListeners = new LinkedHashMap<>();
         }
         changeListeners.computeIfAbsent(type, k -> org.eclipse.collections.impl.factory.Lists.mutable.empty())
-                .add(listener);
+                       .add(listener);
         return this;
     }
 
@@ -271,7 +271,7 @@ public class StyleContext {
     public boolean hasProperty(StyleType<?> type) {
         return valuesByType.containsKey(type)
                 || appliedProperties.stream()
-                .anyMatch(p -> p.type().equals(type));
+                                    .anyMatch(p -> p.type().equals(type));
     }
 
     /**

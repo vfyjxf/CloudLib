@@ -82,15 +82,15 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
         mainGroup().addWidget(
                 Inspector.create()
-                        .setTrackMouse(true)
-                        .setDisplayMode(Inspector.DisplayMode.FULL)
-                        .useStyle(UIStyles.positionAbsolute(), UIStyles.sizeOf(280, 180))
-                        .setSceneLayer(SceneLayer.debug)
+                         .setTrackMouse(true)
+                         .setDisplayMode(Inspector.DisplayMode.FULL)
+                         .useStyle(UIStyles.positionAbsolute(), UIStyles.sizeOf(280, 180))
+                         .setSceneLayer(SceneLayer.debug)
         );
 
         // Create the reusable widget
         reusableWidget = LabelWidget.of("★ REUSABLE ★")
-                .setColor(0xFFFF00FF);
+                                    .setColor(0xFFFF00FF);
         reusableWidget.onInit((self) -> {
             System.out.println("Reusable widget initialized");
             reuseCount++;
@@ -120,15 +120,15 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         header.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
         var title = LabelWidget.of("Widget Manipulation Test")
-                .setColor(0xFFFFAA00)
-                .setShadow(true);
+                               .setColor(0xFFFFAA00)
+                               .setShadow(true);
         title.useStyle(UIStyle.of(UIStyles.sizeOf(200, 12)));
         header.addWidget(title);
 
         header.addWidget(SpacerWidget.create());
 
         statsLabel = LabelWidget.of("Widgets: 0")
-                .setColor(0xFF88FF88);
+                                .setColor(0xFF88FF88);
         statsLabel.useStyle(UIStyle.of(UIStyles.sizeOf(100, 12)));
         header.addWidget(statsLabel);
 
@@ -213,8 +213,8 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         columnA.useStyle(UIStyle.of(UIStyles.sizeOf(-1, -1)));
 
         var labelA = LabelWidget.of("▼ Container A")
-                .setColor(0xFF88AAFF)
-                .setShadow(true);
+                                .setColor(0xFF88AAFF)
+                                .setShadow(true);
         labelA.useStyle(UIStyle.of(UIStyles.heightOf(14)));
         columnA.addWidget(labelA);
 
@@ -246,8 +246,8 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         columnB.useStyle(UIStyle.of(UIStyles.sizeOf(-1, -1)));
 
         var labelB = LabelWidget.of("▼ Container B")
-                .setColor(0xFF88FF88)
-                .setShadow(true);
+                                .setColor(0xFF88FF88)
+                                .setShadow(true);
         labelB.useStyle(UIStyle.of(UIStyles.heightOf(14)));
         columnB.addWidget(labelB);
 
@@ -270,7 +270,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         statusBar.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
         statusLabel = LabelWidget.of("Ready")
-                .setColor(0xFFAAAAAA);
+                                 .setColor(0xFFAAAAAA);
         statusLabel.useStyle(UIStyle.of(UIStyles.flexGrow(1)));
         statusBar.addWidget(statusLabel);
 
@@ -285,7 +285,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
     private ButtonWidget createButton(String label, Runnable action, int color) {
         var btn = ButtonWidget.of(label, action)
-                .setColors(color, lighten(color), darken(color));
+                              .setColors(color, lighten(color), darken(color));
         btn.useStyle(UIStyle.of(UIStyles.minWidth(90), UIStyles.heightOf(18), UIStyles.padding(2)));
         return btn;
     }
@@ -310,8 +310,8 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
     private LabelWidget createNumberedWidget(int number, int color) {
         var widget = LabelWidget.of("#" + number)
-                .setColor(color)
-                .setShadow(true);
+                                .setColor(color)
+                                .setShadow(true);
         widget.useStyle(UIStyle.of(
                 UIStyles.padding(4, 8),
                 UIStyles.background(new ColorTexture(0x30000000))

@@ -362,14 +362,14 @@ public class VisualContext {
         }
         if (borderWidth != 0.0f) {
             sb.append("border=").append(borderWidth).append(" ")
-                    .append(String.format("0x%08X", borderColor)).append(", ");
+              .append(String.format("0x%08X", borderColor)).append(", ");
             any = true;
         }
         if (hasShadow()) {
             sb.append("shadow=(").append(shadowOffsetX).append(",")
-                    .append(shadowOffsetY).append(",")
-                    .append(shadowBlurRadius).append(",")
-                    .append(String.format("0x%08X", shadowColor)).append("), ");
+              .append(shadowOffsetY).append(",")
+              .append(shadowBlurRadius).append(",")
+              .append(String.format("0x%08X", shadowColor)).append("), ");
             any = true;
         }
         if (textColor != null) {

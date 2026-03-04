@@ -98,10 +98,10 @@ public final class ProgressBarBlueprint implements Blueprint<ProgressBarWidget> 
     @Override
     public void updateWidget(ProgressBarWidget widget, Scene scene, SceneContext context) {
         widget.setProgressSupplier(progressSupplier)
-                .setDirection(direction)
-                .setBackgroundTexture(backgroundTexture)
-                .setFillTexture(fillTexture)
-                .useStyle(style);
+              .setDirection(direction)
+              .setBackgroundTexture(backgroundTexture)
+              .setFillTexture(fillTexture)
+              .useStyle(style);
     }
 
     //endregion

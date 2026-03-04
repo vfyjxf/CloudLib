@@ -62,9 +62,9 @@ import java.util.Objects;
 @CanIgnoreReturnValue
 public class Widget
         implements Renderable,
-        EventHandler<WidgetEvent>,
-        DataAttachable,
-        Backstage {
+                   EventHandler<WidgetEvent>,
+                   DataAttachable,
+                   Backstage {
 
     //region core
 

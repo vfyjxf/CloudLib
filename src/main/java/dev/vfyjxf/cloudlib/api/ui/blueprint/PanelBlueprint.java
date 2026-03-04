@@ -126,12 +126,12 @@ public final class PanelBlueprint implements Blueprint.Group<PanelWidget, Widget
     @Override
     public void updateWidget(PanelWidget widget, Scene scene, SceneContext context) {
         widget.setTitle(title)
-                .setBackgroundTexture(backgroundTexture)
-                .setBorderTexture(borderTexture)
-                .setBorderWidth(borderWidth)
-                .setContentPadding(contentPadding)
-                .setShowTitleBar(showTitleBar)
-                .useStyle(style);
+              .setBackgroundTexture(backgroundTexture)
+              .setBorderTexture(borderTexture)
+              .setBorderWidth(borderWidth)
+              .setContentPadding(contentPadding)
+              .setShowTitleBar(showTitleBar)
+              .useStyle(style);
     }
 
     //endregion

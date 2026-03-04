@@ -55,8 +55,8 @@ public final class FloatingPositioning {
             List<@Nullable FloatingMiddleware> middleware
     ) {
         List<FloatingMiddleware> validMiddleware = middleware.stream()
-                .filter(m -> m != null)
-                .toList();
+                                                             .filter(m -> m != null)
+                                                             .toList();
 
         // Compute initial coords from placement
         double[] coords = computeCoordsFromPlacement(referenceRect, floatingRect, placement);

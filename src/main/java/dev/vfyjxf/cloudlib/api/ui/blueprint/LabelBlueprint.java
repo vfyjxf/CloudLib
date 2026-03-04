@@ -92,10 +92,10 @@ public final class LabelBlueprint implements Blueprint<LabelWidget> {
     @Override
     public void updateWidget(LabelWidget widget, Scene scene, SceneContext context) {
         widget.setText(text)
-                .setColor(color)
-                .setShadow(shadow)
-                .setAlign(align)
-                .useStyle(style);
+              .setColor(color)
+              .setShadow(shadow)
+              .setAlign(align)
+              .useStyle(style);
     }
 
     //endregion

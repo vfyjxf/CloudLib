@@ -15,7 +15,7 @@ public class PluginLoaderTest {
 
     @Test
     void testSort() {
-        PluginLoader.LoadingResult<ModPlugin> result = PluginLoader.load(ModPlugin.class);
+        PluginLoader.LoadingResult<ModPlugin> result = PluginLoader.load(SpiPluginLookup.of(ModPlugin.class));
         Assertions.assertSame(TestPlugin.class, result.plugins().getFirst().getClass());
         Assertions.assertEquals(2, result.plugins().size());
         Assertions.assertEquals(
@@ -23,7 +23,7 @@ public class PluginLoaderTest {
             "plugin: cloudlib:test_plugin_d failed to load because: Missing optional dependency: cloudlib:test_plugin_c",
             result.failures().makeString("", ",\n", "")
         );
-        Assertions.assertThrows(IllegalStateException.class, () -> PluginLoader.load(DuplicatePluginInterface.class));
+        Assertions.assertThrows(IllegalStateException.class, () -> PluginLoader.load(SpiPluginLookup.of(DuplicatePluginInterface.class)));
     }
 
     @AutoService(ModPlugin.class)

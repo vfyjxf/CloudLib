@@ -79,10 +79,10 @@ public class TestFloatingScreen extends BasicScreen {
 
         mainGroup().addWidget(
                 Inspector.create()
-                        .setTrackMouse(true)
-                        .setDisplayMode(Inspector.DisplayMode.FULL)
-                        .useStyle(UIStyles.positionAbsolute(), UIStyles.sizeOf(280, 180))
-                        .setSceneLayer(SceneLayer.debug)
+                         .setTrackMouse(true)
+                         .setDisplayMode(Inspector.DisplayMode.FULL)
+                         .useStyle(UIStyles.positionAbsolute(), UIStyles.sizeOf(280, 180))
+                         .setSceneLayer(SceneLayer.debug)
         );
 
         mainGroup().addWidget(root);
@@ -95,8 +95,8 @@ public class TestFloatingScreen extends BasicScreen {
         header.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
         var title = LabelWidget.of("FloatingEffect Test")
-                .setColor(0xFFFFAA00)
-                .setShadow(true);
+                               .setColor(0xFFFFAA00)
+                               .setShadow(true);
         title.useStyle(UIStyle.of(UIStyles.sizeOf(200, 12)));
         header.addWidget(title);
 
@@ -191,16 +191,16 @@ public class TestFloatingScreen extends BasicScreen {
                 UIStyles.justifyCenter()
         ));
         var refLabel = LabelWidget.of("Reference")
-                .setColor(0xFFFFFFFF)
-                .setShadow(true);
+                                  .setColor(0xFFFFFFFF)
+                                  .setShadow(true);
         refLabel.useStyle(UIStyle.of(UIStyles.sizeOf(60, 12)));
         referenceBox.addChild(refLabel);
         area.addChild(referenceBox);
 
         // Floating element — a tooltip-like label
         floatingLabel = LabelWidget.of("Floating: " + currentPlacement.name())
-                .setColor(0xFFFFFF88)
-                .setShadow(true);
+                                   .setColor(0xFFFFFF88)
+                                   .setShadow(true);
         floatingLabel.useStyle(UIStyle.of(
                 UIStyles.padding(4, 8),
                 UIStyles.background(new ColorTexture(0xEE333333))
@@ -227,8 +227,8 @@ public class TestFloatingScreen extends BasicScreen {
         ));
 
         var label = LabelWidget.of("All Placements Preview (offset + flip + shift):")
-                .setColor(0xFF88AACC)
-                .setShadow(true);
+                               .setColor(0xFF88AACC)
+                               .setShadow(true);
         label.useStyle(UIStyle.of(UIStyles.heightOf(12)));
         container.addWidget(label);
 
@@ -249,7 +249,7 @@ public class TestFloatingScreen extends BasicScreen {
                 UIStyles.justifyCenter()
         ));
         var smallRefLabel = LabelWidget.of("Ref")
-                .setColor(0xFFFFFFFF);
+                                       .setColor(0xFFFFFFFF);
         smallRefLabel.useStyle(UIStyle.of(UIStyles.sizeOf(24, 10)));
         smallRef.addChild(smallRefLabel);
         area.addChild(smallRef);
@@ -263,8 +263,8 @@ public class TestFloatingScreen extends BasicScreen {
         for (int i = 0; i < showcasePlacements.length; i++) {
             var p = showcasePlacements[i];
             var floater = LabelWidget.of(p.name())
-                    .setColor(colors[i])
-                    .setShadow(true);
+                                     .setColor(colors[i])
+                                     .setShadow(true);
             floater.useStyle(UIStyle.of(
                     UIStyles.padding(2, 4),
                     UIStyles.background(new ColorTexture(0xCC222222))
@@ -284,7 +284,7 @@ public class TestFloatingScreen extends BasicScreen {
         bar.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
         statusLabel = LabelWidget.of(buildStatusText())
-                .setColor(0xFFAAAAAA);
+                                 .setColor(0xFFAAAAAA);
         statusLabel.useStyle(UIStyle.of(UIStyles.flexGrow(1)));
         bar.addWidget(statusLabel);
 
@@ -359,14 +359,14 @@ public class TestFloatingScreen extends BasicScreen {
 
     private ButtonWidget createPlacementButton(String label, FloatingPlacement placement, int color) {
         var btn = ButtonWidget.of(label, () -> setPlacement(placement))
-                .setColors(color, lighten(color), darken(color));
+                              .setColors(color, lighten(color), darken(color));
         btn.useStyle(UIStyle.of(UIStyles.minWidth(70), UIStyles.heightOf(14), UIStyles.padding(1, 4)));
         return btn;
     }
 
     private ButtonWidget createButton(String label, Runnable action, int color) {
         var btn = ButtonWidget.of(label, action)
-                .setColors(color, lighten(color), darken(color));
+                              .setColors(color, lighten(color), darken(color));
         btn.useStyle(UIStyle.of(UIStyles.minWidth(70), UIStyles.heightOf(16), UIStyles.padding(2)));
         return btn;
     }

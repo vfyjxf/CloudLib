@@ -818,7 +818,7 @@ public final class Scene {
                     Widget member = snapshot.get(i);
                     if (member.lifecycle.mounted()) {
                         member.listeners(WidgetEvent.onClickOutside)
-                                .onClickOutside(member.interruptible());
+                              .onClickOutside(member.interruptible());
                     }
                 }
             }

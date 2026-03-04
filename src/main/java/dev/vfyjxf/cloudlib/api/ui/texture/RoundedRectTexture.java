@@ -158,8 +158,9 @@ public record RoundedRectTexture(
         }
     }
 
-    private void emitBorder(VertexEmitter emitter, float x, float y, float width, float height,
-                            float rTL, float rTR, float rBL, float rBR) {
+    private void emitBorder(
+            VertexEmitter emitter, float x, float y, float width, float height,
+            float rTL, float rTR, float rBL, float rBR) {
         float t = borderThickness;
         if (x + width - rTR > x + rTL) {
             emitter.colored(x + rTL, y, width - rTL - rTR, t, borderColor);

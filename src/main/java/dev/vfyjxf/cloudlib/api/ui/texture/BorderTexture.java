@@ -20,8 +20,9 @@ public record BorderTexture(
         return new BorderTexture(color, color, color, color, top, right, bottom, left);
     }
 
-    public static BorderTexture sides(int cTop, int cRight, int cBottom, int cLeft,
-                                      int tTop, int tRight, int tBottom, int tLeft) {
+    public static BorderTexture sides(
+            int cTop, int cRight, int cBottom, int cLeft,
+            int tTop, int tRight, int tBottom, int tLeft) {
         return new BorderTexture(cTop, cRight, cBottom, cLeft, tTop, tRight, tBottom, tLeft);
     }
 

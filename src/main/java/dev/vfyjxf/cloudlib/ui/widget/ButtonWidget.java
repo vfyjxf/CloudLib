@@ -52,6 +52,10 @@ public class ButtonWidget extends Widget {
         return new ButtonWidget(label);
     }
 
+    public static ButtonWidget of(Component label, Runnable onClick) {
+        return new ButtonWidget(label).onClick(onClick);
+    }
+
     public static ButtonWidget of(String label, Runnable onClick) {
         return new ButtonWidget(Component.literal(label)).onClick(onClick);
     }

@@ -82,7 +82,7 @@ public final class ExposeManagement {
 
     public boolean anyToServer() {
         return exposes.selectInstancesOf(Reversed.class)
-                .anySatisfy(Reversed::hasReversedData);
+                      .anySatisfy(Reversed::hasReversedData);
     }
 
     public void writeAllToClient(RegistryFriendlyByteBuf byteBuf) {

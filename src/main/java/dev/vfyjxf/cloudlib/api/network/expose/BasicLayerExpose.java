@@ -12,9 +12,9 @@ import java.util.function.Consumer;
 sealed abstract class BasicLayerExpose<E>
         implements LayerExpose<E>, Transcoder
         permits StandardLayerExpose,
-        StandardReversedLayerExpose,
-        StandardDiffLayerExpose,
-        StandardDiffReverseLayerExpose {
+                StandardReversedLayerExpose,
+                StandardDiffLayerExpose,
+                StandardDiffReverseLayerExpose {
 
     private final SimpleEvent<Consumer<E>> receiveEvent = SimpleEvent.create();
     private final String name;

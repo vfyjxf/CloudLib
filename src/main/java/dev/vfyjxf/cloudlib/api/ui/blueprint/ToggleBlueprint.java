@@ -104,10 +104,10 @@ public final class ToggleBlueprint implements Blueprint<ToggleWidget> {
     @Override
     public void updateWidget(ToggleWidget widget, Scene scene, SceneContext context) {
         widget.setToggled(toggled)
-                .onToggle(onToggle)
-                .setTextures(offTexture, onTexture)
-                .setHoverTexture(hoverTexture)
-                .useStyle(style);
+              .onToggle(onToggle)
+              .setTextures(offTexture, onTexture)
+              .setHoverTexture(hoverTexture)
+              .useStyle(style);
     }
 
     //endregion

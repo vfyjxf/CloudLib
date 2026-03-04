@@ -86,7 +86,7 @@ public final class RowBlueprint implements Blueprint.Group<RowWidget, Widget> {
     @Override
     public void updateWidget(RowWidget widget, Scene scene, SceneContext context) {
         widget.setSpacing(spacing)
-                .useStyle(style);
+              .useStyle(style);
     }
 
     //endregion

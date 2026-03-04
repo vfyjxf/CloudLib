@@ -166,8 +166,8 @@ public final class UIStyle {
      */
     public UIStyle without(String propertyName) {
         List<StyleProperty> filtered = properties.stream()
-                .filter(p -> !p.type().id().equals(propertyName))
-                .collect(Collectors.toList());
+                                                 .filter(p -> !p.type().id().equals(propertyName))
+                                                 .collect(Collectors.toList());
         return new UIStyle(filtered);
     }
 

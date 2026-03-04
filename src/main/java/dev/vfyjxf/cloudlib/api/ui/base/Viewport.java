@@ -149,8 +149,9 @@ public final class Viewport {
     /**
      * Creates a viewport with both viewport and content dimensions.
      */
-    public static Viewport create(int viewportWidth, int viewportHeight,
-                                  int contentWidth, int contentHeight) {
+    public static Viewport create(
+            int viewportWidth, int viewportHeight,
+            int contentWidth, int contentHeight) {
         Viewport vp = create(viewportWidth, viewportHeight);
         vp.contentWidth = contentWidth;
         vp.contentHeight = contentHeight;
@@ -708,8 +709,9 @@ public final class Viewport {
     /**
      * Tests whether a parent-space point hits a local-space rectangle.
      */
-    public boolean hitTest(double parentX, double parentY,
-                           int cx, int cy, int cw, int ch) {
+    public boolean hitTest(
+            double parentX, double parentY,
+            int cx, int cy, int cw, int ch) {
         FloatPos local = parentToLocal(parentX, parentY);
         return local.x >= cx && local.x < cx + cw
                 && local.y >= cy && local.y < cy + ch;
@@ -886,9 +888,10 @@ public final class Viewport {
      * the local-space point maps to the given parent-space point.
      */
     @Contract("_,_,_,_,_ -> this")
-    public Viewport adjustTranslateForPivot(int translateIndex,
-                                            double localX, double localY,
-                                            double parentX, double parentY) {
+    public Viewport adjustTranslateForPivot(
+            int translateIndex,
+            double localX, double localY,
+            double parentX, double parentY) {
         float ox = (float) (originX * viewportWidth);
         float oy = (float) (originY * viewportHeight);
 
@@ -925,9 +928,10 @@ public final class Viewport {
      * keep the cursor point stationary.
      */
     @Contract("_,_,_,_,_ -> this")
-    public Viewport zoomAt(int scaleIndex, int translateIndex,
-                           double factor,
-                           double parentX, double parentY) {
+    public Viewport zoomAt(
+            int scaleIndex, int translateIndex,
+            double factor,
+            double parentX, double parentY) {
         return zoomAt(scaleIndex, translateIndex, factor, factor, parentX, parentY);
     }
 
@@ -935,9 +939,10 @@ public final class Viewport {
      * Non-uniform variant of {@link #zoomAt(int, int, double, double, double)}.
      */
     @Contract("_,_,_,_,_,_ -> this")
-    public Viewport zoomAt(int scaleIndex, int translateIndex,
-                           double factorX, double factorY,
-                           double parentX, double parentY) {
+    public Viewport zoomAt(
+            int scaleIndex, int translateIndex,
+            double factorX, double factorY,
+            double parentX, double parentY) {
         FloatPos localPt = parentToLocal(parentX, parentY);
 
         ViewportTransform.Scale s = (ViewportTransform.Scale) pipelineGet(scaleIndex);
@@ -956,9 +961,10 @@ public final class Viewport {
      * at {@code translateIndex} to keep the cursor point stationary.
      */
     @Contract("_,_,_,_,_ -> this")
-    public Viewport rotateAt(int rotateIndex, int translateIndex,
-                             double deltaRadians,
-                             double parentX, double parentY) {
+    public Viewport rotateAt(
+            int rotateIndex, int translateIndex,
+            double deltaRadians,
+            double parentX, double parentY) {
         FloatPos localPt = parentToLocal(parentX, parentY);
 
         ViewportTransform.Rotate r = (ViewportTransform.Rotate) pipelineGet(rotateIndex);

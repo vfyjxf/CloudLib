@@ -188,9 +188,9 @@ public final class FlipMiddleware implements FloatingMiddleware {
 
                 // Check if we should leave the current main axis
                 boolean allMainAxisOverflow = overflowsData.stream()
-                        .allMatch(d -> d.placement.sideAxis() == initialSideAxis
-                                ? d.mainAxisOverflow() > 0
-                                : true);
+                                                           .allMatch(d -> d.placement.sideAxis() == initialSideAxis
+                                                                   ? d.mainAxisOverflow() > 0
+                                                                   : true);
 
                 boolean shouldTryNext = allMainAxisOverflow || nextPlacement.sideAxis() == initialSideAxis;
 
@@ -217,19 +217,19 @@ public final class FlipMiddleware implements FloatingMiddleware {
     private FloatingPlacement findBestPlacement(List<OverflowEntry> overflowsData, FloatingPlacement.Axis initialSideAxis, FloatingPlacement initialPlacement) {
         // First, find candidates that don't overflow the main axis
         FloatingPlacement candidate = overflowsData.stream()
-                .filter(d -> d.mainAxisOverflow() <= 0)
-                .min((a, b) -> Integer.compare(a.crossAxisTotalOverflow(), b.crossAxisTotalOverflow()))
-                .map(d -> d.placement)
-                .orElse(null);
+                                                   .filter(d -> d.mainAxisOverflow() <= 0)
+                                                   .min((a, b) -> Integer.compare(a.crossAxisTotalOverflow(), b.crossAxisTotalOverflow()))
+                                                   .map(d -> d.placement)
+                                                   .orElse(null);
 
         if (candidate != null) return candidate;
 
         // Fallback strategy
         return switch (fallbackStrategy) {
             case bestFit -> overflowsData.stream()
-                    .min(Comparator.comparingInt(OverflowEntry::totalPositiveOverflow))
-                    .map(d -> d.placement)
-                    .orElse(initialPlacement);
+                                         .min(Comparator.comparingInt(OverflowEntry::totalPositiveOverflow))
+                                         .map(d -> d.placement)
+                                         .orElse(initialPlacement);
             case initialPlacement -> initialPlacement;
         };
     }
