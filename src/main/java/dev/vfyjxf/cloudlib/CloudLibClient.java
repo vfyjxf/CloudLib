@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib;
 import dev.vfyjxf.cloudlib.api.plugin.AnnotationPluginLookup;
 import dev.vfyjxf.cloudlib.api.plugin.CloudLibClientPlugin;
 import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
-import dev.vfyjxf.cloudlib.api.plugin.SpiPluginLookup;
+import dev.vfyjxf.cloudlib.api.ui.dump.UIDumpRunner;
 import dev.vfyjxf.cloudlib.data.lang.LangKeyProvider;
 import dev.vfyjxf.cloudlib.ui.GuiEventHandler;
 import dev.vfyjxf.cloudlib.ui.UIManager;
@@ -36,6 +36,7 @@ public final class CloudLibClient extends CloudLib {
         Singletons.attachInstance(GuiEventHandler.class, new GuiEventHandler());
         NeoForge.EVENT_BUS.register(GuiEventHandler.getInstance());
         NeoForge.EVENT_BUS.register(UIManager.instance());
+        UIDumpRunner.register();
     }
 
     @Override

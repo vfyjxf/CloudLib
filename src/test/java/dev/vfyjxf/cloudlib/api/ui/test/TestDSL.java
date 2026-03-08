@@ -1,5 +1,11 @@
-package dev.vfyjxf.cloudlib.api.ui.base;
+package dev.vfyjxf.cloudlib.api.ui.test;
 
+import dev.vfyjxf.cloudlib.api.ui.base.Blueprint;
+import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
+import dev.vfyjxf.cloudlib.api.ui.base.Scene;
+import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
+import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
@@ -36,14 +42,13 @@ public final class TestDSL {
         public int updateCount;
         public int unmountCount;
 
-        @Override
-        public void unmount() {
-            unmountCount++;
+        public TestTextWidget() {
+            onUnmount(() -> unmountCount++);
         }
 
         @Override
         public String toString() {
-            return "TestTextWidget{text='" + text + "', key=" + key + "}";
+            return "TestTextWidget{text='" + text + "', key=" + key() + "}";
         }
     }
 
@@ -54,6 +59,10 @@ public final class TestDSL {
         public int updateCount;
         public int unmountCount;
 
+        public TestButtonWidget() {
+            onUnmount(() -> unmountCount++);
+        }
+
         public void click() {
             if (onClick != null) {
                 onClick.run();
@@ -61,13 +70,8 @@ public final class TestDSL {
         }
 
         @Override
-        public void unmount() {
-            unmountCount++;
-        }
-
-        @Override
         public String toString() {
-            return "TestButtonWidget{label='" + label + "', key=" + key + "}";
+            return "TestButtonWidget{label='" + label + "', key=" + key() + "}";
         }
     }
 
@@ -81,6 +85,7 @@ public final class TestDSL {
 
         public TestStackWidget(String kind) {
             this.kind = kind;
+            onUnmount(() -> unmountCount++);
         }
 
         @Override
@@ -89,13 +94,8 @@ public final class TestDSL {
         }
 
         @Override
-        public void unmount() {
-            unmountCount++;
-        }
-
-        @Override
         public String toString() {
-            return "TestStackWidget{" + kind + ", name=" + name + ", key=" + key + "}";
+            return "TestStackWidget{" + kind + ", name=" + name + ", key=" + key() + "}";
         }
     }
 

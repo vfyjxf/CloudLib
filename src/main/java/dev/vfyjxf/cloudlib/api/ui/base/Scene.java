@@ -23,7 +23,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import mezz.jei.gui.input.MouseUtil;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
 import org.eclipse.collections.api.list.MutableList;
@@ -1086,7 +1085,7 @@ public final class Scene {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         Widget fw = focusingWidget();
         if (fw == null || !fw.lifecycle.mounted()) return false;
-        var localMouse = root.sceneToLocal(MouseUtil.getX(), MouseUtil.getY());
+        var localMouse = root.sceneToLocal(ScreenUtil.getMouseX(), ScreenUtil.getMouseY());
         double mouseX = localMouse.x;
         double mouseY = localMouse.y;
         var input = InputContext.fromKeyboard(keyCode, scanCode, modifiers, mouseX, mouseY);
@@ -1109,7 +1108,7 @@ public final class Scene {
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         Widget fw = focusingWidget();
         if (fw == null || !fw.lifecycle.mounted()) return false;
-        var localMouse = root.sceneToLocal(MouseUtil.getX(), MouseUtil.getY());
+        var localMouse = root.sceneToLocal(ScreenUtil.getMouseX(), ScreenUtil.getMouseY());
         double mouseX = localMouse.x;
         double mouseY = localMouse.y;
         var input = InputContext.fromKeyboard(keyCode, scanCode, modifiers, mouseX, mouseY);

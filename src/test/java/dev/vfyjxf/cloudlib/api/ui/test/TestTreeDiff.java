@@ -1,5 +1,7 @@
-package dev.vfyjxf.cloudlib.api.ui.base;
+package dev.vfyjxf.cloudlib.api.ui.test;
 
+import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;

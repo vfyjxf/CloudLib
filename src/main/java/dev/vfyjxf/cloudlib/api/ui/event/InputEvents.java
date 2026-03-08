@@ -47,6 +47,7 @@ public final class InputEvents {
         EventDispatch result = EventDispatch.pass;
         for (var listener : listeners) {
             result = EventDispatch.max(result, listener.onDragged(input, deltaX, deltaY, context));
+            if (result == EventDispatch.consumed) context.consume();
             if (context.interrupted()) return result;
         }
         return result;

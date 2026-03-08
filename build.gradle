@@ -59,6 +59,12 @@ neoForge {
             programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
 
+        dumpClient {
+            client()
+            gameDirectory = project.file('runs/dump')
+            systemProperty 'cloudlib.dump', 'true'
+        }
+
         configureEach {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
             logLevel = org.slf4j.event.Level.DEBUG
@@ -143,19 +149,23 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
     testImplementation "net.neoforged:testframework:${project.neo_version}"
     testImplementation 'com.palantir.javapoet:javapoet:0.6.0'
-
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
     jmh "org.openjdk.jmh:jmh-core:1.37"
     jmh "org.openjdk.jmh:jmh-generator-annprocess:1.37"
     jmhAnnotationProcessor "org.openjdk.jmh:jmh-generator-annprocess:1.37"
 
-//    testCompileOnly 'com.google.auto.service:auto-service:1.1.1'
-//    testAnnotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+    testCompileOnly 'com.google.auto.service:auto-service:1.1.1'
+    testAnnotationProcessor 'com.google.auto.service:auto-service:1.1.1'
 }
 
 test {
     useJUnitPlatform()
+    testLogging {
+        exceptionFormat = 'full'
+        events 'failed'
+        showStackTraces = true
+    }
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

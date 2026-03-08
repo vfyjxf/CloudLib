@@ -216,11 +216,7 @@ public final class Events {
         }
 
         private void update() {
-            if (listeners.size() == 1) {
-                invoker = listeners.getFirst().listener;
-            } else {
-                invoker = merger.apply(listeners.collect(ListenerEntry::listener));
-            }
+            invoker = merger.apply(listeners.collect(ListenerEntry::listener));
         }
 
         private void checkLifetime() {

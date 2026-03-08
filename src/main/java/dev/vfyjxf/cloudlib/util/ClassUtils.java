@@ -52,7 +52,7 @@ public final class ClassUtils {
 
     @Nullable
     public static Method findFunctionalMethod(Class<?> clazz) {
-        if (clazz.isInterface()) {
+        if (clazz.isInterface() && !clazz.isAnnotation()) {
             Method functionalMethod = null;
             Method[] methods = clazz.getMethods();
             for (Method method : methods) {

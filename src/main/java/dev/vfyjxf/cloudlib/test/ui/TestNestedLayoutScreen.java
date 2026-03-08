@@ -30,7 +30,7 @@ import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
  *   <li>Child (red): 100x100 (fixed width, aspect ratio determines height)</li>
  * </ul>
  */
-@TestScreen
+//@TestScreen
 public class TestNestedLayoutScreen extends BasicScreen {
 
     public TestNestedLayoutScreen() {

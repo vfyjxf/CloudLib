@@ -224,6 +224,7 @@ public final class SceneCanvas {
                 RenderSystem.setShaderTexture(0, tb.texture);
                 RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
                 RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
 
                 BufferBuilder buffer = Tesselator.getInstance().begin(
                         VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
@@ -246,6 +247,7 @@ public final class SceneCanvas {
             } else if (cmd instanceof BatchState.ColoredBatch cb) {
                 RenderSystem.setShader(GameRenderer::getPositionColorShader);
                 RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
 
                 BufferBuilder buffer = Tesselator.getInstance().begin(
                         VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);

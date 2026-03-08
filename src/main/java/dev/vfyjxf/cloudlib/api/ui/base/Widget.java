@@ -241,6 +241,13 @@ public class Widget
         return key;
     }
 
+    /**
+     * Sets the key for this widget. Intended for test infrastructure.
+     */
+    public void setKey(@Nullable Object key) {
+        this.key = key;
+    }
+
     public final @UnknownNullability CompositeWidget<? extends Widget> parent() {
         return parent;
     }
@@ -1001,7 +1008,7 @@ public class Widget
     @Contract("_ -> this")
     public final Widget onMouseClicked(InputEvent.OnMouseClicked listener) {
         return onEvent(InputEvents.onMouseClicked, (input, context) -> {
-            if (context.bubbling() || context.targeting()) listener.onClicked(input, context);
+            if (context.bubbling() || context.targeting()) return listener.onClicked(input, context);
             return EventDispatch.pass;
         });
     }
@@ -1018,7 +1025,7 @@ public class Widget
     @Contract("_ -> this")
     public final Widget onMouseClick(InputEvent.OnMouseClick listener) {
         return onEvent(InputEvents.onMouseClick, (input, clickCount, context) -> {
-            if (context.targeting() || context.bubbling()) listener.onClick(input, clickCount, context);
+            if (context.targeting() || context.bubbling()) return listener.onClick(input, clickCount, context);
             return EventDispatch.pass;
         });
     }
@@ -1035,7 +1042,7 @@ public class Widget
     @Contract("_ -> this")
     public final Widget onMouseReleased(InputEvent.OnMouseReleased listener) {
         return onEvent(InputEvents.onMouseReleased, (input, context) -> {
-            if (context.targeting() || context.bubbling()) listener.onReleased(input, context);
+            if (context.targeting() || context.bubbling()) return listener.onReleased(input, context);
             return EventDispatch.pass;
         });
     }
@@ -1052,7 +1059,7 @@ public class Widget
     @Contract("_ -> this")
     public final Widget onMouseDragged(InputEvent.OnMouseDragged listener) {
         return onEvent(InputEvents.onMouseDragged, ((input, deltaX, deltaY, context) -> {
-            if (context.targeting() || context.bubbling()) listener.onDragged(input, deltaX, deltaY, context);
+            if (context.targeting() || context.bubbling()) return listener.onDragged(input, deltaX, deltaY, context);
             return EventDispatch.pass;
         }));
     }
@@ -1077,7 +1084,7 @@ public class Widget
     public final Widget onMouseScrolled(InputEvent.OnMouseScrolled listener) {
         return onEvent(InputEvents.onMouseScrolled, (mouseX, mouseY, scrollX, scrollY, context) -> {
             if (context.bubbling() || context.targeting())
-                listener.onScrolled(mouseX, mouseY, scrollX, scrollY, context);
+                return listener.onScrolled(mouseX, mouseY, scrollX, scrollY, context);
             return EventDispatch.pass;
         });
     }
@@ -1093,7 +1100,7 @@ public class Widget
     @Contract("_ -> this")
     public final Widget onKeyReleased(InputEvent.OnKeyReleased listener) {
         return onEvent(InputEvents.onKeyReleased, (input, context) -> {
-            if (context.targeting() || context.bubbling()) listener.onKeyReleased(input, context);
+            if (context.targeting() || context.bubbling()) return listener.onKeyReleased(input, context);
             return EventDispatch.pass;
         });
     }
@@ -1110,7 +1117,7 @@ public class Widget
     @Contract("_ -> this")
     public final Widget onKeyPressed(InputEvent.OnKeyPressed listener) {
         return onEvent(InputEvents.onKeyPressed, (input, context) -> {
-            if (context.targeting() || context.bubbling()) listener.onKeyPressed(input, context);
+            if (context.targeting() || context.bubbling()) return listener.onKeyPressed(input, context);
             return EventDispatch.pass;
         });
     }
@@ -1126,7 +1133,7 @@ public class Widget
 
     public final Widget onCharTyped(InputEvent.OnCharTyped listener) {
         return onEvent(InputEvents.onCharTyped, (codePoint, modifiers, context) -> {
-            if (context.targeting() || context.bubbling()) listener.onCharTyped(codePoint, modifiers, context);
+            if (context.targeting() || context.bubbling()) return listener.onCharTyped(codePoint, modifiers, context);
             return EventDispatch.pass;
         });
     }

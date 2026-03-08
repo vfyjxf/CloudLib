@@ -13,6 +13,7 @@ public final class ScreenUtil {
 
     public static double getMouseX() {
         Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null || minecraft.mouseHandler == null) return 0;
         MouseHandler mouseHelper = minecraft.mouseHandler;
         double scale = (double) minecraft.getWindow().getGuiScaledWidth() / (double) minecraft.getWindow().getScreenWidth();
         return mouseHelper.xpos() * scale;
@@ -20,6 +21,7 @@ public final class ScreenUtil {
 
     public static double getMouseY() {
         Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null || minecraft.mouseHandler == null) return 0;
         MouseHandler mouseHelper = minecraft.mouseHandler;
         double scale = (double) minecraft.getWindow().getGuiScaledHeight() / (double) minecraft.getWindow().getScreenHeight();
         return mouseHelper.ypos() * scale;
@@ -27,6 +29,7 @@ public final class ScreenUtil {
 
     public static FloatPos getMousePos() {
         Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null || minecraft.mouseHandler == null) return new FloatPos(0, 0);
         MouseHandler mouseHelper = minecraft.mouseHandler;
         double scale = (double) minecraft.getWindow().getGuiScaledWidth() / (double) minecraft.getWindow().getScreenWidth();
         var mouseX = mouseHelper.xpos() * scale;
