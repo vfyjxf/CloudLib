@@ -51,7 +51,7 @@ public record InputContext(
             int modifiers,
             boolean isReleased
     ) {
-        this(key, mouseX, mouseY, modifiers, isReleased ? KeyAction.RELEASE : KeyAction.PRESS);
+        this(key, mouseX, mouseY, modifiers, isReleased ? KeyAction.release : KeyAction.press);
     }
 
     public boolean isAllowedChatCharacter() {
@@ -107,27 +107,27 @@ public record InputContext(
     }
 
     public boolean isLeftClick() {
-        return isMouse() && key().getValue() == 0;
+        return isMouse() && key.getValue() == 0;
     }
 
     public boolean isRightClick() {
-        return isMouse() && key().getValue() == 1;
+        return isMouse() && key.getValue() == 1;
     }
 
     public boolean isKeyboard() {
-        return this.key().getType() == InputConstants.Type.KEYSYM;
+        return key.getType() == InputConstants.Type.KEYSYM;
     }
 
     public boolean isRelease() {
-        return this.action() == KeyAction.RELEASE;
+        return action == KeyAction.release;
     }
 
     public boolean isPress() {
-        return this.action() == KeyAction.PRESS;
+        return action == KeyAction.press;
     }
 
     public boolean isRepeat() {
-        return this.action() == KeyAction.REPEAT;
+        return action == KeyAction.repeat;
     }
 
     /**
@@ -139,15 +139,15 @@ public record InputContext(
     }
 
     public enum KeyAction {
-        PRESS,
-        RELEASE,
-        REPEAT;
+        press,
+        release,
+        repeat;
 
         public static KeyAction from(int action) {
             return switch (action) {
-                case 0 -> PRESS;
-                case 1 -> RELEASE;
-                case 2 -> REPEAT;
+                case 0 -> press;
+                case 1 -> release;
+                case 2 -> repeat;
                 default -> throw new IllegalArgumentException("Unexpected value: " + action);
             };
         }

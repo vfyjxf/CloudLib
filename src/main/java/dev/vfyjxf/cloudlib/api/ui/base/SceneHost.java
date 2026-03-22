@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
+import dev.vfyjxf.cloudlib.api.math.Size;
 import dev.vfyjxf.cloudlib.api.ui.base.host.ScreenSceneHost;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;

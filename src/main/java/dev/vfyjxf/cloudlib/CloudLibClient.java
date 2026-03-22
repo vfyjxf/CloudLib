@@ -3,11 +3,7 @@ package dev.vfyjxf.cloudlib;
 import dev.vfyjxf.cloudlib.api.plugin.AnnotationPluginLookup;
 import dev.vfyjxf.cloudlib.api.plugin.CloudLibClientPlugin;
 import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
-import dev.vfyjxf.cloudlib.api.ui.dump.UIDumpRunner;
 import dev.vfyjxf.cloudlib.data.lang.LangKeyProvider;
-import dev.vfyjxf.cloudlib.ui.GuiEventHandler;
-import dev.vfyjxf.cloudlib.ui.UIManager;
-import dev.vfyjxf.cloudlib.util.Singletons;
 import net.minecraft.data.DataProvider;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -15,7 +11,6 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
-import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.slf4j.Logger;
@@ -33,10 +28,6 @@ public final class CloudLibClient extends CloudLib {
         clientPlugins = PluginLoader.loadPlugin(logger, "CloudLib Client Plugin", AnnotationPluginLookup.of(CloudLibClientPlugin.class)).toImmutable();
         modBus.addListener(this::gatherData);
         modBus.addListener(this::registerClientTooltipComponentFactories);
-        Singletons.attachInstance(GuiEventHandler.class, new GuiEventHandler());
-        NeoForge.EVENT_BUS.register(GuiEventHandler.getInstance());
-        NeoForge.EVENT_BUS.register(UIManager.instance());
-        UIDumpRunner.register();
     }
 
     @Override

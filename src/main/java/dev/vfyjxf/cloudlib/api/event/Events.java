@@ -151,9 +151,7 @@ public final class Events {
         @Override
         public T invoker() {
             checkLifetime();
-            if (invoker == null) {
-                update();
-            }
+            if (invoker == null) update();
             return invoker;
         }
 

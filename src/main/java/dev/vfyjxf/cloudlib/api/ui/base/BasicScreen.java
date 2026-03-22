@@ -1,9 +1,9 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
 import dev.vfyjxf.cloudlib.api.ui.base.host.ScreenSceneHost;
-import dev.vfyjxf.cloudlib.api.ui.overlay.UIOverlay;
+import dev.vfyjxf.cloudlib.api.ui.overlay.SceneOverlay;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.ui.overlay.UIOverlayImpl;
+import dev.vfyjxf.cloudlib.ui.overlay.SceneOverlayImpl;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -16,7 +16,7 @@ public abstract class BasicScreen extends Screen {
 
     protected final WidgetGroup<Widget> mainGroup;
     private final Scene scene;
-    private final UIOverlayImpl screenOverlay;
+    private final SceneOverlayImpl screenOverlay;
 
     /**
      * Note: Register init listener in constructor
@@ -33,7 +33,7 @@ public abstract class BasicScreen extends Screen {
         //endregion
         //region screen overlay
         WidgetGroup<Widget> overlayPanel = mainGroup.addWidget(new WidgetGroup<>());
-        screenOverlay = new UIOverlayImpl(overlayPanel, true);
+        screenOverlay = new SceneOverlayImpl(overlayPanel);
         //endregion
     }
 
@@ -45,7 +45,7 @@ public abstract class BasicScreen extends Screen {
         return scene;
     }
 
-    public UIOverlay screenOverlay() {
+    public SceneOverlay screenOverlay() {
         return screenOverlay;
     }
 

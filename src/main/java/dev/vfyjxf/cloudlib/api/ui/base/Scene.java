@@ -500,6 +500,7 @@ public final class Scene {
 
     public void mount(SceneContext context) {
         this.context = context;
+        setLayoutArea(context.width(), context.height());
         WidgetTree.walkBreadthFirst(root, true, -1, (widget, depth) -> {
             if (!widget.lifecycle.initialized()) {
                 throw new IllegalArgumentException("Widget: " + widget + " is not initialized!");
@@ -528,6 +529,10 @@ public final class Scene {
     }
 
     void unmountWidget(Widget widget) {
+        // Widget was queued for creation but never initialized/mounted — just discard
+        if (createdWidgets.remove(widget)) {
+            return;
+        }
         if (!widget.lifecycle.mounted()) {
             throw new IllegalArgumentException("Cannot unmount widget: " + widget + " because it is not mounted!");
         }
@@ -589,6 +594,17 @@ public final class Scene {
             widget.destroy();
         }
         destroyingWidgets.clear();
+    }
+
+    /**
+     * Applies pending scene mutations without performing a render pass.
+     * Useful for automation flows that trigger UI updates and need a stable
+     * widget tree immediately afterward.
+     */
+    public void stabilize() {
+        drainDeferred();
+        rebuildRequired();
+        runPostLayout();
     }
 
     //endregion

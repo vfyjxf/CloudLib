@@ -17,15 +17,15 @@ public final class ExposeManagement {
         /**
          * Send all expose
          */
-        FULL,
+        full,
         /**
          * Send the changed value, prioritizing difference.,
          */
-        DIFFERENCE,
+        difference,
         /**
          * Send the changed value,but don't care difference.
          */
-        FULL_VALUE
+        fullValue
     }
 
     private final MutableShortObjectMap<ExposeCommon> exposes = new ShortObjectHashMap<>();
@@ -86,19 +86,19 @@ public final class ExposeManagement {
     }
 
     public void writeAllToClient(RegistryFriendlyByteBuf byteBuf) {
-        writeToClient(byteBuf, SyncStrategy.FULL);
+        writeToClient(byteBuf, SyncStrategy.full);
     }
 
     public void writeDifferenceToClient(RegistryFriendlyByteBuf byteBuf) {
-        writeToClient(byteBuf, SyncStrategy.DIFFERENCE);
+        writeToClient(byteBuf, SyncStrategy.difference);
     }
 
     public void writeChangesToClient(RegistryFriendlyByteBuf byteBuf) {
-        writeToClient(byteBuf, SyncStrategy.FULL_VALUE);
+        writeToClient(byteBuf, SyncStrategy.fullValue);
     }
 
     public void writeToClient(RegistryFriendlyByteBuf byteBuf, SyncStrategy strategy) {
-        if (strategy == SyncStrategy.FULL) {
+        if (strategy == SyncStrategy.full) {
             byteBuf.writeBoolean(true);//flag:send all
             for (ExposeCommon expose : exposes) {
                 if (expose instanceof ReversedOnly<?, ?>) continue;
@@ -112,7 +112,7 @@ public final class ExposeManagement {
                 try {
                     if (!expose.changed()) continue;
                     byteBuf.writeShort(expose.id());
-                    if (strategy == SyncStrategy.DIFFERENCE &&
+                    if (strategy == SyncStrategy.difference &&
                             expose instanceof Transcoder transcoder &&
                             expose instanceof Differential<?> differential
                     ) {

@@ -4,7 +4,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.Scene;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
-import dev.vfyjxf.cloudlib.api.ui.overlay.UIOverlay;
+import dev.vfyjxf.cloudlib.api.ui.overlay.SceneOverlay;
 import dev.vfyjxf.cloudlib.api.ui.sync.menu.BasicMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -20,7 +20,7 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
     protected final WidgetGroup<Widget> mainGroup;
     protected final Player player;
     private final Scene scene;
-    private final UIOverlay screenOverlay = null;
+    private final SceneOverlay screenOverlay = null;
 
     public BasicMenuScreen(T menu, Inventory playerInventory) {
         super(menu, playerInventory, Component.empty());
@@ -54,7 +54,7 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
         return mainGroup;
     }
 
-    public UIOverlay screenOverlay() {
+    public SceneOverlay screenOverlay() {
         return screenOverlay;
     }
 

@@ -32,3 +32,8 @@ run
 design
 runs
 run-*
+
+#agent
+.codex
+.vscode
+.worktrees

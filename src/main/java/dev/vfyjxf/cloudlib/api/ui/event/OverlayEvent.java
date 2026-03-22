@@ -2,7 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.event;
 
 import dev.vfyjxf.cloudlib.api.event.EventDefinition;
 import dev.vfyjxf.cloudlib.api.event.Events;
-import dev.vfyjxf.cloudlib.api.ui.overlay.UIOverlay;
+import dev.vfyjxf.cloudlib.api.ui.overlay.SceneOverlay;
 
 public interface OverlayEvent {
 
@@ -15,7 +15,7 @@ public interface OverlayEvent {
     @FunctionalInterface
     interface OnOverlayBuild extends OverlayEvent {
 
-        void onBuild(UIOverlay overlay);
+        void onBuild(SceneOverlay overlay);
 
     }
 
