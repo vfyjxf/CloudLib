@@ -40,6 +40,10 @@ public final class Namespace implements Comparable<Namespace> {
         return new Namespace("minecraft", path);
     }
 
+    public static Namespace ofCommon(String path) {
+        return new Namespace("c", path);
+    }
+
     public static Namespace of(String root, String path) {
         return new Namespace(root, path);
     }
