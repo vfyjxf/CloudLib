@@ -35,6 +35,10 @@ public class TextWidget extends Widget {
         return new TextWidget(entry.get());
     }
 
+    public static TextWidget of(LangEntry entry, Object... args) {
+        return new TextWidget(entry.get(args));
+    }
+
     private TextWidget(Component text) {
         this.text = text;
         this.onMount((scene, context, handle) -> {
@@ -55,6 +59,11 @@ public class TextWidget extends Widget {
 
     public TextWidget setText(Component text) {
         this.text = text;
+        return this;
+    }
+
+    public TextWidget setText(LangEntry entry, Object... args) {
+        this.text = entry.get(args);
         return this;
     }
 

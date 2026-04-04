@@ -8,6 +8,7 @@ import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollDirection;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollEffect;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollState;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
+import dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares;
 
 /**
  * Static DSL entry point for creating {@link Effect} instances.
@@ -137,7 +138,7 @@ public final class UIEffects {
      * @param middleware ordered middleware to apply (offset, flip, shift, etc.)
      * @return a floating effect
      * @see FloatingEffect
-     * @see dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares
+     * @see FloatingMiddlewares
      */
     public static FloatingEffect floating(Widget reference, FloatingPlacement placement, FloatingMiddleware... middleware) {
         return FloatingEffect.create(reference, placement, middleware);

@@ -59,9 +59,7 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
             {
                 onEvent(WidgetEvent.onRender, ((canvas, mouseX, mouseY, partialTicks, self, context) -> {
                     if (displayItem.isEmpty()) return;
-                    canvas.render((graphics -> {
-                        graphics.renderItem(displayItem, 0, 0);
-                    }));
+                    canvas.layeredGraphics().renderItem(displayItem, 0, 0);
                 }));
             }
         };

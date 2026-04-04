@@ -10,7 +10,13 @@ import dev.vfyjxf.cloudlib.api.ui.floating.FloatingPlacement;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
-import dev.vfyjxf.cloudlib.ui.widget.*;
+import dev.vfyjxf.cloudlib.ui.widget.BoxWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ButtonWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
+import dev.vfyjxf.cloudlib.ui.widget.DividerWidget;
+import dev.vfyjxf.cloudlib.ui.widget.LabelWidget;
+import dev.vfyjxf.cloudlib.ui.widget.RowWidget;
+import dev.vfyjxf.cloudlib.ui.widget.SpacerWidget;
 
 import static dev.vfyjxf.cloudlib.api.ui.effect.UIEffects.floating;
 import static dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares.*;

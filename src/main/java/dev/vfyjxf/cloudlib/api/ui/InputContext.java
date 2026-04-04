@@ -114,6 +114,10 @@ public record InputContext(
         return isMouse() && key.getValue() == 1;
     }
 
+    public boolean isMiddleClick() {
+        return isMouse() && key.getValue() == 2;
+    }
+
     public boolean isKeyboard() {
         return key.getType() == InputConstants.Type.KEYSYM;
     }

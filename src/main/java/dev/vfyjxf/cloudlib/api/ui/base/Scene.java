@@ -458,6 +458,7 @@ public final class Scene {
     private final ObjectSet<Widget> createdWidgets = new ObjectLinkedOpenHashSet<>();
     private final ObjectSet<Widget> remountWidgets = new ObjectLinkedOpenHashSet<>();
     private final ObjectSet<Widget> destroyingWidgets = new ObjectLinkedOpenHashSet<>();
+    private final ObjectSet<Widget> retainedWidgets = new ObjectLinkedOpenHashSet<>();
     private SceneContext context;
 
     //region scene handle
@@ -518,14 +519,32 @@ public final class Scene {
 //            throw new IllegalStateException("Widget: " + widget + " is not being destroyed!");
 //        }
         //TODO:完善reuse的流程，让上面的检查能够工作
-        destroyingWidgets.remove(widget);
+        WidgetTree.walkBreadthFirst(widget, true, -1, (w, depth) -> {
+            destroyingWidgets.remove(w);
+            retainedWidgets.add(w);
+            return TraversalControl.proceed;
+        });
     }
 
     void remountWidget(Widget widget) {
         if (!widget.lifecycle.unmounted()) {
             throw new IllegalArgumentException("Cannot add widget: " + widget + " because it is not unmounted!");
         }
+        restoreParentLinks(widget);
+        WidgetTree.walkBreadthFirst(widget, true, -1, (w, depth) -> {
+            retainedWidgets.remove(w);
+            return TraversalControl.proceed;
+        });
         remountWidgets.add(widget);
+    }
+
+    private void restoreParentLinks(Widget widget) {
+        if (widget instanceof CompositeWidget<?> composite) {
+            for (Widget child : composite.children()) {
+                child.parent = composite;
+                restoreParentLinks(child);
+            }
+        }
     }
 
     void unmountWidget(Widget widget) {
@@ -558,6 +577,7 @@ public final class Scene {
             widget.destroy();
         }
         destroyingWidgets.clear();
+        destroyRetainedWidgets();
     }
 
     private void rebuildRequired() {
@@ -579,7 +599,10 @@ public final class Scene {
         }
         if (!remountWidgets.isEmpty()) {
             for (Widget widget : remountWidgets) {
-                widget.mount(this, context, handleOf(widget));
+                WidgetTree.walkBreadthFirst(widget, true, -1, (w, depth) -> {
+                    w.mount(this, context, handleOf(w));
+                    return TraversalControl.proceed;
+                });
             }
             remountWidgets.clear();
         }
@@ -594,6 +617,15 @@ public final class Scene {
             widget.destroy();
         }
         destroyingWidgets.clear();
+    }
+
+    private void destroyRetainedWidgets() {
+        for (Widget widget : retainedWidgets) {
+            if (widget.lifecycle.unmounted()) {
+                widget.destroy();
+            }
+        }
+        retainedWidgets.clear();
     }
 
     /**
@@ -688,9 +720,52 @@ public final class Scene {
     //region tooltip
 
     private Tooltip hoverTooltip = new Tooltip();
+    private boolean hoverRefreshQueued = false;
+    private double queuedHoverMouseX = 0.0;
+    private double queuedHoverMouseY = 0.0;
 
     public void setHoverTooltip(Tooltip tooltip) {
         this.hoverTooltip = Checks.checkNotNull(tooltip, "tooltip");
+    }
+
+    public void requestHoverRefresh(double mouseX, double mouseY) {
+        queuedHoverMouseX = mouseX;
+        queuedHoverMouseY = mouseY;
+        if (hoverRefreshQueued) {
+            return;
+        }
+        hoverRefreshQueued = true;
+        defer(() -> {
+            hoverRefreshQueued = false;
+            if (!root.lifecycle.mounted()) {
+                return;
+            }
+            mouseMoved(queuedHoverMouseX, queuedHoverMouseY);
+        });
+    }
+
+    private void refreshHoverTooltip(double mouseX, double mouseY) {
+        Tooltip resolved = resolveHoverTooltip(mouseX, mouseY);
+        setHoverTooltip(resolved != null ? resolved : Tooltip.create());
+    }
+
+    private @Nullable Tooltip resolveHoverTooltip(double mouseX, double mouseY) {
+        WidgetPath path = lastHoveredPath;
+        if (path == null) {
+            return null;
+        }
+        for (int i = path.size() - 1; i >= 0; i--) {
+            Widget widget = path.get(i);
+            if (!widget.lifecycle.mounted()) {
+                continue;
+            }
+            FloatPos local = widget.sceneToLocal(mouseX, mouseY);
+            Tooltip tooltip = widget.hoverTooltip((int) local.x, (int) local.y);
+            if (tooltip != null && tooltip.notEmpty()) {
+                return tooltip;
+            }
+        }
+        return null;
     }
 
     private record TooltipInstance(Tooltip tooltip, ClientTooltipPositioner positioner) {
@@ -935,10 +1010,12 @@ public final class Scene {
             var bubble = target.bubble();
             currentClickWidget = target;
             lastClickButton = button;
-            return handleBubbleEvent(
+            boolean result = handleBubbleEvent(
                     target, bubble, InputEvents.onMouseClicked,
                     (listener) -> listener.onClicked(input, bubble)
             );
+            refreshHoverTooltip(mouseX, mouseY);
+            return result;
         }
         return false;
     }
@@ -996,6 +1073,7 @@ public final class Scene {
                 dispatchClickOutside(target);
             }
             currentClickWidget = null;
+            refreshHoverTooltip(mouseX, mouseY);
             return result;
         }
         clickCount = 0;
@@ -1031,6 +1109,7 @@ public final class Scene {
                 int forkIndex = currentPath.commonAncestorIndex(lastHoveredPath);
                 for (int i = lastHoveredPath.size() - 1; i > forkIndex; i--) {
                     Widget widget = lastHoveredPath.get(i);
+                    if (!widget.lifecycle.mounted()) continue;
                     widget.hovered = false;
                     widget.listeners(InputEvents.onMouseLeave).onLeave(mouseX, mouseY, widget.interruptible());
                 }
@@ -1051,6 +1130,7 @@ public final class Scene {
             lastHoveredPath = null;
         }
         //endregion
+        refreshHoverTooltip(mouseX, mouseY);
     }
 
     /**
@@ -1081,10 +1161,12 @@ public final class Scene {
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             var bubble = target.bubble();
-            return handleBubbleEvent(
+            boolean result = handleBubbleEvent(
                     target, bubble, InputEvents.onMouseScrolled,
                     (listener) -> listener.onScrolled(mouseX, mouseY, scrollX, scrollY, bubble)
             );
+            refreshHoverTooltip(mouseX, mouseY);
+            return result;
         }
         return false;
     }

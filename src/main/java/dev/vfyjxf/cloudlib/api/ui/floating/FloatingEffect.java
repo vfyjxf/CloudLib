@@ -8,6 +8,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.effect.Effect;
 import dev.vfyjxf.cloudlib.api.ui.layout.LayoutScope;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
+import dev.vfyjxf.cloudlib.api.ui.layout.LayoutHandler;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -22,7 +23,7 @@ import java.util.Objects;
  * When applied, this effect:
  * <ul>
  *   <li>Sets the floating widget to absolute positioning so it doesn't affect the flow layout</li>
- *   <li>Registers a {@link dev.vfyjxf.cloudlib.api.ui.layout.LayoutHandler LayoutHandler} that
+ *   <li>Registers a {@link LayoutHandler LayoutHandler} that
  *       computes the floating position during every layout pass</li>
  *   <li>Runs the configured {@link FloatingMiddleware} pipeline (offset, flip, shift, etc.)</li>
  *   <li>Writes the computed coordinates into the {@link LayoutScope}</li>

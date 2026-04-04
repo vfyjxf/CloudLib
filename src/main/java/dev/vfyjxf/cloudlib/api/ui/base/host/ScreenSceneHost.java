@@ -7,13 +7,7 @@ import net.minecraft.client.gui.screens.Screen;
 /**
  * A scene host for a Minecraft screen.
  */
-public final class ScreenSceneHost implements SceneHost {
-
-    private final Screen screen;
-
-    public ScreenSceneHost(Screen screen) {
-        this.screen = screen;
-    }
+public record ScreenSceneHost(Screen screen) implements SceneHost {
 
     @Override
     public Font font() {

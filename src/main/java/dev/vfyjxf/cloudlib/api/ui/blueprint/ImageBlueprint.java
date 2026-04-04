@@ -7,6 +7,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import dev.vfyjxf.cloudlib.ui.widget.ImageWidget;
+import dev.vfyjxf.cloudlib.api.ui.texture.ImageTexture;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,7 +39,7 @@ public final class ImageBlueprint implements Blueprint<ImageWidget> {
 
     public static ImageBlueprint Image(ResourceLocation location, int width, int height) {
         return ScopedReceiver.add(new ImageBlueprint(
-                new dev.vfyjxf.cloudlib.api.ui.texture.ImageTexture(location, width, height)
+                new ImageTexture(location, width, height)
         ));
     }
 

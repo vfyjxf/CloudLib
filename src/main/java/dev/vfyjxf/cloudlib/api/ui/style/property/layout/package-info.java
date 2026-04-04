@@ -43,7 +43,6 @@
  * @see dev.vfyjxf.taffy.style.TaffyStyle
  * @see dev.vfyjxf.cloudlib.api.ui.style.UIStyles
  */
-@NotNullByDefault
+@dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
 package dev.vfyjxf.cloudlib.api.ui.style.property.layout;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;

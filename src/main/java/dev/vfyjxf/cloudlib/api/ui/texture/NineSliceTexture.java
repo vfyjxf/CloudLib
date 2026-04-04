@@ -152,19 +152,25 @@ public record NineSliceTexture(
         addQuad(buffer, matrix, uMin, vBottom, uLeft, vMax, x, y + h - bottom, left, bottom);
         addQuad(buffer, matrix, uRight, vBottom, uMax, vMax, x + w - right, y + h - bottom, right, bottom);
 
-        if (tiledMiddleWidth > 0) {
+        boolean hasHorizontalTiling = tiledMiddleWidth > 0 && middleWidth > 0;
+        if (hasHorizontalTiling && top > 0) {
             // Top edge
             addTiled(buffer, matrix, uLeft, vMin, uRight, vTop, x + left, y, tiledMiddleWidth, top, middleWidth, top);
+        }
+        if (hasHorizontalTiling && bottom > 0) {
             // Bottom edge
             addTiled(buffer, matrix, uLeft, vBottom, uRight, vMax, x + left, y + h - bottom, tiledMiddleWidth, bottom, middleWidth, bottom);
         }
-        if (tiledMiddleHeight > 0) {
+        boolean hasVerticalTiling = tiledMiddleHeight > 0 && middleHeight > 0;
+        if (hasVerticalTiling && left > 0) {
             // Left edge
             addTiled(buffer, matrix, uMin, vTop, uLeft, vBottom, x, y + top, left, tiledMiddleHeight, left, middleHeight);
+        }
+        if (hasVerticalTiling && right > 0) {
             // Right edge
             addTiled(buffer, matrix, uRight, vTop, uMax, vBottom, x + w - right, y + top, right, tiledMiddleHeight, right, middleHeight);
         }
-        if (tiledMiddleWidth > 0 && tiledMiddleHeight > 0) {
+        if (tiledMiddleWidth > 0 && tiledMiddleHeight > 0 && middleWidth > 0 && middleHeight > 0) {
             // Center
             addTiled(buffer, matrix, uLeft, vTop, uRight, vBottom, x + left, y + top, tiledMiddleWidth, tiledMiddleHeight, middleWidth, middleHeight);
         }
@@ -265,19 +271,25 @@ public record NineSliceTexture(
         emitter.textured(textureLocation, x, y + h - bottom, left, bottom, uMin, vBottom, uLeft, vMax, color);
         emitter.textured(textureLocation, x + w - right, y + h - bottom, right, bottom, uRight, vBottom, uMax, vMax, color);
 
-        if (tiledMiddleWidth > 0) {
+        boolean hasHorizontalTiling = tiledMiddleWidth > 0 && middleWidth > 0;
+        if (hasHorizontalTiling && top > 0) {
             // Top edge
             emitTiled(emitter, textureLocation, uLeft, vMin, uRight, vTop, x + left, y, tiledMiddleWidth, top, middleWidth, top, color);
+        }
+        if (hasHorizontalTiling && bottom > 0) {
             // Bottom edge
             emitTiled(emitter, textureLocation, uLeft, vBottom, uRight, vMax, x + left, y + h - bottom, tiledMiddleWidth, bottom, middleWidth, bottom, color);
         }
-        if (tiledMiddleHeight > 0) {
+        boolean hasVerticalTiling = tiledMiddleHeight > 0 && middleHeight > 0;
+        if (hasVerticalTiling && left > 0) {
             // Left edge
             emitTiled(emitter, textureLocation, uMin, vTop, uLeft, vBottom, x, y + top, left, tiledMiddleHeight, left, middleHeight, color);
+        }
+        if (hasVerticalTiling && right > 0) {
             // Right edge
             emitTiled(emitter, textureLocation, uRight, vTop, uMax, vBottom, x + w - right, y + top, right, tiledMiddleHeight, right, middleHeight, color);
         }
-        if (tiledMiddleWidth > 0 && tiledMiddleHeight > 0) {
+        if (tiledMiddleWidth > 0 && tiledMiddleHeight > 0 && middleWidth > 0 && middleHeight > 0) {
             // Center
             emitTiled(emitter, textureLocation, uLeft, vTop, uRight, vBottom, x + left, y + top, tiledMiddleWidth, tiledMiddleHeight, middleWidth, middleHeight, color);
         }

@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.integration.moddevmcp;
 
+import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetPath;
 
@@ -42,7 +43,7 @@ public final class CloudLibWidgetPathFormatter {
         if (parent == null) {
             return fallbackIndex;
         }
-        if (!(parent instanceof dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget<?> composite)) {
+        if (!(parent instanceof CompositeWidget<?> composite)) {
             return fallbackIndex;
         }
 

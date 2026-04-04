@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.scroll;
 
+import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 
@@ -8,7 +9,7 @@ import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
  * <p>
  * {@code ScrollState} manages scroll offsets, content dimensions, scroll speed,
  * scrollbar visibility, textures, and smooth scrolling. It is designed to be
- * attached to any {@link dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget CompositeWidget}
+ * attached to any {@link CompositeWidget CompositeWidget}
  * via {@link ScrollEffect}.
  * <p>
  * Content size is automatically computed from children bounds by default.
@@ -36,6 +37,15 @@ public final class ScrollState {
     private static final int DEFAULT_SCROLLBAR_WIDTH = 6;
     private static final int DEFAULT_MIN_THUMB_SIZE = 20;
     private static final float DEFAULT_SMOOTH_SPEED = 0.35f;
+    private static final float DEFAULT_WHEEL_ACCELERATION_STEP = 0.35f;
+    private static final float DEFAULT_WHEEL_ACCELERATION_MAX_MULTIPLIER = 4.0f;
+    private static final long DEFAULT_WHEEL_ACCELERATION_RESET_MILLIS = 180L;
+    private static final float LONG_CONTENT_WHEEL_ACCELERATION_STEP = 0.45f;
+    private static final float LONG_CONTENT_WHEEL_ACCELERATION_MAX_MULTIPLIER = 6.0f;
+    private static final long LONG_CONTENT_WHEEL_ACCELERATION_RESET_MILLIS = 220L;
+    private static final float DEFAULT_AUTO_SCROLL_DEAD_ZONE = 6.0f;
+    private static final float DEFAULT_AUTO_SCROLL_SPEED = 0.35f;
+    private static final float DEFAULT_AUTO_SCROLL_MAX_SPEED = 36.0f;
     private static final float SNAP_THRESHOLD = 0.5f;
     private static final VisualTexture DEFAULT_TRACK = new ColorTexture(0x80000000);
     private static final VisualTexture DEFAULT_THUMB = new ColorTexture(0xFFAAAAAA);
@@ -75,6 +85,28 @@ public final class ScrollState {
 
     //endregion
 
+    //region wheel acceleration
+
+    private boolean wheelAcceleration = false;
+    private float wheelAccelerationStep = DEFAULT_WHEEL_ACCELERATION_STEP;
+    private float wheelAccelerationMaxMultiplier = DEFAULT_WHEEL_ACCELERATION_MAX_MULTIPLIER;
+    private long wheelAccelerationResetMillis = DEFAULT_WHEEL_ACCELERATION_RESET_MILLIS;
+    private float wheelAccelerationMultiplier = 1.0f;
+    private long wheelAccelerationLastMillis = Long.MIN_VALUE;
+    private int wheelAccelerationLastDirectionX = 0;
+    private int wheelAccelerationLastDirectionY = 0;
+
+    //endregion
+
+    //region middle mouse auto-scroll
+
+    private boolean middleMouseAutoScroll = false;
+    private float autoScrollDeadZone = DEFAULT_AUTO_SCROLL_DEAD_ZONE;
+    private float autoScrollSpeed = DEFAULT_AUTO_SCROLL_SPEED;
+    private float autoScrollMaxSpeed = DEFAULT_AUTO_SCROLL_MAX_SPEED;
+
+    //endregion
+
     //region smooth scrolling
 
     private boolean smooth = true;
@@ -85,11 +117,16 @@ public final class ScrollState {
     //region scrollbar config
 
     private boolean showScrollbar = true;
+    private boolean enabled = true;
     private boolean draggable = true;
     private int scrollbarWidth = DEFAULT_SCROLLBAR_WIDTH;
     private int minThumbSize = DEFAULT_MIN_THUMB_SIZE;
     private VisualTexture trackTexture = DEFAULT_TRACK;
     private VisualTexture thumbTexture = DEFAULT_THUMB;
+    private int viewportInsetTop = 0;
+    private int viewportInsetRight = 0;
+    private int viewportInsetBottom = 0;
+    private int viewportInsetLeft = 0;
 
     //endregion
 
@@ -324,6 +361,178 @@ public final class ScrollState {
 
     //endregion
 
+    //region wheel acceleration
+
+    public boolean wheelAcceleration() {
+        return wheelAcceleration;
+    }
+
+    public ScrollState wheelAcceleration(boolean enabled) {
+        if (this.wheelAcceleration != enabled) {
+            resetWheelAcceleration();
+        }
+        this.wheelAcceleration = enabled;
+        return this;
+    }
+
+    public float wheelAccelerationStep() {
+        return wheelAccelerationStep;
+    }
+
+    public ScrollState wheelAccelerationStep(float step) {
+        this.wheelAccelerationStep = Math.max(0.0f, step);
+        return this;
+    }
+
+    public float wheelAccelerationMaxMultiplier() {
+        return wheelAccelerationMaxMultiplier;
+    }
+
+    public ScrollState wheelAccelerationMaxMultiplier(float multiplier) {
+        this.wheelAccelerationMaxMultiplier = Math.max(1.0f, multiplier);
+        this.wheelAccelerationMultiplier = Math.min(this.wheelAccelerationMultiplier, this.wheelAccelerationMaxMultiplier);
+        return this;
+    }
+
+    public long wheelAccelerationResetMillis() {
+        return wheelAccelerationResetMillis;
+    }
+
+    public ScrollState wheelAccelerationResetMillis(long resetMillis) {
+        this.wheelAccelerationResetMillis = Math.max(0L, resetMillis);
+        return this;
+    }
+
+    /**
+     * Enables wheel acceleration tuned for long, dense content such as item grids,
+     * recipe databases, and layer lists.
+     */
+    public ScrollState longContentWheelAcceleration() {
+        return wheelAcceleration(true)
+                .wheelAccelerationStep(LONG_CONTENT_WHEEL_ACCELERATION_STEP)
+                .wheelAccelerationMaxMultiplier(LONG_CONTENT_WHEEL_ACCELERATION_MAX_MULTIPLIER)
+                .wheelAccelerationResetMillis(LONG_CONTENT_WHEEL_ACCELERATION_RESET_MILLIS);
+    }
+
+    public float currentWheelAccelerationMultiplier() {
+        return wheelAccelerationMultiplier;
+    }
+
+    public ScrollDelta wheelDelta(double scrollX, double scrollY) {
+        return wheelScrollDelta(scrollX, scrollY, System.currentTimeMillis());
+    }
+
+    public ScrollDelta wheelDelta(double scrollX, double scrollY, long nowMillis) {
+        return wheelScrollDelta(scrollX, scrollY, nowMillis);
+    }
+
+    ScrollDelta wheelScrollDelta(double scrollX, double scrollY, long nowMillis) {
+        float multiplier = advanceWheelAcceleration(scrollX, scrollY, nowMillis);
+        return new ScrollDelta(
+                (float) (-scrollX * scrollSpeed * multiplier),
+                (float) (-scrollY * scrollSpeed * multiplier)
+        );
+    }
+
+    float advanceWheelAcceleration(double scrollX, double scrollY, long nowMillis) {
+        double magnitude = Math.max(Math.abs(scrollX), Math.abs(scrollY));
+        if (!wheelAcceleration || magnitude <= 0.0) {
+            resetWheelAcceleration();
+            return 1.0f;
+        }
+
+        int directionX = sign(scrollX);
+        int directionY = sign(scrollY);
+        boolean first = wheelAccelerationLastMillis == Long.MIN_VALUE;
+        boolean timedOut = !first && (nowMillis < wheelAccelerationLastMillis
+                || nowMillis - wheelAccelerationLastMillis > wheelAccelerationResetMillis);
+        boolean reversed = isDirectionReversed(directionX, directionY);
+
+        if (first || timedOut || reversed) {
+            wheelAccelerationMultiplier = 1.0f;
+        } else {
+            float step = wheelAccelerationStep * (float) Math.max(1.0, magnitude);
+            wheelAccelerationMultiplier = Math.min(wheelAccelerationMaxMultiplier, wheelAccelerationMultiplier + step);
+        }
+
+        wheelAccelerationLastMillis = nowMillis;
+        if (directionX != 0) wheelAccelerationLastDirectionX = directionX;
+        if (directionY != 0) wheelAccelerationLastDirectionY = directionY;
+        return wheelAccelerationMultiplier;
+    }
+
+    void resetWheelAcceleration() {
+        wheelAccelerationMultiplier = 1.0f;
+        wheelAccelerationLastMillis = Long.MIN_VALUE;
+        wheelAccelerationLastDirectionX = 0;
+        wheelAccelerationLastDirectionY = 0;
+    }
+
+    private boolean isDirectionReversed(int directionX, int directionY) {
+        return (directionX != 0 && wheelAccelerationLastDirectionX != 0 && directionX != wheelAccelerationLastDirectionX)
+                || (directionY != 0 && wheelAccelerationLastDirectionY != 0 && directionY != wheelAccelerationLastDirectionY);
+    }
+
+    private static int sign(double value) {
+        if (value > 0.0) return 1;
+        if (value < 0.0) return -1;
+        return 0;
+    }
+
+    public record ScrollDelta(float x, float y) {
+    }
+
+    //endregion
+
+    //region middle mouse auto-scroll
+
+    public boolean middleMouseAutoScroll() {
+        return middleMouseAutoScroll;
+    }
+
+    public ScrollState middleMouseAutoScroll(boolean enabled) {
+        this.middleMouseAutoScroll = enabled;
+        return this;
+    }
+
+    public float autoScrollDeadZone() {
+        return autoScrollDeadZone;
+    }
+
+    public ScrollState autoScrollDeadZone(float deadZone) {
+        this.autoScrollDeadZone = Math.max(0.0f, deadZone);
+        return this;
+    }
+
+    public float autoScrollSpeed() {
+        return autoScrollSpeed;
+    }
+
+    public ScrollState autoScrollSpeed(float speed) {
+        this.autoScrollSpeed = Math.max(0.0f, speed);
+        return this;
+    }
+
+    public float autoScrollMaxSpeed() {
+        return autoScrollMaxSpeed;
+    }
+
+    public ScrollState autoScrollMaxSpeed(float maxSpeed) {
+        this.autoScrollMaxSpeed = Math.max(0.0f, maxSpeed);
+        return this;
+    }
+
+    float autoScrollDelta(double distanceFromAnchor) {
+        double distance = Math.abs(distanceFromAnchor);
+        if (distance <= autoScrollDeadZone || autoScrollSpeed <= 0.0f || autoScrollMaxSpeed <= 0.0f) {
+            return 0.0f;
+        }
+        float delta = (float) Math.min(autoScrollMaxSpeed, (distance - autoScrollDeadZone) * autoScrollSpeed);
+        return (float) Math.copySign(delta, distanceFromAnchor);
+    }
+
+    //endregion
+
     //region smooth scrolling
 
     /**
@@ -426,6 +635,19 @@ public final class ScrollState {
         return this;
     }
 
+    public boolean enabled() {
+        return enabled;
+    }
+
+    public ScrollState enabled(boolean enabled) {
+        this.enabled = enabled;
+        if (!enabled) {
+            resetScroll();
+            resetWheelAcceleration();
+        }
+        return this;
+    }
+
     /**
      * Returns whether the scrollbar thumb can be dragged with the mouse.
      */
@@ -494,6 +716,45 @@ public final class ScrollState {
         return this;
     }
 
+    public int viewportInsetTop() {
+        return viewportInsetTop;
+    }
+
+    public int viewportInsetRight() {
+        return viewportInsetRight;
+    }
+
+    public int viewportInsetBottom() {
+        return viewportInsetBottom;
+    }
+
+    public int viewportInsetLeft() {
+        return viewportInsetLeft;
+    }
+
+    /**
+     * Insets the scroll viewport and scrollbar tracks from the widget edges.
+     * <p>
+     * This is useful when a scrollable widget has a textured frame or border that
+     * should remain visually reserved while the inner content scrolls.
+     */
+    public ScrollState viewportInset(int inset) {
+        return viewportInset(inset, inset, inset, inset);
+    }
+
+    public ScrollState viewportInset(int vertical, int horizontal) {
+        return viewportInset(vertical, horizontal, vertical, horizontal);
+    }
+
+    public ScrollState viewportInset(int top, int right, int bottom, int left) {
+        this.viewportInsetTop = Math.max(0, top);
+        this.viewportInsetRight = Math.max(0, right);
+        this.viewportInsetBottom = Math.max(0, bottom);
+        this.viewportInsetLeft = Math.max(0, left);
+        reclamp();
+        return this;
+    }
+
     //endregion
 
     //region viewport (managed by ScrollEffect)
@@ -523,14 +784,14 @@ public final class ScrollState {
      * Returns whether vertical scrolling is possible (content taller than viewport).
      */
     public boolean canScrollVertically() {
-        return direction.allowsVertical() && contentHeight > viewportHeight;
+        return enabled && direction.allowsVertical() && contentHeight > viewportHeight;
     }
 
     /**
      * Returns whether horizontal scrolling is possible (content wider than viewport).
      */
     public boolean canScrollHorizontally() {
-        return direction.allowsHorizontal() && contentWidth > viewportWidth;
+        return enabled && direction.allowsHorizontal() && contentWidth > viewportWidth;
     }
 
     /**
@@ -595,6 +856,7 @@ public final class ScrollState {
                 ", content=(" + contentWidth + "x" + contentHeight + ")" +
                 ", viewport=(" + viewportWidth + "x" + viewportHeight + ")" +
                 ", smooth=" + smooth +
+                ", enabled=" + enabled +
                 '}';
     }
 }

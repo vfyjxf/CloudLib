@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.style.property.visual;
 
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollEffect;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollState;
 import dev.vfyjxf.cloudlib.api.ui.style.StyleType;
 import dev.vfyjxf.cloudlib.api.ui.style.VisualContext;
@@ -12,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
  * <p>
  * This property stores scrollbar styling data (track texture, thumb texture, width, min thumb size)
  * in the widget's {@link VisualContext} as a custom property, which can then be read by
- * {@link dev.vfyjxf.cloudlib.api.ui.scroll.ScrollEffect ScrollEffect} or any custom scroll logic.
+ * {@link ScrollEffect ScrollEffect} or any custom scroll logic.
  *
  * <h3>Usage with UIStyles</h3>
  * <pre>{@code
@@ -35,7 +37,7 @@ import org.jetbrains.annotations.Nullable;
  * }</pre>
  *
  * @see ScrollState
- * @see dev.vfyjxf.cloudlib.api.ui.scroll.ScrollEffect
+ * @see ScrollEffect
  */
 public record ScrollbarStyleProperty(ScrollbarStyleData data) implements VisualProperty {
 
@@ -115,7 +117,7 @@ public record ScrollbarStyleProperty(ScrollbarStyleData data) implements VisualP
      * @param widget the widget to read from
      * @return the scrollbar style data, or null if not set
      */
-    public static @Nullable ScrollbarStyleData getFrom(dev.vfyjxf.cloudlib.api.ui.base.Widget widget) {
+    public static @Nullable ScrollbarStyleData getFrom(Widget widget) {
         return widget.style().visualContext().getProperty(PROPERTY_KEY, ScrollbarStyleData.class);
     }
 

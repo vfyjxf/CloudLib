@@ -7,7 +7,16 @@ import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
-import dev.vfyjxf.cloudlib.ui.widget.*;
+import dev.vfyjxf.cloudlib.ui.widget.BoxWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ButtonWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
+import dev.vfyjxf.cloudlib.ui.widget.DividerWidget;
+import dev.vfyjxf.cloudlib.ui.widget.LabelWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ProgressBarWidget;
+import dev.vfyjxf.cloudlib.ui.widget.RowWidget;
+import dev.vfyjxf.cloudlib.ui.widget.SpacerWidget;
+import dev.vfyjxf.cloudlib.ui.widget.TextFieldWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ToggleWidget;
 
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
 
@@ -49,8 +58,8 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Divider
         var headerDivider = DividerWidget.horizontal()
-                                         .setColor(0xFF555555)
-                                         .setThickness(2);
+										 .setColor(0xFF555555)
+										 .setThickness(2);
         headerDivider.useStyle(UIStyle.of(heightOf(4)));
         mainContainer.addWidget(headerDivider);
 
@@ -105,8 +114,8 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Title
         var title = LabelWidget.of("CloudLib UI Components Demo")
-                               .setColor(0xFFFFAA00)
-                               .setShadow(true);
+							   .setColor(0xFFFFAA00)
+							   .setShadow(true);
         title.useStyle(UIStyle.of(sizeOf(200, 12)));
         header.addWidget(title);
 
@@ -115,8 +124,8 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Search Field
         var searchField = TextFieldWidget.create()
-                                         .setPlaceholder("Search...")
-                                         .onTextChanged(text -> this.searchText = text);
+										 .setPlaceholder("Search...")
+										 .onTextChanged(text -> this.searchText = text);
         searchField.useStyle(UIStyle.of(
                 sizeOf(150, 20)
         ));
@@ -124,8 +133,8 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Settings Toggle
         var settingsToggle = ToggleWidget.create(false)
-                                         .onToggle(state -> System.out.println("Settings: " + state))
-                                         .setColors(0xFF666666, 0xFF00AA00);
+										 .onToggle(state -> System.out.println("Settings: " + state))
+										 .setColors(0xFF666666, 0xFF00AA00);
         settingsToggle.useStyle(UIStyle.of(sizeOf(30, 16)));
         header.addWidget(settingsToggle);
 
@@ -179,7 +188,7 @@ public class TestLayoutScreen extends BasicScreen {
         row1.setSpacing(4);
 
         var primaryBtn = ButtonWidget.of("Primary", () -> clickCount++)
-                                     .setColors(0xFF0066CC, 0xFF0088FF, 0xFF004499);
+									 .setColors(0xFF0066CC, 0xFF0088FF, 0xFF004499);
         primaryBtn.useStyle(UIStyle.of(sizeOf(80, 20)));
         row1.addWidget(primaryBtn);
 
@@ -219,8 +228,8 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Horizontal Progress
         var horizontalProgress = ProgressBarWidget.create(() -> progressValue)
-                                                  .setDirection(ProgressBarWidget.Direction.LEFT_TO_RIGHT)
-                                                  .setColors(0xFF333333, 0xFF00AA00);
+												  .setDirection(ProgressBarWidget.Direction.LEFT_TO_RIGHT)
+												  .setColors(0xFF333333, 0xFF00AA00);
         horizontalProgress.useStyle(UIStyle.of(sizeOf(164, 12)));
         section.addWidget(horizontalProgress);
 

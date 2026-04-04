@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -40,7 +41,11 @@ public final class SceneCanvas {
     }
 
     private final GuiGraphics graphics;
+    private final GuiGraphics forwardedGraphics;
     private final ClipStack clipStack = new ClipStack();
+    private boolean forwardedActive = false;
+    private boolean forwardedLayered = false;
+    private boolean forwardedClipApplied = false;
 
     // Render transform stack (render-only effects)
     private final Deque<Matrix4f> transformStack = new ArrayDeque<>();
@@ -48,16 +53,15 @@ public final class SceneCanvas {
 
     private final Vector4f transformTemp = new Vector4f();
 
-    // Color state
     private int currentColor = 0xFFFFFFFF;
 
     private float zOffset = 0f;
 
-    // Batch state (always enabled globally)
     private final BatchState batchState = new BatchState();
 
     private SceneCanvas(GuiGraphics graphics) {
         this.graphics = graphics;
+        this.forwardedGraphics = new GuiGraphics(Minecraft.getInstance(), graphics.bufferSource());
     }
 
     //region batch
@@ -204,6 +208,11 @@ public final class SceneCanvas {
      * draw order.
      */
     public void flushBatch() {
+        flushForwardedDraw();
+        flushCanvasBatch();
+    }
+
+    private void flushCanvasBatch() {
         // Flush MC's internal text/sprite buffer first — text was already
         // rendered under the correct scissor during textDraw's restoreScissor()
         // (which triggers graphics.flush before removing the scissor).
@@ -211,8 +220,10 @@ public final class SceneCanvas {
 
         if (batchState.isEmpty()) return;
 
-        // Clear depth so batch quads are not occluded by previous text/item depth writes
+        // Canvas quads are 2D painter-order UI. They must not write depth, otherwise
+        // later layered item renders can be hidden while their decoration text remains visible.
         RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+        RenderSystem.disableDepthTest();
 
         applyScissor();
         graphics.pose().pushPose();
@@ -285,8 +296,20 @@ public final class SceneCanvas {
 
     //region render - drawing API
 
+    /**
+     * Shared pass-through graphics for forwarded vanilla / interop rendering.
+     * Pose is synchronized to the current canvas transform before returning.
+     */
     public GuiGraphics graphics() {
-        return graphics;
+        return beginForwardedDraw(false);
+    }
+
+    /**
+     * Shared pass-through graphics for layered vanilla / interop rendering.
+     * Pose is synchronized to the current canvas transform before returning.
+     */
+    public GuiGraphics layeredGraphics() {
+        return beginForwardedDraw(true);
     }
 
     //region color
@@ -332,6 +355,7 @@ public final class SceneCanvas {
     //region texture
 
     public SceneCanvas texture(VisualTexture texture, int x, int y, int width, int height) {
+        flushForwardedDraw();
         // Check if texture supports batching
         if (texture instanceof BatchableTexture batchable && batchable.supportsBatching()) {
             batchable.emit(batchEmitter, x, y, width, height, currentColor);
@@ -361,6 +385,7 @@ public final class SceneCanvas {
     public SceneCanvas quad(
             ResourceLocation texture, int x, int y, int width, int height,
             float u0, float v0, float u1, float v1) {
+        flushForwardedDraw();
         batchEmitter.textured(texture, x, y, width, height, u0, v0, u1, v1, currentColor);
         return this;
     }
@@ -384,6 +409,7 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas sprite(TextureAtlasSprite sprite, int x, int y, int width, int height) {
+        flushForwardedDraw();
         batchEmitter.textured(sprite.atlasLocation(), x, y, width, height,
                 sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), currentColor);
         return this;
@@ -411,6 +437,7 @@ public final class SceneCanvas {
     //region fill & shape
 
     public SceneCanvas fill(int x, int y, int width, int height, int color) {
+        flushForwardedDraw();
         batchEmitter.colored(x, y, width, height, color);
         return this;
     }
@@ -431,6 +458,7 @@ public final class SceneCanvas {
     public SceneCanvas fillGradient(
             int x, int y, int width, int height,
             int colorTL, int colorTR, int colorBL, int colorBR) {
+        flushForwardedDraw();
         // Transform corners: bottom-left, bottom-right, top-right, top-left
         float[] bl = transformPointLocal(x, y + height);
         float[] br = transformPointLocal(x + width, y + height);
@@ -900,6 +928,15 @@ public final class SceneCanvas {
         return this;
     }
 
+    public SceneCanvas drawString(FormattedCharSequence text, int x, int y, int color) {
+        return drawString(text, x, y, color, false);
+    }
+
+    public SceneCanvas drawString(FormattedCharSequence text, int x, int y, int color, boolean dropShadow) {
+        textDraw(() -> graphics.drawString(font(), text, x, y, color, dropShadow));
+        return this;
+    }
+
     public SceneCanvas drawCenteredString(String text, int x, int y, int color) {
         int textWidth = font().width(text);
         return drawString(text, x - textWidth / 2, y, color);
@@ -926,6 +963,14 @@ public final class SceneCanvas {
         return drawString(text, x, y, color, false);
     }
 
+    public SceneCanvas text(FormattedCharSequence text, int x, int y, int color, boolean dropShadow) {
+        return drawString(text, x, y, color, dropShadow);
+    }
+
+    public SceneCanvas text(FormattedCharSequence text, int x, int y, int color) {
+        return drawString(text, x, y, color, false);
+    }
+
     //endregion
 
     //region item
@@ -933,12 +978,12 @@ public final class SceneCanvas {
     private static final float Z_INCREMENT = 1f;
 
     public SceneCanvas renderItem(ItemStack stack, int x, int y) {
-        layeredDraw(() -> graphics.renderItem(stack, x, y));
+        layeredGraphics().renderItem(stack, x, y);
         return this;
     }
 
     public SceneCanvas renderItemDecorations(ItemStack stack, int x, int y, @Nullable String text) {
-        layeredDraw(() -> graphics.renderItemDecorations(font(), stack, x, y, text));
+        layeredGraphics().renderItemDecorations(font(), stack, x, y, text);
         return this;
     }
 
@@ -955,7 +1000,8 @@ public final class SceneCanvas {
      * Clears depth buffer afterward and increments z-offset.
      */
     public SceneCanvas renderLayered(Consumer<GuiGraphics> draw) {
-        layeredDraw(() -> draw.accept(graphics));
+        draw.accept(layeredGraphics());
+        flushForwardedDraw();
         return this;
     }
 
@@ -965,7 +1011,8 @@ public final class SceneCanvas {
      * Executes a custom draw operation with transform and clip applied.
      */
     public SceneCanvas render(Consumer<GuiGraphics> draw) {
-        directDraw(() -> draw.accept(graphics));
+        draw.accept(graphics());
+        flushForwardedDraw();
         return this;
     }
 
@@ -1071,8 +1118,9 @@ public final class SceneCanvas {
      * active, ensuring correct clipping.
      */
     private void textDraw(Runnable action) {
+        flushForwardedDraw();
         if (!batchState.isEmpty()) {
-            flushBatch();
+            flushCanvasBatch();
         }
         applyScissor();
         graphics.pose().pushPose();
@@ -1083,25 +1131,70 @@ public final class SceneCanvas {
         restoreScissor();
     }
 
-    /**
-     * {@link #directDraw} + depth-clear + z-increment (for items / tooltips).
-     */
-    private void layeredDraw(Runnable action) {
-        directDraw(action);
-        RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
-        zOffset += Z_INCREMENT;
+    private GuiGraphics beginForwardedDraw(boolean layered) {
+        flushForwardedDraw();
+        flushCanvasBatch();
+        if (layered) {
+            RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+        }
+        syncForwardedGraphicsPose();
+        forwardedClipApplied = applyForwardedScissor();
+        forwardedLayered = layered;
+        forwardedActive = true;
+        return forwardedGraphics;
+    }
+
+    private void flushForwardedDraw() {
+        if (!forwardedActive) {
+            return;
+        }
+        try {
+            forwardedGraphics.flush();
+        } finally {
+            if (forwardedClipApplied) {
+                forwardedGraphics.disableScissor();
+            }
+            forwardedClipApplied = false;
+            forwardedActive = false;
+        }
+        if (forwardedLayered) {
+            RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+            zOffset += Z_INCREMENT;
+        }
+        forwardedLayered = false;
+    }
+
+    private void syncForwardedGraphicsPose() {
+        PoseStack pose = new PoseStack();
+        PoseStack.Pose source = graphics.pose().last();
+        PoseStack.Pose target = pose.last();
+        target.pose().set(source.pose());
+        target.normal().set(source.normal());
+        pose.mulPose(localTransform());
+        pose.translate(0, 0, zOffset);
+        forwardedGraphics.pose = pose;
+    }
+
+    private boolean applyForwardedScissor() {
+        Rect clip = clipStack.current();
+        if (clip == null) {
+            return false;
+        }
+        forwardedGraphics.enableScissor(clip.x(), clip.y(), clip.right(), clip.bottom());
+        return true;
     }
 
     //endregion
-
     //region transform
 
     public SceneCanvas pushTransform() {
+        flushForwardedDraw();
         transformStack.push(new Matrix4f(currentTransform));
         return this;
     }
 
     public SceneCanvas popTransform() {
+        flushForwardedDraw();
         if (transformStack.isEmpty()) {
             throw new IllegalStateException("Transform stack underflow");
         }
@@ -1114,6 +1207,7 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas translate(float x, float y) {
+        flushForwardedDraw();
         currentTransform.translate(x, y, 0);
         return this;
     }
@@ -1123,16 +1217,19 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas scale(float scale) {
+        flushForwardedDraw();
         currentTransform.scale(scale, scale, 1);
         return this;
     }
 
     public SceneCanvas scale(float scaleX, float scaleY) {
+        flushForwardedDraw();
         currentTransform.scale(scaleX, scaleY, 1);
         return this;
     }
 
     public SceneCanvas rotate(float radians) {
+        flushForwardedDraw();
         currentTransform.rotateZ(radians);
         return this;
     }
@@ -1142,6 +1239,7 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas resetTransform() {
+        flushForwardedDraw();
         currentTransform.identity();
         return this;
     }

@@ -8,9 +8,11 @@ import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollDirection;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollState;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
-import dev.vfyjxf.cloudlib.ui.widget.*;
+import dev.vfyjxf.cloudlib.ui.widget.ButtonWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
+import dev.vfyjxf.cloudlib.ui.widget.LabelWidget;
+import dev.vfyjxf.cloudlib.ui.widget.RowWidget;
 import dev.vfyjxf.taffy.style.TaffyDimension;
 
 import static dev.vfyjxf.cloudlib.api.ui.effect.UIEffects.scrollable;
@@ -59,8 +61,8 @@ public class TestSectionScreen extends BasicScreen {
                 widthOf(TaffyDimension.percent(0.5f))
         ));
         var label1 = LabelWidget.of("这是第一个分组的内容")
-                                .setColor(0xFFE2E8F0)
-                                .setAlign(LabelWidget.TextAlign.CENTER);
+								.setColor(0xFFE2E8F0)
+								.setAlign(LabelWidget.TextAlign.CENTER);
         label1.useStyle(UIStyle.of(
                 sizeOf(TaffyDimension.percent(1f), TaffyDimension.length(200)),
                 background(new ColorTexture(0xFF334155))
@@ -83,7 +85,7 @@ public class TestSectionScreen extends BasicScreen {
         for (int i = 1; i <= 3; i++) {
             int idx = i;
             var btn = ButtonWidget.of("按钮 " + i, () -> System.out.println("press " + idx))
-                                  .setColors(0xFF334155, 0xFF475569, 0xFF1E293B);
+								  .setColors(0xFF334155, 0xFF475569, 0xFF1E293B);
             btn.useStyle(UIStyle.of(
                     sizeOf(100, 32),
                     flexShrink(0)

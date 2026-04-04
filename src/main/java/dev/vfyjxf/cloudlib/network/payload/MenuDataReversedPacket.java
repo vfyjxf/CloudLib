@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 public record MenuDataReversedPacket(int containerId, byte[] syncData) implements ServerboundPayload {
 
-    public static final ServerPayloadInfo<MenuDataReversedPacket> INFO = CloudlibPayloads.createServerInfo(
+    public static final ServerPayloadInfo<MenuDataReversedPacket> info = CloudlibPayloads.createServerInfo(
             StreamCodec.ofMember(
                     MenuDataReversedPacket::encode,
                     MenuDataReversedPacket::decode
@@ -39,7 +39,7 @@ public record MenuDataReversedPacket(int containerId, byte[] syncData) implement
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
-        return INFO.type();
+        return info.type();
     }
 
     private void encode(RegistryFriendlyByteBuf buf) {

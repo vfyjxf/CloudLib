@@ -1,7 +1,6 @@
 package dev.vfyjxf.cloudlib.api.performer;
 
 import dev.vfyjxf.cloudlib.api.util.Namespace;
-import net.minecraft.resources.ResourceLocation;
 import net.neoforged.testframework.junit.EphemeralTestServerProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -41,7 +41,9 @@ public class LangKeyProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
-        LangBuilder.builders.forEach(builder -> builder.getDefines().forEach(it -> this.add(it.key(), it.value())));
+        LangBuilder.builders.forEach(builder -> builder.getDefines()
+            .select(LangEntry::hasDefaultValue)
+            .forEach(it -> this.add(it.key(), it.value())));
         for (CustomLangProvider provider : providers) {
             provider.addTranslations(this);
         }

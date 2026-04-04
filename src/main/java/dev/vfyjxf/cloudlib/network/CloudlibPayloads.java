@@ -23,8 +23,8 @@ public class CloudlibPayloads {
         //TODO:provide a meaningful version.
         PayloadRegistrar registrar = event.registrar(Constants.modId);
         //region play 2 client
-        MenuSyncDownstreamPacket.INFO.registerPlay(registrar);
-        MenuDataReversedPacket.INFO.registerPlay(registrar);
+        MenuSyncDownstreamPacket.info.registerPlay(registrar);
+        MenuDataReversedPacket.info.registerPlay(registrar);
         //endregion
 
         //region play 2 server

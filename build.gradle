@@ -84,7 +84,15 @@ neoForge {
     }
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+sourceSets {
+    main {
+        java.exclude 'dev/vfyjxf/cloudlib/integration/moddevmcp/**'
+        resources { srcDir 'src/generated/resources' }
+    }
+    test {
+        java.exclude 'dev/vfyjxf/cloudlib/integration/moddevmcp/**'
+    }
+}
 
 repositories {
     mavenLocal()
@@ -149,15 +157,6 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
     testImplementation "net.neoforged:testframework:${project.neo_version}"
     testImplementation 'com.palantir.javapoet:javapoet:0.6.0'
-    compileOnly("dev.vfyjxf:moddevmcp:0.3") {
-        transitive = false
-    }
-    testCompileOnly("dev.vfyjxf:moddevmcp:0.3") {
-        transitive = false
-    }
-    testRuntimeOnly("dev.vfyjxf:moddevmcp:0.3") {
-        transitive = false
-    }
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
     jmh "org.openjdk.jmh:jmh-core:1.37"

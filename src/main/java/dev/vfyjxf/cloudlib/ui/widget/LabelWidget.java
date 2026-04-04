@@ -45,6 +45,10 @@ public class LabelWidget extends Widget {
         return new LabelWidget(entry.get());
     }
 
+    public static LabelWidget of(LangEntry entry, Object... args) {
+        return new LabelWidget(entry.get(args));
+    }
+
     private LabelWidget(Component text) {
         this.text = text;
         this.onMount((scene, context, handle) -> {
@@ -65,6 +69,11 @@ public class LabelWidget extends Widget {
 
     public LabelWidget setText(Component text) {
         this.text = text;
+        return this;
+    }
+
+    public LabelWidget setText(LangEntry entry, Object... args) {
+        this.text = entry.get(args);
         return this;
     }
 

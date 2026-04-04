@@ -77,7 +77,7 @@ public non-sealed interface Expose<T> extends ExposeCommon {
 
     /**
      * @return the previous value of this Expose
-     * @throws IllegalStateException if the snapshot is {@link dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot.None}
+     * @throws IllegalStateException if the snapshot is {@link Snapshot.None}
      */
     default @UnknownNullability T previous() throws IllegalStateException {
         return snapshot().readValue();

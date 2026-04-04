@@ -1,14 +1,16 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
 import dev.vfyjxf.cloudlib.api.ui.base.host.ScreenSceneHost;
-import dev.vfyjxf.cloudlib.api.ui.overlay.SceneOverlay;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.ui.overlay.SceneOverlayImpl;
+import dev.vfyjxf.cloudlib.ui.overlay.OverlayApiImpl;
+import dev.vfyjxf.cloudlib.ui.overlay.OverlayRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
+
+import java.util.List;
 
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.sizeOf;
 
@@ -16,7 +18,8 @@ public abstract class BasicScreen extends Screen {
 
     protected final WidgetGroup<Widget> mainGroup;
     private final Scene scene;
-    private final SceneOverlayImpl screenOverlay;
+    private final WidgetGroup<Widget> overlayGroup;
+    private List<OverlayRuntime<?>> overlayRuntimes = List.of();
 
     /**
      * Note: Register init listener in constructor
@@ -32,8 +35,7 @@ public abstract class BasicScreen extends Screen {
 
         //endregion
         //region screen overlay
-        WidgetGroup<Widget> overlayPanel = mainGroup.addWidget(new WidgetGroup<>());
-        screenOverlay = new SceneOverlayImpl(overlayPanel);
+        overlayGroup = mainGroup.addWidget(new WidgetGroup<>());
         //endregion
     }
 
@@ -45,13 +47,10 @@ public abstract class BasicScreen extends Screen {
         return scene;
     }
 
-    public SceneOverlay screenOverlay() {
-        return screenOverlay;
-    }
-
     @MustBeInvokedByOverriders
     @Override
     protected void init() {
+        detachOverlays();
         mainGroup.useStyle(UIStyle.of(
                 sizeOf(width, height)
         ));
@@ -60,12 +59,39 @@ public abstract class BasicScreen extends Screen {
         scene.setLayoutArea(width, height);
         scene.layout();
         mainGroup.applyLayout();
+        attachOverlays();
     }
 
     @Override
     public void onClose() {
+        detachOverlays();
         super.onClose();
         scene.destroy();
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
+        detachOverlays();
+    }
+
+    private void attachOverlays() {
+        var api = OverlayApiImpl.instance();
+        if (api != null) {
+            var manager = api.manager();
+            var context = manager.createContext(this);
+            overlayRuntimes = manager.attachOverlays(this, context, overlayGroup);
+        }
+    }
+
+    private void detachOverlays() {
+        if (!overlayRuntimes.isEmpty()) {
+            var api = OverlayApiImpl.instance();
+            if (api != null) {
+                api.manager().detachOverlays(overlayRuntimes, overlayGroup);
+            }
+            overlayRuntimes = List.of();
+        }
     }
 
     @Override
@@ -76,6 +102,19 @@ public abstract class BasicScreen extends Screen {
                 sizeOf(width, height)
         ));
         scene.setLayoutArea(width, height);
+        scene.layout();
+        mainGroup.applyLayout();
+        refreshOverlays();
+    }
+
+    private void refreshOverlays() {
+        var api = OverlayApiImpl.instance();
+        if (api == null) {
+            return;
+        }
+        var manager = api.manager();
+        overlayRuntimes = manager.refreshOverlays(this, overlayGroup, overlayRuntimes);
+        scene.stabilize();
         scene.layout();
         mainGroup.applyLayout();
     }

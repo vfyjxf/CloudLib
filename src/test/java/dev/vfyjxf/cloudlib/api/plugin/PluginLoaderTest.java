@@ -15,9 +15,9 @@ public class PluginLoaderTest {
 
     @Test
     void testSort() {
-        PluginLoader.LoadingResult<ModPlugin> result = PluginLoader.load(SpiPluginLookup.of(ModPlugin.class));
+        PluginLoader.LoadingResult<ModPlugin> result = PluginLoader.load(AnnotationPluginLookup.of(ModPlugin.class));
         Assertions.assertSame(TestPlugin.class, result.plugins().getFirst().getClass());
-        Assertions.assertEquals(2, result.plugins().size());
+        Assertions.assertEquals(4, result.plugins().size());
         Assertions.assertEquals(
             "plugin: cloudlib:test_plugin_e failed to load because: Missing required dependency: cloudlib:test_plugin_c,\n" +
             "plugin: cloudlib:test_plugin_d failed to load because: Missing optional dependency: cloudlib:test_plugin_c",
@@ -26,7 +26,7 @@ public class PluginLoaderTest {
         Assertions.assertThrows(IllegalStateException.class, () -> PluginLoader.load(SpiPluginLookup.of(DuplicatePluginInterface.class)));
     }
 
-    @AutoService(ModPlugin.class)
+	@PluginMarker
     public static class TestPlugin implements ModPlugin {
 
         @Override
@@ -40,7 +40,7 @@ public class PluginLoaderTest {
         }
     }
 
-    @AutoService(ModPlugin.class)
+	@PluginMarker
     public static class TestPluginB implements ModPlugin {
 
         @Override
@@ -61,6 +61,7 @@ public class PluginLoaderTest {
     }
 
     //    @AutoService(ModPlugin.class)
+//	@PluginMarker
     public static class TestPluginC implements ModPlugin {
 
         @Override
@@ -80,7 +81,7 @@ public class PluginLoaderTest {
         }
     }
 
-    @AutoService(ModPlugin.class)
+	@PluginMarker
     public static class TestPluginD implements ModPlugin {
 
         @Override
@@ -100,7 +101,7 @@ public class PluginLoaderTest {
         }
     }
 
-    @AutoService(ModPlugin.class)
+	@PluginMarker
     public static class TestPluginE implements ModPlugin {
 
         @Override

@@ -118,7 +118,6 @@ public class PanelWidget extends CompositeWidget<Widget> {
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        var graphics = canvas.graphics();
         int w = width();
         int h = height();
 

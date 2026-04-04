@@ -3,6 +3,7 @@ package dev.vfyjxf.cloudlib.api.plugin;
 import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.CloudNamespaces;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -214,7 +215,7 @@ public class PluginDispatcherTest {
         var b = plugin("b", dep("a", PluginDependency.Order.after));
 
         var dispatcher = PluginDispatcher.create(
-            dev.vfyjxf.cloudlib.api.util.MutableLists.of(a, b)
+            MutableLists.of(a, b)
         );
 
         assertEquals(2, dispatcher.plugins().size());

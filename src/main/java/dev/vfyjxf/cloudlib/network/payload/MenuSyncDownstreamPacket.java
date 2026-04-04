@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 public record MenuSyncDownstreamPacket(int containerId, byte[] syncData) implements ClientboundPayload {
 
-    public static final ClientPayloadInfo<MenuSyncDownstreamPacket> INFO = CloudlibPayloads.createClientInfo(
+    public static final ClientPayloadInfo<MenuSyncDownstreamPacket> info = CloudlibPayloads.createClientInfo(
             StreamCodec.ofMember(
                     MenuSyncDownstreamPacket::write,
                     MenuSyncDownstreamPacket::decode
@@ -40,7 +40,7 @@ public record MenuSyncDownstreamPacket(int containerId, byte[] syncData) impleme
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
-        return INFO.type();
+        return info.type();
     }
 
     private void write(RegistryFriendlyByteBuf buf) {

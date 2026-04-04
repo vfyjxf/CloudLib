@@ -60,11 +60,15 @@ import java.util.Objects;
  */
 @SuppressWarnings("unchecked")
 @CanIgnoreReturnValue
-public class Widget
-        implements Renderable,
-                   EventHandler<WidgetEvent>,
-                   DataAttachable,
-                   Backstage {
+public class Widget implements Renderable,
+                               EventHandler<WidgetEvent>,
+                               DataAttachable,
+                               Backstage {
+
+    @FunctionalInterface
+    public interface HoverTooltipProvider {
+        @Nullable Tooltip tooltip(int mouseX, int mouseY);
+    }
 
     //region core
 
@@ -147,6 +151,7 @@ public class Widget
     final VisualContext visualContext = style.visualContext();
     boolean visible = true;
     Tooltip tooltip = new Tooltip();
+    @Nullable HoverTooltipProvider hoverTooltipProvider;
     //endregion
 
     //region state
@@ -636,6 +641,7 @@ public class Widget
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         SceneCanvas canvas = SceneCanvas.create(graphics);
         render(canvas, mouseX, mouseY, partialTicks);
+        canvas.flushBatch();
     }
 
     /**
@@ -867,6 +873,40 @@ public class Widget
     public Widget setTooltip(Tooltip tooltip) {
         this.tooltip = tooltip;
         return this;
+    }
+
+    /**
+     * Registers a tooltip provider for hover state.
+     * The provider receives mouse coordinates relative to this widget.
+     * Return {@code null} or an empty tooltip to indicate no tooltip at the current hover point.
+     */
+    @Contract("_ -> this")
+    public Widget onHoverTooltip(@Nullable HoverTooltipProvider provider) {
+        this.hoverTooltipProvider = provider;
+        return this;
+    }
+
+    /**
+     * Registers a static tooltip shown while the widget is hovered.
+     */
+    @Contract("_ -> this")
+    public Widget onHoverTooltip(@Nullable Tooltip tooltip) {
+        if (tooltip == null) {
+            this.hoverTooltipProvider = null;
+            return this;
+        }
+        return onHoverTooltip((mouseX, mouseY) -> tooltip);
+    }
+
+    /**
+     * Resolves the tooltip for the given local mouse position.
+     * Falls back to {@link #tooltip()} when no explicit hover provider is registered.
+     */
+    public @Nullable Tooltip hoverTooltip(int mouseX, int mouseY) {
+        if (hoverTooltipProvider != null) {
+            return hoverTooltipProvider.tooltip(mouseX, mouseY);
+        }
+        return tooltip.notEmpty() ? tooltip : null;
     }
 
     //endregion

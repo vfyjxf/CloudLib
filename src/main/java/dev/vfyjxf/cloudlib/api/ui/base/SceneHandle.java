@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
 import dev.vfyjxf.cloudlib.util.Checks;
+import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,7 @@ import java.util.Deque;
  * when {@link #cleanup()} is called. This ensures that resources are
  * released in reverse order of acquisition.</p>
  *
- * @see Widget#onMount(dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent.OnMount)
+ * @see Widget#onMount(WidgetEvent.OnMount)
  */
 public final class SceneHandle {
 
