@@ -1,9 +1,13 @@
 package dev.vfyjxf.cloudlib.api.ui.texture;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiSpriteManager;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Image texture - the most commonly used texture type.
@@ -23,6 +27,7 @@ public record ImageTexture(
         int textureWidth, int textureHeight,
         boolean atlasSprite
 ) implements SizedTexture, BatchableTexture {
+    private static final Map<ResourceLocation, SpriteRegion> spriteRegions = new ConcurrentHashMap<>();
 
     /**
      * Creates a standard image texture.
@@ -126,11 +131,9 @@ public record ImageTexture(
     public void emit(VertexEmitter emitter, float x, float y, float w, float h, int color) {
         if (atlasSprite) {
             // For atlas sprites, get the actual UV coordinates from the sprite
-            var minecraft = Minecraft.getInstance();
-            var guiSprites = minecraft.getGuiSprites();
-            TextureAtlasSprite sprite = guiSprites.getSprite(location);
-            emitter.textured(sprite.atlasLocation(), x, y, w, h,
-                    sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), color);
+            SpriteRegion sprite = spriteRegion(location);
+            emitter.textured(sprite.texture(), x, y, w, h,
+                    sprite.uMin(), sprite.vMin(), sprite.uMax(), sprite.vMax(), color);
         } else {
             float u0 = (float) this.u / textureWidth;
             float v0 = (float) this.v / textureHeight;
@@ -141,4 +144,33 @@ public record ImageTexture(
     }
 
     //endregion
+
+    private static SpriteRegion spriteRegion(ResourceLocation location) {
+        GuiSpriteManager sprites = Minecraft.getInstance().getGuiSprites();
+        SpriteRegion cached = spriteRegions.get(location);
+        if (cached != null && cached.owner() == sprites) {
+            return cached;
+        }
+        TextureAtlasSprite sprite = sprites.getSprite(location);
+        SpriteRegion region = new SpriteRegion(
+                sprites,
+                sprite.atlasLocation(),
+                sprite.getU0(),
+                sprite.getV0(),
+                sprite.getU1(),
+                sprite.getV1()
+        );
+        spriteRegions.put(location, region);
+        return region;
+    }
+
+    private record SpriteRegion(
+            GuiSpriteManager owner,
+            ResourceLocation texture,
+            float uMin,
+            float vMin,
+            float uMax,
+            float vMax
+    ) {
+    }
 }

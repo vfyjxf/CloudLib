@@ -3,11 +3,15 @@ package dev.vfyjxf.cloudlib.api.ui.texture;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiSpriteManager;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Nine-slice texture that scales while preserving corner regions.
@@ -36,6 +40,7 @@ public record NineSliceTexture(
         int left, int right, int top, int bottom,
         boolean atlasSprite
 ) implements SizedTexture, BatchableTexture {
+    private static final Map<ResourceLocation, SpriteRegion> spriteRegions = new ConcurrentHashMap<>();
 
     /**
      * Creates a nine-slice texture with uniform border (standard mode).
@@ -106,36 +111,10 @@ public record NineSliceTexture(
 
     @Override
     public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-        ResourceLocation textureLocation;
-        float uMin, vMin, uMax, vMax;
-
-        if (atlasSprite) {
-            var minecraft = Minecraft.getInstance();
-            var guiSprites = minecraft.getGuiSprites();
-            TextureAtlasSprite sprite = guiSprites.getSprite(location);
-            textureLocation = sprite.atlasLocation();
-            uMin = sprite.getU0();
-            vMin = sprite.getV0();
-            uMax = sprite.getU1();
-            vMax = sprite.getV1();
-        } else {
-            textureLocation = location;
-            uMin = 0;
-            vMin = 0;
-            uMax = 1;
-            vMax = 1;
-        }
-
-        float uSize = uMax - uMin;
-        float vSize = vMax - vMin;
-
-        float uLeft = uMin + uSize * (left / (float) width);
-        float uRight = uMax - uSize * (right / (float) width);
-        float vTop = vMin + vSize * (top / (float) height);
-        float vBottom = vMax - vSize * (bottom / (float) height);
+        TextureRegion region = textureRegion();
 
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderTexture(0, textureLocation);
+        RenderSystem.setShaderTexture(0, region.texture());
 
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
@@ -147,32 +126,32 @@ public record NineSliceTexture(
         int tiledMiddleHeight = h - top - bottom;
 
         // Four corners (fixed size, never tiled)
-        addQuad(buffer, matrix, uMin, vMin, uLeft, vTop, x, y, left, top);
-        addQuad(buffer, matrix, uRight, vMin, uMax, vTop, x + w - right, y, right, top);
-        addQuad(buffer, matrix, uMin, vBottom, uLeft, vMax, x, y + h - bottom, left, bottom);
-        addQuad(buffer, matrix, uRight, vBottom, uMax, vMax, x + w - right, y + h - bottom, right, bottom);
+        addQuad(buffer, matrix, region.uMin(), region.vMin(), region.uLeft(), region.vTop(), x, y, left, top);
+        addQuad(buffer, matrix, region.uRight(), region.vMin(), region.uMax(), region.vTop(), x + w - right, y, right, top);
+        addQuad(buffer, matrix, region.uMin(), region.vBottom(), region.uLeft(), region.vMax(), x, y + h - bottom, left, bottom);
+        addQuad(buffer, matrix, region.uRight(), region.vBottom(), region.uMax(), region.vMax(), x + w - right, y + h - bottom, right, bottom);
 
         boolean hasHorizontalTiling = tiledMiddleWidth > 0 && middleWidth > 0;
         if (hasHorizontalTiling && top > 0) {
             // Top edge
-            addTiled(buffer, matrix, uLeft, vMin, uRight, vTop, x + left, y, tiledMiddleWidth, top, middleWidth, top);
+            addTiled(buffer, matrix, region.uLeft(), region.vMin(), region.uRight(), region.vTop(), x + left, y, tiledMiddleWidth, top, middleWidth, top);
         }
         if (hasHorizontalTiling && bottom > 0) {
             // Bottom edge
-            addTiled(buffer, matrix, uLeft, vBottom, uRight, vMax, x + left, y + h - bottom, tiledMiddleWidth, bottom, middleWidth, bottom);
+            addTiled(buffer, matrix, region.uLeft(), region.vBottom(), region.uRight(), region.vMax(), x + left, y + h - bottom, tiledMiddleWidth, bottom, middleWidth, bottom);
         }
         boolean hasVerticalTiling = tiledMiddleHeight > 0 && middleHeight > 0;
         if (hasVerticalTiling && left > 0) {
             // Left edge
-            addTiled(buffer, matrix, uMin, vTop, uLeft, vBottom, x, y + top, left, tiledMiddleHeight, left, middleHeight);
+            addTiled(buffer, matrix, region.uMin(), region.vTop(), region.uLeft(), region.vBottom(), x, y + top, left, tiledMiddleHeight, left, middleHeight);
         }
         if (hasVerticalTiling && right > 0) {
             // Right edge
-            addTiled(buffer, matrix, uRight, vTop, uMax, vBottom, x + w - right, y + top, right, tiledMiddleHeight, right, middleHeight);
+            addTiled(buffer, matrix, region.uRight(), region.vTop(), region.uMax(), region.vBottom(), x + w - right, y + top, right, tiledMiddleHeight, right, middleHeight);
         }
         if (tiledMiddleWidth > 0 && tiledMiddleHeight > 0 && middleWidth > 0 && middleHeight > 0) {
             // Center
-            addTiled(buffer, matrix, uLeft, vTop, uRight, vBottom, x + left, y + top, tiledMiddleWidth, tiledMiddleHeight, middleWidth, middleHeight);
+            addTiled(buffer, matrix, region.uLeft(), region.vTop(), region.uRight(), region.vBottom(), x + left, y + top, tiledMiddleWidth, tiledMiddleHeight, middleWidth, middleHeight);
         }
 
         BufferUploader.drawWithShader(buffer.buildOrThrow());
@@ -232,18 +211,56 @@ public record NineSliceTexture(
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float w, float h, int color) {
-        ResourceLocation textureLocation;
-        float uMin, vMin, uMax, vMax;
+        TextureRegion region = textureRegion();
 
+        int middleWidth = width - left - right;
+        int middleHeight = height - top - bottom;
+        float tiledMiddleWidth = w - left - right;
+        float tiledMiddleHeight = h - top - bottom;
+
+        // Four corners
+        emitter.textured(region.texture(), x, y, left, top, region.uMin(), region.vMin(), region.uLeft(), region.vTop(), color);
+        emitter.textured(region.texture(), x + w - right, y, right, top, region.uRight(), region.vMin(), region.uMax(), region.vTop(), color);
+        emitter.textured(region.texture(), x, y + h - bottom, left, bottom, region.uMin(), region.vBottom(), region.uLeft(), region.vMax(), color);
+        emitter.textured(region.texture(), x + w - right, y + h - bottom, right, bottom, region.uRight(), region.vBottom(), region.uMax(), region.vMax(), color);
+
+        boolean hasHorizontalTiling = tiledMiddleWidth > 0 && middleWidth > 0;
+        if (hasHorizontalTiling && top > 0) {
+            // Top edge
+            emitTiled(emitter, region.texture(), region.uLeft(), region.vMin(), region.uRight(), region.vTop(), x + left, y, tiledMiddleWidth, top, middleWidth, top, color);
+        }
+        if (hasHorizontalTiling && bottom > 0) {
+            // Bottom edge
+            emitTiled(emitter, region.texture(), region.uLeft(), region.vBottom(), region.uRight(), region.vMax(), x + left, y + h - bottom, tiledMiddleWidth, bottom, middleWidth, bottom, color);
+        }
+        boolean hasVerticalTiling = tiledMiddleHeight > 0 && middleHeight > 0;
+        if (hasVerticalTiling && left > 0) {
+            // Left edge
+            emitTiled(emitter, region.texture(), region.uMin(), region.vTop(), region.uLeft(), region.vBottom(), x, y + top, left, tiledMiddleHeight, left, middleHeight, color);
+        }
+        if (hasVerticalTiling && right > 0) {
+            // Right edge
+            emitTiled(emitter, region.texture(), region.uRight(), region.vTop(), region.uMax(), region.vBottom(), x + w - right, y + top, right, tiledMiddleHeight, right, middleHeight, color);
+        }
+        if (tiledMiddleWidth > 0 && tiledMiddleHeight > 0 && middleWidth > 0 && middleHeight > 0) {
+            // Center
+            emitTiled(emitter, region.texture(), region.uLeft(), region.vTop(), region.uRight(), region.vBottom(), x + left, y + top, tiledMiddleWidth, tiledMiddleHeight, middleWidth, middleHeight, color);
+        }
+    }
+
+    private TextureRegion textureRegion() {
+        ResourceLocation textureLocation;
+        float uMin;
+        float vMin;
+        float uMax;
+        float vMax;
         if (atlasSprite) {
-            var minecraft = Minecraft.getInstance();
-            var guiSprites = minecraft.getGuiSprites();
-            TextureAtlasSprite sprite = guiSprites.getSprite(location);
-            textureLocation = sprite.atlasLocation();
-            uMin = sprite.getU0();
-            vMin = sprite.getV0();
-            uMax = sprite.getU1();
-            vMax = sprite.getV1();
+            SpriteRegion sprite = spriteRegion(location);
+            textureLocation = sprite.texture();
+            uMin = sprite.uMin();
+            vMin = sprite.vMin();
+            uMax = sprite.uMax();
+            vMax = sprite.vMax();
         } else {
             textureLocation = location;
             uMin = 0;
@@ -254,45 +271,53 @@ public record NineSliceTexture(
 
         float uSize = uMax - uMin;
         float vSize = vMax - vMin;
-
         float uLeft = uMin + uSize * (left / (float) width);
         float uRight = uMax - uSize * (right / (float) width);
         float vTop = vMin + vSize * (top / (float) height);
         float vBottom = vMax - vSize * (bottom / (float) height);
+        return new TextureRegion(textureLocation, uMin, vMin, uMax, vMax, uLeft, uRight, vTop, vBottom);
+    }
 
-        int middleWidth = width - left - right;
-        int middleHeight = height - top - bottom;
-        float tiledMiddleWidth = w - left - right;
-        float tiledMiddleHeight = h - top - bottom;
+    private static SpriteRegion spriteRegion(ResourceLocation location) {
+        GuiSpriteManager sprites = Minecraft.getInstance().getGuiSprites();
+        SpriteRegion cached = spriteRegions.get(location);
+        if (cached != null && cached.owner() == sprites) {
+            return cached;
+        }
+        TextureAtlasSprite sprite = sprites.getSprite(location);
+        SpriteRegion region = new SpriteRegion(
+                sprites,
+                sprite.atlasLocation(),
+                sprite.getU0(),
+                sprite.getV0(),
+                sprite.getU1(),
+                sprite.getV1()
+        );
+        spriteRegions.put(location, region);
+        return region;
+    }
 
-        // Four corners
-        emitter.textured(textureLocation, x, y, left, top, uMin, vMin, uLeft, vTop, color);
-        emitter.textured(textureLocation, x + w - right, y, right, top, uRight, vMin, uMax, vTop, color);
-        emitter.textured(textureLocation, x, y + h - bottom, left, bottom, uMin, vBottom, uLeft, vMax, color);
-        emitter.textured(textureLocation, x + w - right, y + h - bottom, right, bottom, uRight, vBottom, uMax, vMax, color);
+    private record SpriteRegion(
+            GuiSpriteManager owner,
+            ResourceLocation texture,
+            float uMin,
+            float vMin,
+            float uMax,
+            float vMax
+    ) {
+    }
 
-        boolean hasHorizontalTiling = tiledMiddleWidth > 0 && middleWidth > 0;
-        if (hasHorizontalTiling && top > 0) {
-            // Top edge
-            emitTiled(emitter, textureLocation, uLeft, vMin, uRight, vTop, x + left, y, tiledMiddleWidth, top, middleWidth, top, color);
-        }
-        if (hasHorizontalTiling && bottom > 0) {
-            // Bottom edge
-            emitTiled(emitter, textureLocation, uLeft, vBottom, uRight, vMax, x + left, y + h - bottom, tiledMiddleWidth, bottom, middleWidth, bottom, color);
-        }
-        boolean hasVerticalTiling = tiledMiddleHeight > 0 && middleHeight > 0;
-        if (hasVerticalTiling && left > 0) {
-            // Left edge
-            emitTiled(emitter, textureLocation, uMin, vTop, uLeft, vBottom, x, y + top, left, tiledMiddleHeight, left, middleHeight, color);
-        }
-        if (hasVerticalTiling && right > 0) {
-            // Right edge
-            emitTiled(emitter, textureLocation, uRight, vTop, uMax, vBottom, x + w - right, y + top, right, tiledMiddleHeight, right, middleHeight, color);
-        }
-        if (tiledMiddleWidth > 0 && tiledMiddleHeight > 0 && middleWidth > 0 && middleHeight > 0) {
-            // Center
-            emitTiled(emitter, textureLocation, uLeft, vTop, uRight, vBottom, x + left, y + top, tiledMiddleWidth, tiledMiddleHeight, middleWidth, middleHeight, color);
-        }
+    private record TextureRegion(
+            ResourceLocation texture,
+            float uMin,
+            float vMin,
+            float uMax,
+            float vMax,
+            float uLeft,
+            float uRight,
+            float vTop,
+            float vBottom
+    ) {
     }
 
     /**

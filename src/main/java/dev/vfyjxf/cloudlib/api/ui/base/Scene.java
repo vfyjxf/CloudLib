@@ -756,7 +756,7 @@ public final class Scene {
         }
         for (int i = path.size() - 1; i >= 0; i--) {
             Widget widget = path.get(i);
-            if (!widget.lifecycle.mounted()) {
+            if (!isMountedInThisScene(widget)) {
                 continue;
             }
             FloatPos local = widget.sceneToLocal(mouseX, mouseY);
@@ -789,7 +789,7 @@ public final class Scene {
             var layerWidgets = extraLayers.get(layer);
             for (int i = 0; i < layerWidgets.size(); i++) {
                 Widget widget = layerWidgets.get(i);
-                if (!widget.shouldRender()) continue;
+                if (!isMountedInThisScene(widget) || !widget.shouldRender()) continue;
 
                 if (widget.coordinateSpace == CoordinateSpace.scene) {
                     // Scene-positioned: layout is in scene space,
@@ -1095,6 +1095,9 @@ public final class Scene {
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             target.listeners(InputEvents.onMouseMoved).onMoved(mouseX, mouseY, target.interruptible());
+            if (!isMountedInThisScene(target)) {
+                target = null;
+            }
         }
         //region mouse enter/leave
         if (target != null) {
@@ -1102,6 +1105,7 @@ public final class Scene {
             if (lastHoveredPath == null) {
                 for (int i = 0; i < currentPath.size(); i++) {
                     Widget widget = currentPath.get(i);
+                    if (!isMountedInThisScene(widget)) continue;
                     widget.hovered = true;
                     widget.listeners(InputEvents.onMouseEnter).onEnter(mouseX, mouseY, widget.interruptible());
                 }
@@ -1109,21 +1113,22 @@ public final class Scene {
                 int forkIndex = currentPath.commonAncestorIndex(lastHoveredPath);
                 for (int i = lastHoveredPath.size() - 1; i > forkIndex; i--) {
                     Widget widget = lastHoveredPath.get(i);
-                    if (!widget.lifecycle.mounted()) continue;
+                    if (!isMountedInThisScene(widget)) continue;
                     widget.hovered = false;
                     widget.listeners(InputEvents.onMouseLeave).onLeave(mouseX, mouseY, widget.interruptible());
                 }
                 for (int i = forkIndex + 1; i < currentPath.size(); i++) {
                     Widget widget = currentPath.get(i);
+                    if (!isMountedInThisScene(widget)) continue;
                     widget.hovered = true;
                     widget.listeners(InputEvents.onMouseEnter).onEnter(mouseX, mouseY, widget.interruptible());
                 }
             }
-            lastHoveredPath = currentPath;
+            lastHoveredPath = isMountedInThisScene(target) ? currentPath : null;
         } else if (lastHoveredPath != null) {
             for (int i = lastHoveredPath.size() - 1; i >= 0; i--) {
                 Widget widget = lastHoveredPath.get(i);
-                if (!widget.lifecycle.mounted()) continue;
+                if (!isMountedInThisScene(widget)) continue;
                 widget.hovered = false;
                 widget.listeners(InputEvents.onMouseLeave).onLeave(mouseX, mouseY, widget.interruptible());
             }
@@ -1242,6 +1247,9 @@ public final class Scene {
     //region hit test & bubble event
 
     public @Nullable Widget hitTest(double mouseX, double mouseY) {
+        if (!isMountedInThisScene(root)) {
+            return null;
+        }
         // Extra layers (floating, overlay, …) — highest priority, checked in reverse order
         for (int i = SceneLayer.extraLayers.size() - 1; i >= 0; i--) {
             SceneLayer layer = SceneLayer.extraLayers.get(i);
@@ -1250,6 +1258,7 @@ public final class Scene {
 
             for (int j = widgets.size() - 1; j >= 0; j--) {
                 Widget layerWidget = widgets.get(j);
+                if (!isMountedInThisScene(layerWidget)) continue;
                 double hitX, hitY;
                 boolean inSceneSpace = layerWidget.coordinateSpace == CoordinateSpace.scene || layerWidget.parent() == null;
                 if (inSceneSpace) {
@@ -1257,27 +1266,36 @@ public final class Scene {
                     hitY = mouseY;
                 } else {
                     var parent = layerWidget.parent();
+                    if (!isMountedInThisScene(parent)) continue;
                     FloatPos local = parent.sceneToLocal(mouseX, mouseY);
                     hitX = local.x + parent.viewport().contentOffsetX();
                     hitY = local.y + parent.viewport().contentOffsetY();
                 }
 
-                Widget hit = WidgetTree.hitTest(layerWidget, hitX, hitY);
+                Widget hit = mountedHit(WidgetTree.hitTest(layerWidget, hitX, hitY));
                 if (hit != null) return hit;
             }
         }
 
         // Content layer (root tree)
-        Widget rootHit = WidgetTree.hitTest(root, mouseX, mouseY);
+        Widget rootHit = mountedHit(WidgetTree.hitTest(root, mouseX, mouseY));
         if (rootHit != null) return rootHit;
 
         // Debug layer — inspector has the lowest priority so it never shadows
         // other widgets during mouse tracking.
         if (inspector != null) {
-            return WidgetTree.hitTest(inspector, mouseX, mouseY);
+            return mountedHit(WidgetTree.hitTest(inspector, mouseX, mouseY));
         }
 
         return null;
+    }
+
+    private boolean isMountedInThisScene(@Nullable Widget widget) {
+        return widget != null && widget.lifecycle.mounted() && widget.scene == this;
+    }
+
+    private @Nullable Widget mountedHit(@Nullable Widget widget) {
+        return isMountedInThisScene(widget) ? widget : null;
     }
 
     public static <E extends WidgetEvent> boolean handleBubbleEvent(

@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.canvas;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.base.Viewport;
@@ -46,12 +47,14 @@ public final class SceneCanvas {
     private boolean forwardedActive = false;
     private boolean forwardedLayered = false;
     private boolean forwardedClipApplied = false;
+    private boolean graphicsBufferDirty = false;
 
     // Render transform stack (render-only effects)
     private final Deque<Matrix4f> transformStack = new ArrayDeque<>();
     private Matrix4f currentTransform = new Matrix4f();
 
     private final Vector4f transformTemp = new Vector4f();
+    private final Vector4f batchTransformTemp = new Vector4f();
 
     private int currentColor = 0xFFFFFFFF;
 
@@ -177,23 +180,72 @@ public final class SceneCanvas {
         public void textured(
                 ResourceLocation texture, float x, float y, float width, float height,
                 float u0, float v0, float u1, float v1, int color) {
-            float[] bl = transformPointLocal(x, y + height);
-            float[] br = transformPointLocal(x + width, y + height);
-            float[] tr = transformPointLocal(x + width, y);
-            float[] tl = transformPointLocal(x, y);
-            batchState.addTextured(texture, bl[0], bl[1], br[0], br[1], tr[0], tr[1], tl[0], tl[1],
+            if (width <= 0 || height <= 0) {
+                return;
+            }
+            Matrix4f transform = currentTransform;
+            transform.transform(batchTransformTemp.set(x, y + height, 0, 1));
+            float blX = batchTransformTemp.x;
+            float blY = batchTransformTemp.y;
+            transform.transform(batchTransformTemp.set(x + width, y + height, 0, 1));
+            float brX = batchTransformTemp.x;
+            float brY = batchTransformTemp.y;
+            transform.transform(batchTransformTemp.set(x + width, y, 0, 1));
+            float trX = batchTransformTemp.x;
+            float trY = batchTransformTemp.y;
+            transform.transform(batchTransformTemp.set(x, y, 0, 1));
+            float tlX = batchTransformTemp.x;
+            float tlY = batchTransformTemp.y;
+            if (quadOutsideClip(blX, blY, brX, brY, trX, trY, tlX, tlY)) {
+                return;
+            }
+            batchState.addTextured(texture, blX, blY, brX, brY, trX, trY, tlX, tlY,
                     u0, v0, u1, v1, color);
         }
 
         @Override
         public void colored(float x, float y, float width, float height, int color) {
-            float[] bl = transformPointLocal(x, y + height);
-            float[] br = transformPointLocal(x + width, y + height);
-            float[] tr = transformPointLocal(x + width, y);
-            float[] tl = transformPointLocal(x, y);
-            batchState.addColored(bl[0], bl[1], br[0], br[1], tr[0], tr[1], tl[0], tl[1], color);
+            if (width <= 0 || height <= 0) {
+                return;
+            }
+            Matrix4f transform = currentTransform;
+            transform.transform(batchTransformTemp.set(x, y + height, 0, 1));
+            float blX = batchTransformTemp.x;
+            float blY = batchTransformTemp.y;
+            transform.transform(batchTransformTemp.set(x + width, y + height, 0, 1));
+            float brX = batchTransformTemp.x;
+            float brY = batchTransformTemp.y;
+            transform.transform(batchTransformTemp.set(x + width, y, 0, 1));
+            float trX = batchTransformTemp.x;
+            float trY = batchTransformTemp.y;
+            transform.transform(batchTransformTemp.set(x, y, 0, 1));
+            float tlX = batchTransformTemp.x;
+            float tlY = batchTransformTemp.y;
+            if (quadOutsideClip(blX, blY, brX, brY, trX, trY, tlX, tlY)) {
+                return;
+            }
+            batchState.addColored(blX, blY, brX, brY, trX, trY, tlX, tlY, color);
         }
     };
+
+    private boolean quadOutsideClip(
+            float x0, float y0,
+            float x1, float y1,
+            float x2, float y2,
+            float x3, float y3) {
+        Rect clip = clipStack.current();
+        if (clip == null) {
+            return false;
+        }
+        float minX = Math.min(Math.min(x0, x1), Math.min(x2, x3));
+        float maxX = Math.max(Math.max(x0, x1), Math.max(x2, x3));
+        float minY = Math.min(Math.min(y0, y1), Math.min(y2, y3));
+        float maxY = Math.max(Math.max(y0, y1), Math.max(y2, y3));
+        return maxX <= clip.x()
+                || minX >= clip.right()
+                || maxY <= clip.y()
+                || minY >= clip.bottom();
+    }
 
     public BatchableTexture.VertexEmitter emitter() {
         return batchEmitter;
@@ -213,12 +265,20 @@ public final class SceneCanvas {
     }
 
     private void flushCanvasBatch() {
-        // Flush MC's internal text/sprite buffer first — text was already
-        // rendered under the correct scissor during textDraw's restoreScissor()
-        // (which triggers graphics.flush before removing the scissor).
-        graphics.flush();
+        if (batchState.isEmpty()) {
+            if (graphicsBufferDirty) {
+                graphics.flush();
+                graphicsBufferDirty = false;
+            }
+            return;
+        }
 
-        if (batchState.isEmpty()) return;
+        // Flush MC's internal text/sprite buffer first so pending vanilla
+        // vertices keep their painter order relative to the canvas batch.
+        if (graphicsBufferDirty) {
+            graphics.flush();
+            graphicsBufferDirty = false;
+        }
 
         // Canvas quads are 2D painter-order UI. They must not write depth, otherwise
         // later layered item renders can be hidden while their decoration text remains visible.
@@ -355,6 +415,9 @@ public final class SceneCanvas {
     //region texture
 
     public SceneCanvas texture(VisualTexture texture, int x, int y, int width, int height) {
+        if (width <= 0 || height <= 0) {
+            return this;
+        }
         flushForwardedDraw();
         // Check if texture supports batching
         if (texture instanceof BatchableTexture batchable && batchable.supportsBatching()) {
@@ -385,6 +448,9 @@ public final class SceneCanvas {
     public SceneCanvas quad(
             ResourceLocation texture, int x, int y, int width, int height,
             float u0, float v0, float u1, float v1) {
+        if (width <= 0 || height <= 0) {
+            return this;
+        }
         flushForwardedDraw();
         batchEmitter.textured(texture, x, y, width, height, u0, v0, u1, v1, currentColor);
         return this;
@@ -409,6 +475,9 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas sprite(TextureAtlasSprite sprite, int x, int y, int width, int height) {
+        if (width <= 0 || height <= 0) {
+            return this;
+        }
         flushForwardedDraw();
         batchEmitter.textured(sprite.atlasLocation(), x, y, width, height,
                 sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), currentColor);
@@ -437,6 +506,9 @@ public final class SceneCanvas {
     //region fill & shape
 
     public SceneCanvas fill(int x, int y, int width, int height, int color) {
+        if (width <= 0 || height <= 0) {
+            return this;
+        }
         flushForwardedDraw();
         batchEmitter.colored(x, y, width, height, color);
         return this;
@@ -971,6 +1043,100 @@ public final class SceneCanvas {
         return drawString(text, x, y, color, false);
     }
 
+    public SceneCanvas textBatch(Consumer<TextBatch> draw) {
+        flushForwardedDraw();
+        if (!batchState.isEmpty()) {
+            flushCanvasBatch();
+        }
+        applyScissor();
+        graphics.pose().pushPose();
+        graphics.pose().mulPose(localTransform());
+        graphics.pose().translate(0, 0, zOffset);
+        try {
+            draw.accept(new TextBatch(graphics, font()));
+        } finally {
+            graphics.pose().popPose();
+            graphics.flush();
+            graphicsBufferDirty = false;
+            restoreScissor();
+        }
+        return this;
+    }
+
+    public static final class TextBatch {
+        private final GuiGraphics graphics;
+        private final Font font;
+
+        private TextBatch(GuiGraphics graphics, Font font) {
+            this.graphics = graphics;
+            this.font = font;
+        }
+
+        public void drawString(String text, int x, int y, int color, boolean dropShadow) {
+            if (text == null || text.isEmpty()) {
+                return;
+            }
+            font.drawInBatch(
+                    text,
+                    x,
+                    y,
+                    color,
+                    dropShadow,
+                    graphics.pose().last().pose(),
+                    graphics.bufferSource(),
+                    Font.DisplayMode.NORMAL,
+                    0,
+                    15728880
+            );
+        }
+
+        public void drawStringClipped(String text, int x, int y, int maxWidth, int color, boolean dropShadow) {
+            String clipped = clipText(text, maxWidth);
+            if (!clipped.isEmpty()) {
+                drawString(clipped, x, y, color, dropShadow);
+            }
+        }
+
+        public void drawString(Component text, int x, int y, int color, boolean dropShadow) {
+            if (text == null) {
+                return;
+            }
+            drawString(text.getVisualOrderText(), x, y, color, dropShadow);
+        }
+
+        public void drawString(FormattedCharSequence text, int x, int y, int color, boolean dropShadow) {
+            if (text == null) {
+                return;
+            }
+            font.drawInBatch(
+                    text,
+                    x,
+                    y,
+                    color,
+                    dropShadow,
+                    graphics.pose().last().pose(),
+                    graphics.bufferSource(),
+                    Font.DisplayMode.NORMAL,
+                    0,
+                    15728880
+            );
+        }
+
+        private String clipText(String text, int maxWidth) {
+            if (text == null || text.isEmpty() || maxWidth <= 0) {
+                return "";
+            }
+            if (font.width(text) <= maxWidth) {
+                return text;
+            }
+            int ellipsisWidth = font.width("...");
+            if (maxWidth <= ellipsisWidth) {
+                return "";
+            }
+            return font.plainSubstrByWidth(text, maxWidth - ellipsisWidth).stripTrailing() + "...";
+        }
+    }
+
     //endregion
 
     //region item
@@ -1090,6 +1256,7 @@ public final class SceneCanvas {
     private void restoreScissor() {
         if (clipStack.hasClip()) {
             graphics.disableScissor();
+            graphicsBufferDirty = false;
         }
     }
 
@@ -1103,6 +1270,7 @@ public final class SceneCanvas {
         graphics.pose().mulPose(localTransform());
         graphics.pose().translate(0, 0, zOffset);
         action.run();
+        graphicsBufferDirty = true;
         graphics.pose().popPose();
         restoreScissor();
     }
@@ -1127,6 +1295,7 @@ public final class SceneCanvas {
         graphics.pose().mulPose(localTransform());
         graphics.pose().translate(0, 0, zOffset);
         action.run();
+        graphicsBufferDirty = true;
         graphics.pose().popPose();
         restoreScissor();
     }
@@ -1296,12 +1465,30 @@ public final class SceneCanvas {
         for (int i = 0; i < widgets.size(); i++) {
             T widget = widgets.get(i);
             if (!widget.shouldRender()) continue;
+            if (hasClip() && isClipped(widgetSceneBounds(widget))) continue;
             Viewport vp = widget.viewport();
             pushViewport(vp);
             var local = vp.parentToLocal(mouseX, mouseY);
             widget.render(this, (int) local.x, (int) local.y, partialTicks);
             popViewport();
         }
+    }
+
+    private static Rect widgetSceneBounds(Widget widget) {
+        FloatPos tl = widget.localToScene(0, 0);
+        FloatPos tr = widget.localToScene(widget.width(), 0);
+        FloatPos bl = widget.localToScene(0, widget.height());
+        FloatPos br = widget.localToScene(widget.width(), widget.height());
+        double minX = Math.min(Math.min(tl.x, tr.x), Math.min(bl.x, br.x));
+        double minY = Math.min(Math.min(tl.y, tr.y), Math.min(bl.y, br.y));
+        double maxX = Math.max(Math.max(tl.x, tr.x), Math.max(bl.x, br.x));
+        double maxY = Math.max(Math.max(tl.y, tr.y), Math.max(bl.y, br.y));
+        return new Rect(
+                (int) Math.floor(minX),
+                (int) Math.floor(minY),
+                (int) Math.ceil(maxX - minX),
+                (int) Math.ceil(maxY - minY)
+        );
     }
 
     /**
