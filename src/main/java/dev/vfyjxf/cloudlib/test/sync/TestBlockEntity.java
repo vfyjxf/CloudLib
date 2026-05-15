@@ -88,6 +88,7 @@ public class TestBlockEntity extends BlockEntity {
 
     public static class Menu extends BasicMenu<TestBlockEntity> {
 
+        //region exposes
         public final Expose<@NotNull Integer> basic = expose(
                 "basic",
                 mutableRefOf(primitive()),
@@ -176,6 +177,8 @@ public class TestBlockEntity extends BlockEntity {
                         })
 
                 );
+
+        //endregion
 
         public static final MenuInfo<Menu, TestBlockEntity> INFO = MenuInfo.create(
                 Locations.ofMod("test_block_entity"),

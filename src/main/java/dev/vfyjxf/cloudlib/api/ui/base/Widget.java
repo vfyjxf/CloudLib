@@ -258,7 +258,7 @@ public class Widget implements Renderable,
     }
 
     public final WidgetPath path() {
-        Checks.checkArgument(lifecycle.mounted(), "Widget is not mounted!");
+        Checks.checkArgument(lifecycle.mounted(), "Widget: %s is not mounted!".formatted(this));
         return this.scene.pathOf(this);
     }
 
