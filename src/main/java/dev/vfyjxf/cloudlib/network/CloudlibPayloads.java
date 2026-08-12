@@ -5,6 +5,7 @@ import dev.vfyjxf.cloudlib.api.network.payload.ClientPayloadInfo;
 import dev.vfyjxf.cloudlib.api.network.payload.ClientboundPayload;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerPayloadInfo;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
+import dev.vfyjxf.cloudlib.network.payload.BlockEntitySyncPacket;
 import dev.vfyjxf.cloudlib.network.payload.MenuDataReversedPacket;
 import dev.vfyjxf.cloudlib.network.payload.MenuSyncDownstreamPacket;
 import dev.vfyjxf.cloudlib.util.Locations;
@@ -25,6 +26,7 @@ public class CloudlibPayloads {
         //region play 2 client
         MenuSyncDownstreamPacket.info.registerPlay(registrar);
         MenuDataReversedPacket.info.registerPlay(registrar);
+        BlockEntitySyncPacket.info.registerPlay(registrar);
         //endregion
 
         //region play 2 server

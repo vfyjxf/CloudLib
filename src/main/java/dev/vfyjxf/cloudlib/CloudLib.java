@@ -3,11 +3,13 @@ package dev.vfyjxf.cloudlib;
 import dev.vfyjxf.cloudlib.api.plugin.AnnotationPluginLookup;
 import dev.vfyjxf.cloudlib.api.plugin.CloudLibPlugin;
 import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
+import dev.vfyjxf.cloudlib.blockentity.BlockEntitySyncBatcher;
 import dev.vfyjxf.cloudlib.debug.DebugConfig;
 import dev.vfyjxf.cloudlib.network.CloudlibPayloads;
 import dev.vfyjxf.cloudlib.test.TestRegistry;
 import dev.vfyjxf.cloudlib.util.Locations;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -15,6 +17,8 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLConstructModEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +48,16 @@ public sealed abstract class CloudLib permits CloudLibClient, CloudLibServer {
 
         //region register
         modBus.addListener(CloudlibPayloads::register);
+        //endregion
+
+        //region game-bus listeners
+        //At each level's tick end, flush the per-dimension block-entity sync batcher: one merged
+        //packet per dimension per tick, instead of one packet per block entity.
+        NeoForge.EVENT_BUS.addListener((LevelTickEvent.Post event) -> {
+            if (!event.getLevel().isClientSide) {
+                BlockEntitySyncBatcher.get(event.getLevel()).flush((ServerLevel) event.getLevel());
+            }
+        });
         //endregion
     }
 

@@ -248,7 +248,12 @@ public final class Events {
 
         @Override
         public void invoke(Consumer<T> invoker) {
-            for (T listener : listeners) {
+            //iterate a snapshot so that a reentrant invoke() (e.g. a listener that sets a Handle
+            //again, which re-enters fire() -> invoke()) or an unregister() during the callback
+            //cannot corrupt the live backing list (FastList has no fail-fast iterator).
+            Object[] snapshot = listeners.toArray();
+            for (Object o : snapshot) {
+                @SuppressWarnings("unchecked") T listener = (T) o;
                 invoker.accept(listener);
             }
         }

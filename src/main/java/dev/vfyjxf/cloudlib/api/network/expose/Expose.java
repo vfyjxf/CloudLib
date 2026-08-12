@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
+import dev.vfyjxf.cloudlib.api.data.handle.Handle;
 import dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot;
 import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
 import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
@@ -41,6 +42,46 @@ public non-sealed interface Expose<T> extends ExposeCommon {
                 id,
                 snapshot,
                 valueSupplier,
+                encoder,
+                decoder
+        );
+    }
+
+    //endregion
+
+    //region handle factory
+
+    /**
+     * Create an Expose backed by a {@link Handle}. The handle's dirty flag drives change detection
+     * (via the internal {@code HandleSnapshot} adapter), and {@code handle::get} is the value supplier.
+     * This is the push-based replacement for the snapshot/polling entry points above.
+     */
+    static <T> Expose<T> create(
+            String name, short id,
+            Handle<T> handle, UnaryFlowHandler<T> exposeCodec
+    ) {
+        return new StandardExpose<>(
+                name,
+                id,
+                Snapshot.HandleSnapshot.of(handle),
+                handle::get,
+                exposeCodec,
+                exposeCodec
+        );
+    }
+
+    /**
+     * Create an Expose backed by a {@link Handle}. See {@link #create(String, short, Handle, UnaryFlowHandler)}.
+     */
+    static <T> Expose<T> create(
+            String name, short id,
+            Handle<T> handle, FlowEncoder<T> encoder, FlowDecoder<T> decoder
+    ) {
+        return new StandardExpose<>(
+                name,
+                id,
+                Snapshot.HandleSnapshot.of(handle),
+                handle::get,
                 encoder,
                 decoder
         );
