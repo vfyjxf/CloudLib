@@ -2,23 +2,27 @@ package dev.vfyjxf.cloudlib.data.lang;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public record LangEntry(String key, @Nullable String value) {
+/**
+ * A typed reference to a translation key. Entries are pure references: the actual texts
+ * live in the distributed yaml lang files (hand-written under {@code src/main/lang} or
+ * produced by {@link DistributedLangProvider} under {@code src/generated/lang}) and are
+ * packed into vanilla json lang files at build time.
+ *
+ * <p>Constants of this type are exposed by the generated key class (see the cloudLang
+ * gradle plugin), never as raw strings.
+ */
+public record LangEntry(String key) {
 
     public LangEntry {
         Objects.requireNonNull(key, "key");
     }
 
-    public static LangEntry reference(String key) {
-        return new LangEntry(key, null);
-    }
-
-    public boolean hasDefaultValue() {
-        return value != null;
+    public static LangEntry of(String key) {
+        return new LangEntry(key);
     }
 
     public MutableComponent get() {
@@ -49,7 +53,7 @@ public record LangEntry(String key, @Nullable String value) {
         if (suffix == null || suffix.isBlank()) {
             return this;
         }
-        return reference(this.key + "." + suffix);
+        return of(this.key + "." + suffix);
     }
 
 }

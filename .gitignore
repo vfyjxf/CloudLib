@@ -33,6 +33,10 @@ design
 runs
 run-*
 
+# datagen output, lives under build/generated/datagen, guard against stale tooling
+
+src/generated/
+
 #agent
 .codex
 .vscode

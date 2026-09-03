@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib;
 import dev.vfyjxf.cloudlib.api.plugin.AnnotationPluginLookup;
 import dev.vfyjxf.cloudlib.api.plugin.CloudLibClientPlugin;
 import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
-import dev.vfyjxf.cloudlib.data.lang.LangKeyProvider;
+import dev.vfyjxf.cloudlib.data.lang.CloudLibLangProvider;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayApiImpl;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayEventHandler;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayRegisterImpl;
@@ -62,7 +62,7 @@ public final class CloudLibClient extends CloudLib {
     private void gatherData(GatherDataEvent event) {
         event.getGenerator().addProvider(
                 event.includeClient(),
-                (DataProvider.Factory<DataProvider>) (output) -> new LangKeyProvider(Constants.modId, output)
+                (DataProvider.Factory<DataProvider>) CloudLibLangProvider::new
         );
     }
 
