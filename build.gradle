@@ -5,8 +5,16 @@ plugins {
     id 'maven-publish'
     id 'net.neoforged.moddev' version '2.0.122'
     id "me.champeau.jmh" version "0.7.2"
+    id 'dev.vfyjxf.cloudlib.lang'
 //    id("net.ltgt.errorprone") version "4.1.0"
 //    id("net.ltgt.nullaway") version "2.1.0"
+}
+
+cloudLang {
+    modId = 'cloudlib'
+    packageName = 'dev.vfyjxf.cloudlib.data.lang'
+    className = 'CloudLang'
+    constantNameStyle = 'camel'
 }
 
 version = project.mod_version
@@ -56,7 +64,7 @@ neoForge {
         data {
             data()
             gameDirectory = project.file('runs/data')
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('build/generated/datagen/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
 
         dumpClient {
@@ -87,7 +95,11 @@ neoForge {
 sourceSets {
     main {
         java.exclude 'dev/vfyjxf/cloudlib/integration/moddevmcp/**'
-        resources { srcDir 'src/generated/resources' }
+        //datagen output lives next to the lang yaml under build/, like the modMetadata dir
+        resources {
+            srcDir layout.buildDirectory.dir('generated/datagen/resources')
+            exclude '**/.cache/**'
+        }
     }
     test {
         java.exclude 'dev/vfyjxf/cloudlib/integration/moddevmcp/**'
