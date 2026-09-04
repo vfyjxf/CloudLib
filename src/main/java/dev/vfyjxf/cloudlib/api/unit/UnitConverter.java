@@ -1,632 +1,387 @@
 package dev.vfyjxf.cloudlib.api.unit;
 
-import dev.vfyjxf.cloudlib.api.unit.conversion.*;
+import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
+import dev.vfyjxf.cloudlib.api.unit.exception.NoConversionPathException;
+import dev.vfyjxf.cloudlib.api.unit.exception.RuleConflictException;
+import dev.vfyjxf.cloudlib.api.unit.text.QuantityFormatter;
+import dev.vfyjxf.cloudlib.api.unit.text.UnitNames;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
+import dev.vfyjxf.cloudlib.util.Checks;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Immutable conversion engine. All math is exact, carried on {@link Ratio};
+ * conversion paths are resolved by BFS shortest-path over the rule graph and memoized.
+ *
+ * <p>Built fluently:
+ * <pre>{@code
+ * UnitConverter converter = UnitConverter.builder()
+ *         .add(TimeUnits.pack())
+ *         .add(ItemUnits.pack())
+ *         .convert(EnergyUnits.eu, EnergyUnits.fe).by(4)                        // 1 eu = 4 fe
+ *         .convert(TimeUnits.second, TimeUnits.tick).fixed().by(20)             // fixed: can't be overridden
+ *         .convert(ItemUnits.ingot, ItemUnits.block).forMaterial(iron).by(1, 4) // material override
+ *         .convert(ItemUnits.ingot, FluidUnits.millibucket).by(144)             // cross-family bridge
+ *         .convert(someUnit, otherUnit).byApproximate(0.9)                      // lossy rule
+ *         .build();
+ * }</pre>
+ *
+ * <p>Besides the family packs ({@code TimeUnits}, {@code EnergyUnits},
+ * {@code FluidUnits}, {@code ItemUnits}), two mutually exclusive mod-convention
+ * packs are predefined: {@code TicUnits} (Tinkers' Construct 3, 90 mB per ingot)
+ * and {@code GtUnits} (GregTech, 144 L per ingot). Their bridges are fixed, so
+ * adding both packs to one converter throws {@link RuleConflictException} instead
+ * of silently mixing conventions.
+ */
+@NotNullByDefault
 public final class UnitConverter {
 
-    //region Internal key types
-
-    private record UnitPairKey(Unit<?> from, Unit<?> to) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    private record UnitIdPairKey(Namespace fromUnitId, Namespace toUnitId) {
+    private record EdgeKey(Unit<?> from, Unit<?> to, @Nullable Namespace material) {
     }
 
-    private record MaterialUnitIdPairKey(Namespace materialId, Namespace fromUnitId, Namespace toUnitId) {
+    private record RuleDef(Ratio ratio, boolean fixed) {
     }
 
-    private record DomainUnitIdPairKey(String domain, Namespace fromUnitId, Namespace toUnitId) {
+    private record MemoKey(Unit<?> from, Unit<?> to, @Nullable Namespace material) {
     }
 
-    record ResolvedRatio(double ratio, @Nullable ExactRatio exactRatio) {
-        static ResolvedRatio approximate(double ratio) {
-            return new ResolvedRatio(ratio, null);
-        }
-
-        static ResolvedRatio exact(ExactRatio exactRatio) {
-            return new ResolvedRatio(exactRatio.toDouble(), exactRatio);
-        }
-
-        static ResolvedRatio of(double ratio, @Nullable ExactRatio exactRatio) {
-            return new ResolvedRatio(ratio, exactRatio);
-        }
-
-        ResolvedRatio inverse() {
-            return new ResolvedRatio(1.0 / ratio, exactRatio != null ? exactRatio.inverse() : null);
-        }
-
-        ResolvedRatio multiply(ResolvedRatio other) {
-            @Nullable ExactRatio combined = (this.exactRatio != null && other.exactRatio != null)
-                    ? this.exactRatio.multiply(other.exactRatio) : null;
-            return new ResolvedRatio(this.ratio * other.ratio, combined);
-        }
+    private record SearchNode(Unit<?> unit, Ratio ratio) {
     }
 
-    //endregion
+    private final Map<EdgeKey, RuleDef> edges;
+    private final Map<UnitFamily<?>, Unit<?>> baseUnits;
+    private final Map<MemoKey, Ratio> memo = new ConcurrentHashMap<>();
+    private final QuantityFormatter formatter;
 
-    //region Frozen data
-
-    private final Map<UnitPairKey, List<FamilyRule<?>>> familyRules;
-    private final Map<UnitPairKey, List<BridgeRule<?, ?>>> bridgeRules;
-    private final Map<UnitIdPairKey, FallbackRule> fallbackRules;
-    private final Map<UnitIdPairKey, TemplateRule> templateRules;
-    private final Map<MaterialUnitIdPairKey, MaterialRule> materialRules;
-    private final Map<MaterialUnitIdPairKey, ObjectRule> objectRules;
-    private final Map<DomainUnitIdPairKey, DomainRule> domainRules;
-    private final Set<Namespace> allUnitIds;
-
-    private UnitConverter(
-            Map<UnitPairKey, List<FamilyRule<?>>> familyRules,
-            Map<UnitPairKey, List<BridgeRule<?, ?>>> bridgeRules,
-            Map<UnitIdPairKey, FallbackRule> fallbackRules,
-            Map<UnitIdPairKey, TemplateRule> templateRules,
-            Map<MaterialUnitIdPairKey, MaterialRule> materialRules,
-            Map<MaterialUnitIdPairKey, ObjectRule> objectRules,
-            Map<DomainUnitIdPairKey, DomainRule> domainRules,
-            Set<Namespace> allUnitIds
-    ) {
-        this.familyRules = familyRules;
-        this.bridgeRules = bridgeRules;
-        this.fallbackRules = fallbackRules;
-        this.templateRules = templateRules;
-        this.materialRules = materialRules;
-        this.objectRules = objectRules;
-        this.domainRules = domainRules;
-        this.allUnitIds = allUnitIds;
+    private UnitConverter(Map<EdgeKey, RuleDef> edges, Map<UnitFamily<?>, Unit<?>> baseUnits) {
+        this.edges = edges;
+        this.baseUnits = baseUnits;
+        this.formatter = new QuantityFormatter(this, UnitNames.defaults());
     }
 
-    //endregion
-
-    //region Build from ConversionSchema
-
-    static UnitConverter build(ConversionSchema mutable) {
-        // --- Combine family rules: defaults + user ---
-        List<FamilyRule<?>> allFamilyRules = new ArrayList<>();
-        if (mutable.useDefaults()) {
-            List<FamilyRule<?>> defaults = Units.defaultRules();
-            // Validate: user rules cannot contradict fixed default rules
-            for (FamilyRule<?> userRule : mutable.familyRules()) {
-                for (FamilyRule<?> defRule : defaults) {
-                    if (defRule.fixed()
-                            && userRule.from().equals(defRule.from())
-                            && userRule.to().equals(defRule.to())
-                            && Math.abs(userRule.ratio() - defRule.ratio()) > 1e-9) {
-                        throw new InvalidRuleException(
-                                "Fixed rule " + defRule.from() + " -> " + defRule.to() +
-                                        " is fixed at " + defRule.ratio() + ", cannot override with " + userRule.ratio()
-                        );
-                    }
-                }
-            }
-            // Add defaults that are not overridden by user rules (same pair + specificity)
-            for (FamilyRule<?> defRule : defaults) {
-                boolean overridden = false;
-                for (FamilyRule<?> userRule : mutable.familyRules()) {
-                    if (userRule.from().equals(defRule.from())
-                            && userRule.to().equals(defRule.to())
-                            && userRule.specificity() == defRule.specificity()) {
-                        overridden = true;
-                        break;
-                    }
-                }
-                if (!overridden) {
-                    allFamilyRules.add(defRule);
-                }
-            }
-        }
-        allFamilyRules.addAll(mutable.familyRules());
-
-        // --- Family rules: group by pair, detect conflicts ---
-        Map<UnitPairKey, List<FamilyRule<?>>> familyMap = new HashMap<>();
-        for (FamilyRule<?> rule : allFamilyRules) {
-            UnitPairKey key = new UnitPairKey(rule.from(), rule.to());
-            familyMap.computeIfAbsent(key, k -> new ArrayList<>()).add(rule);
-        }
-        for (var entry : familyMap.entrySet()) {
-            List<FamilyRule<?>> rules = entry.getValue();
-            Set<Integer> seenSpecificities = new HashSet<>();
-            for (FamilyRule<?> rule : rules) {
-                if (!seenSpecificities.add(rule.specificity())) {
-                    throw new RuleConflictException(
-                            "Family rule conflict at same specificity: " + entry.getKey().from() + " -> " + entry.getKey().to()
-                    );
-                }
-            }
-            rules.sort(Comparator.<FamilyRule<?>>comparingInt(FamilyRule::specificity).reversed());
-        }
-
-        // --- Bridge rules: group by pair, detect conflicts with same material + context ---
-        Map<UnitPairKey, List<BridgeRule<?, ?>>> bridgeMap = new HashMap<>();
-        for (BridgeRule<?, ?> rule : mutable.bridgeRules()) {
-            UnitPairKey key = new UnitPairKey(rule.from(), rule.to());
-            List<BridgeRule<?, ?>> existing = bridgeMap.computeIfAbsent(key, k -> new ArrayList<>());
-            for (BridgeRule<?, ?> prev : existing) {
-                if (Objects.equals(prev.requiredMaterialId(), rule.requiredMaterialId())
-                        && prev.requiredContext().equals(rule.requiredContext())) {
-                    throw new RuleConflictException(
-                            "Bridge rule conflict (same material + context): " + rule.from() + " -> " + rule.to()
-                    );
-                }
-            }
-            existing.add(rule);
-        }
-        for (var entry : bridgeMap.entrySet()) {
-            entry.getValue().sort(Comparator.<BridgeRule<?, ?>>comparingInt(BridgeRule::specificity).reversed());
-        }
-
-        // --- Object rules: detect conflicts ---
-        Map<MaterialUnitIdPairKey, ObjectRule> objMap = new HashMap<>();
-        for (ObjectRule rule : mutable.objectRules()) {
-            MaterialUnitIdPairKey key = new MaterialUnitIdPairKey(rule.objectId(), rule.fromUnitId(), rule.toUnitId());
-            if (objMap.put(key, rule) != null) {
-                throw new RuleConflictException("Object rule conflict: " + rule.objectId() + " " + rule.fromUnitId() + " -> " + rule.toUnitId());
-            }
-        }
-
-        // --- Material rules: detect conflicts ---
-        Map<MaterialUnitIdPairKey, MaterialRule> matMap = new HashMap<>();
-        for (MaterialRule rule : mutable.materialRules()) {
-            MaterialUnitIdPairKey key = new MaterialUnitIdPairKey(rule.materialId(), rule.fromUnitId(), rule.toUnitId());
-            if (matMap.put(key, rule) != null) {
-                throw new RuleConflictException("Material rule conflict: " + rule.materialId() + " " + rule.fromUnitId() + " -> " + rule.toUnitId());
-            }
-        }
-
-        // --- Template rules: detect conflicts ---
-        Map<UnitIdPairKey, TemplateRule> tmplMap = new HashMap<>();
-        for (TemplateRule rule : mutable.templateRules()) {
-            UnitIdPairKey key = new UnitIdPairKey(rule.fromUnitId(), rule.toUnitId());
-            if (tmplMap.put(key, rule) != null) {
-                throw new RuleConflictException("Template rule conflict: " + rule.fromUnitId() + " -> " + rule.toUnitId());
-            }
-        }
-
-        // --- Fallback rules: detect conflicts ---
-        Map<UnitIdPairKey, FallbackRule> fbMap = new HashMap<>();
-        for (FallbackRule rule : mutable.fallbackRules()) {
-            UnitIdPairKey key = new UnitIdPairKey(rule.fromUnitId(), rule.toUnitId());
-            if (fbMap.put(key, rule) != null) {
-                throw new RuleConflictException("Fallback rule conflict: " + rule.fromUnitId() + " -> " + rule.toUnitId());
-            }
-        }
-
-        // --- Domain rules: detect conflicts ---
-        Map<DomainUnitIdPairKey, DomainRule> domMap = new HashMap<>();
-        for (DomainRule rule : mutable.domainRules()) {
-            DomainUnitIdPairKey key = new DomainUnitIdPairKey(rule.domain(), rule.fromUnitId(), rule.toUnitId());
-            if (domMap.put(key, rule) != null) {
-                throw new RuleConflictException("Domain rule conflict: " + rule.domain() + " " + rule.fromUnitId() + " -> " + rule.toUnitId());
-            }
-        }
-
-        // --- Collect all known unit IDs for auto-derivation ---
-        Set<Namespace> allUnitIds = new HashSet<>();
-        for (ObjectRule r : objMap.values()) {
-            allUnitIds.add(r.fromUnitId());
-            allUnitIds.add(r.toUnitId());
-        }
-        for (MaterialRule r : matMap.values()) {
-            allUnitIds.add(r.fromUnitId());
-            allUnitIds.add(r.toUnitId());
-        }
-        for (DomainRule r : domMap.values()) {
-            allUnitIds.add(r.fromUnitId());
-            allUnitIds.add(r.toUnitId());
-        }
-        for (TemplateRule r : tmplMap.values()) {
-            allUnitIds.add(r.fromUnitId());
-            allUnitIds.add(r.toUnitId());
-        }
-        for (FallbackRule r : fbMap.values()) {
-            allUnitIds.add(r.fromUnitId());
-            allUnitIds.add(r.toUnitId());
-        }
-        // Also collect unit IDs from family rules for transitive derivation
-        for (var entry : familyMap.entrySet()) {
-            allUnitIds.add(entry.getKey().from().id());
-            allUnitIds.add(entry.getKey().to().id());
-        }
-
-        Map<UnitPairKey, List<FamilyRule<?>>> immutableFamilyMap = new HashMap<>();
-        for (var entry : familyMap.entrySet()) {
-            immutableFamilyMap.put(entry.getKey(), List.copyOf(entry.getValue()));
-        }
-        Map<UnitPairKey, List<BridgeRule<?, ?>>> immutableBridgeMap = new HashMap<>();
-        for (var entry : bridgeMap.entrySet()) {
-            immutableBridgeMap.put(entry.getKey(), List.copyOf(entry.getValue()));
-        }
-
-        return new UnitConverter(
-                Collections.unmodifiableMap(immutableFamilyMap),
-                Collections.unmodifiableMap(immutableBridgeMap),
-                Map.copyOf(fbMap),
-                Map.copyOf(tmplMap),
-                Map.copyOf(matMap),
-                Map.copyOf(objMap),
-                Map.copyOf(domMap),
-                Set.copyOf(allUnitIds)
-        );
+    /**
+     * The default formatter backed by {@link UnitNames#defaults()}.
+     */
+    public QuantityFormatter formatter() {
+        return formatter;
     }
 
-    //endregion
-
-    //region Public conversion API
-
-    // --- convert ---
-
-    public <F> double convert(double amount, Unit<F> from, Unit<F> to) {
-        return convert(amount, from, to, null, ConvertContext.empty(), ConversionMode.exactFirstThenApprox);
+    public <F> Quantity<F> quantity(long amount, Unit<F> unit) {
+        return Quantity.of(Ratio.of(amount), unit, this);
     }
 
-    public <F> double convert(double amount, Unit<F> from, Unit<F> to, Namespace material) {
-        return convert(amount, from, to, material, ConvertContext.empty(), ConversionMode.exactFirstThenApprox);
+    public <F> Quantity<F> quantity(Ratio value, Unit<F> unit) {
+        return Quantity.of(value, unit, this);
     }
 
-    public <F> double convert(double amount, Unit<F> from, Unit<F> to, ConversionMode mode) {
-        return convert(amount, from, to, null, ConvertContext.empty(), mode);
+    public <F1, F2> Quantity<F2> convert(long amount, Unit<F1> from, Unit<F2> to) {
+        return convert(Ratio.of(amount), from, to, null);
     }
 
-    public <F> double convert(double amount, Unit<F> from, Unit<F> to, @Nullable Namespace material, ConvertContext context) {
-        return convert(amount, from, to, material, context, ConversionMode.exactFirstThenApprox);
+    public <F1, F2> Quantity<F2> convert(long amount, Unit<F1> from, Unit<F2> to, @Nullable Namespace material) {
+        return convert(Ratio.of(amount), from, to, material);
     }
 
-    public <F> double convert(double amount, Unit<F> from, Unit<F> to,
-                              @Nullable Namespace material, ConvertContext context, ConversionMode mode) {
-        if (from.equals(to)) return amount;
+    public <F1, F2> Quantity<F2> convert(Ratio value, Unit<F1> from, Unit<F2> to) {
+        return convert(value, from, to, null);
+    }
 
-        ResolvedRatio resolved = resolveFullRatio(from, to, material, context);
-        if (resolved == null) {
-            throw new NoRuleMatchedException("No conversion rule: " + from + " -> " + to);
+    public <F1, F2> Quantity<F2> convert(Ratio value, Unit<F1> from, Unit<F2> to, @Nullable Namespace material) {
+        Checks.checkNotNull(value, "value");
+        Checks.checkNotNull(from, "from");
+        Checks.checkNotNull(to, "to");
+        Ratio ratio = resolveRatio(from, to, material);
+        return Quantity.of(value.multiply(ratio), to, this);
+    }
+
+    /**
+     * Normalizes an amount of matter into a {@link MaterialAmount}: converts it to the
+     * family's registered base unit (material-specific rules apply) and tags it with the material.
+     */
+    public <F> MaterialAmount materialAmount(long amount, Unit<F> unit, Namespace material) {
+        return materialAmount(Ratio.of(amount), unit, material);
+    }
+
+    public <F> MaterialAmount materialAmount(Ratio value, Unit<F> unit, Namespace material) {
+        Checks.checkNotNull(value, "value");
+        Checks.checkNotNull(unit, "unit");
+        Checks.checkNotNull(material, "material");
+        Unit<?> base = baseUnits.get(unit.family());
+        if (base == null) {
+            throw new IllegalStateException("No base unit registered for family " + unit.family().id());
         }
-
-        return switch (mode) {
-            case exactFirstThenApprox -> amount * resolved.ratio();
-            case exactOnly -> {
-                if (resolved.exactRatio() == null) {
-                    throw new InexactResultException(
-                            "No exact ratio path: " + from + " -> " + to + " (approximate ratio=" + resolved.ratio() + ")"
-                    );
-                }
-                yield amount * resolved.ratio();
-            }
-            case approximateOnly -> amount * resolved.ratio();
-        };
+        Ratio baseValue = convert(value, unit, base, material).value();
+        return new MaterialAmount(material, baseValue, base, this);
     }
 
-    // --- canConvert ---
-
-    public <F> boolean canConvert(Unit<F> from, Unit<F> to) {
-        return canConvert(from, to, null, ConvertContext.empty());
+    /**
+     * The registered base unit of a matter family, or null if none was registered.
+     */
+    public @Nullable Unit<?> baseUnit(UnitFamily<?> family) {
+        Checks.checkNotNull(family, "family");
+        return baseUnits.get(family);
     }
 
-    public <F> boolean canConvert(Unit<F> from, Unit<F> to, Namespace material) {
-        return canConvert(from, to, material, ConvertContext.empty());
+    public boolean canConvert(Unit<?> from, Unit<?> to) {
+        return canConvert(from, to, null);
     }
 
-    public <F> boolean canConvert(Unit<F> from, Unit<F> to, @Nullable Namespace material, ConvertContext context) {
+    public boolean canConvert(Unit<?> from, Unit<?> to, @Nullable Namespace material) {
+        Checks.checkNotNull(from, "from");
+        Checks.checkNotNull(to, "to");
         if (from.equals(to)) return true;
-        return resolveFullRatio(from, to, material, context) != null;
-    }
-
-    // --- convertDiscrete (strict) ---
-
-    public <F> long convertDiscrete(long amount, Unit<F> from, Unit<F> to) {
-        return convertDiscrete(amount, from, to, null, ConvertContext.empty());
-    }
-
-    public <F> long convertDiscrete(long amount, Unit<F> from, Unit<F> to, Namespace material) {
-        return convertDiscrete(amount, from, to, material, ConvertContext.empty());
-    }
-
-    public <F> long convertDiscrete(long amount, Unit<F> from, Unit<F> to,
-                                    @Nullable Namespace material, ConvertContext context) {
-        if (from.equals(to)) return amount;
-
-        ResolvedRatio resolved = resolveFullRatio(from, to, material, context);
-        if (resolved == null) {
-            throw new NoRuleMatchedException("No conversion rule: " + from + " -> " + to);
+        try {
+            resolveRatio(from, to, material);
+            return true;
+        } catch (NoConversionPathException e) {
+            return false;
         }
-
-        // Try exact path first
-        if (resolved.exactRatio() != null) {
-            Long exact = resolved.exactRatio().applyExact(amount);
-            if (exact != null) return exact;
-        }
-
-        double result = amount * resolved.ratio();
-        long rounded = Math.round(result);
-        if (Math.abs(result - rounded) > 1e-9) {
-            throw new InexactResultException(
-                    "Discrete conversion inexact: " + amount + " " + from + " -> " + to + " = " + result
-            );
-        }
-        return rounded;
-    }
-
-    // --- convertDiscrete (with rounding mode) ---
-
-    public <F> DiscreteConversionResult convertDiscrete(
-            long amount, Unit<F> from, Unit<F> to, DiscreteRoundingMode mode
-    ) {
-        return convertDiscrete(amount, from, to, null, ConvertContext.empty(), mode);
-    }
-
-    public <F> DiscreteConversionResult convertDiscrete(
-            long amount, Unit<F> from, Unit<F> to, Namespace material, DiscreteRoundingMode mode
-    ) {
-        return convertDiscrete(amount, from, to, material, ConvertContext.empty(), mode);
-    }
-
-    public <F> DiscreteConversionResult convertDiscrete(
-            long amount, Unit<F> from, Unit<F> to,
-            @Nullable Namespace material, ConvertContext context, DiscreteRoundingMode mode
-    ) {
-        if (from.equals(to)) return DiscreteConversionResult.exact(amount);
-
-        ResolvedRatio resolved = resolveFullRatio(from, to, material, context);
-        if (resolved == null) {
-            throw new NoRuleMatchedException("No conversion rule: " + from + " -> " + to);
-        }
-
-        // Try exact integer path
-        if (resolved.exactRatio() != null) {
-            Long exact = resolved.exactRatio().applyExact(amount);
-            if (exact != null) return DiscreteConversionResult.exact(exact);
-        }
-
-        double result = amount * resolved.ratio();
-        long rounded = Math.round(result);
-        boolean exact = Math.abs(result - rounded) <= 1e-9;
-
-        return switch (mode) {
-            case strict -> {
-                if (!exact) {
-                    throw new InexactResultException("Discrete conversion inexact: " + result);
-                }
-                yield DiscreteConversionResult.exact(rounded);
-            }
-            case floorWithRemainder -> {
-                long floor = (long) Math.floor(result);
-                double remainder = result - floor;
-                yield exact
-                        ? DiscreteConversionResult.exact(floor)
-                        : DiscreteConversionResult.inexact(floor, remainder);
-            }
-            case approximate -> {
-                double remainder = result - rounded;
-                yield exact
-                        ? DiscreteConversionResult.exact(rounded)
-                        : DiscreteConversionResult.inexact(rounded, remainder);
-            }
-        };
-    }
-
-    //endregion
-
-    //region Cross-family API
-
-    // --- Explicit bridge ---
-
-    public <F1, F2> double convertCross(
-            double amount, Unit<F1> from, BridgeRule<F1, F2> bridge, Unit<F2> to
-    ) {
-        if (!from.equals(bridge.from())) {
-            throw new CrossFamilyNotAllowedException(
-                    "Source unit " + from + " does not match bridge source " + bridge.from()
-            );
-        }
-        if (!to.equals(bridge.to())) {
-            throw new CrossFamilyNotAllowedException(
-                    "Target unit " + to + " does not match bridge target " + bridge.to()
-            );
-        }
-        UnitPairKey bridgeKey = new UnitPairKey(bridge.from(), bridge.to());
-        if (!bridgeRules.containsKey(bridgeKey)) {
-            throw new CrossFamilyNotAllowedException(
-                    "Bridge rule not registered: " + bridge.from() + " -> " + bridge.to()
-            );
-        }
-        return amount * bridge.ratio();
-    }
-
-    // --- Auto-resolve cross-family ---
-
-    public double convertCross(double amount, Unit<?> from, Unit<?> to) {
-        return convertCross(amount, from, to, null, ConvertContext.empty());
-    }
-
-    public double convertCross(double amount, Unit<?> from, Unit<?> to, Namespace material) {
-        return convertCross(amount, from, to, material, ConvertContext.empty());
-    }
-
-    public double convertCross(double amount, Unit<?> from, Unit<?> to,
-                               @Nullable Namespace material, ConvertContext context) {
-        ResolvedRatio resolved = resolveBridgeRatio(from, to, material, context);
-        if (resolved == null) {
-            throw new CrossFamilyNotAllowedException(
-                    "No bridge rule: " + from + " -> " + to
-            );
-        }
-        return amount * resolved.ratio();
-    }
-
-    public boolean canConvertCross(Unit<?> from, Unit<?> to) {
-        return canConvertCross(from, to, null, ConvertContext.empty());
-    }
-
-    public boolean canConvertCross(Unit<?> from, Unit<?> to, Namespace material) {
-        return canConvertCross(from, to, material, ConvertContext.empty());
-    }
-
-    public boolean canConvertCross(Unit<?> from, Unit<?> to,
-                                   @Nullable Namespace material, ConvertContext context) {
-        return resolveBridgeRatio(from, to, material, context) != null;
-    }
-
-    public long convertCrossDiscrete(long amount, Unit<?> from, Unit<?> to) {
-        return convertCrossDiscrete(amount, from, to, null, ConvertContext.empty());
-    }
-
-    public long convertCrossDiscrete(long amount, Unit<?> from, Unit<?> to, Namespace material) {
-        return convertCrossDiscrete(amount, from, to, material, ConvertContext.empty());
-    }
-
-    public long convertCrossDiscrete(long amount, Unit<?> from, Unit<?> to,
-                                     @Nullable Namespace material, ConvertContext context) {
-        ResolvedRatio resolved = resolveBridgeRatio(from, to, material, context);
-        if (resolved == null) {
-            throw new CrossFamilyNotAllowedException(
-                    "No bridge rule: " + from + " -> " + to
-            );
-        }
-        if (resolved.exactRatio() != null) {
-            Long exact = resolved.exactRatio().applyExact(amount);
-            if (exact != null) return exact;
-        }
-        double result = amount * resolved.ratio();
-        long rounded = Math.round(result);
-        if (Math.abs(result - rounded) > 1e-9) {
-            throw new InexactResultException(
-                    "Discrete cross-family conversion inexact: " + amount + " " + from + " -> " + to + " = " + result
-            );
-        }
-        return rounded;
-    }
-
-    //endregion
-
-    //region Internal resolution
-
-    private static final int MAX_DERIVATION_DEPTH = 2;
-
-    /**
-     * Main resolver: tries forward → auto-inverse → transitive derivation.
-     */
-    private <F> @Nullable ResolvedRatio resolveFullRatio(Unit<F> from, Unit<F> to,
-                                                         @Nullable Namespace material, ConvertContext context) {
-        return resolveFullRatio(from, to, material, context, MAX_DERIVATION_DEPTH);
-    }
-
-    private <F> @Nullable ResolvedRatio resolveFullRatio(Unit<F> from, Unit<F> to,
-                                                         @Nullable Namespace material, ConvertContext context,
-                                                         int maxDepth) {
-        // 1. Forward direction
-        ResolvedRatio forward = resolveForwardRatio(from, to, material, context);
-        if (forward != null) return forward;
-
-        // 2. Auto-inverse: try reverse direction and invert
-        ResolvedRatio reverse = resolveForwardRatio(to, from, material, context);
-        if (reverse != null) return reverse.inverse();
-
-        // 3. Transitive derivation via intermediate form (depth-limited)
-        if (maxDepth <= 0) return null;
-        return resolveDerivedRatio(from, to, material, context, maxDepth - 1);
     }
 
     /**
-     * Resolves a ratio in the forward direction only (no auto-inverse).
-     * Priority: matter rules (MatterFamily only) > family rules.
+     * Resolves the exact ratio such that {@code 1 from = ratio to}.
      */
-    private <F> @Nullable ResolvedRatio resolveForwardRatio(Unit<F> from, Unit<F> to,
-                                                            @Nullable Namespace material, ConvertContext context) {
-        if (from.family() instanceof MatterFamily<?>) {
-            ResolvedRatio matter = resolveMatterRatio(from, to, material);
-            if (matter != null) return matter;
-        }
-
-        return resolveFamilyRuleRatio(from, to, context);
+    public Ratio resolveRatio(Unit<?> from, Unit<?> to, @Nullable Namespace material) {
+        if (from.equals(to)) return Ratio.ONE;
+        return memo.computeIfAbsent(new MemoKey(from, to, material), key -> bfs(key.from(), key.to(), key.material()));
     }
 
-    /**
-     * Resolves matter rules with priority: object > material > domain > template > fallback.
-     */
-    private <F> @Nullable ResolvedRatio resolveMatterRatio(Unit<F> from, Unit<F> to,
-                                                           @Nullable Namespace material) {
-        Namespace fromId = from.id();
-        Namespace toId = to.id();
-
-        if (material != null) {
-            // Object rule (highest priority)
-            ObjectRule obj = objectRules.get(new MaterialUnitIdPairKey(material, fromId, toId));
-            if (obj != null) return ResolvedRatio.of(obj.ratio(), obj.exactRatio());
-
-            // Material rule
-            MaterialRule mat = materialRules.get(new MaterialUnitIdPairKey(material, fromId, toId));
-            if (mat != null) return ResolvedRatio.of(mat.ratio(), mat.exactRatio());
-
-            // Domain rule (matches by material's root/domain)
-            DomainRule dom = domainRules.get(new DomainUnitIdPairKey(material.root(), fromId, toId));
-            if (dom != null) return ResolvedRatio.of(dom.ratio(), dom.exactRatio());
-        }
-
-        // Template rule
-        TemplateRule tmpl = templateRules.get(new UnitIdPairKey(fromId, toId));
-        if (tmpl != null) return ResolvedRatio.of(tmpl.ratio(), tmpl.exactRatio());
-
-        // Fallback rule (lowest priority)
-        FallbackRule fb = fallbackRules.get(new UnitIdPairKey(fromId, toId));
-        if (fb != null) return ResolvedRatio.of(fb.ratio(), fb.exactRatio());
-
-        return null;
-    }
-
-    private <F> @Nullable ResolvedRatio resolveFamilyRuleRatio(Unit<F> from, Unit<F> to, ConvertContext context) {
-        UnitPairKey key = new UnitPairKey(from, to);
-        List<FamilyRule<?>> rules = familyRules.get(key);
-        if (rules == null) return null;
-
-        for (FamilyRule<?> rule : rules) {
-            if (rule.matches(context)) {
-                return ResolvedRatio.of(rule.ratio(), rule.exactRatio());
-            }
-        }
-        return null;
-    }
-
-    private <F> @Nullable ResolvedRatio resolveDerivedRatio(Unit<F> from, Unit<F> to,
-                                                            @Nullable Namespace material, ConvertContext context,
-                                                            int maxDepth) {
-        for (Namespace midId : allUnitIds) {
-            if (midId.equals(from.id()) || midId.equals(to.id())) continue;
-
-            Unit<F> mid = Unit.create(from.family(), midId);
-            ResolvedRatio r1 = resolveFullRatio(from, mid, material, context, maxDepth);
-            ResolvedRatio r2 = resolveFullRatio(mid, to, material, context, maxDepth);
-
-            if (r1 != null && r2 != null) {
-                return r1.multiply(r2);
-            }
-        }
-        return null;
-    }
-
-    private @Nullable ResolvedRatio resolveBridgeRatio(Unit<?> from, Unit<?> to,
-                                                       @Nullable Namespace material, ConvertContext context) {
-        UnitPairKey key = new UnitPairKey(from, to);
-        List<BridgeRule<?, ?>> rules = bridgeRules.get(key);
-        if (rules != null) {
-            for (BridgeRule<?, ?> rule : rules) {
-                if (rule.matches(material, context)) {
-                    return ResolvedRatio.of(rule.ratio(), rule.exactRatio());
+    private Ratio bfs(Unit<?> from, Unit<?> to, @Nullable Namespace material) {
+        Deque<SearchNode> queue = new ArrayDeque<>();
+        Set<Unit<?>> visited = new HashSet<>();
+        queue.add(new SearchNode(from, Ratio.ONE));
+        visited.add(from);
+        while (!queue.isEmpty()) {
+            SearchNode current = queue.poll();
+            // material-specific edges first, then generic ones
+            for (boolean specific : new boolean[]{true, false}) {
+                for (Map.Entry<EdgeKey, RuleDef> entry : edges.entrySet()) {
+                    EdgeKey edge = entry.getKey();
+                    if (specific != (edge.material() != null)) continue;
+                    if (edge.material() != null && !edge.material().equals(material)) continue;
+                    Unit<?> next;
+                    Ratio edgeRatio;
+                    if (edge.from().equals(current.unit())) {
+                        next = edge.to();
+                        edgeRatio = entry.getValue().ratio();
+                    } else if (edge.to().equals(current.unit())) {
+                        next = edge.from();
+                        edgeRatio = entry.getValue().ratio().inverse();
+                    } else {
+                        continue;
+                    }
+                    Ratio nextRatio = current.ratio().multiply(edgeRatio);
+                    if (next.equals(to)) return nextRatio;
+                    if (visited.add(next)) {
+                        queue.add(new SearchNode(next, nextRatio));
+                    }
                 }
             }
         }
-        // Auto-inverse: try reverse direction
-        UnitPairKey reverseKey = new UnitPairKey(to, from);
-        List<BridgeRule<?, ?>> reverseRules = bridgeRules.get(reverseKey);
-        if (reverseRules != null) {
-            for (BridgeRule<?, ?> rule : reverseRules) {
-                if (rule.matches(material, context)) {
-                    return ResolvedRatio.of(rule.ratio(), rule.exactRatio()).inverse();
-                }
-            }
-        }
-        return null;
+        throw new NoConversionPathException(from, to);
     }
 
-    //endregion
+    public static final class Builder {
+
+        private final Map<EdgeKey, RuleDef> edges = new LinkedHashMap<>();
+        private final Map<UnitFamily<?>, Unit<?>> baseUnits = new LinkedHashMap<>();
+
+        private Builder() {
+        }
+
+        /**
+         * Starts a rule registration: {@code 1 from = ratio to}. At the terminal
+         * {@code by*(...)} call the rule is classified: endpoints in the same family
+         * become a family rule, endpoints in different families become a bridge.
+         */
+        public <F1, F2> RuleStep convert(Unit<F1> from, Unit<F2> to) {
+            Checks.checkNotNull(from, "from");
+            Checks.checkNotNull(to, "to");
+            return new RuleStep(from, to);
+        }
+
+        /**
+         * Registers a predefined bundle: all its rules, then its base unit if present.
+         */
+        public Builder add(UnitPack pack) {
+            Checks.checkNotNull(pack, "pack");
+            rules(pack.rules());
+            if (pack.baseUnit() != null) {
+                baseUnit(pack.baseUnit());
+            }
+            return this;
+        }
+
+        public Builder rules(Iterable<UnitRule> rules) {
+            Checks.checkNotNull(rules, "rules");
+            for (UnitRule rule : rules) {
+                apply(rule);
+            }
+            return this;
+        }
+
+        public Builder rules(UnitRule... rules) {
+            return rules(List.of(rules));
+        }
+
+        /**
+         * Registers the base unit of a matter family, used by {@link MaterialAmount}
+         * normalization. One per family: duplicate registration throws
+         * {@link RuleConflictException}; a unit of a measure family is rejected.
+         */
+        public <F> Builder baseUnit(Unit<F> matterUnit) {
+            Checks.checkNotNull(matterUnit, "matterUnit");
+            Checks.checkArgument(
+                    matterUnit.family().isMatter(),
+                    "Base unit must belong to a matter family: %s",
+                    matterUnit.family().id()
+            );
+            Unit<?> existing = baseUnits.putIfAbsent(matterUnit.family(), matterUnit);
+            if (existing != null) {
+                throw new RuleConflictException(
+                        "Base unit of family " + matterUnit.family().id() + " already registered: " + existing.id()
+                );
+            }
+            return this;
+        }
+
+        public UnitConverter build() {
+            return new UnitConverter(
+                    Collections.unmodifiableMap(new LinkedHashMap<>(edges)),
+                    Collections.unmodifiableMap(new LinkedHashMap<>(baseUnits))
+            );
+        }
+
+        /**
+         * The fluent second stage of {@link #convert(Unit, Unit)}. Modifiers
+         * ({@link #fixed()}, {@link #forMaterial(Namespace)}) return the step and are
+         * combinable in either order; the {@code by*(...)} terminals finish the
+         * registration and return the builder for chaining.
+         */
+        public final class RuleStep {
+
+            private final Unit<?> from;
+            private final Unit<?> to;
+            private boolean fixed;
+            private @Nullable Namespace material;
+
+            private RuleStep(Unit<?> from, Unit<?> to) {
+                this.from = from;
+                this.to = to;
+            }
+
+            /**
+             * The rule can never be overridden by a later rule for the same pair.
+             */
+            public RuleStep fixed() {
+                this.fixed = true;
+                return this;
+            }
+
+            /**
+             * The rule applies only to the given material; wins over the generic rule.
+             */
+            public RuleStep forMaterial(Namespace material) {
+                this.material = Checks.checkNotNull(material, "material");
+                return this;
+            }
+
+            public Builder by(long ratio) {
+                return by(Ratio.of(ratio));
+            }
+
+            public Builder by(long numerator, long denominator) {
+                return by(Ratio.of(numerator, denominator));
+            }
+
+            public Builder by(Ratio ratio) {
+                Checks.checkNotNull(ratio, "ratio");
+                if (from.family().equals(to.family())) {
+                    return putRule(from, to, ratio, fixed, material);
+                }
+                return putBridge(from, to, ratio, fixed, material);
+            }
+
+            public Builder byApproximate(double value) {
+                return by(Ratio.approximate(value));
+            }
+
+            public Builder byApproximate(long numerator, long denominator) {
+                return by(Ratio.approximate(numerator, denominator));
+            }
+        }
+
+        private void apply(UnitRule rule) {
+            switch (rule.kind()) {
+                case rule, matter -> putRule(rule.from(), rule.to(), rule.ratio(), rule.fixed(), rule.material());
+                case bridge -> putBridge(rule.from(), rule.to(), rule.ratio(), rule.fixed(), rule.material());
+            }
+        }
+
+        private Builder putRule(Unit<?> from, Unit<?> to, Ratio ratio, boolean fixed, @Nullable Namespace material) {
+            checkPositive(ratio);
+            Checks.checkArgument(
+                    from.family().equals(to.family()),
+                    "Rule endpoints must be in the same family: %s vs %s",
+                    from.family().id(), to.family().id()
+            );
+            return put(new EdgeKey(from, to, material), new RuleDef(ratio, fixed));
+        }
+
+        private Builder putBridge(Unit<?> from, Unit<?> to, Ratio ratio, boolean fixed, @Nullable Namespace material) {
+            checkPositive(ratio);
+            Checks.checkArgument(
+                    !from.family().equals(to.family()),
+                    "Bridge endpoints must be in different families: %s",
+                    from.family().id()
+            );
+            return put(new EdgeKey(from, to, material), new RuleDef(ratio, fixed));
+        }
+
+        private Builder put(EdgeKey key, RuleDef def) {
+            RuleDef existing = edges.get(key);
+            if (existing != null) {
+                if (existing.fixed()) {
+                    throw new RuleConflictException("Fixed rule " + key.from() + " -> " + key.to() + " can't be overridden");
+                }
+                if (existing.ratio().equals(def.ratio())) {
+                    throw new RuleConflictException("Duplicate rule " + key.from() + " -> " + key.to() + " with ratio " + def.ratio());
+                }
+                edges.put(key, def);
+                return this;
+            }
+            EdgeKey reverse = new EdgeKey(key.to(), key.from(), key.material());
+            RuleDef existingReverse = edges.get(reverse);
+            if (existingReverse != null) {
+                if (existingReverse.fixed()) {
+                    throw new RuleConflictException("Fixed rule " + reverse.from() + " -> " + reverse.to() + " can't be overridden");
+                }
+                if (existingReverse.ratio().equals(def.ratio().inverse())) {
+                    throw new RuleConflictException("Duplicate rule " + key.from() + " -> " + key.to() + " (already defined in reverse)");
+                }
+                edges.remove(reverse);
+            }
+            edges.put(key, def);
+            return this;
+        }
+
+        private static void checkPositive(Ratio ratio) {
+            Checks.checkNotNull(ratio, "ratio");
+            Checks.checkArgument(ratio.signum() > 0, "Rule ratio must be positive: %s", ratio);
+        }
+    }
 }
