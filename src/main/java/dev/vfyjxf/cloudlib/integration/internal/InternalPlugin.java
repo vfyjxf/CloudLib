@@ -1,13 +1,17 @@
 package dev.vfyjxf.cloudlib.integration.internal;
 
-import dev.vfyjxf.cloudlib.api.registry.ModuleEntryPoint;
-import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
-import dev.vfyjxf.cloudlib.api.utils.ModService;
+import dev.vfyjxf.cloudlib.api.plugin.CloudLibPlugin;
+import dev.vfyjxf.cloudlib.api.plugin.PluginMarker;
+import dev.vfyjxf.cloudlib.api.util.Namespace;
+import dev.vfyjxf.cloudlib.util.CloudNamespaces;
 
-@ModService
-public class InternalPlugin implements ModuleEntryPoint {
+@PluginMarker
+public class InternalPlugin implements CloudLibPlugin {
+
+    public static final Namespace id = CloudNamespaces.ofMod("builtin");
+
     @Override
-    public void registerUI(IUIRegistry registry) {
+    public Namespace pluginId() {
+        return id;
     }
-
 }

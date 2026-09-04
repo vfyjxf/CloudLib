@@ -1,16 +1,17 @@
 package dev.vfyjxf.cloudlib.api.ui.drag;
 
+import dev.vfyjxf.cloudlib.Constants;
 import dev.vfyjxf.cloudlib.api.performer.CompositeScenario;
-import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
-import dev.vfyjxf.cloudlib.utils.Locations;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.util.Namespace;
 
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 
 public interface DragConsumer {
 
-    CompositeScenario<DragConsumer> SCENARIO = new CompositeScenario<>(
-            Locations.of("drag_consumer"),
+    CompositeScenario<DragConsumer> scenario = new CompositeScenario<>(
+            Namespace.of(Constants.modId, "drag_consumer"),
             DragConsumer.class,
             listeners -> new DragConsumer() {
 

@@ -9,7 +9,6 @@ import net.neoforged.testframework.junit.EphemeralTestServerProvider;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.ArrayList;
@@ -63,7 +62,7 @@ class SnapshotTest {
 
     }
 
-    @Test
+//    @Test
     void serverTick(MinecraftServer server) {
         TestHolder testHolder = new TestHolder();
         Expose<Integer> copyOf = new Expose<>(

@@ -1,4 +1,3 @@
-@NotNullByDefault
+@dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
 package dev.vfyjxf.cloudlib.api.network;
 
-import dev.vfyjxf.cloudlib.api.annotations.NotNullByDefault;

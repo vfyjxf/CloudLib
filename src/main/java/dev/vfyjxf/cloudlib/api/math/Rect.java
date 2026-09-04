@@ -5,48 +5,16 @@ import org.jetbrains.annotations.Contract;
 /**
  * Represents a rectangle.
  */
-public class Rect {
+public record Rect(int x, int y, int width, int height) {
 
-    public int x;
-    public int y;
-    public int width;
-    public int height;
+    public static final Rect empty = new Rect(0, 0, 0, 0);
 
     public Rect(Pos pos, Size size) {
-        this.x = pos.x;
-        this.y = pos.y;
-        this.width = size.width;
-        this.height = size.height;
+        this(pos.x(), pos.y(), size.width(), size.height());
     }
 
     public Rect(Pos pos, int width, int height) {
-        this.x = pos.x;
-        this.y = pos.y;
-        this.width = width;
-        this.height = height;
-    }
-
-    public Rect(int x, int y, int width, int height) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-    }
-
-    public int x() {
-        return x;
-    }
-
-    public int y() {
-        return y;
-    }
-
-    public int width() {
-        return width;
-    }
-
-    public int height() {
-        return height;
+        this(pos.x(), pos.y(), width, height);
     }
 
     public int right() {
@@ -77,22 +45,6 @@ public class Rect {
         return new Pos(centerX(), centerY());
     }
 
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
-    }
-
     public Rect copy() {
         return new Rect(x, y, width, height);
     }
@@ -102,7 +54,7 @@ public class Rect {
     }
 
     public boolean contains(Pos pos) {
-        return contains(pos.x, pos.y);
+        return contains(pos.x(), pos.y());
     }
 
     public boolean contains(double x, double y) {
@@ -121,12 +73,26 @@ public class Rect {
         return this.x < x + width && this.x + this.width > x && this.y < y + height && this.y + this.height > y;
     }
 
+    /**
+     * Returns the intersection of this rectangle with another.
+     *
+     * @param other the other rectangle
+     * @return the intersection, or a zero-area rect if no intersection
+     */
+    @Contract("_ -> new")
+    public Rect intersection(Rect other) {
+        int x1 = Math.max(this.x, other.x);
+        int y1 = Math.max(this.y, other.y);
+        int x2 = Math.min(this.right(), other.right());
+        int y2 = Math.min(this.bottom(), other.bottom());
+        int w = Math.max(0, x2 - x1);
+        int h = Math.max(0, y2 - y1);
+        return new Rect(x1, y1, w, h);
+    }
 
-    @Contract("_ -> this")
+    @Contract("_ -> new")
     public Rect move(Pos pos) {
-        this.x = pos.x;
-        this.y = pos.y;
-        return this;
+        return new Rect(pos.x() + x, pos.y() + y, width, height);
     }
 
     @Override

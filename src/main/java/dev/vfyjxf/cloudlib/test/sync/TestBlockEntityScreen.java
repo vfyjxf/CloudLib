@@ -1,20 +1,11 @@
 package dev.vfyjxf.cloudlib.test.sync;
 
-import dev.vfyjxf.cloudlib.api.ui.event.InputEvent;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
-import dev.vfyjxf.cloudlib.api.ui.modifier.Modifier;
 import dev.vfyjxf.cloudlib.api.ui.sync.BasicMenuScreen;
-import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
-import dev.vfyjxf.cloudlib.helper.RenderHelper;
-import dev.vfyjxf.cloudlib.ui.widgets.TextWidget;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
-import java.awt.Color;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
 public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu> {
@@ -22,10 +13,10 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
     public TestBlockEntityScreen(TestBlockEntity.Menu menu, Inventory playerInventory) {
         super(menu, playerInventory);
 
-        mainGroup.withModifier(
-                Modifier()
-                        .background(0xff282c34)
-        );
+//        mainGroup.withModifier(
+//                Modifier()
+//                        .background(0xff282c34)
+//        );
 
 //        //region item display
 //        var itemDisplayWidget = mainGroup().addWidget(new Widget() {
@@ -66,9 +57,9 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
             private final ItemStack displayItem = stack;
 
             {
-                onEvent(WidgetEvent.onRender, ((graphics, mouseX, mouseY, partialTicks, context) -> {
+                onEvent(WidgetEvent.onRender, ((canvas, mouseX, mouseY, partialTicks, self, context) -> {
                     if (displayItem.isEmpty()) return;
-                    graphics.renderItem(displayItem, 0, 0);
+                    canvas.layeredGraphics().renderItem(displayItem, 0, 0);
                 }));
             }
         };
@@ -82,7 +73,7 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
 //            itemDisplayList.clear();
 //            for (int i = 0; i < stacks.size(); i++) {
 //                ItemStack stack = stacks.get(i);
-//                var itemDisplay = itemDisplayList.addWidget(itemDisplayFactory.apply(stack));
+//                var itemDisplay = itemDisplayList.addWidget(itemDisplayFactory.updateWidget(stack));
 //                itemDisplay.mark("itemDisplay" + i);
 //                itemDisplay.withModifier(
 //                        Modifier.builder()
@@ -115,7 +106,7 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
 //        //endregion
 
 //        //region selected
-//        var selectedDisplay = mainGroup().addWidget(itemDisplayFactory.apply(ItemStack.EMPTY));
+//        var selectedDisplay = mainGroup().addWidget(itemDisplayFactory.updateWidget(ItemStack.EMPTY));
 //        selectedDisplay.mark("selectedDisplay");
 //        selectedDisplay.withModifier(
 //                Modifier().

@@ -3,8 +3,8 @@ package dev.vfyjxf.cloudlib.api.ui;
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Pos;
-import dev.vfyjxf.cloudlib.api.ui.widgets.Widget;
-import dev.vfyjxf.cloudlib.utils.ScreenUtil;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.util.ScreenUtil;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.StringUtil;
@@ -51,11 +51,15 @@ public record InputContext(
             int modifiers,
             boolean isReleased
     ) {
-        this(key, mouseX, mouseY, modifiers, isReleased ? KeyAction.RELEASE : KeyAction.PRESS);
+        this(key, mouseX, mouseY, modifiers, isReleased ? KeyAction.release : KeyAction.press);
     }
 
     public boolean isAllowedChatCharacter() {
         return isKeyboard() && StringUtil.isAllowedChatCharacter((char) this.key.getValue());
+    }
+
+    public boolean isKey(int glfwKey) {
+        return this.key.getValue() == glfwKey;
     }
 
     public boolean is(KeyMapping keyMapping) {
@@ -103,27 +107,31 @@ public record InputContext(
     }
 
     public boolean isLeftClick() {
-        return isMouse() && key().getValue() == 0;
+        return isMouse() && key.getValue() == 0;
     }
 
     public boolean isRightClick() {
-        return isMouse() && key().getValue() == 1;
+        return isMouse() && key.getValue() == 1;
+    }
+
+    public boolean isMiddleClick() {
+        return isMouse() && key.getValue() == 2;
     }
 
     public boolean isKeyboard() {
-        return this.key().getType() == InputConstants.Type.KEYSYM;
+        return key.getType() == InputConstants.Type.KEYSYM;
     }
 
     public boolean isRelease() {
-        return this.action() == KeyAction.RELEASE;
+        return action == KeyAction.release;
     }
 
     public boolean isPress() {
-        return this.action() == KeyAction.PRESS;
+        return action == KeyAction.press;
     }
 
     public boolean isRepeat() {
-        return this.action() == KeyAction.REPEAT;
+        return action == KeyAction.repeat;
     }
 
     /**
@@ -131,25 +139,19 @@ public record InputContext(
      * @return the mouse position relative to the widget
      */
     public FloatPos mouseRelative(Widget coordinate) {
-        var parent = coordinate.parent();
-        var pos = new FloatPos(mouseX, mouseY);
-        while (parent != null) {
-            pos.translate(-parent.posX(), -parent.posY());
-            parent = parent.parent();
-        }
-        return pos;
+        return coordinate.sceneToLocal(mouseX, mouseY);
     }
 
     public enum KeyAction {
-        PRESS,
-        RELEASE,
-        REPEAT;
+        press,
+        release,
+        repeat;
 
         public static KeyAction from(int action) {
             return switch (action) {
-                case 0 -> PRESS;
-                case 1 -> RELEASE;
-                case 2 -> REPEAT;
+                case 0 -> press;
+                case 1 -> release;
+                case 2 -> repeat;
                 default -> throw new IllegalArgumentException("Unexpected value: " + action);
             };
         }

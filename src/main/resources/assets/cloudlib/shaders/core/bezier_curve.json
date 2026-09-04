@@ -1,0 +1,27 @@
+{
+    "blend": {
+        "func": "add",
+        "srcrgb": "srcalpha",
+        "dstrgb": "1-srcalpha"
+    },
+    "vertex": "cloudlib:bezier_curve",
+    "fragment": "cloudlib:bezier_curve",
+    "attributes": [ "Position", "UV0" ],
+    "samplers": [],
+    "uniforms": [
+        { "name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] },
+        { "name": "ProjMat",      "type": "matrix4x4", "count": 16, "values": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] },
+        { "name": "Size",         "type": "float",     "count": 2,  "values": [0.0, 0.0] },
+        { "name": "P0",           "type": "float",     "count": 2,  "values": [0.0, 0.0] },
+        { "name": "P1",           "type": "float",     "count": 2,  "values": [0.0, 0.0] },
+        { "name": "P2",           "type": "float",     "count": 2,  "values": [0.0, 0.0] },
+        { "name": "P3",           "type": "float",     "count": 2,  "values": [0.0, 0.0] },
+        { "name": "CurveType",    "type": "int",       "count": 1,  "values": [0] },
+        { "name": "LineWidth",    "type": "float",     "count": 1,  "values": [1.0] },
+        { "name": "Smoothing",    "type": "float",     "count": 1,  "values": [1.0] },
+        { "name": "ColorStart",   "type": "float",     "count": 4,  "values": [1.0, 1.0, 1.0, 1.0] },
+        { "name": "ColorEnd",     "type": "float",     "count": 4,  "values": [1.0, 1.0, 1.0, 1.0] },
+        { "name": "GlowWidth",    "type": "float",     "count": 1,  "values": [0.0] },
+        { "name": "GlowColor",    "type": "float",     "count": 4,  "values": [0.0, 0.0, 0.0, 0.0] }
+    ]
+}

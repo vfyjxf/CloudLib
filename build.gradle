@@ -3,9 +3,18 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.72'
+    id 'net.neoforged.moddev' version '2.0.122'
+    id "me.champeau.jmh" version "0.7.2"
+    id 'dev.vfyjxf.cloudlib.lang'
 //    id("net.ltgt.errorprone") version "4.1.0"
 //    id("net.ltgt.nullaway") version "2.1.0"
+}
+
+cloudLang {
+    modId = 'cloudlib'
+    packageName = 'dev.vfyjxf.cloudlib.data.lang'
+    className = 'CloudLang'
+    constantNameStyle = 'camel'
 }
 
 version = project.mod_version
@@ -27,6 +36,7 @@ configurations {
 
 neoForge {
     version = project.neo_version
+    accessTransformers = project.files('src/main/resources/META-INF/accesstransformer.cfg')
 
     parchment {
         mappingsVersion = project.parchment_mappings_version
@@ -36,13 +46,13 @@ neoForge {
     runs {
         client {
             client()
-            gameDirectory = project.file('run-client')
+            gameDirectory = project.file('runs/client')
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
         server {
             server()
-            gameDirectory = project.file('run-server')
+            gameDirectory = project.file('runs/server')
             programArgument '--nogui'
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
@@ -53,17 +63,20 @@ neoForge {
 
         data {
             data()
-            gameDirectory = project.file('run-data')
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+            gameDirectory = project.file('runs/data')
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('build/generated/datagen/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+
+        dumpClient {
+            client()
+            gameDirectory = project.file('runs/dump')
+            systemProperty 'cloudlib.dump', 'true'
         }
 
         configureEach {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
             logLevel = org.slf4j.event.Level.DEBUG
-            if (isJetBrainsRuntime()) {
-                jvmArgument "-XX:+AllowEnhancedClassRedefinition"
-                jvmArgument "-XX:HotswapAgent=fatjar"
-            }
+            systemProperty('terminal.jline', 'true')
         }
     }
 
@@ -79,9 +92,22 @@ neoForge {
     }
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+sourceSets {
+    main {
+        java.exclude 'dev/vfyjxf/cloudlib/integration/moddevmcp/**'
+        //datagen output lives next to the lang yaml under build/, like the modMetadata dir
+        resources {
+            srcDir layout.buildDirectory.dir('generated/datagen/resources')
+            exclude '**/.cache/**'
+        }
+    }
+    test {
+        java.exclude 'dev/vfyjxf/cloudlib/integration/moddevmcp/**'
+    }
+}
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven { url = "https://maven.quiltmc.org/repository/release/" }
     maven { url = "https://jitpack.io" }
@@ -114,41 +140,52 @@ repositories {
 }
 
 dependencies {
-//    errorprone "com.uber.nullaway:nullaway:0.12.6"
-//    errorprone "com.google.errorprone:error_prone_core:2.37.0"
-//    compileOnly "net.minecraftforge:eventbus:7.0-beta.1"
+    localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
     compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
-    additionalRuntimeClasspath(implementation("org.eclipse.collections:eclipse-collections-api:11.1.0"))
-    jarJar("org.eclipse.collections:eclipse-collections-api:[11.1.0,)") {
+    additionalRuntimeClasspath(api("org.eclipse.collections:eclipse-collections-api:13.0.0"))
+    jarJar("org.eclipse.collections:eclipse-collections-api:[13.0.0,)") {
         version {
-            prefer("11.1.0")
+            prefer("13.0.0")
         }
     }
-    additionalRuntimeClasspath(implementation("org.eclipse.collections:eclipse-collections:11.1.0"))
-    jarJar("org.eclipse.collections:eclipse-collections:[11.1.0,)") {
+    additionalRuntimeClasspath(api("org.eclipse.collections:eclipse-collections:13.0.0"))
+    jarJar("org.eclipse.collections:eclipse-collections:[13.0.0,)") {
         version {
-            prefer("11.1.0")
+            prefer("13.0.0")
         }
     }
-    additionalRuntimeClasspath(implementation 'org.appliedenergistics.yoga:yoga:1.0.0')
-    jarJar("org.appliedenergistics.yoga:yoga:1.0.0") {
+    additionalRuntimeClasspath(api("dev.vfyjxf:taffy:1.1.3"))
+    jarJar("dev.vfyjxf:taffy:1.1.3") {
         version {
-            prefer("1.0.0")
+            prefer("1.1.3")
         }
     }
-    additionalRuntimeClasspath(implementation("net.lenni0451:Reflect:1.4.0"))
+    additionalRuntimeClasspath(api("net.lenni0451:Reflect:1.4.0"))
     jarJar "net.lenni0451:Reflect:1.4.0"
+
+//    compileOnly 'com.google.auto.service:auto-service:1.1.1'
+//    annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
     testImplementation "net.neoforged:testframework:${project.neo_version}"
     testImplementation 'com.palantir.javapoet:javapoet:0.6.0'
-
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+    jmh "org.openjdk.jmh:jmh-core:1.37"
+    jmh "org.openjdk.jmh:jmh-generator-annprocess:1.37"
+    jmhAnnotationProcessor "org.openjdk.jmh:jmh-generator-annprocess:1.37"
+
+    testCompileOnly 'com.google.auto.service:auto-service:1.1.1'
+    testAnnotationProcessor 'com.google.auto.service:auto-service:1.1.1'
 }
 
 test {
     useJUnitPlatform()
+    testLogging {
+        exceptionFormat = 'full'
+        events 'failed'
+        showStackTraces = true
+    }
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
@@ -201,3 +238,5 @@ idea {
         downloadJavadoc = true
     }
 }
+
+

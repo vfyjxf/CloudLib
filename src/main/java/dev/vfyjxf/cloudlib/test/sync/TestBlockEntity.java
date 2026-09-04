@@ -2,14 +2,16 @@ package dev.vfyjxf.cloudlib.test.sync;
 
 import dev.vfyjxf.cloudlib.api.data.CheckStrategy;
 import dev.vfyjxf.cloudlib.api.data.snapshot.DiffObservable;
+import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
 import dev.vfyjxf.cloudlib.api.network.UnaryFlowHandler;
 import dev.vfyjxf.cloudlib.api.network.expose.DiffLayerExpose;
 import dev.vfyjxf.cloudlib.api.network.expose.Expose;
+import dev.vfyjxf.cloudlib.api.network.expose.LayerExpose;
 import dev.vfyjxf.cloudlib.api.network.expose.ReversedOnly;
 import dev.vfyjxf.cloudlib.api.ui.sync.menu.BasicMenu;
 import dev.vfyjxf.cloudlib.api.ui.sync.menu.MenuInfo;
 import dev.vfyjxf.cloudlib.test.TestRegistry;
-import dev.vfyjxf.cloudlib.utils.Locations;
+import dev.vfyjxf.cloudlib.util.Locations;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -19,15 +21,16 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -85,97 +88,100 @@ public class TestBlockEntity extends BlockEntity {
 
     public static class Menu extends BasicMenu<TestBlockEntity> {
 
-//        public final Expose<@NotNull Integer> basic = expose(
-//                "basic",
-//                mutableRefOf(primitive()),
-//                o -> o.basic,
-//                UnaryFlowHandler.codecOf(ByteBufCodecs.INT)
-//        );
-//
-//        public final Expose<@NotNull String> reference = expose(
-//                "reference",
-//                mutableRefOf(CheckStrategy.equals()),
-//                o -> o.reference,
-//                UnaryFlowHandler.codecOf(ByteBufCodecs.STRING_UTF8)
-//        );
-//
-//        public final Expose<@NotNull ItemStack> registerEntry = expose(
-//                "registerEntry",
-//                mutableRefOf(sameItemStack),
-//                o -> o.registerEntry,
-//                UnaryFlowHandler.codecOf(ItemStack.STREAM_CODEC)
-//        );
-//
-//        public final ReversedOnly<@NotNull ItemStack, @NotNull ItemStack> selected = reversedOnly(
-//                "selected",
-//                ItemStack.STREAM_CODEC::encode,
-//                ItemStack.STREAM_CODEC::decode
-//        ).whenReceiveFromClient(stack -> {
-//            provider.selected = stack;
-//            System.out.println("Selected: " + stack);
-//        });
-
-//        public final LayerExpose<@NotNull List<ItemStack>> layerExpose = layerExpose(
-//                "transform",
-//                immutableRefOf(provider.transform),
-//                o -> o.transform,
-//                (byteBuf, element) ->
-//                {
-//                    IItemHandler inner = element.inner;
-//                    int size = inner.getSlots();
-//                    byteBuf.writeInt(size);
-//                    for (int i = 0; i < size; i++) {
-//                        ItemStack stack = inner.getStackInSlot(i);
-//                        ItemStack.OPTIONAL_STREAM_CODEC.encode(byteBuf, stack);
-//                    }
-//                },
-//                (byteBuf) ->
-//                {
-//                    int size = byteBuf.readInt();
-//                    List<ItemStack> stacks = new ArrayList<>();
-//                    for (int i = 0; i < size; i++) {
-//                        ItemStack stack = ItemStack.OPTIONAL_STREAM_CODEC.decode(byteBuf);
-//                        stacks.add(stack);
-//                    }
-//                    return stacks;
-//                }
-//        );
-
-        public final DiffLayerExpose<List<ItemStack>, Set<IntObjectPair<ItemStack>>> diffable = diffLayerExpose(
-                "diffable",
-                immutableRefOf(provider.transform),
-                o -> o.transform,
-                (byteBuf, element) ->
-                {
-                    List<ItemStack> list = IntStream.range(0, element.getSlots())
-                            .mapToObj(element::getStackInSlot)
-                            .toList();
-                    ItemStack.OPTIONAL_LIST_STREAM_CODEC.encode(byteBuf, list);
-                },
-                ItemStack.OPTIONAL_LIST_STREAM_CODEC::decode,
-
-                (byteBuf, element) -> {
-                    byteBuf.writeInt(element.size());
-                    for (IntObjectPair<ItemStack> stack : element) {
-                        byteBuf.writeInt(stack.leftInt());
-                        ItemStack.OPTIONAL_STREAM_CODEC.encode(byteBuf, stack.right());
-                    }
-                },
-                (byteBuf -> {
-                    int size = byteBuf.readInt();
-                    Set<IntObjectPair<ItemStack>> stacks = new HashSet<>();
-                    for (int i = 0; i < size; i++) {
-                        int index = byteBuf.readInt();
-                        ItemStack stack = ItemStack.OPTIONAL_STREAM_CODEC.decode(byteBuf);
-                        stacks.add(IntObjectPair.of(index, stack));
-                    }
-                    return stacks;
-                })
-
+        //region exposes
+        public final Expose<@NotNull Integer> basic = expose(
+                "basic",
+                mutableRefOf(primitive()),
+                o -> o.basic,
+                UnaryFlowHandler.codecOf(ByteBufCodecs.INT)
         );
 
+        public final Expose<@NotNull String> reference = expose(
+                "reference",
+                mutableRefOf(CheckStrategy.equals()),
+                o -> o.reference,
+                UnaryFlowHandler.codecOf(ByteBufCodecs.STRING_UTF8)
+        );
+
+        public final Expose<@NotNull ItemStack> registerEntry = expose(
+                "registerEntry",
+                mutableRefOf(sameItemStack),
+                o -> o.registerEntry,
+                UnaryFlowHandler.codecOf(ItemStack.STREAM_CODEC)
+        );
+
+        public final ReversedOnly<@NotNull ItemStack, @NotNull ItemStack> selected = reversedOnly(
+                "selected",
+                ItemStack.STREAM_CODEC::encode,
+                ItemStack.STREAM_CODEC::decode
+        ).whenReceiveFromClient(stack -> {
+            provider.selected = stack;
+            System.out.println("Selected: " + stack);
+        });
+
+        public final LayerExpose<@NotNull List<ItemStack>> layerExpose =
+                layerExpose(
+                        "transform",
+                        immutableRefOf(provider.transform),
+                        o -> o.transform,
+                        (byteBuf, element) ->
+                        {
+                            IItemHandler inner = (IItemHandler) element.changedSlots;
+                            int size = inner.getSlots();
+                            byteBuf.writeInt(size);
+                            for (int i = 0; i < size; i++) {
+                                ItemStack stack = inner.getStackInSlot(i);
+                                ItemStack.OPTIONAL_STREAM_CODEC.encode(byteBuf, stack);
+                            }
+                        },
+                        (byteBuf) ->
+                        {
+                            int size = byteBuf.readInt();
+                            List<ItemStack> stacks = new ArrayList<>();
+                            for (int i = 0; i < size; i++) {
+                                ItemStack stack = ItemStack.OPTIONAL_STREAM_CODEC.decode(byteBuf);
+                                stacks.add(stack);
+                            }
+                            return stacks;
+                        }
+                );
+
+        public final DiffLayerExpose<List<ItemStack>, Set<IntObjectPair<ItemStack>>> diffable =
+                diffLayerExpose(
+                        "diffable",
+                        immutableRefOf(provider.transform),
+                        o -> o.transform,
+                        FlowEncoder.encoder((byteBuf, element) -> {
+                            List<ItemStack> list = IntStream.range(0, element.getSlots())
+                                                            .mapToObj(element::getStackInSlot)
+                                                            .toList();
+                            ItemStack.OPTIONAL_LIST_STREAM_CODEC.encode(byteBuf, list);
+                        }),
+                        ItemStack.OPTIONAL_LIST_STREAM_CODEC::decode,
+                        (byteBuf, element) -> {
+                            byteBuf.writeInt(element.size());
+                            for (IntObjectPair<ItemStack> stack : element) {
+                                byteBuf.writeInt(stack.leftInt());
+                                ItemStack.OPTIONAL_STREAM_CODEC.encode(byteBuf, stack.right());
+                            }
+                        },
+                        (byteBuf -> {
+                            int size = byteBuf.readInt();
+                            Set<IntObjectPair<ItemStack>> stacks = new HashSet<>();
+                            for (int i = 0; i < size; i++) {
+                                int index = byteBuf.readInt();
+                                ItemStack stack = ItemStack.OPTIONAL_STREAM_CODEC.decode(byteBuf);
+                                stacks.add(IntObjectPair.of(index, stack));
+                            }
+                            return stacks;
+                        })
+
+                );
+
+        //endregion
+
         public static final MenuInfo<Menu, TestBlockEntity> INFO = MenuInfo.create(
-                Locations.of("test_block_entity"),
+                Locations.ofMod("test_block_entity"),
                 Menu::new,
                 () -> TestBlockEntityScreen::new
         );
@@ -216,9 +222,9 @@ public class TestBlockEntity extends BlockEntity {
         @Override
         public Set<IntObjectPair<ItemStack>> difference() {
             var difference = changedSlots.intStream()
-                    .mapToObj(slot -> IntObjectPair.of(slot, this.getStackInSlot(slot)))
-                    .filter(pair -> !pair.right().isEmpty())
-                    .collect(Collectors.toSet());
+                                         .mapToObj(slot -> IntObjectPair.of(slot, this.getStackInSlot(slot)))
+                                         .filter(pair -> !pair.right().isEmpty())
+                                         .collect(Collectors.toSet());
             changedSlots.clear();
             return difference;
         }

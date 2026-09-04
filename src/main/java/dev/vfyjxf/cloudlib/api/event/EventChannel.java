@@ -1,8 +1,14 @@
 package dev.vfyjxf.cloudlib.api.event;
 
 
-import dev.vfyjxf.cloudlib.event.EventChannelImpl;
-import org.jetbrains.annotations.ApiStatus;
+import dev.vfyjxf.cloudlib.api.event.context.BubbleContext;
+import dev.vfyjxf.cloudlib.api.event.context.CancelableContext;
+import dev.vfyjxf.cloudlib.api.event.context.CommonContext;
+import dev.vfyjxf.cloudlib.api.event.context.InterruptibleContext;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
+import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.map.MutableMap;
 
 import java.util.function.BooleanSupplier;
 
@@ -12,8 +18,7 @@ import java.util.function.BooleanSupplier;
  *
  * @param <T> the base type of the events
  */
-@ApiStatus.NonExtendable
-public interface EventChannel<T> {
+public sealed interface EventChannel<T> permits EventChannelImpl {
 
     static <T> EventChannel<T> create(EventHandler<T> handler) {
         return new EventChannelImpl<>(handler);
@@ -21,16 +26,20 @@ public interface EventChannel<T> {
 
     EventHandler<T> handler();
 
-    default EventContext.Common common() {
-        return new EventContext.Common(this);
+    default CommonContext common() {
+        return new CommonContext(this);
     }
 
-    default EventContext.Cancelable cancelable() {
-        return new EventContext.Cancelable(this);
+    default CancelableContext cancelable() {
+        return new CancelableContext(this);
     }
 
-    default EventContext.Interruptible interruptible() {
-        return new EventContext.Interruptible(this);
+    default InterruptibleContext interruptible() {
+        return new InterruptibleContext(this);
+    }
+
+    default BubbleContext bubble() {
+        return new BubbleContext(this);
     }
 
     default <E extends T> void register(EventDefinition<E> definition, E listener) {
@@ -80,4 +89,44 @@ public interface EventChannel<T> {
         boolean check(Class<? extends T> type);
     }
 
+}
+
+final class EventChannelImpl<T> implements EventChannel<T> {
+
+    private final EventHandler<T> handler;
+    private final MutableMap<EventDefinition<?>, Event<?>> listeners = Maps.mutable.empty();
+    private final MutableList<Checker<T>> checkers = MutableLists.empty();
+
+    public EventChannelImpl(EventHandler<T> handler) {
+        this.handler = handler;
+    }
+
+    @Override
+    public EventHandler<T> handler() {
+        return handler;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <E extends T> Event<E> get(EventDefinition<E> definition) {
+        if (!checkers.isEmpty() && checkers.noneSatisfy(checker -> checker.check(definition.type()))) {
+            throw new IllegalArgumentException("Event type: " + definition.type() + " not allowed");
+        }
+        return (Event<E>) listeners.getIfAbsentPut(definition, definition::create);
+    }
+
+    @Override
+    public void clearAllListeners() {
+        for (Event<?> source : listeners) {
+            source.clearListeners();
+        }
+    }
+
+    @Override
+    public void checkEvent(Checker<T> checker) {
+        if (checkers.contains(checker)) {
+            throw new IllegalArgumentException("Event checker already registered");
+        }
+        checkers.add(checker);
+    }
 }

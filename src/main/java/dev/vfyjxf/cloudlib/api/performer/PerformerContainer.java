@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.performer;
 
-import dev.vfyjxf.cloudlib.utils.Checks;
+import dev.vfyjxf.cloudlib.util.Checks;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
 import org.jetbrains.annotations.NotNull;

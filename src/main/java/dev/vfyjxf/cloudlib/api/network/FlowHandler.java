@@ -5,6 +5,10 @@ import net.minecraft.network.codec.StreamCodec;
 
 public interface FlowHandler<T, R> extends FlowEncoder<T>, FlowDecoder<R> {
 
+    static <T, R> FlowHandler<T, R> handler(FlowHandler<T, R> handler) {
+        return handler;
+    }
+
     static <T> FlowHandler<T, T> codecOf(StreamCodec<? super RegistryFriendlyByteBuf, T> codec) {
         return new FlowHandler<>() {
             @Override

@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 
 public enum BlockEntityProviderType implements MenuProviderType<BlockEntity> {
-    INSTANCE;
+    instance;
 
     private static final ResourceLocation ID = MenuProviderType.createId("block_entity");
 

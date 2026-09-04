@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.network.payload;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerPayloadInfo;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
 import dev.vfyjxf.cloudlib.api.ui.sync.menu.BasicMenu;
-import dev.vfyjxf.cloudlib.network.CloudlibNetworkPayloads;
+import dev.vfyjxf.cloudlib.network.CloudlibPayloads;
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 public record MenuDataReversedPacket(int containerId, byte[] syncData) implements ServerboundPayload {
 
-    public static final ServerPayloadInfo<MenuDataReversedPacket> INFO = CloudlibNetworkPayloads.createServerInfo(
+    public static final ServerPayloadInfo<MenuDataReversedPacket> info = CloudlibPayloads.createServerInfo(
             StreamCodec.ofMember(
                     MenuDataReversedPacket::encode,
                     MenuDataReversedPacket::decode
@@ -39,7 +39,7 @@ public record MenuDataReversedPacket(int containerId, byte[] syncData) implement
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
-        return INFO.type();
+        return info.type();
     }
 
     private void encode(RegistryFriendlyByteBuf buf) {
@@ -57,7 +57,7 @@ public record MenuDataReversedPacket(int containerId, byte[] syncData) implement
             var buffer = new RegistryFriendlyByteBuf(Unpooled.wrappedBuffer(syncData), player.registryAccess(), ConnectionType.OTHER);
             menu.receiveFromClient(buffer);
         } else {
-            CloudlibNetworkPayloads.log.warn("Received menu data reversed packet for non-matching menu: {} != {}", containerId, player.containerMenu.containerId);
+            CloudlibPayloads.log.warn("Received menu data reversed packet for non-matching menu: {} != {}", containerId, player.containerMenu.containerId);
         }
     }
 

@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.data.snapshot;
 
 import dev.vfyjxf.cloudlib.api.data.CheckStrategy;
-import dev.vfyjxf.cloudlib.utils.Checks;
+import dev.vfyjxf.cloudlib.util.Checks;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -16,20 +16,20 @@ import java.util.function.UnaryOperator;
 public sealed interface Snapshot<T> {
 
     enum State {
-        CHANGED,
-        UNCHANGED,
-        ILLEGAL;
+        changed,
+        unchanged,
+        illegal;
 
         public boolean changed() {
-            return this == CHANGED;
+            return this == changed;
         }
 
         public boolean unchanged() {
-            return this == UNCHANGED;
+            return this == unchanged;
         }
 
         public boolean illegal() {
-            return this == ILLEGAL;
+            return this == illegal;
         }
     }
 
@@ -52,12 +52,12 @@ public sealed interface Snapshot<T> {
 
     @SafeVarargs
     static <T extends Observable> Snapshot<T> immutableRefOf(T value, T... typeCatch) {
-        Checks.checkNotNull(value, "The value cannot be null");
+        Checks.checkNotNull(value, "value");
         Checks.checkArgument(typeCatch.length == 0, "The typeCatch must be empty");
         return new ImmutableRef<>(value, (unused) -> value.changed());
     }
 
-    static <T> Snapshot<T> mutableRefOf(CheckStrategy<T> strategy) {
+    static <T> MutableRef<T> mutableRefOf(CheckStrategy<T> strategy) {
         return new MutableRef<>(strategy);
     }
 
@@ -96,21 +96,22 @@ public sealed interface Snapshot<T> {
 
     static <T> boolean changed(Snapshot<T> instance, T current) {
         return switch (instance.currentState(current)) {
-            case CHANGED -> true;
-            case UNCHANGED -> false;
-            case ILLEGAL -> throw new IllegalStateException("The snapshot has been changed illegally");
+            case changed -> true;
+            case unchanged -> false;
+            case illegal -> throw new IllegalStateException("The snapshot has been changed illegally");
         };
     }
 
     /**
      * A snapshot that does not hold any value.
      */
-    enum None implements Snapshot<Object> {
-        INSTANCE;
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    enum None implements Snapshot {
+        instance;
 
         @SuppressWarnings("unchecked")
         private static <T> Snapshot<T> instance() {
-            return (Snapshot<T>) INSTANCE;
+            return (Snapshot<T>) instance;
         }
 
         @Override
@@ -135,7 +136,7 @@ public sealed interface Snapshot<T> {
 
         @Override
         public State currentState(Object current) {
-            return State.UNCHANGED;
+            return State.unchanged;
         }
     }
 
@@ -155,6 +156,7 @@ public sealed interface Snapshot<T> {
 
         public Predicate<T> strategy() {
             return strategy;
+
         }
 
         @Override
@@ -170,14 +172,14 @@ public sealed interface Snapshot<T> {
         @Override
         public State currentState(T current) {
             boolean changed = value != current || !strategy.test(current);
-            if (changed) return State.ILLEGAL;
-            else return State.UNCHANGED;
+            if (changed) return State.illegal;
+            else return State.unchanged;
         }
 
         @Override
         public boolean updateState(T current) {
             State state = currentState(current);
-            if (state == State.ILLEGAL)
+            if (state == State.illegal)
                 throw new IllegalStateException("The snapshot has been changed illegally");
             else return false;
         }
@@ -231,16 +233,16 @@ public sealed interface Snapshot<T> {
 
         @Override
         public State currentState(T current) {
-            if (value != current) return State.ILLEGAL;
-            else return strategy.test(value) ? State.UNCHANGED : State.CHANGED;
+            if (value != current) return State.illegal;
+            else return strategy.test(value) ? State.unchanged : State.changed;
         }
 
         @Override
         public boolean updateState(T current) {
             return switch (currentState(current)) {
-                case CHANGED -> true;
-                case UNCHANGED -> false;
-                case ILLEGAL -> throw new IllegalStateException("The snapshot has been changed illegally");
+                case changed -> true;
+                case unchanged -> false;
+                case illegal -> throw new IllegalStateException("The snapshot has been changed illegally");
             };
         }
 
@@ -287,7 +289,7 @@ public sealed interface Snapshot<T> {
 
         @Override
         public T readValue() throws IllegalStateException {
-            return null;
+            return value;
         }
 
         public T value() {
@@ -297,7 +299,7 @@ public sealed interface Snapshot<T> {
         @Override
         public State currentState(T current) {
             var changed = !strategy.matches(value, current);
-            return changed ? State.CHANGED : State.UNCHANGED;
+            return changed ? State.changed : State.unchanged;
         }
 
         @Override
@@ -377,7 +379,7 @@ public sealed interface Snapshot<T> {
         @Override
         public State currentState(T current) {
             var changed = !strategy.matches(value, current);
-            return changed ? State.CHANGED : State.UNCHANGED;
+            return changed ? State.changed : State.unchanged;
         }
 
         @Override

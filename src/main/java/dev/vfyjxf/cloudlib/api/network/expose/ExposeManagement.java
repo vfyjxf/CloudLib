@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
-import dev.vfyjxf.cloudlib.api.utils.Maybe;
-import dev.vfyjxf.cloudlib.utils.Checks;
+import dev.vfyjxf.cloudlib.api.util.Maybe;
+import dev.vfyjxf.cloudlib.util.Checks;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.eclipse.collections.api.map.primitive.MutableShortObjectMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ShortObjectHashMap;
@@ -17,15 +17,15 @@ public final class ExposeManagement {
         /**
          * Send all expose
          */
-        FULL,
+        full,
         /**
          * Send the changed value, prioritizing difference.,
          */
-        DIFFERENCE,
+        difference,
         /**
          * Send the changed value,but don't care difference.
          */
-        FULL_VALUE
+        fullValue
     }
 
     private final MutableShortObjectMap<ExposeCommon> exposes = new ShortObjectHashMap<>();
@@ -52,7 +52,7 @@ public final class ExposeManagement {
     }
 
     public <T extends ExposeCommon> T registerExpose(T expose) {
-        Checks.checkNotNull(expose, "Expose cannot be null");
+        Checks.checkNotNull(expose, "expose");
         if (exposes.containsKey(expose.id())) {
             throw new IllegalArgumentException("Expose with id " + expose.id() + " already exists");
         }
@@ -61,7 +61,7 @@ public final class ExposeManagement {
     }
 
     public <T extends ReversedOnly<?, ?>> T registerReversed(T reversed) {
-        Checks.checkNotNull(reversed, "Reversed cannot be null");
+        Checks.checkNotNull(reversed, "reversed");
         ExposeCommon expose = (ExposeCommon) reversed;
         if (exposes.containsKey(expose.id())) {
             throw new IllegalArgumentException("Reversed with id " + expose.id() + " already exists");
@@ -82,23 +82,23 @@ public final class ExposeManagement {
 
     public boolean anyToServer() {
         return exposes.selectInstancesOf(Reversed.class)
-                .anySatisfy(Reversed::hasReversedData);
+                      .anySatisfy(Reversed::hasReversedData);
     }
 
     public void writeAllToClient(RegistryFriendlyByteBuf byteBuf) {
-        writeToClient(byteBuf, SyncStrategy.FULL);
+        writeToClient(byteBuf, SyncStrategy.full);
     }
 
     public void writeDifferenceToClient(RegistryFriendlyByteBuf byteBuf) {
-        writeToClient(byteBuf, SyncStrategy.DIFFERENCE);
+        writeToClient(byteBuf, SyncStrategy.difference);
     }
 
     public void writeChangesToClient(RegistryFriendlyByteBuf byteBuf) {
-        writeToClient(byteBuf, SyncStrategy.FULL_VALUE);
+        writeToClient(byteBuf, SyncStrategy.fullValue);
     }
 
     public void writeToClient(RegistryFriendlyByteBuf byteBuf, SyncStrategy strategy) {
-        if (strategy == SyncStrategy.FULL) {
+        if (strategy == SyncStrategy.full) {
             byteBuf.writeBoolean(true);//flag:send all
             for (ExposeCommon expose : exposes) {
                 if (expose instanceof ReversedOnly<?, ?>) continue;
@@ -112,7 +112,7 @@ public final class ExposeManagement {
                 try {
                     if (!expose.changed()) continue;
                     byteBuf.writeShort(expose.id());
-                    if (strategy == SyncStrategy.DIFFERENCE &&
+                    if (strategy == SyncStrategy.difference &&
                             expose instanceof Transcoder transcoder &&
                             expose instanceof Differential<?> differential
                     ) {
