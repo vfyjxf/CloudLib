@@ -1,5 +1,8 @@
 package dev.vfyjxf.cloudlib.ui.inworld;
 
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.pipeline.TextureTarget;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -8,6 +11,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexSorting;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.base.Scene;
@@ -26,6 +30,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPlacement;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldProvider;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldUiApi;
 import dev.vfyjxf.cloudlib.api.ui.inworld.Projection;
+import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 import dev.vfyjxf.cloudlib.ui.KeyMappings;
 import dev.vfyjxf.cloudlib.util.ScreenUtil;
@@ -53,11 +58,14 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -116,6 +124,9 @@ public final class InworldManager implements InworldUiApi {
 
     //region state
 
+    private static final org.slf4j.Logger LOGGER =
+            org.slf4j.LoggerFactory.getLogger(InworldManager.class);
+
     private final Minecraft mc = Minecraft.getInstance();
 
     private final WidgetGroup<Widget> root = new WidgetGroup<>();
@@ -128,6 +139,8 @@ public final class InworldManager implements InworldUiApi {
     private @Nullable PanelRuntime focused;
     private @Nullable PanelRuntime pointed;
     private @Nullable FloatPos pointedUv;
+    /** true when the crosshair actually rests on a panel (vs only its anchor block) */
+    private boolean pointedInPanel;
 
     private boolean inspecting;
     private @Nullable InworldInspectScreen inspectScreen;
@@ -141,6 +154,10 @@ public final class InworldManager implements InworldUiApi {
     private long tick;
 
     private int parkCursor = 0;
+    /** Horizontal cursor inside the off-screen input strip (right of the window). */
+    private int stripCursor = 0;
+    /** Width of the virtual input strip appended to the scene layout area. */
+    private int faceStripWidth = 0;
     /** Reused per-frame collection of presented dock panels awaiting corner layout. */
     private final List<PanelRuntime> dockQueue = new ArrayList<>();
     private static final int PARK_BASE = -1_000_000;
@@ -155,6 +172,11 @@ public final class InworldManager implements InworldUiApi {
     //endregion
 
     private InworldManager() {
+        //the root fills the whole layout area (window + input strip) so hitTest
+        //bounds-checks pass everywhere — without an explicit size the taffy
+        //root measures 0×0 (absolute children are out of flow) and nothing
+        //would ever be clickable
+        root.useStyle(UIStyles.sizePercent(1f));
         scene.init();
         scene.mount(SceneContext.create(new InworldSceneHost()));
     }
@@ -373,12 +395,19 @@ public final class InworldManager implements InworldUiApi {
         int button = event.getButton();
         if (action == GLFW.GLFW_PRESS) {
             double[] v = virtualPointer();
-            boolean consumed = scene.mouseClicked(v[0], v[1], button);
+            Widget hit = scene.hitTest(v[0], v[1]);
+            LOGGER.info("click press: ptr=({},{}) pointed={} uv={} hit={}",
+                    (int) v[0], (int) v[1], pointed, pointedUv, hit);
+            //clicks landing anywhere on a pointed panel are swallowed even on
+            //dead chrome — otherwise LMB would mine the block under the panel
+            boolean consumed = scene.mouseClicked(v[0], v[1], button) || pointedInPanel;
             pressedConsumed = consumed;
             if (consumed) event.setCanceled(true);
         } else if (action == GLFW.GLFW_RELEASE) {
             double[] v = virtualPointer();
-            boolean consumed = scene.mouseReleased(v[0], v[1], button);
+            LOGGER.info("click release: ptr=({},{}) hit={}",
+                    (int) v[0], (int) v[1], scene.hitTest(v[0], v[1]));
+            boolean consumed = scene.mouseReleased(v[0], v[1], button) || pointedInPanel;
             if (consumed || pressedConsumed) event.setCanceled(true);
             pressedConsumed = false;
         }
@@ -388,7 +417,8 @@ public final class InworldManager implements InworldUiApi {
         if (inspecting || mc.level == null || mc.screen != null) return;
         if (panels.isEmpty()) return;
         double[] v = virtualPointer();
-        if (scene.mouseScrolled(v[0], v[1], event.getScrollDeltaX(), event.getScrollDeltaY())) {
+        if (scene.mouseScrolled(v[0], v[1], event.getScrollDeltaX(), event.getScrollDeltaY())
+                || pointedInPanel) {
             event.setCanceled(true);
         }
     }
@@ -396,6 +426,10 @@ public final class InworldManager implements InworldUiApi {
     private void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         for (PanelRuntime runtime : panels.values()) {
             root.remove(runtime.widget);
+            if (runtime.faceTarget != null) {
+                runtime.faceTarget.destroyBuffers();
+                runtime.faceTarget = null;
+            }
         }
         panels.clear();
         imperative.clear();
@@ -417,6 +451,10 @@ public final class InworldManager implements InworldUiApi {
             if (!wanted.containsKey(runtime.key())) {
                 it.remove();
                 root.remove(runtime.widget);
+                if (runtime.faceTarget != null) {
+                    runtime.faceTarget.destroyBuffers();
+                    runtime.faceTarget = null;
+                }
                 if (focused == runtime) focused = null;
                 if (pointed == runtime) pointed = null;
             }
@@ -438,6 +476,12 @@ public final class InworldManager implements InworldUiApi {
         InworldPanelContext ctx = new InworldPanelContext(mc.level, mc.player, runtime);
         Widget content = spec.content().apply(ctx);
         runtime.widget = new InworldPanelWidget(runtime, spec, content);
+        runtime.widget.useStyle(UIStyles.zIndexOf(spec.interactive() ? 0 : -1));
+        if (spec.openAnimation() && mc.level != null) {
+            runtime.bornAt = mc.level.getGameTime()
+                    + mc.getTimer().getGameTimeDeltaPartialTick(true);
+            runtime.openScale = 0.25f;
+        }
         panels.put(spec.key(), runtime);
         root.addWidget(runtime.widget);
         return runtime;
@@ -447,6 +491,8 @@ public final class InworldManager implements InworldUiApi {
         runtime.widget.setTitle(runtime.spec.title());
         runtime.widget.setHints(runtime.spec.hints());
         runtime.widget.setInteractive(runtime.spec.interactive());
+        //non-interactive panels (entity tags) render behind the chrome
+        runtime.widget.useStyle(UIStyles.zIndexOf(runtime.spec.interactive() ? 0 : -1));
     }
 
     //endregion
@@ -473,6 +519,7 @@ public final class InworldManager implements InworldUiApi {
         if (proj == null || level == null) return;
 
         parkCursor = 0;
+        stripCursor = 0;
         List<PanelRuntime> docked = dockQueue;
 
         for (PanelRuntime runtime : panels.values()) {
@@ -481,6 +528,7 @@ public final class InworldManager implements InworldUiApi {
             runtime.anchorScreen = null;
             runtime.presented = false;
             runtime.flat = false;
+            runtime.smoothMove = false;
 
             Vec3 anchor = runtime.anchorWorld;
             if (anchor == null || !runtime.widget.visible()) continue;
@@ -506,12 +554,39 @@ public final class InworldManager implements InworldUiApi {
                         runtime.flat = true;
                     }
                     case InworldPlacement.Dock dock -> resolveDock(runtime, dock, docked);
+                    case InworldPlacement.Expand expand -> resolveExpand(runtime, expand);
                 }
             }
         }
 
         layoutDocks(docked);
         docked.clear();
+        smoothFlatPositions();
+        resolveConflicts();
+
+        //open-animation drive (world panels scale their quad instead)
+        float now = level.getGameTime() + framePartialTick;
+        for (PanelRuntime runtime : panels.values()) {
+            if (runtime.bornAt >= 0) {
+                float t = (now - runtime.bornAt) / 9f;
+                runtime.openScale = t >= 1f ? 1f
+                        : 0.25f + 0.75f * easeOutBack(Math.max(t, 0f));
+                if (t >= 1f) runtime.bornAt = -1;
+            }
+            runtime.widget.openScale = runtime.flat ? runtime.openScale : 1f;
+            //non-interactive tags shrink with distance so far labels don't hog space
+            runtime.widget.distScale = runtime.flat && !runtime.spec.interactive()
+                    ? (float) Math.min(1f, Math.max(0.55f, 11.0 / Math.max(runtime.distance, 1)))
+                    : 1f;
+        }
+
+        //the scene's coordinate space is the window plus a virtual "input
+        //strip" to its right where face panels are parked — inside the root's
+        //bounds so hitTest reaches them, outside the window so they never draw
+        faceStripWidth = stripCursor > 0 ? stripCursor + 32 : 0;
+        scene.setLayoutArea(
+                mc.getWindow().getGuiScaledWidth() + faceStripWidth,
+                mc.getWindow().getGuiScaledHeight());
 
         //apply layout so widget bounds are fresh for this frame
         scene.stabilize();
@@ -541,7 +616,9 @@ public final class InworldManager implements InworldUiApi {
             return;
         }
         runtime.presented = true;
-        runtime.widget.setScreenPos((int) result.x(), (int) result.y());
+        runtime.smoothMove = true;
+        runtime.targetX = (int) result.x();
+        runtime.targetY = (int) result.y();
     }
 
     private static boolean floatingHidden(FloatingPositioning.PositionResult result) {
@@ -558,6 +635,9 @@ public final class InworldManager implements InworldUiApi {
             return;
         }
         runtime.presented = true;
+        //follow panels track their anchor tightly — no position smoothing,
+        //the interpolated anchor already moves smoothly
+        runtime.smoothMove = false;
         runtime.widget.setScreenPos(
                 (int) (anchorPx.x - runtime.widget.width() * 0.5 + follow.offsetX()),
                 (int) (anchorPx.y - runtime.widget.height() * 0.5 + follow.offsetY())
@@ -571,14 +651,16 @@ public final class InworldManager implements InworldUiApi {
         }
         runtime.presented = true;
         runtime.flat = true;
+        runtime.smoothMove = true;
         runtime.dockCorner = dock.corner();
         docked.add(runtime);
     }
 
     /**
      * Packs docked panels into their screen corners: AUTO picks the quadrant
-     * the anchor projects into, panels stack from the corner inward in offer
-     * order, positions are pure screen-space so they never jitter.
+     * the anchor projects into with a deadband around the center lines so a
+     * wandering anchor doesn't keep flapping the panel between corners, panels
+     * stack from the corner inward in offer order.
      */
     private void layoutDocks(List<PanelRuntime> docked) {
         if (docked.isEmpty()) return;
@@ -589,13 +671,9 @@ public final class InworldManager implements InworldUiApi {
         for (PanelRuntime runtime : docked) {
             InworldPlacement.DockCorner corner = runtime.dockCorner;
             if (corner == InworldPlacement.DockCorner.AUTO) {
-                FloatPos anchorPx = runtime.anchorScreen;
-                boolean left = anchorPx != null && anchorPx.x < W * 0.5f;
-                boolean top = anchorPx == null || anchorPx.y < H * 0.5f;
-                corner = top
-                        ? (left ? InworldPlacement.DockCorner.TOP_LEFT : InworldPlacement.DockCorner.TOP_RIGHT)
-                        : (left ? InworldPlacement.DockCorner.BOTTOM_LEFT : InworldPlacement.DockCorner.BOTTOM_RIGHT);
+                corner = autoCorner(runtime.anchorScreen, W, H, runtime.lastAutoCorner);
             }
+            runtime.lastAutoCorner = corner;
             int slot = dockCursors[corner.ordinal()];
             int w = runtime.widget.width();
             int h = runtime.widget.height();
@@ -608,12 +686,250 @@ public final class InworldManager implements InworldUiApi {
                 default -> H - marginY - h - slot;
             };
             dockCursors[corner.ordinal()] = slot + h + gap;
-            runtime.widget.setScreenPos(x, y);
+            runtime.targetX = x;
+            runtime.targetY = y;
         }
         Arrays.fill(dockCursors, 0);
     }
 
+    /**
+     * AUTO-corner pick with hysteresis: the anchor has to push a deadband past
+     * the screen's center lines before the panel switches sides, so crossing
+     * the center doesn't slam the panel to the opposite corner.
+     */
+    private static InworldPlacement.DockCorner autoCorner(
+            @Nullable FloatPos anchor, int W, int H, @Nullable InworldPlacement.DockCorner prev) {
+        int db = 72;
+        boolean left, top;
+        if (anchor == null || prev == null) {
+            left = anchor == null || anchor.x < W * 0.5f;
+            top = anchor == null || anchor.y < H * 0.5f;
+        } else {
+            left = anchor.x < W * 0.5f + (isLeft(prev) ? db : -db);
+            top = anchor.y < H * 0.5f + (isTop(prev) ? db : -db);
+        }
+        return top
+                ? (left ? InworldPlacement.DockCorner.TOP_LEFT : InworldPlacement.DockCorner.TOP_RIGHT)
+                : (left ? InworldPlacement.DockCorner.BOTTOM_LEFT : InworldPlacement.DockCorner.BOTTOM_RIGHT);
+    }
+
+    private static boolean isLeft(InworldPlacement.DockCorner c) {
+        return c == InworldPlacement.DockCorner.TOP_LEFT || c == InworldPlacement.DockCorner.BOTTOM_LEFT;
+    }
+
+    private static boolean isTop(InworldPlacement.DockCorner c) {
+        return c == InworldPlacement.DockCorner.TOP_LEFT || c == InworldPlacement.DockCorner.TOP_RIGHT;
+    }
+
     private final int[] dockCursors = new int[InworldPlacement.DockCorner.values().length];
+
+    /**
+     * Keeps non-interactive flat panels (entity tags) out of the foreground:
+     * interactive panels own their screen area; tags are placed nearest-first
+     * (by distance) and each one slides to the closest free slot around
+     * whatever blocks it — above, below, left, right — or is hidden for the
+     * frame when nothing nearby is free. Placed tags reserve their rect so
+     * later tags can't stack on them.
+     */
+    private void resolveConflicts() {
+        int W = mc.getWindow().getGuiScaledWidth();
+        int H = mc.getWindow().getGuiScaledHeight();
+        List<Rect2i> occupied = new ArrayList<>();
+        for (PanelRuntime r : panels.values()) {
+            if (r.presented && r.flat && r.spec.interactive() && r.widget.visible()) {
+                occupied.add(new Rect2i(
+                        r.widget.screenX, r.widget.screenY,
+                        r.widget.width(), r.widget.height()));
+            }
+        }
+        if (occupied.isEmpty()) return;
+
+        List<PanelRuntime> tags = new ArrayList<>();
+        for (PanelRuntime r : panels.values()) {
+            if (r.presented && r.flat && !r.spec.interactive() && r.widget.visible()) {
+                tags.add(r);
+            }
+        }
+        //nearer tags win the free slots; far ones get displaced or hidden
+        tags.sort(Comparator.comparingDouble(t -> t.distance));
+
+        for (PanelRuntime tag : tags) {
+            int w = tag.widget.width();
+            int h = tag.widget.height();
+            int x = tag.widget.screenX;
+            int y = tag.widget.screenY;
+            for (int iter = 0; iter < 8; iter++) {
+                Rect2i blocker = firstOverlap(x, y, w, h, occupied);
+                if (blocker == null) break;
+                int bestX = Integer.MAX_VALUE, bestY = 0;
+                int bestCost = Integer.MAX_VALUE;
+                //slide to the cheapest free side of the blocking rect
+                int[][] candidates = {
+                        {x, blocker.getY() - h - 3},
+                        {x, blocker.getY() + blocker.getHeight() + 3},
+                        {blocker.getX() - w - 3, y},
+                        {blocker.getX() + blocker.getWidth() + 3, y}};
+                for (int[] c : candidates) {
+                    int cx = Math.max(2, Math.min(W - w - 2, c[0]));
+                    int cy = Math.max(2, Math.min(H - h - 2, c[1]));
+                    if (firstOverlap(cx, cy, w, h, occupied) != null) continue;
+                    int cost = Math.abs(cx - x) + Math.abs(cy - y);
+                    if (cost < bestCost) {
+                        bestCost = cost;
+                        bestX = cx;
+                        bestY = cy;
+                    }
+                }
+                if (bestX == Integer.MAX_VALUE) {
+                    //no free side — too crowded, hide the tag this frame
+                    x = PARK_BASE - parkCursor++ * PARK_STEP;
+                    y = 0;
+                    break;
+                }
+                x = bestX;
+                y = bestY;
+            }
+            if (x > -900_000) {
+                occupied.add(new Rect2i(x, y, w, h));
+            }
+            tag.widget.setScreenPos(x, y);
+            tag.posX = tag.targetX = x;
+            tag.posY = tag.targetY = y;
+        }
+    }
+
+    private static @Nullable Rect2i firstOverlap(int x, int y, int w, int h, List<Rect2i> rects) {
+        for (Rect2i o : rects) {
+            if (x < o.getX() + o.getWidth() && x + w > o.getX()
+                    && y < o.getY() + o.getHeight() && y + h > o.getY()) {
+                return o;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Expanding exponential smoothing over resolved flat positions — when a
+     * panel's slot/corner changes it glides to the new spot instead of
+     * teleporting. Newly presented panels snap straight to their target.
+     */
+    private void smoothFlatPositions() {
+        float dt = mc.getTimer().getRealtimeDeltaTicks() / 20f;
+        float k = 1f - (float) Math.exp(-dt * 14);
+        for (PanelRuntime runtime : panels.values()) {
+            if (runtime.presented && runtime.flat && runtime.smoothMove) {
+                if (!runtime.posInit) {
+                    runtime.posX = runtime.targetX;
+                    runtime.posY = runtime.targetY;
+                    runtime.posInit = true;
+                } else {
+                    runtime.posX += (runtime.targetX - runtime.posX) * k;
+                    runtime.posY += (runtime.targetY - runtime.posY) * k;
+                }
+                runtime.widget.setScreenPos(Math.round(runtime.posX), Math.round(runtime.posY));
+            } else {
+                runtime.posInit = false;
+            }
+        }
+    }
+
+    /**
+     * World-space placement for expand panels: scans rings of candidate spots
+     * around the anchor for air (the hologram floats beside/above its block),
+     * yaw-billboards the panel toward the player, and parks the widget in the
+     * input strip so the synthesized pointer can reach it — same pipeline as
+     * face panels.
+     */
+    private void resolveExpand(PanelRuntime runtime, InworldPlacement.Expand expand) {
+        Vec3 anchor = runtime.anchorWorld;
+        if (anchor == null || mc.level == null || mc.player == null) {
+            runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+            return;
+        }
+        runtime.presented = true;
+        runtime.flat = false;
+
+        double ppb = expand.pixelsPerBlock();
+        runtime.facePpb = ppb;
+        double s = 1.0 / ppb;
+        double pw = runtime.widget.width() * s;
+        double ph = runtime.widget.height() * s;
+
+        ClientLevel level = mc.level;
+        Vec3 eye = mc.player.getEyePosition(framePartialTick);
+
+        //other world-space panels already occupy these spots
+        List<Vec3> occupied = new ArrayList<>();
+        for (PanelRuntime other : panels.values()) {
+            if (other != runtime && other.presented && other.expandPos != null) {
+                occupied.add(other.expandPos);
+            }
+        }
+
+        Vec3 best = null;
+        double bestScore = Double.MAX_VALUE;
+        double[] dys = {1.7, 1.1, 0.5, 2.3, -0.2};
+        for (int ring = 0; ring < 4; ring++) {
+            double rad = 1.0 + ring * 0.55 + pw * 0.5;
+            for (double dy : dys) {
+                for (int i = 0; i < 10; i++) {
+                    double ang = i * (Math.PI * 2 / 10);
+                    Vec3 spot = anchor.add(Math.cos(ang) * rad, dy, Math.sin(ang) * rad);
+                    double score = expandSpotScore(level, spot, pw, ph, anchor);
+                    for (Vec3 o : occupied) {
+                        if (spot.distanceToSqr(o) < (pw * 0.5 + 0.6) * (pw * 0.5 + 0.6)) {
+                            score += 64; //another hologram already there
+                        }
+                    }
+                    if (score < bestScore) {
+                        bestScore = score;
+                        best = spot;
+                    }
+                }
+            }
+        }
+
+        //stickiness: keep the previously chosen spot unless a clearly better
+        //one exists — otherwise the panel would jitter between near-tied spots
+        if (runtime.expandPos != null) {
+            double cur = expandSpotScore(level, runtime.expandPos, pw, ph, anchor);
+            if (cur <= bestScore * 1.35 + 1.0) {
+                best = runtime.expandPos;
+            }
+        }
+        runtime.expandPos = best;
+
+        //yaw-billboard toward the player's eye: u×v faces away from the viewer
+        //(GUI winding, same convention as face panels)
+        Vec3 d = eye.subtract(best);
+        double len = Math.hypot(d.x, d.z);
+        Vec3 dH = len < 1e-4 ? new Vec3(0, 0, 1) : new Vec3(d.x / len, 0, d.z / len);
+        Vec3 u = new Vec3(dH.z, 0, -dH.x);
+        runtime.faceU = u.scale(s);
+        runtime.faceV = new Vec3(0, -1, 0).scale(s);
+        runtime.faceNormal = dH;
+        runtime.faceOrigin = best
+                .subtract(runtime.faceU.scale(runtime.widget.width() * 0.5))
+                .subtract(runtime.faceV.scale(runtime.widget.height() * 0.5));
+
+        int stripX = mc.getWindow().getGuiScaledWidth() + 16 + stripCursor;
+        stripCursor += runtime.widget.width() + 16;
+        runtime.widget.setScreenPos(stripX, 8);
+    }
+
+    /** Prefers spots near the anchor with the panel's bounding volume in air. */
+    private static double expandSpotScore(ClientLevel level, Vec3 spot, double pw, double ph, Vec3 anchor) {
+        double score = spot.subtract(anchor).lengthSqr();
+        var box = new net.minecraft.world.phys.AABB(
+                spot.x - pw * 0.5, spot.y - ph * 0.5, spot.z - pw * 0.5,
+                spot.x + pw * 0.5, spot.y + ph * 0.5, spot.z + pw * 0.5);
+        for (BlockPos b : BlockPos.betweenClosed(
+                BlockPos.containing(box.minX, box.minY, box.minZ),
+                BlockPos.containing(box.maxX, box.maxY, box.maxZ))) {
+            if (!level.getBlockState(b).isAir()) score += 16;
+        }
+        return score;
+    }
 
     /**
      * Computes the panel's world-space rect on its face. In world presentation
@@ -654,7 +970,11 @@ public final class InworldManager implements InworldUiApi {
                 .subtract(runtime.faceU.scale(runtime.widget.width() * 0.5))
                 .subtract(runtime.faceV.scale(runtime.widget.height() * 0.5));
 
-        runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+        //park inside the off-screen input strip: reachable by synthesized
+        //pointer coords (slotX + u, slotY + v) but never rendered on screen
+        int stripX = mc.getWindow().getGuiScaledWidth() + 16 + stripCursor;
+        stripCursor += runtime.widget.width() + 16;
+        runtime.widget.setScreenPos(stripX, 8);
     }
 
     /**
@@ -696,16 +1016,18 @@ public final class InworldManager implements InworldUiApi {
         Projection proj = projection;
         pointed = null;
         pointedUv = null;
+        pointedInPanel = false;
         if (proj == null || mc.level == null) return;
 
         Vec3 origin = proj.cameraPos();
         Vec3 dir = proj.crosshairDirection();
 
-        //1. crosshair ray against face panels
+        //1. crosshair ray against world-space panels (face + expand)
         double bestT = Double.MAX_VALUE;
         for (PanelRuntime runtime : panels.values()) {
-            if (!(runtime.spec.placement() instanceof InworldPlacement.Face)) continue;
-            if (!runtime.presented || !runtime.widget.visible()) continue;
+            if (!worldSpace(runtime.spec.placement())) continue;
+            if (!runtime.presented || runtime.flat || !runtime.widget.visible()
+                    || runtime.faceU == null) continue;
             FloatPos uv = Projection.rayPlane(origin, dir, runtime.faceOrigin,
                     runtime.faceU, runtime.faceV, runtime.faceNormal,
                     runtime.widget.width(), runtime.widget.height());
@@ -717,6 +1039,7 @@ public final class InworldManager implements InworldUiApi {
                 pointedUv = uv;
             }
         }
+        if (pointed != null) pointedInPanel = true;
 
         //2. crosshair over a flat panel
         if (pointed == null) {
@@ -724,9 +1047,10 @@ public final class InworldManager implements InworldUiApi {
             double cy = mc.getWindow().getGuiScaledHeight() * 0.5;
             Widget hit = scene.hitTest(cx, cy);
             pointed = panelOf(hit);
+            if (pointed != null) pointedInPanel = true;
         }
 
-        //3. crosshair on an anchor block
+        //3. crosshair on an anchor block (focus only — clicks fall through to the game)
         if (pointed == null && mc.hitResult instanceof BlockHitResult blockHit
                 && blockHit.getType() == HitResult.Type.BLOCK) {
             for (PanelRuntime runtime : panels.values()) {
@@ -740,6 +1064,7 @@ public final class InworldManager implements InworldUiApi {
         if (pointed != null && !pointed.spec.interactive()) {
             pointed = null;
             pointedUv = null;
+            pointedInPanel = false;
         }
 
         //world mode focus follows pointing
@@ -797,52 +1122,152 @@ public final class InworldManager implements InworldUiApi {
 
     //region rendering
 
-    /** Renders face panels in world space during the level stage. */
+    /** Face and Expand panels render in world space through the FBO quad path. */
+    private static boolean worldSpace(InworldPlacement p) {
+        return p instanceof InworldPlacement.Face || p instanceof InworldPlacement.Expand;
+    }
+
+    /** Render-to-texture supersampling factor for world-space panels. */
+    private static final int FACE_SS = 2;
+    /** Dedicated buffer source for FBO passes — flushing the shared level source mid-pass would corrupt the world render. */
+    private final MultiBufferSource.BufferSource panelBuffers =
+            MultiBufferSource.immediate(new com.mojang.blaze3d.vertex.ByteBufferBuilder(1 << 18));
+
+    /**
+     * Renders face panels in world space during the level stage. Each panel's
+     * widget tree is first drawn into an offscreen {@link RenderTarget} with a
+     * plain GUI ortho setup, then the texture is blitted onto a single world
+     * quad — the quad carries no internal z-layering so nothing inside the
+     * panel can z-fight, and the quad itself wins its block surface with a
+     * polygon-offset decal bias.
+     */
     private void renderFacePanels(RenderLevelStageEvent event, Vec3 cameraPos) {
-        MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
-        //vertices are pre-transformed to view space by the widget pose below —
-        //the shader still multiplies ProjMat·ModelViewMat, so force ModelView
-        //to identity or the leftover rotation applies twice
+        float pt = event.getPartialTick().getGameTimeDeltaPartialTick(true);
+
         var modelView = RenderSystem.getModelViewStack();
         modelView.pushMatrix();
         modelView.identity();
         RenderSystem.applyModelViewMatrix();
-        //batched quads may wind clockwise from the viewing side — draw them two-sided
+        //the textured quad may wind clockwise from the viewing side
         RenderSystem.disableCull();
-        //decal-style depth bias: every panel fragment is pulled toward the
-        //camera in depth space, so coplanar/near-coplanar block faces lose the
-        //depth test — kills z-fighting at any distance or glancing angle
         RenderSystem.enablePolygonOffset();
         RenderSystem.polygonOffset(-1f, -4f);
         for (PanelRuntime runtime : panels.values()) {
-            if (!(runtime.spec.placement() instanceof InworldPlacement.Face)) continue;
-            if (!runtime.presented || !runtime.widget.visible()) continue;
+            if (!worldSpace(runtime.spec.placement())) continue;
+            //inspect mode flattens expand panels to docks — nothing world-space to draw
+            if (!runtime.presented || runtime.flat || !runtime.widget.visible()
+                    || runtime.faceU == null) continue;
 
-            PoseStack pose = new PoseStack();
-            //worldToView already contains the −cam translation, so the panel's
-            //world-space origin is translated verbatim
-            pose.last().pose().set(worldToView != null ? worldToView : event.getModelViewMatrix());
-            pose.translate(runtime.faceOrigin.x, runtime.faceOrigin.y, runtime.faceOrigin.z);
-            pose.last().pose().mul(faceBasis(runtime));
-
-            GuiGraphics graphics = new GuiGraphics(mc, pose, buffers);
-            SceneCanvas canvas = SceneCanvas.create(graphics);
-            canvas.preserveDepth();
-
-            FloatPos uv = runtime == pointed ? pointedUv : null;
-            runtime.widget.setFrameState(runtime.focused(), uv != null);
-            runtime.widget.render(canvas,
-                    uv != null ? (int) uv.x : -1,
-                    uv != null ? (int) uv.y : -1,
-                    event.getPartialTick().getGameTimeDeltaPartialTick(true));
-            canvas.flushBatch();
-            graphics.flush();
+            RenderTarget target = faceTarget(runtime);
+            renderPanelToTarget(runtime, target, pt);
+            drawFaceQuad(runtime, target);
         }
         RenderSystem.polygonOffset(0, 0);
         RenderSystem.disablePolygonOffset();
         RenderSystem.enableCull();
         modelView.popMatrix();
         RenderSystem.applyModelViewMatrix();
+    }
+
+    /** Lazily creates/resizes the panel's offscreen target at 2× its gui size. */
+    private static RenderTarget faceTarget(PanelRuntime runtime) {
+        RenderTarget target = runtime.faceTarget;
+        int w = runtime.widget.width() * FACE_SS;
+        int h = runtime.widget.height() * FACE_SS;
+        if (target == null) {
+            target = new TextureTarget(w, h, true, Minecraft.ON_OSX);
+            target.setClearColor(0f, 0f, 0f, 0f);
+            runtime.faceTarget = target;
+        }
+        if (target.width != w || target.height != h) {
+            target.resize(w, h, Minecraft.ON_OSX);
+        }
+        return target;
+    }
+
+    /**
+     * Draws the widget tree into the panel's offscreen target using the same
+     * ortho + modelView convention vanilla uses for GUI rendering
+     * ({@code z = -11000} under a 1000..21000 ortho frustum).
+     */
+    private void renderPanelToTarget(PanelRuntime runtime, RenderTarget target, float pt) {
+        int w = runtime.widget.width();
+        int h = runtime.widget.height();
+
+        //save the currently bound FBO + viewport — under Fabulous! graphics the
+        //translucent stage renders into a non-main target, so blindly rebinding
+        //the main target afterwards would break the level pass
+        int prevFbo = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
+        int[] prevVp = new int[4];
+        GL11.glGetIntegerv(GL11.GL_VIEWPORT, prevVp);
+
+        target.clear(Minecraft.ON_OSX);
+        target.bindWrite(true);
+
+        Matrix4f prevProj = new Matrix4f(RenderSystem.getProjectionMatrix());
+        var mv = RenderSystem.getModelViewStack();
+        mv.pushMatrix();
+        mv.identity();
+        mv.translate(0, 0, -11000);
+        RenderSystem.applyModelViewMatrix();
+        RenderSystem.setProjectionMatrix(
+                new Matrix4f().setOrtho(0, w, h, 0, 1000, 21000),
+                VertexSorting.ORTHOGRAPHIC_Z);
+        try {
+            //ortho is 0..w over a w*SS-px viewport — supersampling comes free,
+            //no pose scale needed
+            GuiGraphics graphics = new GuiGraphics(mc, new PoseStack(), panelBuffers);
+            SceneCanvas canvas = SceneCanvas.create(graphics);
+            FloatPos uv = runtime == pointed ? pointedUv : null;
+            runtime.widget.setFrameState(runtime.focused(), uv != null);
+            runtime.widget.render(canvas,
+                    uv != null ? (int) uv.x : -1,
+                    uv != null ? (int) uv.y : -1, pt);
+            canvas.flushBatch();
+            //private buffer source — never endBatch() the shared level source mid-pass
+            panelBuffers.endBatch();
+        } finally {
+            target.unbindWrite();
+            GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, prevFbo);
+            RenderSystem.viewport(prevVp[0], prevVp[1], prevVp[2], prevVp[3]);
+            mv.popMatrix();
+            RenderSystem.applyModelViewMatrix();
+            RenderSystem.setProjectionMatrix(prevProj, VertexSorting.DISTANCE_TO_ORIGIN);
+        }
+    }
+
+    /** Blits the panel texture onto the face's world-space quad (texture v is flipped). */
+    private void drawFaceQuad(PanelRuntime runtime, RenderTarget target) {
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderTexture(0, target.getColorTextureId());
+        RenderSystem.enableBlend();
+
+        Matrix4f mat = worldToView != null ? worldToView : new Matrix4f();
+        Vec3 o = runtime.faceOrigin;
+        Vec3 u = runtime.faceU;
+        Vec3 v = runtime.faceV;
+        double w = runtime.widget.width(), h = runtime.widget.height();
+        Vec3 p10 = o.add(u.scale(w));
+        Vec3 p01 = o.add(v.scale(h));
+        Vec3 p11 = p10.add(v.scale(h));
+
+        //open animation: scale the quad around its center
+        float sc = runtime.openScale;
+        if (sc < 0.999f) {
+            Vec3 c = o.add(u.scale(w * 0.5)).add(v.scale(h * 0.5));
+            o = c.add(o.subtract(c).scale(sc));
+            p10 = c.add(p10.subtract(c).scale(sc));
+            p01 = c.add(p01.subtract(c).scale(sc));
+            p11 = c.add(p11.subtract(c).scale(sc));
+        }
+
+        BufferBuilder buffer = Tesselator.getInstance()
+                .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        buffer.addVertex(mat, (float) o.x, (float) o.y, (float) o.z).setUv(0, 1);
+        buffer.addVertex(mat, (float) p01.x, (float) p01.y, (float) p01.z).setUv(0, 0);
+        buffer.addVertex(mat, (float) p11.x, (float) p11.y, (float) p11.z).setUv(1, 0);
+        buffer.addVertex(mat, (float) p10.x, (float) p10.y, (float) p10.z).setUv(1, 1);
+        BufferUploader.drawWithShader(buffer.buildOrThrow());
     }
 
     //region scan frame
@@ -892,6 +1317,22 @@ public final class InworldManager implements InworldUiApi {
         Matrix4f mat = worldToView;
         for (BlockPos pos : framed) {
             emitScanFrame(buffer, mat, pos, t, hot.contains(pos));
+        }
+        //expand panels get a world-space connector: anchor → panel bottom-center
+        for (PanelRuntime runtime : panels.values()) {
+            if (!(runtime.spec.placement() instanceof InworldPlacement.Expand)) continue;
+            //inspect flattens expand panels to docks — no world quad, no connector
+            if (!runtime.presented || runtime.flat || !runtime.widget.visible()
+                    || runtime.anchorWorld == null || runtime.faceU == null) continue;
+            Vec3 a = runtime.anchorWorld;
+            Vec3 pb = runtime.faceOrigin
+                    .add(runtime.faceU.scale(runtime.widget.width() * 0.5))
+                    .add(runtime.faceV.scale(runtime.widget.height()));
+            line(buffer, mat,
+                    new double[]{a.x, a.y, a.z},
+                    new double[]{pb.x, pb.y, pb.z},
+                    runtime.focused() || runtime == pointed
+                            ? InworldTheme.LINE_FOCUSED : InworldTheme.LINE);
         }
         var mesh = buffer.build();
         if (mesh != null) {
@@ -976,7 +1417,6 @@ public final class InworldManager implements InworldUiApi {
      */
     private void renderScreenSpace(GuiGraphics graphics, double pointerX, double pointerY, float partialTick) {
         scene.mouseMoved(pointerX, pointerY);
-        scene.setLayoutArea(mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
 
         SceneCanvas canvas = SceneCanvas.create(graphics);
         for (PanelRuntime runtime : panels.values()) {
@@ -993,6 +1433,12 @@ public final class InworldManager implements InworldUiApi {
         renderTooltip(graphics, pointerX, pointerY);
     }
 
+    /** ease-out-back — slight overshoot so expanding panels "pop" into place. */
+    private static float easeOutBack(float t) {
+        float c1 = 1.70158f, c3 = c1 + 1f, u = t - 1f;
+        return 1f + c3 * u * u * u + c1 * u * u;
+    }
+
     private void renderTooltip(GuiGraphics graphics, double pointerX, double pointerY) {
         Widget hit = scene.hitTest(pointerX, pointerY);
         if (hit == null) return;
@@ -1007,6 +1453,7 @@ public final class InworldManager implements InworldUiApi {
         for (PanelRuntime runtime : panels.values()) {
             if (!runtime.presented || !runtime.flat || !runtime.widget.visible()) continue;
             if (!runtime.spec.leaderLine()) continue;
+            if (runtime.widget.screenX < -900_000) continue; //parked/hidden — no line
             FloatPos from = leaderOrigin(runtime);
             if (from == null) continue;
 

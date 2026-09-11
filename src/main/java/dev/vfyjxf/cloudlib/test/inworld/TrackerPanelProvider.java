@@ -10,6 +10,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelSpec;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPlacement;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldProvider;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldSink;
+import dev.vfyjxf.cloudlib.api.ui.inworld.InworldUi;
 import dev.vfyjxf.cloudlib.ui.inworld.InworldTheme;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
 import dev.vfyjxf.cloudlib.ui.widget.TextWidget;
@@ -60,14 +61,13 @@ public final class TrackerPanelProvider implements InworldProvider {
                     .title(Component.literal("TRACKER//" + shortPos(p)))
                     .hints("LMB:press", "R:inspect"));
 
-            //console face tracks the player horizontally
+            //compact face controller tracks the player horizontally
             Direction side = sideToward(context.player(), p);
             sink.offer(InworldPanelSpec
                     .of("tracker/face/" + p,
                             InworldAnchor.of(p),
                             InworldPlacement.face(side, 0.5, 0.5, 64),
-                            TrackerPanelProvider::faceContent)
-                    .title(Component.literal("CTL")));
+                            TrackerPanelProvider::faceContent));
 
             //a follow-tag per living entity in range of the tracker
             var box = AABB.ofSize(Vec3.atCenterOf(p), TrackerBlockEntity.RANGE * 2.0, 12, TrackerBlockEntity.RANGE * 2.0);
@@ -113,27 +113,52 @@ public final class TrackerPanelProvider implements InworldProvider {
         var alert = ChipWidget.of(alertLabel(be), () -> be.sendAction(TrackerBlockEntity.ACTION_TOGGLE_ALERT));
         be.alert().onChange(v -> alert.setLabel(alertLabel(be)));
         actions.addWidget(alert);
+        actions.addWidget(ChipWidget.of("scan", () -> toggleExpand(ctx)));
         column.addWidget(actions);
 
         return column;
     }
 
+    /**
+     * Compact face controller: one row — entity count + action chips. The big
+     * detail view lives in the expand panel opened by the "scan" chip.
+     */
     private static Widget faceContent(InworldPanelContext ctx) {
         TrackerBlockEntity be = ctx.blockEntity(TrackerBlockEntity.class);
-        ColumnWidget column = ColumnWidget.create(2);
+        WidgetGroup<Widget> row = Widgets.row(JustifyContent.FLEX_START, AlignItems.CENTER);
+        row.useStyle(columnGap(3));
         if (be == null) {
-            column.addWidget(TextWidget.of("NO LINK").setColor(InworldTheme.TEXT_DIM));
-            return column;
+            row.addWidget(TextWidget.of("◈ --").setColor(InworldTheme.TEXT_DIM));
+            return row;
         }
-        var count = TextWidget.of("ents " + be.entities().get()).setColor(InworldTheme.ACCENT);
-        be.entities().onChange(v -> count.setText("ents " + v));
-        column.addWidget(count);
-        WidgetGroup<Widget> actions = Widgets.row(JustifyContent.FLEX_START, AlignItems.FLEX_START);
-        actions.useStyle(columnGap(2));
-        actions.addWidget(ChipWidget.of("ping", () -> be.sendAction(TrackerBlockEntity.ACTION_PING)));
-        actions.addWidget(ChipWidget.of("alert", () -> be.sendAction(TrackerBlockEntity.ACTION_TOGGLE_ALERT)));
-        column.addWidget(actions);
-        return column;
+        var count = TextWidget.of("◈ " + be.entities().get()).setColor(InworldTheme.ACCENT);
+        be.entities().onChange(v -> count.setText("◈ " + v));
+        row.addWidget(count);
+        row.addWidget(ChipWidget.of("ping", () -> be.sendAction(TrackerBlockEntity.ACTION_PING)));
+        row.addWidget(ChipWidget.of("scan", () -> toggleExpand(ctx)));
+        return row;
+    }
+
+    /**
+     * The "scan" chip toggles a detached expand panel: it auto-places into a
+     * free screen area near the anchor and plays the open animation.
+     */
+    private static void toggleExpand(InworldPanelContext ctx) {
+        BlockPos p = ctx.panel().blockPos();
+        if (p == null) return;
+        Object key = "tracker/expand/" + p;
+        if (InworldUi.instance().panel(key) != null) {
+            InworldUi.instance().close(key);
+            return;
+        }
+        InworldUi.show(InworldPanelSpec
+                .of(key,
+                        InworldAnchor.of(p, new Vec3(0.5, 0.9, 0.5)),
+                        InworldPlacement.expand(),
+                        c -> new RadarWidget())
+                .title(Component.literal("SCAN//" + shortPos(p)))
+                .openAnimation(true)
+                .hints("LMB:press", "scan:close"));
     }
 
     private static Widget entityTag(LivingEntity entity) {

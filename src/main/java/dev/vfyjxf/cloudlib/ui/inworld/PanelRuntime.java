@@ -36,13 +36,34 @@ final class PanelRuntime implements InworldPanel {
     boolean flat;
     /** resolved dock corner this frame (AUTO resolved to a concrete corner) */
     InworldPlacement.DockCorner dockCorner = InworldPlacement.DockCorner.AUTO;
+    /** last resolved AUTO dock corner — hysteresis keeps it until the anchor crosses far past center */
+    @Nullable InworldPlacement.DockCorner lastAutoCorner;
+
+    /** whether the resolved flat position should glide to its target (dock/floating/expand) */
+    boolean smoothMove;
+    /** target flat-screen position resolved this frame */
+    int targetX, targetY;
+    /** smoothed flat-screen position — lerped toward the target so slot changes glide */
+    float posX, posY;
+    /** whether posX/posY hold a valid previous position (false → snap, no glide) */
+    boolean posInit;
+
+    /** gameTime+partialTick when the panel was created; -1 = no open animation */
+    float bornAt = -1;
+    /** current open-animation scale driven by the manager (1 = fully open) */
+    float openScale = 1f;
 
     //face placement geometry (world space)
     Vec3 faceOrigin;
     Vec3 faceU;
     Vec3 faceV;
     Vec3 faceNormal;
+    /** Sticky world position for expand panels — re-scored each frame, only
+     *  replaced when a clearly better spot appears (no per-frame jumps). */
+    Vec3 expandPos;
     double facePpb;
+    /** offscreen target the face panel's widget tree is rendered into each frame */
+    @Nullable com.mojang.blaze3d.pipeline.RenderTarget faceTarget;
 
     /** panel-local pointer position when crosshair-pointed in world mode */
     @Nullable FloatPos pointedUv;

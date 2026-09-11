@@ -28,6 +28,7 @@ public final class InworldPanelSpec {
     List<String> hints = List.of();
     boolean interactive = true;
     boolean leaderLine = true;
+    boolean openAnimation = false;
     double maxDistance = 32;
 
     private InworldPanelSpec(
@@ -86,6 +87,11 @@ public final class InworldPanelSpec {
         return leaderLine;
     }
 
+    /** Whether the panel plays a scale-in open animation when created. */
+    public boolean openAnimation() {
+        return openAnimation;
+    }
+
     /** Maximum camera distance in blocks before the panel is hidden. */
     public double maxDistance() {
         return maxDistance;
@@ -110,6 +116,11 @@ public final class InworldPanelSpec {
 
     public InworldPanelSpec leaderLine(boolean leaderLine) {
         this.leaderLine = leaderLine;
+        return this;
+    }
+
+    public InworldPanelSpec openAnimation(boolean openAnimation) {
+        this.openAnimation = openAnimation;
         return this;
     }
 

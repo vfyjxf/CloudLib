@@ -42,6 +42,10 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
     boolean pointed;
     int screenX;
     int screenY;
+    /** open-animation scale (1 = fully open); driven by the manager each frame */
+    float openScale = 1f;
+    /** distance falloff scale for non-interactive tags; driven by the manager */
+    float distScale = 1f;
 
     public InworldPanelWidget(PanelRuntime runtime, InworldPanelSpec spec, Widget content) {
         this.runtime = runtime;
@@ -210,9 +214,21 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
 
     @Override
     public void render(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        float scale = openScale * distScale;
+        boolean animating = scale < 0.999f;
+        if (animating) {
+            //grow out of the bottom-center — toward the leader line/anchor
+            canvas.pushTransform();
+            canvas.translate(width() * 0.5f, height());
+            canvas.scale(scale);
+            canvas.translate(-width() * 0.5f, -height());
+        }
         super.render(canvas, mouseX, mouseY, partialTicks);
         if (focused || pointed) {
             drawBrackets(canvas);
+        }
+        if (animating) {
+            canvas.popTransform();
         }
     }
 

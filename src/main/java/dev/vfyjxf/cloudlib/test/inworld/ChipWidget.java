@@ -71,9 +71,10 @@ public class ChipWidget extends Widget {
         boolean hot = hovered() || focused();
         int border = hot ? InworldTheme.ACCENT : InworldTheme.BORDER;
         if (pressed) {
-            canvas.fill(0, 0, w, h, InworldTheme.ACCENT_DIM);
+            canvas.fill(0, 0, w, h, 0xF22E4E4C);
         } else if (hot) {
-            canvas.fill(0, 0, w, h, 0x3335D6D0);
+            //near-solid dark fill — translucent fills read as "see-through" on world panels
+            canvas.fill(0, 0, w, h, 0xF2162226);
         }
         canvas.strokeRect(0, 0, w, h, border);
         var font = context().font();

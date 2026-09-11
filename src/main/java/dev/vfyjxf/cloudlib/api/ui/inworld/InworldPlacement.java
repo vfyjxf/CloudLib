@@ -86,6 +86,20 @@ public sealed interface InworldPlacement {
         return new Dock(DockCorner.AUTO);
     }
 
+    /**
+     * World-space expanded panel: floats at a free spot near the anchor,
+     * billboarded toward the player — a holographic "big screen" the block's
+     * compact face controller opens on demand. Combine with
+     * {@link InworldPanelSpec#openAnimation(boolean)} for a pop-in effect.
+     */
+    static Expand expand() {
+        return new Expand(72);
+    }
+
+    static Expand expand(double pixelsPerBlock) {
+        return new Expand(pixelsPerBlock);
+    }
+
     //endregion
 
     /**
@@ -120,6 +134,16 @@ public sealed interface InworldPlacement {
      * panels in one corner stack vertically in offer order.
      */
     record Dock(DockCorner corner) implements InworldPlacement {
+    }
+
+    /**
+     * A world-space panel floating at a free spot near its anchor — the
+     * manager scans candidate positions around the anchor for air, then
+     * billboards the panel toward the player. Rendered through the same
+     * render-to-texture quad path as {@link Face} and clickable via crosshair
+     * raycast. {@code pixelsPerBlock} sets the world size.
+     */
+    record Expand(double pixelsPerBlock) implements InworldPlacement {
     }
 
     /** Which screen corner a {@link Dock} panel pins to. */
