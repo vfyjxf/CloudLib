@@ -546,6 +546,7 @@ public final class InworldManager implements InworldUiApi {
             runtime.anchorScreen = null;
             runtime.presented = false;
             runtime.flat = false;
+            runtime.docked = false;
             runtime.smoothMove = false;
 
             Vec3 anchor = runtime.anchorWorld;
@@ -594,13 +595,13 @@ public final class InworldManager implements InworldUiApi {
         layoutDocks(docked);
         docked.clear();
 
-        //screen rects the interactive flat panels have settled into, plus the
-        //projected rects of world-space panels resolved so far — holograms
-        //and tags must stay out of them
+        //screen rects the foreground chrome occupies: interactive flat panels
+        //and every docked panel (interactive or not — a dock slot is chrome),
+        //plus the projected rects of world-space panels resolved so far
         List<Rect2i> occupied = new ArrayList<>();
         for (PanelRuntime r : panels.values()) {
             if (!r.presented || !r.widget.visible()) continue;
-            if (r.flat && r.spec.interactive()) {
+            if (r.flat && (r.spec.interactive() || r.docked)) {
                 occupied.add(new Rect2i(
                         r.smoothMove ? r.targetX : r.widget.screenX,
                         r.smoothMove ? r.targetY : r.widget.screenY,
@@ -710,6 +711,7 @@ public final class InworldManager implements InworldUiApi {
         }
         runtime.presented = true;
         runtime.flat = true;
+        runtime.docked = true;
         runtime.smoothMove = true;
         runtime.dockCorner = dock.corner();
         docked.add(runtime);
@@ -829,15 +831,19 @@ public final class InworldManager implements InworldUiApi {
     private final int[] dockCursorEnd = new int[InworldPlacement.DockCorner.values().length];
 
     /**
-     * Screen zoning for non-interactive flat panels (entity tags).
+     * Screen zoning for non-interactive flat panels (entity tags, passive
+     * floats). Docked panels — interactive or not — are chrome and keep their
+     * dock slot; they never enter this pass.
      *
-     * Interactive panels own their settled rect. A tag keeps its anchor
-     * position when it fits; a graze slides it to the cheapest free side of
-     * the blocker (≤24px, stays near the entity); anything bigger is pulled
-     * into a side rail — an edge column on the half of the screen its anchor
-     * projects into. Rails are packed in offer order (group, then distance)
-     * with uniform gaps, so crowded tags form a tidy list instead of a
-     * scatter of barely-disjoint boxes. Rail-bound tags glide to their slot.
+     * Occlusion policy is deliberately tolerant: a tag renders behind the
+     * foreground chrome, so a partly-covered tag is still readable and keeps
+     * sitting on its entity. Only when more than half the tag (or a >10px
+     * intrusion) is covered do we look for an escape — the cheapest of the
+     * four sides of the dominant blocker within a 48px glide; and only when
+     * even that fails <em>and</em> the tag is nearly buried (>72% covered) is
+     * it pulled into a side rail — an edge column on the half of the screen
+     * its anchor projects into. Everything in between stays put behind the
+     * chrome rather than wandering off and losing its anchor.
      */
     private void resolveConflicts(List<Rect2i> occupied) {
         int W = mc.getWindow().getGuiScaledWidth();
@@ -846,7 +852,8 @@ public final class InworldManager implements InworldUiApi {
 
         List<PanelRuntime> tags = new ArrayList<>();
         for (PanelRuntime r : panels.values()) {
-            if (r.presented && r.flat && !r.spec.interactive() && r.widget.visible()) {
+            if (r.presented && r.flat && !r.spec.interactive() && !r.docked
+                    && r.widget.visible()) {
                 tags.add(r);
             }
         }
@@ -884,33 +891,32 @@ public final class InworldManager implements InworldUiApi {
         for (PanelRuntime tag : visible) {
             int w = tag.widget.width();
             int h = tag.widget.height();
-            int x = (int) Math.max(2, Math.min(W - w - 2,
+            //the tag's home this frame: a follow tag anchors at screenX (just
+            //rewritten by resolveFollow), a floating tag at its resolved target
+            int ix = (int) Math.max(2, Math.min(W - w - 2,
                     tag.smoothMove ? tag.targetX : tag.widget.screenX));
-            int y = (int) Math.max(2, Math.min(H - h - 2,
+            int iy = (int) Math.max(2, Math.min(H - h - 2,
                     tag.smoothMove ? tag.targetY : tag.widget.screenY));
+            int wx = ix, wy = iy;
 
-            //occlusion tolerance: a slight graze under a foreground panel is
-            //accepted — the tag already renders behind it. Only when the
-            //covered share (or the intrusion depth) is actually noticeable do
-            //we pay for a slide, and then only by just enough to get back
-            //under the tolerance instead of jumping fully clear.
-            var oc = InworldLayout.occlusion(x, y, w, h, occupied);
-            if (!oc.tolerable(w, h)) {
+            var oc = InworldLayout.occlusion(ix, iy, w, h, occupied);
+            if (!oc.acceptable(w, h)) {
                 Rect2i blocker = oc.blocker();
-                int tol = 5; //px of intrusion left behind after the slide
-                int bx = Integer.MAX_VALUE, by = 0, bestCost = Integer.MAX_VALUE, bestDir = -1;
+                int tol = 10; //px of graze an escape position may keep
+                int bx = 0, by = 0, bestCost = Integer.MAX_VALUE, bestDir = -1;
                 int[][] candidates = {
-                        {x, blocker.getY() - h + tol},
-                        {x, blocker.getY() + blocker.getHeight() - tol},
-                        {blocker.getX() - w + tol, y},
-                        {blocker.getX() + blocker.getWidth() - tol, y}};
+                        {ix, blocker.getY() - h + tol},
+                        {ix, blocker.getY() + blocker.getHeight() - tol},
+                        {blocker.getX() - w + tol, iy},
+                        {blocker.getX() + blocker.getWidth() - tol, iy}};
                 for (int i = 0; i < candidates.length; i++) {
                     int[] c = candidates[i];
                     int cx = Math.max(2, Math.min(W - w - 2, c[0]));
                     int cy = Math.max(2, Math.min(H - h - 2, c[1]));
                     var co = InworldLayout.occlusion(cx, cy, w, h, occupied);
-                    if (!co.tolerable(w, h)) continue;
-                    int cost = Math.abs(cx - x) + Math.abs(cy - y)
+                    //an escape must land readable — or at least halve the cover
+                    if (!co.acceptable(w, h) && co.area() >= oc.area() * 0.55) continue;
+                    int cost = Math.abs(cx - ix) + Math.abs(cy - iy)
                             - (i == tag.lastSlideDir ? 14 : 0);
                     if (cost < bestCost) {
                         bestCost = cost;
@@ -919,18 +925,35 @@ public final class InworldManager implements InworldUiApi {
                         bestDir = i;
                     }
                 }
-                if (bestDir >= 0 && bestCost <= 24) {
-                    x = bx;
-                    y = by;
+                if (bestDir >= 0 && bestCost <= 48) {
+                    wx = bx;
+                    wy = by;
                     tag.lastSlideDir = bestDir;
-                } else {
+                } else if (oc.buried(w, h)) {
                     tag.lastSlideDir = -1;
                     railQueue.add(tag);
                     continue;
+                } else {
+                    //not worth the trip — stay behind the chrome
+                    tag.lastSlideDir = -1;
                 }
             }
-            placeTag(tag, x, y);
-            occupied.add(new Rect2i(x, y, w, h));
+
+            //commit: a displaced (or still-gliding-home) tag uses the
+            //posX/targetX smoothing so escapes and returns animate; a tag at
+            //home snaps tight to its anchor with no lag
+            boolean displaced = wx != ix || wy != iy;
+            boolean settling = tag.posInit
+                    && (Math.abs(tag.posX - ix) > 1.5f || Math.abs(tag.posY - iy) > 1.5f);
+            if (displaced || settling) {
+                tag.smoothMove = true;
+                placeTag(tag, wx, wy);
+            } else {
+                tag.smoothMove = false;
+                tag.posInit = false;
+                tag.widget.setScreenPos(ix, iy);
+            }
+            occupied.add(new Rect2i(wx, wy, w, h));
         }
 
         //rails: packed columns on the left/right edge, below that side's

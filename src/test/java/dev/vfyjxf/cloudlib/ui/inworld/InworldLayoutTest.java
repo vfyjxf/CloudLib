@@ -132,4 +132,37 @@ class InworldLayoutTest {
         assertEquals(100, oc.blocker().getX());
     }
 
+    //---- relaxed tiers: tags stay unless mostly unreadable ----
+
+    @Test
+    void halfCoveredStillAcceptable() {
+        //tag 40x12 at x 80..120 vs panel 100..180 → 20x12 = 50% covered
+        var oc = InworldLayout.occlusion(80, 105, 40, 12, PANEL);
+        assertFalse(oc.tolerable(40, 12));
+        assertTrue(oc.acceptable(40, 12));
+        assertFalse(oc.buried(40, 12));
+    }
+
+    @Test
+    void deepIntrusionIsNotAcceptable() {
+        //tag fully inside the panel → 100% covered, 12px deep
+        var oc = InworldLayout.occlusion(110, 101, 40, 12, PANEL);
+        assertFalse(oc.acceptable(40, 12));
+        assertTrue(oc.buried(40, 12));
+    }
+
+    @Test
+    void buriedNeedsMostOfTheTag() {
+        //tag 60% covered — not acceptable, not buried → stays behind chrome
+        var oc = InworldLayout.occlusion(156, 105, 40, 12, PANEL); //x 156..196 vs panel ..180 → 24x12 = 60%
+        assertFalse(oc.acceptable(40, 12));
+        assertFalse(oc.buried(40, 12));
+    }
+
+    @Test
+    void coverageIsFractionOfArea() {
+        var oc = InworldLayout.occlusion(100, 100, 40, 12, PANEL); //fully inside → 1.0
+        assertEquals(1.0, oc.coverage(40, 12), 1e-6);
+    }
+
 }

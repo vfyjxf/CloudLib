@@ -36,6 +36,8 @@ final class PanelRuntime implements InworldPanel {
     boolean flat;
     /** resolved dock corner this frame (AUTO resolved to a concrete corner) */
     InworldPlacement.DockCorner dockCorner = InworldPlacement.DockCorner.AUTO;
+    /** dock layout already placed this panel this frame — the conflict pass must leave it alone */
+    boolean docked;
     /** last resolved AUTO dock corner — hysteresis keeps it until the anchor crosses far past center */
     @Nullable InworldPlacement.DockCorner lastAutoCorner;
 

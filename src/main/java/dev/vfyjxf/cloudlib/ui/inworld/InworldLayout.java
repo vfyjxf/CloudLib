@@ -66,6 +66,25 @@ final class InworldLayout {
         boolean tolerable(int w, int h) {
             return blocker == null || area <= w * h * 0.15 || depth <= 5;
         }
+
+        /** Covered share of the rect, 0..1+. */
+        double coverage(int w, int h) {
+            return area / (w * (double) h);
+        }
+
+        /**
+         * Still readable enough to leave in place — a tag renders behind the
+         * foreground chrome, so up to half-covered (or a ≤10px graze) is
+         * preferable to moving the tag away from its entity.
+         */
+        boolean acceptable(int w, int h) {
+            return blocker == null || coverage(w, h) <= 0.5 || depth <= 10;
+        }
+
+        /** Mostly hidden — the rare case where a rail slot is actually better. */
+        boolean buried(int w, int h) {
+            return blocker != null && coverage(w, h) > 0.72;
+        }
     }
 
     static Occl occlusion(int x, int y, int w, int h, List<Rect2i> rects) {
