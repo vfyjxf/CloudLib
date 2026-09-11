@@ -13,6 +13,8 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldSink;
 import dev.vfyjxf.cloudlib.test.sync.SyncedTestBlockEntity;
 import dev.vfyjxf.cloudlib.ui.inworld.InworldTheme;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
+import dev.vfyjxf.cloudlib.ui.widget.DividerWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ProgressBarWidget;
 import dev.vfyjxf.cloudlib.ui.widget.TextWidget;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -24,6 +26,7 @@ import dev.vfyjxf.taffy.style.JustifyContent;
 
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.alignItemsFlexStart;
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.columnGap;
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.sizeOf;
 
 /**
  * Demo provider: offers an in-world panel for every
@@ -83,12 +86,12 @@ public final class SyncedPanelProvider implements InworldProvider {
                     .title(Component.literal("LINK")));
         }
 
-        //follow-mode demo: a small tag pinned above the player
+        //follow-mode demo: an entity-tag pinned above the player
         sink.offer(InworldPanelSpec
                 .of("player/tag",
                         InworldAnchor.of(() -> context.player().position().add(0, 2.35, 0)),
                         InworldPlacement.follow(0, 0),
-                        c -> playerTag())
+                        c -> new EntityTagWidget(context.player(), "LOCAL"))
                 .maxDistance(64));
     }
 
@@ -103,13 +106,26 @@ public final class SyncedPanelProvider implements InworldProvider {
             return column;
         }
 
+        //row 1: count + 16-cycle progress meter
+        WidgetGroup<Widget> countRow = Widgets.row(JustifyContent.FLEX_START, AlignItems.CENTER);
+        countRow.useStyle(columnGap(3));
         var count = TextWidget.of("count " + be.count().get()).setColor(InworldTheme.TEXT);
         be.count().onChange(v -> count.setText("count " + v));
-        column.addWidget(count);
+        countRow.addWidget(count);
+        var cycle = ProgressBarWidget.create(() -> (be.count().get() & 15) / 16.0);
+        cycle.setColors(0xFF081018, InworldTheme.ACCENT);
+        cycle.useStyle(sizeOf(40, 5));
+        countRow.addWidget(cycle);
+        column.addWidget(countRow);
 
         var label = TextWidget.of(be.label().get()).setColor(InworldTheme.TEXT_DIM);
         be.label().onChange(v -> label.setText(v));
         column.addWidget(label);
+
+        var divider = DividerWidget.horizontal();
+        divider.setColor(InworldTheme.TITLE_RULE);
+        divider.useStyle(sizeOf(96, 3));
+        column.addWidget(divider);
 
         var strip = new ItemStripWidget();
         strip.setItems(be.items().get());
@@ -156,15 +172,19 @@ public final class SyncedPanelProvider implements InworldProvider {
 
     private static Widget tagContent(InworldPanelContext ctx) {
         SyncedTestBlockEntity be = ctx.blockEntity(SyncedTestBlockEntity.class);
-        var text = TextWidget.of(be == null ? "--" : "◈ " + be.count().get()).setColor(InworldTheme.ACCENT);
-        if (be != null) {
-            be.count().onChange(v -> text.setText("◈ " + v));
+        ColumnWidget column = ColumnWidget.create(2);
+        column.useStyle(alignItemsFlexStart());
+        if (be == null) {
+            column.addWidget(TextWidget.of("--").setColor(InworldTheme.TEXT_DIM));
+            return column;
         }
-        return text;
-    }
-
-    private static Widget playerTag() {
-        return TextWidget.of("◈ LOCAL").setColor(InworldTheme.TEXT_DIM);
+        var text = TextWidget.of("◈ " + be.count().get()).setColor(InworldTheme.ACCENT);
+        be.count().onChange(v -> text.setText("◈ " + v));
+        column.addWidget(text);
+        var label = TextWidget.of(be.label().get()).setColor(InworldTheme.TEXT_DIM);
+        be.label().onChange(v -> label.setText(v));
+        column.addWidget(label);
+        return column;
     }
 
     //endregion

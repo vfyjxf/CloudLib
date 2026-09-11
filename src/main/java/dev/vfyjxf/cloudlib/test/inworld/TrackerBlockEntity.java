@@ -27,25 +27,32 @@ public class TrackerBlockEntity extends BasicSyncedBlockEntity {
 
     /** Entity scan radius around the block. */
     public static final int RANGE = 14;
+    /** Upper bound of the client-settable alert threshold. */
+    public static final int MAX_THRESHOLD = 32;
 
     private static final class Network {
         static final Schema<Integer> entities = Schema.of("entities", 0, Codec.INT, UnaryFlowHandler.codecOf(ByteBufCodecs.INT));
         static final Schema<String> nearest = Schema.of("nearest", "--", Codec.STRING, UnaryFlowHandler.codecOf(ByteBufCodecs.STRING_UTF8));
         static final Schema<Boolean> alert = Schema.of("alert", false, Codec.BOOL, UnaryFlowHandler.codecOf(ByteBufCodecs.BOOL));
         static final Schema<Integer> pings = Schema.of("pings", 0, Codec.INT, UnaryFlowHandler.codecOf(ByteBufCodecs.INT));
+        /** Crowd threshold the client can tune via the threshold slider. */
+        static final Schema<Integer> threshold = Schema.of("threshold", 6, Codec.INT, UnaryFlowHandler.codecOf(ByteBufCodecs.INT));
     }
 
     private final Handle<Integer> entities = useSynced(Network.entities);
     private final Handle<String> nearest = useSynced(Network.nearest);
     private final Handle<Boolean> alert = useSynced(Network.alert);
     private final Handle<Integer> pings = useSynced(Network.pings);
+    private final Handle<Integer> threshold = useSynced(Network.threshold);
     private final UnaryReversed<Integer> action = unaryReversed("action", UnaryFlowHandler.codecOf(ByteBufCodecs.VAR_INT));
+    private final UnaryReversed<Integer> setThreshold = unaryReversed("setThreshold", UnaryFlowHandler.codecOf(ByteBufCodecs.VAR_INT));
 
     private long tick;
 
     public TrackerBlockEntity(BlockPos pos, BlockState state) {
         super(TestRegistry.trackerBlockEntity.get(), pos, state);
         action.whenReceiveFromClient(this::onAction);
+        setThreshold.whenReceiveFromClient(v -> threshold.set(Math.clamp(v, 0, MAX_THRESHOLD)));
     }
 
     public Handle<Integer> entities() {
@@ -64,12 +71,26 @@ public class TrackerBlockEntity extends BasicSyncedBlockEntity {
         return pings;
     }
 
+    public Handle<Integer> threshold() {
+        return threshold;
+    }
+
     /** Client-side: queues an action for the server and flushes the channel. */
     public void sendAction(int actionId) {
         try {
             action.sendToServer(actionId);
         } catch (IllegalStateException ignored) {
             return; //a value is already queued this tick
+        }
+        pushReversed();
+    }
+
+    /** Client-side: queues a new crowd threshold (clamped server-side). */
+    public void sendThreshold(int value) {
+        try {
+            setThreshold.sendToServer(value);
+        } catch (IllegalStateException ignored) {
+            return;
         }
         pushReversed();
     }

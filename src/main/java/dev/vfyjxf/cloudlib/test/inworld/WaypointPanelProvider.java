@@ -48,6 +48,8 @@ public final class WaypointPanelProvider implements InworldProvider {
         }
     }
 
+    private static final String[] WINDS = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
+
     private static Widget content(InworldPanelContext ctx) {
         var distance = TextWidget.of("◈ --").setColor(InworldTheme.ACCENT);
         distance.setTickable(true);
@@ -56,7 +58,11 @@ public final class WaypointPanelProvider implements InworldProvider {
             BlockPos pos = ctx.panel().blockPos();
             if (player == null || pos == null) return;
             int d = (int) Math.sqrt(player.distanceToSqr(Vec3.atCenterOf(pos)));
-            distance.setText("◈ " + d + "m");
+            //compass bearing from player to the waypoint (north = -Z)
+            double dx = pos.getX() + 0.5 - player.getX();
+            double dz = pos.getZ() + 0.5 - player.getZ();
+            int wind = (int) (Math.round(Math.toDegrees(Math.atan2(dx, -dz)) / 45.0) + 8) & 7;
+            distance.setText("◈ " + d + "m " + WINDS[wind]);
         });
         return distance;
     }

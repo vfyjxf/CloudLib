@@ -13,6 +13,9 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldSink;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldUi;
 import dev.vfyjxf.cloudlib.ui.inworld.InworldTheme;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
+import dev.vfyjxf.cloudlib.ui.widget.DividerWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ProgressBarWidget;
+import dev.vfyjxf.cloudlib.ui.widget.SliderWidget;
 import dev.vfyjxf.cloudlib.ui.widget.TextWidget;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.JustifyContent;
@@ -26,16 +29,18 @@ import net.minecraft.world.phys.Vec3;
 
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.alignItemsFlexStart;
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.columnGap;
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.sizeOf;
 
 /**
  * Demo provider for {@link TrackerBlockEntity}: per block it offers
  * <ul>
- *   <li>a floating stat panel above the block (entity count, nearest, ping
- *       count, action chips driving the reversed channel);</li>
- *   <li>a face panel on the side facing the player — the placement is
- *       re-offered each pass, so the console face tracks the player;</li>
- *   <li>a follow-tag on every living entity in range, anchored to the entity
- *       itself and re-created/removed as entities come and go.</li>
+ *   <li>a docked stat console — synced values, a density bar, an alert-threshold
+ *       slider wired through a second reversed channel, and action chips;</li>
+ *   <li>a compact face controller tracking the player's side of the block —
+ *       {@code V} or the "scan" chip opens the world-space scan console;</li>
+ *   <li>an {@link EntityTagWidget} follow-tag per living entity in range,
+ *       group-merged via {@code groupLimit(3)};</li>
+ *   <li>a detached expand panel hosting {@link ScanConsoleWidget}.</li>
  * </ul>
  */
 public final class TrackerPanelProvider implements InworldProvider {
@@ -67,7 +72,7 @@ public final class TrackerPanelProvider implements InworldProvider {
             sink.offer(InworldPanelSpec
                     .of("tracker/face/" + p,
                             InworldAnchor.of(p),
-                            InworldPlacement.face(side, 0.5, 0.5, 64),
+                            InworldPlacement.face(side, 0.5, 0.5, 96),
                             TrackerPanelProvider::faceContent)
                     .action(TrackerPanelProvider::toggleExpand));
 
@@ -79,7 +84,7 @@ public final class TrackerPanelProvider implements InworldProvider {
                         .of("tracker/ent/" + entity.getId(),
                                 InworldAnchor.ofEntity(entity.getId(), new Vec3(0, entity.getBbHeight() + 0.35, 0)),
                                 InworldPlacement.follow(0, 0),
-                                c -> entityTag(entity))
+                                c -> new EntityTagWidget(entity))
                         .interactive(false)
                         .groupLimit(3)
                         .maxDistance(TrackerBlockEntity.RANGE * 2));
@@ -98,17 +103,62 @@ public final class TrackerPanelProvider implements InworldProvider {
             return column;
         }
 
-        var entities = TextWidget.of("ents " + be.entities().get()).setColor(InworldTheme.TEXT);
-        be.entities().onChange(v -> entities.setText("ents " + v));
-        column.addWidget(entities);
+        //row 1: entity count + crowd-density bar
+        WidgetGroup<Widget> entsRow = Widgets.row(JustifyContent.FLEX_START, AlignItems.CENTER);
+        entsRow.useStyle(columnGap(3));
+        var ents = TextWidget.of("ents " + be.entities().get()).setColor(InworldTheme.TEXT);
+        be.entities().onChange(v -> ents.setText("ents " + v));
+        entsRow.addWidget(ents);
+        var density = ProgressBarWidget.create(
+                () -> Math.min(1, be.entities().get() / (double) TrackerBlockEntity.MAX_THRESHOLD));
+        density.setColors(0xFF081018, InworldTheme.ACCENT);
+        density.useStyle(sizeOf(44, 5));
+        entsRow.addWidget(density);
+        column.addWidget(entsRow);
 
         var nearest = TextWidget.of("nearest " + be.nearest().get()).setColor(InworldTheme.TEXT_DIM);
         be.nearest().onChange(v -> nearest.setText("nearest " + v));
         column.addWidget(nearest);
 
+        //row 3: ping count + armed lamp (armed when the live count reaches the threshold)
+        WidgetGroup<Widget> stateRow = Widgets.row(JustifyContent.FLEX_START, AlignItems.CENTER);
+        stateRow.useStyle(columnGap(4));
         var pings = TextWidget.of("pings " + be.pings().get()).setColor(InworldTheme.TEXT_DIM);
         be.pings().onChange(v -> pings.setText("pings " + v));
-        column.addWidget(pings);
+        stateRow.addWidget(pings);
+        var armed = TextWidget.of("·ok").setColor(InworldTheme.TEXT_DIM);
+        armed.setTickable(true);
+        armed.onTick(() -> {
+            boolean tripped = be.entities().get() >= be.threshold().get() && be.entities().get() > 0;
+            armed.setText(tripped ? "▲ARM" : "·ok");
+            armed.setColor(tripped ? 0xFFE06666 : InworldTheme.TEXT_DIM);
+        });
+        stateRow.addWidget(armed);
+        column.addWidget(stateRow);
+
+        var divider = DividerWidget.horizontal();
+        divider.setColor(InworldTheme.TITLE_RULE);
+        divider.useStyle(sizeOf(112, 3));
+        column.addWidget(divider);
+
+        //threshold row: slider drives the second reversed channel; server clamps
+        WidgetGroup<Widget> thrRow = Widgets.row(JustifyContent.FLEX_START, AlignItems.CENTER);
+        thrRow.useStyle(columnGap(3));
+        thrRow.addWidget(TextWidget.of("thr").setColor(InworldTheme.TEXT_DIM));
+        var thrValue = TextWidget.of(be.threshold().get() + "").setColor(InworldTheme.ACCENT);
+        be.threshold().onChange(v -> thrValue.setText(v + ""));
+        var slider = SliderWidget.create(0, TrackerBlockEntity.MAX_THRESHOLD, be.threshold().get());
+        slider.setStep(1);
+        slider.setThumbSize(5);
+        slider.setColors(0xFF081018, InworldTheme.ACCENT_DIM, InworldTheme.ACCENT);
+        slider.useStyle(sizeOf(52, 9));
+        slider.onValueChanged(v -> {
+            be.sendThreshold((int) Math.round(v));
+            thrValue.setText((int) Math.round(v) + "");
+        });
+        thrRow.addWidget(slider);
+        thrRow.addWidget(thrValue);
+        column.addWidget(thrRow);
 
         WidgetGroup<Widget> actions = Widgets.row(JustifyContent.FLEX_START, AlignItems.FLEX_START);
         actions.useStyle(columnGap(2));
@@ -144,7 +194,7 @@ public final class TrackerPanelProvider implements InworldProvider {
 
     /**
      * The "scan" chip toggles a detached expand panel: it auto-places into a
-     * free screen area near the anchor and plays the open animation.
+     * free world-space area near the anchor and plays the open animation.
      */
     private static void toggleExpand(InworldPanelContext ctx) {
         BlockPos p = ctx.panel().blockPos();
@@ -158,24 +208,13 @@ public final class TrackerPanelProvider implements InworldProvider {
                 .of(key,
                         InworldAnchor.of(p, new Vec3(0.5, 0.9, 0.5)),
                         InworldPlacement.expand(),
-                        c -> new RadarWidget())
+                        ScanConsoleWidget::new)
                 .title(Component.literal("SCAN//" + shortPos(p)))
                 .openAnimation(true)
                 .hints("LMB:press", "scan:close"));
     }
 
-    private static Widget entityTag(LivingEntity entity) {
-        var text = TextWidget.of(tagText(entity)).setColor(InworldTheme.ACCENT);
-        text.setTickable(true);
-        text.onTick(() -> text.setText(tagText(entity)));
-        return text;
-    }
-
     //endregion
-
-    private static String tagText(LivingEntity entity) {
-        return "◇ " + entity.getName().getString() + " " + (int) Math.ceil(entity.getHealth()) + "hp";
-    }
 
     private static String alertLabel(TrackerBlockEntity be) {
         return be.alert().get() ? "alert*" : "alert";
