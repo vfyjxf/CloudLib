@@ -46,8 +46,13 @@ public final class InworldTheme {
     /** edges when the block's panel is focused/pointed */
     public static final int SCAN_EDGE_HOT = 0x8C57E6E6;
     public static final int SCAN_TICK_HOT = 0xFF57E6E6;
+    /** voxel-shape outline of a framed block — the vanilla hit-outline style thick lines */
+    public static final int SCAN_SHAPE = 0x9935D6D0;
+    public static final int SCAN_SHAPE_HOT = 0xFF57E6E6;
     /** the bright segment sweeping the frame's top loop */
     public static final int SCAN_SWEEP = 0xFF8FFFFF;
+    /** dark underlay drawn under leader lines so they stay readable on bright terrain */
+    public static final int LINE_EDGE = 0xB0050A0E;
 
     /** Primary text. */
     public static final int TEXT = 0xFFE8F4F8;

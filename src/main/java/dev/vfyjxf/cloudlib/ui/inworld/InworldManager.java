@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
@@ -39,13 +40,22 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -55,6 +65,7 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
@@ -1638,27 +1649,85 @@ public final class InworldManager implements InworldUiApi {
         if (worldToView == null || mc.level == null) return;
         Set<BlockPos> framed = new HashSet<>();
         Set<BlockPos> hot = new HashSet<>();
+        Set<Integer> framedEnts = new HashSet<>();
+        Set<Integer> hotEnts = new HashSet<>();
         for (PanelRuntime runtime : panels.values()) {
             if (!runtime.presented || !runtime.widget.visible()) continue;
             BlockPos pos = runtime.spec.anchor().blockPos();
-            if (pos == null) continue;
-            framed.add(pos);
-            if (runtime.focused() || runtime == pointed) hot.add(pos);
+            if (pos != null) {
+                framed.add(pos);
+                if (runtime.focused() || runtime == pointed) hot.add(pos);
+            } else if (runtime.spec.anchor() instanceof InworldAnchor.EntityTarget et) {
+                framedEnts.add(et.entityId());
+                if (runtime.focused() || runtime == pointed) hotEnts.add(et.entityId());
+            }
         }
-        if (framed.isEmpty()) return;
+        boolean hasExpand = false;
+        for (PanelRuntime runtime : panels.values()) {
+            if (runtime.spec.placement() instanceof InworldPlacement.Expand
+                    && runtime.presented && !runtime.flat && runtime.widget.visible()
+                    && runtime.anchorWorld != null && runtime.faceU != null) {
+                hasExpand = true;
+                break;
+            }
+        }
+        if (!hasExpand && framed.isEmpty() && framedEnts.isEmpty()) return;
 
         var modelView = RenderSystem.getModelViewStack();
         modelView.pushMatrix();
         modelView.identity();
         RenderSystem.applyModelViewMatrix();
 
+        //vanilla-style outline pass — the block's real voxel shape and entity
+        //hitboxes drawn with RenderType.lines(), same as the crosshair hit
+        //outline and the F3+B debug boxes
+        PoseStack pose = new PoseStack();
+        pose.last().pose().set(worldToView);
+        pose.last().normal().set(new Matrix3f(worldToView));
+        VertexConsumer lines = panelBuffers.getBuffer(RenderType.lines());
+        for (BlockPos pos : framed) {
+            BlockState state = mc.level.getBlockState(pos);
+            VoxelShape shape = state.getShape(mc.level, pos, CollisionContext.empty());
+            if (shape.isEmpty()) shape = Shapes.block();
+            int c = hot.contains(pos) ? InworldTheme.SCAN_SHAPE_HOT : InworldTheme.SCAN_SHAPE;
+            emitShape(pose, lines, shape, pos.getX(), pos.getY(), pos.getZ(),
+                    red(c), green(c), blue(c), alpha(c));
+        }
+        for (int id : framedEnts) {
+            Entity entity = mc.level.getEntity(id);
+            if (entity == null) continue;
+            Vec3 p = entity.getPosition(framePartialTick);
+            var dims = entity.getDimensions(entity.getPose());
+            double hw = dims.width() * 0.5;
+            AABB box = new AABB(p.x - hw, p.y, p.z - hw,
+                    p.x + hw, p.y + dims.height(), p.z + hw).inflate(0.03);
+            int c = hotEnts.contains(id) ? InworldTheme.SCAN_SHAPE_HOT : InworldTheme.SCAN_SHAPE;
+            LevelRenderer.renderLineBox(pose, lines, box,
+                    red(c), green(c), blue(c), alpha(c));
+        }
+        panelBuffers.endBatch(RenderType.lines());
+
+        //hacker accents — corner ticks, the top-loop sweep and expand
+        //connectors stay on the cheap DEBUG_LINES pass
         double t = (mc.level.getGameTime() + framePartialTick) * 0.9;
         var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
         Matrix4f mat = worldToView;
         for (BlockPos pos : framed) {
             emitScanFrame(buffer, mat, pos, t, hot.contains(pos));
         }
-        //expand panels get a world-space connector: anchor → panel bottom-center
+        emitExpandConnectors(buffer, mat);
+        var mesh = buffer.build();
+        if (mesh != null) {
+            RenderSystem.enableBlend();
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            BufferUploader.drawWithShader(mesh);
+        }
+
+        modelView.popMatrix();
+        RenderSystem.applyModelViewMatrix();
+    }
+
+    private void emitExpandConnectors(BufferBuilder buffer, Matrix4f mat) {
         for (PanelRuntime runtime : panels.values()) {
             if (!(runtime.spec.placement() instanceof InworldPlacement.Expand)) continue;
             //inspect flattens expand panels to docks — no world quad, no connector
@@ -1674,15 +1743,42 @@ public final class InworldManager implements InworldUiApi {
                     runtime.focused() || runtime == pointed
                             ? InworldTheme.LINE_FOCUSED : InworldTheme.LINE);
         }
-        var mesh = buffer.build();
-        if (mesh != null) {
-            RenderSystem.enableBlend();
-            RenderSystem.setShader(GameRenderer::getPositionColorShader);
-            BufferUploader.drawWithShader(mesh);
-        }
+    }
 
-        modelView.popMatrix();
-        RenderSystem.applyModelViewMatrix();
+    /** Replica of vanilla's private {@code LevelRenderer.renderShape} — true voxel edges, not AABB slices. */
+    private static void emitShape(PoseStack pose, VertexConsumer out, VoxelShape shape,
+                                  double x, double y, double z,
+                                  float r, float g, float b, float a) {
+        PoseStack.Pose p = pose.last();
+        shape.forAllEdges((x0, y0, z0, x1, y1, z1) -> {
+            float nx = (float) (x1 - x0), ny = (float) (y1 - y0), nz = (float) (z1 - z0);
+            float nl = Mth.sqrt(nx * nx + ny * ny + nz * nz);
+            if (nl > 1e-6f) {
+                nx /= nl;
+                ny /= nl;
+                nz /= nl;
+            }
+            out.addVertex(p, (float) (x0 + x), (float) (y0 + y), (float) (z0 + z))
+                    .setColor(r, g, b, a).setNormal(p, nx, ny, nz);
+            out.addVertex(p, (float) (x1 + x), (float) (y1 + y), (float) (z1 + z))
+                    .setColor(r, g, b, a).setNormal(p, nx, ny, nz);
+        });
+    }
+
+    private static float red(int c) {
+        return ((c >> 16) & 0xFF) / 255f;
+    }
+
+    private static float green(int c) {
+        return ((c >> 8) & 0xFF) / 255f;
+    }
+
+    private static float blue(int c) {
+        return (c & 0xFF) / 255f;
+    }
+
+    private static float alpha(int c) {
+        return ((c >> 24) & 0xFF) / 255f;
     }
 
     private static void emitScanFrame(BufferBuilder buffer, Matrix4f mat, BlockPos pos, double t, boolean bright) {
@@ -1694,11 +1790,7 @@ public final class InworldManager implements InworldUiApi {
                 {x0, y1, z0}, {x1, y1, z0}, {x0, y1, z1}, {x1, y1, z1}
         };
 
-        int edge = bright ? InworldTheme.SCAN_EDGE_HOT : InworldTheme.SCAN_EDGE;
         int tick = bright ? InworldTheme.SCAN_TICK_HOT : InworldTheme.SCAN_TICK;
-        for (int[] pair : SCAN_EDGES) {
-            line(buffer, mat, c[pair[0]], c[pair[1]], edge);
-        }
         //corner ticks: short brighter stubs from each corner along its edges
         double tl = 0.14;
         for (int i = 0; i < 8; i++) {
@@ -1819,7 +1911,16 @@ public final class InworldManager implements InworldUiApi {
             }
 
             int color = runtime.focused() ? InworldTheme.LINE_FOCUSED : InworldTheme.LINE;
+            //dark edge pass under the bright core — keeps the line readable
+            //against bright sand/sky instead of washing out
+            drawLine(graphics, (float) ex + 1, (float) ey, (float) from.x + 1, (float) from.y, InworldTheme.LINE_EDGE);
+            drawLine(graphics, (float) ex, (float) ey + 1, (float) from.x, (float) from.y + 1, InworldTheme.LINE_EDGE);
             drawLine(graphics, (float) ex, (float) ey, (float) from.x, (float) from.y, color);
+            //hollow diamond marking the source the line leads back to
+            drawLine(graphics, (float) from.x, (float) from.y - 3.5f, (float) from.x + 3.5f, (float) from.y, color);
+            drawLine(graphics, (float) from.x + 3.5f, (float) from.y, (float) from.x, (float) from.y + 3.5f, color);
+            drawLine(graphics, (float) from.x, (float) from.y + 3.5f, (float) from.x - 3.5f, (float) from.y, color);
+            drawLine(graphics, (float) from.x - 3.5f, (float) from.y, (float) from.x, (float) from.y - 3.5f, color);
         }
     }
 
