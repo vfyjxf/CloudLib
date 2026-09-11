@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.test.inworld;
 
+import dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares;
+import dev.vfyjxf.cloudlib.api.ui.floating.FloatingPlacement;
 import dev.vfyjxf.cloudlib.api.ui.Widgets;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
@@ -74,6 +76,47 @@ public final class TrackerPanelProvider implements InworldProvider {
                             InworldAnchor.of(p),
                             InworldPlacement.face(side, 0.5, 0.5, 96),
                             TrackerPanelProvider::faceContent)
+                    .action(TrackerPanelProvider::toggleExpand));
+
+            //Witness-style trace puzzle floating left of the anchor — hold V and
+            //drag a path from the start circle to the exit stub
+            sink.offer(InworldPanelSpec
+                    .of("tracker/maze/" + p,
+                            InworldAnchor.of(p, new Vec3(0.5, 1.5, 0.5)),
+                            InworldPlacement.floating(
+                                    FloatingPlacement.leftStart,
+                                    FloatingMiddlewares.offset(14),
+                                    FloatingMiddlewares.flip(),
+                                    FloatingMiddlewares.shift(4),
+                                    FloatingMiddlewares.hide()),
+                            ctx -> {
+                                TrackerBlockEntity tbe = ctx.blockEntity(TrackerBlockEntity.class);
+                                return new TracePuzzleWidget(ctx,
+                                        () -> { if (tbe != null) tbe.sendSolved(); },
+                                        () -> tbe != null ? tbe.solves().get() : 0);
+                            })
+                    .title(Component.literal("MAZE//" + shortPos(p)))
+                    .hints("hold V:trace")
+                    .action(TrackerPanelProvider::toggleExpand));
+
+            //sigil pad floating right — freehand rune strokes recognized on
+            //release and dispatched to the server over a reversed channel
+            sink.offer(InworldPanelSpec
+                    .of("tracker/sigil/" + p,
+                            InworldAnchor.of(p, new Vec3(0.5, 1.5, 0.5)),
+                            InworldPlacement.floating(
+                                    FloatingPlacement.rightStart,
+                                    FloatingMiddlewares.offset(14),
+                                    FloatingMiddlewares.flip(),
+                                    FloatingMiddlewares.shift(4),
+                                    FloatingMiddlewares.hide()),
+                            ctx -> {
+                                TrackerBlockEntity tbe = ctx.blockEntity(TrackerBlockEntity.class);
+                                return new GlyphPadWidget(ctx,
+                                        id -> { if (tbe != null) tbe.sendGlyph(id); });
+                            })
+                    .title(Component.literal("SIGIL//" + shortPos(p)))
+                    .hints("hold V:draw")
                     .action(TrackerPanelProvider::toggleExpand));
 
             //a follow-tag per living entity in range of the tracker

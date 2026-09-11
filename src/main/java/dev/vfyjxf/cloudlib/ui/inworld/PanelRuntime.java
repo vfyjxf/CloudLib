@@ -167,6 +167,11 @@ final class PanelRuntime implements InworldPanel {
         return closed;
     }
 
+    /** The content's trace-mode handler, when it implements {@link InworldTraceable}. */
+    @Nullable dev.vfyjxf.cloudlib.api.ui.inworld.InworldTraceable traceable() {
+        return widget.content() instanceof dev.vfyjxf.cloudlib.api.ui.inworld.InworldTraceable t ? t : null;
+    }
+
     /** The scene-space x used for synthesized pointer input (parked face panels use their slot). */
     int inputSceneX() {
         return widget.screenX;

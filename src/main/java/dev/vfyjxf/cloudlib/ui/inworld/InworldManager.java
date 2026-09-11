@@ -26,6 +26,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldAnchor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanel;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
+import dev.vfyjxf.cloudlib.api.ui.inworld.InworldTraceable;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelSpec;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPlacement;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldProvider;
@@ -166,6 +167,22 @@ public final class InworldManager implements InworldUiApi {
 
     private boolean inspecting;
     private @Nullable InworldInspectScreen inspectScreen;
+
+    //region trace-mode state (Witness-style drag interaction)
+    /** panel currently being traced, non-null for the duration of a session */
+    private @Nullable PanelRuntime tracing;
+    private @Nullable InworldTraceScreen traceScreen;
+    /** trace cursor in content-local px */
+    private float traceX, traceY;
+    /** accumulated cursor travel — a sub-4px short press falls back to the panel action */
+    private float traceMoved;
+    private long traceStartTick;
+    /** the session is hosted by the inspect screen — no extra screen was opened */
+    private boolean traceInspectHosted;
+    /** look-assist: ease the camera onto the anchor for the first ticks of a session */
+    private float traceYaw, tracePitch;
+    private int traceLookTicks;
+    //endregion
     /** Set when the inspect screen was closed by ESC while the key is still held — don't reopen until released. */
     private boolean inspectDismissed;
     private boolean pressedConsumed;
@@ -225,6 +242,7 @@ public final class InworldManager implements InworldUiApi {
         PanelRuntime runtime = panels.remove(key);
         if (runtime != null) {
             root.remove(runtime.widget);
+            if (tracing == runtime) endTrace(false);
             if (focused == runtime) focused = null;
             if (pointed == runtime) pointed = null;
         }
@@ -332,6 +350,8 @@ public final class InworldManager implements InworldUiApi {
         while (KeyMappings.focusNext.consumeClick()) focusNext();
         while (KeyMappings.focusPrevious.consumeClick()) focusPrevious();
         while (KeyMappings.interact.consumeClick()) triggerInteract();
+        //inspect-hosted traces have no trace screen to drive the look-assist
+        if (tracing != null && traceInspectHosted) tickTraceLook();
 
         //providers — each provider's last emission is cached; reconcile runs
         //when at least one provider was re-evaluated (or on the first tick so
@@ -459,6 +479,8 @@ public final class InworldManager implements InworldUiApi {
         imperative.clear();
         focused = null;
         pointed = null;
+        tracing = null;
+        traceScreen = null;
         inspecting = false;
         inspectScreen = null;
     }
@@ -1537,7 +1559,9 @@ public final class InworldManager implements InworldUiApi {
             boolean manual = focused != null && focused.presented
                     && focused.spec.interactive() && tick - manualFocusTick < 100;
             PanelRuntime newFocus;
-            if (pointed != null) {
+            if (tracing != null) {
+                newFocus = tracing; //a live trace pins focus to its panel
+            } else if (pointed != null) {
                 newFocus = pointed;
                 manualFocusTick = -1000;
             } else if (manual) {
@@ -1558,7 +1582,8 @@ public final class InworldManager implements InworldUiApi {
         double bestScore = Double.MAX_VALUE;
         for (PanelRuntime r : panels.values()) {
             if (!r.presented || !r.widget.visible() || !r.spec.interactive()) continue;
-            if (r.anchorWorld == null || r.spec.action() == null) continue;
+            //an action or a traceable content both make the panel "activatable"
+            if (r.anchorWorld == null || (r.spec.action() == null && r.traceable() == null)) continue;
             if (r.distance > Math.min(r.spec.maxDistance(), InworldLayout.SOFT_FOCUS_RANGE)) continue;
             double score = InworldLayout.softFocusScore(eye, look, r.anchorWorld);
             if (score < 0) continue;
@@ -1571,14 +1596,192 @@ public final class InworldManager implements InworldUiApi {
         return best;
     }
 
-    /** The interact hotkey — runs the focused panel's primary action, if any. */
+    /**
+     * The interact hotkey. Traceable panels enter a trace session instead of
+     * firing immediately — a quick tap still lands on the primary action (see
+     * {@link #endTrace}).
+     */
     private void triggerInteract() {
         PanelRuntime target = focused;
         if (target == null || !target.presented || !target.spec.interactive()) return;
+        if (target.traceable() != null) {
+            beginTrace(target);
+            return;
+        }
+        fireAction(target);
+    }
+
+    private void fireAction(PanelRuntime target) {
         var action = target.spec.action();
         if (action == null || mc.level == null || mc.player == null) return;
         action.accept(new InworldPanelContext(mc.level, mc.player, target));
     }
+
+    //region trace mode — Witness-style hold-and-drag on the panel surface
+
+    /**
+     * Starts a trace session on the panel: locks the camera behind a capture
+     * screen (or reuses the inspect screen when already inspecting), feeds the
+     * widget cursor positions unprojected onto its surface, and ends with a
+     * commit when the interact key is released.
+     */
+    private void beginTrace(PanelRuntime runtime) {
+        InworldTraceable traceable = runtime.traceable();
+        if (traceable == null || mc.level == null || mc.player == null) return;
+        if (mc.screen != null && !inspecting) return; //a foreign screen owns input
+
+        FloatPos start = initialTracePoint(runtime);
+        InworldPanelContext ctx = new InworldPanelContext(mc.level, mc.player, runtime);
+        if (!traceable.traceBegin(ctx, (float) start.x, (float) start.y)) {
+            fireAction(runtime);
+            return;
+        }
+
+        tracing = runtime;
+        traceX = (float) start.x;
+        traceY = (float) start.y;
+        traceMoved = 0;
+        traceStartTick = tick;
+        focused = runtime;
+        manualFocusTick = tick;
+
+        //look-assist: ease the view onto the anchor — Witness re-centres the
+        //player on the panel; rotating the camera is our equivalent, and it
+        //keeps grazing-angle face panels usable during the trace
+        if (runtime.anchorWorld != null) {
+            Vec3 d = runtime.anchorWorld.subtract(mc.player.getEyePosition());
+            traceYaw = (float) Math.toDegrees(Math.atan2(-d.x, d.z));
+            tracePitch = (float) -Math.toDegrees(Math.atan2(d.y, Math.hypot(d.x, d.z)));
+            traceLookTicks = 10;
+        }
+
+        if (inspecting) {
+            traceInspectHosted = true; //the inspect screen already captures input
+        } else {
+            traceInspectHosted = false;
+            KeyMapping.releaseAll(); //held walk keys would keep running under the screen
+            traceScreen = new InworldTraceScreen(this);
+            mc.setScreen(traceScreen);
+        }
+    }
+
+    /** First cursor position: the aimed-at panel point when pointing, else content center. */
+    private FloatPos initialTracePoint(PanelRuntime runtime) {
+        Widget content = runtime.widget.content();
+        if (pointed == runtime && pointedUv != null) {
+            FloatPos off = contentOffset(runtime);
+            return new FloatPos(pointedUv.x - off.x, pointedUv.y - off.y);
+        }
+        return new FloatPos(content.width() * 0.5f, content.height() * 0.5f);
+    }
+
+    /**
+     * Offset of the content widget's origin inside the chrome's panel pixel
+     * space — subtract it from a panel-space point to get content-local px.
+     */
+    private FloatPos contentOffset(PanelRuntime runtime) {
+        FloatPos scene = runtime.widget.content().localToScene(0, 0);
+        return new FloatPos((float) (scene.x - runtime.widget.screenX),
+                (float) (scene.y - runtime.widget.screenY));
+    }
+
+    /** Screen-space cursor → panel pixel space (ray-unprojected for world panels). */
+    private @Nullable FloatPos tracePanelPoint(PanelRuntime runtime, double sx, double sy) {
+        if (runtime.flat) {
+            return new FloatPos((float) (sx - runtime.widget.screenX),
+                    (float) (sy - runtime.widget.screenY));
+        }
+        Projection proj = projection;
+        if (proj == null || runtime.faceU == null) return null;
+        return Projection.rayPlaneUV(proj.cameraPos(), proj.rayDirection(sx, sy),
+                runtime.faceOrigin, runtime.faceU, runtime.faceV, runtime.faceNormal);
+    }
+
+    void traceMouseMoved(double sx, double sy) {
+        PanelRuntime runtime = tracing;
+        if (runtime == null) return;
+        if (!runtime.presented) { //panel hid mid-trace (parked/offscreen) — drop the stroke
+            endTrace(false);
+            return;
+        }
+        InworldTraceable traceable = runtime.traceable();
+        if (traceable == null) {
+            endTrace(false);
+            return;
+        }
+        FloatPos px = tracePanelPoint(runtime, sx, sy);
+        if (px == null) return; //ray left the plane — keep the last cursor
+        FloatPos off = contentOffset(runtime);
+        Widget content = runtime.widget.content();
+        float cx = (float) Mth.clamp(px.x - off.x, -4, content.width() + 4);
+        float cy = (float) Mth.clamp(px.y - off.y, -4, content.height() + 4);
+        traceMoved += Math.abs(cx - traceX) + Math.abs(cy - traceY);
+        traceX = cx;
+        traceY = cy;
+        traceable.traceMove(cx, cy);
+    }
+
+    /**
+     * Ends the session. A committed trace hands the stroke to the widget —
+     * except a quick tap (&lt;4px, &lt;6 ticks), which cancels the trace and
+     * fires the panel's primary action instead so tap-to-click and
+     * hold-to-trace share the interact key.
+     */
+    void endTrace(boolean commit) {
+        PanelRuntime runtime = tracing;
+        if (runtime == null) return;
+        tracing = null;
+        traceInspectHosted = false;
+        traceScreen = null;
+        InworldTraceable traceable = runtime.traceable();
+        if (traceable != null && mc.level != null && mc.player != null) {
+            boolean tap = commit && traceMoved < 4f && tick - traceStartTick < 6;
+            if (tap) {
+                traceable.traceCancel();
+                fireAction(runtime);
+            } else if (commit) {
+                traceable.traceCommit(new InworldPanelContext(mc.level, mc.player, runtime));
+            } else {
+                traceable.traceCancel();
+            }
+        }
+    }
+
+    boolean traceActive() {
+        return tracing != null;
+    }
+
+    /** Raw poll of the interact binding — works while the capture screen owns input. */
+    boolean traceHeld() {
+        KeyMapping key = KeyMappings.interact;
+        InputConstants.Key bound = key.key;
+        long window = mc.getWindow().getWindow();
+        return switch (bound.getType()) {
+            case KEYSYM -> InputConstants.isKeyDown(window, bound.getValue());
+            case MOUSE -> GLFW.glfwGetMouseButton(window, bound.getValue()) == GLFW.GLFW_PRESS;
+            case SCANCODE -> key.isDown();
+        };
+    }
+
+    /** Look-assist step — called by the trace screen each tick. */
+    void tickTraceLook() {
+        if (traceLookTicks-- <= 0 || mc.player == null) return;
+        mc.player.setYRot(Mth.rotLerp(0.35f, mc.player.getYRot(), traceYaw));
+        mc.player.setXRot(Mth.lerp(0.35f, mc.player.getXRot(), tracePitch));
+    }
+
+    void onTraceScreenRemoved() {
+        traceScreen = null;
+        //ESC or a foreign screen took over mid-trace — drop the stroke
+        if (tracing != null && !traceInspectHosted) endTrace(false);
+    }
+
+    /** GUI render while a trace screen is open — same chrome as the HUD pass. */
+    void renderTrace(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        renderScreenSpace(graphics, mouseX, mouseY, partialTick);
+    }
+
+    //endregion
 
     private double distanceAlongRay(Vec3 origin, Vec3 dir, PanelRuntime runtime) {
         Vec3 to = runtime.faceOrigin.subtract(origin);
@@ -2202,10 +2405,18 @@ public final class InworldManager implements InworldUiApi {
 
     //inspect-mode input — forwarded by InworldInspectScreen
     void inspectMouseMoved(double x, double y) {
+        if (tracing != null) {
+            traceMouseMoved(x, y);
+            return;
+        }
         scene.mouseMoved(x, y);
     }
 
     boolean inspectMouseClicked(double x, double y, int button) {
+        if (tracing != null) {
+            endTrace(true); //click mid-trace commits, same as releasing V
+            return true;
+        }
         boolean consumed = scene.mouseClicked(x, y, button);
         Widget hit = scene.hitTest(x, y);
         PanelRuntime panel = panelOf(hit);
@@ -2243,6 +2454,11 @@ public final class InworldManager implements InworldUiApi {
     }
 
     boolean inspectKeyReleased(int keyCode, int scanCode, int modifiers) {
+        InputConstants.Key key = InputConstants.getKey(keyCode, scanCode);
+        if (tracing != null && KeyMappings.interact.isActiveAndMatches(key)) {
+            endTrace(true);
+            return true;
+        }
         return scene.keyReleased(keyCode, scanCode, modifiers);
     }
 

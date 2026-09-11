@@ -123,6 +123,50 @@ class ProjectionTest {
     }
 
     @Test
+    void rayPlaneUVReturnsOutOfBoundsCoordinates() {
+        //same setup as rayPlaneMissesOutsideRect — the unclamped variant must
+        //still return the panel-local hit (trace cursors may sit off-panel)
+        Vec3 origin = new Vec3(0, 0, 0);
+        Vec3 dir = new Vec3(1, 0, -1).normalize();
+        Vec3 planeOrigin = new Vec3(-1, -0.5, -2);
+        Vec3 u = new Vec3(2.0 / 96, 0, 0);
+        Vec3 v = new Vec3(0, 1.0 / 48, 0);
+        Vec3 n = new Vec3(0, 0, 1);
+
+        FloatPos uv = Projection.rayPlaneUV(origin, dir, planeOrigin, u, v, n);
+        assertNotNull(uv);
+        assertTrue(uv.x > 96, "hit lands right of the panel — x beyond width");
+        assertEquals(24, uv.y, 0.01);
+    }
+
+    @Test
+    void rayPlaneUVAgreesWithClampedVariantInside() {
+        Vec3 origin = new Vec3(0, 0, 0);
+        Vec3 dir = new Vec3(0.1, -0.2, -1).normalize();
+        Vec3 planeOrigin = new Vec3(-1, -0.5, -2);
+        Vec3 u = new Vec3(2.0 / 96, 0, 0);
+        Vec3 v = new Vec3(0, 1.0 / 48, 0);
+        Vec3 n = new Vec3(0, 0, 1);
+
+        FloatPos raw = Projection.rayPlaneUV(origin, dir, planeOrigin, u, v, n);
+        FloatPos clamped = Projection.rayPlane(origin, dir, planeOrigin, u, v, n, 96, 48);
+        assertNotNull(raw);
+        assertNotNull(clamped);
+        assertEquals(raw.x, clamped.x, 1e-6);
+        assertEquals(raw.y, clamped.y, 1e-6);
+    }
+
+    @Test
+    void rayPlaneUVRejectsParallelAndBackfacing() {
+        assertNull(Projection.rayPlaneUV(
+                new Vec3(0, 0, 0), new Vec3(1, 0, 0),
+                new Vec3(0, 0, -2), new Vec3(1, 0, 0), new Vec3(0, 1, 0), new Vec3(0, 0, 1)));
+        assertNull(Projection.rayPlaneUV(
+                new Vec3(0, 0, 0), new Vec3(0, 0, 1),
+                new Vec3(-1, -1, -2), new Vec3(1, 0, 0), new Vec3(0, 1, 0), new Vec3(0, 0, 1)));
+    }
+
+    @Test
     void distanceIsEuclidean() {
         Projection p = identityView();
         assertEquals(5.0, p.distance(new Vec3(0, 0, -5)), 1e-6);

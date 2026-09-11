@@ -181,6 +181,22 @@ public final class Projection {
             Vec3 originPx, Vec3 uAxis, Vec3 vAxis, Vec3 normal,
             double widthPx, double heightPx
     ) {
+        FloatPos uv = rayPlaneUV(origin, dir, originPx, uAxis, vAxis, normal);
+        if (uv == null) return null;
+        if (uv.x < 0 || uv.y < 0 || uv.x > widthPx || uv.y > heightPx) return null;
+        return uv;
+    }
+
+    /**
+     * {@link #rayPlane} without the bounds check — panel-local pixels even
+     * when the hit lands outside the quad (negative or beyond w/h). Trace
+     * mode uses this so the cursor can leave the panel edge slightly instead
+     * of freezing at the border.
+     */
+    public static @Nullable FloatPos rayPlaneUV(
+            Vec3 origin, Vec3 dir,
+            Vec3 originPx, Vec3 uAxis, Vec3 vAxis, Vec3 normal
+    ) {
         double denom = dir.dot(normal);
         if (Math.abs(denom) < 1.0e-7) return null;
         double t = originPx.subtract(origin).dot(normal) / denom;
@@ -188,7 +204,6 @@ public final class Projection {
         Vec3 hit = origin.add(dir.scale(t)).subtract(originPx);
         double u = hit.dot(uAxis) / uAxis.lengthSqr();
         double v = hit.dot(vAxis) / vAxis.lengthSqr();
-        if (u < 0 || v < 0 || u > widthPx || v > heightPx) return null;
         return new FloatPos(u, v);
     }
 

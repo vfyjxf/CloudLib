@@ -37,15 +37,26 @@ public class TrackerBlockEntity extends BasicSyncedBlockEntity {
         static final Schema<Integer> pings = Schema.of("pings", 0, Codec.INT, UnaryFlowHandler.codecOf(ByteBufCodecs.INT));
         /** Crowd threshold the client can tune via the threshold slider. */
         static final Schema<Integer> threshold = Schema.of("threshold", 6, Codec.INT, UnaryFlowHandler.codecOf(ByteBufCodecs.INT));
+        /** Trace-puzzle solve count — proof the trace committed all the way to the server. */
+        static final Schema<Integer> solves = Schema.of("solves", 0, Codec.INT, UnaryFlowHandler.codecOf(ByteBufCodecs.INT));
     }
+
+    /** Glyph ids the sigil pad can send — mapped server-side onto real actions. */
+    public static final int GLYPH_PULSE = 0;
+    public static final int GLYPH_SURGE = 1;
+    public static final int GLYPH_MARK = 2;
+    public static final int GLYPH_CHANNEL = 3;
 
     private final Handle<Integer> entities = useSynced(Network.entities);
     private final Handle<String> nearest = useSynced(Network.nearest);
     private final Handle<Boolean> alert = useSynced(Network.alert);
     private final Handle<Integer> pings = useSynced(Network.pings);
     private final Handle<Integer> threshold = useSynced(Network.threshold);
+    private final Handle<Integer> solves = useSynced(Network.solves);
     private final UnaryReversed<Integer> action = unaryReversed("action", UnaryFlowHandler.codecOf(ByteBufCodecs.VAR_INT));
     private final UnaryReversed<Integer> setThreshold = unaryReversed("setThreshold", UnaryFlowHandler.codecOf(ByteBufCodecs.VAR_INT));
+    private final UnaryReversed<Integer> solved = unaryReversed("solved", UnaryFlowHandler.codecOf(ByteBufCodecs.VAR_INT));
+    private final UnaryReversed<Integer> glyph = unaryReversed("glyph", UnaryFlowHandler.codecOf(ByteBufCodecs.VAR_INT));
 
     private long tick;
 
@@ -53,6 +64,8 @@ public class TrackerBlockEntity extends BasicSyncedBlockEntity {
         super(TestRegistry.trackerBlockEntity.get(), pos, state);
         action.whenReceiveFromClient(this::onAction);
         setThreshold.whenReceiveFromClient(v -> threshold.set(Math.clamp(v, 0, MAX_THRESHOLD)));
+        solved.whenReceiveFromClient(v -> solves.set(solves.get() + 1));
+        glyph.whenReceiveFromClient(this::onGlyph);
     }
 
     public Handle<Integer> entities() {
@@ -75,6 +88,10 @@ public class TrackerBlockEntity extends BasicSyncedBlockEntity {
         return threshold;
     }
 
+    public Handle<Integer> solves() {
+        return solves;
+    }
+
     /** Client-side: queues an action for the server and flushes the channel. */
     public void sendAction(int actionId) {
         try {
@@ -93,6 +110,42 @@ public class TrackerBlockEntity extends BasicSyncedBlockEntity {
             return;
         }
         pushReversed();
+    }
+
+    /** Client-side: the trace puzzle was solved. */
+    public void sendSolved() {
+        try {
+            solved.sendToServer(1);
+        } catch (IllegalStateException ignored) {
+            return;
+        }
+        pushReversed();
+    }
+
+    /** Client-side: a sigil was drawn and recognized on the pad. */
+    public void sendGlyph(int glyphId) {
+        try {
+            glyph.sendToServer(glyphId);
+        } catch (IllegalStateException ignored) {
+            return;
+        }
+        pushReversed();
+    }
+
+    /** Sigil → action mapping, applied on the server. */
+    private void onGlyph(int id) {
+        switch (id) {
+            case GLYPH_PULSE -> {
+                pings.set(pings.get() + 1);
+                nearest.set("pulse " + pings.get());
+            }
+            case GLYPH_SURGE -> alert.set(!alert.get());
+            case GLYPH_MARK -> solves.set(solves.get() + 1);
+            case GLYPH_CHANNEL -> threshold.set((threshold.get() + 8) % (MAX_THRESHOLD + 1));
+            default -> {
+                //unknown glyph — drop silently
+            }
+        }
     }
 
     private void onAction(int actionId) {
