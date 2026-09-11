@@ -160,6 +160,7 @@ public final class InworldManager implements InworldUiApi {
     private int faceStripWidth = 0;
     /** Reused per-frame collection of presented dock panels awaiting corner layout. */
     private final List<PanelRuntime> dockQueue = new ArrayList<>();
+    private final List<PanelRuntime> expandQueue = new ArrayList<>();
     private static final int PARK_BASE = -1_000_000;
     private static final int PARK_STEP = 4096;
 
@@ -521,6 +522,7 @@ public final class InworldManager implements InworldUiApi {
         parkCursor = 0;
         stripCursor = 0;
         List<PanelRuntime> docked = dockQueue;
+        List<PanelRuntime> expandDeferred = expandQueue;
 
         for (PanelRuntime runtime : panels.values()) {
             runtime.pointedUv = null;
@@ -554,14 +556,43 @@ public final class InworldManager implements InworldUiApi {
                         runtime.flat = true;
                     }
                     case InworldPlacement.Dock dock -> resolveDock(runtime, dock, docked);
-                    case InworldPlacement.Expand expand -> resolveExpand(runtime, expand);
+                    //expand resolves AFTER dock layout — its world spot must
+                    //not project onto screen area the flat panels occupy
+                    case InworldPlacement.Expand expand -> expandDeferred.add(runtime);
                 }
             }
         }
 
         layoutDocks(docked);
         docked.clear();
-        resolveConflicts();
+
+        //screen rects the interactive flat panels have settled into, plus the
+        //projected rects of world-space panels resolved so far — holograms
+        //and tags must stay out of them
+        List<Rect2i> occupied = new ArrayList<>();
+        for (PanelRuntime r : panels.values()) {
+            if (!r.presented || !r.widget.visible()) continue;
+            if (r.flat && r.spec.interactive()) {
+                occupied.add(new Rect2i(
+                        r.smoothMove ? r.targetX : r.widget.screenX,
+                        r.smoothMove ? r.targetY : r.widget.screenY,
+                        r.widget.width(), r.widget.height()));
+            } else if (!r.flat && worldSpace(r.spec.placement())) {
+                Rect2i b = projectedWorldRect(r);
+                if (b != null) occupied.add(b);
+            }
+        }
+        for (PanelRuntime r : expandDeferred) {
+            resolveExpand(r, (InworldPlacement.Expand) r.spec.placement(), occupied);
+            //a shown hologram reserves its own screen rect for the next one
+            if (r.presented && !r.flat) {
+                Rect2i b = projectedWorldRect(r);
+                if (b != null) occupied.add(b);
+            }
+        }
+        expandDeferred.clear();
+
+        resolveConflicts(occupied);
         smoothFlatPositions();
 
         //open-animation drive (world panels scale their quad instead)
@@ -742,28 +773,10 @@ public final class InworldManager implements InworldUiApi {
      * with uniform gaps, so crowded tags form a tidy list instead of a
      * scatter of barely-disjoint boxes. Rail-bound tags glide to their slot.
      */
-    private void resolveConflicts() {
+    private void resolveConflicts(List<Rect2i> occupied) {
         int W = mc.getWindow().getGuiScaledWidth();
         int H = mc.getWindow().getGuiScaledHeight();
         int margin = 8;
-
-        //foreground: interactive flat panels at their settled (target) slots,
-        //plus the projected screen rect of world-space panels — a hologram
-        //floats in the world but still owns its screen area
-        List<Rect2i> occupied = new ArrayList<>();
-        for (PanelRuntime r : panels.values()) {
-            if (!r.presented || !r.widget.visible()) continue;
-            if (r.flat && r.spec.interactive()) {
-                occupied.add(new Rect2i(
-                        r.smoothMove ? r.targetX : r.widget.screenX,
-                        r.smoothMove ? r.targetY : r.widget.screenY,
-                        r.widget.width(), r.widget.height()));
-            } else if (!r.flat && worldSpace(r.spec.placement())) {
-                Rect2i b = projectedWorldRect(r);
-                if (b != null) occupied.add(b);
-            }
-        }
-        if (occupied.isEmpty()) return;
 
         List<PanelRuntime> tags = new ArrayList<>();
         for (PanelRuntime r : panels.values()) {
@@ -844,13 +857,18 @@ public final class InworldManager implements InworldUiApi {
 
     /**
      * Commits a tag's resolved position: non-smoothed panels (follow) write
-     * the slot directly; smoothed ones glide into it.
+     * the slot directly; smoothed ones glide into it. The glide start is only
+     * re-anchored on entry — resolveFollow rewrites the screen pos to the
+     * anchor every frame, so re-anchoring posX here would restart the glide
+     * forever and strand the tag mid-flight.
      */
     private void placeTag(PanelRuntime tag, int x, int y) {
         if (tag.smoothMove) {
-            tag.posX = tag.widget.screenX;
-            tag.posY = tag.widget.screenY;
-            tag.posInit = true;
+            if (!tag.posInit) {
+                tag.posX = tag.widget.screenX;
+                tag.posY = tag.widget.screenY;
+                tag.posInit = true;
+            }
             tag.targetX = x;
             tag.targetY = y;
         } else {
@@ -870,36 +888,15 @@ public final class InworldManager implements InworldUiApi {
     }
 
     /**
-     * Screen-space bounding box of a world-space panel's quad — the four
-     * corners projected and unioned with a small pad. Null when every corner
-     * is off-screen or unprojectable.
+     * Screen-space bounding box of a world-space panel's quad. Null when every
+     * corner is off-screen or unprojectable.
      */
     private @Nullable Rect2i projectedWorldRect(PanelRuntime r) {
-        Projection proj = projection;
-        if (proj == null || r.faceOrigin == null || r.faceU == null || r.faceV == null) {
+        if (projection == null || r.faceOrigin == null || r.faceU == null || r.faceV == null) {
             return null;
         }
-        double w = r.widget.width();
-        double h = r.widget.height();
-        Vec3 o = r.faceOrigin;
-        Vec3[] corners = {
-                o,
-                o.add(r.faceU.scale(w)),
-                o.add(r.faceV.scale(h)),
-                o.add(r.faceU.scale(w)).add(r.faceV.scale(h))};
-        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
-        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
-        boolean any = false;
-        for (Vec3 c : corners) {
-            FloatPos s = proj.worldToScreen(c);
-            if (s == null) continue;
-            any = true;
-            minX = Math.min(minX, (int) s.x);
-            minY = Math.min(minY, (int) s.y);
-            maxX = Math.max(maxX, (int) s.x);
-            maxY = Math.max(maxY, (int) s.y);
-        }
-        return any ? new Rect2i(minX - 4, minY - 4, maxX - minX + 8, maxY - minY + 8) : null;
+        return quadScreenRect(projection, r.faceOrigin, r.faceU, r.faceV,
+                r.widget.width(), r.widget.height());
     }
 
     /**
@@ -930,18 +927,20 @@ public final class InworldManager implements InworldUiApi {
     /**
      * World-space placement for expand panels: scans rings of candidate spots
      * around the anchor for air (the hologram floats beside/above its block),
+     * penalizes spots whose screen projection would cover foreground panels,
      * yaw-billboards the panel toward the player, and parks the widget in the
      * input strip so the synthesized pointer can reach it — same pipeline as
-     * face panels.
+     * face panels. When every spot lands on occupied screen area the panel
+     * hides rather than overlapping the chrome.
      */
-    private void resolveExpand(PanelRuntime runtime, InworldPlacement.Expand expand) {
+    private void resolveExpand(PanelRuntime runtime, InworldPlacement.Expand expand,
+                               List<Rect2i> reserved) {
         Vec3 anchor = runtime.anchorWorld;
-        if (anchor == null || mc.level == null || mc.player == null) {
+        Projection proj = projection;
+        if (anchor == null || proj == null || mc.level == null || mc.player == null) {
             runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
             return;
         }
-        runtime.presented = true;
-        runtime.flat = false;
 
         double ppb = expand.pixelsPerBlock();
         runtime.facePpb = ppb;
@@ -953,15 +952,17 @@ public final class InworldManager implements InworldUiApi {
         Vec3 eye = mc.player.getEyePosition(framePartialTick);
 
         //other world-space panels already occupy these spots
-        List<Vec3> occupied = new ArrayList<>();
+        List<Vec3> occupiedWorld = new ArrayList<>();
         for (PanelRuntime other : panels.values()) {
             if (other != runtime && other.presented && other.expandPos != null) {
-                occupied.add(other.expandPos);
+                occupiedWorld.add(other.expandPos);
             }
         }
 
+        Vec3 vDown = new Vec3(0, -1, 0).scale(s);
         Vec3 best = null;
         double bestScore = Double.MAX_VALUE;
+        double bestFrac = 1;
         double[] dys = {1.7, 1.1, 0.5, 2.3, -0.2};
         for (int ring = 0; ring < 4; ring++) {
             double rad = 1.0 + ring * 0.55 + pw * 0.5;
@@ -970,14 +971,20 @@ public final class InworldManager implements InworldUiApi {
                     double ang = i * (Math.PI * 2 / 10);
                     Vec3 spot = anchor.add(Math.cos(ang) * rad, dy, Math.sin(ang) * rad);
                     double score = expandSpotScore(level, spot, pw, ph, anchor);
-                    for (Vec3 o : occupied) {
+                    for (Vec3 o : occupiedWorld) {
                         if (spot.distanceToSqr(o) < (pw * 0.5 + 0.6) * (pw * 0.5 + 0.6)) {
                             score += 64; //another hologram already there
                         }
                     }
+                    //screen-space cost: covering docked/flat panels is the worst outcome
+                    double frac = expandScreenOverlap(proj, eye, spot, vDown, s,
+                            runtime.widget.width(), runtime.widget.height(), reserved);
+                    score += frac * 600;
+                    if (frac >= 0.999) score += 300; //unprojectable / fully covered
                     if (score < bestScore) {
                         bestScore = score;
                         best = spot;
+                        bestFrac = frac;
                     }
                 }
             }
@@ -987,10 +994,26 @@ public final class InworldManager implements InworldUiApi {
         //one exists — otherwise the panel would jitter between near-tied spots
         if (runtime.expandPos != null) {
             double cur = expandSpotScore(level, runtime.expandPos, pw, ph, anchor);
+            double curFrac = expandScreenOverlap(proj, eye, runtime.expandPos, vDown, s,
+                    runtime.widget.width(), runtime.widget.height(), reserved);
+            cur += curFrac * 600 + (curFrac >= 0.999 ? 300 : 0);
             if (cur <= bestScore * 1.35 + 1.0) {
                 best = runtime.expandPos;
+                bestFrac = curFrac;
             }
         }
+
+        //can't show it cleanly → don't show it; hysteresis keeps the
+        //show/hide edge from flickering
+        double hideAt = runtime.expandHidden ? 0.15 : 0.35;
+        if (best == null || bestFrac > hideAt) {
+            runtime.expandHidden = true;
+            runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+            return;
+        }
+        runtime.expandHidden = false;
+        runtime.presented = true;
+        runtime.flat = false;
         runtime.expandPos = best;
 
         //yaw-billboard toward the player's eye: u×v faces away from the viewer
@@ -1000,7 +1023,7 @@ public final class InworldManager implements InworldUiApi {
         Vec3 dH = len < 1e-4 ? new Vec3(0, 0, 1) : new Vec3(d.x / len, 0, d.z / len);
         Vec3 u = new Vec3(dH.z, 0, -dH.x);
         runtime.faceU = u.scale(s);
-        runtime.faceV = new Vec3(0, -1, 0).scale(s);
+        runtime.faceV = vDown;
         runtime.faceNormal = dH;
         runtime.faceOrigin = best
                 .subtract(runtime.faceU.scale(runtime.widget.width() * 0.5))
@@ -1009,6 +1032,51 @@ public final class InworldManager implements InworldUiApi {
         int stripX = mc.getWindow().getGuiScaledWidth() + 16 + stripCursor;
         stripCursor += runtime.widget.width() + 16;
         runtime.widget.setScreenPos(stripX, 8);
+    }
+
+    /**
+     * Fraction (0..1) of a hologram's projected screen rect covered by
+     * reserved foreground rects. 1 when the quad can't project at all.
+     */
+    private static double expandScreenOverlap(Projection proj, Vec3 eye, Vec3 spot,
+                                              Vec3 vDown, double s, int wPx, int hPx,
+                                              List<Rect2i> reserved) {
+        Vec3 d = eye.subtract(spot);
+        double len = Math.hypot(d.x, d.z);
+        Vec3 dH = len < 1e-4 ? new Vec3(0, 0, 1) : new Vec3(d.x / len, 0, d.z / len);
+        Vec3 u = new Vec3(dH.z, 0, -dH.x).scale(s);
+        Vec3 o = spot.subtract(u.scale(wPx * 0.5)).subtract(vDown.scale(hPx * 0.5));
+        Rect2i rect = quadScreenRect(proj, o, u, vDown, wPx, hPx);
+        if (rect == null) return 1;
+        double over = 0;
+        for (Rect2i r : reserved) {
+            int ix = Math.max(0, Math.min(rect.getX() + rect.getWidth(), r.getX() + r.getWidth())
+                    - Math.max(rect.getX(), r.getX()));
+            int iy = Math.max(0, Math.min(rect.getY() + rect.getHeight(), r.getY() + r.getHeight())
+                    - Math.max(rect.getY(), r.getY()));
+            over += (double) ix * iy;
+        }
+        return Math.min(1, over / ((double) rect.getWidth() * rect.getHeight()));
+    }
+
+    /** Projects a world quad (origin + u·w + v·h) to its screen bounding rect. */
+    private static @Nullable Rect2i quadScreenRect(Projection proj, Vec3 o, Vec3 u, Vec3 v,
+                                                   double w, double h) {
+        Vec3[] corners = {o, o.add(u.scale(w)), o.add(v.scale(h)),
+                o.add(u.scale(w)).add(v.scale(h))};
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+        boolean any = false;
+        for (Vec3 c : corners) {
+            FloatPos s = proj.worldToScreen(c);
+            if (s == null) continue;
+            any = true;
+            minX = Math.min(minX, (int) s.x);
+            minY = Math.min(minY, (int) s.y);
+            maxX = Math.max(maxX, (int) s.x);
+            maxY = Math.max(maxY, (int) s.y);
+        }
+        return any ? new Rect2i(minX - 4, minY - 4, maxX - minX + 8, maxY - minY + 8) : null;
     }
 
     /** Prefers spots near the anchor with the panel's bounding volume in air. */

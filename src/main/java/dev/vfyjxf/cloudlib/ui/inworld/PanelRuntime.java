@@ -61,6 +61,9 @@ final class PanelRuntime implements InworldPanel {
     /** Sticky world position for expand panels — re-scored each frame, only
      *  replaced when a clearly better spot appears (no per-frame jumps). */
     Vec3 expandPos;
+    /** true while every expand spot overlaps foreground screen area too much —
+     *  the panel hides instead of covering the chrome (with hysteresis). */
+    boolean expandHidden;
     double facePpb;
     /** offscreen target the face panel's widget tree is rendered into each frame */
     @Nullable com.mojang.blaze3d.pipeline.RenderTarget faceTarget;
