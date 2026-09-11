@@ -48,6 +48,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -153,6 +154,12 @@ public final class InworldManager implements InworldUiApi {
     private @Nullable PanelRuntime pointed;
     /** Best in-cone interactive panel when nothing is strictly pointed at — the WD2-style "look near it" selection. */
     private @Nullable PanelRuntime softPointed;
+    /**
+     * Tick of the last manual focus-cycle key press. While fresh (&lt;5s) the
+     * pointing pass must not stomp the manually chosen focus — strict aim
+     * (pointed != null) still wins and ends manual mode.
+     */
+    private long manualFocusTick = -1000;
     private @Nullable FloatPos pointedUv;
     /** true when the crosshair actually rests on a panel (vs only its anchor block) */
     private boolean pointedInPanel;
@@ -636,7 +643,7 @@ public final class InworldManager implements InworldUiApi {
             runtime.widget.openScale = runtime.flat ? runtime.openScale : 1f;
             //non-interactive tags shrink with distance so far labels don't hog space
             runtime.widget.distScale = runtime.flat && !runtime.spec.interactive()
-                    ? (float) Math.min(1f, Math.max(0.55f, 11.0 / Math.max(runtime.distance, 1)))
+                    ? (float) Math.min(1f, Math.max(0.45f, 9.5 / Math.max(runtime.distance, 1)))
                     : 1f;
         }
 
@@ -1523,9 +1530,21 @@ public final class InworldManager implements InworldUiApi {
             softPointed = pickSoftFocus(origin, dir);
         }
 
-        //world mode focus follows pointing
+        //world mode focus follows pointing — except while a manual cycle is
+        //fresh: then the cycled panel keeps focus until the player strictly
+        //points at something or the window expires
         if (!inspecting) {
-            PanelRuntime newFocus = pointed != null ? pointed : softPointed;
+            boolean manual = focused != null && focused.presented
+                    && focused.spec.interactive() && tick - manualFocusTick < 100;
+            PanelRuntime newFocus;
+            if (pointed != null) {
+                newFocus = pointed;
+                manualFocusTick = -1000;
+            } else if (manual) {
+                newFocus = focused;
+            } else {
+                newFocus = softPointed;
+            }
             if (newFocus != focused) {
                 focused = newFocus;
                 if (focused != null) scene.requestFocus(focused.widget);
@@ -1593,13 +1612,17 @@ public final class InworldManager implements InworldUiApi {
 
     private void focusStep(int direction) {
         if (panels.isEmpty()) return;
-        List<PanelRuntime> order = panels.values().stream().filter(r -> r.presented).toList();
+        //only interactive panels are worth cycling onto
+        List<PanelRuntime> order = panels.values().stream()
+                .filter(r -> r.presented && r.spec.interactive())
+                .toList();
         if (order.isEmpty()) return;
         int idx = order.indexOf(focused);
         int next = idx < 0
                 ? (direction > 0 ? 0 : order.size() - 1)
                 : (idx + direction + order.size()) % order.size();
         focus(order.get(next));
+        manualFocusTick = tick;
     }
 
     //endregion
@@ -2044,11 +2067,18 @@ public final class InworldManager implements InworldUiApi {
                 continue; //origin inside the panel — no line
             }
 
-            int color = runtime.focused() ? InworldTheme.LINE_FOCUSED : InworldTheme.LINE;
-            //dark edge pass under the bright core — keeps the line readable
-            //against bright sand/sky instead of washing out
-            drawLine(graphics, (float) ex + 1, (float) ey, (float) from.x + 1, (float) from.y, InworldTheme.LINE_EDGE);
-            drawLine(graphics, (float) ex, (float) ey + 1, (float) from.x, (float) from.y + 1, InworldTheme.LINE_EDGE);
+            //adaptive ink: sample the world behind the line's midpoint — a
+            //dark core + light halo over bright terrain, bright core + dark
+            //halo in the dark. Smoothed per panel so crossing a brightness
+            //edge doesn't flicker the line.
+            runtime.lineLum += (sampleLineLuminance(ex, ey, from.x, from.y) - runtime.lineLum) * 0.25f;
+            boolean brightBg = runtime.lineLum > 0.5f;
+            int color = runtime.focused()
+                    ? (brightBg ? InworldTheme.LINE_FOCUSED_DARK : InworldTheme.LINE_FOCUSED)
+                    : (brightBg ? InworldTheme.LINE_DARK : InworldTheme.LINE);
+            int edge = brightBg ? InworldTheme.LINE_EDGE_LIGHT : InworldTheme.LINE_EDGE;
+            drawLine(graphics, (float) ex + 1, (float) ey, (float) from.x + 1, (float) from.y, edge);
+            drawLine(graphics, (float) ex, (float) ey + 1, (float) from.x, (float) from.y + 1, edge);
             drawLine(graphics, (float) ex, (float) ey, (float) from.x, (float) from.y, color);
             //hollow diamond marking the source the line leads back to
             drawLine(graphics, (float) from.x, (float) from.y - 3.5f, (float) from.x + 3.5f, (float) from.y, color);
@@ -2056,6 +2086,32 @@ public final class InworldManager implements InworldUiApi {
             drawLine(graphics, (float) from.x, (float) from.y + 3.5f, (float) from.x - 3.5f, (float) from.y, color);
             drawLine(graphics, (float) from.x - 3.5f, (float) from.y, (float) from.x, (float) from.y - 3.5f, color);
         }
+    }
+
+    /**
+     * Estimated scene luminance (0..1) behind a leader line: a ray through
+     * the line's midpoint contributes the hit block's map color; a miss falls
+     * back to the sky color at the camera (covers day/night/weather/biome).
+     */
+    private float sampleLineLuminance(double x0, double y0, double x1, double y1) {
+        var level = mc.level;
+        var proj = projection;
+        var player = mc.player;
+        if (level == null || proj == null || player == null) return 0.2f;
+        Vec3 eye = proj.cameraPos();
+        Vec3 dir = proj.rayDirection((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        var hit = level.clip(new ClipContext(eye, eye.add(dir.scale(48)),
+                ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+        if (hit.getType() == HitResult.Type.BLOCK) {
+            int col = level.getBlockState(hit.getBlockPos())
+                    .getMapColor(level, hit.getBlockPos()).col;
+            float r = ((col >> 16) & 0xFF) / 255f;
+            float g = ((col >> 8) & 0xFF) / 255f;
+            float b = (col & 0xFF) / 255f;
+            return 0.299f * r + 0.587f * g + 0.114f * b;
+        }
+        Vec3 sky = level.getSkyColor(eye, framePartialTick);
+        return (float) (0.299 * sky.x + 0.587 * sky.y + 0.114 * sky.z);
     }
 
     /**
@@ -2170,8 +2226,17 @@ public final class InworldManager implements InworldUiApi {
     }
 
     boolean inspectKeyPressed(int keyCode, int scanCode, int modifiers) {
-        if (KeyMappings.interact.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
+        InputConstants.Key key = InputConstants.getKey(keyCode, scanCode);
+        if (KeyMappings.interact.isActiveAndMatches(key)) {
             triggerInteract();
+            return true;
+        }
+        if (KeyMappings.focusNext.isActiveAndMatches(key)) {
+            focusStep(1);
+            return true;
+        }
+        if (KeyMappings.focusPrevious.isActiveAndMatches(key)) {
+            focusStep(-1);
             return true;
         }
         return scene.keyPressed(keyCode, scanCode, modifiers);

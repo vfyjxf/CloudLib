@@ -4,18 +4,17 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.ui.inworld.InworldTheme;
 import dev.vfyjxf.taffy.geometry.FloatSize;
-import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.LivingEntity;
 
 /**
- * Compact entity tag: a name line plus a 2px health bar underneath — richer
- * than the plain text tag, still small enough for the group-merge and rail
- * layouts. Right side of the name line shows "hp·dist".
+ * Compact entity tag: a name line with the hp count on the right and a 2px
+ * health bar underneath — kept deliberately small so tags stay unobtrusive
+ * next to their entities (distance shrinks them further via distScale).
  */
 public final class EntityTagWidget extends Widget {
 
-    private static final int MIN_W = 40;
-    private static final int H = 14;
+    private static final int MIN_W = 26;
+    private static final int H = 12;
     private static final int HP_LOW = 0xFFE06666;
 
     private final LivingEntity entity;
@@ -31,8 +30,8 @@ public final class EntityTagWidget extends Widget {
         onMount((scene, context, handle) ->
                 scene.layoutTree().setMeasureFunc(nodeId(), (style, space) -> {
                     var font = context.font();
-                    //reserve room for the widest "hp·dist" suffix (e.g. " 20·99m")
-                    int w = font.width("◇ " + name()) + font.width(" 20·99m");
+                    //name + room for a two-digit hp suffix
+                    int w = font.width("◇ " + name()) + font.width(" 99");
                     return new FloatSize(Math.max(MIN_W, w), H);
                 }));
     }
@@ -47,21 +46,15 @@ public final class EntityTagWidget extends Widget {
         int w = width();
 
         canvas.text("◇ " + name(), 0, 0, InworldTheme.ACCENT);
-
-        var player = Minecraft.getInstance().player;
-        String right = entity == player
-                ? (int) Math.ceil(entity.getHealth()) + ""
-                : (int) Math.ceil(entity.getHealth()) + "·"
-                + (player == null ? "?" : (int) Math.sqrt(player.distanceToSqr(entity)) + "m");
-        canvas.text(right, w - font.width(right), 0, InworldTheme.TEXT_DIM);
+        String hp = (int) Math.ceil(entity.getHealth()) + "";
+        canvas.text(hp, w - font.width(hp), 0, InworldTheme.TEXT_DIM);
 
         float frac = entity.getMaxHealth() > 0 ? entity.getHealth() / entity.getMaxHealth() : 0;
         int barY = font.lineHeight + 1;
-        canvas.fill(0, barY, w, 3, 0x66061012);
-        canvas.strokeRect(0, barY, w, 3, 0x5535D6D0);
-        int fill = (int) ((w - 2) * Math.clamp(frac, 0f, 1f));
+        canvas.fill(0, barY, w, 2, 0x66061012);
+        int fill = (int) (w * Math.clamp(frac, 0f, 1f));
         if (fill > 0) {
-            canvas.fill(1, barY + 1, fill, 1, frac < 0.3f ? HP_LOW : InworldTheme.ACCENT);
+            canvas.fill(0, barY, fill, 2, frac < 0.3f ? HP_LOW : InworldTheme.ACCENT);
         }
     }
 }

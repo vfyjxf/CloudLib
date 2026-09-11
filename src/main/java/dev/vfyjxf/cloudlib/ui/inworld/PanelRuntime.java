@@ -55,6 +55,8 @@ final class PanelRuntime implements InworldPanel {
 
     /** this frame the panel is collapsed to an off-screen edge indicator */
     boolean indicator;
+    /** smoothed scene luminance behind the leader line's midpoint — picks dark/bright ink */
+    float lineLum = 0.2f;
     /** normalized screen-space direction from the center toward the off-screen anchor */
     @Nullable FloatPos indicatorDir;
 

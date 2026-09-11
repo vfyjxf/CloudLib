@@ -199,7 +199,11 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         int h = height();
 
         canvas.fill(0, 0, w, h, focused ? InworldTheme.BG_FOCUSED : InworldTheme.BG);
-        canvas.strokeRect(0, 0, w, h, focused || pointed ? InworldTheme.BORDER_FOCUSED : InworldTheme.BORDER);
+        //idle panels carry no frame — the leader line is the only chrome; the
+        //outline appears only when the panel is focused/pointed
+        if (focused || pointed) {
+            canvas.strokeRect(0, 0, w, h, InworldTheme.BORDER_FOCUSED);
+        }
 
         if (title != null) {
             //header: accent chip + text + hairline rule

@@ -36,6 +36,15 @@ public final class InworldTheme {
     /** Leader line of the focused panel. */
     public static final int LINE_FOCUSED = 0xFF57E6E6;
 
+    /** Leader line core over bright backgrounds — dark slate so it still reads. */
+    public static final int LINE_DARK = 0xD8121D26;
+
+    /** Focused leader line over bright backgrounds — a deep teal. */
+    public static final int LINE_FOCUSED_DARK = 0xFF159E97;
+
+    /** Line halo used over bright backgrounds (inverse of the usual dark edge). */
+    public static final int LINE_EDGE_LIGHT = 0x8CEAF6FF;
+
     /** Small square marker drawn at the anchor end of a leader line. */
     public static final int LINE_NODE = 0xFFFFFFFF;
 
