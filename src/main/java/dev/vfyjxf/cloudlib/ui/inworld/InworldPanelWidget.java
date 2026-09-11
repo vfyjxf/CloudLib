@@ -79,7 +79,7 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
      * pointer.
      */
     private void focusCycle(boolean forward) {
-        if (scene() == null) return;
+        if (!lifecycle().mounted()) return;
         List<Widget> focusables = new ArrayList<>();
         WidgetTree.walkPreOrder(content, true, -1, (widget, depth) -> {
             if (widget != content && widget.focusable() && widget.visible() && widget.active()) {
@@ -110,7 +110,7 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         if (screenX != x || screenY != y) {
             screenX = x;
             screenY = y;
-            if (scene() != null) {
+            if (lifecycle().mounted()) {
                 scene().layoutTree().markDirty(nodeId());
             }
         }

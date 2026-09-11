@@ -26,7 +26,7 @@ public class ItemStripWidget extends Widget {
 
     public void setItems(List<ItemStack> items) {
         this.items = items;
-        if (scene() != null) {
+        if (lifecycle().mounted()) {
             scene().layoutTree().markDirty(nodeId());
         }
     }

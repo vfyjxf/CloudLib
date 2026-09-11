@@ -60,7 +60,7 @@ public class TextWidget extends Widget {
     public TextWidget setText(Component text) {
         this.text = text;
         //re-measure: the measure func reads this.text, so the node must be dirty
-        if (scene() != null) {
+        if (lifecycle().mounted()) {
             scene().layoutTree().markDirty(nodeId());
         }
         return this;
