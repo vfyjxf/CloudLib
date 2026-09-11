@@ -59,17 +59,19 @@ public class TextWidget extends Widget {
 
     public TextWidget setText(Component text) {
         this.text = text;
+        //re-measure: the measure func reads this.text, so the node must be dirty
+        if (scene() != null) {
+            scene().layoutTree().markDirty(nodeId());
+        }
         return this;
     }
 
     public TextWidget setText(LangEntry entry, Object... args) {
-        this.text = entry.get(args);
-        return this;
+        return setText(entry.get(args));
     }
 
     public TextWidget setText(String text) {
-        this.text = Component.literal(text);
-        return this;
+        return setText(Component.literal(text));
     }
 
     public int color() {

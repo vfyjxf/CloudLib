@@ -1,0 +1,8 @@
+# Block/item names for the dev test content.
+# Nested mappings flatten to dotted translation keys (block.cloudlib.test_block).
+block:
+  cloudlib:
+    test_block: Test Block
+    test_synced_block: Synced Test Block
+    tracker_block: Tracker
+    waypoint_block: Waypoint

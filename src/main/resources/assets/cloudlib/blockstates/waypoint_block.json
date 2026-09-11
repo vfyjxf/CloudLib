@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "cloudlib:block/waypoint_block"
+    }
+  }
+}

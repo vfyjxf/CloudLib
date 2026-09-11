@@ -61,6 +61,16 @@ public final class SyncedPanelProvider implements InworldProvider {
                     .hints("LMB:press", "R:inspect")
                     .leaderLine(false));
 
+            //side console: the placement is re-offered each pass, tracking the
+            //player's horizontal direction so the panel always faces them
+            sink.offer(InworldPanelSpec
+                    .of("synced/side/" + p,
+                            InworldAnchor.of(p),
+                            InworldPlacement.face(sideToward(context.player(), p), 0.5, 0.5, 64),
+                            SyncedPanelProvider::sideContent)
+                    .title(Component.literal("IO"))
+                    .hints("LMB:press"));
+
             sink.offer(InworldPanelSpec
                     .of("synced/tag/" + p,
                             InworldAnchor.of(p, new Vec3(0.5, 1.15, 0.5)),
@@ -111,6 +121,33 @@ public final class SyncedPanelProvider implements InworldProvider {
         column.addWidget(actions);
 
         return column;
+    }
+
+    private static Widget sideContent(InworldPanelContext ctx) {
+        SyncedTestBlockEntity be = ctx.blockEntity(SyncedTestBlockEntity.class);
+        ColumnWidget column = ColumnWidget.create(2);
+        if (be == null) {
+            column.addWidget(TextWidget.of("NO LINK").setColor(InworldTheme.TEXT_DIM));
+            return column;
+        }
+        var count = TextWidget.of("cnt " + be.count().get()).setColor(InworldTheme.ACCENT);
+        be.count().onChange(v -> count.setText("cnt " + v));
+        column.addWidget(count);
+        WidgetGroup<Widget> actions = Widgets.row(JustifyContent.FLEX_START, AlignItems.FLEX_START);
+        actions.useStyle(columnGap(2));
+        actions.addWidget(ChipWidget.of("+1", () -> be.sendAction(SyncedTestBlockEntity.ACTION_INCREMENT)));
+        actions.addWidget(ChipWidget.of("rst", () -> be.sendAction(SyncedTestBlockEntity.ACTION_RESET)));
+        column.addWidget(actions);
+        return column;
+    }
+
+    /** The block face oriented toward the player's position (fallback: where they look). */
+    private static Direction sideToward(net.minecraft.world.entity.player.Player player, BlockPos pos) {
+        Vec3 delta = player.position().subtract(Vec3.atCenterOf(pos));
+        if (delta.x * delta.x + delta.z * delta.z < 0.05) {
+            return Direction.fromYRot(player.getYRot()).getOpposite();
+        }
+        return Direction.getNearest(delta.x, 0, delta.z);
     }
 
     private static Widget tagContent(InworldPanelContext ctx) {
