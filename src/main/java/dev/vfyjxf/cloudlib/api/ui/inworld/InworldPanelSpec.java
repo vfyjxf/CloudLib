@@ -1,0 +1,132 @@
+package dev.vfyjxf.cloudlib.api.ui.inworld;
+
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.function.Function;
+
+/**
+ * Immutable-ish description of one in-world panel, offered either imperatively
+ * through {@code InworldUi.show(spec)} or declaratively by an
+ * {@link InworldProvider}.
+ * <p>
+ * The {@code key} is the panel's identity: providers re-offer the same key each
+ * scan to keep a panel alive; when a key stops being offered the panel closes.
+ * Two offers with the same key but different anchors/placements update the
+ * existing panel in place.
+ */
+public final class InworldPanelSpec {
+
+    final Object key;
+    InworldAnchor anchor;
+    InworldPlacement placement;
+    Function<InworldPanelContext, ? extends Widget> content;
+
+    @Nullable Component title;
+    List<String> hints = List.of();
+    boolean interactive = true;
+    boolean leaderLine = true;
+    double maxDistance = 32;
+
+    private InworldPanelSpec(
+            Object key,
+            InworldAnchor anchor,
+            InworldPlacement placement,
+            Function<InworldPanelContext, ? extends Widget> content
+    ) {
+        this.key = key;
+        this.anchor = anchor;
+        this.placement = placement;
+        this.content = content;
+    }
+
+    public static InworldPanelSpec of(
+            Object key,
+            InworldAnchor anchor,
+            InworldPlacement placement,
+            Function<InworldPanelContext, ? extends Widget> content
+    ) {
+        return new InworldPanelSpec(key, anchor, placement, content);
+    }
+
+    public Object key() {
+        return key;
+    }
+
+    public InworldAnchor anchor() {
+        return anchor;
+    }
+
+    public InworldPlacement placement() {
+        return placement;
+    }
+
+    public Function<InworldPanelContext, ? extends Widget> content() {
+        return content;
+    }
+
+    public @Nullable Component title() {
+        return title;
+    }
+
+    /** Small interaction chips rendered on the panel frame, e.g. {@code "[E] open"}. */
+    public List<String> hints() {
+        return hints;
+    }
+
+    /** Whether the panel reacts to clicks/hover at all. */
+    public boolean interactive() {
+        return interactive;
+    }
+
+    /** Whether a connector line is drawn between the panel and its anchor in screen modes. */
+    public boolean leaderLine() {
+        return leaderLine;
+    }
+
+    /** Maximum camera distance in blocks before the panel is hidden. */
+    public double maxDistance() {
+        return maxDistance;
+    }
+
+    //region mutation
+
+    public InworldPanelSpec title(@Nullable Component title) {
+        this.title = title;
+        return this;
+    }
+
+    public InworldPanelSpec hints(String... hints) {
+        this.hints = List.of(hints);
+        return this;
+    }
+
+    public InworldPanelSpec interactive(boolean interactive) {
+        this.interactive = interactive;
+        return this;
+    }
+
+    public InworldPanelSpec leaderLine(boolean leaderLine) {
+        this.leaderLine = leaderLine;
+        return this;
+    }
+
+    public InworldPanelSpec maxDistance(double maxDistance) {
+        this.maxDistance = maxDistance;
+        return this;
+    }
+
+    public InworldPanelSpec anchor(InworldAnchor anchor) {
+        this.anchor = anchor;
+        return this;
+    }
+
+    public InworldPanelSpec placement(InworldPlacement placement) {
+        this.placement = placement;
+        return this;
+    }
+
+    //endregion
+}

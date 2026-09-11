@@ -1,9 +1,13 @@
 package dev.vfyjxf.cloudlib.api.ui.sync;
 
 import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
+import dev.vfyjxf.cloudlib.api.ui.base.FocusScopeNode;
 import dev.vfyjxf.cloudlib.api.ui.base.Scene;
+import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.base.host.ScreenSceneHost;
+import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.sync.menu.BasicMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -12,6 +16,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
+
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.sizeOf;
 
 //TODO:Rework
 public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractContainerScreen<T> {
@@ -30,14 +36,7 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
         //region setup main panel
         mainGroup = new WidgetGroup<>();
         {
-//            mainGroup.setRoot(rootWidget);
-//            mainGroup.asChild(rootWidget);
-//            mainGroup.onInit(self -> {
-//                mainGroup.withModifier(
-//                        Modifier.builder()
-//                                .size(width, height)
-//                );
-//            });
+            mainGroup.setFocusNode(new FocusScopeNode());
         }
         scene = new Scene(mainGroup);
         //endregion
@@ -47,12 +46,37 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
         return mainGroup;
     }
 
+    protected Scene scene() {
+        return scene;
+    }
+
     @MustBeInvokedByOverriders
     @Override
     protected void init() {
-//        rootWidget.init();
-        mainGroup.applyLayout();
+        mainGroup.useStyle(UIStyle.of(sizeOf(width, height)));
+        scene.init();
+        scene.mount(SceneContext.create(new ScreenSceneHost(this)));
+        scene.setLayoutArea(width, height);
+        scene.stabilize();
         super.init();
+    }
+
+    @Override
+    public void onClose() {
+        super.onClose();
+        scene.destroy();
+    }
+
+    /**
+     * Called by {@link AbstractContainerScreen#tick()} (which is final).
+     * Ticks the scene first so widget logic runs before menu bookkeeping.
+     */
+    @Override
+    protected void containerTick() {
+        if (mainGroup.lifecycle().mounted()) {
+            scene.tick();
+        }
+        menu.sendReveredDataToServer();
     }
 
     @Override
@@ -64,11 +88,6 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
 
-    }
-
-    protected void containerTick() {
-        mainGroup.tick();
-        menu.sendReveredDataToServer();
     }
 
     @Override

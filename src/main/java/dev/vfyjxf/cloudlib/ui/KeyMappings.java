@@ -18,4 +18,37 @@ public final class KeyMappings {
             CloudLang.Keys.debug.key()
     );
 
+    /**
+     * Hold to enter the in-world inspect presentation: the camera-look mouse is
+     * captured by a transparent overlay screen and panels flatten to screen space.
+     */
+    public static final KeyMapping inspect = new KeyMapping(
+            "cloudlib.keys.inworld_inspect",
+            KeyConflictContext.IN_GAME,
+            KeyModifier.NONE,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_R,
+            CloudLang.Keys.debug.key()
+    );
+
+    /** Cycle the in-world panel focus forward. */
+    public static final KeyMapping focusNext = new KeyMapping(
+            "cloudlib.keys.inworld_focus_next",
+            KeyConflictContext.IN_GAME,
+            KeyModifier.NONE,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_GRAVE_ACCENT,
+            CloudLang.Keys.debug.key()
+    );
+
+    /** Cycle the in-world panel focus backward. */
+    public static final KeyMapping focusPrevious = new KeyMapping(
+            "cloudlib.keys.inworld_focus_previous",
+            KeyConflictContext.IN_GAME,
+            KeyModifier.NONE,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_X,
+            CloudLang.Keys.debug.key()
+    );
+
 }

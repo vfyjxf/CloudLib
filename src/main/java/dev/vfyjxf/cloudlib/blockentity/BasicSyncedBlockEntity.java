@@ -12,6 +12,8 @@ import dev.vfyjxf.cloudlib.api.network.UnaryFlowHandler;
 import dev.vfyjxf.cloudlib.api.network.expose.DiffLayerExpose;
 import dev.vfyjxf.cloudlib.api.network.expose.Expose;
 import dev.vfyjxf.cloudlib.api.network.expose.LayerExpose;
+import dev.vfyjxf.cloudlib.api.network.expose.ReversedOnly;
+import dev.vfyjxf.cloudlib.api.network.expose.UnaryReversed;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -91,6 +93,24 @@ public abstract class BasicSyncedBlockEntity extends BasicBlockEntity
             String name, DiffHandle<T, D> handle, FlowHandler<T, E> codec, UnaryFlowHandler<D> diffCodec
     ) {
         return sync.diffLayerExpose(name, handle, codec, diffCodec);
+    }
+
+    /**
+     * A client → server action channel: the client queues values with
+     * {@link ReversedOnly#sendToServer} and the server receives them through
+     * {@code whenReceiveFromClient}. Flush with {@link #pushReversed()}.
+     */
+    protected <S, R> ReversedOnly<S, R> reversedOnly(String name, FlowHandler<S, R> codec) {
+        return sync.reversedOnly(name, codec);
+    }
+
+    protected <T> UnaryReversed<T> unaryReversed(String name, UnaryFlowHandler<T> codec) {
+        return sync.unaryReversed(name, codec);
+    }
+
+    /** Client-side: flushes queued reversed values to the server. */
+    protected void pushReversed() {
+        sync.flushToServer();
     }
 
     @Override

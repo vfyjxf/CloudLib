@@ -60,11 +60,31 @@ public final class SceneCanvas {
 
     private float zOffset = 0f;
 
+    /**
+     * When true, flushes keep the depth buffer untouched and leave the depth
+     * test enabled. Required when this canvas renders in world space (inside a
+     * {@code RenderLevelStageEvent}), where the default GUI layering behaviour —
+     * clearing the depth buffer and disabling the depth test — would destroy
+     * the level's depth information.
+     */
+    private boolean preserveDepth = false;
+
     private final BatchState batchState = new BatchState();
 
     private SceneCanvas(GuiGraphics graphics) {
         this.graphics = graphics;
         this.forwardedGraphics = new GuiGraphics(Minecraft.getInstance(), graphics.bufferSource());
+    }
+
+    /**
+     * Switches this canvas into depth-preserving mode for in-world rendering.
+     * Canvas quads are then depth-tested against the world and occluded
+     * correctly by terrain, at the cost of zOffset layering no longer
+     * overriding world depth.
+     */
+    public SceneCanvas preserveDepth() {
+        this.preserveDepth = true;
+        return this;
     }
 
     //region batch
@@ -282,8 +302,13 @@ public final class SceneCanvas {
 
         // Canvas quads are 2D painter-order UI. They must not write depth, otherwise
         // later layered item renders can be hidden while their decoration text remains visible.
-        RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
-        RenderSystem.disableDepthTest();
+        // In world-space mode the depth buffer belongs to the level — keep it.
+        if (!preserveDepth) {
+            RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+            RenderSystem.disableDepthTest();
+        } else {
+            RenderSystem.enableDepthTest();
+        }
 
         applyScissor();
         graphics.pose().pushPose();
@@ -1303,7 +1328,7 @@ public final class SceneCanvas {
     private GuiGraphics beginForwardedDraw(boolean layered) {
         flushForwardedDraw();
         flushCanvasBatch();
-        if (layered) {
+        if (layered && !preserveDepth) {
             RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
         }
         syncForwardedGraphicsPose();
@@ -1327,7 +1352,9 @@ public final class SceneCanvas {
             forwardedActive = false;
         }
         if (forwardedLayered) {
-            RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+            if (!preserveDepth) {
+                RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+            }
             zOffset += Z_INCREMENT;
         }
         forwardedLayered = false;

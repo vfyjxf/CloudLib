@@ -1,135 +1,102 @@
 package dev.vfyjxf.cloudlib.test.sync;
 
+import dev.vfyjxf.cloudlib.api.ui.Widgets;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
+import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
+import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.sync.BasicMenuScreen;
+import dev.vfyjxf.cloudlib.test.inworld.ChipWidget;
+import dev.vfyjxf.cloudlib.test.inworld.ItemStripWidget;
+import dev.vfyjxf.cloudlib.ui.inworld.HackerPanel;
+import dev.vfyjxf.cloudlib.ui.inworld.InworldTheme;
+import dev.vfyjxf.cloudlib.ui.widget.TextWidget;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.JustifyContent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
-import java.util.function.Function;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.alignItemsCenter;
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.alignItemsFlexStart;
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.columnGap;
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.flexColumn;
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.justifyCenter;
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.justifyFlexStart;
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.widthOf;
+
+/**
+ * The synced-block demo screen, rebuilt around the hacker-mode chrome:
+ * a single dark panel listing the menu's live exposes, the 9-slot transform
+ * inventory as an item strip, and a row of chips that push items through the
+ * {@code selected} reversed channel.
+ */
 public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu> {
 
     public TestBlockEntityScreen(TestBlockEntity.Menu menu, Inventory playerInventory) {
         super(menu, playerInventory);
 
-//        mainGroup.withModifier(
-//                Modifier()
-//                        .background(0xff282c34)
-//        );
+        mainGroup.useStyle(UIStyle.of(flexColumn(), justifyCenter(), alignItemsCenter()));
 
-//        //region item display
-//        var itemDisplayWidget = mainGroup().addWidget(new Widget() {
-//            private ItemStack displayItem = ItemStack.EMPTY;
-//
-//            {
-//                onEvent(WidgetEvent.onRender, (graphics, mouseX, mouseY, partialTicks, context) -> {
-//                    if (displayItem.isEmpty()) return;
-//                    graphics.renderItem(displayItem, 0, 0);
-//                });
-//            }
-//        });
-//        menu.registerEntry.whenReceive(stack -> {
-//            itemDisplayWidget.displayItem = stack;
-//        });
-//        itemDisplayWidget.withModifier(
-//                Modifier.builder()
-//                        .size(16, 16)
-//                        .posRel(0.4, 0.5)
-//        );
-//        //endregion
-//
-//        //region basic display
-//        var basicDisplay = mainGroup.addWidget(TextWidget.of("nothing"));
-//        menu.basic.whenReceive(integer -> {
-//            basicDisplay.setText(Component.literal("Received from server:" + integer));
-//        });
-//        basicDisplay.withModifier(
-//                Modifier.builder()
-//                        .size(32)
-//                        .background(Color.darkGray.getRGB())
-//                        .posRel(0.2, 0.2)
-//        );
-//        //endregion
+        HackerPanel panel = new HackerPanel(Component.literal("TEST.BE//live-sync"));
+        panel.useStyle(widthOf(190));
+        mainGroup.addWidget(panel);
 
-//        //region item display
-        Function<ItemStack, Widget> itemDisplayFactory = (ItemStack stack) -> new Widget() {
-            private final ItemStack displayItem = stack;
+        //region live scalars
+        var basic = TextWidget.of("basic --").setColor(InworldTheme.TEXT);
+        menu.basic.whenReceive(v -> basic.setText("basic " + v));
+        panel.addChild(basic);
 
-            {
-                onEvent(WidgetEvent.onRender, ((canvas, mouseX, mouseY, partialTicks, self, context) -> {
-                    if (displayItem.isEmpty()) return;
-                    canvas.layeredGraphics().renderItem(displayItem, 0, 0);
-                }));
-            }
-        };
-//        var itemDisplayList = mainGroup().addWidget(new WidgetGroup<>());
-//        itemDisplayList.mark("itemDisplayList");
-//        Modifier modifier = Modifier.builder()
-//                .size(16 * 3)
-//                .posRel(0.5, 0.5)
-//                .layoutWith(GridResizer::new, l -> l.fixed(3));
-//        menu.layerExpose.whenReceive(stacks -> {
-//            itemDisplayList.clear();
-//            for (int i = 0; i < stacks.size(); i++) {
-//                ItemStack stack = stacks.get(i);
-//                var itemDisplay = itemDisplayList.addWidget(itemDisplayFactory.updateWidget(stack));
-//                itemDisplay.mark("itemDisplay" + i);
-//                itemDisplay.withModifier(
-//                        Modifier.builder()
-//                                .size(16, 16)
-//                );
-//            }
-//            itemDisplayList.withModifier(modifier);
-//            itemDisplayList.init();
-//            itemDisplayList.layout();
-//        });
-//        //endregion
+        var reference = TextWidget.of("ref --").setColor(InworldTheme.TEXT_DIM);
+        menu.reference.whenReceive(v -> reference.setText("ref " + v));
+        panel.addChild(reference);
+        //endregion
 
-        //region difference display
+        //region register entry (single live item)
+        panel.addChild(TextWidget.of("entry").setColor(InworldTheme.TEXT_DIM));
+        var entry = new ItemStripWidget();
+        panel.addChild(entry);
+        menu.registerEntry.whenReceive(stack -> entry.setItems(List.of(stack)));
+        //endregion
 
+        //region transform inventory (9 slots, live layer expose)
+        panel.addChild(TextWidget.of("transform").setColor(InworldTheme.TEXT_DIM));
+        var transform = new ItemStripWidget();
+        panel.addChild(transform);
+        menu.layerExpose.whenReceive(transform::setItems);
+        //endregion
+
+        //region selected — client → server reversed channel
+        panel.addChild(TextWidget.of("select → server").setColor(InworldTheme.TEXT_DIM));
+        WidgetGroup<Widget> chips = Widgets.row(JustifyContent.FLEX_START, AlignItems.FLEX_START);
+        chips.useStyle(columnGap(2));
+        List<ItemStack> options = List.of(
+                Items.APPLE.getDefaultInstance(),
+                Items.DIAMOND.getDefaultInstance(),
+                Items.EMERALD.getDefaultInstance(),
+                Items.ENDER_PEARL.getDefaultInstance(),
+                Items.NETHERITE_SCRAP.getDefaultInstance()
+        );
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        var lastSent = TextWidget.of("--").setColor(InworldTheme.ACCENT);
+        for (int i = 0; i < options.size(); i++) {
+            ItemStack stack = options.get(i);
+            chips.addWidget(ChipWidget.of(String.valueOf(i + 1), () -> {
+                ItemStack sent = stack.copyWithCount(random.nextInt(1, 64));
+                menu.selected.sendToServer(sent);
+                lastSent.setText("sent " + sent.getCount() + "x " + sent.getHoverName().getString());
+            }));
+        }
+        panel.addChild(chips);
+        panel.addChild(lastSent);
+        //endregion
+
+        //region difference logging (kept — this is what the expose demonstrates)
         menu.diffable.whenReceive(x -> System.out.println("all data received" + x));
         menu.diffable.whenDiffReceive(x -> System.out.println("diff data received" + x));
-        //region
-
-
-//        //region label display
-//        var labelDisplay = mainGroup().addWidget(TextWidget.of("Nothing"));
-//        menu.reference.whenReceive(string -> {
-//            labelDisplay.setText(Component.literal("Received from server:" + string));
-//        });
-//        labelDisplay.withModifier(
-//                Modifier.builder()
-//                        .posRel(0.5, 0.2)
-//                        .size(64, 32)
-//        );
-//        //endregion
-
-//        //region selected
-//        var selectedDisplay = mainGroup().addWidget(itemDisplayFactory.updateWidget(ItemStack.EMPTY));
-//        selectedDisplay.mark("selectedDisplay");
-//        selectedDisplay.withModifier(
-//                Modifier().
-//                        size(16, 16)
-//                        .posRel(0.6, 0.3)
-//        );
-//        List<ItemStack> stacks = List.of(
-//                Items.APPLE.getDefaultInstance(),
-//                Items.BEDROCK.getDefaultInstance(),
-//                Items.DIAMOND.getDefaultInstance(),
-//                Items.DIAMOND_SWORD.getDefaultInstance(),
-//                Items.DIAMOND_PICKAXE.getDefaultInstance()
-//        );
-//        ThreadLocalRandom random = ThreadLocalRandom.current();
-//        selectedDisplay.onEvent(WidgetEvent.onRender, ((graphics, mouseX, mouseY, partialTicks, context) -> {
-//            RenderHelper.drawSolidRect(graphics, 0, 0, 16, 16, 0xFF000000);
-//        }));
-//        selectedDisplay.onEvent(InputEvent.onMouseClicked, (input, context) -> {
-//            int index = random.nextInt(stacks.size());
-//            ItemStack stack = stacks.get(index);
-//            menu.selected.sendToServer(stack.copyWithCount(random.nextInt(1, 64)));
-//            return true;
-//        });
-//        //endregion
+        //endregion
     }
 }
