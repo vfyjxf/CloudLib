@@ -119,6 +119,7 @@ public final class InworldManager implements InworldUiApi {
         event.register(KeyMappings.inspect);
         event.register(KeyMappings.focusNext);
         event.register(KeyMappings.focusPrevious);
+        event.register(KeyMappings.interact);
     }
 
     public static void init() {
@@ -150,6 +151,8 @@ public final class InworldManager implements InworldUiApi {
 
     private @Nullable PanelRuntime focused;
     private @Nullable PanelRuntime pointed;
+    /** Best in-cone interactive panel when nothing is strictly pointed at — the WD2-style "look near it" selection. */
+    private @Nullable PanelRuntime softPointed;
     private @Nullable FloatPos pointedUv;
     /** true when the crosshair actually rests on a panel (vs only its anchor block) */
     private boolean pointedInPanel;
@@ -321,6 +324,7 @@ public final class InworldManager implements InworldUiApi {
         //focus cycling
         while (KeyMappings.focusNext.consumeClick()) focusNext();
         while (KeyMappings.focusPrevious.consumeClick()) focusPrevious();
+        while (KeyMappings.interact.consumeClick()) triggerInteract();
 
         //providers — each provider's last emission is cached; reconcile runs
         //when at least one provider was re-evaluated (or on the first tick so
@@ -1031,16 +1035,12 @@ public final class InworldManager implements InworldUiApi {
             g.sort(Comparator.comparingDouble(m -> m.tan));
             double lo = margin + 8;
             double hi = (e < 2 ? H : W) - margin - 8;
-            double gap = Math.min(26, (hi - lo) / (g.size() - 1));
-            for (int i = 1; i < g.size(); i++) {
-                if (g.get(i).tan < g.get(i - 1).tan + gap) {
-                    g.get(i).tan = g.get(i - 1).tan + gap;
-                }
-            }
-            double shift = Math.min(0, hi - g.get(g.size() - 1).tan);
-            if (g.get(0).tan + shift < lo) shift = lo - g.get(0).tan;
-            for (IndMark m : g) {
-                m.tan += shift;
+            double[] tan = new double[g.size()];
+            for (int i = 0; i < g.size(); i++) tan[i] = g.get(i).tan;
+            InworldLayout.spreadEdgeSlots(tan, lo, hi, 26);
+            for (int i = 0; i < g.size(); i++) {
+                IndMark m = g.get(i);
+                m.tan = tan[i];
                 if (e < 2) m.py = m.tan; else m.px = m.tan;
             }
         }
@@ -1368,6 +1368,7 @@ public final class InworldManager implements InworldUiApi {
         pointed = null;
         pointedUv = null;
         pointedInPanel = false;
+        softPointed = null;
         if (proj == null || mc.level == null) return;
 
         Vec3 origin = proj.cameraPos();
@@ -1418,14 +1419,50 @@ public final class InworldManager implements InworldUiApi {
             pointedInPanel = false;
         }
 
+        //4. no exact hit — WD2-style soft focus: the interactive panel whose
+        //anchor is nearest the look vector inside a ~30° cone gets selected,
+        //so a hotkey press doesn't demand pixel-perfect crosshair aim. Only
+        //panels that declared a primary action participate.
+        if (pointed == null && !inspecting) {
+            softPointed = pickSoftFocus(origin, dir);
+        }
+
         //world mode focus follows pointing
         if (!inspecting) {
-            PanelRuntime newFocus = pointed;
+            PanelRuntime newFocus = pointed != null ? pointed : softPointed;
             if (newFocus != focused) {
                 focused = newFocus;
                 if (focused != null) scene.requestFocus(focused.widget);
             }
         }
+    }
+
+    /** Nearest-to-look-axis actionable panel inside the soft-focus cone and range. */
+    private @Nullable PanelRuntime pickSoftFocus(Vec3 eye, Vec3 look) {
+        PanelRuntime best = null;
+        double bestScore = Double.MAX_VALUE;
+        for (PanelRuntime r : panels.values()) {
+            if (!r.presented || !r.widget.visible() || !r.spec.interactive()) continue;
+            if (r.anchorWorld == null || r.spec.action() == null) continue;
+            if (r.distance > Math.min(r.spec.maxDistance(), InworldLayout.SOFT_FOCUS_RANGE)) continue;
+            double score = InworldLayout.softFocusScore(eye, look, r.anchorWorld);
+            if (score < 0) continue;
+            score += r.distance * 0.01; //angle decides, distance breaks near-ties
+            if (score < bestScore) {
+                bestScore = score;
+                best = r;
+            }
+        }
+        return best;
+    }
+
+    /** The interact hotkey — runs the focused panel's primary action, if any. */
+    private void triggerInteract() {
+        PanelRuntime target = focused;
+        if (target == null || !target.presented || !target.spec.interactive()) return;
+        var action = target.spec.action();
+        if (action == null || mc.level == null || mc.player == null) return;
+        action.accept(new InworldPanelContext(mc.level, mc.player, target));
     }
 
     private double distanceAlongRay(Vec3 origin, Vec3 dir, PanelRuntime runtime) {
@@ -2036,6 +2073,10 @@ public final class InworldManager implements InworldUiApi {
     }
 
     boolean inspectKeyPressed(int keyCode, int scanCode, int modifiers) {
+        if (KeyMappings.interact.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
+            triggerInteract();
+            return true;
+        }
         return scene.keyPressed(keyCode, scanCode, modifiers);
     }
 

@@ -59,7 +59,8 @@ public final class TrackerPanelProvider implements InworldProvider {
                             InworldPlacement.dock(),
                             TrackerPanelProvider::mainContent)
                     .title(Component.literal("TRACKER//" + shortPos(p)))
-                    .hints("LMB:press", "R:inspect"));
+                    .hints("V:scan", "LMB:press", "R:inspect")
+                    .action(TrackerPanelProvider::toggleExpand));
 
             //compact face controller tracks the player horizontally
             Direction side = sideToward(context.player(), p);
@@ -67,7 +68,8 @@ public final class TrackerPanelProvider implements InworldProvider {
                     .of("tracker/face/" + p,
                             InworldAnchor.of(p),
                             InworldPlacement.face(side, 0.5, 0.5, 64),
-                            TrackerPanelProvider::faceContent));
+                            TrackerPanelProvider::faceContent)
+                    .action(TrackerPanelProvider::toggleExpand));
 
             //a follow-tag per living entity in range of the tracker
             var box = AABB.ofSize(Vec3.atCenterOf(p), TrackerBlockEntity.RANGE * 2.0, 12, TrackerBlockEntity.RANGE * 2.0);

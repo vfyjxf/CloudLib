@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -52,6 +53,13 @@ public final class InworldPanelSpec {
      * panel where the target can't be seen anyway.
      */
     @Nullable BooleanSupplier offscreenIndicator;
+    /**
+     * The panel's primary action — invoked by the interact hotkey when this
+     * panel is focused/soft-focused (Watch-Dogs-style: look roughly at the
+     * anchor, press the key). Panels declaring an action are also eligible
+     * for cone-based soft focus even without an exact crosshair hit.
+     */
+    @Nullable Consumer<InworldPanelContext> action;
 
     private InworldPanelSpec(
             Object key,
@@ -140,6 +148,11 @@ public final class InworldPanelSpec {
         return offscreenIndicator != null && offscreenIndicator.getAsBoolean();
     }
 
+    /** The panel's primary action triggered by the interact hotkey, or null. */
+    public @Nullable Consumer<InworldPanelContext> action() {
+        return action;
+    }
+
     //region mutation
 
     public InworldPanelSpec title(@Nullable Component title) {
@@ -195,6 +208,15 @@ public final class InworldPanelSpec {
      */
     public InworldPanelSpec offscreenIndicator(BooleanSupplier allowed) {
         this.offscreenIndicator = allowed;
+        return this;
+    }
+
+    /**
+     * Sets the panel's primary action — run by the interact hotkey while the
+     * panel is focused. Also makes the panel eligible for soft focus.
+     */
+    public InworldPanelSpec action(Consumer<InworldPanelContext> action) {
+        this.action = action;
         return this;
     }
 

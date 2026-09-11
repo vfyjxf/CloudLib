@@ -51,4 +51,17 @@ public final class KeyMappings {
             CloudLang.Keys.debug.key()
     );
 
+    /**
+     * Trigger the focused/soft-focused in-world panel's primary action —
+     * the Watch-Dogs-style "look roughly at it, press the key" interaction.
+     */
+    public static final KeyMapping interact = new KeyMapping(
+            "cloudlib.keys.inworld_interact",
+            KeyConflictContext.IN_GAME,
+            KeyModifier.NONE,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_V,
+            CloudLang.Keys.debug.key()
+    );
+
 }
