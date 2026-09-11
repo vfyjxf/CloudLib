@@ -51,6 +51,11 @@ final class PanelRuntime implements InworldPanel {
      *  keeps a displaced tag from flip-flopping between near-tied sides */
     int lastSlideDir = -1;
 
+    /** this frame the panel is collapsed to an off-screen edge indicator */
+    boolean indicator;
+    /** normalized screen-space direction from the center toward the off-screen anchor */
+    @Nullable FloatPos indicatorDir;
+
     /** gameTime+partialTick when the panel was created; -1 = no open animation */
     float bornAt = -1;
     /** current open-animation scale driven by the manager (1 = fully open) */

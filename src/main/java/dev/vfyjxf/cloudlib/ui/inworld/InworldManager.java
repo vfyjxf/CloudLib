@@ -541,6 +541,18 @@ public final class InworldManager implements InworldUiApi {
 
             runtime.anchorScreen = proj.worldToScreen(anchor);
 
+            //off-screen collapse: shrink to an edge indicator instead of
+            //presenting the full panel where the target can't be seen.
+            //skipped while inspecting — the flat projection is meant to show
+            //every panel regardless of facing
+            if (runtime.spec.collapsesOffscreen() && !inspecting && anchorOffscreen(runtime.anchorScreen)) {
+                runtime.indicator = true;
+                runtime.indicatorDir = offscreenDirection(anchor);
+                runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+                continue;
+            }
+            runtime.indicator = false;
+
             InworldPlacement placement = runtime.spec.placement();
             if (inspecting) {
                 //flat projection: every panel docks to a screen corner
@@ -918,6 +930,139 @@ public final class InworldManager implements InworldUiApi {
             }
         }
         return null;
+    }
+
+    /** Anchor is off the camera view — behind the camera or beyond the viewport edge. */
+    private boolean anchorOffscreen(@Nullable FloatPos s) {
+        if (s == null) return true;
+        int W = mc.getWindow().getGuiScaledWidth();
+        int H = mc.getWindow().getGuiScaledHeight();
+        return s.x < 0 || s.y < 0 || s.x >= W || s.y >= H;
+    }
+
+    /**
+     * Bearing of an off-screen anchor in screen space (x right, y down,
+     * normalized). In front of the camera the view-space direction maps
+     * straight over; behind the camera we keep the correct side and bias the
+     * marker to the bottom edge.
+     */
+    private FloatPos offscreenDirection(Vec3 anchor) {
+        Matrix4f mv = worldToView;
+        Vec3 cam = mc.gameRenderer.getMainCamera().getPosition();
+        if (mv != null) {
+            Vector4f v = new Vector4f(
+                    (float) anchor.x, (float) anchor.y, (float) anchor.z, 1f)
+                    .mul(mv); //world→view (already carries -cam translate)
+            float sx = v.x(), sy = v.z() < 0 ? -v.y() : 1f;
+            double len = Math.hypot(sx, sy);
+            if (len > 1e-4) return new FloatPos(sx / len, sy / len);
+        }
+        //fallback: camera-relative bearing from yaw — forward=(-sin,cos),
+        //right=(-cos,-sin) on the xz plane
+        Vec3 d = anchor.subtract(cam);
+        double yaw = Math.toRadians(mc.gameRenderer.getMainCamera().getYRot());
+        double sx = -d.x * Math.cos(yaw) - d.z * Math.sin(yaw);
+        double fwd = -d.x * Math.sin(yaw) + d.z * Math.cos(yaw);
+        double sy = fwd > 0 ? -d.y : 1.0;
+        double len = Math.hypot(sx, sy);
+        return len > 1e-4 ? new FloatPos(sx / len, sy / len) : new FloatPos(0, 1);
+    }
+
+    /**
+     * Draws every collapsed panel's edge indicator: a diamond pinned to the
+     * screen border in the anchor's bearing, a short tick pointing outward,
+     * and the distance tucked on the inside so it never spills off-screen.
+     * Marks landing on the same edge are spread deterministically — order is
+     * the stable panel-key order, so nothing churns frame to frame.
+     */
+    private void renderIndicators(GuiGraphics graphics) {
+        int W = mc.getWindow().getGuiScaledWidth();
+        int H = mc.getWindow().getGuiScaledHeight();
+        int margin = 14;
+        float cx = W * 0.5f, cy = H * 0.5f;
+        var font = mc.font;
+
+        List<PanelRuntime> collapsed = null;
+        for (PanelRuntime r : panels.values()) {
+            if (r.indicator && r.indicatorDir != null && r.widget.visible()) {
+                if (collapsed == null) collapsed = new ArrayList<>();
+                collapsed.add(r);
+            }
+        }
+        if (collapsed == null) return;
+        collapsed.sort(Comparator.comparing(r -> String.valueOf(r.spec.key())));
+
+        //walk each bearing from center to the inset border
+        List<IndMark> marks = new ArrayList<>(collapsed.size());
+        for (PanelRuntime r : collapsed) {
+            FloatPos d = r.indicatorDir;
+            double tx = Math.abs(d.x) < 1e-4 ? Double.MAX_VALUE
+                    : (cx - margin) / Math.abs(d.x);
+            double ty = Math.abs(d.y) < 1e-4 ? Double.MAX_VALUE
+                    : (cy - margin) / Math.abs(d.y);
+            boolean side = tx < ty; //hits a vertical edge before a horizontal one
+            double t = Math.min(tx, ty);
+            IndMark m = new IndMark();
+            m.runtime = r;
+            m.dir = d;
+            m.edge = side ? (d.x < 0 ? 0 : 1) : (d.y < 0 ? 2 : 3);
+            m.px = cx + d.x * t;
+            m.py = cy + d.y * t;
+            m.tan = side ? m.py : m.px;
+            marks.add(m);
+        }
+
+        //spread marks sharing an edge with a fixed gap, then recenter the run
+        for (int e = 0; e < 4; e++) {
+            List<IndMark> g = new ArrayList<>();
+            for (IndMark m : marks) if (m.edge == e) g.add(m);
+            if (g.size() < 2) continue;
+            g.sort(Comparator.comparingDouble(m -> m.tan));
+            double lo = margin + 8;
+            double hi = (e < 2 ? H : W) - margin - 8;
+            double gap = Math.min(26, (hi - lo) / (g.size() - 1));
+            for (int i = 1; i < g.size(); i++) {
+                if (g.get(i).tan < g.get(i - 1).tan + gap) {
+                    g.get(i).tan = g.get(i - 1).tan + gap;
+                }
+            }
+            double shift = Math.min(0, hi - g.get(g.size() - 1).tan);
+            if (g.get(0).tan + shift < lo) shift = lo - g.get(0).tan;
+            for (IndMark m : g) {
+                m.tan += shift;
+                if (e < 2) m.py = m.tan; else m.px = m.tan;
+            }
+        }
+
+        for (IndMark m : marks) {
+            PanelRuntime r = m.runtime;
+            FloatPos d = m.dir;
+            float px = (float) m.px, py = (float) m.py;
+            int color = r.focused() ? InworldTheme.BORDER_FOCUSED : InworldTheme.ACCENT_DIM;
+            drawLine(graphics, px, py - 5, px + 5, py, color);
+            drawLine(graphics, px + 5, py, px, py + 5, color);
+            drawLine(graphics, px, py + 5, px - 5, py, color);
+            drawLine(graphics, px - 5, py, px, py - 5, color);
+            //bearing tick pointing further outward
+            drawLine(graphics, (float) (px + d.x * 6), (float) (py + d.y * 6),
+                    (float) (px + d.x * 10), (float) (py + d.y * 10), InworldTheme.ACCENT);
+            //distance sits on the inward side so it stays readable on any edge
+            String dist = (int) r.distance + "m";
+            double ix = px - d.x * 17, iy = py - d.y * 16;
+            graphics.drawString(font, dist,
+                    (int) (ix - font.width(dist) * 0.5),
+                    (int) (iy - font.lineHeight * 0.5),
+                    InworldTheme.TEXT_DIM);
+        }
+    }
+
+    /** One collapsed panel's edge mark — tangential slot may be adjusted by the de-conflict pass. */
+    private static final class IndMark {
+        PanelRuntime runtime;
+        FloatPos dir;
+        int edge;      //0=left 1=right 2=top 3=bottom
+        double tan;    //slot coordinate along the edge
+        double px, py; //resolved screen position
     }
 
     /**
@@ -1619,6 +1764,7 @@ public final class InworldManager implements InworldUiApi {
         }
 
         renderLeaderLines(graphics);
+        renderIndicators(graphics);
 
         canvas.pushViewport(root.viewport());
         root.render(canvas, (int) pointerX, (int) pointerY, partialTick);

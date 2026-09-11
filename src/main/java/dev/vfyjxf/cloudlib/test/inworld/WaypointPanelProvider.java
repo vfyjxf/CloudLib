@@ -43,6 +43,7 @@ public final class WaypointPanelProvider implements InworldProvider {
                             WaypointPanelProvider::content)
                     .title(Component.literal("WP//" + p.getX() + "," + p.getZ()))
                     .interactive(false)
+                    .offscreenIndicator()
                     .maxDistance(MAX_DISTANCE));
         }
     }

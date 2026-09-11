@@ -5,6 +5,7 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
 /**
@@ -44,6 +45,13 @@ public final class InworldPanelSpec {
      * different limits the smallest wins.
      */
     int groupLimit = Integer.MAX_VALUE;
+    /**
+     * Off-screen collapse: when set and the supplier allows, a panel whose
+     * anchor leaves the camera view shrinks to a small edge indicator
+     * (diamond + bearing tick + distance) instead of rendering the full
+     * panel where the target can't be seen anyway.
+     */
+    @Nullable BooleanSupplier offscreenIndicator;
 
     private InworldPanelSpec(
             Object key,
@@ -127,6 +135,11 @@ public final class InworldPanelSpec {
         return groupLimit;
     }
 
+    /** Whether this panel may currently collapse to an off-screen edge indicator. */
+    public boolean collapsesOffscreen() {
+        return offscreenIndicator != null && offscreenIndicator.getAsBoolean();
+    }
+
     //region mutation
 
     public InworldPanelSpec title(@Nullable Component title) {
@@ -168,6 +181,20 @@ public final class InworldPanelSpec {
     /** Caps how many members of this panel's group may be visible at once; extras merge into a "+N" badge. */
     public InworldPanelSpec groupLimit(int groupLimit) {
         this.groupLimit = Math.max(1, groupLimit);
+        return this;
+    }
+
+    /** Allow this panel to collapse to an edge indicator whenever its anchor is off-screen. */
+    public InworldPanelSpec offscreenIndicator() {
+        return offscreenIndicator(() -> true);
+    }
+
+    /**
+     * Caller-controlled off-screen collapse — the panel shrinks to an edge
+     * indicator only while {@code allowed} returns true.
+     */
+    public InworldPanelSpec offscreenIndicator(BooleanSupplier allowed) {
+        this.offscreenIndicator = allowed;
         return this;
     }
 
