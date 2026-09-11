@@ -30,6 +30,13 @@ public final class InworldPanelSpec {
     boolean leaderLine = true;
     boolean openAnimation = false;
     double maxDistance = 32;
+    /**
+     * Zoning group: displaced non-interactive panels (entity tags) that cannot
+     * keep their anchor position are gathered into a side rail; panels sharing
+     * a group key stay adjacent inside it. {@code null} derives the group from
+     * the panel key's parent path ("tracker/ent/12" → "tracker/ent").
+     */
+    @Nullable String group;
 
     private InworldPanelSpec(
             Object key,
@@ -97,6 +104,17 @@ public final class InworldPanelSpec {
         return maxDistance;
     }
 
+    /**
+     * The zoning group this panel belongs to. Defaults to the panel key's
+     * parent path so sibling keys ("x/tag/1", "x/tag/2") zone together.
+     */
+    public String group() {
+        if (group != null) return group;
+        String k = String.valueOf(key);
+        int slash = k.lastIndexOf('/');
+        return slash > 0 ? k.substring(0, slash) : k;
+    }
+
     //region mutation
 
     public InworldPanelSpec title(@Nullable Component title) {
@@ -126,6 +144,12 @@ public final class InworldPanelSpec {
 
     public InworldPanelSpec maxDistance(double maxDistance) {
         this.maxDistance = maxDistance;
+        return this;
+    }
+
+    /** Overrides the zoning group (see {@link #group()}). */
+    public InworldPanelSpec group(@Nullable String group) {
+        this.group = group;
         return this;
     }
 

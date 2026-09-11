@@ -561,8 +561,8 @@ public final class InworldManager implements InworldUiApi {
 
         layoutDocks(docked);
         docked.clear();
-        smoothFlatPositions();
         resolveConflicts();
+        smoothFlatPositions();
 
         //open-animation drive (world panels scale their quad instead)
         float now = level.getGameTime() + framePartialTick;
@@ -663,6 +663,7 @@ public final class InworldManager implements InworldUiApi {
      * stack from the corner inward in offer order.
      */
     private void layoutDocks(List<PanelRuntime> docked) {
+        Arrays.fill(dockTopExtent, 0);
         if (docked.isEmpty()) return;
         int W = mc.getWindow().getGuiScaledWidth();
         int H = mc.getWindow().getGuiScaledHeight();
@@ -686,6 +687,11 @@ public final class InworldManager implements InworldUiApi {
                 default -> H - marginY - h - slot;
             };
             dockCursors[corner.ordinal()] = slot + h + gap;
+            if (corner == InworldPlacement.DockCorner.TOP_LEFT) {
+                dockTopExtent[0] = Math.max(dockTopExtent[0], y + h);
+            } else if (corner == InworldPlacement.DockCorner.TOP_RIGHT) {
+                dockTopExtent[1] = Math.max(dockTopExtent[1], y + h);
+            }
             runtime.targetX = x;
             runtime.targetY = y;
         }
@@ -722,24 +728,39 @@ public final class InworldManager implements InworldUiApi {
     }
 
     private final int[] dockCursors = new int[InworldPlacement.DockCorner.values().length];
+    /** bottom edge (px) of the TOP_LEFT/TOP_RIGHT dock stacks — tag rails start below them */
+    private final int[] dockTopExtent = new int[2];
 
     /**
-     * Keeps non-interactive flat panels (entity tags) out of the foreground:
-     * interactive panels own their screen area; tags are placed nearest-first
-     * (by distance) and each one slides to the closest free slot around
-     * whatever blocks it — above, below, left, right — or is hidden for the
-     * frame when nothing nearby is free. Placed tags reserve their rect so
-     * later tags can't stack on them.
+     * Screen zoning for non-interactive flat panels (entity tags).
+     *
+     * Interactive panels own their settled rect. A tag keeps its anchor
+     * position when it fits; a graze slides it to the cheapest free side of
+     * the blocker (≤24px, stays near the entity); anything bigger is pulled
+     * into a side rail — an edge column on the half of the screen its anchor
+     * projects into. Rails are packed in offer order (group, then distance)
+     * with uniform gaps, so crowded tags form a tidy list instead of a
+     * scatter of barely-disjoint boxes. Rail-bound tags glide to their slot.
      */
     private void resolveConflicts() {
         int W = mc.getWindow().getGuiScaledWidth();
         int H = mc.getWindow().getGuiScaledHeight();
+        int margin = 8;
+
+        //foreground: interactive flat panels at their settled (target) slots,
+        //plus the projected screen rect of world-space panels — a hologram
+        //floats in the world but still owns its screen area
         List<Rect2i> occupied = new ArrayList<>();
         for (PanelRuntime r : panels.values()) {
-            if (r.presented && r.flat && r.spec.interactive() && r.widget.visible()) {
+            if (!r.presented || !r.widget.visible()) continue;
+            if (r.flat && r.spec.interactive()) {
                 occupied.add(new Rect2i(
-                        r.widget.screenX, r.widget.screenY,
+                        r.smoothMove ? r.targetX : r.widget.screenX,
+                        r.smoothMove ? r.targetY : r.widget.screenY,
                         r.widget.width(), r.widget.height()));
+            } else if (!r.flat && worldSpace(r.spec.placement())) {
+                Rect2i b = projectedWorldRect(r);
+                if (b != null) occupied.add(b);
             }
         }
         if (occupied.isEmpty()) return;
@@ -750,20 +771,23 @@ public final class InworldManager implements InworldUiApi {
                 tags.add(r);
             }
         }
-        //nearer tags win the free slots; far ones get displaced or hidden
-        tags.sort(Comparator.comparingDouble(t -> t.distance));
+        //group first (siblings stay adjacent), then nearest first
+        tags.sort(Comparator.comparing((PanelRuntime t) -> t.spec.group())
+                .thenComparingDouble(t -> t.distance));
 
+        List<PanelRuntime> railQueue = new ArrayList<>();
         for (PanelRuntime tag : tags) {
             int w = tag.widget.width();
             int h = tag.widget.height();
-            int x = tag.widget.screenX;
-            int y = tag.widget.screenY;
-            for (int iter = 0; iter < 8; iter++) {
-                Rect2i blocker = firstOverlap(x, y, w, h, occupied);
-                if (blocker == null) break;
-                int bestX = Integer.MAX_VALUE, bestY = 0;
-                int bestCost = Integer.MAX_VALUE;
-                //slide to the cheapest free side of the blocking rect
+            int x = (int) Math.max(2, Math.min(W - w - 2,
+                    tag.smoothMove ? tag.targetX : tag.widget.screenX));
+            int y = (int) Math.max(2, Math.min(H - h - 2,
+                    tag.smoothMove ? tag.targetY : tag.widget.screenY));
+
+            Rect2i blocker = firstOverlap(x, y, w, h, occupied);
+            if (blocker != null) {
+                //small graze → slide to the cheapest free side, stays near the entity
+                int bx = Integer.MAX_VALUE, by = 0, bestCost = Integer.MAX_VALUE;
                 int[][] candidates = {
                         {x, blocker.getY() - h - 3},
                         {x, blocker.getY() + blocker.getHeight() + 3},
@@ -776,25 +800,62 @@ public final class InworldManager implements InworldUiApi {
                     int cost = Math.abs(cx - x) + Math.abs(cy - y);
                     if (cost < bestCost) {
                         bestCost = cost;
-                        bestX = cx;
-                        bestY = cy;
+                        bx = cx;
+                        by = cy;
                     }
                 }
-                if (bestX == Integer.MAX_VALUE) {
-                    //no free side — too crowded, hide the tag this frame
-                    x = PARK_BASE - parkCursor++ * PARK_STEP;
-                    y = 0;
-                    break;
+                if (bx != Integer.MAX_VALUE && bestCost <= 24) {
+                    x = bx;
+                    y = by;
+                } else {
+                    railQueue.add(tag);
+                    continue;
                 }
-                x = bestX;
-                y = bestY;
             }
-            if (x > -900_000) {
-                occupied.add(new Rect2i(x, y, w, h));
+            placeTag(tag, x, y);
+            occupied.add(new Rect2i(x, y, w, h));
+        }
+
+        //rails: packed columns on the left/right edge, below that side's
+        //top dock stack
+        int[] railY = {dockTopExtent[0] > 0 ? dockTopExtent[0] + 6 : margin + 16,
+                dockTopExtent[1] > 0 ? dockTopExtent[1] + 6 : margin + 16};
+        for (PanelRuntime tag : railQueue) {
+            int w = tag.widget.width();
+            int h = tag.widget.height();
+            int side = tag.anchorScreen != null && tag.anchorScreen.x < W * 0.5f ? 0 : 1;
+            int x = side == 0 ? margin : W - margin - w;
+            int y = railY[side];
+            while (firstOverlap(x, y, w, h, occupied) != null && y + h <= H - margin) {
+                y += 4;
             }
+            if (y + h > H - margin) {
+                //rail full — hide the tag this frame
+                tag.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+                tag.smoothMove = false;
+                continue;
+            }
+            tag.smoothMove = true; //glide into the rail slot
+            placeTag(tag, x, y);
+            occupied.add(new Rect2i(x, y, w, h));
+            railY[side] = y + h + 4;
+        }
+    }
+
+    /**
+     * Commits a tag's resolved position: non-smoothed panels (follow) write
+     * the slot directly; smoothed ones glide into it.
+     */
+    private void placeTag(PanelRuntime tag, int x, int y) {
+        if (tag.smoothMove) {
+            tag.posX = tag.widget.screenX;
+            tag.posY = tag.widget.screenY;
+            tag.posInit = true;
+            tag.targetX = x;
+            tag.targetY = y;
+        } else {
             tag.widget.setScreenPos(x, y);
-            tag.posX = tag.targetX = x;
-            tag.posY = tag.targetY = y;
+            tag.posInit = false;
         }
     }
 
@@ -806,6 +867,39 @@ public final class InworldManager implements InworldUiApi {
             }
         }
         return null;
+    }
+
+    /**
+     * Screen-space bounding box of a world-space panel's quad — the four
+     * corners projected and unioned with a small pad. Null when every corner
+     * is off-screen or unprojectable.
+     */
+    private @Nullable Rect2i projectedWorldRect(PanelRuntime r) {
+        Projection proj = projection;
+        if (proj == null || r.faceOrigin == null || r.faceU == null || r.faceV == null) {
+            return null;
+        }
+        double w = r.widget.width();
+        double h = r.widget.height();
+        Vec3 o = r.faceOrigin;
+        Vec3[] corners = {
+                o,
+                o.add(r.faceU.scale(w)),
+                o.add(r.faceV.scale(h)),
+                o.add(r.faceU.scale(w)).add(r.faceV.scale(h))};
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+        boolean any = false;
+        for (Vec3 c : corners) {
+            FloatPos s = proj.worldToScreen(c);
+            if (s == null) continue;
+            any = true;
+            minX = Math.min(minX, (int) s.x);
+            minY = Math.min(minY, (int) s.y);
+            maxX = Math.max(maxX, (int) s.x);
+            maxY = Math.max(maxY, (int) s.y);
+        }
+        return any ? new Rect2i(minX - 4, minY - 4, maxX - minX + 8, maxY - minY + 8) : null;
     }
 
     /**
