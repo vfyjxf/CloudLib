@@ -79,6 +79,7 @@ public final class TrackerPanelProvider implements InworldProvider {
                                 InworldPlacement.follow(0, 0),
                                 c -> entityTag(entity))
                         .interactive(false)
+                        .groupLimit(3)
                         .maxDistance(TrackerBlockEntity.RANGE * 2));
             }
         }

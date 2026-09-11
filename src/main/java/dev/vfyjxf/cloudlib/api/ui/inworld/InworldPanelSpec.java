@@ -37,6 +37,13 @@ public final class InworldPanelSpec {
      * the panel key's parent path ("tracker/ent/12" → "tracker/ent").
      */
     @Nullable String group;
+    /**
+     * Merge cap for the zoning group: at most this many non-interactive
+     * members are shown at once; the rest collapse into a "+N" badge on the
+     * last visible member. Unlimited by default. When members declare
+     * different limits the smallest wins.
+     */
+    int groupLimit = Integer.MAX_VALUE;
 
     private InworldPanelSpec(
             Object key,
@@ -115,6 +122,11 @@ public final class InworldPanelSpec {
         return slash > 0 ? k.substring(0, slash) : k;
     }
 
+    /** Max members of this panel's group shown at once — see {@link #groupLimit}. */
+    public int groupLimit() {
+        return groupLimit;
+    }
+
     //region mutation
 
     public InworldPanelSpec title(@Nullable Component title) {
@@ -150,6 +162,12 @@ public final class InworldPanelSpec {
     /** Overrides the zoning group (see {@link #group()}). */
     public InworldPanelSpec group(@Nullable String group) {
         this.group = group;
+        return this;
+    }
+
+    /** Caps how many members of this panel's group may be visible at once; extras merge into a "+N" badge. */
+    public InworldPanelSpec groupLimit(int groupLimit) {
+        this.groupLimit = Math.max(1, groupLimit);
         return this;
     }
 

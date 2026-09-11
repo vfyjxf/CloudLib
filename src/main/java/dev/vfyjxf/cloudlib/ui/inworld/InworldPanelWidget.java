@@ -46,6 +46,8 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
     float openScale = 1f;
     /** distance falloff scale for non-interactive tags; driven by the manager */
     float distScale = 1f;
+    /** merge badge drawn at the top-right corner ("+3") — null = none */
+    @Nullable String overflow;
 
     public InworldPanelWidget(PanelRuntime runtime, InworldPanelSpec spec, Widget content) {
         this.runtime = runtime;
@@ -209,6 +211,15 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
                 }
                 hx -= 4;
             }
+        }
+
+        //merge badge: "+N" chip hanging off the top-right corner
+        if (overflow != null) {
+            var font = Minecraft.getInstance().font;
+            int tw = font.width(overflow) + 5;
+            canvas.fill(w - tw - 2, -4, tw, 9, InworldTheme.BG_FOCUSED);
+            canvas.strokeRect(w - tw - 2, -4, tw, 9, InworldTheme.ACCENT);
+            canvas.text(overflow, w - tw + 1, -3, InworldTheme.ACCENT);
         }
     }
 

@@ -66,6 +66,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -784,12 +785,38 @@ public final class InworldManager implements InworldUiApi {
                 tags.add(r);
             }
         }
-        //group first (siblings stay adjacent), then nearest first
+        //stable order: group → coarse distance bucket (2-block steps, so tiny
+        //distance wiggles don't reorder) → key — keeps slots from swapping
         tags.sort(Comparator.comparing((PanelRuntime t) -> t.spec.group())
-                .thenComparingDouble(t -> t.distance));
+                .thenComparingInt(t -> (int) (t.distance / 2))
+                .thenComparing(t -> String.valueOf(t.spec.key())));
+
+        //merge pass: a group shows at most groupLimit members; extras hide
+        //and the last visible member carries a "+N" badge
+        List<PanelRuntime> visible = new ArrayList<>(tags.size());
+        Map<String, Integer> groupIdx = new HashMap<>();
+        Map<String, PanelRuntime> groupLast = new HashMap<>();
+        Map<String, Integer> groupHidden = new HashMap<>();
+        for (PanelRuntime tag : tags) {
+            tag.widget.overflow = null;
+            String g = tag.spec.group();
+            int idx = groupIdx.merge(g, 1, Integer::sum) - 1;
+            if (idx < tag.spec.groupLimit()) {
+                visible.add(tag);
+                groupLast.put(g, tag);
+            } else {
+                groupHidden.merge(g, 1, Integer::sum);
+                tag.presented = false;
+                tag.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+            }
+        }
+        for (var e : groupLast.entrySet()) {
+            int hidden = groupHidden.getOrDefault(e.getKey(), 0);
+            if (hidden > 0) e.getValue().widget.overflow = "+" + hidden;
+        }
 
         List<PanelRuntime> railQueue = new ArrayList<>();
-        for (PanelRuntime tag : tags) {
+        for (PanelRuntime tag : visible) {
             int w = tag.widget.width();
             int h = tag.widget.height();
             int x = (int) Math.max(2, Math.min(W - w - 2,
@@ -799,28 +826,34 @@ public final class InworldManager implements InworldUiApi {
 
             Rect2i blocker = firstOverlap(x, y, w, h, occupied);
             if (blocker != null) {
-                //small graze → slide to the cheapest free side, stays near the entity
-                int bx = Integer.MAX_VALUE, by = 0, bestCost = Integer.MAX_VALUE;
+                //small graze → slide to the cheapest free side; the last used
+                //direction gets a discount so near-tied sides don't flip
+                int bx = Integer.MAX_VALUE, by = 0, bestCost = Integer.MAX_VALUE, bestDir = -1;
                 int[][] candidates = {
                         {x, blocker.getY() - h - 3},
                         {x, blocker.getY() + blocker.getHeight() + 3},
                         {blocker.getX() - w - 3, y},
                         {blocker.getX() + blocker.getWidth() + 3, y}};
-                for (int[] c : candidates) {
+                for (int i = 0; i < candidates.length; i++) {
+                    int[] c = candidates[i];
                     int cx = Math.max(2, Math.min(W - w - 2, c[0]));
                     int cy = Math.max(2, Math.min(H - h - 2, c[1]));
                     if (firstOverlap(cx, cy, w, h, occupied) != null) continue;
-                    int cost = Math.abs(cx - x) + Math.abs(cy - y);
+                    int cost = Math.abs(cx - x) + Math.abs(cy - y)
+                            - (i == tag.lastSlideDir ? 14 : 0);
                     if (cost < bestCost) {
                         bestCost = cost;
                         bx = cx;
                         by = cy;
+                        bestDir = i;
                     }
                 }
-                if (bx != Integer.MAX_VALUE && bestCost <= 24) {
+                if (bestDir >= 0 && bestCost <= 24) {
                     x = bx;
                     y = by;
+                    tag.lastSlideDir = bestDir;
                 } else {
+                    tag.lastSlideDir = -1;
                     railQueue.add(tag);
                     continue;
                 }

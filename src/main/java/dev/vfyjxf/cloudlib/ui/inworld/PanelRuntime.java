@@ -47,6 +47,9 @@ final class PanelRuntime implements InworldPanel {
     float posX, posY;
     /** whether posX/posY hold a valid previous position (false → snap, no glide) */
     boolean posInit;
+    /** sticky conflict-slide direction (index into the 4-side candidate list);
+     *  keeps a displaced tag from flip-flopping between near-tied sides */
+    int lastSlideDir = -1;
 
     /** gameTime+partialTick when the panel was created; -1 = no open animation */
     float bornAt = -1;
