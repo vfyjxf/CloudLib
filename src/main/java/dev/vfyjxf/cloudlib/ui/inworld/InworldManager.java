@@ -57,6 +57,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -132,6 +133,7 @@ public final class InworldManager implements InworldUiApi {
     private boolean pressedConsumed;
 
     private @Nullable Projection projection;
+    private @Nullable Matrix4f worldToView;
     private long tick;
 
     private int parkCursor = 0;
@@ -140,6 +142,9 @@ public final class InworldManager implements InworldUiApi {
 
     private record ProviderRegistration(InworldProvider provider, int interval, long nextRun) {
     }
+
+    /** Each provider's most recent emission — persisted between its runs so reconcile doesn't drop panels on off-ticks. */
+    private final Map<InworldProvider, Map<Object, InworldPanelSpec>> providerPanels = new IdentityHashMap<>();
 
     //endregion
 
@@ -182,6 +187,15 @@ public final class InworldManager implements InworldUiApi {
     @Override
     public void unregisterProvider(InworldProvider provider) {
         providers.removeIf(r -> r.provider() == provider);
+        if (providerPanels.remove(provider) != null) {
+            Map<Object, InworldPanelSpec> wanted = new LinkedHashMap<>(imperative);
+            for (Map<Object, InworldPanelSpec> emitted : providerPanels.values()) {
+                for (InworldPanelSpec spec : emitted.values()) {
+                    wanted.putIfAbsent(spec.key(), spec);
+                }
+            }
+            reconcile(wanted);
+        }
     }
 
     @Override
@@ -267,18 +281,31 @@ public final class InworldManager implements InworldUiApi {
         while (KeyMappings.focusNext.consumeClick()) focusNext();
         while (KeyMappings.focusPrevious.consumeClick()) focusPrevious();
 
-        //providers
+        //providers — each provider's last emission is cached; reconcile runs
+        //when at least one provider was re-evaluated (or on the first tick so
+        //imperative panels created before providers registered still show)
         if (mc.level != null) {
-            Map<Object, InworldPanelSpec> wanted = new LinkedHashMap<>(imperative);
+            boolean ran = tick == 1;
             InworldContext ctx = new InworldContext(mc.level, mc.player, mc.gameRenderer.getMainCamera(), currentProjection(), tick);
             for (int i = 0; i < providers.size(); i++) {
                 ProviderRegistration reg = providers.get(i);
                 if (tick >= reg.nextRun()) {
-                    reg.provider().provide(ctx, spec -> wanted.putIfAbsent(spec.key(), spec));
+                    Map<Object, InworldPanelSpec> emitted = new LinkedHashMap<>();
+                    reg.provider().provide(ctx, spec -> emitted.putIfAbsent(spec.key(), spec));
+                    providerPanels.put(reg.provider(), emitted);
                     providers.set(i, new ProviderRegistration(reg.provider(), reg.interval(), tick + reg.interval()));
+                    ran = true;
                 }
             }
-            reconcile(wanted);
+            if (ran) {
+                Map<Object, InworldPanelSpec> wanted = new LinkedHashMap<>(imperative);
+                for (Map<Object, InworldPanelSpec> emitted : providerPanels.values()) {
+                    for (InworldPanelSpec spec : emitted.values()) {
+                        wanted.putIfAbsent(spec.key(), spec);
+                    }
+                }
+                reconcile(wanted);
+            }
         }
 
         scene.tick();
@@ -289,10 +316,15 @@ public final class InworldManager implements InworldUiApi {
         if (mc.level == null || mc.player == null) return;
         if (mc.options.hideGui) return;
 
-        //capture this frame's projection
-        Matrix4f worldToView = new Matrix4f(event.getPoseStack().last().pose());
-        Matrix4f viewToClip = event.getProjectionMatrix();
+        //capture this frame's projection. Note: the per-rendertype stages pass
+        //no pose stack (getPoseStack() is a fresh identity stack); the real
+        //world→view matrix is getModelViewMatrix(), which is camera ROTATION
+        //only — the −cameraPos translation happens inside renderSectionLayer.
         Vec3 cameraPos = event.getCamera().getPosition();
+        Matrix4f worldToView = new Matrix4f(event.getModelViewMatrix());
+        worldToView.translate((float) -cameraPos.x, (float) -cameraPos.y, (float) -cameraPos.z);
+        this.worldToView = worldToView;
+        Matrix4f viewToClip = event.getProjectionMatrix();
         int w = mc.getWindow().getGuiScaledWidth();
         int h = mc.getWindow().getGuiScaledHeight();
         projection = Projection.capture(worldToView, viewToClip, cameraPos, w, h);
@@ -553,7 +585,7 @@ public final class InworldManager implements InworldUiApi {
                 .add(n.scale(0.5))
                 .add(uAxis.scale(face.u() - 0.5))
                 .add(vAxis.scale(face.v() - 0.5))
-                .add(n.scale(0.002));
+                .add(n.scale(0.002 + 2 * s));
 
         runtime.faceU = uAxis.scale(s);
         runtime.faceV = vAxis.scale(s);
@@ -565,7 +597,12 @@ public final class InworldManager implements InworldUiApi {
         runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
     }
 
-    /** Panel +x axis in world space for each face (right as seen from outside the face). */
+    /**
+     * Panel +x axis in world space for each face (right as seen from outside
+     * the face). With v = down and n_col = u×v the basis is right-handed and
+     * unmirrored; u×v ends up opposite the face normal — that's expected for
+     * GUI-style quads whose front faces the viewer.
+     */
     private static Vec3 faceUAxis(Direction face) {
         return switch (face) {
             case NORTH -> new Vec3(-1, 0, 0);
@@ -703,6 +740,13 @@ public final class InworldManager implements InworldUiApi {
     /** Renders face panels in world space during the level stage. */
     private void renderFacePanels(RenderLevelStageEvent event, Vec3 cameraPos) {
         MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
+        //vertices are pre-transformed to view space by the widget pose below —
+        //the shader still multiplies ProjMat·ModelViewMat, so force ModelView
+        //to identity or the leftover rotation applies twice
+        var modelView = RenderSystem.getModelViewStack();
+        modelView.pushMatrix();
+        modelView.identity();
+        RenderSystem.applyModelViewMatrix();
         //batched quads may wind clockwise from the viewing side — draw them two-sided
         RenderSystem.disableCull();
         for (PanelRuntime runtime : panels.values()) {
@@ -710,7 +754,9 @@ public final class InworldManager implements InworldUiApi {
             if (!runtime.presented || !runtime.widget.visible()) continue;
 
             PoseStack pose = new PoseStack();
-            pose.last().pose().set(event.getPoseStack().last().pose());
+            //worldToView already contains the −cam translation, so the panel's
+            //world-space origin is translated verbatim
+            pose.last().pose().set(worldToView != null ? worldToView : event.getModelViewMatrix());
             pose.translate(runtime.faceOrigin.x, runtime.faceOrigin.y, runtime.faceOrigin.z);
             pose.last().pose().mul(faceBasis(runtime));
 
@@ -728,18 +774,25 @@ public final class InworldManager implements InworldUiApi {
             graphics.flush();
         }
         RenderSystem.enableCull();
+        modelView.popMatrix();
+        RenderSystem.applyModelViewMatrix();
     }
 
-    /** Local px → world basis: x→u·s, y→v·s, z→normal·s (keeps layering sane). */
+    /**
+     * Local px → world basis: x→u, y→v, z→u×v (normalized back to 1px depth).
+     * u×v points opposite the face normal — same handedness as GUI screen
+     * space, so fills/text are unmirrored for a viewer outside the face.
+     */
     private static Matrix4f faceBasis(PanelRuntime runtime) {
         Vec3 u = runtime.faceU;
         Vec3 v = runtime.faceV;
-        Vec3 n = runtime.faceNormal;
-        double s = 1.0 / runtime.facePpb;
+        Vec3 w = u.cross(v);
+        double len = w.length();
+        if (len > 0) w = w.scale(1.0 / len / runtime.facePpb);
         Matrix4f m = new Matrix4f();
         m.m00((float) u.x); m.m10((float) u.y); m.m20((float) u.z);
         m.m01((float) v.x); m.m11((float) v.y); m.m21((float) v.z);
-        m.m02((float) (n.x * s)); m.m12((float) (n.y * s)); m.m22((float) (n.z * s));
+        m.m02((float) w.x); m.m12((float) w.y); m.m22((float) w.z);
         m.m33(1);
         return m;
     }
@@ -806,8 +859,10 @@ public final class InworldManager implements InworldUiApi {
 
             int color = runtime.focused() ? InworldTheme.LINE_FOCUSED : InworldTheme.LINE;
             drawLine(graphics, (float) ex, (float) ey, (float) anchorPx.x, (float) anchorPx.y, color);
-            //anchor node: small square
-            graphics.fill((int) anchorPx.x - 1, (int) anchorPx.y - 1, 3, 3,
+            //anchor node: small square — fill takes corners, not w/h
+            int ax = (int) anchorPx.x;
+            int ay = (int) anchorPx.y;
+            graphics.fill(ax - 1, ay - 1, ax + 2, ay + 2,
                     runtime.focused() ? InworldTheme.LINE_FOCUSED : InworldTheme.LINE_NODE);
         }
     }

@@ -606,7 +606,10 @@ public final class Scene {
             }
             remountWidgets.clear();
         }
-        if (tree.needsVisit(root.nodeId())) {
+        //needsVisit only reflects layout computed in a previous pass; a freshly
+        //markDirty'd node has an empty cache instead — check both so dirty
+        //marking actually triggers a relayout
+        if (tree.needsVisit(root.nodeId()) || tree.isDirty(root.nodeId())) {
             layout();
             root.applyLayout();
         }

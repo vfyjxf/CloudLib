@@ -58,10 +58,6 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
                         InworldTheme.PADDING
                 )
         );
-        onLayout((widget, scope) -> {
-            scope.useTaffy();
-            scope.setPosition(screenX, screenY);
-        });
         //tab / shift+tab cycles focus through the panel's focusable content
         onKeyPressed((input, context) -> {
             if (input.isKey(GLFW.GLFW_KEY_TAB)) {
@@ -114,6 +110,18 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
                 scene().layoutTree().markDirty(nodeId());
             }
         }
+    }
+
+    /**
+     * Panel position is driven by the manager ({@link #setScreenPos}), not by
+     * taffy — the absolute-positioned node's taffy layout is always (0,0) and
+     * unchanged layouts never fire {@code onLayout}, so apply the pending
+     * position directly after the super pass.
+     */
+    @Override
+    public void applyLayout() {
+        super.applyLayout();
+        viewport().setLayout(screenX, screenY);
     }
 
     void setTitle(@Nullable Component title) {

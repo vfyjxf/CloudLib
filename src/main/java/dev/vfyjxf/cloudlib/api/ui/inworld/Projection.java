@@ -10,9 +10,11 @@ import org.joml.Vector4f;
  * World ↔ screen coordinate conversion for the in-world UI layer.
  * <p>
  * A {@code Projection} captures the camera transform of one rendered frame:
- * the world→view matrix (the level-render pose stack, which already contains
- * the camera rotation and translation) and the view→clip matrix (the game
- * projection matrix). All conversions are expressed in <b>gui-scaled</b>
+ * the world→view matrix — note that vanilla's level {@code modelViewMatrix}
+ * is camera <em>rotation only</em>; the caller must compose in the
+ * {@code −cameraPos} translation themselves ({@code m.translate(-cam)}) — and
+ * the view→clip matrix (the game projection matrix). All conversions are
+ * expressed in <b>gui-scaled</b>
  * screen pixels — the same coordinate space {@link dev.vfyjxf.cloudlib.api.ui.base.Scene}
  * works in.
  *
