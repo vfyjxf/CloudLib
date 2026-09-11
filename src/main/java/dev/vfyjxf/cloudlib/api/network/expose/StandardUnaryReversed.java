@@ -1,40 +1,24 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
-import net.minecraft.network.RegistryFriendlyByteBuf;
+import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
+import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
 
 import java.util.function.Consumer;
 
-final class StandardUnaryReversed<T> implements UnaryReversed<T>, ReversedTranscoder {
+final class StandardUnaryReversed<T> extends StandardReversed<T, T> implements UnaryReversed<T> {
 
-    private final StandardReversed<T, T> reversed;
-
-    StandardUnaryReversed(StandardReversed<T, T> reversed) {
-        this.reversed = reversed;
+    StandardUnaryReversed(
+            String name,
+            short id,
+            FlowEncoder<T> reversedEncoder,
+            FlowDecoder<T> reversedDecoder
+    ) {
+        super(name, id, reversedEncoder, reversedDecoder);
     }
 
     @Override
-    public void sendToServer(T toSend) {
-        reversed.sendToServer(toSend);
-    }
-
-    @Override
-    public UnaryReversed<T> whenReceiveFromClient(Consumer<T> consumer) {
-        reversed.whenReceiveFromClient(consumer);
+    public StandardUnaryReversed<T> whenReceiveFromClient(Consumer<T> consumer) {
+        super.whenReceiveFromClient(consumer);
         return this;
-    }
-
-    @Override
-    public boolean hasReversedData() {
-        return reversed.hasReversedData();
-    }
-
-    @Override
-    public void writeToServer(RegistryFriendlyByteBuf byteBuf) {
-        reversed.writeToServer(byteBuf);
-    }
-
-    @Override
-    public void readFromClient(RegistryFriendlyByteBuf byteBuf) {
-        reversed.readFromClient(byteBuf);
     }
 }

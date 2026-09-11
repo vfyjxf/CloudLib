@@ -4,7 +4,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 
 @ApiStatus.Internal
-public sealed interface ExposeCommon permits Expose, LayerExpose {
+sealed interface ExposeCommon permits Expose, LayerExpose {
 
     /**
      * @return the debug name of this expose

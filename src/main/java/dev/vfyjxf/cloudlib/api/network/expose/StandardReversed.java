@@ -12,7 +12,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
 @ApiStatus.Internal
-final class StandardReversed<S, R> extends BasicExpose<Void> implements ReversedOnly<S, R>, ReversedTranscoder {
+sealed class StandardReversed<S, R> extends BasicExpose<Void> implements ReversedOnly<S, R>, ReversedTranscoder
+        permits StandardUnaryReversed {
 
     private final SimpleEvent<Consumer<R>> reverseReceiveEvent = SimpleEvent.create();
     private final FlowEncoder<S> reversedEncoder;

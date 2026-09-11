@@ -14,13 +14,12 @@ public sealed interface UnaryReversed<T>
             FlowEncoder<T> reversedEncoder,
             FlowDecoder<T> reversedDecoder
     ) {
-        StandardReversed<T, T> reversed = new StandardReversed<>(
+        return new StandardUnaryReversed<>(
                 name,
                 id,
                 reversedEncoder,
                 reversedDecoder
         );
-        return new StandardUnaryReversed<>(reversed);
     }
 
     static <T> UnaryReversed<T> create(
