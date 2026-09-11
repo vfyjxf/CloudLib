@@ -5,10 +5,10 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.sync.BasicMenuScreen;
-import dev.vfyjxf.cloudlib.test.inworld.ChipWidget;
-import dev.vfyjxf.cloudlib.test.inworld.ItemStripWidget;
-import dev.vfyjxf.cloudlib.ui.inworld.HackerPanel;
-import dev.vfyjxf.cloudlib.ui.inworld.InworldTheme;
+import dev.vfyjxf.cloudlib.ui.widget.ChipWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ItemStripWidget;
+import dev.vfyjxf.cloudlib.ui.hacker.HackerPanel;
+import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.ui.widget.TextWidget;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.JustifyContent;
@@ -46,31 +46,31 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
         mainGroup.addWidget(panel);
 
         //region live scalars
-        var basic = TextWidget.of("basic --").setColor(InworldTheme.TEXT);
+        var basic = TextWidget.of("basic --").setColor(HackerTheme.TEXT);
         menu.basic.whenReceive(v -> basic.setText("basic " + v));
         panel.addChild(basic);
 
-        var reference = TextWidget.of("ref --").setColor(InworldTheme.TEXT_DIM);
+        var reference = TextWidget.of("ref --").setColor(HackerTheme.TEXT_DIM);
         menu.reference.whenReceive(v -> reference.setText("ref " + v));
         panel.addChild(reference);
         //endregion
 
         //region register entry (single live item)
-        panel.addChild(TextWidget.of("entry").setColor(InworldTheme.TEXT_DIM));
+        panel.addChild(TextWidget.of("entry").setColor(HackerTheme.TEXT_DIM));
         var entry = new ItemStripWidget();
         panel.addChild(entry);
         menu.registerEntry.whenReceive(stack -> entry.setItems(List.of(stack)));
         //endregion
 
         //region transform inventory (9 slots, live layer expose)
-        panel.addChild(TextWidget.of("transform").setColor(InworldTheme.TEXT_DIM));
+        panel.addChild(TextWidget.of("transform").setColor(HackerTheme.TEXT_DIM));
         var transform = new ItemStripWidget();
         panel.addChild(transform);
         menu.layerExpose.whenReceive(transform::setItems);
         //endregion
 
         //region selected — client → server reversed channel
-        panel.addChild(TextWidget.of("select → server").setColor(InworldTheme.TEXT_DIM));
+        panel.addChild(TextWidget.of("select → server").setColor(HackerTheme.TEXT_DIM));
         WidgetGroup<Widget> chips = Widgets.row(JustifyContent.FLEX_START, AlignItems.FLEX_START);
         chips.useStyle(columnGap(2));
         List<ItemStack> options = List.of(
@@ -81,7 +81,7 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
                 Items.NETHERITE_SCRAP.getDefaultInstance()
         );
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        var lastSent = TextWidget.of("--").setColor(InworldTheme.ACCENT);
+        var lastSent = TextWidget.of("--").setColor(HackerTheme.ACCENT);
         for (int i = 0; i < options.size(); i++) {
             ItemStack stack = options.get(i);
             chips.addWidget(ChipWidget.of(String.valueOf(i + 1), () -> {

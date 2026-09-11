@@ -8,7 +8,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelSpec;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPlacement;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldProvider;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldSink;
-import dev.vfyjxf.cloudlib.ui.inworld.InworldTheme;
+import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.ui.widget.TextWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -51,7 +51,7 @@ public final class WaypointPanelProvider implements InworldProvider {
     private static final String[] WINDS = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
 
     private static Widget content(InworldPanelContext ctx) {
-        var distance = TextWidget.of("◈ --").setColor(InworldTheme.ACCENT);
+        var distance = TextWidget.of("◈ --").setColor(HackerTheme.ACCENT);
         distance.setTickable(true);
         distance.onTick(() -> {
             var player = Minecraft.getInstance().player;

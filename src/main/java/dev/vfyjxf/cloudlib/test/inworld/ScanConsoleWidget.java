@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.test.inworld;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
-import dev.vfyjxf.cloudlib.ui.inworld.InworldTheme;
+import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -77,7 +77,7 @@ public final class ScanConsoleWidget extends Widget {
             if (e == mc.player) continue;
             float nx = (float) ((e.getX() - anchor.getX() - 0.5) / range);
             float nz = (float) ((e.getZ() - anchor.getZ() - 0.5) / range);
-            int color = e instanceof Monster ? WARN : InworldTheme.ACCENT;
+            int color = e instanceof Monster ? WARN : HackerTheme.ACCENT;
             found.add(new Blip(nx, nz, color));
         }
         blips = found;
@@ -114,7 +114,7 @@ public final class ScanConsoleWidget extends Widget {
         double sweep = now * 0.11;
         for (int i = 0; i < 3; i++) {
             double a = sweep - i * 0.16;
-            int color = ((int) ((1f - i * 0.33f) * 200) << 24) | (InworldTheme.ACCENT & 0xFFFFFF);
+            int color = ((int) ((1f - i * 0.33f) * 200) << 24) | (HackerTheme.ACCENT & 0xFFFFFF);
             canvas.line(cx, cy, (float) (cx + Math.cos(a) * r), (float) (cy + Math.sin(a) * r), 1f, color);
         }
 
@@ -132,7 +132,7 @@ public final class ScanConsoleWidget extends Widget {
                 canvas.strokeRect(bx - 3, by - 3, 7, 7, color);
             }
         }
-        canvas.strokeRect(cx - r - 2, cy - r - 2, r * 2 + 4, r * 2 + 4, InworldTheme.BORDER);
+        canvas.strokeRect(cx - r - 2, cy - r - 2, r * 2 + 4, r * 2 + 4, HackerTheme.BORDER);
     }
 
     /** Right column: synced stats + threshold bar + alert lamp. */
@@ -140,34 +140,34 @@ public final class ScanConsoleWidget extends Widget {
         int x = 102;
         int y = 6;
         if (be == null) {
-            canvas.text("NO LINK", x, y + 20, InworldTheme.TEXT_DIM);
+            canvas.text("NO LINK", x, y + 20, HackerTheme.TEXT_DIM);
             return;
         }
         int ents = be.entities().get();
         int thr = be.threshold().get();
 
-        canvas.text("ENTS " + ents, x, y, InworldTheme.TEXT);
-        canvas.text("NEAR " + be.nearest().get(), x, y + 11, InworldTheme.TEXT_DIM);
-        canvas.text("PING " + be.pings().get(), x, y + 22, InworldTheme.TEXT_DIM);
+        canvas.text("ENTS " + ents, x, y, HackerTheme.TEXT);
+        canvas.text("NEAR " + be.nearest().get(), x, y + 11, HackerTheme.TEXT_DIM);
+        canvas.text("PING " + be.pings().get(), x, y + 22, HackerTheme.TEXT_DIM);
 
         //crowd threshold bar — flips to warn color when live count crosses it
         int barY = y + 35;
-        canvas.text("THR", x, barY - 1, InworldTheme.TEXT_DIM);
+        canvas.text("THR", x, barY - 1, HackerTheme.TEXT_DIM);
         int bx = x + 20;
         int bw = 44;
         boolean tripped = ents >= thr && ents > 0;
-        int fill = tripped ? WARN : InworldTheme.ACCENT;
+        int fill = tripped ? WARN : HackerTheme.ACCENT;
         canvas.fill(bx, barY, bw, 5, BG_PANEL);
         canvas.strokeRect(bx, barY, bw, 5, 0x5535D6D0);
         int fw = (int) ((bw - 2) * (thr / (double) TrackerBlockEntity.MAX_THRESHOLD));
         canvas.fill(bx + 1, barY + 1, fw, 3, fill);
         //live count marker riding on the same bar
         int mark = bx + 1 + (int) ((bw - 2) * Math.min(1, ents / (double) TrackerBlockEntity.MAX_THRESHOLD));
-        canvas.fill(mark, barY - 1, 1, 7, InworldTheme.TEXT);
-        canvas.text(thr + "", bx + bw + 3, barY - 1, tripped ? WARN : InworldTheme.TEXT_DIM);
+        canvas.fill(mark, barY - 1, 1, 7, HackerTheme.TEXT);
+        canvas.text(thr + "", bx + bw + 3, barY - 1, tripped ? WARN : HackerTheme.TEXT_DIM);
 
         canvas.text(be.alert().get() ? "■ ALRT" : "· idle", x, y + 46,
-                be.alert().get() ? WARN : InworldTheme.TEXT_DIM);
+                be.alert().get() ? WARN : HackerTheme.TEXT_DIM);
     }
 
     /** Bottom-left: entity-count history sparkline. */
@@ -176,7 +176,7 @@ public final class ScanConsoleWidget extends Widget {
         int sy = 97;
         int sw = 88;
         int sh = 8;
-        canvas.text("HIST", sx, sy - 8, InworldTheme.TEXT_DIM);
+        canvas.text("HIST", sx, sy - 8, HackerTheme.TEXT_DIM);
         canvas.fill(sx, sy, sw, sh, BG_PANEL);
         canvas.strokeRect(sx, sy, sw, sh, 0x5535D6D0);
         if (histSize < 2) return;
@@ -187,7 +187,7 @@ public final class ScanConsoleWidget extends Widget {
             int px = sx + 1 + i * (sw - 2) / Math.max(1, history.length - 1);
             int py = sy + sh - 1 - (int) (Math.min(v, 32) / 32.0 * (sh - 2));
             if (prevX >= 0) {
-                canvas.line(prevX, prevY, px, py, InworldTheme.ACCENT_DIM);
+                canvas.line(prevX, prevY, px, py, HackerTheme.ACCENT_DIM);
             }
             prevX = px;
             prevY = py;
@@ -204,8 +204,8 @@ public final class ScanConsoleWidget extends Widget {
             float amp = (float) (Math.sin(now * 0.3 + i * 0.9) * 0.5 + 0.5);
             int bh = 2 + (int) (amp * 7);
             canvas.fill(x + i * (bw + 2), base - bh, bw, bh,
-                    amp > 0.6f ? InworldTheme.ACCENT : InworldTheme.ACCENT_DIM);
+                    amp > 0.6f ? HackerTheme.ACCENT : HackerTheme.ACCENT_DIM);
         }
-        canvas.text("SIG", x, base - 16, InworldTheme.TEXT_DIM);
+        canvas.text("SIG", x, base - 16, HackerTheme.TEXT_DIM);
     }
 }

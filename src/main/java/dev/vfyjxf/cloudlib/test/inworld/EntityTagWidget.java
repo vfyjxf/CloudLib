@@ -2,7 +2,7 @@ package dev.vfyjxf.cloudlib.test.inworld;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.ui.inworld.InworldTheme;
+import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -45,16 +45,16 @@ public final class EntityTagWidget extends Widget {
         var font = context().font();
         int w = width();
 
-        canvas.text("◇ " + name(), 0, 0, InworldTheme.ACCENT);
+        canvas.text("◇ " + name(), 0, 0, HackerTheme.ACCENT);
         String hp = (int) Math.ceil(entity.getHealth()) + "";
-        canvas.text(hp, w - font.width(hp), 0, InworldTheme.TEXT_DIM);
+        canvas.text(hp, w - font.width(hp), 0, HackerTheme.TEXT_DIM);
 
         float frac = entity.getMaxHealth() > 0 ? entity.getHealth() / entity.getMaxHealth() : 0;
         int barY = font.lineHeight + 1;
         canvas.fill(0, barY, w, 2, 0x66061012);
         int fill = (int) (w * Math.clamp(frac, 0f, 1f));
         if (fill > 0) {
-            canvas.fill(0, barY, fill, 2, frac < 0.3f ? HP_LOW : InworldTheme.ACCENT);
+            canvas.fill(0, barY, fill, 2, frac < 0.3f ? HP_LOW : HackerTheme.ACCENT);
         }
     }
 }

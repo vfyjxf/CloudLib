@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.ui.inworld;
+package dev.vfyjxf.cloudlib.ui.hacker;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
@@ -29,8 +29,8 @@ public class HackerPanel extends WidgetGroup<Widget> {
         useStyle(UIStyle.of(
                 flexColumn(),
                 rowGap(3),
-                padding(title != null ? InworldTheme.TITLE_HEIGHT + 2 : InworldTheme.PADDING,
-                        6, InworldTheme.PADDING + 1, 6)
+                padding(title != null ? HackerTheme.TITLE_HEIGHT + 2 : HackerTheme.PADDING,
+                        6, HackerTheme.PADDING + 1, 6)
         ));
     }
 
@@ -47,12 +47,12 @@ public class HackerPanel extends WidgetGroup<Widget> {
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         int w = width();
         int h = height();
-        canvas.fill(0, 0, w, h, InworldTheme.BG);
-        canvas.strokeRect(0, 0, w, h, InworldTheme.BORDER);
+        canvas.fill(0, 0, w, h, HackerTheme.BG);
+        canvas.strokeRect(0, 0, w, h, HackerTheme.BORDER);
         if (title != null) {
-            canvas.fill(3, 5, 3, 3, InworldTheme.ACCENT);
-            canvas.text(title, 9, 3, InworldTheme.TEXT);
-            canvas.fill(0, InworldTheme.TITLE_HEIGHT + 1, w, 1, InworldTheme.TITLE_RULE);
+            canvas.fill(3, 5, 3, 3, HackerTheme.ACCENT);
+            canvas.text(title, 9, 3, HackerTheme.TEXT);
+            canvas.fill(0, HackerTheme.TITLE_HEIGHT + 1, w, 1, HackerTheme.TITLE_RULE);
         }
     }
 }

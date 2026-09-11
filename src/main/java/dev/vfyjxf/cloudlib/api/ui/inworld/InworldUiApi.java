@@ -30,8 +30,14 @@ import java.util.List;
  *       crosshair, or the panel whose anchor block is looked at) plus mouse
  *       clicks, which are swallowed when a widget consumes them.</li>
  *   <li><b>inspect</b> — free mouse cursor while the inspect key is held.</li>
- *   <li><b>keynav</b> — the cycle-focus key walks the panel focus ring;
+ *   <li><b>soft focus</b> — the actionable panel nearest the look vector in a
+ *       cone is focused automatically; the interact key fires its primary
+ *       {@link InworldPanelSpec#action} without pixel-perfect aim.</li>
+ *   <li><b>keynav</b> — the cycle-focus keys walk the panel focus ring;
  *       keyboard input is routed to the focused panel.</li>
+ *   <li><b>trace</b> — content widgets implementing {@link InworldTraceable}
+ *       capture a drag on the panel surface (camera locked, cursor
+ *       unprojected onto the panel) for Witness-style drawing input.</li>
  * </ul>
  *
  * <h3>Sync</h3>

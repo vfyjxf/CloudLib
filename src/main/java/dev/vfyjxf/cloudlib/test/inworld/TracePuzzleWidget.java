@@ -4,7 +4,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldTraceable;
-import dev.vfyjxf.cloudlib.ui.inworld.InworldTheme;
+import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 
 import java.util.ArrayList;
@@ -155,11 +155,11 @@ public final class TracePuzzleWidget extends Widget implements InworldTraceable 
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        int line = InworldTheme.LINE_DARK;
+        int line = HackerTheme.LINE_DARK;
         int node = 0xFF3A4A55;
-        int pathColor = solved ? InworldTheme.ACCENT
-                : failFlash > 0 ? 0xFFE06666 : InworldTheme.ACCENT;
-        int pathDim = solved || failFlash > 0 ? pathColor : InworldTheme.ACCENT_DIM;
+        int pathColor = solved ? HackerTheme.ACCENT
+                : failFlash > 0 ? 0xFFE06666 : HackerTheme.ACCENT;
+        int pathDim = solved || failFlash > 0 ? pathColor : HackerTheme.ACCENT_DIM;
 
         //edges — blocked ones get a punched-out gap
         for (int a = 0; a < COLS * ROWS; a++) {
@@ -170,11 +170,11 @@ public final class TracePuzzleWidget extends Widget implements InworldTraceable 
         //nodes
         for (int id = 0; id < COLS * ROWS; id++) {
             canvas.circle(nx(id), ny(id), id == START ? 3f : 1.6f,
-                    id == START ? InworldTheme.ACCENT_DIM : node);
+                    id == START ? HackerTheme.ACCENT_DIM : node);
         }
         //exit stub off the top-right node
         canvas.line(nx(EXIT_PRE), ny(EXIT_PRE), nx(EXIT), ny(EXIT), 1f, line);
-        canvas.circle(nx(EXIT), ny(EXIT), 2.2f, solved ? InworldTheme.ACCENT : node);
+        canvas.circle(nx(EXIT), ny(EXIT), 2.2f, solved ? HackerTheme.ACCENT : node);
 
         //the traced path + live tip segment
         if (!path.isEmpty() && fade > -8) {
@@ -197,7 +197,7 @@ public final class TracePuzzleWidget extends Widget implements InworldTraceable 
         //the trace cursor — the Witness "dot"
         if (tracing && !solved) {
             canvas.circle(cursorX, cursorY, 4f, 0x5516D8CF);
-            canvas.circle(cursorX, cursorY, 1.8f, InworldTheme.ACCENT);
+            canvas.circle(cursorX, cursorY, 1.8f, HackerTheme.ACCENT);
         }
 
         //status line
@@ -205,8 +205,8 @@ public final class TracePuzzleWidget extends Widget implements InworldTraceable 
                 ? "SOLVED" + (solves != null ? " ×" + solves.getAsInt() : "")
                 : failFlash > 0 ? "ROUTE FAIL"
                 : tracing ? "···" : "route ◉→◎";
-        int sc = solved ? InworldTheme.ACCENT
-                : failFlash > 0 ? 0xFFE06666 : InworldTheme.TEXT_DIM;
+        int sc = solved ? HackerTheme.ACCENT
+                : failFlash > 0 ? 0xFFE06666 : HackerTheme.TEXT_DIM;
         canvas.text(status, 0, H - 9, sc);
     }
 

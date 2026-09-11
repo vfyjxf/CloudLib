@@ -4,7 +4,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldTraceable;
-import dev.vfyjxf.cloudlib.ui.inworld.InworldTheme;
+import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 
 import java.util.ArrayList;
@@ -124,7 +124,7 @@ public final class GlyphPadWidget extends Widget implements InworldTraceable {
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         //the pad: recessed ink surface
         canvas.fill(0, 0, W, PAD_H, 0xA0050A10);
-        canvas.strokeRect(0, 0, W, PAD_H, InworldTheme.LINE_DARK);
+        canvas.strokeRect(0, 0, W, PAD_H, HackerTheme.LINE_DARK);
         //center guides — faint crosshair so freehand strokes have a reference
         canvas.line(W / 2f, 4, W / 2f, PAD_H - 4, 1f, 0x2216D8CF);
         canvas.line(4, PAD_H / 2f, W - 4, PAD_H / 2f, 1f, 0x2216D8CF);
@@ -132,22 +132,22 @@ public final class GlyphPadWidget extends Widget implements InworldTraceable {
         //ink trail
         if (!stroke.isEmpty()) {
             float alpha = inkFade > 0 && !tracing ? 0.35f + 0.65f * (inkFade / 24f) : 1f;
-            int ink = withAlpha(lastOk || tracing ? InworldTheme.ACCENT : 0xFFE06666, alpha);
+            int ink = withAlpha(lastOk || tracing ? HackerTheme.ACCENT : 0xFFE06666, alpha);
             for (int i = 1; i < stroke.size(); i++) {
                 float[] a = stroke.get(i - 1), b = stroke.get(i);
                 canvas.line(a[0], a[1], b[0], b[1], 1.6f, ink);
             }
             if (tracing) {
                 canvas.circle(cursorX, cursorY, 3.5f, 0x5516D8CF);
-                canvas.circle(cursorX, cursorY, 1.6f, InworldTheme.ACCENT);
+                canvas.circle(cursorX, cursorY, 1.6f, HackerTheme.ACCENT);
             }
         }
 
         //status row: available glyphs + the last recognized rune
-        canvas.text("◯ ⩍ ✓ ─", 0, PAD_H + 4, InworldTheme.TEXT_DIM);
+        canvas.text("◯ ⩍ ✓ ─", 0, PAD_H + 4, HackerTheme.TEXT_DIM);
         int color = resultFlash > 0
-                ? (lastOk ? InworldTheme.ACCENT : 0xFFE06666)
-                : InworldTheme.TEXT_DIM;
+                ? (lastOk ? HackerTheme.ACCENT : 0xFFE06666)
+                : HackerTheme.TEXT_DIM;
         String label = "≫ " + last;
         var font = context().font();
         canvas.text(label, W - font.width(label), PAD_H + 4, color);

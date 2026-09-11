@@ -21,6 +21,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.base.host.InworldSceneHost;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.api.ui.floating.FloatingPositioning;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldAnchor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldContext;
@@ -35,6 +36,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.Projection;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 import dev.vfyjxf.cloudlib.ui.KeyMappings;
+import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.util.ScreenUtil;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -817,8 +819,8 @@ public final class InworldManager implements InworldUiApi {
 
     /** Height of a folded panel: title/hint chrome only, content hidden. */
     private static int foldHeight(PanelRuntime r) {
-        int padTop = r.spec.title() != null ? InworldTheme.TITLE_HEIGHT + 2 : InworldTheme.PADDING;
-        int padBottom = r.spec.hints().isEmpty() ? InworldTheme.PADDING : InworldTheme.HINT_HEIGHT + 2;
+        int padTop = r.spec.title() != null ? HackerTheme.TITLE_HEIGHT + 2 : HackerTheme.PADDING;
+        int padBottom = r.spec.hints().isEmpty() ? HackerTheme.PADDING : HackerTheme.HINT_HEIGHT + 2;
         return padTop + padBottom;
     }
 
@@ -1145,21 +1147,21 @@ public final class InworldManager implements InworldUiApi {
             PanelRuntime r = m.runtime;
             FloatPos d = m.dir;
             float px = (float) m.px, py = (float) m.py;
-            int color = r.focused() ? InworldTheme.BORDER_FOCUSED : InworldTheme.ACCENT_DIM;
+            int color = r.focused() ? HackerTheme.BORDER_FOCUSED : HackerTheme.ACCENT_DIM;
             drawLine(graphics, px, py - 5, px + 5, py, color);
             drawLine(graphics, px + 5, py, px, py + 5, color);
             drawLine(graphics, px, py + 5, px - 5, py, color);
             drawLine(graphics, px - 5, py, px, py - 5, color);
             //bearing tick pointing further outward
             drawLine(graphics, (float) (px + d.x * 6), (float) (py + d.y * 6),
-                    (float) (px + d.x * 10), (float) (py + d.y * 10), InworldTheme.ACCENT);
+                    (float) (px + d.x * 10), (float) (py + d.y * 10), HackerTheme.ACCENT);
             //distance sits on the inward side so it stays readable on any edge
             String dist = (int) r.distance + "m";
             double ix = px - d.x * 17, iy = py - d.y * 16;
             graphics.drawString(font, dist,
                     (int) (ix - font.width(dist) * 0.5),
                     (int) (iy - font.lineHeight * 0.5),
-                    InworldTheme.TEXT_DIM);
+                    HackerTheme.TEXT_DIM);
         }
     }
 
@@ -1182,13 +1184,13 @@ public final class InworldManager implements InworldUiApi {
             int y = isTop(corners[c])
                     ? marginY + dockCursorEnd[c]
                     : H - marginY - 9 - dockCursorEnd[c];
-            graphics.fill(x, y, x + tw, y + 9, InworldTheme.BG_FOCUSED);
+            graphics.fill(x, y, x + tw, y + 9, HackerTheme.BG_FOCUSED);
             //1px accent frame
-            graphics.fill(x, y, x + tw, y + 1, InworldTheme.ACCENT_DIM);
-            graphics.fill(x, y + 8, x + tw, y + 9, InworldTheme.ACCENT_DIM);
-            graphics.fill(x, y, x + 1, y + 9, InworldTheme.ACCENT_DIM);
-            graphics.fill(x + tw - 1, y, x + tw, y + 9, InworldTheme.ACCENT_DIM);
-            graphics.drawString(font, s, x + 3, y + 1, InworldTheme.ACCENT);
+            graphics.fill(x, y, x + tw, y + 1, HackerTheme.ACCENT_DIM);
+            graphics.fill(x, y + 8, x + tw, y + 9, HackerTheme.ACCENT_DIM);
+            graphics.fill(x, y, x + 1, y + 9, HackerTheme.ACCENT_DIM);
+            graphics.fill(x + tw - 1, y, x + tw, y + 9, HackerTheme.ACCENT_DIM);
+            graphics.drawString(font, s, x + 3, y + 1, HackerTheme.ACCENT);
         }
     }
 
@@ -2048,7 +2050,7 @@ public final class InworldManager implements InworldUiApi {
             BlockState state = mc.level.getBlockState(pos);
             VoxelShape shape = state.getShape(mc.level, pos, CollisionContext.empty());
             if (shape.isEmpty()) shape = Shapes.block();
-            int c = hot.contains(pos) ? InworldTheme.SCAN_SHAPE_HOT : InworldTheme.SCAN_SHAPE;
+            int c = hot.contains(pos) ? HackerTheme.SCAN_SHAPE_HOT : HackerTheme.SCAN_SHAPE;
             emitShape(pose, lines, shape, pos.getX(), pos.getY(), pos.getZ(),
                     red(c), green(c), blue(c), alpha(c));
         }
@@ -2060,7 +2062,7 @@ public final class InworldManager implements InworldUiApi {
             double hw = dims.width() * 0.5;
             AABB box = new AABB(p.x - hw, p.y, p.z - hw,
                     p.x + hw, p.y + dims.height(), p.z + hw).inflate(0.03);
-            int c = hotEnts.contains(id) ? InworldTheme.SCAN_SHAPE_HOT : InworldTheme.SCAN_SHAPE;
+            int c = hotEnts.contains(id) ? HackerTheme.SCAN_SHAPE_HOT : HackerTheme.SCAN_SHAPE;
             LevelRenderer.renderLineBox(pose, lines, box,
                     red(c), green(c), blue(c), alpha(c));
         }
@@ -2100,7 +2102,7 @@ public final class InworldManager implements InworldUiApi {
                     new double[]{a.x, a.y, a.z},
                     new double[]{pb.x, pb.y, pb.z},
                     runtime.focused() || runtime == pointed
-                            ? InworldTheme.LINE_FOCUSED : InworldTheme.LINE);
+                            ? HackerTheme.LINE_FOCUSED : HackerTheme.LINE);
         }
     }
 
@@ -2149,7 +2151,7 @@ public final class InworldManager implements InworldUiApi {
                 {x0, y1, z0}, {x1, y1, z0}, {x0, y1, z1}, {x1, y1, z1}
         };
 
-        int tick = bright ? InworldTheme.SCAN_TICK_HOT : InworldTheme.SCAN_TICK;
+        int tick = bright ? HackerTheme.SCAN_TICK_HOT : HackerTheme.SCAN_TICK;
         //corner ticks: short brighter stubs from each corner along its edges
         double tl = 0.14;
         for (int i = 0; i < 8; i++) {
@@ -2169,7 +2171,7 @@ public final class InworldManager implements InworldUiApi {
         double f1 = Math.max(0, f - len);
         double[] p0 = {a[0] + (b[0] - a[0]) * f1, a[1] + (b[1] - a[1]) * f1, a[2] + (b[2] - a[2]) * f1};
         double[] p1 = {a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f};
-        line(buffer, mat, p0, p1, InworldTheme.SCAN_SWEEP);
+        line(buffer, mat, p0, p1, HackerTheme.SCAN_SWEEP);
     }
 
     private static void line(BufferBuilder buffer, Matrix4f mat, double[] a, double[] b, int color) {
@@ -2277,9 +2279,9 @@ public final class InworldManager implements InworldUiApi {
             runtime.lineLum += (sampleLineLuminance(ex, ey, from.x, from.y) - runtime.lineLum) * 0.25f;
             boolean brightBg = runtime.lineLum > 0.5f;
             int color = runtime.focused()
-                    ? (brightBg ? InworldTheme.LINE_FOCUSED_DARK : InworldTheme.LINE_FOCUSED)
-                    : (brightBg ? InworldTheme.LINE_DARK : InworldTheme.LINE);
-            int edge = brightBg ? InworldTheme.LINE_EDGE_LIGHT : InworldTheme.LINE_EDGE;
+                    ? (brightBg ? HackerTheme.LINE_FOCUSED_DARK : HackerTheme.LINE_FOCUSED)
+                    : (brightBg ? HackerTheme.LINE_DARK : HackerTheme.LINE);
+            int edge = brightBg ? HackerTheme.LINE_EDGE_LIGHT : HackerTheme.LINE_EDGE;
             drawLine(graphics, (float) ex + 1, (float) ey, (float) from.x + 1, (float) from.y, edge);
             drawLine(graphics, (float) ex, (float) ey + 1, (float) from.x, (float) from.y + 1, edge);
             drawLine(graphics, (float) ex, (float) ey, (float) from.x, (float) from.y, color);

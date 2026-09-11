@@ -1,9 +1,9 @@
-package dev.vfyjxf.cloudlib.test.inworld;
+package dev.vfyjxf.cloudlib.ui.widget;
 
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.ui.inworld.InworldTheme;
+import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
@@ -69,7 +69,7 @@ public class ChipWidget extends Widget {
         int w = width();
         int h = height();
         boolean hot = hovered() || focused();
-        int border = hot ? InworldTheme.ACCENT : InworldTheme.BORDER;
+        int border = hot ? HackerTheme.ACCENT : HackerTheme.BORDER;
         if (pressed) {
             canvas.fill(0, 0, w, h, 0xF22E4E4C);
         } else if (hot) {
@@ -79,6 +79,6 @@ public class ChipWidget extends Widget {
         canvas.strokeRect(0, 0, w, h, border);
         var font = context().font();
         canvas.text(label, (w - font.width(label)) / 2, (h - font.lineHeight) / 2 + 1,
-                hot ? InworldTheme.TEXT : InworldTheme.TEXT_DIM);
+                hot ? HackerTheme.TEXT : HackerTheme.TEXT_DIM);
     }
 }

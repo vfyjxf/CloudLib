@@ -11,8 +11,10 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPlacement;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldProvider;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldSink;
 import dev.vfyjxf.cloudlib.test.sync.SyncedTestBlockEntity;
-import dev.vfyjxf.cloudlib.ui.inworld.InworldTheme;
+import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.cloudlib.ui.widget.ChipWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ItemStripWidget;
 import dev.vfyjxf.cloudlib.ui.widget.DividerWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ProgressBarWidget;
 import dev.vfyjxf.cloudlib.ui.widget.TextWidget;
@@ -102,28 +104,28 @@ public final class SyncedPanelProvider implements InworldProvider {
         ColumnWidget column = ColumnWidget.create(3);
         column.useStyle(alignItemsFlexStart());
         if (be == null) {
-            column.addWidget(TextWidget.of("NO LINK").setColor(InworldTheme.TEXT_DIM));
+            column.addWidget(TextWidget.of("NO LINK").setColor(HackerTheme.TEXT_DIM));
             return column;
         }
 
         //row 1: count + 16-cycle progress meter
         WidgetGroup<Widget> countRow = Widgets.row(JustifyContent.FLEX_START, AlignItems.CENTER);
         countRow.useStyle(columnGap(3));
-        var count = TextWidget.of("count " + be.count().get()).setColor(InworldTheme.TEXT);
+        var count = TextWidget.of("count " + be.count().get()).setColor(HackerTheme.TEXT);
         be.count().onChange(v -> count.setText("count " + v));
         countRow.addWidget(count);
         var cycle = ProgressBarWidget.create(() -> (be.count().get() & 15) / 16.0);
-        cycle.setColors(0xFF081018, InworldTheme.ACCENT);
+        cycle.setColors(0xFF081018, HackerTheme.ACCENT);
         cycle.useStyle(sizeOf(40, 5));
         countRow.addWidget(cycle);
         column.addWidget(countRow);
 
-        var label = TextWidget.of(be.label().get()).setColor(InworldTheme.TEXT_DIM);
+        var label = TextWidget.of(be.label().get()).setColor(HackerTheme.TEXT_DIM);
         be.label().onChange(v -> label.setText(v));
         column.addWidget(label);
 
         var divider = DividerWidget.horizontal();
-        divider.setColor(InworldTheme.TITLE_RULE);
+        divider.setColor(HackerTheme.TITLE_RULE);
         divider.useStyle(sizeOf(96, 3));
         column.addWidget(divider);
 
@@ -147,10 +149,10 @@ public final class SyncedPanelProvider implements InworldProvider {
         SyncedTestBlockEntity be = ctx.blockEntity(SyncedTestBlockEntity.class);
         ColumnWidget column = ColumnWidget.create(2);
         if (be == null) {
-            column.addWidget(TextWidget.of("NO LINK").setColor(InworldTheme.TEXT_DIM));
+            column.addWidget(TextWidget.of("NO LINK").setColor(HackerTheme.TEXT_DIM));
             return column;
         }
-        var count = TextWidget.of("cnt " + be.count().get()).setColor(InworldTheme.ACCENT);
+        var count = TextWidget.of("cnt " + be.count().get()).setColor(HackerTheme.ACCENT);
         be.count().onChange(v -> count.setText("cnt " + v));
         column.addWidget(count);
         WidgetGroup<Widget> actions = Widgets.row(JustifyContent.FLEX_START, AlignItems.FLEX_START);
@@ -175,13 +177,13 @@ public final class SyncedPanelProvider implements InworldProvider {
         ColumnWidget column = ColumnWidget.create(2);
         column.useStyle(alignItemsFlexStart());
         if (be == null) {
-            column.addWidget(TextWidget.of("--").setColor(InworldTheme.TEXT_DIM));
+            column.addWidget(TextWidget.of("--").setColor(HackerTheme.TEXT_DIM));
             return column;
         }
-        var text = TextWidget.of("◈ " + be.count().get()).setColor(InworldTheme.ACCENT);
+        var text = TextWidget.of("◈ " + be.count().get()).setColor(HackerTheme.ACCENT);
         be.count().onChange(v -> text.setText("◈ " + v));
         column.addWidget(text);
-        var label = TextWidget.of(be.label().get()).setColor(InworldTheme.TEXT_DIM);
+        var label = TextWidget.of(be.label().get()).setColor(HackerTheme.TEXT_DIM);
         be.label().onChange(v -> label.setText(v));
         column.addWidget(label);
         return column;

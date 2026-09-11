@@ -1,13 +1,13 @@
-package dev.vfyjxf.cloudlib.ui.inworld;
+package dev.vfyjxf.cloudlib.ui.hacker;
 
 /**
  * Visual constants for the in-world UI chrome — a hacker-mode look:
  * dark translucent panels, thin borders, corner brackets for focus,
  * and connector lines back to the world anchor.
  */
-public final class InworldTheme {
+public final class HackerTheme {
 
-    private InworldTheme() {
+    private HackerTheme() {
     }
 
     //region colors

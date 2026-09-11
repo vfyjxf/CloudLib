@@ -7,6 +7,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelSpec;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -61,10 +62,10 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         useStyle(
                 positionAbsolute(),
                 padding(
-                        spec.title() != null ? InworldTheme.TITLE_HEIGHT + 2 : InworldTheme.PADDING,
-                        InworldTheme.PADDING,
-                        spec.hints().isEmpty() ? InworldTheme.PADDING : InworldTheme.HINT_HEIGHT + 2,
-                        InworldTheme.PADDING
+                        spec.title() != null ? HackerTheme.TITLE_HEIGHT + 2 : HackerTheme.PADDING,
+                        HackerTheme.PADDING,
+                        spec.hints().isEmpty() ? HackerTheme.PADDING : HackerTheme.HINT_HEIGHT + 2,
+                        HackerTheme.PADDING
                 )
         );
         //tab / shift+tab cycles focus through the panel's focusable content
@@ -88,10 +89,10 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         var font = Minecraft.getInstance().font;
         int need = 0;
         if (title != null) {
-            need = Math.max(need, font.width(title) + 12 + InworldTheme.PADDING);
+            need = Math.max(need, font.width(title) + 12 + HackerTheme.PADDING);
         }
         if (!hints.isEmpty()) {
-            int row = InworldTheme.PADDING * 2;
+            int row = HackerTheme.PADDING * 2;
             for (String hint : hints) {
                 int sep = hint.indexOf(':');
                 String key = sep > 0 ? hint.substring(0, sep) : hint;
@@ -198,24 +199,24 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         int w = width();
         int h = height();
 
-        canvas.fill(0, 0, w, h, focused ? InworldTheme.BG_FOCUSED : InworldTheme.BG);
+        canvas.fill(0, 0, w, h, focused ? HackerTheme.BG_FOCUSED : HackerTheme.BG);
         //idle panels carry no frame — the leader line is the only chrome; the
         //outline appears only when the panel is focused/pointed
         if (focused || pointed) {
-            canvas.strokeRect(0, 0, w, h, InworldTheme.BORDER_FOCUSED);
+            canvas.strokeRect(0, 0, w, h, HackerTheme.BORDER_FOCUSED);
         }
 
         if (title != null) {
             //header: accent chip + text + hairline rule
-            canvas.fill(3, 5, 3, 3, InworldTheme.ACCENT);
-            canvas.text(title, 9, 3, InworldTheme.TEXT);
-            canvas.fill(0, InworldTheme.TITLE_HEIGHT + 1, w, 1, InworldTheme.TITLE_RULE);
+            canvas.fill(3, 5, 3, 3, HackerTheme.ACCENT);
+            canvas.text(title, 9, 3, HackerTheme.TEXT);
+            canvas.fill(0, HackerTheme.TITLE_HEIGHT + 1, w, 1, HackerTheme.TITLE_RULE);
         }
 
         if (!hints.isEmpty()) {
             var font = Minecraft.getInstance().font;
-            int hx = w - InworldTheme.PADDING;
-            int hy = h - InworldTheme.HINT_HEIGHT + 1;
+            int hx = w - HackerTheme.PADDING;
+            int hy = h - HackerTheme.HINT_HEIGHT + 1;
             for (int i = hints.size() - 1; i >= 0; i--) {
                 String hint = hints.get(i);
                 int sep = hint.indexOf(':');
@@ -224,10 +225,10 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
                 int keyW = font.width(key) + 4;
                 int labelW = label.isEmpty() ? 0 : font.width(label) + 3;
                 hx -= keyW + labelW;
-                canvas.strokeRect(hx, hy - 1, keyW, 9, InworldTheme.ACCENT_DIM);
-                canvas.text(key, hx + 2, hy, InworldTheme.HINT_KEY);
+                canvas.strokeRect(hx, hy - 1, keyW, 9, HackerTheme.ACCENT_DIM);
+                canvas.text(key, hx + 2, hy, HackerTheme.HINT_KEY);
                 if (labelW > 0) {
-                    canvas.text(label, hx + keyW + 3, hy, InworldTheme.TEXT_DIM);
+                    canvas.text(label, hx + keyW + 3, hy, HackerTheme.TEXT_DIM);
                 }
                 hx -= 4;
             }
@@ -237,9 +238,9 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         if (overflow != null) {
             var font = Minecraft.getInstance().font;
             int tw = font.width(overflow) + 5;
-            canvas.fill(w - tw - 2, -4, tw, 9, InworldTheme.BG_FOCUSED);
-            canvas.strokeRect(w - tw - 2, -4, tw, 9, InworldTheme.ACCENT);
-            canvas.text(overflow, w - tw + 1, -3, InworldTheme.ACCENT);
+            canvas.fill(w - tw - 2, -4, tw, 9, HackerTheme.BG_FOCUSED);
+            canvas.strokeRect(w - tw - 2, -4, tw, 9, HackerTheme.ACCENT);
+            canvas.text(overflow, w - tw + 1, -3, HackerTheme.ACCENT);
         }
     }
 
@@ -269,8 +270,8 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
     private void drawBrackets(SceneCanvas canvas) {
         int w = width();
         int h = height();
-        int b = InworldTheme.BRACKET;
-        int color = focused ? InworldTheme.ACCENT : InworldTheme.ACCENT_DIM;
+        int b = HackerTheme.BRACKET;
+        int color = focused ? HackerTheme.ACCENT : HackerTheme.ACCENT_DIM;
         //top-left
         canvas.fill(-2, -2, b, 1, color);
         canvas.fill(-2, -2, 1, b, color);

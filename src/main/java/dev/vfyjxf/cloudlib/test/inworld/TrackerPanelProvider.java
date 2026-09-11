@@ -13,7 +13,8 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPlacement;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldProvider;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldSink;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldUi;
-import dev.vfyjxf.cloudlib.ui.inworld.InworldTheme;
+import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.cloudlib.ui.widget.ChipWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
 import dev.vfyjxf.cloudlib.ui.widget.DividerWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ProgressBarWidget;
@@ -142,58 +143,58 @@ public final class TrackerPanelProvider implements InworldProvider {
         ColumnWidget column = ColumnWidget.create(3);
         column.useStyle(alignItemsFlexStart());
         if (be == null) {
-            column.addWidget(TextWidget.of("NO LINK").setColor(InworldTheme.TEXT_DIM));
+            column.addWidget(TextWidget.of("NO LINK").setColor(HackerTheme.TEXT_DIM));
             return column;
         }
 
         //row 1: entity count + crowd-density bar
         WidgetGroup<Widget> entsRow = Widgets.row(JustifyContent.FLEX_START, AlignItems.CENTER);
         entsRow.useStyle(columnGap(3));
-        var ents = TextWidget.of("ents " + be.entities().get()).setColor(InworldTheme.TEXT);
+        var ents = TextWidget.of("ents " + be.entities().get()).setColor(HackerTheme.TEXT);
         be.entities().onChange(v -> ents.setText("ents " + v));
         entsRow.addWidget(ents);
         var density = ProgressBarWidget.create(
                 () -> Math.min(1, be.entities().get() / (double) TrackerBlockEntity.MAX_THRESHOLD));
-        density.setColors(0xFF081018, InworldTheme.ACCENT);
+        density.setColors(0xFF081018, HackerTheme.ACCENT);
         density.useStyle(sizeOf(44, 5));
         entsRow.addWidget(density);
         column.addWidget(entsRow);
 
-        var nearest = TextWidget.of("nearest " + be.nearest().get()).setColor(InworldTheme.TEXT_DIM);
+        var nearest = TextWidget.of("nearest " + be.nearest().get()).setColor(HackerTheme.TEXT_DIM);
         be.nearest().onChange(v -> nearest.setText("nearest " + v));
         column.addWidget(nearest);
 
         //row 3: ping count + armed lamp (armed when the live count reaches the threshold)
         WidgetGroup<Widget> stateRow = Widgets.row(JustifyContent.FLEX_START, AlignItems.CENTER);
         stateRow.useStyle(columnGap(4));
-        var pings = TextWidget.of("pings " + be.pings().get()).setColor(InworldTheme.TEXT_DIM);
+        var pings = TextWidget.of("pings " + be.pings().get()).setColor(HackerTheme.TEXT_DIM);
         be.pings().onChange(v -> pings.setText("pings " + v));
         stateRow.addWidget(pings);
-        var armed = TextWidget.of("·ok").setColor(InworldTheme.TEXT_DIM);
+        var armed = TextWidget.of("·ok").setColor(HackerTheme.TEXT_DIM);
         armed.setTickable(true);
         armed.onTick(() -> {
             boolean tripped = be.entities().get() >= be.threshold().get() && be.entities().get() > 0;
             armed.setText(tripped ? "▲ARM" : "·ok");
-            armed.setColor(tripped ? 0xFFE06666 : InworldTheme.TEXT_DIM);
+            armed.setColor(tripped ? 0xFFE06666 : HackerTheme.TEXT_DIM);
         });
         stateRow.addWidget(armed);
         column.addWidget(stateRow);
 
         var divider = DividerWidget.horizontal();
-        divider.setColor(InworldTheme.TITLE_RULE);
+        divider.setColor(HackerTheme.TITLE_RULE);
         divider.useStyle(sizeOf(112, 3));
         column.addWidget(divider);
 
         //threshold row: slider drives the second reversed channel; server clamps
         WidgetGroup<Widget> thrRow = Widgets.row(JustifyContent.FLEX_START, AlignItems.CENTER);
         thrRow.useStyle(columnGap(3));
-        thrRow.addWidget(TextWidget.of("thr").setColor(InworldTheme.TEXT_DIM));
-        var thrValue = TextWidget.of(be.threshold().get() + "").setColor(InworldTheme.ACCENT);
+        thrRow.addWidget(TextWidget.of("thr").setColor(HackerTheme.TEXT_DIM));
+        var thrValue = TextWidget.of(be.threshold().get() + "").setColor(HackerTheme.ACCENT);
         be.threshold().onChange(v -> thrValue.setText(v + ""));
         var slider = SliderWidget.create(0, TrackerBlockEntity.MAX_THRESHOLD, be.threshold().get());
         slider.setStep(1);
         slider.setThumbSize(5);
-        slider.setColors(0xFF081018, InworldTheme.ACCENT_DIM, InworldTheme.ACCENT);
+        slider.setColors(0xFF081018, HackerTheme.ACCENT_DIM, HackerTheme.ACCENT);
         slider.useStyle(sizeOf(52, 9));
         slider.onValueChanged(v -> {
             be.sendThreshold((int) Math.round(v));
@@ -224,10 +225,10 @@ public final class TrackerPanelProvider implements InworldProvider {
         WidgetGroup<Widget> row = Widgets.row(JustifyContent.FLEX_START, AlignItems.CENTER);
         row.useStyle(columnGap(3));
         if (be == null) {
-            row.addWidget(TextWidget.of("◈ --").setColor(InworldTheme.TEXT_DIM));
+            row.addWidget(TextWidget.of("◈ --").setColor(HackerTheme.TEXT_DIM));
             return row;
         }
-        var count = TextWidget.of("◈ " + be.entities().get()).setColor(InworldTheme.ACCENT);
+        var count = TextWidget.of("◈ " + be.entities().get()).setColor(HackerTheme.ACCENT);
         be.entities().onChange(v -> count.setText("◈ " + v));
         row.addWidget(count);
         row.addWidget(ChipWidget.of("ping", () -> be.sendAction(TrackerBlockEntity.ACTION_PING)));
