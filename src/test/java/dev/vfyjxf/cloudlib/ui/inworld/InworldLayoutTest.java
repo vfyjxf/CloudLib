@@ -1,9 +1,15 @@
 package dev.vfyjxf.cloudlib.ui.inworld;
 
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -83,6 +89,47 @@ class InworldLayoutTest {
         for (int i = 1; i < tan.length; i++) {
             assertTrue(tan[i] > tan[i - 1]);
         }
+    }
+
+    //---- occlusion tolerance ----
+
+    private static final List<Rect2i> PANEL = List.of(new Rect2i(100, 100, 80, 40));
+
+    @Test
+    void noOverlapIsTolerable() {
+        var oc = InworldLayout.occlusion(10, 10, 40, 12, PANEL);
+        assertTrue(oc.tolerable(40, 12));
+        assertNull(oc.blocker());
+    }
+
+    @Test
+    void thinGrazeIsTolerated() {
+        //tag bottom 3px dips under the panel's top — a sliver, keep it
+        var oc = InworldLayout.occlusion(100, 91, 40, 12, PANEL); //y 91..103 vs panel 100..140 → 3px graze
+        assertTrue(oc.tolerable(40, 12));
+    }
+
+    @Test
+    void smallCornerOverlapIsTolerated() {
+        var oc = InworldLayout.occlusion(70, 95, 40, 12, PANEL); //10x7 corner bite ≈ 14.6% area
+        assertTrue(oc.tolerable(40, 12));
+    }
+
+    @Test
+    void deepCoverageIsNotTolerated() {
+        var oc = InworldLayout.occlusion(110, 105, 40, 12, PANEL); //mostly inside the panel
+        assertFalse(oc.tolerable(40, 12));
+        assertNotNull(oc.blocker());
+    }
+
+    @Test
+    void dominantBlockerIsLargestContributor() {
+        var rects = List.of(
+                new Rect2i(100, 100, 80, 40),   //huge overlap
+                new Rect2i(80, 100, 20, 10));   //small side graze
+        var oc = InworldLayout.occlusion(85, 102, 40, 12, rects);
+        //85..125: 25x12=300 covered by the panel, 15x8=120 by the graze
+        assertEquals(100, oc.blocker().getX());
     }
 
 }

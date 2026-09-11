@@ -1,6 +1,10 @@
 package dev.vfyjxf.cloudlib.ui.inworld;
 
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 /**
  * Pure, allocation-free layout math for the in-world manager — extracted so
@@ -49,6 +53,37 @@ final class InworldLayout {
         double shift = Math.min(0, hi - tan[tan.length - 1]);
         if (tan[0] + shift < lo) shift = lo - tan[0];
         for (int i = 0; i < tan.length; i++) tan[i] += shift;
+    }
+
+    /**
+     * How much of a candidate rect is covered by the occupied set:
+     * {@code area} = total covered px, {@code depth} = the worst single
+     * thin-graze intrusion (min of intersection w/h per blocker),
+     * {@code blocker} = the contributor covering the most area.
+     */
+    record Occl(double area, double depth, @Nullable Rect2i blocker) {
+        /** A slight graze is fine — tags render behind interactive panels anyway. */
+        boolean tolerable(int w, int h) {
+            return blocker == null || area <= w * h * 0.15 || depth <= 5;
+        }
+    }
+
+    static Occl occlusion(int x, int y, int w, int h, List<Rect2i> rects) {
+        double area = 0, depth = 0, dominantArea = 0;
+        Rect2i dominant = null;
+        for (Rect2i o : rects) {
+            int iw = Math.min(x + w, o.getX() + o.getWidth()) - Math.max(x, o.getX());
+            int ih = Math.min(y + h, o.getY() + o.getHeight()) - Math.max(y, o.getY());
+            if (iw <= 0 || ih <= 0) continue;
+            double a = iw * (double) ih;
+            area += a;
+            depth = Math.max(depth, Math.min(iw, ih));
+            if (a > dominantArea) {
+                dominantArea = a;
+                dominant = o;
+            }
+        }
+        return new Occl(area, depth, dominant);
     }
 
 }

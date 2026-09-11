@@ -48,6 +48,8 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
     float distScale = 1f;
     /** merge badge drawn at the top-right corner ("+3") — null = none */
     @Nullable String overflow;
+    /** dock-column overflow: render only the chrome (title/hints), content hidden */
+    boolean folded;
 
     public InworldPanelWidget(PanelRuntime runtime, InworldPanelSpec spec, Widget content) {
         this.runtime = runtime;
@@ -171,6 +173,20 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
     void setFrameState(boolean focused, boolean pointed) {
         this.focused = focused;
         this.pointed = pointed;
+    }
+
+    /**
+     * Fold/unfold the panel: folded panels hide their content so only the
+     * chrome (title strip + hint chips) remains — the dock column's way of
+     * staying on screen when it runs out of vertical room.
+     */
+    void setFolded(boolean folded) {
+        if (this.folded == folded) return;
+        this.folded = folded;
+        content.setVisible(!folded);
+        if (lifecycle().mounted()) {
+            scene().layoutTree().markDirty(nodeId());
+        }
     }
 
     //endregion

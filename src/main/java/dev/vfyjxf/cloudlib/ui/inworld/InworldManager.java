@@ -720,13 +720,22 @@ public final class InworldManager implements InworldUiApi {
      * the anchor projects into with a deadband around the center lines so a
      * wandering anchor doesn't keep flapping the panel between corners, panels
      * stack from the corner inward in offer order.
+     * <p>
+     * Each screen side is one shared vertical budget (top and bottom columns
+     * grow toward each other): when a panel no longer fits it is first
+     * <em>folded</em> to its chrome strip; when even folded strips overflow the
+     * panel is hidden for the frame and counted into the corner's "+N" chip.
      */
     private void layoutDocks(List<PanelRuntime> docked) {
         Arrays.fill(dockTopExtent, 0);
+        Arrays.fill(dockOverflow, 0);
+        Arrays.fill(dockCursorEnd, 0);
         if (docked.isEmpty()) return;
         int W = mc.getWindow().getGuiScaledWidth();
         int H = mc.getWindow().getGuiScaledHeight();
         int marginX = 8, marginY = 8, gap = 6;
+        int budget = H - marginY * 2;
+        int[] sideUsed = new int[2];
 
         for (PanelRuntime runtime : docked) {
             InworldPlacement.DockCorner corner = runtime.dockCorner;
@@ -734,18 +743,35 @@ public final class InworldManager implements InworldUiApi {
                 corner = autoCorner(runtime.anchorScreen, W, H, runtime.lastAutoCorner);
             }
             runtime.lastAutoCorner = corner;
-            int slot = dockCursors[corner.ordinal()];
+            int side = isLeft(corner) ? 0 : 1;
+            boolean top = isTop(corner);
             int w = runtime.widget.width();
             int h = runtime.widget.height();
+
+            runtime.folded = false;
+            if (sideUsed[side] + h + gap > budget) {
+                int fh = foldHeight(runtime);
+                if (sideUsed[side] + fh + gap <= budget) {
+                    runtime.folded = true;
+                    h = fh;
+                } else {
+                    //column full even folded — hide this frame, count into "+N"
+                    runtime.presented = false;
+                    runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+                    dockOverflow[corner.ordinal()]++;
+                    continue;
+                }
+            }
+            runtime.widget.setFolded(runtime.folded);
+
+            int slot = dockCursors[corner.ordinal()];
             int x = switch (corner) {
                 case TOP_LEFT, BOTTOM_LEFT -> marginX;
                 default -> W - marginX - w;
             };
-            int y = switch (corner) {
-                case TOP_LEFT, TOP_RIGHT -> marginY + slot;
-                default -> H - marginY - h - slot;
-            };
+            int y = top ? marginY + slot : H - marginY - h - slot;
             dockCursors[corner.ordinal()] = slot + h + gap;
+            sideUsed[side] += h + gap;
             if (corner == InworldPlacement.DockCorner.TOP_LEFT) {
                 dockTopExtent[0] = Math.max(dockTopExtent[0], y + h);
             } else if (corner == InworldPlacement.DockCorner.TOP_RIGHT) {
@@ -754,7 +780,15 @@ public final class InworldManager implements InworldUiApi {
             runtime.targetX = x;
             runtime.targetY = y;
         }
+        System.arraycopy(dockCursors, 0, dockCursorEnd, 0, dockCursorEnd.length);
         Arrays.fill(dockCursors, 0);
+    }
+
+    /** Height of a folded panel: title/hint chrome only, content hidden. */
+    private static int foldHeight(PanelRuntime r) {
+        int padTop = r.spec.title() != null ? InworldTheme.TITLE_HEIGHT + 2 : InworldTheme.PADDING;
+        int padBottom = r.spec.hints().isEmpty() ? InworldTheme.PADDING : InworldTheme.HINT_HEIGHT + 2;
+        return padTop + padBottom;
     }
 
     /**
@@ -789,6 +823,10 @@ public final class InworldManager implements InworldUiApi {
     private final int[] dockCursors = new int[InworldPlacement.DockCorner.values().length];
     /** bottom edge (px) of the TOP_LEFT/TOP_RIGHT dock stacks — tag rails start below them */
     private final int[] dockTopExtent = new int[2];
+    /** per-corner count of panels that didn't fit even folded — drawn as "+N" chips */
+    private final int[] dockOverflow = new int[InworldPlacement.DockCorner.values().length];
+    /** per-corner final stack extent from the layout pass — where the overflow chip hangs */
+    private final int[] dockCursorEnd = new int[InworldPlacement.DockCorner.values().length];
 
     /**
      * Screen zoning for non-interactive flat panels (entity tags).
@@ -851,21 +889,27 @@ public final class InworldManager implements InworldUiApi {
             int y = (int) Math.max(2, Math.min(H - h - 2,
                     tag.smoothMove ? tag.targetY : tag.widget.screenY));
 
-            Rect2i blocker = firstOverlap(x, y, w, h, occupied);
-            if (blocker != null) {
-                //small graze → slide to the cheapest free side; the last used
-                //direction gets a discount so near-tied sides don't flip
+            //occlusion tolerance: a slight graze under a foreground panel is
+            //accepted — the tag already renders behind it. Only when the
+            //covered share (or the intrusion depth) is actually noticeable do
+            //we pay for a slide, and then only by just enough to get back
+            //under the tolerance instead of jumping fully clear.
+            var oc = InworldLayout.occlusion(x, y, w, h, occupied);
+            if (!oc.tolerable(w, h)) {
+                Rect2i blocker = oc.blocker();
+                int tol = 5; //px of intrusion left behind after the slide
                 int bx = Integer.MAX_VALUE, by = 0, bestCost = Integer.MAX_VALUE, bestDir = -1;
                 int[][] candidates = {
-                        {x, blocker.getY() - h - 3},
-                        {x, blocker.getY() + blocker.getHeight() + 3},
-                        {blocker.getX() - w - 3, y},
-                        {blocker.getX() + blocker.getWidth() + 3, y}};
+                        {x, blocker.getY() - h + tol},
+                        {x, blocker.getY() + blocker.getHeight() - tol},
+                        {blocker.getX() - w + tol, y},
+                        {blocker.getX() + blocker.getWidth() - tol, y}};
                 for (int i = 0; i < candidates.length; i++) {
                     int[] c = candidates[i];
                     int cx = Math.max(2, Math.min(W - w - 2, c[0]));
                     int cy = Math.max(2, Math.min(H - h - 2, c[1]));
-                    if (firstOverlap(cx, cy, w, h, occupied) != null) continue;
+                    var co = InworldLayout.occlusion(cx, cy, w, h, occupied);
+                    if (!co.tolerable(w, h)) continue;
                     int cost = Math.abs(cx - x) + Math.abs(cy - y)
                             - (i == tag.lastSlideDir ? 14 : 0);
                     if (cost < bestCost) {
@@ -1064,6 +1108,35 @@ public final class InworldManager implements InworldUiApi {
                     (int) (ix - font.width(dist) * 0.5),
                     (int) (iy - font.lineHeight * 0.5),
                     InworldTheme.TEXT_DIM);
+        }
+    }
+
+    /**
+     * Draws a small "+N" chip at the end of each dock column that hid panels
+     * this frame — the honest "there's more but it doesn't fit" marker.
+     */
+    private void renderDockOverflow(GuiGraphics graphics) {
+        int W = mc.getWindow().getGuiScaledWidth();
+        int H = mc.getWindow().getGuiScaledHeight();
+        int marginX = 8, marginY = 8;
+        var font = mc.font;
+        var corners = InworldPlacement.DockCorner.values();
+        for (int c = 0; c < corners.length; c++) {
+            int n = dockOverflow[c];
+            if (n == 0) continue;
+            String s = "+" + n;
+            int tw = font.width(s) + 5;
+            int x = isLeft(corners[c]) ? marginX : W - marginX - tw;
+            int y = isTop(corners[c])
+                    ? marginY + dockCursorEnd[c]
+                    : H - marginY - 9 - dockCursorEnd[c];
+            graphics.fill(x, y, x + tw, y + 9, InworldTheme.BG_FOCUSED);
+            //1px accent frame
+            graphics.fill(x, y, x + tw, y + 1, InworldTheme.ACCENT_DIM);
+            graphics.fill(x, y + 8, x + tw, y + 9, InworldTheme.ACCENT_DIM);
+            graphics.fill(x, y, x + 1, y + 9, InworldTheme.ACCENT_DIM);
+            graphics.fill(x + tw - 1, y, x + tw, y + 9, InworldTheme.ACCENT_DIM);
+            graphics.drawString(font, s, x + 3, y + 1, InworldTheme.ACCENT);
         }
     }
 
@@ -1894,6 +1967,7 @@ public final class InworldManager implements InworldUiApi {
 
         renderLeaderLines(graphics);
         renderIndicators(graphics);
+        renderDockOverflow(graphics);
 
         canvas.pushViewport(root.viewport());
         root.render(canvas, (int) pointerX, (int) pointerY, partialTick);
