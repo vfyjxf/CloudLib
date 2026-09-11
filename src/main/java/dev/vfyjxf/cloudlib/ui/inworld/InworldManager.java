@@ -638,12 +638,14 @@ public final class InworldManager implements InworldUiApi {
         Vec3 uAxis = faceUAxis(dir);
         Vec3 vAxis = faceVAxis(dir);
 
-        //center of the panel on the face, pushed a hair off the surface
+        //center of the panel on the face — the geometric offset only needs to
+        //cover the panel's own internal z-layering now that the render pass
+        //applies a polygon-offset decal bias against the block surface
         Vec3 facePoint = Vec3.atCenterOf(blockPos)
                 .add(n.scale(0.5))
                 .add(uAxis.scale(face.u() - 0.5))
                 .add(vAxis.scale(face.v() - 0.5))
-                .add(n.scale(0.002 + 2 * s));
+                .add(n.scale(0.001 + s));
 
         runtime.faceU = uAxis.scale(s);
         runtime.faceV = vAxis.scale(s);
@@ -807,6 +809,11 @@ public final class InworldManager implements InworldUiApi {
         RenderSystem.applyModelViewMatrix();
         //batched quads may wind clockwise from the viewing side — draw them two-sided
         RenderSystem.disableCull();
+        //decal-style depth bias: every panel fragment is pulled toward the
+        //camera in depth space, so coplanar/near-coplanar block faces lose the
+        //depth test — kills z-fighting at any distance or glancing angle
+        RenderSystem.enablePolygonOffset();
+        RenderSystem.polygonOffset(-1f, -4f);
         for (PanelRuntime runtime : panels.values()) {
             if (!(runtime.spec.placement() instanceof InworldPlacement.Face)) continue;
             if (!runtime.presented || !runtime.widget.visible()) continue;
@@ -831,6 +838,8 @@ public final class InworldManager implements InworldUiApi {
             canvas.flushBatch();
             graphics.flush();
         }
+        RenderSystem.polygonOffset(0, 0);
+        RenderSystem.disablePolygonOffset();
         RenderSystem.enableCull();
         modelView.popMatrix();
         RenderSystem.applyModelViewMatrix();
