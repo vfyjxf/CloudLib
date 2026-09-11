@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.sync.menu;
 
+import dev.vfyjxf.cloudlib.api.data.handle.DiffHandle;
+import dev.vfyjxf.cloudlib.api.data.handle.Handle;
 import dev.vfyjxf.cloudlib.api.data.snapshot.DiffObservable;
 import dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot;
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
@@ -117,6 +119,36 @@ public abstract class BasicMenu<P>
         );
     }
 
+    //region handle expose
+
+    protected <T> Expose<T> expose(
+            String name,
+            Handle<T> handle,
+            UnaryFlowHandler<T> exposeCodec
+    ) {
+        return exposeManagement.registerExpose(
+                Expose.create(
+                        name, exposeManagement.nextId(),
+                        handle, exposeCodec
+                )
+        );
+    }
+
+    protected <T> Expose<T> expose(
+            String name,
+            Handle<T> handle,
+            FlowEncoder<T> encoder, FlowDecoder<T> decoder
+    ) {
+        return exposeManagement.registerExpose(
+                Expose.create(
+                        name, exposeManagement.nextId(),
+                        handle, encoder, decoder
+                )
+        );
+    }
+
+    //endregion
+
 
     protected <T, E> LayerExpose<E> layerExpose(
             String name,
@@ -142,6 +174,19 @@ public abstract class BasicMenu<P>
                         name, exposeManagement.nextId(),
                         snapshot, () -> valueSupplier.apply(provider),
                         codec
+                )
+        );
+    }
+
+    protected <T, E> LayerExpose<E> layerExpose(
+            String name,
+            Handle<T> handle,
+            FlowHandler<T, E> codec
+    ) {
+        return exposeManagement.registerExpose(
+                LayerExpose.create(
+                        name, exposeManagement.nextId(),
+                        handle, codec
                 )
         );
     }
@@ -368,6 +413,24 @@ public abstract class BasicMenu<P>
                 )
         );
     }
+
+    //region handle diff expose
+
+    protected <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> diffLayerExpose(
+            String name,
+            DiffHandle<T, D> handle,
+            FlowHandler<T, E> codec,
+            UnaryFlowHandler<D> diffCodec
+    ) {
+        return exposeManagement.registerExpose(
+                DiffLayerExpose.create(
+                        name, exposeManagement.nextId(),
+                        handle, codec, diffCodec
+                )
+        );
+    }
+
+    //endregion
 
     //endregion
 

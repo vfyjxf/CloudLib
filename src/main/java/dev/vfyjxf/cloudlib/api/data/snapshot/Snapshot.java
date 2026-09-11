@@ -1,7 +1,9 @@
 package dev.vfyjxf.cloudlib.api.data.snapshot;
 
 import dev.vfyjxf.cloudlib.api.data.CheckStrategy;
+import dev.vfyjxf.cloudlib.api.data.handle.Handle;
 import dev.vfyjxf.cloudlib.util.Checks;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -411,6 +413,65 @@ public sealed interface Snapshot<T> {
             return "CopyInstance{" +
                     ", value=" + value +
                     '}';
+        }
+    }
+
+    /**
+     * Internal adapter letting a {@link Handle} masquerade as a {@link Snapshot} so it can drive the
+     * existing Expose machinery. The handle's dirty flag is the change signal; value comparison
+     * happens at {@link Handle#set} time, so this is a pure dirty-flag reader/clearer.
+     */
+    @ApiStatus.Internal
+    final class HandleSnapshot<T> implements Snapshot<T> {
+
+        private final Handle<T> handle;
+
+        private HandleSnapshot(Handle<T> handle) {
+            this.handle = handle;
+        }
+
+        public static <T> HandleSnapshot<T> of(Handle<T> handle) {
+            return new HandleSnapshot<>(handle);
+        }
+
+        @Override
+        public T readValue() {
+            return handle.get();
+        }
+
+        @Override
+        public @Nullable T value() {
+            return handle.get();
+        }
+
+        @Override
+        public State currentState(T current) {
+            //handle.changed() is the change signal: for a plain Handle it is dirty(); for a DiffHandle
+            //it is dirty() || get().changed(), so in-place mutation of a DiffObservable value surfaces too.
+            //`current` is handle.get() and is intentionally ignored.
+            return handle.changed() ? State.changed : State.unchanged;
+        }
+
+        @Override
+        public boolean updateState(T current) {
+            boolean changed = handle.changed();
+            handle.clearDirty();
+            return changed;
+        }
+
+        @Override
+        public void forceUpdateState(T current) {
+            handle.clearDirty();
+        }
+
+        @Override
+        public boolean mutable() {
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return "HandleSnapshot{" + handle + '}';
         }
     }
 

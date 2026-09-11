@@ -2,6 +2,8 @@ package dev.vfyjxf.cloudlib.test;
 
 import dev.vfyjxf.cloudlib.Constants;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
+import dev.vfyjxf.cloudlib.test.sync.SyncedTestBlock;
+import dev.vfyjxf.cloudlib.test.sync.SyncedTestBlockEntity;
 import dev.vfyjxf.cloudlib.test.sync.TestBlock;
 import dev.vfyjxf.cloudlib.test.sync.TestBlockEntity;
 import net.minecraft.core.registries.Registries;
@@ -35,6 +37,12 @@ public final class TestRegistry {
             BlockItem::new
     );
 
+    public static final DeferredBlock<SyncedTestBlock> testSyncedBlock = block(
+            "test_synced_block",
+            SyncedTestBlock::new,
+            BlockItem::new
+    );
+
     private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, Constants.modId);
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TestBlockEntity>> testBlockEntity =
@@ -42,6 +50,14 @@ public final class TestRegistry {
                     "test_block_entity",
                     () -> BlockEntityType.Builder
                             .of(TestBlockEntity::new, testBlock.get())
+                            .build(null)
+            );
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SyncedTestBlockEntity>> testSyncedBlockEntity =
+            BLOCK_ENTITIES.register(
+                    "test_synced_block_entity",
+                    () -> BlockEntityType.Builder
+                            .of(SyncedTestBlockEntity::new, testSyncedBlock.get())
                             .build(null)
             );
 

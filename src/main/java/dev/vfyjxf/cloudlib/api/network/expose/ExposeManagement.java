@@ -86,25 +86,43 @@ public final class ExposeManagement {
     }
 
     public void writeAllToClient(RegistryFriendlyByteBuf byteBuf) {
-        writeToClient(byteBuf, SyncStrategy.full);
+        writeToClient(byteBuf, SyncStrategy.full, true);
+    }
+
+    /**
+     * Write the full state of every expose without clearing any dirty flags. Intended for the
+     * vanilla BlockEntity bootstrap path ({@code getUpdateTag}/{@code getUpdatePacket}), which may
+     * run on the server mid-tick and must not consume an in-flight change that the live per-tick
+     * flush still needs to send.
+     */
+    public void writeAllToClient(RegistryFriendlyByteBuf byteBuf, boolean clearDirty) {
+        writeToClient(byteBuf, SyncStrategy.full, clearDirty);
     }
 
     public void writeDifferenceToClient(RegistryFriendlyByteBuf byteBuf) {
-        writeToClient(byteBuf, SyncStrategy.difference);
+        writeToClient(byteBuf, SyncStrategy.difference, true);
     }
 
     public void writeChangesToClient(RegistryFriendlyByteBuf byteBuf) {
-        writeToClient(byteBuf, SyncStrategy.fullValue);
+        writeToClient(byteBuf, SyncStrategy.fullValue, true);
     }
 
     public void writeToClient(RegistryFriendlyByteBuf byteBuf, SyncStrategy strategy) {
+        writeToClient(byteBuf, strategy, true);
+    }
+
+    /**
+     * @param clearDirty only meaningful for {@link SyncStrategy#full}; the difference/fullValue paths
+     *                  always clear because every value they write has been consumed
+     */
+    public void writeToClient(RegistryFriendlyByteBuf byteBuf, SyncStrategy strategy, boolean clearDirty) {
         if (strategy == SyncStrategy.full) {
             byteBuf.writeBoolean(true);//flag:send all
             for (ExposeCommon expose : exposes) {
                 if (expose instanceof ReversedOnly<?, ?>) continue;
                 byteBuf.writeShort(expose.id());
                 writeExpose(expose, byteBuf);
-                expose.updateSnapshot();
+                if (clearDirty) expose.updateSnapshot();
             }
         } else {
             byteBuf.writeBoolean(false);//flag:send diff
