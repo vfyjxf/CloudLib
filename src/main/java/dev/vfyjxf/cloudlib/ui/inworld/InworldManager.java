@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.ui.inworld;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -15,8 +16,6 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.base.host.InworldSceneHost;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares;
-import dev.vfyjxf.cloudlib.api.ui.floating.FloatingPlacement;
 import dev.vfyjxf.cloudlib.api.ui.floating.FloatingPositioning;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldAnchor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldContext;
@@ -37,6 +36,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -55,12 +55,15 @@ import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The client-side runtime of the in-world UI layer.
@@ -134,9 +137,12 @@ public final class InworldManager implements InworldUiApi {
 
     private @Nullable Projection projection;
     private @Nullable Matrix4f worldToView;
+    private float framePartialTick;
     private long tick;
 
     private int parkCursor = 0;
+    /** Reused per-frame collection of presented dock panels awaiting corner layout. */
+    private final List<PanelRuntime> dockQueue = new ArrayList<>();
     private static final int PARK_BASE = -1_000_000;
     private static final int PARK_STEP = 4096;
 
@@ -321,6 +327,7 @@ public final class InworldManager implements InworldUiApi {
         //world→view matrix is getModelViewMatrix(), which is camera ROTATION
         //only — the −cameraPos translation happens inside renderSectionLayer.
         Vec3 cameraPos = event.getCamera().getPosition();
+        framePartialTick = event.getPartialTick().getGameTimeDeltaPartialTick(true);
         Matrix4f worldToView = new Matrix4f(event.getModelViewMatrix());
         worldToView.translate((float) -cameraPos.x, (float) -cameraPos.y, (float) -cameraPos.z);
         this.worldToView = worldToView;
@@ -331,10 +338,12 @@ public final class InworldManager implements InworldUiApi {
 
         resolvePanels();
 
-        //in-world render pass: face panels only, and only in world presentation
+        //in-world render pass: face panels only in world presentation; the
+        //scan frame is useful in both (inspect's leader lines end on it)
         if (!inspecting) {
             renderFacePanels(event, cameraPos);
         }
+        renderScanFrames();
     }
 
     private void onGuiRender(RenderGuiEvent.Post event) {
@@ -464,10 +473,11 @@ public final class InworldManager implements InworldUiApi {
         if (proj == null || level == null) return;
 
         parkCursor = 0;
+        List<PanelRuntime> docked = dockQueue;
 
         for (PanelRuntime runtime : panels.values()) {
             runtime.pointedUv = null;
-            runtime.anchorWorld = runtime.spec.anchor().position(level);
+            runtime.anchorWorld = runtime.spec.anchor().position(level, framePartialTick);
             runtime.anchorScreen = null;
             runtime.presented = false;
             runtime.flat = false;
@@ -482,9 +492,8 @@ public final class InworldManager implements InworldUiApi {
 
             InworldPlacement placement = runtime.spec.placement();
             if (inspecting) {
-                //flat projection: every panel becomes floating near its anchor
-                resolveFloating(runtime, inspectPlacement(placement));
-                runtime.flat = true;
+                //flat projection: every panel docks to a screen corner
+                resolveDock(runtime, inspectPlacement(placement), docked);
             } else {
                 switch (placement) {
                     case InworldPlacement.Face face -> resolveFace(runtime, face);
@@ -496,24 +505,22 @@ public final class InworldManager implements InworldUiApi {
                         resolveFollow(runtime, follow);
                         runtime.flat = true;
                     }
+                    case InworldPlacement.Dock dock -> resolveDock(runtime, dock, docked);
                 }
             }
         }
+
+        layoutDocks(docked);
+        docked.clear();
 
         //apply layout so widget bounds are fresh for this frame
         scene.stabilize();
     }
 
-    private static InworldPlacement.Floating inspectPlacement(InworldPlacement original) {
-        if (original instanceof InworldPlacement.Floating floating) return floating;
-        return new InworldPlacement.Floating(
-                FloatingPlacement.rightStart,
-                List.of(
-                        FloatingMiddlewares.offset(18),
-                        FloatingMiddlewares.flip(),
-                        FloatingMiddlewares.shift(6),
-                        FloatingMiddlewares.hide()
-                ));
+    /** Inspect flattens every placement into a corner dock. */
+    private static InworldPlacement.Dock inspectPlacement(InworldPlacement original) {
+        if (original instanceof InworldPlacement.Dock dock) return dock;
+        return new InworldPlacement.Dock(InworldPlacement.DockCorner.AUTO);
     }
 
     private void resolveFloating(PanelRuntime runtime, InworldPlacement.Floating placement) {
@@ -556,6 +563,57 @@ public final class InworldManager implements InworldUiApi {
                 (int) (anchorPx.y - runtime.widget.height() * 0.5 + follow.offsetY())
         );
     }
+
+    private void resolveDock(PanelRuntime runtime, InworldPlacement.Dock dock, List<PanelRuntime> docked) {
+        if (runtime.anchorScreen == null) {
+            runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+            return;
+        }
+        runtime.presented = true;
+        runtime.flat = true;
+        runtime.dockCorner = dock.corner();
+        docked.add(runtime);
+    }
+
+    /**
+     * Packs docked panels into their screen corners: AUTO picks the quadrant
+     * the anchor projects into, panels stack from the corner inward in offer
+     * order, positions are pure screen-space so they never jitter.
+     */
+    private void layoutDocks(List<PanelRuntime> docked) {
+        if (docked.isEmpty()) return;
+        int W = mc.getWindow().getGuiScaledWidth();
+        int H = mc.getWindow().getGuiScaledHeight();
+        int marginX = 8, marginY = 8, gap = 6;
+
+        for (PanelRuntime runtime : docked) {
+            InworldPlacement.DockCorner corner = runtime.dockCorner;
+            if (corner == InworldPlacement.DockCorner.AUTO) {
+                FloatPos anchorPx = runtime.anchorScreen;
+                boolean left = anchorPx != null && anchorPx.x < W * 0.5f;
+                boolean top = anchorPx == null || anchorPx.y < H * 0.5f;
+                corner = top
+                        ? (left ? InworldPlacement.DockCorner.TOP_LEFT : InworldPlacement.DockCorner.TOP_RIGHT)
+                        : (left ? InworldPlacement.DockCorner.BOTTOM_LEFT : InworldPlacement.DockCorner.BOTTOM_RIGHT);
+            }
+            int slot = dockCursors[corner.ordinal()];
+            int w = runtime.widget.width();
+            int h = runtime.widget.height();
+            int x = switch (corner) {
+                case TOP_LEFT, BOTTOM_LEFT -> marginX;
+                default -> W - marginX - w;
+            };
+            int y = switch (corner) {
+                case TOP_LEFT, TOP_RIGHT -> marginY + slot;
+                default -> H - marginY - h - slot;
+            };
+            dockCursors[corner.ordinal()] = slot + h + gap;
+            runtime.widget.setScreenPos(x, y);
+        }
+        Arrays.fill(dockCursors, 0);
+    }
+
+    private final int[] dockCursors = new int[InworldPlacement.DockCorner.values().length];
 
     /**
      * Computes the panel's world-space rect on its face. In world presentation
@@ -778,6 +836,112 @@ public final class InworldManager implements InworldUiApi {
         RenderSystem.applyModelViewMatrix();
     }
 
+    //region scan frame
+
+    /** world-space scan frame corners: which axis deltas each corner owns */
+    private static final int[][] SCAN_EDGES = {
+            {0, 1}, {1, 3}, {3, 2}, {2, 0},   //bottom loop
+            {4, 5}, {5, 7}, {7, 6}, {6, 4},   //top loop
+            {0, 4}, {1, 5}, {2, 6}, {3, 7}    //pillars
+    };
+    private static final int[][] SCAN_CORNERS = new int[8][3];
+
+    static {
+        for (int i = 0; i < 8; i++) {
+            int x = i & 1, y = (i >> 1) & 1, z = (i >> 2) & 1;
+            SCAN_CORNERS[i][0] = (x ^ 1) | (y << 1) | (z << 2); //x-neighbor
+            SCAN_CORNERS[i][1] = x | ((y ^ 1) << 1) | (z << 2); //y-neighbor
+            SCAN_CORNERS[i][2] = x | (y << 1) | ((z ^ 1) << 2); //z-neighbor
+        }
+    }
+
+    /**
+     * Draws the hacker-style scan frame around every block that currently
+     * hosts a presented panel: dim box edges, brighter corner ticks and a
+     * bright segment sweeping the top loop. Dedupes shared anchor blocks.
+     */
+    private void renderScanFrames() {
+        if (worldToView == null || mc.level == null) return;
+        Set<BlockPos> framed = new HashSet<>();
+        Set<BlockPos> hot = new HashSet<>();
+        for (PanelRuntime runtime : panels.values()) {
+            if (!runtime.presented || !runtime.widget.visible()) continue;
+            BlockPos pos = runtime.spec.anchor().blockPos();
+            if (pos == null) continue;
+            framed.add(pos);
+            if (runtime.focused() || runtime == pointed) hot.add(pos);
+        }
+        if (framed.isEmpty()) return;
+
+        var modelView = RenderSystem.getModelViewStack();
+        modelView.pushMatrix();
+        modelView.identity();
+        RenderSystem.applyModelViewMatrix();
+
+        double t = (mc.level.getGameTime() + framePartialTick) * 0.9;
+        var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+        Matrix4f mat = worldToView;
+        for (BlockPos pos : framed) {
+            emitScanFrame(buffer, mat, pos, t, hot.contains(pos));
+        }
+        var mesh = buffer.build();
+        if (mesh != null) {
+            RenderSystem.enableBlend();
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            BufferUploader.drawWithShader(mesh);
+        }
+
+        modelView.popMatrix();
+        RenderSystem.applyModelViewMatrix();
+    }
+
+    private static void emitScanFrame(BufferBuilder buffer, Matrix4f mat, BlockPos pos, double t, boolean bright) {
+        double e = 0.003;
+        double x0 = pos.getX() - e, y0 = pos.getY() - e, z0 = pos.getZ() - e;
+        double x1 = pos.getX() + 1 + e, y1 = pos.getY() + 1 + e, z1 = pos.getZ() + 1 + e;
+        double[][] c = {
+                {x0, y0, z0}, {x1, y0, z0}, {x0, y0, z1}, {x1, y0, z1},
+                {x0, y1, z0}, {x1, y1, z0}, {x0, y1, z1}, {x1, y1, z1}
+        };
+
+        int edge = bright ? InworldTheme.SCAN_EDGE_HOT : InworldTheme.SCAN_EDGE;
+        int tick = bright ? InworldTheme.SCAN_TICK_HOT : InworldTheme.SCAN_TICK;
+        for (int[] pair : SCAN_EDGES) {
+            line(buffer, mat, c[pair[0]], c[pair[1]], edge);
+        }
+        //corner ticks: short brighter stubs from each corner along its edges
+        double tl = 0.14;
+        for (int i = 0; i < 8; i++) {
+            for (int nb : SCAN_CORNERS[i]) {
+                double[] a = c[i], b = c[nb];
+                double dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2];
+                line(buffer, mat, a, new double[]{a[0] + dx * tl, a[1] + dy * tl, a[2] + dz * tl}, tick);
+            }
+        }
+        //scan segment sweeping the top loop
+        double s = ((t % 4) + 4) % 4;
+        int seg = (int) s;
+        double f = s - seg;
+        double[] a = c[SCAN_EDGES[4 + seg][0]];
+        double[] b = c[SCAN_EDGES[4 + seg][1]];
+        double len = 0.22;
+        double f1 = Math.max(0, f - len);
+        double[] p0 = {a[0] + (b[0] - a[0]) * f1, a[1] + (b[1] - a[1]) * f1, a[2] + (b[2] - a[2]) * f1};
+        double[] p1 = {a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f};
+        line(buffer, mat, p0, p1, InworldTheme.SCAN_SWEEP);
+    }
+
+    private static void line(BufferBuilder buffer, Matrix4f mat, double[] a, double[] b, int color) {
+        float alpha = ((color >> 24) & 0xFF) / 255f;
+        float r = ((color >> 16) & 0xFF) / 255f;
+        float g = ((color >> 8) & 0xFF) / 255f;
+        float bl = (color & 0xFF) / 255f;
+        buffer.addVertex(mat, (float) a[0], (float) a[1], (float) a[2]).setColor(r, g, bl, alpha);
+        buffer.addVertex(mat, (float) b[0], (float) b[1], (float) b[2]).setColor(r, g, bl, alpha);
+    }
+
+    //endregion
+
     /**
      * Local px → world basis: x→u, y→v, z→u×v (normalized back to 1px depth).
      * u×v points opposite the face normal — same handedness as GUI screen
@@ -829,42 +993,73 @@ public final class InworldManager implements InworldUiApi {
         }
     }
 
-    /** Draws a connector line from each flat panel's edge to its projected anchor point. */
+    /** Draws a connector line from each flat panel's edge to its anchor's scan frame. */
     private void renderLeaderLines(GuiGraphics graphics) {
         for (PanelRuntime runtime : panels.values()) {
             if (!runtime.presented || !runtime.flat || !runtime.widget.visible()) continue;
             if (!runtime.spec.leaderLine()) continue;
-            FloatPos anchorPx = runtime.anchorScreen;
-            if (anchorPx == null) continue;
+            FloatPos from = leaderOrigin(runtime);
+            if (from == null) continue;
 
             int w = runtime.widget.width();
             int h = runtime.widget.height();
             float px = runtime.widget.screenX;
             float py = runtime.widget.screenY;
 
-            //nearest point on the panel rect to the anchor
-            double ex = Math.max(px, Math.min(anchorPx.x, px + w));
-            double ey = Math.max(py, Math.min(anchorPx.y, py + h));
-            //project the anchor point onto the rect border
+            //nearest point on the panel rect to the origin
+            double ex = Math.max(px, Math.min(from.x, px + w));
+            double ey = Math.max(py, Math.min(from.y, py + h));
+            //project the origin onto the rect border
             double cx = px + w * 0.5;
             double cy = py + h * 0.5;
             if (ex > px && ex < px + w) {
-                ey = anchorPx.y < cy ? py : py + h;
+                ey = from.y < cy ? py : py + h;
             } else if (ey > py && ey < py + h) {
-                ex = anchorPx.x < cx ? px : px + w;
+                ex = from.x < cx ? px : px + w;
             }
-            if (anchorPx.x >= px && anchorPx.x <= px + w && anchorPx.y >= py && anchorPx.y <= py + h) {
-                continue; //anchor inside the panel — no line
+            if (from.x >= px && from.x <= px + w && from.y >= py && from.y <= py + h) {
+                continue; //origin inside the panel — no line
             }
 
             int color = runtime.focused() ? InworldTheme.LINE_FOCUSED : InworldTheme.LINE;
-            drawLine(graphics, (float) ex, (float) ey, (float) anchorPx.x, (float) anchorPx.y, color);
-            //anchor node: small square — fill takes corners, not w/h
-            int ax = (int) anchorPx.x;
-            int ay = (int) anchorPx.y;
-            graphics.fill(ax - 1, ay - 1, ax + 2, ay + 2,
-                    runtime.focused() ? InworldTheme.LINE_FOCUSED : InworldTheme.LINE_NODE);
+            drawLine(graphics, (float) ex, (float) ey, (float) from.x, (float) from.y, color);
         }
+    }
+
+    /**
+     * Where a panel's leader line originates: the scan-frame corner nearest the
+     * panel for block-bound anchors, else the plain projected anchor point.
+     */
+    private @Nullable FloatPos leaderOrigin(PanelRuntime runtime) {
+        BlockPos pos = runtime.spec.anchor().blockPos();
+        Projection proj = projection;
+        if (pos == null || proj == null) return runtime.anchorScreen;
+
+        float px = runtime.widget.screenX;
+        float py = runtime.widget.screenY;
+        int w = runtime.widget.width();
+        int h = runtime.widget.height();
+        //panel rect center — pick the frame corner closest to it
+        double cx = px + w * 0.5;
+        double cy = py + h * 0.5;
+
+        double e = 0.003;
+        FloatPos best = null;
+        double bestD = Double.MAX_VALUE;
+        for (int i = 0; i < 8; i++) {
+            Vec3 corner = new Vec3(
+                    pos.getX() + ((i & 1) == 0 ? -e : 1 + e),
+                    pos.getY() + (((i >> 1) & 1) == 0 ? -e : 1 + e),
+                    pos.getZ() + (((i >> 2) & 1) == 0 ? -e : 1 + e));
+            FloatPos s = proj.worldToScreen(corner);
+            if (s == null) continue;
+            double d = (s.x - cx) * (s.x - cx) + (s.y - cy) * (s.y - cy);
+            if (d < bestD) {
+                bestD = d;
+                best = s;
+            }
+        }
+        return best != null ? best : runtime.anchorScreen;
     }
 
     private static void drawLine(GuiGraphics graphics, float x0, float y0, float x1, float y1, int color) {

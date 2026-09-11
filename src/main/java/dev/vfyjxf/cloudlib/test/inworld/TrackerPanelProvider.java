@@ -55,7 +55,7 @@ public final class TrackerPanelProvider implements InworldProvider {
             sink.offer(InworldPanelSpec
                     .of("tracker/main/" + p,
                             InworldAnchor.of(p, new Vec3(0.5, 1.2, 0.5)),
-                            InworldPlacement.floating(),
+                            InworldPlacement.dock(),
                             TrackerPanelProvider::mainContent)
                     .title(Component.literal("TRACKER//" + shortPos(p)))
                     .hints("LMB:press", "R:inspect"));

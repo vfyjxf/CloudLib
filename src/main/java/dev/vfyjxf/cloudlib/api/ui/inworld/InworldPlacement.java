@@ -71,6 +71,21 @@ public sealed interface InworldPlacement {
         return new Follow(0, 0);
     }
 
+    /**
+     * Panel docks to a fixed screen corner/edge — the stable "pinned to the
+     * screen" presentation: panels stack from the corner outward and a leader
+     * line connects back to the anchor's scan frame. The docked position is
+     * independent of camera micro-motion, so it never jitters.
+     */
+    static Dock dock(DockCorner corner) {
+        return new Dock(corner);
+    }
+
+    /** Dock that auto-picks the screen quadrant nearest the projected anchor. */
+    static Dock dock() {
+        return new Dock(DockCorner.AUTO);
+    }
+
     //endregion
 
     /**
@@ -97,5 +112,23 @@ public sealed interface InworldPlacement {
      * fixed pixel offset.
      */
     record Follow(double offsetX, double offsetY) implements InworldPlacement {
+    }
+
+    /**
+     * A screen-space panel docked into a fixed screen corner. {@link DockCorner#AUTO}
+     * picks the corner on the same side as the anchor's projection; multiple
+     * panels in one corner stack vertically in offer order.
+     */
+    record Dock(DockCorner corner) implements InworldPlacement {
+    }
+
+    /** Which screen corner a {@link Dock} panel pins to. */
+    enum DockCorner {
+        TOP_LEFT,
+        TOP_RIGHT,
+        BOTTOM_LEFT,
+        BOTTOM_RIGHT,
+        /** Pick the quadrant the anchor projects into (falls back when off-screen). */
+        AUTO
     }
 }

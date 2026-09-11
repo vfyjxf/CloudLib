@@ -74,7 +74,7 @@ public final class SyncedPanelProvider implements InworldProvider {
             sink.offer(InworldPanelSpec
                     .of("synced/tag/" + p,
                             InworldAnchor.of(p, new Vec3(0.5, 1.15, 0.5)),
-                            InworldPlacement.floating(),
+                            InworldPlacement.dock(),
                             SyncedPanelProvider::tagContent)
                     .title(Component.literal("LINK")));
         }

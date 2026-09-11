@@ -16,6 +16,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.minWidth;
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.padding;
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.positionAbsolute;
 
@@ -67,6 +68,33 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
             return EventDispatch.pass;
         });
         addWidget(content);
+        applyChromeMinWidth();
+    }
+
+    /**
+     * The panel must be at least as wide as its chrome — title text and the
+     * hint row are drawn over the frame, so taffy (which only sees the content)
+     * would otherwise under-measure and clip them.
+     */
+    private void applyChromeMinWidth() {
+        var font = Minecraft.getInstance().font;
+        int need = 0;
+        if (title != null) {
+            need = Math.max(need, font.width(title) + 12 + InworldTheme.PADDING);
+        }
+        if (!hints.isEmpty()) {
+            int row = InworldTheme.PADDING * 2;
+            for (String hint : hints) {
+                int sep = hint.indexOf(':');
+                String key = sep > 0 ? hint.substring(0, sep) : hint;
+                String label = sep > 0 ? hint.substring(sep + 1) : "";
+                row += font.width(key) + 4;
+                if (!label.isEmpty()) row += font.width(label) + 3;
+                row += 4;
+            }
+            need = Math.max(need, row - 4);
+        }
+        if (need > 0) useStyle(minWidth(need));
     }
 
     /**
@@ -126,10 +154,12 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
 
     void setTitle(@Nullable Component title) {
         this.title = title;
+        applyChromeMinWidth();
     }
 
     void setHints(List<String> hints) {
         this.hints = hints;
+        applyChromeMinWidth();
     }
 
     void setFrameState(boolean focused, boolean pointed) {

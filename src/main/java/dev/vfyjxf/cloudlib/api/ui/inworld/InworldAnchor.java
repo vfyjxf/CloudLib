@@ -54,6 +54,16 @@ public sealed interface InworldAnchor {
     @Nullable
     Vec3 position(ClientLevel level);
 
+    /**
+     * Resolves the anchor interpolated for the current rendered frame.
+     * Tick-snapped implementations should override this to lerp between the
+     * previous and current position — without it panels anchored to moving
+     * entities step-jitter against the smooth rendered world.
+     */
+    default @Nullable Vec3 position(ClientLevel level, float partialTick) {
+        return position(level);
+    }
+
     /** @return whether this anchor currently resolves to a position */
     default boolean alive(ClientLevel level) {
         return position(level) != null;
@@ -104,6 +114,13 @@ public sealed interface InworldAnchor {
             Entity entity = level.getEntity(entityId);
             if (entity == null || !entity.isAlive()) return null;
             return entity.position().add(offset);
+        }
+
+        @Override
+        public @Nullable Vec3 position(ClientLevel level, float partialTick) {
+            Entity entity = level.getEntity(entityId);
+            if (entity == null || !entity.isAlive()) return null;
+            return entity.getPosition(partialTick).add(offset);
         }
     }
 

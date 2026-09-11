@@ -39,6 +39,16 @@ public final class InworldTheme {
     /** Small square marker drawn at the anchor end of a leader line. */
     public static final int LINE_NODE = 0xFFFFFFFF;
 
+    /** dim box edges of the block scan frame */
+    public static final int SCAN_EDGE = 0x5935D6D0;
+    /** corner ticks of the scan frame */
+    public static final int SCAN_TICK = 0xCC35D6D0;
+    /** edges when the block's panel is focused/pointed */
+    public static final int SCAN_EDGE_HOT = 0x8C57E6E6;
+    public static final int SCAN_TICK_HOT = 0xFF57E6E6;
+    /** the bright segment sweeping the frame's top loop */
+    public static final int SCAN_SWEEP = 0xFF8FFFFF;
+
     /** Primary text. */
     public static final int TEXT = 0xFFE8F4F8;
 

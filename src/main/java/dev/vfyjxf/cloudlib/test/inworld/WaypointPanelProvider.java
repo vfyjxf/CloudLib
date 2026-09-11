@@ -39,7 +39,7 @@ public final class WaypointPanelProvider implements InworldProvider {
             sink.offer(InworldPanelSpec
                     .of("wp/" + p,
                             InworldAnchor.of(p, new Vec3(0.5, 1.25, 0.5)),
-                            InworldPlacement.floating(),
+                            InworldPlacement.dock(),
                             WaypointPanelProvider::content)
                     .title(Component.literal("WP//" + p.getX() + "," + p.getZ()))
                     .interactive(false)

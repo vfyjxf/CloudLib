@@ -34,6 +34,8 @@ final class PanelRuntime implements InworldPanel {
     boolean presented;
     /** whether the panel is currently presented flat in screen space */
     boolean flat;
+    /** resolved dock corner this frame (AUTO resolved to a concrete corner) */
+    InworldPlacement.DockCorner dockCorner = InworldPlacement.DockCorner.AUTO;
 
     //face placement geometry (world space)
     Vec3 faceOrigin;
