@@ -1,7 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
 import dev.vfyjxf.cloudlib.api.ui.base.host.GlobalSceneHost;
-import dev.vfyjxf.cloudlib.api.ui.base.host.InworldSceneHost;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -22,18 +21,6 @@ class SceneManagement {
         management.fallbackScene.mount(SceneContext.create(new GlobalSceneHost()));
         NeoForge.EVENT_BUS.register(management);
     }
-
-    //endregion
-
-    //region inworld
-
-    Scene inworldScene = new Scene(new WidgetGroup<>());
-
-    {
-        inworldScene.init();
-        inworldScene.mount(SceneContext.create(new InworldSceneHost()));
-    }
-
 
     //endregion
 

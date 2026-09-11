@@ -2,9 +2,6 @@ package dev.vfyjxf.cloudlib.test;
 
 import dev.vfyjxf.cloudlib.Constants;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
-import dev.vfyjxf.cloudlib.test.inworld.TrackerBlock;
-import dev.vfyjxf.cloudlib.test.inworld.TrackerBlockEntity;
-import dev.vfyjxf.cloudlib.test.inworld.WaypointBlock;
 import dev.vfyjxf.cloudlib.test.sync.SyncedTestBlock;
 import dev.vfyjxf.cloudlib.test.sync.SyncedTestBlockEntity;
 import dev.vfyjxf.cloudlib.test.sync.TestBlock;
@@ -46,18 +43,6 @@ public final class TestRegistry {
             BlockItem::new
     );
 
-    public static final DeferredBlock<TrackerBlock> trackerBlock = block(
-            "tracker_block",
-            TrackerBlock::new,
-            BlockItem::new
-    );
-
-    public static final DeferredBlock<WaypointBlock> waypointBlock = block(
-            "waypoint_block",
-            WaypointBlock::new,
-            BlockItem::new
-    );
-
     private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, Constants.modId);
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TestBlockEntity>> testBlockEntity =
@@ -73,14 +58,6 @@ public final class TestRegistry {
                     "test_synced_block_entity",
                     () -> BlockEntityType.Builder
                             .of(SyncedTestBlockEntity::new, testSyncedBlock.get())
-                            .build(null)
-            );
-
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TrackerBlockEntity>> trackerBlockEntity =
-            BLOCK_ENTITIES.register(
-                    "tracker_block_entity",
-                    () -> BlockEntityType.Builder
-                            .of(TrackerBlockEntity::new, trackerBlock.get())
                             .build(null)
             );
 

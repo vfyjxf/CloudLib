@@ -17,7 +17,7 @@ public class PluginLoaderTest {
     void testSort() {
         PluginLoader.LoadingResult<ModPlugin> result = PluginLoader.load(AnnotationPluginLookup.of(ModPlugin.class));
         Assertions.assertSame(TestPlugin.class, result.plugins().getFirst().getClass());
-        Assertions.assertEquals(4, result.plugins().size());
+        Assertions.assertEquals(3, result.plugins().size());
         Assertions.assertEquals(
             "plugin: cloudlib:test_plugin_e failed to load because: Missing required dependency: cloudlib:test_plugin_c,\n" +
             "plugin: cloudlib:test_plugin_d failed to load because: Missing optional dependency: cloudlib:test_plugin_c",

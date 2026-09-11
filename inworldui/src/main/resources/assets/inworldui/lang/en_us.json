@@ -1,0 +1,10 @@
+{
+  "block.inworldui.tracker_block": "Tracker Block",
+  "block.inworldui.waypoint_block": "Waypoint Block",
+  "itemGroup.inworldui.inworldui_tab": "Inworld UI",
+  "inworldui.keys.category": "Inworld UI",
+  "inworldui.keys.inspect": "Inspect in-world UI",
+  "inworldui.keys.focus_next": "In-world UI focus next",
+  "inworldui.keys.focus_previous": "In-world UI focus previous",
+  "inworldui.keys.interact": "In-world UI interact"
+}

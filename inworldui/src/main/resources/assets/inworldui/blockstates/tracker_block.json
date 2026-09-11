@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "inworldui:block/tracker_block"
+    }
+  }
+}
