@@ -73,6 +73,7 @@ public final class NimbusProjection {
         event.register(NimbusKeyMappings.focusNext);
         event.register(NimbusKeyMappings.focusPrevious);
         event.register(NimbusKeyMappings.interact);
+        event.register(NimbusKeyMappings.inventory);
     }
 
 }

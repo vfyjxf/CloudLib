@@ -47,9 +47,14 @@ public final class NimbusPayloads {
                         SharedPanelRemovePayload.STREAM_CODEC,
                         ResourceLocation.fromNamespaceAndPath(Constants.namespace, "shared_remove"))
                 .registerPlay(registrar);
+        ServerPayloadInfo.create(
+                        TransferPayload.STREAM_CODEC,
+                        ResourceLocation.fromNamespaceAndPath(Constants.namespace, "transfer"))
+                .registerPlay(registrar);
         //payloads that travel nested inside a PanelChannel transport
         PanelChannelPayload.registerChannelType(WorldDragPayload.info.type(), WorldDragPayload.STREAM_CODEC);
         PanelChannelPayload.registerChannelType(ContainerOpsPayload.TYPE, ContainerOpsPayload.STREAM_CODEC);
+        PanelChannelPayload.registerChannelType(TransferPayload.TYPE, TransferPayload.STREAM_CODEC);
     }
 
     public static <T extends ServerboundPayload> ServerPayloadInfo<T> createServerInfo(

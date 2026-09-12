@@ -55,11 +55,13 @@ import dev.vfyjxf.nimbusprojection.api.sync.SharedViewContext;
 import dev.vfyjxf.nimbusprojection.NimbusProjection;
 import dev.vfyjxf.nimbusprojection.network.PanelChannelPayload;
 import dev.vfyjxf.nimbusprojection.network.PresenceReportPayload;
+import dev.vfyjxf.nimbusprojection.feature.inventory.InventoryFeature;
 import dev.vfyjxf.nimbusprojection.network.SharedPanelSpawnPayload;
 import net.neoforged.neoforge.network.PacketDistributor;
 import dev.vfyjxf.nimbusprojection.api.NimbusClient;
 import dev.vfyjxf.cloudlib.api.ui.inworld.Projection;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
+import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDraggable;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
@@ -579,6 +581,9 @@ public final class InworldManager implements NimbusClient {
         while (NimbusKeyMappings.interact.consumeClick()) {
             if (!keysViaScreen && dragSession == null) triggerInteract();
         }
+        while (NimbusKeyMappings.inventory.consumeClick()) {
+            if (!keysViaScreen) InventoryFeature.toggle();
+        }
         tickInteractArm();
 
         tickWorldDrag();
@@ -641,6 +646,7 @@ public final class InworldManager implements NimbusClient {
         }
 
         publishPresence();
+        InventoryFeature.tick(this);
         scene.tick();
     }
 
@@ -989,7 +995,22 @@ public final class InworldManager implements NimbusClient {
         dragPanel = null;
         dragTarget = null;
         dragTrail.clear();
-        if (drag == null || overScene) return;
+        if (drag == null) return;
+        if (overScene) {
+            //release over a panel: a WorldDragAcceptor on the target claims
+            //the stack (panel-to-panel transfer); anything else cancels
+            double[] v = virtualPointer();
+            Widget hit = scene.hitTest(v[0], v[1]);
+            WorldDragAcceptor acceptor = WorldDragAcceptor.find(hit);
+            PanelRuntime target = panelOf(hit);
+            //same-panel drops reach the acceptor too — slot-merge/reorder
+            //is a drop semantics the widget may want
+            if (acceptor != null && target != null) {
+                acceptor.acceptWorldDrag(
+                        drag, new InworldPanelContext(mc.level, mc.player, target), v[0], v[1]);
+            }
+            return;
+        }
 
         List<BlockPos> targets = panel != null
                 ? drag.commitTargets(trail, new InworldPanelContext(mc.level, mc.player, panel))

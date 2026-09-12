@@ -57,6 +57,19 @@ public final class NimbusKeyMappings {
             NimbusLang.Keys.generalCategory.key()
     );
 
+    /**
+     * Summon/dismiss the inventory satellite panel manually — independent of
+     * the auto-summon that engaging a container triggers.
+     */
+    public static final KeyMapping inventory = new KeyMapping(
+            NimbusLang.Keys.inventory.key(),
+            KeyConflictContext.IN_GAME,
+            KeyModifier.NONE,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_I,
+            NimbusLang.Keys.generalCategory.key()
+    );
+
     private NimbusKeyMappings() {
     }
 }

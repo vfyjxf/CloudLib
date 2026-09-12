@@ -4,10 +4,13 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
+import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
+import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
 import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.ui.sync.ContainerContents;
 import dev.vfyjxf.cloudlib.ui.widget.ContainerGridWidget;
 import dev.vfyjxf.nimbusprojection.network.ContainerOpsPayload;
+import dev.vfyjxf.nimbusprojection.network.TransferPayload;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import org.lwjgl.glfw.GLFW;
 import net.minecraft.core.BlockPos;
@@ -21,7 +24,7 @@ import java.util.function.Supplier;
  * is dormant (fill ratio + top items, Jade-style), the full interactive
  * {@link ContainerGridWidget} once engaged into the hologram.
  */
-public final class ContainerPanelWidget extends WidgetGroup<Widget> {
+public final class ContainerPanelWidget extends WidgetGroup<Widget> implements WorldDragAcceptor {
 
     private static final int CELL = 12;
     private static final int TOP_ITEMS = 4;
@@ -85,5 +88,20 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> {
         summary.setVisible(!engaged);
         grid.setVisible(engaged);
         super.renderInternal(canvas, mouseX, mouseY, partialTicks);
+    }
+
+    /**
+     * A stack dropped anywhere on this panel is deposited into the
+     * container — no slot precision needed (destSlot -1 = first fitting).
+     */
+    @Override
+    public boolean acceptWorldDrag(WorldDrag drag, InworldPanelContext dropCtx, double sceneX, double sceneY) {
+        BlockPos p = pos.get();
+        if (p == null || ctx.channel() == null) return false;
+        ctx.channel().sendToServer(new TransferPayload(
+                drag.sourceContainer(), drag.sourceSlot(),
+                p, -1,
+                drag.carried().getCount()));
+        return true;
     }
 }
