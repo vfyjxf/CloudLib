@@ -63,6 +63,15 @@ public final class ContainerContents {
         return stacks.get(slot);
     }
 
+    /**
+     * Drop the throttle so the next {@link #watch} re-queries immediately —
+     * call after a drag commit so the just-mutated source refreshes now
+     * rather than on the next repoll.
+     */
+    public static void invalidate(BlockPos pos) {
+        lastQuery.remove(pos.immutable());
+    }
+
     /** Server snapshot arrived — store it. */
     public static void receive(BlockPos pos, List<ItemStack> stacks) {
         cache.put(pos.immutable(), List.copyOf(stacks));

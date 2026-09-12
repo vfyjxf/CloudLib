@@ -689,6 +689,12 @@ public final class InworldManager implements InworldUiApi {
         PacketDistributor.sendToServer(new WorldDragPayload(
                 drag.sourceSlot(), mode, targets, look, drag.sourceContainer()));
 
+        //the commit just mutated the source (and every target) server-side —
+        //drop the throttle so their next watch() re-queries immediately
+        //instead of showing a stale slot until the repoll
+        if (drag.sourceContainer() != null) ContainerContents.invalidate(drag.sourceContainer());
+        for (BlockPos t : targets) ContainerContents.invalidate(t);
+
         //cosmetic fly-outs: one sprite per non-zero share, release point →
         //target top-center. Throw mode needs none — the real ItemEntity spawns.
         if (!targets.isEmpty() && hold != null) {
