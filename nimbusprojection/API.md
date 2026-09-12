@@ -8,108 +8,121 @@ pointing a crosshair at pixels.
 
 | Layer | Home | Contents |
 |---|---|---|
-| primitives | `cloudlib.api.ui.inworld` | what a world-anchored UI surface *is*: `InworldAnchor`, `InworldPlacement`, `Projection`, `InworldPanel`, `InworldPanelContext`, `InworldOverlayScreen`, `PanelChannel`, plus the widget-facing interaction contracts `InworldTraceable`, `WorldDraggable`/`WorldDrag`, `SplitPlan` |
-| semantics | `nimbusprojection.api` | who provides panels and when they live/die, presentation policy, network model — `PanelSpec`, providers, `NimbusClient`/`NimbusServer`, shared panels, channels, presence |
+| primitives | `cloudlib.api.ui.inworld` | what a world-anchored UI surface *is*: `PanelKey`, `InworldAnchor` (+`AnchorCodec` registry), `Presentation` (open, 6 builtin descriptors), `Projection`, `LayoutHint`/`OcclusionClass`, `InworldPanel`, `InworldPanelContext`, `InworldOverlayScreen`, `PanelChannel`, and the widget-facing interaction contracts `InworldTraceable`, `WorldDraggable`/`WorldDrag`, `SplitPlan` |
+| semantics | `nimbusprojection.api` | who provides panels and when they live/die, presentation solving, policy overrides, network model |
 
 CloudLib never depends on Nimbus; Nimbus builds on CloudLib. Third-party
 consumers write against `nimbusprojection.api` and the CloudLib widget kit.
 
 ## Panel model
 
-A panel = `PanelSpec(key, anchor, placement, content)`.
+A panel = `PanelSpec(PanelKey, anchor, presentation, content)`.
 
-- **key** — identity. Providers re-offer keys each pass; a missing key
-  closes the panel, a re-offered key preserves widget state.
-- **anchor** (`InworldAnchor`, CloudLib) — block pos (+offset), entity, or
-  dynamic supplier; resolved per frame.
-- **placement** (`InworldPlacement`, CloudLib) — the presentation mode:
-  - `Face` — flat on a block face, world-space quad, crosshair-ray input
-  - `Floating` — screen-space, positioned near the projected anchor via
-    the floating middleware pipeline
-  - `Follow` — screen-space, pinned to the anchor's projection (nameplate)
-  - `Dock` — stacked into a screen corner with a leader line back to the
-    anchor; the folding/overflow budget system
-  - `Expand` — world-space hologram at a free spot near the anchor,
-    billboarded toward the player
+- **key** — `PanelKey(namespace, path)`, serializable; providers re-offer
+  keys each pass, missing keys close, re-offered keys preserve widget
+  state. Path may be hierarchical; the parent path derives the default
+  zoning group.
+- **anchor** (`InworldAnchor`, open) — block pos (+offset), entity, fixed
+  pos, or dynamic supplier; resolved per frame. Custom anchors become
+  network-shareable by registering an `AnchorCodec`.
+- **presentation** (`Presentation`, open) — descriptor records:
+  `Face` / `Floating` / `Follow` / `Dock` / `Expand` / `InspectOnly`.
+  Custom presentations = a descriptor record + a `PresentationDriver`
+  registered on `NimbusClient.registerPresentation`.
 - **content** — `InworldPanelContext → Widget`: an ordinary CloudLib
   widget tree.
 
-Provisioning paths:
+### Containers
 
-1. `NimbusClient.registerProvider(provider, interval)` — declarative scans
-   ("a panel per synced BE in range", "the block I look at").
-2. `NimbusClient.open(spec)` / `close(key)` — imperative.
-3. `NimbusServer.share(spec)` — server-declared, broadcast to all watchers
-   (see below).
+`PanelGroup(key, anchor, members)` — offered via `PanelSink.offerGroup`.
+Membership: explicit `members` / same-anchor implicit merge (escape via
+`spec.standalone(true)`) / cross-anchor via `spec.groupKey(groupKey)`.
+Roles (`GroupRole`): `PRIMARY` opens on engage, `SECONDARY` expands after,
+`AMBIENT` always visible (implicit: `onDemand(false)` members).
+
+### Lifecycle
+
+- `decay(Decay(ttl, fade, lingerOnHover))` — transient panels: toasts,
+  pick-up feedback. TTL from creation, re-offers don't extend.
+- `suspendPolicy(SuspendPolicy)` — open SPI returning
+  `LIVE`/`SUSPEND`/`CLOSE` per tick; `SuspendPolicy.standard()` is the
+  default (dead anchor/dimension change → CLOSE, screen/pause → SUSPEND).
+
+### Layout participation
+
+All space-budget declarations live in one object — `spec.layoutHint(hint)`
+or `spec.hint().zone(...)`:
+
+- `zone`/`zoneLimit` — displaced panels merge into a `+N` rail
+- `offscreenIndicator` — collapse to an edge marker when the anchor leaves
+  the view
+- `foldable` — join the fold→hide→`+N` budget chain
+- `occlusionTolerance` — acceptable chrome-overlap fraction ("a little
+  cover is fine")
+- `occlusion` — `OCCLUDED_BY_WORLD` / `OCCLUDED_BY_UI_ONLY` /
+  `ALWAYS_ON_TOP`
+
+## Presentation drivers
+
+`PresentationDriver<P>` — the open SPI solving one `Presentation.type()`:
+
+- `resolve(ctx) → PanelGeometry` — world quad or screen rect this frame
+- `pick(ctx) → uv` — pointer (ray or screen point) → surface-local coords
+- `flatten(ctx) → FlattenedGeometry` — what it becomes in inspect mode
+- `inspectPolicy()` — FLATTEN / HIDDEN / CUSTOM
+
+Occlusion avoidance, chrome collision and focus participation are the
+runtime's uniform pipeline — drivers only report geometry. The six
+builtins are ordinary drivers over the same SPI.
 
 ## Interaction model
 
-The runtime owns input; specs/widgets declare capabilities.
-
-- **Soft focus** — the actionable panel nearest the look vector inside a
-  cone is focused; angle dominates, distance breaks ties, hysteresis
-  prevents flapping. No pixel-perfect aim.
-- **Engage toggle** — interact key (V): tap on a dormant focus target opens
-  it, tap on an engaged panel closes it, hold activates the pointer for
-  click/drag. `onDemand` panels stay dormant (anchor affordance only)
-  until engaged; `onDemand(false)` panels always present.
-- **Widget contracts** (CloudLib) — a content widget opts in:
-  - `InworldTraceable` — pointer strokes on the panel surface
-    (Witness-style); a quick tap falls back to the panel's `action`.
-  - `WorldDraggable` → `WorldDrag` — press hands the drag to the world:
-    carried content floats at the view ray, world objects (containers)
-    become drop targets, commit is server-authoritative, `SplitPlan`
-    provides the shared distribution math.
-- **Inspect** — hold-key (R): camera look captured by a transparent
-  `InworldOverlayScreen`, every panel flattens to screen space under a
-  free cursor with leader lines back to anchors.
-- **Focus ring** — cycle-focus keys walk panels; keyboard input routes to
-  the focused panel.
+- **Soft focus** — cone-based auto-selection, angle-dominant scoring,
+  incumbent hysteresis. `spec.focusPolicy(FocusPolicy)` overrides scoring
+  (SPI; hysteresis stays runtime-owned). Single primary focus.
+- **Engage toggle** — interact key: tap opens dormant focus target, tap
+  closes engaged panel, hold activates the pointer. `onDemand` panels stay
+  dormant until engaged.
+- **Widget contracts** — `InworldTraceable` (surface strokes),
+  `WorldDraggable`/`WorldDrag` (drag into world, server-authoritative
+  commit, `SplitPlan` math). Richer forms (radial menus) are widget
+  shapes, not new verbs.
+- **Inspect** — hold-key flat projection; `InspectOnly` panels exist only
+  there. Keyboard cycles the focus ring.
 
 ## Network model
 
-Three mechanisms, each for a different shape of data:
-
-1. **Expose** (CloudLib) — BE-backed panels read live state through
-   `SyncedBlockEntity` handles (S→C, batched per tick) and send actions
-   through `ReversedOnly` exposes (C→S). The default path.
-2. **Panel channels** — for panels *without* a synced BE. Client sends via
-   `InworldPanelContext.channel()` → `PanelChannel.sendToServer`;
-   server-side receives at the `ServerPanelMessageHandler` declared on
-   `SharedPanelSpec.channel(...)`. Server pushes via
-   `SharedPanel.channel()` (`sendTo`/`broadcast`) → client's
-   `PanelChannelHandler` declared on `PanelSpec.channel(...)`.
-   Payloads are ordinary `CustomPacketPayload`s. **Server re-validates
-   everything** — a channel payload is a request, not a fact.
-3. **Shared panels** — `NimbusServer.share(SharedPanelSpec)` declares
-   `(key, anchor, view, payload)` once; the runtime broadcasts it and every
-   client in range materializes the panel through the `SharedPanelView`
-   registered under `view` (`NimbusClient.registerView(id, codec, view)`).
-   `SharedPanel.update(payload)` re-pushes data. This is how *every player
-   sees the same UI*.
-
-## Presence
-
-Each client reports its own panel state (watching / engaged / dragging /
-tracing); the server relays it to other watchers as `PresenceInfo`, read
-via `NimbusClient.presence()`. This is how *other players' operations are
-visible* — ghost affordances on shared panels.
-
-## What is deliberately not here yet
-
-This commit is the API skeleton — contracts only. The runtime (provider
-reconciliation, soft focus, engage lifecycle, presentation solvers,
-inspect screen, OIT rendering, channels, shared-panel broadcast, presence
-relay) is rebuilt feature by feature against these types.
+1. **Expose** (CloudLib) — BE-backed panels: `SyncedBlockEntity` S→C,
+   `ReversedOnly` C→S. The default path.
+2. **Panel channels** — `context.channel().sendToServer(payload)` (C→S,
+   server handler on `SharedPanelSpec.channel`); `SharedPanel.channel()`
+   `sendTo`/`broadcast` (S→C, client handler on `PanelSpec.channel`).
+   Contract: per-payload delivery, **ordering not guaranteed**.
+3. **Shared panels** — `NimbusServer.share(SharedPanelSpec)` broadcasts
+   `(PanelKey, anchor[codec'd], view, payload)`; clients materialize via
+   registered `SharedPanelView`. Two-tier permission:
+   `visibleTo` (who sees it at all) and `canInteract` (who may operate —
+   others get a read-only view and their input is dropped).
+   `SharedPanel.update(payload)` re-pushes data.
+4. **Presence** — clients report their interaction state per panel key;
+   the server relays to co-watchers. Applies to shared panels and to
+   provider panels inside a declared shared domain
+   (`ProviderOptions.shared()` — the provider certifies its keys encode
+   world identity).
 
 ## Layout & compatibility rules carried from the prototype
 
-- Screen-space chrome obeys a budget: fold to a strip → hide → `+N`
-  overflow chip. Partial occlusion is acceptable; strict avoidance is not
-  required.
-- Folding state is per-presentation-scene, recomputed every frame — it
-  must never leak between world and inspect presentation.
+- Screen-space chrome obeys a budget: fold → hide → `+N` overflow chip.
+  Partial occlusion is acceptable; strict avoidance is not required.
+- Folding state is per-presentation-scene, recomputed every frame.
 - World-space draws always declare their own depth state; 2D painter-order
   canvas batches must restore `GL_DEPTH_TEST` when done.
 - Translations come from `src/main/lang/**.yaml` via the CloudLang plugin
   (`NimbusLang` constants), never handwritten json.
+
+## What is deliberately not here yet
+
+This is the API skeleton — contracts only. The runtime (provider
+reconciliation, grouping/engage, drivers, inspect, rendering, channels,
+shared-panel broadcast, presence relay) is built feature by feature
+against these types.

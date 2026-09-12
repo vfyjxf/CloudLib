@@ -1,5 +1,6 @@
 package dev.vfyjxf.nimbusprojection.api;
 
+import dev.vfyjxf.cloudlib.api.ui.inworld.PanelKey;
 import dev.vfyjxf.nimbusprojection.api.sync.SharedPanel;
 import dev.vfyjxf.nimbusprojection.api.sync.SharedPanelSpec;
 
@@ -29,7 +30,7 @@ public interface NimbusServer {
     SharedPanel share(SharedPanelSpec spec);
 
     /** Revokes the shared panel with the given key, if present. */
-    void unshare(Object key);
+    void unshare(PanelKey key);
 
     /** All currently shared panels. */
     Collection<? extends SharedPanel> shared();

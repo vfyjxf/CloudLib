@@ -13,8 +13,11 @@ import java.util.function.Supplier;
  * <p>
  * The anchor is resolved every frame against the client level, so anchors
  * backed by entities or dynamic suppliers track their target automatically.
+ * <p>
+ * The interface is open — a custom anchor becomes network-shareable by
+ * registering an {@link AnchorCodec} on {@link AnchorCodecs}.
  */
-public sealed interface InworldAnchor {
+public interface InworldAnchor {
 
     //region factories
 

@@ -1,5 +1,6 @@
 package dev.vfyjxf.nimbusprojection.api.sync;
 
+import dev.vfyjxf.cloudlib.api.ui.inworld.PanelKey;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public interface SharedPanel {
 
     /** The shared panel's identity key. */
-    String key();
+    PanelKey key();
 
     /** The declaration this panel was shared with. */
     SharedPanelSpec spec();

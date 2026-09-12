@@ -3,31 +3,35 @@ package dev.vfyjxf.nimbusprojection.api.panel;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldAnchor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
-import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPlacement;
+import dev.vfyjxf.cloudlib.api.ui.inworld.LayoutHint;
+import dev.vfyjxf.cloudlib.api.ui.inworld.PanelKey;
+import dev.vfyjxf.cloudlib.api.ui.inworld.Presentation;
+import dev.vfyjxf.nimbusprojection.api.policy.FocusPolicy;
+import dev.vfyjxf.nimbusprojection.api.policy.SuspendPolicy;
 import dev.vfyjxf.nimbusprojection.api.sync.PanelChannelHandler;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
  * Immutable-ish description of one in-world panel, offered either
- * imperatively through {@code NimbusClient.open(spec)} or declaratively by a
- * {@link dev.vfyjxf.nimbusprojection.api.provider.PanelProvider}.
+ * imperatively through {@code NimbusClient.open(spec)}, declaratively by a
+ * {@link dev.vfyjxf.nimbusprojection.api.provider.PanelProvider}, or as a
+ * member of a {@link PanelGroup}.
  * <p>
  * The {@code key} is the panel's identity: providers re-offer the same key
- * each scan to keep a panel alive; when a key stops being offered the panel
- * closes. Two offers with the same key but different anchors/placements
+ * each pass to keep a panel alive; when a key stops being offered the panel
+ * closes. Two offers with the same key but different anchors/presentations
  * update the existing panel in place.
  */
 public final class PanelSpec {
 
-    final Object key;
+    final PanelKey key;
     InworldAnchor anchor;
-    InworldPlacement placement;
+    Presentation presentation;
     Function<InworldPanelContext, ? extends Widget> content;
 
     @Nullable Component title;
@@ -42,67 +46,73 @@ public final class PanelSpec {
      * affordance while focused, but presents no chrome — until the interact
      * key engages it. Defaults true so the world isn't wallpapered with
      * panels; set false for ambient displays that should always show.
-     * Non-interactive panels ignore this — they are pure displays and are
-     * always presented.
      */
     boolean onDemand = true;
     /**
-     * Zoning group: displaced non-interactive panels that cannot keep their
-     * anchor position are gathered into a side rail; panels sharing a group
-     * key stay adjacent inside it. {@code null} derives the group from the
-     * panel key's parent path ("tracker/ent/12" → "tracker/ent").
+     * Layout participation: zoning, folding, off-screen collapse and
+     * occlusion policy — read by every presentation driver.
      */
-    @Nullable String group;
+    LayoutHint layoutHint = LayoutHint.defaults();
     /**
-     * Merge cap for the zoning group: at most this many non-interactive
-     * members are shown at once; the rest collapse into a "+N" badge on the
-     * last visible member. Unlimited by default. When members declare
-     * different limits the smallest wins.
+     * Transient lifecycle: when set the panel dies after its TTL with a
+     * fade-out — toasts, pick-up hints, operation feedback. {@code null} =
+     * lives until its key stops being offered (or closed imperatively).
      */
-    int groupLimit = Integer.MAX_VALUE;
+    @Nullable Decay decay;
     /**
-     * Off-screen collapse: when set and the supplier allows, a panel whose
-     * anchor leaves the camera view shrinks to a small edge indicator
-     * (diamond + bearing tick + distance) instead of rendering the full
-     * panel where the target can't be seen anyway.
+     * Cross-anchor group membership: joins the {@link PanelGroup} offered
+     * under this key regardless of where this panel's anchor sits — the
+     * multi-block-structure case (every part of a door shares the group's
+     * affordance).
      */
-    @Nullable BooleanSupplier offscreenIndicator;
+    @Nullable PanelKey groupKey;
     /**
-     * The panel's primary action — invoked by the interact hotkey when this
-     * panel is focused/soft-focused (look roughly at the anchor, press the
-     * key). Panels declaring an action are also eligible for cone-based soft
+     * The role this panel claims inside a container. In an explicit
+     * {@link PanelGroup} the member's declared role wins; in an implicit
+     * same-anchor merge the first {@link GroupRole#PRIMARY} claimant is
+     * primary and the rest demote to secondary.
+     */
+    GroupRole groupRole = GroupRole.PRIMARY;
+    /**
+     * Refuses implicit same-anchor merging: this panel keeps its own
+     * affordance even when another panel resolves to the same anchor.
+     */
+    boolean standalone = false;
+    /** Focus-selection override — {@code null} = the runtime's soft-cone default. */
+    @Nullable FocusPolicy focusPolicy;
+    /** Suspend/close policy override — {@code null} = {@link SuspendPolicy#standard()}. */
+    @Nullable SuspendPolicy suspendPolicy;
+    /**
+     * The panel's primary action — invoked by the interact hotkey while
+     * focused. Panels declaring an action are eligible for cone-based soft
      * focus even without an exact crosshair hit.
      */
     @Nullable Consumer<InworldPanelContext> action;
-    /**
-     * Handler for payloads arriving <em>from the server</em> on this panel's
-     * channel. The matching send handle is
-     * {@link InworldPanelContext#channel()}.
-     */
+    /** Server → client channel handler; sends go through {@link InworldPanelContext#channel()}. */
     @Nullable PanelChannelHandler channel;
 
     private PanelSpec(
-            Object key,
+            PanelKey key,
             InworldAnchor anchor,
-            InworldPlacement placement,
+            Presentation presentation,
             Function<InworldPanelContext, ? extends Widget> content
     ) {
         this.key = key;
         this.anchor = anchor;
-        this.placement = placement;
+        this.presentation = presentation;
         this.content = content;
     }
 
     public static PanelSpec of(
-            Object key,
+            PanelKey key,
             InworldAnchor anchor,
-            InworldPlacement placement,
+            Presentation presentation,
             Function<InworldPanelContext, ? extends Widget> content
     ) {
-        return new PanelSpec(key, anchor, placement, content);
+        return new PanelSpec(key, anchor, presentation, content);
     }
 
-    public Object key() {
+    public PanelKey key() {
         return key;
     }
 
@@ -110,8 +120,8 @@ public final class PanelSpec {
         return anchor;
     }
 
-    public InworldPlacement placement() {
-        return placement;
+    public Presentation presentation() {
+        return presentation;
     }
 
     public Function<InworldPanelContext, ? extends Widget> content() {
@@ -147,25 +157,39 @@ public final class PanelSpec {
         return maxDistance;
     }
 
-    /**
-     * The zoning group this panel belongs to. Defaults to the panel key's
-     * parent path so sibling keys ("x/tag/1", "x/tag/2") zone together.
-     */
-    public String group() {
-        if (group != null) return group;
-        String k = String.valueOf(key);
-        int slash = k.lastIndexOf('/');
-        return slash > 0 ? k.substring(0, slash) : k;
+    /** Layout participation — see {@link LayoutHint}. */
+    public LayoutHint layoutHint() {
+        return layoutHint;
     }
 
-    /** Max members of this panel's group shown at once — see {@link #groupLimit}. */
-    public int groupLimit() {
-        return groupLimit;
+    /** Transient lifecycle, or null for a persistent panel. */
+    public @Nullable Decay decay() {
+        return decay;
     }
 
-    /** Whether this panel may currently collapse to an off-screen edge indicator. */
-    public boolean collapsesOffscreen() {
-        return offscreenIndicator != null && offscreenIndicator.getAsBoolean();
+    /** The named cross-anchor group this panel joins, or null. */
+    public @Nullable PanelKey groupKey() {
+        return groupKey;
+    }
+
+    /** The role this panel claims inside a container. */
+    public GroupRole groupRole() {
+        return groupRole;
+    }
+
+    /** Whether implicit same-anchor merging is refused. */
+    public boolean standalone() {
+        return standalone;
+    }
+
+    /** Focus-selection override, or null for the runtime default. */
+    public @Nullable FocusPolicy focusPolicy() {
+        return focusPolicy;
+    }
+
+    /** Suspend/close policy override, or null for {@link SuspendPolicy#standard()}. */
+    public @Nullable SuspendPolicy suspendPolicy() {
+        return suspendPolicy;
     }
 
     /** The panel's primary action triggered by the interact hotkey, or null. */
@@ -227,35 +251,56 @@ public final class PanelSpec {
         return this;
     }
 
-    /** Overrides the zoning group (see {@link #group()}). */
-    public PanelSpec group(@Nullable String group) {
-        this.group = group;
+    /** Replaces the layout hint — zoning/folding/occlusion declarations. */
+    public PanelSpec layoutHint(LayoutHint hint) {
+        this.layoutHint = hint;
         return this;
     }
 
-    /** Caps how many members of this panel's group may be visible at once; extras merge into a "+N" badge. */
-    public PanelSpec groupLimit(int groupLimit) {
-        this.groupLimit = Math.max(1, groupLimit);
+    /** Mutates the current hint in place (chain-friendly convenience). */
+    public LayoutHint hint() {
+        return layoutHint;
+    }
+
+    /** Gives the panel a transient lifecycle — see {@link Decay}. */
+    public PanelSpec decay(Decay decay) {
+        this.decay = decay;
         return this;
     }
 
-    /** Allow this panel to collapse to an edge indicator whenever its anchor is off-screen. */
-    public PanelSpec offscreenIndicator() {
-        return offscreenIndicator(() -> true);
+    /** Joins the {@link PanelGroup} offered under {@code groupKey}, across anchors. */
+    public PanelSpec groupKey(PanelKey groupKey) {
+        this.groupKey = groupKey;
+        return this;
+    }
+
+    /** The role this panel claims inside a container — see {@link GroupRole}. */
+    public PanelSpec groupRole(GroupRole role) {
+        this.groupRole = role;
+        return this;
+    }
+
+    /** Refuses implicit same-anchor merging — this panel keeps its own affordance. */
+    public PanelSpec standalone(boolean standalone) {
+        this.standalone = standalone;
+        return this;
+    }
+
+    /** Overrides focus selection for this panel — see {@link FocusPolicy}. */
+    public PanelSpec focusPolicy(FocusPolicy policy) {
+        this.focusPolicy = policy;
+        return this;
+    }
+
+    /** Overrides suspend/close behaviour — see {@link SuspendPolicy}. */
+    public PanelSpec suspendPolicy(SuspendPolicy policy) {
+        this.suspendPolicy = policy;
+        return this;
     }
 
     /**
-     * Caller-controlled off-screen collapse — the panel shrinks to an edge
-     * indicator only while {@code allowed} returns true.
-     */
-    public PanelSpec offscreenIndicator(BooleanSupplier allowed) {
-        this.offscreenIndicator = allowed;
-        return this;
-    }
-
-    /**
-     * Sets the panel's primary action — run by the interact hotkey while the
-     * panel is focused. Also makes the panel eligible for soft focus.
+     * Sets the panel's primary action — run by the interact hotkey while
+     * focused. Also makes the panel eligible for soft focus.
      */
     public PanelSpec action(Consumer<InworldPanelContext> action) {
         this.action = action;
@@ -277,8 +322,8 @@ public final class PanelSpec {
         return this;
     }
 
-    public PanelSpec placement(InworldPlacement placement) {
-        this.placement = placement;
+    public PanelSpec presentation(Presentation presentation) {
+        this.presentation = presentation;
         return this;
     }
 

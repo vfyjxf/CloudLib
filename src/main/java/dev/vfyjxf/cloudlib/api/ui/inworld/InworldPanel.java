@@ -14,11 +14,11 @@ import org.jetbrains.annotations.Nullable;
 public interface InworldPanel {
 
     /** The identity key from the panel's spec. */
-    Object key();
+    PanelKey key();
 
     InworldAnchor anchor();
 
-    InworldPlacement placement();
+    Presentation presentation();
 
     /** The chrome root widget (frame + content). */
     Widget widget();

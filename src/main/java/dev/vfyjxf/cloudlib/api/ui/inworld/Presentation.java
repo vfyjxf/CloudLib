@@ -4,17 +4,30 @@ import dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddleware;
 import dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares;
 import dev.vfyjxf.cloudlib.api.ui.floating.FloatingPlacement;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
 
 /**
- * How a {@link InworldPanel} is presented in "world" presentation mode.
+ * How an in-world panel surface is presented — the presentation-mode
+ * descriptor.
  * <p>
- * In "inspect" presentation mode (the hold-key flat projection) every panel is
- * flattened to screen space regardless of its placement; the placement only
- * describes where the flat panel is born relative to its projected anchor.
+ * The interface is <b>open</b>: the built-in descriptors below cover the
+ * common modes, and a third party may define its own record implementing
+ * {@code Presentation} plus a matching runtime driver registered with the
+ * consuming mod (for Nimbus: {@code PresentationDriver}). The descriptor is
+ * pure data — all solving policy lives in the driver.
+ * <p>
+ * In "inspect" presentation (the hold-key flat projection) every panel is
+ * flattened to screen space regardless of its descriptor; the descriptor
+ * only describes where the flat panel is born relative to its projected
+ * anchor — except {@link InspectOnly}, which has no world presentation at
+ * all and exists solely in the inspect layer.
  */
-public sealed interface InworldPlacement {
+public interface Presentation {
+
+    /** The presentation type id a runtime driver registers against. */
+    ResourceLocation type();
 
     //region factories
 
@@ -99,6 +112,19 @@ public sealed interface InworldPlacement {
         return new Expand(pixelsPerBlock);
     }
 
+    /**
+     * Inspect-only panel: no world presentation at all — it materializes
+     * solely in the inspect flat projection. With {@code affordance} the
+     * anchor still shows a subtle world marker hinting the panel exists.
+     */
+    static InspectOnly inspectOnly(boolean affordance) {
+        return new InspectOnly(affordance);
+    }
+
+    static InspectOnly inspectOnly() {
+        return new InspectOnly(true);
+    }
+
     //endregion
 
     /**
@@ -109,7 +135,11 @@ public sealed interface InworldPlacement {
      * @param v              vertical position of the panel center on the face (0..1)
      * @param pixelsPerBlock gui pixels per block; panel world size = panelPx / pixelsPerBlock
      */
-    record Face(Direction face, double u, double v, double pixelsPerBlock) implements InworldPlacement {
+    record Face(Direction face, double u, double v, double pixelsPerBlock) implements Presentation {
+        @Override
+        public ResourceLocation type() {
+            return Builtin.FACE;
+        }
     }
 
     /**
@@ -117,14 +147,22 @@ public sealed interface InworldPlacement {
      * through the floating middleware pipeline.
      */
     record Floating(FloatingPlacement placement,
-                    List<FloatingMiddleware> middlewares) implements InworldPlacement {
+                    List<FloatingMiddleware> middlewares) implements Presentation {
+        @Override
+        public ResourceLocation type() {
+            return Builtin.FLOATING;
+        }
     }
 
     /**
      * A screen-space panel pinned to the anchor's projected position plus a
      * fixed pixel offset.
      */
-    record Follow(double offsetX, double offsetY) implements InworldPlacement {
+    record Follow(double offsetX, double offsetY) implements Presentation {
+        @Override
+        public ResourceLocation type() {
+            return Builtin.FOLLOW;
+        }
     }
 
     /**
@@ -132,17 +170,35 @@ public sealed interface InworldPlacement {
      * picks the corner on the same side as the anchor's projection; multiple
      * panels in one corner stack vertically in offer order.
      */
-    record Dock(DockCorner corner) implements InworldPlacement {
+    record Dock(DockCorner corner) implements Presentation {
+        @Override
+        public ResourceLocation type() {
+            return Builtin.DOCK;
+        }
     }
 
     /**
-     * A world-space panel floating at a free spot near its anchor — the
-     * manager scans candidate positions around the anchor for air, then
-     * billboards the panel toward the player. Rendered through the same
-     * render-to-texture quad path as {@link Face} and clickable via crosshair
-     * raycast. {@code pixelsPerBlock} sets the world size.
+     * A world-space panel floating at a free spot near its anchor —
+     * billboarded toward the player and clickable via crosshair raycast.
+     * {@code pixelsPerBlock} sets the world size.
      */
-    record Expand(double pixelsPerBlock) implements InworldPlacement {
+    record Expand(double pixelsPerBlock) implements Presentation {
+        @Override
+        public ResourceLocation type() {
+            return Builtin.EXPAND;
+        }
+    }
+
+    /**
+     * A panel that exists only in the inspect flat projection — no world
+     * presentation, no world-mode focus. {@code affordance} controls whether
+     * the anchor shows a subtle marker hinting the panel can be revealed.
+     */
+    record InspectOnly(boolean affordance) implements Presentation {
+        @Override
+        public ResourceLocation type() {
+            return Builtin.INSPECT_ONLY;
+        }
     }
 
     /** Which screen corner a {@link Dock} panel pins to. */
@@ -153,5 +209,18 @@ public sealed interface InworldPlacement {
         BOTTOM_RIGHT,
         /** Pick the quadrant the anchor projects into (falls back when off-screen). */
         AUTO
+    }
+
+    /** Type ids of the built-in descriptors. */
+    final class Builtin {
+        public static final ResourceLocation FACE = ResourceLocation.fromNamespaceAndPath("cloudlib", "face");
+        public static final ResourceLocation FLOATING = ResourceLocation.fromNamespaceAndPath("cloudlib", "floating");
+        public static final ResourceLocation FOLLOW = ResourceLocation.fromNamespaceAndPath("cloudlib", "follow");
+        public static final ResourceLocation DOCK = ResourceLocation.fromNamespaceAndPath("cloudlib", "dock");
+        public static final ResourceLocation EXPAND = ResourceLocation.fromNamespaceAndPath("cloudlib", "expand");
+        public static final ResourceLocation INSPECT_ONLY = ResourceLocation.fromNamespaceAndPath("cloudlib", "inspect_only");
+
+        private Builtin() {
+        }
     }
 }

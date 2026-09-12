@@ -1,5 +1,7 @@
 package dev.vfyjxf.nimbusprojection.api.sync;
 
+import dev.vfyjxf.cloudlib.api.ui.inworld.PanelKey;
+
 import java.util.UUID;
 
 /**
@@ -9,14 +11,15 @@ import java.util.UUID;
  *
  * @param playerId the interacting player's UUID
  * @param panelKey the panel's key — for shared panels this is the shared
- *                 spec key; for local panels presence propagates only when
- *                 the key is network-meaningful (e.g. a String)
+ *                 spec key; for provider panels presence propagates only
+ *                 for keys inside a declared shared domain
+ *                 ({@code ProviderOptions.sharedDomain})
  * @param kind     what the player is doing
  * @param sinceTick server tick the state began — for ordering/freshness
  */
 public record PresenceInfo(
         UUID playerId,
-        Object panelKey,
+        PanelKey panelKey,
         PresenceKind kind,
         long sinceTick
 ) {
