@@ -50,9 +50,12 @@ public final class NimbusProjection {
 
     private void loadComplete(FMLLoadCompleteEvent event) {
         var api = InworldUi.instance();
-        api.registerProvider(new SyncedPanelProvider(), 10);
-        api.registerProvider(new TrackerPanelProvider(), 10);
-        api.registerProvider(new InventoryPanelProvider(), 5);
+        //interactive providers run near every tick — dormant targets must
+        //exist by the time the soft-focus cone could select them, and stale
+        //anchors read as lag
+        api.registerProvider(new SyncedPanelProvider(), 3);
+        api.registerProvider(new TrackerPanelProvider(), 3);
+        api.registerProvider(new InventoryPanelProvider(), 1);
         api.registerProvider(new WaypointPanelProvider(), 20);
     }
 

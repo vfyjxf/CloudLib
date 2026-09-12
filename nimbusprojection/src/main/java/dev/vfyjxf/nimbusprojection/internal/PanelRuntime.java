@@ -102,6 +102,14 @@ final class PanelRuntime implements InworldPanel {
     /** panel-local pointer position when crosshair-pointed in world mode */
     @Nullable FloatPos pointedUv;
 
+    /**
+     * 0..1 focus "heat": ramps up while this panel owns the player's attention
+     * (focused or crosshair-pointed), decays after. Drives the scan frame /
+     * engage-chip fade so focus changes read as smooth transitions instead of
+     * pops. Render-side only — updated once per level-stage frame.
+     */
+    float focusHeat;
+
     //endregion
 
     private boolean closed;

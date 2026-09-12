@@ -561,8 +561,11 @@ public final class InworldManager implements InworldUiApi {
             }
         }
         if (target == null || target.anchorScreen == null) return;
-        String key = "[" + NimbusKeyMappings.interact.getTranslatedKeyMessage().getString()
-                + (closing ? "]×" : "]");
+        float heat = target.focusHeat;
+        if (heat <= 0.05f) return;
+        //one key toggles both ways — the chip style carries the state:
+        //hollow = press to open, solid = press to close
+        String key = "[" + NimbusKeyMappings.interact.getTranslatedKeyMessage().getString() + "]";
         var font = mc.font;
         int tw = font.width(key) + 6;
         int x = (int) Math.round(target.anchorScreen.x - tw * 0.5);
@@ -582,12 +585,25 @@ public final class InworldManager implements InworldUiApi {
         }
         x = Math.max(2, Math.min(x, mc.getWindow().getGuiScaledWidth() - tw - 2));
         y = Math.max(2, y);
-        graphics.fill(x, y, x + tw, y + 10, HackerTheme.BG_FOCUSED);
-        graphics.fill(x, y, x + tw, y + 1, HackerTheme.ACCENT_DIM);
-        graphics.fill(x, y + 9, x + tw, y + 10, HackerTheme.ACCENT_DIM);
-        graphics.fill(x, y, x + 1, y + 10, HackerTheme.ACCENT_DIM);
-        graphics.fill(x + tw - 1, y, x + tw, y + 10, HackerTheme.ACCENT_DIM);
-        graphics.drawString(font, key, x + 3, y + 1, HackerTheme.ACCENT);
+        if (closing) {
+            //solid chip: the open panel is under the crosshair — V closes it
+            graphics.fill(x, y, x + tw, y + 10, scaleAlpha(HackerTheme.ACCENT, heat * 0.92f));
+            graphics.drawString(font, key, x + 3, y + 1, scaleAlpha(HackerTheme.LINE_DARK, heat));
+        } else {
+            //hollow chip: dormant target — V opens it
+            graphics.fill(x, y, x + tw, y + 10, scaleAlpha(HackerTheme.BG_FOCUSED, heat));
+            graphics.fill(x, y, x + tw, y + 1, scaleAlpha(HackerTheme.ACCENT_DIM, heat));
+            graphics.fill(x, y + 9, x + tw, y + 10, scaleAlpha(HackerTheme.ACCENT_DIM, heat));
+            graphics.fill(x, y, x + 1, y + 10, scaleAlpha(HackerTheme.ACCENT_DIM, heat));
+            graphics.fill(x + tw - 1, y, x + tw, y + 10, scaleAlpha(HackerTheme.ACCENT_DIM, heat));
+            graphics.drawString(font, key, x + 3, y + 1, scaleAlpha(HackerTheme.ACCENT, heat));
+        }
+    }
+
+    /** ARGB with its alpha channel rescaled — drives fade-by-heat rendering. */
+    private static int scaleAlpha(int argb, float s) {
+        int a = Math.min(255, Math.round(((argb >>> 24) & 0xFF) * s));
+        return (a << 24) | (argb & 0x00FFFFFF);
     }
 
     private void onMouseButton(InputEvent.MouseButton.Pre event) {
@@ -2123,10 +2139,16 @@ public final class InworldManager implements InworldUiApi {
         }
     }
 
-    /** Nearest-to-look-axis actionable panel inside the soft-focus cone and range. */
+    /**
+     * Nearest-to-look-axis actionable panel inside the soft-focus cone and
+     * range. The incumbent focus keeps its seat until a challenger scores
+     * clearly better — without the margin the selection flaps back and forth
+     * whenever two anchors sit at similar angles.
+     */
     private @Nullable PanelRuntime pickSoftFocus(Vec3 eye, Vec3 look) {
         PanelRuntime best = null;
         double bestScore = Double.MAX_VALUE;
+        double incumbentScore = -1;
         for (PanelRuntime r : panels.values()) {
             boolean dormant = isDormant(r);
             if (!dormant && (!r.presented || !r.widget.visible() || !r.spec.interactive())) continue;
@@ -2139,10 +2161,16 @@ public final class InworldManager implements InworldUiApi {
             double score = InworldLayout.softFocusScore(eye, look, r.anchorWorld);
             if (score < 0) continue;
             score += r.distance * 0.01; //angle decides, distance breaks near-ties
+            if (r == focused) incumbentScore = score;
             if (score < bestScore) {
                 bestScore = score;
                 best = r;
             }
+        }
+        //hysteresis: the incumbent must be beaten by ~35% score to lose focus
+        if (incumbentScore >= 0 && best != null && best != focused
+                && incumbentScore < bestScore * 1.5 + 0.004) {
+            return focused;
         }
         return best;
     }
@@ -2799,17 +2827,26 @@ public final class InworldManager implements InworldUiApi {
         if (worldToView == null || mc.level == null) return;
         Set<BlockPos> framed = new HashSet<>();
         Set<Integer> framedEnts = new HashSet<>();
+        Map<BlockPos, Float> frameHeat = new HashMap<>();
+        Map<Integer, Float> frameEntHeat = new HashMap<>();
         for (PanelRuntime runtime : panels.values()) {
+            //focus heat: ramps while this panel holds the player's attention,
+            //decays after — the frame/chip fade instead of popping on/off
+            boolean hot = runtime.focused() || runtime == pointed || runtime == softPointed;
+            runtime.focusHeat = Mth.clamp(
+                    runtime.focusHeat + (hot ? 0.3f : -0.12f), 0f, 1f);
             if (!runtime.widget.visible()) continue;
             //dormant panels present nothing — but a targeted one's anchor is
             //exactly what the scan frame marks
             if (!runtime.presented && !isDormant(runtime)) continue;
-            if (!runtime.focused() && runtime != pointed) continue;
+            if (runtime.focusHeat <= 0.03f) continue;
             BlockPos pos = runtime.spec.anchor().blockPos();
             if (pos != null) {
                 framed.add(pos);
+                frameHeat.merge(pos, runtime.focusHeat, Math::max);
             } else if (runtime.spec.anchor() instanceof InworldAnchor.EntityTarget et) {
                 framedEnts.add(et.entityId());
+                frameEntHeat.merge(et.entityId(), runtime.focusHeat, Math::max);
             }
         }
         boolean hasExpand = false;
@@ -2841,14 +2878,16 @@ public final class InworldManager implements InworldUiApi {
         //vanilla-style outlines — the block's real voxel shape and entity
         //hitboxes, same as the crosshair hit outline and the F3+B debug boxes
         for (BlockPos pos : framed) {
+            float heat = frameHeat.getOrDefault(pos, 1f);
             BlockState state = mc.level.getBlockState(pos);
             VoxelShape shape = state.getShape(mc.level, pos, CollisionContext.empty());
             if (shape.isEmpty()) shape = Shapes.block();
             int c = HackerTheme.SCAN_SHAPE_HOT;
             emitShape(pose, buffer, shape, pos.getX(), pos.getY(), pos.getZ(),
-                    red(c), green(c), blue(c), alpha(c));
+                    red(c), green(c), blue(c), alpha(c) * heat);
         }
         for (int id : framedEnts) {
+            float heat = frameEntHeat.getOrDefault(id, 1f);
             Entity entity = mc.level.getEntity(id);
             if (entity == null) continue;
             Vec3 p = entity.getPosition(framePartialTick);
@@ -2858,13 +2897,13 @@ public final class InworldManager implements InworldUiApi {
                     p.x + hw, p.y + dims.height(), p.z + hw).inflate(0.03);
             int c = HackerTheme.SCAN_SHAPE_HOT;
             LevelRenderer.renderLineBox(pose, buffer, box,
-                    red(c), green(c), blue(c), alpha(c));
+                    red(c), green(c), blue(c), alpha(c) * heat);
         }
 
         //hacker accents — corner ticks, the top-loop sweep and expand connectors
         double t = (mc.level.getGameTime() + framePartialTick) * 0.9;
         for (BlockPos pos : framed) {
-            emitScanFrame(buffer, mat, pos, t, true);
+            emitScanFrame(buffer, mat, pos, t, true, frameHeat.getOrDefault(pos, 1f));
         }
         emitExpandConnectors(buffer, mat);
         var mesh = buffer.build();
@@ -3067,6 +3106,10 @@ public final class InworldManager implements InworldUiApi {
     }
 
     private static void emitScanFrame(BufferBuilder buffer, Matrix4f mat, BlockPos pos, double t, boolean bright) {
+        emitScanFrame(buffer, mat, pos, t, bright, 1f);
+    }
+
+    private static void emitScanFrame(BufferBuilder buffer, Matrix4f mat, BlockPos pos, double t, boolean bright, float alphaScale) {
         double e = 0.003;
         double x0 = pos.getX() - e, y0 = pos.getY() - e, z0 = pos.getZ() - e;
         double x1 = pos.getX() + 1 + e, y1 = pos.getY() + 1 + e, z1 = pos.getZ() + 1 + e;
@@ -3082,7 +3125,7 @@ public final class InworldManager implements InworldUiApi {
             for (int nb : SCAN_CORNERS[i]) {
                 double[] a = c[i], b = c[nb];
                 double dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2];
-                line(buffer, mat, a, new double[]{a[0] + dx * tl, a[1] + dy * tl, a[2] + dz * tl}, tick);
+                line(buffer, mat, a, new double[]{a[0] + dx * tl, a[1] + dy * tl, a[2] + dz * tl}, tick, alphaScale);
             }
         }
         //scan segment sweeping the top loop
@@ -3095,11 +3138,15 @@ public final class InworldManager implements InworldUiApi {
         double f1 = Math.max(0, f - len);
         double[] p0 = {a[0] + (b[0] - a[0]) * f1, a[1] + (b[1] - a[1]) * f1, a[2] + (b[2] - a[2]) * f1};
         double[] p1 = {a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f};
-        line(buffer, mat, p0, p1, HackerTheme.SCAN_SWEEP);
+        line(buffer, mat, p0, p1, HackerTheme.SCAN_SWEEP, alphaScale);
     }
 
     private static void line(BufferBuilder buffer, Matrix4f mat, double[] a, double[] b, int color) {
-        float alpha = ((color >> 24) & 0xFF) / 255f;
+        line(buffer, mat, a, b, color, 1f);
+    }
+
+    private static void line(BufferBuilder buffer, Matrix4f mat, double[] a, double[] b, int color, float alphaScale) {
+        float alpha = ((color >> 24) & 0xFF) / 255f * alphaScale;
         float r = ((color >> 16) & 0xFF) / 255f;
         float g = ((color >> 8) & 0xFF) / 255f;
         float bl = (color & 0xFF) / 255f;
