@@ -33,6 +33,4 @@ public record SolveContext<P extends Presentation>(
         Projection projection,
         Vec3 anchorWorld,
         List<Rect2i> occupiedChrome,
-        float partialTick
-) {
-}
+        float partialTick) {}

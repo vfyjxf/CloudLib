@@ -48,5 +48,4 @@ public interface FocusPolicy {
     static FocusPolicy never() {
         return ctx -> UNFOCUSABLE;
     }
-
 }

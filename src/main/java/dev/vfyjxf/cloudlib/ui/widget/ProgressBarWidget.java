@@ -15,29 +15,32 @@ import java.util.function.DoubleSupplier;
  */
 public class ProgressBarWidget extends Widget {
 
-    //region types
+    // region types
 
     public enum Direction {
-        LEFT_TO_RIGHT, RIGHT_TO_LEFT, TOP_TO_BOTTOM, BOTTOM_TO_TOP
+        leftToRight,
+        rightToLeft,
+        topToBottom,
+        bottomToTop
     }
 
-    //endregion
+    // endregion
 
-    //region state
+    // region state
 
     private DoubleSupplier progressSupplier = () -> 0.0;
-    private Direction direction = Direction.LEFT_TO_RIGHT;
+    private Direction direction = Direction.leftToRight;
 
-    //endregion
+    // endregion
 
-    //region textures
+    // region textures
 
     private @Nullable VisualTexture backgroundTexture = new ColorTexture(0xFF333333);
     private VisualTexture fillTexture = new ColorTexture(0xFF00AA00);
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     public static ProgressBarWidget create() {
         return new ProgressBarWidget();
@@ -47,12 +50,11 @@ public class ProgressBarWidget extends Widget {
         return new ProgressBarWidget().setProgressSupplier(progressSupplier);
     }
 
-    private ProgressBarWidget() {
-    }
+    private ProgressBarWidget() {}
 
-    //endregion
+    // endregion
 
-    //region configuration
+    // region configuration
 
     public double progress() {
         return Math.clamp(progressSupplier.getAsDouble(), 0.0, 1.0);
@@ -101,9 +103,9 @@ public class ProgressBarWidget extends Widget {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
@@ -119,13 +121,13 @@ public class ProgressBarWidget extends Widget {
         int fillX = 0, fillY = 0, fillW = width(), fillH = height();
 
         switch (direction) {
-            case LEFT_TO_RIGHT -> fillW = (int) (width() * progress);
-            case RIGHT_TO_LEFT -> {
+            case leftToRight -> fillW = (int) (width() * progress);
+            case rightToLeft -> {
                 fillW = (int) (width() * progress);
                 fillX = width() - fillW;
             }
-            case TOP_TO_BOTTOM -> fillH = (int) (height() * progress);
-            case BOTTOM_TO_TOP -> {
+            case topToBottom -> fillH = (int) (height() * progress);
+            case bottomToTop -> {
                 fillH = (int) (height() * progress);
                 fillY = height() - fillH;
             }
@@ -134,16 +136,17 @@ public class ProgressBarWidget extends Widget {
         canvas.texture(fillTexture, fillX, fillY, fillW, fillH);
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
-        collector.addFormatted("progress", String.format("%.1f%%", progress() * 100), null, InspectionProperty.categoryData);
-        collector.addWithDefault("direction", direction, Direction.LEFT_TO_RIGHT, InspectionProperty.categoryVisual);
+        collector.addFormatted(
+                "progress", String.format("%.1f%%", progress() * 100), null, InspectionProperty.categoryData);
+        collector.addWithDefault("direction", direction, Direction.leftToRight, InspectionProperty.categoryVisual);
     }
 
-    //endregion
+    // endregion
 }

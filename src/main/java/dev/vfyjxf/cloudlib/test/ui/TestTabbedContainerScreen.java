@@ -1,23 +1,23 @@
-//package dev.vfyjxf.cloudlib.test.ui;
+// package dev.vfyjxf.cloudlib.test.ui;
 //
-//import dev.vfyjxf.cloudlib.api.ui.base.BasicScreen;
-//import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-//import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-//import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
-//import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-//import dev.vfyjxf.cloudlib.ui.widgets.ButtonWidget;
-//import dev.vfyjxf.cloudlib.ui.widgets.ColumnWidget;
-//import dev.vfyjxf.cloudlib.ui.widgets.LabelWidget;
-//import dev.vfyjxf.cloudlib.ui.widgets.ProgressBarWidget;
-//import dev.vfyjxf.cloudlib.ui.widgets.RowWidget;
-//import dev.vfyjxf.cloudlib.ui.widgets.ScrollPanelWidget;
-//import dev.vfyjxf.cloudlib.ui.widgets.SpacerWidget;
-//import dev.vfyjxf.cloudlib.ui.widgets.TabbedContainerWidget;
-//import dev.vfyjxf.cloudlib.ui.widgets.TextFieldWidget;
-//import dev.vfyjxf.cloudlib.ui.widgets.ToggleWidget;
-//import net.minecraft.network.chat.Component;
+// import dev.vfyjxf.cloudlib.api.ui.base.BasicScreen;
+// import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+// import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
+// import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
+// import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
+// import dev.vfyjxf.cloudlib.ui.widgets.ButtonWidget;
+// import dev.vfyjxf.cloudlib.ui.widgets.ColumnWidget;
+// import dev.vfyjxf.cloudlib.ui.widgets.LabelWidget;
+// import dev.vfyjxf.cloudlib.ui.widgets.ProgressBarWidget;
+// import dev.vfyjxf.cloudlib.ui.widgets.RowWidget;
+// import dev.vfyjxf.cloudlib.ui.widgets.ScrollPanelWidget;
+// import dev.vfyjxf.cloudlib.ui.widgets.SpacerWidget;
+// import dev.vfyjxf.cloudlib.ui.widgets.TabbedContainerWidget;
+// import dev.vfyjxf.cloudlib.ui.widgets.TextFieldWidget;
+// import dev.vfyjxf.cloudlib.ui.widgets.ToggleWidget;
+// import net.minecraft.network.chat.Component;
 //
-//import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
+// import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
 //
 /// **
 // * Test screen demonstrating the TabbedContainerWidget.
@@ -31,7 +31,7 @@
 // * </ul>
 // */
 /// /@TestScreen
-//public class TestTabbedContainerScreen extends BasicScreen {
+// public class TestTabbedContainerScreen extends BasicScreen {
 //
 //    // State for testing state preservation
 //    private int counterValue = 0;
@@ -256,7 +256,8 @@
 //    /**
 //     * Creates a setting toggle row.
 //     */
-//    private Widget createSettingToggle(String label, boolean initialState, java.util.function.Consumer<Boolean> onToggle) {
+//    private Widget createSettingToggle(String label, boolean initialState, java.util.function.Consumer<Boolean>
+// onToggle) {
 //        var row = RowWidget.create();
 //        row.setSpacing(8);
 //        row.applyStyle(UIStyle.of(alignItemsCenter()));
@@ -292,7 +293,7 @@
 //        content.addChild(titleLabel);
 //
 //        // Scrollable item list
-//        var scrollPanel = ScrollPanelWidget.vertical();
+//        var scrollPanel = ScrollPanelWidget.VERTICAL();
 //        scrollPanel.setContentHeight(300);
 //        scrollPanel.setScrollSpeed(15);
 //        scrollPanel.setBackgroundTexture(new ColorTexture(0x30000000));
@@ -391,7 +392,7 @@
 //        interactiveSection.addChild(interactiveLabel);
 //
 //        var progressBar = ProgressBarWidget.create(() -> progressValue)
-//                .setDirection(ProgressBarWidget.Direction.LEFT_TO_RIGHT)
+//                .setDirection(ProgressBarWidget.Direction.leftToRight)
 //                .setColors(0xFF333333, 0xFF00AAFF);
 //        progressBar.applyStyle(UIStyle.of(sizeOf(200, 16)));
 //        interactiveSection.addChild(progressBar);
@@ -433,7 +434,7 @@
 //        row.addChild(label);
 //
 //        var bar = ProgressBarWidget.create(() -> value)
-//                .setDirection(ProgressBarWidget.Direction.LEFT_TO_RIGHT)
+//                .setDirection(ProgressBarWidget.Direction.leftToRight)
 //                .setColors(0xFF333333, color);
 //        bar.applyStyle(UIStyle.of(sizeOf(120, 12)));
 //        row.addChild(bar);
@@ -470,4 +471,4 @@
 //
 //        return statusBar;
 //    }
-//}
+// }

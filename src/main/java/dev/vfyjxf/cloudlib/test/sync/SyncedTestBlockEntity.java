@@ -33,32 +33,36 @@ import java.util.List;
  */
 public class SyncedTestBlockEntity extends BasicSyncedBlockEntity {
 
-    public static final int ACTION_INCREMENT = 0;
-    public static final int ACTION_DECREMENT = 1;
-    public static final int ACTION_RESET = 2;
-    public static final int ACTION_PICK_ITEM = 3;
+    public static final int actionIncrement = 0;
+    public static final int actionDecrement = 1;
+    public static final int actionReset = 2;
+    public static final int actionPickItem = 3;
 
-    private static final Item[] ITEM_POOL = {
-            Items.DIAMOND, Items.EMERALD, Items.GOLD_INGOT, Items.IRON_INGOT,
-            Items.REDSTONE, Items.ENDER_PEARL, Items.NETHERITE_SCRAP, Items.COPPER_INGOT
+    private static final Item[] itemPool = {
+        Items.DIAMOND, Items.EMERALD, Items.GOLD_INGOT, Items.IRON_INGOT,
+        Items.REDSTONE, Items.ENDER_PEARL, Items.NETHERITE_SCRAP, Items.COPPER_INGOT
     };
 
     private static final class Network {
-        static final Schema<Integer> count = Schema.of("count", 0, Codec.INT, UnaryFlowHandler.codecOf(ByteBufCodecs.INT));
-        static final Schema<String> label = Schema.of("label", "", Codec.STRING, UnaryFlowHandler.codecOf(ByteBufCodecs.STRING_UTF8));
-        static final Schema<Boolean> active = Schema.of("active", true, Codec.BOOL, UnaryFlowHandler.codecOf(ByteBufCodecs.BOOL));
+        static final Schema<Integer> count =
+                Schema.of("count", 0, Codec.INT, UnaryFlowHandler.codecOf(ByteBufCodecs.INT));
+        static final Schema<String> label =
+                Schema.of("label", "", Codec.STRING, UnaryFlowHandler.codecOf(ByteBufCodecs.STRING_UTF8));
+        static final Schema<Boolean> active =
+                Schema.of("active", true, Codec.BOOL, UnaryFlowHandler.codecOf(ByteBufCodecs.BOOL));
         static final Schema<List<ItemStack>> items = Schema.of(
-                "items", List.of(),
+                "items",
+                List.of(),
                 ItemStack.CODEC.listOf(),
-                UnaryFlowHandler.codecOf(ItemStack.OPTIONAL_LIST_STREAM_CODEC)
-        );
+                UnaryFlowHandler.codecOf(ItemStack.OPTIONAL_LIST_STREAM_CODEC));
     }
 
     private final Handle<Integer> count = useSynced(Network.count);
     private final Handle<String> label = useSynced(Network.label);
     private final Handle<Boolean> active = useSynced(Network.active);
     private final Handle<List<ItemStack>> items = useSynced(Network.items);
-    private final UnaryReversed<Integer> action = unaryReversed("action", UnaryFlowHandler.codecOf(ByteBufCodecs.VAR_INT));
+    private final UnaryReversed<Integer> action =
+            unaryReversed("action", UnaryFlowHandler.codecOf(ByteBufCodecs.VAR_INT));
 
     private long tick;
 
@@ -88,7 +92,7 @@ public class SyncedTestBlockEntity extends BasicSyncedBlockEntity {
         try {
             action.sendToServer(actionId);
         } catch (IllegalStateException ignored) {
-            return; //a value is already queued this tick — drop the extra click
+            return; // a value is already queued this tick — drop the extra click
         }
         pushReversed();
     }
@@ -96,20 +100,19 @@ public class SyncedTestBlockEntity extends BasicSyncedBlockEntity {
     /** Server-side validation of actions sent from the in-world UI. */
     private void onAction(int actionId) {
         switch (actionId) {
-            case ACTION_INCREMENT -> count.set(count.get() + 1);
-            case ACTION_DECREMENT -> count.set(count.get() - 1);
-            case ACTION_RESET -> {
+            case actionIncrement -> count.set(count.get() + 1);
+            case actionDecrement -> count.set(count.get() - 1);
+            case actionReset -> {
                 count.set(0);
                 items.set(List.of());
             }
-            case ACTION_PICK_ITEM -> {
+            case actionPickItem -> {
                 var next = new ArrayList<>(items.get());
-                next.add(new ItemStack(ITEM_POOL[count.get() % ITEM_POOL.length],
-                        1 + count.get() % 64));
+                next.add(new ItemStack(itemPool[count.get() % itemPool.length], 1 + count.get() % 64));
                 items.set(List.copyOf(next));
             }
             default -> {
-                //unknown action — drop silently
+                // unknown action — drop silently
             }
         }
         label.set("action " + actionId);

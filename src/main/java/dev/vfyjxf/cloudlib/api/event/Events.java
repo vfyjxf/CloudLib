@@ -9,10 +9,10 @@
  * furnished to do so, subject to the following conditions:
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF any KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR any CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
@@ -58,12 +58,11 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public final class Events {
 
-    private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
-    private static final String FACTORY_CLASS = Events.class.getName().replace('.', '/');
-    private static final MutableMap<Class<?>, MethodHandle> WRAPPER_CONSTRUCTORS = Maps.mutable.empty();
+    private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+    private static final String factoryClass = Events.class.getName().replace('.', '/');
+    private static final MutableMap<Class<?>, MethodHandle> wrapperConstructors = Maps.mutable.empty();
 
-    private Events() {
-    }
+    private Events() {}
 
     public static <T> EventDefinition<T> define(Class<T> type, Function<List<T>, ? extends T> merger) {
         Checks.checkArgument(ClassUtils.isFunctionalInterface(type), "type must be a functional interface");
@@ -71,7 +70,8 @@ public final class Events {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T> EventDefinition<T> createGeneric(Class<? super T> type, Function<List<? extends T>, ? extends T> merger) {
+    public static <T> EventDefinition<T> createGeneric(
+            Class<? super T> type, Function<List<? extends T>, ? extends T> merger) {
         Checks.checkArgument(ClassUtils.isFunctionalInterface(type), "type must be a functional interface");
         return new EventDefinitionImpl<>(type, (Function) merger);
     }
@@ -121,9 +121,7 @@ public final class Events {
 
         @Override
         public String toString() {
-            return "EventDefinitionImpl{" +
-                    "type=" + type.getSimpleName() +
-                    '}';
+            return "EventDefinitionImpl{" + "type=" + type.getSimpleName() + '}';
         }
     }
 
@@ -240,7 +238,6 @@ public final class Events {
                 return Integer.compare(o.priority, priority);
             }
         }
-
     }
 
     static final class SimpleEventImpl<T> implements SimpleEvent<T> {
@@ -248,12 +245,13 @@ public final class Events {
 
         @Override
         public void invoke(Consumer<T> invoker) {
-            //iterate a snapshot so that a reentrant invoke() (e.g. a listener that sets a Handle
-            //again, which re-enters fire() -> invoke()) or an unregister() during the callback
-            //cannot corrupt the live backing list (FastList has no fail-fast iterator).
+            // iterate a snapshot so that a reentrant invoke() (e.g. a listener that sets a Handle
+            // again, which re-enters fire() -> invoke()) or an unregister() during the callback
+            // cannot corrupt the live backing list (FastList has no fail-fast iterator).
             Object[] snapshot = listeners.toArray();
             for (Object o : snapshot) {
-                @SuppressWarnings("unchecked") T listener = (T) o;
+                @SuppressWarnings("unchecked")
+                T listener = (T) o;
                 invoker.accept(listener);
             }
         }
@@ -287,15 +285,19 @@ public final class Events {
     @SuppressWarnings("unchecked")
     private static <T> T makeWrapper(Class<T> interfaceClass, Method method, T listener, AtomicInteger counter) {
         try {
-            return (T) WRAPPER_CONSTRUCTORS.getIfAbsentPut(interfaceClass, () -> {
-                try {
-                    byte[] bytes = makeWrapperClass(interfaceClass, method);
-                    MethodHandles.Lookup lookup = LOOKUP.defineHiddenClass(bytes, true);
-                    return lookup.findConstructor(lookup.lookupClass(), MethodType.methodType(void.class, interfaceClass, AtomicInteger.class));
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to create wrapper class", e);
-                }
-            }).invokeWithArguments(listener, counter);
+            return (T) wrapperConstructors
+                    .getIfAbsentPut(interfaceClass, () -> {
+                        try {
+                            byte[] bytes = makeWrapperClass(interfaceClass, method);
+                            MethodHandles.Lookup hiddenLookup = lookup.defineHiddenClass(bytes, true);
+                            return hiddenLookup.findConstructor(
+                                    hiddenLookup.lookupClass(),
+                                    MethodType.methodType(void.class, interfaceClass, AtomicInteger.class));
+                        } catch (Exception e) {
+                            throw new RuntimeException("Failed to create wrapper class", e);
+                        }
+                    })
+                    .invokeWithArguments(listener, counter);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -304,22 +306,28 @@ public final class Events {
     private static byte[] makeWrapperClass(Class<?> interfaceClass, Method method) {
         MethodType methodType = MethodType.methodType(method.getReturnType(), method.getParameterTypes());
         String interfaceName = interfaceClass.getName().replace('.', '/');
-        String typeName = FACTORY_CLASS + "$" + interfaceClass.getSimpleName() + "$" + method.getName() + "Wrapper";
+        String typeName = factoryClass + "$" + interfaceClass.getSimpleName() + "$" + method.getName() + "Wrapper";
         String interfaceDesc = "L" + interfaceName + ";";
         ClassWriter cw = new ClassWriter(0);
         FieldVisitor fv;
         MethodVisitor mv;
-        cw.visit(V16, ACC_PUBLIC | ACC_SUPER, typeName, null, "java/lang/Object", new String[]{interfaceName});
+        cw.visit(V16, ACC_PUBLIC | ACC_SUPER, typeName, null, "java/lang/Object", new String[] {interfaceName});
         {
             fv = cw.visitField(ACC_PRIVATE | ACC_FINAL, "delegate", interfaceDesc, null, null);
             fv.visitEnd();
         }
         {
-            fv = cw.visitField(ACC_PRIVATE | ACC_FINAL, "counter", "Ljava/util/concurrent/atomic/AtomicInteger;", null, null);
+            fv = cw.visitField(
+                    ACC_PRIVATE | ACC_FINAL, "counter", "Ljava/util/concurrent/atomic/AtomicInteger;", null, null);
             fv.visitEnd();
         }
         {
-            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "(" + interfaceDesc + "Ljava/util/concurrent/atomic/AtomicInteger;)V", null, null);
+            mv = cw.visitMethod(
+                    ACC_PUBLIC,
+                    "<init>",
+                    "(" + interfaceDesc + "Ljava/util/concurrent/atomic/AtomicInteger;)V",
+                    null,
+                    null);
             mv.visitCode();
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
@@ -338,21 +346,23 @@ public final class Events {
             mv.visitCode();
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, typeName, "counter", "Ljava/util/concurrent/atomic/AtomicInteger;");
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/concurrent/atomic/AtomicInteger", "decrementAndGet", "()I", false);
+            mv.visitMethodInsn(
+                    INVOKEVIRTUAL, "java/util/concurrent/atomic/AtomicInteger", "decrementAndGet", "()I", false);
             mv.visitInsn(POP);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, typeName, "delegate", interfaceDesc);
             int maxStack = 1, l = methodType.parameterCount();
             for (int i = 0, varIndex = 1; i < l; i++) {
                 VMStackType type = VMStackType.of(methodType.parameterType(i));
-                if (type == VMStackType.VOID) {
+                if (type == VMStackType.voidType) {
                     throw new AssertionError("Parameters should NOT be void.");
                 }
                 mv.visitVarInsn(type.loadingOpcode, varIndex);
                 maxStack += type.stackWidth;
                 varIndex += type.stackWidth;
             }
-            mv.visitMethodInsn(INVOKEINTERFACE, interfaceName, method.getName(), methodType.toMethodDescriptorString(), true);
+            mv.visitMethodInsn(
+                    INVOKEINTERFACE, interfaceName, method.getName(), methodType.toMethodDescriptorString(), true);
             VMStackType type = VMStackType.of(methodType.returnType());
             mv.visitInsn(type.returnOpcode);
             maxStack = Math.max(maxStack, 1 + type.stackWidth);
@@ -368,13 +378,12 @@ public final class Events {
      * <a href="https://gist.github.com/burningtnt/65e1d9bfb2000e69c852335b178692e8">code from</a>
      */
     private enum VMStackType {
-        OBJECT(ALOAD, Opcodes.ARETURN, 1),
-        NUMBER(Opcodes.ILOAD, Opcodes.IRETURN, 1),
-        FLOAT(Opcodes.FLOAD, Opcodes.FRETURN, 1),
-        DOUBLE(Opcodes.DLOAD, Opcodes.DRETURN, 2),
-        LONG(Opcodes.LLOAD, Opcodes.LRETURN, 2),
-        VOID(-1, Opcodes.RETURN, 0);
-
+        object(ALOAD, Opcodes.ARETURN, 1),
+        number(Opcodes.ILOAD, Opcodes.IRETURN, 1),
+        floatType(Opcodes.FLOAD, Opcodes.FRETURN, 1),
+        doubleType(Opcodes.DLOAD, Opcodes.DRETURN, 2),
+        longType(Opcodes.LLOAD, Opcodes.LRETURN, 2),
+        voidType(-1, Opcodes.RETURN, 0);
         private final int loadingOpcode, returnOpcode, stackWidth;
 
         VMStackType(int loadingOpcode, int returnOpcode, int stackWidth) {
@@ -385,19 +394,22 @@ public final class Events {
 
         public static VMStackType of(Class<?> clazz) {
             if (!clazz.isPrimitive()) {
-                return OBJECT;
-            } else if (clazz == int.class || clazz == short.class || clazz == char.class || clazz == byte.class || clazz == boolean.class) {
-                return NUMBER;
+                return object;
+            } else if (clazz == int.class
+                    || clazz == short.class
+                    || clazz == char.class
+                    || clazz == byte.class
+                    || clazz == boolean.class) {
+                return number;
             } else if (clazz == float.class) {
-                return FLOAT;
+                return floatType;
             } else if (clazz == double.class) {
-                return DOUBLE;
+                return doubleType;
             } else if (clazz == long.class) {
-                return LONG;
+                return longType;
             } else {
-                return VOID;
+                return voidType;
             }
         }
     }
-
 }

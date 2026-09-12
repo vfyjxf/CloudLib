@@ -20,7 +20,5 @@ public final class GroupBlueprint<T extends Widget> extends BasicGroupBlueprint<
     }
 
     @Override
-    public void updateWidget(CompositeWidget<T> widget, Scene scene, SceneContext context) {
-
-    }
+    public void updateWidget(CompositeWidget<T> widget, Scene scene, SceneContext context) {}
 }

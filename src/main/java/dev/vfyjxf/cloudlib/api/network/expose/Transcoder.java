@@ -9,5 +9,4 @@ interface Transcoder {
     void writeToClient(RegistryFriendlyByteBuf byteBuf);
 
     void readFromServer(RegistryFriendlyByteBuf byteBuf);
-
 }

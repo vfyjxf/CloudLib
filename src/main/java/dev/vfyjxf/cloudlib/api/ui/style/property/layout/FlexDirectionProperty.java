@@ -56,5 +56,4 @@ public record FlexDirectionProperty(FlexDirection direction) implements LayoutPr
     public String toString() {
         return direction.name().toLowerCase().replace("_", "-");
     }
-
 }

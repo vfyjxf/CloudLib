@@ -47,6 +47,7 @@ public class StyleContext {
      * The holder.
      */
     private final Widget widget;
+
     private TaffyStyle layoutStyle;
     private final VisualContext visualContext;
     private final List<StyleProperty> appliedProperties;
@@ -140,7 +141,7 @@ public class StyleContext {
         notifyChangeListeners(type, oldValue, value);
     }
 
-    //region change listeners
+    // region change listeners
 
     /**
      * Registers a change listener for a specific style type.
@@ -159,8 +160,9 @@ public class StyleContext {
         if (changeListeners == null) {
             changeListeners = new LinkedHashMap<>();
         }
-        changeListeners.computeIfAbsent(type, k -> org.eclipse.collections.impl.factory.Lists.mutable.empty())
-                       .add(listener);
+        changeListeners
+                .computeIfAbsent(type, k -> org.eclipse.collections.impl.factory.Lists.mutable.empty())
+                .add(listener);
         return this;
     }
 
@@ -204,7 +206,7 @@ public class StyleContext {
         }
     }
 
-    //endregion
+    // endregion
 
     /**
      * Applies a layout property to the taffy style.
@@ -270,8 +272,7 @@ public class StyleContext {
      */
     public boolean hasProperty(StyleType<?> type) {
         return valuesByType.containsKey(type)
-                || appliedProperties.stream()
-                                    .anyMatch(p -> p.type().equals(type));
+                || appliedProperties.stream().anyMatch(p -> p.type().equals(type));
     }
 
     /**
@@ -293,9 +294,7 @@ public class StyleContext {
         return null;
     }
 
-    public <T extends StyleProperty> void setProperty(String name, T property) {
-
-    }
+    public <T extends StyleProperty> void setProperty(String name, T property) {}
 
     /**
      * Resets the context to initial state.
@@ -306,5 +305,4 @@ public class StyleContext {
         layoutStyle = new TaffyStyle();
         visualContext.reset();
     }
-
 }

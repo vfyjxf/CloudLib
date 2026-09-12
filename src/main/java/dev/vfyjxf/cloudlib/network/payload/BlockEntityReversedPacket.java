@@ -22,8 +22,7 @@ public record BlockEntityReversedPacket(BlockPos pos, byte[] syncData) implement
 
     public static final ServerPayloadInfo<BlockEntityReversedPacket> info = CloudlibPayloads.createServerInfo(
             StreamCodec.ofMember(BlockEntityReversedPacket::encode, BlockEntityReversedPacket::decode),
-            "block_entity_reversed"
-    );
+            "block_entity_reversed");
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -41,14 +40,18 @@ public record BlockEntityReversedPacket(BlockPos pos, byte[] syncData) implement
 
     @Override
     public void handle(IPayloadContext context, ServerPlayer player) {
-        //basic sanity: the sender must be near the target — in-world panels can
-        //only be presented within a small radius of their anchor anyway
+        // basic sanity: the sender must be near the target — in-world panels can
+        // only be presented within a small radius of their anchor anyway
         if (!pos.closerToCenterThan(player.position(), 64.0)) {
-            CloudlibPayloads.log.warn("Rejected reversed data for far-away block entity {} from {}", pos, player.getName().getString());
+            CloudlibPayloads.log.warn(
+                    "Rejected reversed data for far-away block entity {} from {}",
+                    pos,
+                    player.getName().getString());
             return;
         }
         if (player.level().getBlockEntity(pos) instanceof SyncedBlockEntity synced) {
-            var buffer = new RegistryFriendlyByteBuf(Unpooled.wrappedBuffer(syncData), player.registryAccess(), ConnectionType.OTHER);
+            var buffer = new RegistryFriendlyByteBuf(
+                    Unpooled.wrappedBuffer(syncData), player.registryAccess(), ConnectionType.OTHER);
             synced.sync().receiveFromClient(buffer);
         }
     }

@@ -46,13 +46,14 @@ import java.util.function.Predicate;
  */
 public sealed interface TooltipLocator {
 
-    //region enums
+    // region enums
 
     /**
      * Whether to insert before or after the found position.
      */
     enum Anchor {
-        before, after
+        before,
+        after
     }
 
     /**
@@ -62,12 +63,13 @@ public sealed interface TooltipLocator {
      * {@link #last} selects the latest match in the entry list.
      */
     enum MatchPriority {
-        first, last
+        first,
+        last
     }
 
-    //endregion
+    // endregion
 
-    //region records
+    // region records
 
     /**
      * Insert at the very beginning of the list.
@@ -86,8 +88,7 @@ public sealed interface TooltipLocator {
     /**
      * Insert at a specific index. Clamped to {@code [0, size]}.
      */
-    record At(int index) implements TooltipLocator {
-    }
+    record At(int index) implements TooltipLocator {}
 
     /**
      * Insert relative to entries found by a {@link TooltipFinder}.
@@ -99,12 +100,8 @@ public sealed interface TooltipLocator {
      * @param offset        additional positional offset from the anchor point
      * @param matchPriority which match to use when multiple entries are found
      */
-    record Relative(
-            Anchor anchor,
-            TooltipFinder finder,
-            int offset,
-            MatchPriority matchPriority
-    ) implements TooltipLocator {
+    record Relative(Anchor anchor, TooltipFinder finder, int offset, MatchPriority matchPriority)
+            implements TooltipLocator {
 
         /**
          * Returns a new locator with the given offset applied.
@@ -129,9 +126,9 @@ public sealed interface TooltipLocator {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region factory — positional
+    // region factory — positional
 
     /**
      * Locator that inserts at the very beginning.
@@ -154,9 +151,9 @@ public sealed interface TooltipLocator {
         return new At(index);
     }
 
-    //endregion
+    // endregion
 
-    //region factory — relative (finder)
+    // region factory — relative (finder)
 
     /**
      * Locator that inserts <b>before</b> entries found by the given finder.
@@ -174,9 +171,9 @@ public sealed interface TooltipLocator {
         return new Relative(Anchor.after, finder, 0, MatchPriority.last);
     }
 
-    //endregion
+    // endregion
 
-    //region factory — convenience (marker)
+    // region factory — convenience (marker)
 
     /**
      * Locator that inserts <b>before</b> the first entry with the given marker.
@@ -192,9 +189,9 @@ public sealed interface TooltipLocator {
         return after(TooltipFinder.marker(marker));
     }
 
-    //endregion
+    // endregion
 
-    //region factory — convenience (predicate)
+    // region factory — convenience (predicate)
 
     /**
      * Locator that inserts <b>before</b> the first entry matching the predicate.
@@ -210,6 +207,6 @@ public sealed interface TooltipLocator {
         return after(TooltipFinder.entry(matcher));
     }
 
-    //endregion
+    // endregion
 
 }

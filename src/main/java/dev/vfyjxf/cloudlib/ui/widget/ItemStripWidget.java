@@ -13,15 +13,16 @@ import java.util.List;
  */
 public class ItemStripWidget extends Widget {
 
-    private static final int CELL = 17;
-    private static final int MAX = 9;
+    private static final int cell = 17;
+    private static final int max = 9;
 
     private List<ItemStack> items = List.of();
 
     public ItemStripWidget() {
-        onMount((scene, context, handle) ->
-                scene.layoutTree().setMeasureFunc(nodeId(), (style, space) ->
-                        new FloatSize(Math.max(CELL, Math.min(items.size(), MAX) * CELL), 18)));
+        onMount((scene, context, handle) -> scene.layoutTree()
+                .setMeasureFunc(
+                        nodeId(),
+                        (style, space) -> new FloatSize(Math.max(cell, Math.min(items.size(), max) * cell), 18)));
     }
 
     public void setItems(List<ItemStack> items) {
@@ -33,10 +34,10 @@ public class ItemStripWidget extends Widget {
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        int count = Math.min(items.size(), MAX);
+        int count = Math.min(items.size(), max);
         for (int i = 0; i < count; i++) {
-            canvas.renderItem(items.get(i), i * CELL, 1);
-            canvas.renderItemDecorations(items.get(i), i * CELL, 1);
+            canvas.renderItem(items.get(i), i * cell, 1);
+            canvas.renderItemDecorations(items.get(i), i * cell, 1);
         }
     }
 }

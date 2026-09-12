@@ -31,42 +31,42 @@ import java.util.Map;
  */
 public class VisualContext {
 
-    //region background & icon
+    // region background & icon
     private VisualTexture background = VisualTexture.empty;
     private VisualTexture icon = VisualTexture.empty;
-    //endregion
+    // endregion
 
-    //region zIndex
+    // region zIndex
     /**
      * The z-index for sibling sorting within the same parent.
      * Lower values render first (behind), higher values render last (on top).
      */
     private int zIndex = 0;
-    //endregion
+    // endregion
 
-    //region border
+    // region border
     private float borderWidth;
     private int borderColor;
-    //endregion
+    // endregion
 
-    //region shadow
+    // region shadow
     private float shadowOffsetX;
     private float shadowOffsetY;
     private float shadowBlurRadius;
     private int shadowColor;
-    //endregion
+    // endregion
 
-    //region text styling
+    // region text styling
     private @Nullable Integer textColor;
     private boolean textBold;
     private boolean textItalic;
     private boolean textUnderline;
     private boolean textStrikethrough;
-    //endregion
+    // endregion
 
-    //region custom properties
+    // region custom properties
     private final Map<String, Object> properties = new LinkedHashMap<>();
-    //endregion
+    // endregion
 
     /**
      * Sets a custom property value.
@@ -161,7 +161,7 @@ public class VisualContext {
         this.icon = texture;
     }
 
-    //region zIndex accessors
+    // region zIndex accessors
 
     /**
      * Gets the z-index.
@@ -181,7 +181,7 @@ public class VisualContext {
         this.zIndex = zIndex;
     }
 
-    //endregion
+    // endregion
 
     public float borderWidth() {
         return borderWidth;
@@ -288,7 +288,6 @@ public class VisualContext {
         return (shadowColor & 0xFF000000) != 0 && (shadowBlurRadius > 0 || shadowOffsetX != 0 || shadowOffsetY != 0);
     }
 
-
     public void reset() {
         // Background & Icon
         background = VisualTexture.empty;
@@ -361,15 +360,23 @@ public class VisualContext {
             any = true;
         }
         if (borderWidth != 0.0f) {
-            sb.append("border=").append(borderWidth).append(" ")
-              .append(String.format("0x%08X", borderColor)).append(", ");
+            sb.append("border=")
+                    .append(borderWidth)
+                    .append(" ")
+                    .append(String.format("0x%08X", borderColor))
+                    .append(", ");
             any = true;
         }
         if (hasShadow()) {
-            sb.append("shadow=(").append(shadowOffsetX).append(",")
-              .append(shadowOffsetY).append(",")
-              .append(shadowBlurRadius).append(",")
-              .append(String.format("0x%08X", shadowColor)).append("), ");
+            sb.append("shadow=(")
+                    .append(shadowOffsetX)
+                    .append(",")
+                    .append(shadowOffsetY)
+                    .append(",")
+                    .append(shadowBlurRadius)
+                    .append(",")
+                    .append(String.format("0x%08X", shadowColor))
+                    .append("), ");
             any = true;
         }
         if (textColor != null) {

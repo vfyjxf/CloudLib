@@ -56,7 +56,7 @@ public interface InworldPanel {
         return null;
     }
 
-    //region convenience
+    // region convenience
 
     /** The anchor's block position when block-bound, else null. */
     default @Nullable BlockPos blockPos() {
@@ -76,5 +76,5 @@ public interface InworldPanel {
         return type.isInstance(be) ? (T) be : null;
     }
 
-    //endregion
+    // endregion
 }

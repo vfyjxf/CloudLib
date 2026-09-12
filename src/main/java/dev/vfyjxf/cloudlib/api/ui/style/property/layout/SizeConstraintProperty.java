@@ -18,7 +18,7 @@ import java.util.Objects;
  * <p>
  * The dimension types supported by taffy include:
  * <ul>
- *   <li>{@link TaffyDimension#AUTO} - automatic sizing</li>
+ *   <li>{@link TaffyDimension#auto} - automatic sizing</li>
  *   <li>{@link TaffyDimension#length(float)} - fixed pixel length</li>
  *   <li>{@link TaffyDimension#percent(float)} - percentage of parent (0.0 to 1.0)</li>
  *   <li>{@link TaffyDimension#minContent()} - minimum content size</li>
@@ -37,8 +37,8 @@ public record SizeConstraintProperty(
         @Nullable TaffyDimension minWidth,
         @Nullable TaffyDimension minHeight,
         @Nullable TaffyDimension maxWidth,
-        @Nullable TaffyDimension maxHeight
-) implements LayoutProperty {
+        @Nullable TaffyDimension maxHeight)
+        implements LayoutProperty {
 
     public static final StyleType<SizeConstraintProperty> type = StyleType.of("size-constraint", () -> null);
 

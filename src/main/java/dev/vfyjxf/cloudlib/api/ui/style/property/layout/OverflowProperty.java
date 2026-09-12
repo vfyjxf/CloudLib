@@ -19,8 +19,8 @@ import static java.util.Objects.requireNonNull;
  * The overflow values supported by taffy include:
  * <ul>
  *   <li>{@link Overflow#VISIBLE} - content is not clipped</li>
- *   <li>{@link Overflow#HIDDEN} - content is clipped without scrollbars</li>
- *   <li>{@link Overflow#CLIP} - content is clipped without scrollbars (same as HIDDEN in taffy)</li>
+ *   <li>{@link Overflow#hidden} - content is clipped without scrollbars</li>
+ *   <li>{@link Overflow#CLIP} - content is clipped without scrollbars (same as hidden in taffy)</li>
  *   <li>{@link Overflow#SCROLL} - content is clipped with scrollbars</li>
  * </ul>
  *
@@ -29,14 +29,11 @@ import static java.util.Objects.requireNonNull;
  */
 public record OverflowProperty(@Nullable Overflow x, @Nullable Overflow y) implements LayoutProperty {
 
-    public static final StyleType<TaffyPoint<Overflow>> type = StyleType.of(
-            "overflow",
-            () -> TaffyPoint.all(Overflow.VISIBLE),
-            (context, overflow) -> {
+    public static final StyleType<TaffyPoint<Overflow>> type =
+            StyleType.of("overflow", () -> TaffyPoint.all(Overflow.VISIBLE), (context, overflow) -> {
                 context.layoutStyle().overflow.x = overflow.x;
                 context.layoutStyle().overflow.y = overflow.y;
-            }
-    );
+            });
 
     @Override
     public StyleType<?> type() {

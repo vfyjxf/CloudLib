@@ -1,8 +1,8 @@
 package dev.vfyjxf.cloudlib.api.ui.texture;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiSpriteManager;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiSpriteManager;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 
@@ -22,17 +22,21 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public record ImageTexture(
         ResourceLocation location,
-        int u, int v,
-        int width, int height,
-        int textureWidth, int textureHeight,
-        boolean atlasSprite
-) implements SizedTexture, BatchableTexture {
+        int u,
+        int v,
+        int width,
+        int height,
+        int textureWidth,
+        int textureHeight,
+        boolean atlasSprite)
+        implements SizedTexture, BatchableTexture {
     private static final Map<ResourceLocation, SpriteRegion> spriteRegions = new ConcurrentHashMap<>();
 
     /**
      * Creates a standard image texture.
      */
-    public ImageTexture(ResourceLocation location, int u, int v, int width, int height, int textureWidth, int textureHeight) {
+    public ImageTexture(
+            ResourceLocation location, int u, int v, int width, int height, int textureWidth, int textureHeight) {
         this(location, u, v, width, height, textureWidth, textureHeight, false);
     }
 
@@ -43,7 +47,7 @@ public record ImageTexture(
         this(location, 0, 0, width, height, width, height, false);
     }
 
-    //region factory
+    // region factory
 
     /**
      * Creates a standard image texture from a texture file.
@@ -55,7 +59,8 @@ public record ImageTexture(
     /**
      * Creates a standard image texture with UV region.
      */
-    public static ImageTexture of(ResourceLocation location, int u, int v, int width, int height, int textureWidth, int textureHeight) {
+    public static ImageTexture of(
+            ResourceLocation location, int u, int v, int width, int height, int textureWidth, int textureHeight) {
         return new ImageTexture(location, u, v, width, height, textureWidth, textureHeight, false);
     }
 
@@ -71,13 +76,14 @@ public record ImageTexture(
      * Creates an atlas sprite texture with specified region.
      * Note: For atlas sprites, u/v/textureWidth/textureHeight are used only for subTexture calculations.
      */
-    public static ImageTexture sprite(ResourceLocation spriteLocation, int u, int v, int width, int height, int textureWidth, int textureHeight) {
+    public static ImageTexture sprite(
+            ResourceLocation spriteLocation, int u, int v, int width, int height, int textureWidth, int textureHeight) {
         return new ImageTexture(spriteLocation, u, v, width, height, textureWidth, textureHeight, true);
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     public void render(GuiGraphics graphics, int x, int y, int width, int height) {
@@ -91,15 +97,16 @@ public record ImageTexture(
         }
     }
 
-    //endregion
+    // endregion
 
-    //region modification
+    // region modification
 
     /**
      * Creates a sub-region texture.
      */
     public ImageTexture subTexture(int u, int v, int width, int height) {
-        return new ImageTexture(location, this.u + u, this.v + v, width, height, textureWidth, textureHeight, atlasSprite);
+        return new ImageTexture(
+                location, this.u + u, this.v + v, width, height, textureWidth, textureHeight, atlasSprite);
     }
 
     /**
@@ -123,17 +130,17 @@ public record ImageTexture(
         return atlasSprite ? new ImageTexture(location, u, v, width, height, textureWidth, textureHeight, false) : this;
     }
 
-    //endregion
+    // endregion
 
-    //region batchable texture
+    // region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float w, float h, int color) {
         if (atlasSprite) {
             // For atlas sprites, get the actual UV coordinates from the sprite
             SpriteRegion sprite = spriteRegion(location);
-            emitter.textured(sprite.texture(), x, y, w, h,
-                    sprite.uMin(), sprite.vMin(), sprite.uMax(), sprite.vMax(), color);
+            emitter.textured(
+                    sprite.texture(), x, y, w, h, sprite.uMin(), sprite.vMin(), sprite.uMax(), sprite.vMax(), color);
         } else {
             float u0 = (float) this.u / textureWidth;
             float v0 = (float) this.v / textureHeight;
@@ -143,7 +150,7 @@ public record ImageTexture(
         }
     }
 
-    //endregion
+    // endregion
 
     private static SpriteRegion spriteRegion(ResourceLocation location) {
         GuiSpriteManager sprites = Minecraft.getInstance().getGuiSprites();
@@ -153,24 +160,11 @@ public record ImageTexture(
         }
         TextureAtlasSprite sprite = sprites.getSprite(location);
         SpriteRegion region = new SpriteRegion(
-                sprites,
-                sprite.atlasLocation(),
-                sprite.getU0(),
-                sprite.getV0(),
-                sprite.getU1(),
-                sprite.getV1()
-        );
+                sprites, sprite.atlasLocation(), sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1());
         spriteRegions.put(location, region);
         return region;
     }
 
     private record SpriteRegion(
-            GuiSpriteManager owner,
-            ResourceLocation texture,
-            float uMin,
-            float vMin,
-            float uMax,
-            float vMax
-    ) {
-    }
+            GuiSpriteManager owner, ResourceLocation texture, float uMin, float vMin, float uMax, float vMax) {}
 }

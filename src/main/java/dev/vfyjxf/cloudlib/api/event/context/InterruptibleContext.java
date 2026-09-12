@@ -26,5 +26,4 @@ public final class InterruptibleContext {
     public void interrupt() {
         interrupted = true;
     }
-
 }

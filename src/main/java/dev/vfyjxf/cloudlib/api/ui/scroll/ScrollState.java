@@ -18,7 +18,7 @@ import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
  *
  * <h3>Usage</h3>
  * <pre>{@code
- * ScrollState state = ScrollState.create(ScrollDirection.VERTICAL)
+ * ScrollState state = ScrollState.create(ScrollDirection.vertical)
  *     .scrollSpeed(12)
  *     .smooth(true)
  *     .smoothSpeed(0.3f)
@@ -31,28 +31,28 @@ import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
  */
 public final class ScrollState {
 
-    //region defaults
+    // region defaults
 
-    private static final int DEFAULT_SCROLL_SPEED = 10;
-    private static final int DEFAULT_SCROLLBAR_WIDTH = 6;
-    private static final int DEFAULT_MIN_THUMB_SIZE = 20;
-    private static final float DEFAULT_SMOOTH_SPEED = 0.35f;
-    private static final float DEFAULT_WHEEL_ACCELERATION_STEP = 0.35f;
-    private static final float DEFAULT_WHEEL_ACCELERATION_MAX_MULTIPLIER = 4.0f;
-    private static final long DEFAULT_WHEEL_ACCELERATION_RESET_MILLIS = 180L;
-    private static final float LONG_CONTENT_WHEEL_ACCELERATION_STEP = 0.45f;
-    private static final float LONG_CONTENT_WHEEL_ACCELERATION_MAX_MULTIPLIER = 6.0f;
-    private static final long LONG_CONTENT_WHEEL_ACCELERATION_RESET_MILLIS = 220L;
-    private static final float DEFAULT_AUTO_SCROLL_DEAD_ZONE = 6.0f;
-    private static final float DEFAULT_AUTO_SCROLL_SPEED = 0.35f;
-    private static final float DEFAULT_AUTO_SCROLL_MAX_SPEED = 36.0f;
-    private static final float SNAP_THRESHOLD = 0.5f;
-    private static final VisualTexture DEFAULT_TRACK = new ColorTexture(0x80000000);
-    private static final VisualTexture DEFAULT_THUMB = new ColorTexture(0xFFAAAAAA);
+    private static final int defaultScrollSpeed = 10;
+    private static final int defaultScrollbarWidth = 6;
+    private static final int defaultMinThumbSize = 20;
+    private static final float defaultSmoothSpeed = 0.35f;
+    private static final float defaultWheelAccelerationStep = 0.35f;
+    private static final float defaultWheelAccelerationMaxMultiplier = 4.0f;
+    private static final long defaultWheelAccelerationResetMillis = 180L;
+    private static final float longContentWheelAccelerationStep = 0.45f;
+    private static final float longContentWheelAccelerationMaxMultiplier = 6.0f;
+    private static final long longContentWheelAccelerationResetMillis = 220L;
+    private static final float defaultAutoScrollDeadZone = 6.0f;
+    private static final float defaultAutoScrollSpeed = 0.35f;
+    private static final float defaultAutoScrollMaxSpeed = 36.0f;
+    private static final float snapThreshold = 0.5f;
+    private static final VisualTexture defaultTrack = new ColorTexture(0x80000000);
+    private static final VisualTexture defaultThumb = new ColorTexture(0xFFAAAAAA);
 
-    //endregion
+    // endregion
 
-    //region scroll state
+    // region scroll state
 
     private ScrollDirection direction = ScrollDirection.vertical;
 
@@ -60,6 +60,7 @@ public final class ScrollState {
      * The actual (rendered) scroll position, interpolated toward target when smooth scrolling.
      */
     private float scrollX = 0;
+
     private float scrollY = 0;
 
     /**
@@ -67,77 +68,78 @@ public final class ScrollState {
      * When smooth scrolling is off, actual = target immediately.
      */
     private float targetScrollX = 0;
+
     private float targetScrollY = 0;
 
-    //endregion
+    // endregion
 
-    //region content size
+    // region content size
 
     private int contentWidth = 0;
     private int contentHeight = 0;
     private boolean autoContentSize = true;
 
-    //endregion
+    // endregion
 
-    //region config
+    // region config
 
-    private int scrollSpeed = DEFAULT_SCROLL_SPEED;
+    private int scrollSpeed = defaultScrollSpeed;
 
-    //endregion
+    // endregion
 
-    //region wheel acceleration
+    // region wheel acceleration
 
     private boolean wheelAcceleration = false;
-    private float wheelAccelerationStep = DEFAULT_WHEEL_ACCELERATION_STEP;
-    private float wheelAccelerationMaxMultiplier = DEFAULT_WHEEL_ACCELERATION_MAX_MULTIPLIER;
-    private long wheelAccelerationResetMillis = DEFAULT_WHEEL_ACCELERATION_RESET_MILLIS;
+    private float wheelAccelerationStep = defaultWheelAccelerationStep;
+    private float wheelAccelerationMaxMultiplier = defaultWheelAccelerationMaxMultiplier;
+    private long wheelAccelerationResetMillis = defaultWheelAccelerationResetMillis;
     private float wheelAccelerationMultiplier = 1.0f;
     private long wheelAccelerationLastMillis = Long.MIN_VALUE;
     private int wheelAccelerationLastDirectionX = 0;
     private int wheelAccelerationLastDirectionY = 0;
 
-    //endregion
+    // endregion
 
-    //region middle mouse auto-scroll
+    // region middle mouse auto-scroll
 
     private boolean middleMouseAutoScroll = false;
-    private float autoScrollDeadZone = DEFAULT_AUTO_SCROLL_DEAD_ZONE;
-    private float autoScrollSpeed = DEFAULT_AUTO_SCROLL_SPEED;
-    private float autoScrollMaxSpeed = DEFAULT_AUTO_SCROLL_MAX_SPEED;
+    private float autoScrollDeadZone = defaultAutoScrollDeadZone;
+    private float autoScrollSpeed = defaultAutoScrollSpeed;
+    private float autoScrollMaxSpeed = defaultAutoScrollMaxSpeed;
 
-    //endregion
+    // endregion
 
-    //region smooth scrolling
+    // region smooth scrolling
 
     private boolean smooth = true;
-    private float smoothSpeed = DEFAULT_SMOOTH_SPEED;
+    private float smoothSpeed = defaultSmoothSpeed;
 
-    //endregion
+    // endregion
 
-    //region scrollbar config
+    // region scrollbar config
 
     private boolean showScrollbar = true;
     private boolean enabled = true;
     private boolean draggable = true;
-    private int scrollbarWidth = DEFAULT_SCROLLBAR_WIDTH;
-    private int minThumbSize = DEFAULT_MIN_THUMB_SIZE;
-    private VisualTexture trackTexture = DEFAULT_TRACK;
-    private VisualTexture thumbTexture = DEFAULT_THUMB;
+    private int scrollbarWidth = defaultScrollbarWidth;
+    private int minThumbSize = defaultMinThumbSize;
+    private VisualTexture trackTexture = defaultTrack;
+    private VisualTexture thumbTexture = defaultThumb;
     private int viewportInsetTop = 0;
     private int viewportInsetRight = 0;
     private int viewportInsetBottom = 0;
     private int viewportInsetLeft = 0;
 
-    //endregion
+    // endregion
 
-    //region viewport cache (set by ScrollEffect on render)
+    // region viewport cache (set by ScrollEffect on render)
 
     private int viewportWidth = 0;
     private int viewportHeight = 0;
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     /**
      * Creates a new {@code ScrollState} with default configuration.
@@ -153,12 +155,11 @@ public final class ScrollState {
         return new ScrollState().direction(direction);
     }
 
-    private ScrollState() {
-    }
+    private ScrollState() {}
 
-    //endregion
+    // endregion
 
-    //region direction
+    // region direction
 
     public ScrollDirection direction() {
         return direction;
@@ -169,9 +170,9 @@ public final class ScrollState {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region scroll position
+    // region scroll position
 
     /**
      * Returns the current (rendered) horizontal scroll offset.
@@ -284,9 +285,9 @@ public final class ScrollState {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region content size
+    // region content size
 
     /**
      * Returns whether content size is automatically computed from children bounds.
@@ -346,9 +347,9 @@ public final class ScrollState {
         reclamp();
     }
 
-    //endregion
+    // endregion
 
-    //region scroll speed
+    // region scroll speed
 
     public int scrollSpeed() {
         return scrollSpeed;
@@ -359,9 +360,9 @@ public final class ScrollState {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region wheel acceleration
+    // region wheel acceleration
 
     public boolean wheelAcceleration() {
         return wheelAcceleration;
@@ -390,7 +391,8 @@ public final class ScrollState {
 
     public ScrollState wheelAccelerationMaxMultiplier(float multiplier) {
         this.wheelAccelerationMaxMultiplier = Math.max(1.0f, multiplier);
-        this.wheelAccelerationMultiplier = Math.min(this.wheelAccelerationMultiplier, this.wheelAccelerationMaxMultiplier);
+        this.wheelAccelerationMultiplier =
+                Math.min(this.wheelAccelerationMultiplier, this.wheelAccelerationMaxMultiplier);
         return this;
     }
 
@@ -409,9 +411,9 @@ public final class ScrollState {
      */
     public ScrollState longContentWheelAcceleration() {
         return wheelAcceleration(true)
-                .wheelAccelerationStep(LONG_CONTENT_WHEEL_ACCELERATION_STEP)
-                .wheelAccelerationMaxMultiplier(LONG_CONTENT_WHEEL_ACCELERATION_MAX_MULTIPLIER)
-                .wheelAccelerationResetMillis(LONG_CONTENT_WHEEL_ACCELERATION_RESET_MILLIS);
+                .wheelAccelerationStep(longContentWheelAccelerationStep)
+                .wheelAccelerationMaxMultiplier(longContentWheelAccelerationMaxMultiplier)
+                .wheelAccelerationResetMillis(longContentWheelAccelerationResetMillis);
     }
 
     public float currentWheelAccelerationMultiplier() {
@@ -429,9 +431,7 @@ public final class ScrollState {
     ScrollDelta wheelScrollDelta(double scrollX, double scrollY, long nowMillis) {
         float multiplier = advanceWheelAcceleration(scrollX, scrollY, nowMillis);
         return new ScrollDelta(
-                (float) (-scrollX * scrollSpeed * multiplier),
-                (float) (-scrollY * scrollSpeed * multiplier)
-        );
+                (float) (-scrollX * scrollSpeed * multiplier), (float) (-scrollY * scrollSpeed * multiplier));
     }
 
     float advanceWheelAcceleration(double scrollX, double scrollY, long nowMillis) {
@@ -444,8 +444,9 @@ public final class ScrollState {
         int directionX = sign(scrollX);
         int directionY = sign(scrollY);
         boolean first = wheelAccelerationLastMillis == Long.MIN_VALUE;
-        boolean timedOut = !first && (nowMillis < wheelAccelerationLastMillis
-                || nowMillis - wheelAccelerationLastMillis > wheelAccelerationResetMillis);
+        boolean timedOut = !first
+                && (nowMillis < wheelAccelerationLastMillis
+                        || nowMillis - wheelAccelerationLastMillis > wheelAccelerationResetMillis);
         boolean reversed = isDirectionReversed(directionX, directionY);
 
         if (first || timedOut || reversed) {
@@ -469,8 +470,12 @@ public final class ScrollState {
     }
 
     private boolean isDirectionReversed(int directionX, int directionY) {
-        return (directionX != 0 && wheelAccelerationLastDirectionX != 0 && directionX != wheelAccelerationLastDirectionX)
-                || (directionY != 0 && wheelAccelerationLastDirectionY != 0 && directionY != wheelAccelerationLastDirectionY);
+        return (directionX != 0
+                        && wheelAccelerationLastDirectionX != 0
+                        && directionX != wheelAccelerationLastDirectionX)
+                || (directionY != 0
+                        && wheelAccelerationLastDirectionY != 0
+                        && directionY != wheelAccelerationLastDirectionY);
     }
 
     private static int sign(double value) {
@@ -479,12 +484,11 @@ public final class ScrollState {
         return 0;
     }
 
-    public record ScrollDelta(float x, float y) {
-    }
+    public record ScrollDelta(float x, float y) {}
 
-    //endregion
+    // endregion
 
-    //region middle mouse auto-scroll
+    // region middle mouse auto-scroll
 
     public boolean middleMouseAutoScroll() {
         return middleMouseAutoScroll;
@@ -531,9 +535,9 @@ public final class ScrollState {
         return (float) Math.copySign(delta, distanceFromAnchor);
     }
 
-    //endregion
+    // endregion
 
-    //region smooth scrolling
+    // region smooth scrolling
 
     /**
      * Returns whether smooth (animated) scrolling is enabled.
@@ -595,18 +599,18 @@ public final class ScrollState {
      * Called internally by {@link ScrollEffect} during rendering.
      * <p>
      * Uses exponential interpolation: {@code scroll += (target - scroll) * smoothSpeed}.
-     * Snaps to target when the difference is less than {@value SNAP_THRESHOLD} pixels.
+     * Snaps to target when the difference is less than {@value snapThreshold} pixels.
      */
     void animate() {
         if (!smooth) return;
 
-        if (Math.abs(targetScrollX - scrollX) < SNAP_THRESHOLD) {
+        if (Math.abs(targetScrollX - scrollX) < snapThreshold) {
             scrollX = targetScrollX;
         } else {
             scrollX += (targetScrollX - scrollX) * smoothSpeed;
         }
 
-        if (Math.abs(targetScrollY - scrollY) < SNAP_THRESHOLD) {
+        if (Math.abs(targetScrollY - scrollY) < snapThreshold) {
             scrollY = targetScrollY;
         } else {
             scrollY += (targetScrollY - scrollY) * smoothSpeed;
@@ -618,13 +622,14 @@ public final class ScrollState {
      * (actual position differs from target).
      */
     public boolean isAnimating() {
-        return smooth && (Math.abs(targetScrollX - scrollX) >= SNAP_THRESHOLD
-                || Math.abs(targetScrollY - scrollY) >= SNAP_THRESHOLD);
+        return smooth
+                && (Math.abs(targetScrollX - scrollX) >= snapThreshold
+                        || Math.abs(targetScrollY - scrollY) >= snapThreshold);
     }
 
-    //endregion
+    // endregion
 
-    //region scrollbar config
+    // region scrollbar config
 
     public boolean showScrollbar() {
         return showScrollbar;
@@ -755,9 +760,9 @@ public final class ScrollState {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region viewport (managed by ScrollEffect)
+    // region viewport (managed by ScrollEffect)
 
     /**
      * Updates the viewport dimensions. Called internally by {@link ScrollEffect}.
@@ -776,9 +781,9 @@ public final class ScrollState {
         return viewportHeight;
     }
 
-    //endregion
+    // endregion
 
-    //region query
+    // region query
 
     /**
      * Returns whether vertical scrolling is possible (content taller than viewport).
@@ -826,9 +831,9 @@ public final class ScrollState {
         return max > 0 ? scrollX / max : 0f;
     }
 
-    //endregion
+    // endregion
 
-    //region clamping
+    // region clamping
 
     private void reclamp() {
         this.targetScrollX = clampX(this.targetScrollX);
@@ -845,18 +850,17 @@ public final class ScrollState {
         return Math.clamp(y, 0, Math.max(0, contentHeight - viewportHeight));
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String toString() {
-        return "ScrollState{" +
-                "direction=" + direction +
-                ", scroll=(" + scrollX + ", " + scrollY + ")" +
-                ", target=(" + targetScrollX + ", " + targetScrollY + ")" +
-                ", content=(" + contentWidth + "x" + contentHeight + ")" +
-                ", viewport=(" + viewportWidth + "x" + viewportHeight + ")" +
-                ", smooth=" + smooth +
-                ", enabled=" + enabled +
-                '}';
+        return "ScrollState{" + "direction="
+                + direction + ", scroll=("
+                + scrollX + ", " + scrollY + ")" + ", target=("
+                + targetScrollX + ", " + targetScrollY + ")" + ", content=("
+                + contentWidth + "x" + contentHeight + ")" + ", viewport=("
+                + viewportWidth + "x" + viewportHeight + ")" + ", smooth="
+                + smooth + ", enabled="
+                + enabled + '}';
     }
 }

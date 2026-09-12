@@ -21,57 +21,55 @@ import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.api.ui.floating.AvoidRectsMiddleware;
 import dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddleware;
 import dev.vfyjxf.cloudlib.api.ui.floating.FloatingPositioning;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldAnchor;
-import dev.vfyjxf.nimbusprojection.api.provider.ProviderContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanel;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldTraceable;
-import dev.vfyjxf.nimbusprojection.api.panel.PanelSpec;
 import dev.vfyjxf.cloudlib.api.ui.inworld.PanelChannel;
 import dev.vfyjxf.cloudlib.api.ui.inworld.PanelKey;
 import dev.vfyjxf.cloudlib.api.ui.inworld.Presentation;
-import dev.vfyjxf.nimbusprojection.api.provider.PanelProvider;
-import dev.vfyjxf.nimbusprojection.api.provider.PanelSink;
-import dev.vfyjxf.nimbusprojection.api.provider.ProviderOptions;
-import dev.vfyjxf.nimbusprojection.api.panel.Decay;
-import dev.vfyjxf.nimbusprojection.api.panel.GroupRole;
-import dev.vfyjxf.nimbusprojection.api.panel.PanelGroup;
-import dev.vfyjxf.nimbusprojection.api.policy.FocusContext;
-import dev.vfyjxf.nimbusprojection.api.policy.FocusPolicy;
-import dev.vfyjxf.nimbusprojection.api.policy.SuspendContext;
-import dev.vfyjxf.nimbusprojection.api.policy.SuspendPolicy;
-import dev.vfyjxf.nimbusprojection.api.policy.SuspendVerdict;
-import dev.vfyjxf.nimbusprojection.api.presentation.PresentationDriver;
-import dev.vfyjxf.nimbusprojection.api.presentation.PanelGeometry;
-import dev.vfyjxf.nimbusprojection.api.presentation.SolveContext;
-import dev.vfyjxf.nimbusprojection.api.sync.PresenceInfo;
-import dev.vfyjxf.nimbusprojection.api.sync.PresenceKind;
-import dev.vfyjxf.nimbusprojection.api.sync.SharedPanelView;
-import dev.vfyjxf.nimbusprojection.api.sync.SharedViewContext;
-import dev.vfyjxf.nimbusprojection.NimbusProjection;
-import dev.vfyjxf.nimbusprojection.network.PanelChannelPayload;
-import dev.vfyjxf.nimbusprojection.network.PresenceReportPayload;
-import dev.vfyjxf.nimbusprojection.feature.inventory.InventoryFeature;
-import dev.vfyjxf.nimbusprojection.network.SharedPanelSpawnPayload;
-import net.neoforged.neoforge.network.PacketDistributor;
-import dev.vfyjxf.nimbusprojection.api.NimbusClient;
 import dev.vfyjxf.cloudlib.api.ui.inworld.Projection;
+import dev.vfyjxf.cloudlib.api.ui.inworld.SplitPlan;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDraggable;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
-import dev.vfyjxf.nimbusprojection.NimbusKeyMappings;
-import dev.vfyjxf.cloudlib.api.ui.inworld.SplitPlan;
+import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.ui.sync.ContainerContents;
 import dev.vfyjxf.cloudlib.util.ContainerScan;
-import dev.vfyjxf.nimbusprojection.network.PanelChannelPayload;
-import dev.vfyjxf.nimbusprojection.network.WorldDragPayload;
 import dev.vfyjxf.cloudlib.util.ScreenUtil;
+import dev.vfyjxf.nimbusprojection.NimbusKeyMappings;
+import dev.vfyjxf.nimbusprojection.NimbusProjection;
+import dev.vfyjxf.nimbusprojection.api.NimbusClient;
+import dev.vfyjxf.nimbusprojection.api.panel.Decay;
+import dev.vfyjxf.nimbusprojection.api.panel.GroupRole;
+import dev.vfyjxf.nimbusprojection.api.panel.PanelGroup;
+import dev.vfyjxf.nimbusprojection.api.panel.PanelSpec;
+import dev.vfyjxf.nimbusprojection.api.policy.FocusContext;
+import dev.vfyjxf.nimbusprojection.api.policy.FocusPolicy;
+import dev.vfyjxf.nimbusprojection.api.policy.SuspendContext;
+import dev.vfyjxf.nimbusprojection.api.policy.SuspendPolicy;
+import dev.vfyjxf.nimbusprojection.api.policy.SuspendVerdict;
+import dev.vfyjxf.nimbusprojection.api.presentation.PanelGeometry;
+import dev.vfyjxf.nimbusprojection.api.presentation.PresentationDriver;
+import dev.vfyjxf.nimbusprojection.api.presentation.SolveContext;
+import dev.vfyjxf.nimbusprojection.api.provider.PanelProvider;
+import dev.vfyjxf.nimbusprojection.api.provider.PanelSink;
+import dev.vfyjxf.nimbusprojection.api.provider.ProviderContext;
+import dev.vfyjxf.nimbusprojection.api.provider.ProviderOptions;
+import dev.vfyjxf.nimbusprojection.api.sync.PresenceInfo;
+import dev.vfyjxf.nimbusprojection.api.sync.PresenceKind;
+import dev.vfyjxf.nimbusprojection.api.sync.SharedPanelView;
+import dev.vfyjxf.nimbusprojection.api.sync.SharedViewContext;
+import dev.vfyjxf.nimbusprojection.feature.inventory.InventoryFeature;
+import dev.vfyjxf.nimbusprojection.network.PanelChannelPayload;
+import dev.vfyjxf.nimbusprojection.network.PresenceReportPayload;
+import dev.vfyjxf.nimbusprojection.network.SharedPanelSpawnPayload;
+import dev.vfyjxf.nimbusprojection.network.WorldDragPayload;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -81,12 +79,12 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -101,13 +99,13 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
@@ -117,6 +115,8 @@ import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -171,10 +171,9 @@ public final class InworldManager implements NimbusClient {
         return manager;
     }
 
-    //region state
+    // region state
 
-    private static final org.slf4j.Logger LOGGER =
-            org.slf4j.LoggerFactory.getLogger(InworldManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(InworldManager.class);
 
     private final Minecraft mc = Minecraft.getInstance();
 
@@ -195,6 +194,7 @@ public final class InworldManager implements NimbusClient {
      * (pointed != null) still wins and ends manual mode.
      */
     private long manualFocusTick = -1000;
+
     private @Nullable FloatPos pointedUv;
     /** true when the crosshair actually rests on a panel (vs only its anchor block) */
     private boolean pointedInPanel;
@@ -202,14 +202,16 @@ public final class InworldManager implements NimbusClient {
     private boolean inspecting;
     private @Nullable InworldInspectScreen inspectScreen;
 
-    //region trace-mode state (Witness-style drag interaction)
+    // region trace-mode state (Witness-style drag interaction)
     /** panel currently being traced, non-null for the duration of a session */
     private @Nullable PanelRuntime tracing;
+
     private @Nullable InworldTraceScreen traceScreen;
     /** trace cursor in content-local px */
     private float traceX, traceY;
     /** accumulated cursor travel — a sub-4px short press falls back to the panel action */
     private float traceMoved;
+
     private long traceStartTick;
     /** the session is hosted by the inspect screen — no extra screen was opened */
     private boolean traceInspectHosted;
@@ -224,15 +226,17 @@ public final class InworldManager implements NimbusClient {
     private Vec3 traceO, traceU, traceV, traceN;
     /** frozen screen rect for flat panels */
     private float tracePanelX, tracePanelY;
-    //endregion
+    // endregion
     /** Set when the inspect screen was closed by ESC while the key is still held — don't reopen until released. */
     private boolean inspectDismissed;
+
     private boolean pressedConsumed;
     /** mouse button currently held on the scene (world mode), -1 = none — feeds mouseDragged while held */
     private int heldSceneButton = -1;
+
     private double heldPtrX, heldPtrY;
 
-    //region world-drag state (world-as-UI item transfer)
+    // region world-drag state (world-as-UI item transfer)
     /**
      * Active drag session, non-null while the player holds an item pulled out
      * of a {@link dev.vfyjxf.cloudlib.api.ui.inworld.WorldDraggable} panel.
@@ -240,11 +244,13 @@ public final class InworldManager implements NimbusClient {
      * until the server commits the {@link WorldDragPayload}.
      */
     private @Nullable WorldDrag dragSession;
+
     private @Nullable PanelRuntime dragPanel;
     /** session was started inside the inspect screen — targets come from the cursor ray, not the crosshair */
     private boolean dragInspectHosted;
     /** last cursor position while inspect-hosting a drag (scene coords) */
     private double dragCursorX, dragCursorY;
+
     private final DragTrail dragTrail = new DragTrail();
     /** container under the crosshair right now (may not be in the trail yet) */
     private @Nullable BlockPos dragTarget;
@@ -254,7 +260,7 @@ public final class InworldManager implements NimbusClient {
     private final List<FlyingStack> flying = new ArrayList<>();
     /** target pos → flash age for the landing highlight */
     private final Map<BlockPos, Integer> landFlash = new LinkedHashMap<>();
-    //endregion
+    // endregion
 
     private @Nullable Projection projection;
     private @Nullable Matrix4f worldToView;
@@ -268,24 +274,25 @@ public final class InworldManager implements NimbusClient {
     private int faceStripWidth = 0;
     /** Reused per-frame collection of presented dock panels awaiting corner layout. */
     private final List<PanelRuntime> dockQueue = new ArrayList<>();
+
     private final List<PanelRuntime> expandQueue = new ArrayList<>();
     private final List<PanelRuntime> floatingQueue = new ArrayList<>();
-    private static final int PARK_BASE = -1_000_000;
-    private static final int PARK_STEP = 4096;
+    private static final int parkBase = -1_000_000;
+    private static final int parkStep = 4096;
     /** ticks within which a V press counts as a tap rather than a hold */
-    private static final int INTERACT_TAP_TICKS = 8;
+    private static final int interactTapTicks = 8;
     /** V pressed on an engaged panel — resolves to close-or-pointer on release. */
     private @Nullable PanelRuntime interactArm;
+
     private long interactArmTick;
     private boolean interactArmUsed;
     /** ticks an engaged panel survives without any targeting (~3s) */
-    private static final int ENGAGE_GRACE_TICKS = 60;
+    private static final int engageGraceTicks = 60;
     /** ~10° sweep cone for drag target acquisition — the ray only has to
      *  pass near a container for the trail to collect it */
-    private static final double DRAG_SWEEP_COS = Math.cos(Math.toRadians(10));
+    private static final double dragSweepCos = Math.cos(Math.toRadians(10));
 
-    private record ProviderRegistration(PanelProvider provider, int interval, ProviderOptions options, long nextRun) {
-    }
+    private record ProviderRegistration(PanelProvider provider, int interval, ProviderOptions options, long nextRun) {}
 
     /** Each provider's most recent emission — persisted between its runs so reconcile doesn't drop panels on off-ticks. */
     private final Map<PanelProvider, Map<PanelKey, PanelSpec>> providerPanels = new IdentityHashMap<>();
@@ -298,31 +305,29 @@ public final class InworldManager implements NimbusClient {
     private final Map<ResourceLocation, SharedViewRegistration<?>> sharedViews = new HashMap<>();
 
     private record SharedViewRegistration<P extends CustomPacketPayload>(
-            StreamCodec<? super RegistryFriendlyByteBuf, P> codec,
-            SharedPanelView<P> factory
-    ) {
-    }
+            StreamCodec<? super RegistryFriendlyByteBuf, P> codec, SharedPanelView<P> factory) {}
 
     /** Remote-player presence fed by the network layer — read-only here. */
     private final Map<PanelKey, List<PresenceInfo>> presences = new HashMap<>();
     /** Keys emitted by sharedDomain providers in the latest provider pass —
      *  presence relays only for these. */
     private final Set<PanelKey> sharedDomainKeys = new HashSet<>();
+
     private List<PresenceReportPayload.Entry> lastPresenceReport = List.of();
 
-    //endregion
+    // endregion
 
     private InworldManager() {
-        //the root fills the whole layout area (window + input strip) so hitTest
-        //bounds-checks pass everywhere — without an explicit size the taffy
-        //root measures 0×0 (absolute children are out of flow) and nothing
-        //would ever be clickable
+        // the root fills the whole layout area (window + input strip) so hitTest
+        // bounds-checks pass everywhere — without an explicit size the taffy
+        // root measures 0×0 (absolute children are out of flow) and nothing
+        // would ever be clickable
         root.useStyle(UIStyles.sizePercent(1f));
         scene.init();
         scene.mount(SceneContext.create(new InworldSceneHost()));
     }
 
-    //region NimbusClient
+    // region NimbusClient
 
     @Override
     public InworldPanel open(PanelSpec spec) {
@@ -379,10 +384,9 @@ public final class InworldManager implements NimbusClient {
             ResourceLocation view,
             CustomPacketPayload.Type<P> type,
             StreamCodec<? super RegistryFriendlyByteBuf, P> codec,
-            SharedPanelView<P> factory
-    ) {
-        //the codec doubles as a channel type so the spec's data payload and
-        //later update() payloads resolve through the same wire registry
+            SharedPanelView<P> factory) {
+        // the codec doubles as a channel type so the spec's data payload and
+        // later update() payloads resolve through the same wire registry
         PanelChannelPayload.registerChannelType(type, (StreamCodec<RegistryFriendlyByteBuf, P>) codec);
         sharedViews.put(view, new SharedViewRegistration<>(codec, factory));
     }
@@ -405,16 +409,13 @@ public final class InworldManager implements NimbusClient {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private <P extends CustomPacketPayload> void spawnWith(
-            SharedViewRegistration<P> reg, SharedPanelSpawnPayload spawn
-    ) {
+            SharedViewRegistration<P> reg, SharedPanelSpawnPayload spawn) {
         SharedViewContext<P> ctx = new SharedViewContext<>(
-                mc.level, mc.player, spawn.key(),
-                spawn.anchor(), spawn.presentation(), (P) spawn.payload());
+                mc.level, mc.player, spawn.key(), spawn.anchor(), spawn.presentation(), (P) spawn.payload());
         PanelSpec spec = reg.factory().open(ctx);
         if (spec == null || !spec.key().equals(spawn.key())) {
             NimbusProjection.logger.warn(
-                    "Shared view {} returned a spec not keyed {} — spawn rejected",
-                    spawn.view(), spawn.key());
+                    "Shared view {} returned a spec not keyed {} — spawn rejected", spawn.view(), spawn.key());
             return;
         }
         spec.interactive(spawn.canInteract());
@@ -445,8 +446,7 @@ public final class InworldManager implements NimbusClient {
     public void onChannelMessage(PanelKey key, CustomPacketPayload payload) {
         PanelRuntime runtime = panels.get(key);
         if (runtime == null || runtime.spec.channelHandler() == null) return;
-        runtime.spec.channelHandler().receive(
-                new InworldPanelContext(mc.level, mc.player, runtime), payload);
+        runtime.spec.channelHandler().receive(new InworldPanelContext(mc.level, mc.player, runtime), payload);
     }
 
     /**
@@ -460,10 +460,10 @@ public final class InworldManager implements NimbusClient {
         for (PanelRuntime r : panels.values()) {
             if (!r.shared) continue;
             PresenceKind kind = null;
-            if (dragSession != null && dragPanel == r) kind = PresenceKind.DRAGGING;
-            else if (tracing == r) kind = PresenceKind.TRACING;
-            else if (r.engaged) kind = PresenceKind.ENGAGED;
-            else if (focused == r) kind = PresenceKind.WATCHING;
+            if (dragSession != null && dragPanel == r) kind = PresenceKind.dragging;
+            else if (tracing == r) kind = PresenceKind.tracing;
+            else if (r.engaged) kind = PresenceKind.engaged;
+            else if (focused == r) kind = PresenceKind.watching;
             if (kind != null) report.add(new PresenceReportPayload.Entry(r.spec.key(), kind));
         }
         if (!report.equals(lastPresenceReport)) {
@@ -535,8 +535,10 @@ public final class InworldManager implements NimbusClient {
         for (PanelRuntime runtime : panels.values()) {
             if (runtime.presented && runtime.flat) {
                 areas.add(new Rect2i(
-                        runtime.widget.screenX, runtime.widget.screenY,
-                        runtime.widget.width(), runtime.widget.height()));
+                        runtime.widget.screenX,
+                        runtime.widget.screenY,
+                        runtime.widget.width(),
+                        runtime.widget.height()));
             }
         }
         return areas;
@@ -547,15 +549,15 @@ public final class InworldManager implements NimbusClient {
         return scene;
     }
 
-    //endregion
+    // endregion
 
-    //region events
+    // region events
 
     private void onClientTick(ClientTickEvent.Post event) {
         tick++;
         if (mc.level == null || mc.player == null) return;
 
-        //inspect state machine — raw key polling so it works while the capture screen is open
+        // inspect state machine — raw key polling so it works while the capture screen is open
         boolean held = inspectHeld();
         if (!held) inspectDismissed = false;
         if (held && !inspecting && !inspectDismissed && mc.screen == null) {
@@ -568,9 +570,9 @@ public final class InworldManager implements NimbusClient {
             inspectScreen = null;
         }
 
-        //focus cycling — while a screen (inspect/trace) owns input, keypresses
-        //are routed through inspectKeyPressed; still drain the click counters
-        //here so they don't fire a second time when the screen closes
+        // focus cycling — while a screen (inspect/trace) owns input, keypresses
+        // are routed through inspectKeyPressed; still drain the click counters
+        // here so they don't fire a second time when the screen closes
         boolean keysViaScreen = inspecting || mc.screen != null;
         while (NimbusKeyMappings.focusNext.consumeClick()) {
             if (!keysViaScreen) focusNext();
@@ -590,12 +592,13 @@ public final class InworldManager implements NimbusClient {
         tickSceneDrag();
         tickDecay();
 
-        //providers — each provider's last emission is cached; reconcile runs
-        //when at least one provider was re-evaluated (or on the first tick so
-        //imperative panels created before providers registered still show)
+        // providers — each provider's last emission is cached; reconcile runs
+        // when at least one provider was re-evaluated (or on the first tick so
+        // imperative panels created before providers registered still show)
         if (mc.level != null) {
             boolean ran = tick == 1;
-            ProviderContext ctx = new ProviderContext(mc.level, mc.player, mc.gameRenderer.getMainCamera(), currentProjection(), tick);
+            ProviderContext ctx = new ProviderContext(
+                    mc.level, mc.player, mc.gameRenderer.getMainCamera(), currentProjection(), tick);
             for (int i = 0; i < providers.size(); i++) {
                 ProviderRegistration reg = providers.get(i);
                 if (tick >= reg.nextRun()) {
@@ -620,7 +623,10 @@ public final class InworldManager implements NimbusClient {
                     });
                     providerPanels.put(reg.provider(), emitted);
                     providerGroups.put(reg.provider(), groups);
-                    providers.set(i, new ProviderRegistration(reg.provider(), reg.interval(), reg.options(), tick + reg.interval()));
+                    providers.set(
+                            i,
+                            new ProviderRegistration(
+                                    reg.provider(), reg.interval(), reg.options(), tick + reg.interval()));
                     ran = true;
                 }
             }
@@ -655,10 +661,10 @@ public final class InworldManager implements NimbusClient {
         if (mc.level == null || mc.player == null) return;
         if (mc.options.hideGui) return;
 
-        //capture this frame's projection. Note: the per-rendertype stages pass
-        //no pose stack (getPoseStack() is a fresh identity stack); the real
-        //world→view matrix is getModelViewMatrix(), which is camera ROTATION
-        //only — the −cameraPos translation happens inside renderSectionLayer.
+        // capture this frame's projection. Note: the per-rendertype stages pass
+        // no pose stack (getPoseStack() is a fresh identity stack); the real
+        // world→view matrix is getModelViewMatrix(), which is camera ROTATION
+        // only — the −cameraPos translation happens inside renderSectionLayer.
         Vec3 cameraPos = event.getCamera().getPosition();
         framePartialTick = event.getPartialTick().getGameTimeDeltaPartialTick(true);
         Matrix4f worldToView = new Matrix4f(event.getModelViewMatrix());
@@ -671,26 +677,26 @@ public final class InworldManager implements NimbusClient {
 
         resolvePanels();
 
-        //the stage fires inside renderSectionLayer(translucent) while the
-        //translucent rendertype is still set up — under Fabulous! that's the
-        //translucent target, otherwise the main target. Capture it now: the
-        //sprite endBatch below rebinds the MAIN target via output shards, not
-        //the FBO this stage was actually entered with.
+        // the stage fires inside renderSectionLayer(translucent) while the
+        // translucent rendertype is still set up — under Fabulous! that's the
+        // translucent target, otherwise the main target. Capture it now: the
+        // sprite endBatch below rebinds the main target via output shards, not
+        // the FBO this stage was actually entered with.
         int prevFbo = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
 
-        //item sprites go straight into the scene target BEFORE the OIT pass —
-        //they ride vanilla rendertype output shards that fight a foreign bound
-        //framebuffer, so they can never draw inside the accumulation pass
+        // item sprites go straight into the scene target BEFORE the OIT pass —
+        // they ride vanilla rendertype output shards that fight a foreign bound
+        // framebuffer, so they can never draw inside the accumulation pass
         renderWorldDragSprites();
-        //rebind the real stage target in case endBatch's output shards left
-        //main bound instead (Fabulous!)
+        // rebind the real stage target in case endBatch's output shards left
+        // main bound instead (Fabulous!)
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, prevFbo);
 
-        //in-world render pass: face panels only in world presentation; the
-        //scan frame is useful in both (inspect's leader lines end on it).
-        //All of it routes through the weighted-blended OIT pass when the scene
-        //depth texture can be borrowed — otherwise the draws fall through to
-        //the same direct path they always used.
+        // in-world render pass: face panels only in world presentation; the
+        // scan frame is useful in both (inspect's leader lines end on it).
+        // All of it routes through the weighted-blended OIT pass when the scene
+        // depth texture can be borrowed — otherwise the draws fall through to
+        // the same direct path they always used.
         int sceneDepth = OitTarget.querySceneDepth(prevFbo);
         boolean oitOk = sceneDepth != 0
                 && NimbusShaders.oitReady()
@@ -708,8 +714,8 @@ public final class InworldManager implements NimbusClient {
                 renderScanFrames();
                 renderWorldDragFrames();
             } finally {
-                //restores prevFbo, the viewport and ambient blend/depth state
-                //even when a draw throws mid-pass
+                // restores prevFbo, the viewport and ambient blend/depth state
+                // even when a draw throws mid-pass
                 if (oitOk) {
                     oit.endAccum();
                 }
@@ -717,8 +723,8 @@ public final class InworldManager implements NimbusClient {
             }
             if (oitOk && oitDraws > 0) {
                 oit.resolve(prevFbo);
-                //the pass drew with depth writes off — stamp the panel quads'
-                //depth so later translucent draws can't punch through them
+                // the pass drew with depth writes off — stamp the panel quads'
+                // depth so later translucent draws can't punch through them
                 stampPanelDepth();
             }
         } finally {
@@ -728,15 +734,15 @@ public final class InworldManager implements NimbusClient {
 
     private void onGuiRender(RenderGuiEvent.Post event) {
         if (mc.level == null || mc.player == null) return;
-        if (inspecting) return;                       // the inspect screen renders instead
-        if (mc.screen != null) return;                // compat: a real screen hides in-world ui
+        if (inspecting) return; // the inspect screen renders instead
+        if (mc.screen != null) return; // compat: a real screen hides in-world ui
         if (mc.options.hideGui || panels.isEmpty()) return;
 
         GuiGraphics graphics = event.getGuiGraphics();
         float pt = event.getPartialTick().getGameTimeDeltaPartialTick(true);
 
-        //virtual pointer: a pointed face's uv, otherwise parked off-screen —
-        //the panel tree must not hover under a bare crosshair
+        // virtual pointer: a pointed face's uv, otherwise parked off-screen —
+        // the panel tree must not hover under a bare crosshair
         double vx = -10_000, vy = -10_000;
         updatePointing();
         if (pointed != null && pointedUv != null) {
@@ -755,12 +761,13 @@ public final class InworldManager implements NimbusClient {
      * floating just above the anchor's screen position.
      */
     private void renderEngageChip(GuiGraphics graphics) {
-        PanelRuntime target = focused != null && isDormant(focused) ? focused
+        PanelRuntime target = focused != null && isDormant(focused)
+                ? focused
                 : (pointed != null && isDormant(pointed) ? pointed : null);
         boolean closing = false;
         if (target == null) {
-            //an engaged, closable panel under the crosshair gets the same
-            //affordance mirrored: [V]× toggles it shut
+            // an engaged, closable panel under the crosshair gets the same
+            // affordance mirrored: [V]× toggles it shut
             PanelRuntime cand = focused != null ? focused : pointed;
             if (cand != null && cand.engaged && cand.spec.requiresEngage()) {
                 target = cand;
@@ -770,21 +777,23 @@ public final class InworldManager implements NimbusClient {
         if (target == null || target.anchorScreen == null) return;
         float heat = target.focusHeat;
         if (heat <= 0.05f) return;
-        //one key toggles both ways — the chip style carries the state:
-        //hollow = press to open, solid = press to close
+        // one key toggles both ways — the chip style carries the state:
+        // hollow = press to open, solid = press to close
         String key = "[" + NimbusKeyMappings.interact.getTranslatedKeyMessage().getString() + "]";
         var font = mc.font;
         int tw = font.width(key) + 6;
         int x = (int) Math.round(target.anchorScreen.x - tw * 0.5);
         int y = (int) Math.round(target.anchorScreen.y) - 24;
-        //the anchor may project onto committed chrome (e.g. a dock column) —
-        //hop the chip above whatever covers it so the affordance stays
-        //readable instead of stamping over another panel
+        // the anchor may project onto committed chrome (e.g. a dock column) —
+        // hop the chip above whatever covers it so the affordance stays
+        // readable instead of stamping over another panel
         for (int pass = 0; pass < 3; pass++) {
             boolean moved = false;
             for (Rect2i r : frameOccupied) {
-                if (x + tw <= r.getX() || x >= r.getX() + r.getWidth()
-                        || y + 10 <= r.getY() || y >= r.getY() + r.getHeight()) continue;
+                if (x + tw <= r.getX()
+                        || x >= r.getX() + r.getWidth()
+                        || y + 10 <= r.getY()
+                        || y >= r.getY() + r.getHeight()) continue;
                 y = r.getY() - 12;
                 moved = true;
             }
@@ -793,17 +802,17 @@ public final class InworldManager implements NimbusClient {
         x = Math.max(2, Math.min(x, mc.getWindow().getGuiScaledWidth() - tw - 2));
         y = Math.max(2, y);
         if (closing) {
-            //solid chip: the open panel is under the crosshair — V closes it
-            graphics.fill(x, y, x + tw, y + 10, scaleAlpha(HackerTheme.ACCENT, heat * 0.92f));
-            graphics.drawString(font, key, x + 3, y + 1, scaleAlpha(HackerTheme.LINE_DARK, heat));
+            // solid chip: the open panel is under the crosshair — V closes it
+            graphics.fill(x, y, x + tw, y + 10, scaleAlpha(HackerTheme.accent, heat * 0.92f));
+            graphics.drawString(font, key, x + 3, y + 1, scaleAlpha(HackerTheme.lineDark, heat));
         } else {
-            //hollow chip: dormant target — V opens it
-            graphics.fill(x, y, x + tw, y + 10, scaleAlpha(HackerTheme.BG_FOCUSED, heat));
-            graphics.fill(x, y, x + tw, y + 1, scaleAlpha(HackerTheme.ACCENT_DIM, heat));
-            graphics.fill(x, y + 9, x + tw, y + 10, scaleAlpha(HackerTheme.ACCENT_DIM, heat));
-            graphics.fill(x, y, x + 1, y + 10, scaleAlpha(HackerTheme.ACCENT_DIM, heat));
-            graphics.fill(x + tw - 1, y, x + tw, y + 10, scaleAlpha(HackerTheme.ACCENT_DIM, heat));
-            graphics.drawString(font, key, x + 3, y + 1, scaleAlpha(HackerTheme.ACCENT, heat));
+            // hollow chip: dormant target — V opens it
+            graphics.fill(x, y, x + tw, y + 10, scaleAlpha(HackerTheme.bgFocused, heat));
+            graphics.fill(x, y, x + tw, y + 1, scaleAlpha(HackerTheme.accentDim, heat));
+            graphics.fill(x, y + 9, x + tw, y + 10, scaleAlpha(HackerTheme.accentDim, heat));
+            graphics.fill(x, y, x + 1, y + 10, scaleAlpha(HackerTheme.accentDim, heat));
+            graphics.fill(x + tw - 1, y, x + tw, y + 10, scaleAlpha(HackerTheme.accentDim, heat));
+            graphics.drawString(font, key, x + 3, y + 1, scaleAlpha(HackerTheme.accent, heat));
         }
     }
 
@@ -818,19 +827,25 @@ public final class InworldManager implements NimbusClient {
         int action = event.getAction();
         int button = event.getButton();
         if (action == GLFW.GLFW_PRESS) {
-            //no interaction key held — the press belongs to the world
-            //(mine/attack/use); panels stay clickable only while V is held
-            //or a gesture is already in flight
+            // no interaction key held — the press belongs to the world
+            // (mine/attack/use); panels stay clickable only while V is held
+            // or a gesture is already in flight
             if (!panelPointerLive()) return;
-            interactArmUsed = true; //a mouse press during an armed V hold means it was pointer intent, not a tap-to-close
+            interactArmUsed =
+                    true; // a mouse press during an armed V hold means it was pointer intent, not a tap-to-close
             double[] v = virtualPointer();
             Widget hit = scene.hitTest(v[0], v[1]);
-            LOGGER.info("click press: ptr=({},{}) pointed={} uv={} hit={}",
-                    (int) v[0], (int) v[1], pointed, pointedUv, hit);
-            //world-as-UI: a press on a draggable widget leaves the panel and
-            //becomes a world-targeted drag — checked before normal clicking so
-            //the button stays held for the whole gesture. A live session
-            //already owns the gesture; extra presses are swallowed.
+            logger.info(
+                    "click press: ptr=({},{}) pointed={} uv={} hit={}",
+                    (int) v[0],
+                    (int) v[1],
+                    pointed,
+                    pointedUv,
+                    hit);
+            // world-as-UI: a press on a draggable widget leaves the panel and
+            // becomes a world-targeted drag — checked before normal clicking so
+            // the button stays held for the whole gesture. A live session
+            // already owns the gesture; extra presses are swallowed.
             WorldDraggable src = dragSession == null ? WorldDraggable.find(hit) : null;
             if (src != null) {
                 PanelRuntime srcPanel = panelOf((Widget) src);
@@ -848,22 +863,22 @@ public final class InworldManager implements NimbusClient {
                     }
                 }
             }
-            //clicks landing anywhere on a pointed panel are swallowed even on
-            //dead chrome — otherwise LMB would mine the block under the panel
+            // clicks landing anywhere on a pointed panel are swallowed even on
+            // dead chrome — otherwise LMB would mine the block under the panel
             boolean consumed = scene.mouseClicked(v[0], v[1], button) || pointedInPanel;
             pressedConsumed = consumed;
             if (consumed) {
-                heldSceneButton = button; //held on the scene — world-mode drags feed mouseDragged per frame
+                heldSceneButton = button; // held on the scene — world-mode drags feed mouseDragged per frame
                 heldPtrX = v[0];
                 heldPtrY = v[1];
                 event.setCanceled(true);
             }
         } else if (action == GLFW.GLFW_RELEASE) {
             if (dragSession != null) {
-                //releasing a drag commits (targets/throw) or cancels (back onto
-                //a panel). "Over a panel" must mean a real panel — hitTest can
-                //return the window-filling root over empty space, which would
-                //cancel every release.
+                // releasing a drag commits (targets/throw) or cancels (back onto
+                // a panel). "Over a panel" must mean a real panel — hitTest can
+                // return the window-filling root over empty space, which would
+                // cancel every release.
                 double[] v = virtualPointer();
                 boolean overPanel = panelOf(scene.hitTest(v[0], v[1])) != null;
                 commitWorldDrag(overPanel);
@@ -872,8 +887,7 @@ public final class InworldManager implements NimbusClient {
                 return;
             }
             double[] v = virtualPointer();
-            LOGGER.info("click release: ptr=({},{}) hit={}",
-                    (int) v[0], (int) v[1], scene.hitTest(v[0], v[1]));
+            logger.info("click release: ptr=({},{}) hit={}", (int) v[0], (int) v[1], scene.hitTest(v[0], v[1]));
             boolean consumed = scene.mouseReleased(v[0], v[1], button) || pointedInPanel;
             if (consumed || pressedConsumed) event.setCanceled(true);
             pressedConsumed = false;
@@ -899,7 +913,7 @@ public final class InworldManager implements NimbusClient {
         heldPtrY = v[1];
     }
 
-    //region world-drag (world-as-UI item transfer)
+    // region world-drag (world-as-UI item transfer)
 
     /** A world-drag session is in flight — providers can key off this to keep the source panel alive. */
     public boolean dragActive() {
@@ -908,8 +922,7 @@ public final class InworldManager implements NimbusClient {
 
     /** A block position counts as a drop target when it exposes an item-handler capability. */
     private boolean isDragTarget(BlockPos pos) {
-        return mc.level != null
-                && mc.level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null) != null;
+        return mc.level != null && mc.level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null) != null;
     }
 
     /**
@@ -925,38 +938,40 @@ public final class InworldManager implements NimbusClient {
             landFlash.put(BlockPos.containing(fs.to), 0);
             return true;
         });
-        landFlash.values().removeIf(age -> age + 1 > FlyingStack.FLASH_TICKS);
+        landFlash.values().removeIf(age -> age + 1 > FlyingStack.flashTicks);
         landFlash.replaceAll((p, age) -> age + 1);
 
         if (dragSession == null) return;
-        if (mc.player == null || mc.level == null
-                || dragPanel == null || !panels.containsValue(dragPanel)
+        if (mc.player == null
+                || mc.level == null
+                || dragPanel == null
+                || !panels.containsValue(dragPanel)
                 || (dragInspectHosted ? !inspecting : (inspecting || mc.screen != null))) {
             cancelWorldDrag();
             return;
         }
 
-        //target acquisition: world mode reuses the vanilla crosshair pick;
-        //inspect mode casts the cursor's ray through the live projection
-        //(mc.hitResult is useless there — it always follows screen center).
-        //Either way a near-miss still collects the container — the sweep only
-        //has to pass within a small cone of it, not dead-center it.
+        // target acquisition: world mode reuses the vanilla crosshair pick;
+        // inspect mode casts the cursor's ray through the live projection
+        // (mc.hitResult is useless there — it always follows screen center).
+        // Either way a near-miss still collects the container — the sweep only
+        // has to pass within a small cone of it, not dead-center it.
         Vec3 eye = mc.player.getEyePosition();
         Vec3 dir;
         HitResult hit;
         double reach = mc.player.blockInteractionRange();
         if (dragInspectHosted) {
             if (projection == null) return;
-            //cursor over a panel must not "see through" the UI to a container
-            //behind it — the panel surface owns that pixel while dragging
+            // cursor over a panel must not "see through" the UI to a container
+            // behind it — the panel surface owns that pixel while dragging
             if (panelOf(scene.hitTest(dragCursorX, dragCursorY)) != null) {
                 dragTarget = null;
                 dragTrail.leave();
                 return;
             }
             dir = projection.rayDirection(dragCursorX, dragCursorY);
-            hit = mc.level.clip(new ClipContext(eye, eye.add(dir.scale(reach)),
-                    ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player));
+            hit = mc.level.clip(new ClipContext(
+                    eye, eye.add(dir.scale(reach)), ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player));
         } else {
             dir = mc.player.getLookAngle();
             hit = mc.hitResult;
@@ -970,7 +985,7 @@ public final class InworldManager implements NimbusClient {
             dragHold = eye.add(dir.scale(2.4));
         }
         if (pos == null) {
-            pos = ContainerScan.nearest(mc.level, mc.player, eye, dir, reach, DRAG_SWEEP_COS);
+            pos = ContainerScan.nearest(mc.level, mc.player, eye, dir, reach, dragSweepCos);
         }
         if (pos != null) {
             dragTarget = pos;
@@ -997,39 +1012,37 @@ public final class InworldManager implements NimbusClient {
         dragTrail.clear();
         if (drag == null) return;
         if (overScene) {
-            //release over a panel: a WorldDragAcceptor on the target claims
-            //the stack (panel-to-panel transfer); anything else cancels
+            // release over a panel: a WorldDragAcceptor on the target claims
+            // the stack (panel-to-panel transfer); anything else cancels
             double[] v = virtualPointer();
             Widget hit = scene.hitTest(v[0], v[1]);
             WorldDragAcceptor acceptor = WorldDragAcceptor.find(hit);
             PanelRuntime target = panelOf(hit);
-            //same-panel drops reach the acceptor too — slot-merge/reorder
-            //is a drop semantics the widget may want
+            // same-panel drops reach the acceptor too — slot-merge/reorder
+            // is a drop semantics the widget may want
             if (acceptor != null && target != null) {
-                acceptor.acceptWorldDrag(
-                        drag, new InworldPanelContext(mc.level, mc.player, target), v[0], v[1]);
+                acceptor.acceptWorldDrag(drag, new InworldPanelContext(mc.level, mc.player, target), v[0], v[1]);
             }
             return;
         }
 
-        List<BlockPos> targets = panel != null
-                ? drag.commitTargets(trail, new InworldPanelContext(mc.level, mc.player, panel))
-                : trail;
+        List<BlockPos> targets =
+                panel != null ? drag.commitTargets(trail, new InworldPanelContext(mc.level, mc.player, panel)) : trail;
         int mode = targets.isEmpty()
-                ? (drag.wholeStack() ? WorldDragPayload.THROW_STACK : WorldDragPayload.THROW_ONE)
-                : (drag.wholeStack() ? WorldDragPayload.INSERT_EVEN : WorldDragPayload.INSERT_ONE);
+                ? (drag.wholeStack() ? WorldDragPayload.throwStack : WorldDragPayload.throwOne)
+                : (drag.wholeStack() ? WorldDragPayload.insertEven : WorldDragPayload.insertOne);
         Vec3 look = mc.player.getLookAngle();
-        PacketDistributor.sendToServer(new WorldDragPayload(
-                drag.sourceSlot(), mode, targets, look, drag.sourceContainer()));
+        PacketDistributor.sendToServer(
+                new WorldDragPayload(drag.sourceSlot(), mode, targets, look, drag.sourceContainer()));
 
-        //the commit just mutated the source (and every target) server-side —
-        //drop the throttle so their next watch() re-queries immediately
-        //instead of showing a stale slot until the repoll
+        // the commit just mutated the source (and every target) server-side —
+        // drop the throttle so their next watch() re-queries immediately
+        // instead of showing a stale slot until the repoll
         if (drag.sourceContainer() != null) ContainerContents.invalidate(drag.sourceContainer());
         for (BlockPos t : targets) ContainerContents.invalidate(t);
 
-        //cosmetic fly-outs: one sprite per non-zero share, release point →
-        //target top-center. Throw mode needs none — the real ItemEntity spawns.
+        // cosmetic fly-outs: one sprite per non-zero share, release point →
+        // target top-center. Throw mode needs none — the real ItemEntity spawns.
         if (!targets.isEmpty() && hold != null) {
             int[] shares = drag.wholeStack()
                     ? SplitPlan.evenly(drag.carried().getCount(), targets.size())
@@ -1050,14 +1063,13 @@ public final class InworldManager implements NimbusClient {
         dragTrail.clear();
     }
 
-    //endregion
+    // endregion
 
     private void onMouseScroll(InputEvent.MouseScrollingEvent event) {
         if (inspecting || mc.level == null || mc.screen != null) return;
         if (panels.isEmpty()) return;
         double[] v = virtualPointer();
-        if (scene.mouseScrolled(v[0], v[1], event.getScrollDeltaX(), event.getScrollDeltaY())
-                || pointedInPanel) {
+        if (scene.mouseScrolled(v[0], v[1], event.getScrollDeltaX(), event.getScrollDeltaY()) || pointedInPanel) {
             event.setCanceled(true);
         }
     }
@@ -1086,9 +1098,9 @@ public final class InworldManager implements NimbusClient {
         ContainerContents.clear();
     }
 
-    //endregion
+    // endregion
 
-    //region providers & lifecycle
+    // region providers & lifecycle
 
     /**
      * Transient panels: a spec-declared {@link Decay} counts down from
@@ -1101,8 +1113,7 @@ public final class InworldManager implements NimbusClient {
         for (PanelRuntime r : panels.values()) {
             Decay decay = r.spec.decay();
             if (decay == null) continue;
-            if (decay.lingerOnHover()
-                    && (focused == r || pointed == r || r.engaged || tracing == r)) {
+            if (decay.lingerOnHover() && (focused == r || pointed == r || r.engaged || tracing == r)) {
                 r.bornTick = tick;
                 continue;
             }
@@ -1119,7 +1130,7 @@ public final class InworldManager implements NimbusClient {
     }
 
     private void reconcile(Map<PanelKey, PanelSpec> wanted) {
-        //remove panels no longer offered
+        // remove panels no longer offered
         var it = panels.values().iterator();
         while (it.hasNext()) {
             PanelRuntime runtime = it.next();
@@ -1134,7 +1145,7 @@ public final class InworldManager implements NimbusClient {
                 if (pointed == runtime) pointed = null;
             }
         }
-        //create missing / refresh surviving
+        // create missing / refresh surviving
         for (PanelSpec spec : wanted.values()) {
             PanelRuntime runtime = panels.get(spec.key());
             if (runtime == null) {
@@ -1148,16 +1159,14 @@ public final class InworldManager implements NimbusClient {
 
     private PanelRuntime createPanel(PanelSpec spec) {
         PanelRuntime runtime = new PanelRuntime(this, spec);
-        PanelChannel channel = payload ->
-                PacketDistributor.sendToServer(new PanelChannelPayload(spec.key(), payload));
+        PanelChannel channel = payload -> PacketDistributor.sendToServer(new PanelChannelPayload(spec.key(), payload));
         InworldPanelContext ctx = new InworldPanelContext(mc.level, mc.player, runtime, channel);
         runtime.bornTick = tick;
         Widget content = spec.content().apply(ctx);
         runtime.widget = new InworldPanelWidget(runtime, spec, content);
         runtime.widget.useStyle(UIStyles.zIndexOf(spec.interactive() ? 0 : -1));
         if (spec.openAnimation() && mc.level != null) {
-            runtime.bornAt = mc.level.getGameTime()
-                    + mc.getTimer().getGameTimeDeltaPartialTick(true);
+            runtime.bornAt = mc.level.getGameTime() + mc.getTimer().getGameTimeDeltaPartialTick(true);
             runtime.openScale = 0.25f;
         }
         panels.put(spec.key(), runtime);
@@ -1169,20 +1178,24 @@ public final class InworldManager implements NimbusClient {
         runtime.widget.setTitle(runtime.spec.title());
         runtime.widget.setHints(runtime.spec.hints());
         runtime.widget.setInteractive(runtime.spec.interactive());
-        //non-interactive panels (entity tags) render behind the chrome
+        // non-interactive panels (entity tags) render behind the chrome
         runtime.widget.useStyle(UIStyles.zIndexOf(runtime.spec.interactive() ? 0 : -1));
     }
 
-    //endregion
+    // endregion
 
-    //region per-frame resolution
+    // region per-frame resolution
 
     private @Nullable Projection currentProjection() {
         if (projection == null) {
-            //no level render yet — synthesize an identity-ish projection so providers can still run
+            // no level render yet — synthesize an identity-ish projection so providers can still run
             Matrix4f identity = new Matrix4f();
-            projection = Projection.capture(identity, identity, Vec3.ZERO,
-                    mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+            projection = Projection.capture(
+                    identity,
+                    identity,
+                    Vec3.ZERO,
+                    mc.getWindow().getGuiScaledWidth(),
+                    mc.getWindow().getGuiScaledHeight());
         }
         return projection;
     }
@@ -1206,9 +1219,14 @@ public final class InworldManager implements NimbusClient {
             return;
         }
         PanelGeometry geometry = driver.resolve(new SolveContext<>(
-                presentation, runtime, mc.level, mc.gameRenderer.getMainCamera(),
-                projection, runtime.anchorWorld == null ? Vec3.ZERO : runtime.anchorWorld,
-                List.of(), framePartialTick));
+                presentation,
+                runtime,
+                mc.level,
+                mc.gameRenderer.getMainCamera(),
+                projection,
+                runtime.anchorWorld == null ? Vec3.ZERO : runtime.anchorWorld,
+                List.of(),
+                framePartialTick));
         runtime.presented = true;
         switch (geometry) {
             case PanelGeometry.WorldQuad quad -> {
@@ -1218,7 +1236,7 @@ public final class InworldManager implements NimbusClient {
                 runtime.faceV = quad.axisV().scale(2);
                 runtime.faceNormal = quad.axisU().cross(quad.axisV()).normalize();
                 runtime.facePpb = quad.pixelsPerBlock();
-                runtime.widget.setScreenPos(PARK_BASE, 0);
+                runtime.widget.setScreenPos(parkBase, 0);
             }
             case PanelGeometry.ScreenRect rect -> {
                 runtime.flat = true;
@@ -1243,8 +1261,8 @@ public final class InworldManager implements NimbusClient {
         List<PanelRuntime> expandDeferred = expandQueue;
         List<PanelRuntime> floatingDeferred = floatingQueue;
 
-        //group membership: SECONDARY panels present only while some member of
-        //their group is engaged — collect the live group keys once per pass
+        // group membership: secondary panels present only while some member of
+        // their group is engaged — collect the live group keys once per pass
         Set<PanelKey> engagedGroups = new HashSet<>();
         for (PanelRuntime r : panels.values()) {
             if (r.groupKey != null && r.engaged) engagedGroups.add(r.groupKey);
@@ -1266,27 +1284,32 @@ public final class InworldManager implements NimbusClient {
             runtime.docked = false;
             runtime.smoothMove = false;
 
-            //suspend policy: per-spec lifecycle verdict — CLOSE removes the
-            //panel outright, SUSPEND keeps it alive but unpresented
+            // suspend policy: per-spec lifecycle verdict — close removes the
+            // panel outright, suspend keeps it alive but unpresented
             SuspendVerdict verdict = (runtime.spec.suspendPolicy() != null
-                    ? runtime.spec.suspendPolicy()
-                    : SuspendPolicy.standard())
+                            ? runtime.spec.suspendPolicy()
+                            : SuspendPolicy.standard())
                     .evaluate(new SuspendContext(
-                            level, mc.player, runtime,
-                            runtime.anchorWorld != null, screenOpen, paused, dimensionChanged));
-            if (verdict == SuspendVerdict.CLOSE) {
+                            level,
+                            mc.player,
+                            runtime,
+                            runtime.anchorWorld != null,
+                            screenOpen,
+                            paused,
+                            dimensionChanged));
+            if (verdict == SuspendVerdict.close) {
                 suspendCloses.add(runtime.key());
                 continue;
             }
-            if (verdict == SuspendVerdict.SUSPEND) continue;
+            if (verdict == SuspendVerdict.suspend) continue;
 
             Vec3 anchor = runtime.anchorWorld;
             if (anchor == null || !runtime.widget.visible()) continue;
 
-            //SECONDARY group members stay hidden until their group wakes up
-            if (runtime.groupRole == GroupRole.SECONDARY
+            // secondary group members stay hidden until their group wakes up
+            if (runtime.groupRole == GroupRole.secondary
                     && (runtime.groupKey == null || !engagedGroups.contains(runtime.groupKey))) {
-                runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+                runtime.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
                 continue;
             }
 
@@ -1295,58 +1318,58 @@ public final class InworldManager implements NimbusClient {
 
             runtime.anchorScreen = proj.worldToScreen(anchor);
 
-            //engagement lifecycle: an engaged panel stays open while it is
-            //pointed at, soft-focused, hosting a session, or inspect is flat —
-            //after losing all of those it folds away after a short grace
+            // engagement lifecycle: an engaged panel stays open while it is
+            // pointed at, soft-focused, hosting a session, or inspect is flat —
+            // after losing all of those it folds away after a short grace
             if (runtime.engaged) tickEngagement(runtime);
 
-            //engagement gate: an on-demand panel stays dormant — it tracks
-            //the anchor so the scan frame/key chip and the targeting math
-            //still work, but presents no chrome until the interact key
-            //expands it. Watch-Dogs-style: the world isn't wallpapered with
-            //ui until the player asks for it.
+            // engagement gate: an on-demand panel stays dormant — it tracks
+            // the anchor so the scan frame/key chip and the targeting math
+            // still work, but presents no chrome until the interact key
+            // expands it. Watch-Dogs-style: the world isn't wallpapered with
+            // ui until the player asks for it.
             if (isDormant(runtime)) {
                 runtime.indicator = false;
-                runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+                runtime.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
                 continue;
             }
 
-            //off-screen collapse: shrink to an edge indicator instead of
-            //presenting the full panel where the target can't be seen.
-            //skipped while inspecting — the flat projection is meant to show
-            //every panel regardless of facing
+            // off-screen collapse: shrink to an edge indicator instead of
+            // presenting the full panel where the target can't be seen.
+            // skipped while inspecting — the flat projection is meant to show
+            // every panel regardless of facing
             if (runtime.spec.hint().collapsesOffscreen() && !inspecting && anchorOffscreen(runtime.anchorScreen)) {
                 runtime.indicator = true;
                 runtime.indicatorDir = offscreenDirection(anchor);
-                runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+                runtime.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
                 continue;
             }
             runtime.indicator = false;
 
             Presentation placement = runtime.spec.presentation();
-            //engage-expansion: a dormant Face panel's engaged form is the
-            //world hologram — the face affordance becomes the expand anchor
+            // engage-expansion: a dormant Face panel's engaged form is the
+            // world hologram — the face affordance becomes the expand anchor
             if (runtime.engaged && placement instanceof Presentation.Face) {
                 placement = Presentation.expand();
             }
             if (inspecting) {
-                //flat projection: every panel docks to a screen corner
+                // flat projection: every panel docks to a screen corner
                 resolveDock(runtime, inspectPlacement(placement), docked);
             } else {
                 switch (placement) {
                     case Presentation.Face face -> resolveFace(runtime, face);
-                    //floating resolves after dock layout so the panels can
-                    //steer clear of committed chrome instead of covering it
+                    // floating resolves after dock layout so the panels can
+                    // steer clear of committed chrome instead of covering it
                     case Presentation.Floating floating -> floatingDeferred.add(runtime);
                     case Presentation.Follow follow -> {
                         resolveFollow(runtime, follow);
                         runtime.flat = true;
                     }
                     case Presentation.Dock dock -> resolveDock(runtime, dock, docked);
-                    //expand resolves AFTER dock layout — its world spot must
-                    //not project onto screen area the flat panels occupy
+                    // expand resolves AFTER dock layout — its world spot must
+                    // not project onto screen area the flat panels occupy
                     case Presentation.Expand expand -> expandDeferred.add(runtime);
-                    //custom presentation kinds resolve through their registered driver
+                    // custom presentation kinds resolve through their registered driver
                     default -> resolveCustom(runtime, placement);
                 }
             }
@@ -1354,13 +1377,13 @@ public final class InworldManager implements NimbusClient {
         for (PanelKey k : suspendCloses) close(k);
 
         layoutDocks(docked);
-        //dockQueue is cleared after the floating pass — degraded floats
-        //append to it and a second solve packs them into the same corners
+        // dockQueue is cleared after the floating pass — degraded floats
+        // append to it and a second solve packs them into the same corners
         int dockCount = docked.size();
 
-        //screen rects the foreground chrome occupies: every docked panel
-        //(interactive or not — a dock slot is chrome), interactive flat
-        //panels resolved so far, and projected world-space panels
+        // screen rects the foreground chrome occupies: every docked panel
+        // (interactive or not — a dock slot is chrome), interactive flat
+        // panels resolved so far, and projected world-space panels
         List<Rect2i> occupied = new ArrayList<>();
         List<Rect> obstacles = new ArrayList<>();
         for (PanelRuntime r : panels.values()) {
@@ -1369,7 +1392,8 @@ public final class InworldManager implements NimbusClient {
                 Rect2i rect = new Rect2i(
                         r.smoothMove ? r.targetX : r.widget.screenX,
                         r.smoothMove ? r.targetY : r.widget.screenY,
-                        r.widget.width(), r.widget.height());
+                        r.widget.width(),
+                        r.widget.height());
                 occupied.add(rect);
                 obstacles.add(new Rect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()));
             } else if (!r.flat && worldSpace(r.spec.presentation())) {
@@ -1384,13 +1408,12 @@ public final class InworldManager implements NimbusClient {
         for (PanelRuntime r : floatingDeferred) {
             int before = docked.size();
             resolveFloating(r, (Presentation.Floating) r.spec.presentation(), obstacles, docked);
-            if (docked.size() != before) continue;   //degraded into the dock queue
-            //each resolved floating panel becomes an obstacle for the next —
-            //two panels sharing an anchor side can't stack on each other
+            if (docked.size() != before) continue; // degraded into the dock queue
+            // each resolved floating panel becomes an obstacle for the next —
+            // two panels sharing an anchor side can't stack on each other
             if (r.presented && r.widget.visible()) {
                 r.flat = true;
-                Rect2i rect = new Rect2i(r.targetX, r.targetY,
-                        r.widget.width(), r.widget.height());
+                Rect2i rect = new Rect2i(r.targetX, r.targetY, r.widget.width(), r.widget.height());
                 occupied.add(rect);
                 obstacles.add(new Rect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()));
             }
@@ -1398,15 +1421,14 @@ public final class InworldManager implements NimbusClient {
         floatingDeferred.clear();
 
         if (docked.size() > dockCount) {
-            //late dock arrivals: the solve is deterministic and order-stable,
-            //so a second pass leaves earlier panels exactly where they were
-            //and packs the newcomers into the remaining corner budget
+            // late dock arrivals: the solve is deterministic and order-stable,
+            // so a second pass leaves earlier panels exactly where they were
+            // and packs the newcomers into the remaining corner budget
             layoutDocks(docked);
             for (int i = dockCount; i < docked.size(); i++) {
                 PanelRuntime r = docked.get(i);
                 if (!r.presented) continue;
-                Rect2i rect = new Rect2i(r.targetX, r.targetY,
-                        r.widget.width(), r.widget.height());
+                Rect2i rect = new Rect2i(r.targetX, r.targetY, r.widget.width(), r.widget.height());
                 occupied.add(rect);
                 obstacles.add(new Rect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()));
             }
@@ -1415,7 +1437,7 @@ public final class InworldManager implements NimbusClient {
 
         for (PanelRuntime r : expandDeferred) {
             resolveExpand(r, (Presentation.Expand) r.spec.presentation(), occupied);
-            //a shown hologram reserves its own screen rect for the next one
+            // a shown hologram reserves its own screen rect for the next one
             if (r.presented && !r.flat) {
                 Rect2i b = projectedWorldRect(r);
                 if (b != null) occupied.add(b);
@@ -1427,61 +1449,60 @@ public final class InworldManager implements NimbusClient {
         frameOccupied = occupied;
         smoothFlatPositions();
 
-        //open-animation drive (world panels scale their quad instead)
+        // open-animation drive (world panels scale their quad instead)
         float now = level.getGameTime() + framePartialTick;
         for (PanelRuntime runtime : panels.values()) {
             if (runtime.bornAt >= 0) {
                 float t = (now - runtime.bornAt) / 9f;
-                runtime.openScale = t >= 1f ? 1f
-                        : 0.25f + 0.75f * easeOutBack(Math.max(t, 0f));
+                runtime.openScale = t >= 1f ? 1f : 0.25f + 0.75f * easeOutBack(Math.max(t, 0f));
                 if (t >= 1f) runtime.bornAt = -1;
             }
             runtime.widget.openScale = runtime.flat ? runtime.openScale : 1f;
-            //non-interactive tags shrink with distance so far labels don't hog space
+            // non-interactive tags shrink with distance so far labels don't hog space
             runtime.widget.distScale = runtime.flat && !runtime.spec.interactive()
                     ? (float) Math.min(1f, Math.max(0.45f, 9.5 / Math.max(runtime.distance, 1)))
                     : 1f;
         }
 
-        //the scene's coordinate space is the window plus a virtual "input
-        //strip" to its right where face panels are parked — inside the root's
-        //bounds so hitTest reaches them, outside the window so they never draw
+        // the scene's coordinate space is the window plus a virtual "input
+        // strip" to its right where face panels are parked — inside the root's
+        // bounds so hitTest reaches them, outside the window so they never draw
         faceStripWidth = stripCursor > 0 ? stripCursor + 32 : 0;
         scene.setLayoutArea(
                 mc.getWindow().getGuiScaledWidth() + faceStripWidth,
                 mc.getWindow().getGuiScaledHeight());
 
-        //apply layout so widget bounds are fresh for this frame
+        // apply layout so widget bounds are fresh for this frame
         scene.stabilize();
     }
 
     /** Inspect flattens every placement into a corner dock. */
     private static Presentation.Dock inspectPlacement(Presentation original) {
         if (original instanceof Presentation.Dock dock) return dock;
-        return new Presentation.Dock(Presentation.DockCorner.AUTO);
+        return new Presentation.Dock(Presentation.DockCorner.auto);
     }
 
-    private void resolveFloating(PanelRuntime runtime, Presentation.Floating placement,
-                                 List<Rect> obstacles, List<PanelRuntime> docked) {
+    private void resolveFloating(
+            PanelRuntime runtime, Presentation.Floating placement, List<Rect> obstacles, List<PanelRuntime> docked) {
         FloatPos anchorPx = runtime.anchorScreen;
         if (anchorPx == null) {
-            //anchor behind the camera — parked it would be invisible, so it
-            //degrades into a dock column where it stays discoverable for the
-            //rest of its engagement window
+            // anchor behind the camera — parked it would be invisible, so it
+            // degrades into a dock column where it stays discoverable for the
+            // rest of its engagement window
             dockDegrade(runtime, docked);
             return;
         }
-        //a pinned panel (live trace) freezes in place — retargeting it now
-        //would slide the surface out from under the stroke
+        // a pinned panel (live trace) freezes in place — retargeting it now
+        // would slide the surface out from under the stroke
         if (runtime.pinned) {
             runtime.presented = true;
             runtime.flat = true;
             runtime.smoothMove = false;
             return;
         }
-        //measure against the remembered full size while folded — a folded
-        //dock strip must not squeak back out as a float just because its
-        //collapsed bounds happen to fit somewhere
+        // measure against the remembered full size while folded — a folded
+        // dock strip must not squeak back out as a float just because its
+        // collapsed bounds happen to fit somewhere
         int fw = runtime.widget.width();
         int fh = runtime.widget.height();
         if (runtime.widget.folded) {
@@ -1491,10 +1512,10 @@ public final class InworldManager implements NimbusClient {
             runtime.unfoldedHeight = fh;
             runtime.unfoldedWidth = fw;
         }
-        //the spec's middleware chain runs first, then an internal avoid pass
-        //keeps the panel clear of already-committed chrome (docks, face
-        //projections, earlier floating panels). The avoid is skipped while the
-        //panel carries focus — never slide out from under the cursor.
+        // the spec's middleware chain runs first, then an internal avoid pass
+        // keeps the panel clear of already-committed chrome (docks, face
+        // projections, earlier floating panels). The avoid is skipped while the
+        // panel carries focus — never slide out from under the cursor.
         List<FloatingMiddleware> chain = new ArrayList<>(placement.middlewares());
         if (!runtime.focused() && runtime != pointed) {
             chain.add(AvoidRectsMiddleware.create(() -> obstacles, 4));
@@ -1502,33 +1523,32 @@ public final class InworldManager implements NimbusClient {
         var result = FloatingPositioning.compute(
                 new Rect((int) anchorPx.x - 1, (int) anchorPx.y - 1, 2, 2),
                 new Rect(0, 0, fw, fh),
-                new Rect(0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight()),
-                placement.placement(), chain
-        );
+                new Rect(
+                        0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight()),
+                placement.placement(),
+                chain);
         if (floatingHidden(result)) {
-            //viewport escape: clamp the full panel back inside the screen —
-            //slight anchor occlusion beats losing the content; only when the
-            //panel is genuinely taller/wider than the viewport does it degrade
-            //to a folded chrome strip. Never parks outright.
+            // viewport escape: clamp the full panel back inside the screen —
+            // slight anchor occlusion beats losing the content; only when the
+            // panel is genuinely taller/wider than the viewport does it degrade
+            // to a folded chrome strip. Never parks outright.
             clampOntoScreen(runtime, anchorPx, obstacles, docked);
             return;
         }
         if (blockedByChrome((int) result.x(), (int) result.y(), fw, fh, obstacles)) {
-            //the push-budget ran out — typically a sandwich between chrome the
-            //local escape can't clear. Rather than accept the overlap the
-            //panel joins the dock columns: they own the real degrade ladder
-            //(fold → hide → +N chip) instead of stacking onto other panels
+            // the push-budget ran out — typically a sandwich between chrome the
+            // local escape can't clear. Rather than accept the overlap the
+            // panel joins the dock columns: they own the real degrade ladder
+            // (fold → hide → +N chip) instead of stacking onto other panels
             dockDegrade(runtime, docked);
             return;
         }
         runtime.widget.setFolded(false);
         runtime.presented = true;
         runtime.smoothMove = true;
-        //retarget deadband — sub-2px target churn from anchor/projection noise
-        //keeps the panel gliding forever; small deltas just keep the old target
-        if (!runtime.posInit
-                || InworldLayout.retarget(runtime.targetX, runtime.targetY,
-                result.x(), result.y(), 2)) {
+        // retarget deadband — sub-2px target churn from anchor/projection noise
+        // keeps the panel gliding forever; small deltas just keep the old target
+        if (!runtime.posInit || InworldLayout.retarget(runtime.targetX, runtime.targetY, result.x(), result.y(), 2)) {
             runtime.targetX = (int) result.x();
             runtime.targetY = (int) result.y();
         }
@@ -1544,7 +1564,7 @@ public final class InworldManager implements NimbusClient {
         runtime.flat = true;
         runtime.docked = true;
         runtime.smoothMove = true;
-        runtime.dockCorner = Presentation.DockCorner.AUTO;
+        runtime.dockCorner = Presentation.DockCorner.auto;
         docked.add(runtime);
     }
 
@@ -1570,8 +1590,7 @@ public final class InworldManager implements NimbusClient {
         Rect self = new Rect(x, y, w, h);
         for (Rect ob : obstacles) {
             Rect in = self.intersection(ob);
-            if (in.width() > 6 && in.height() > 6
-                    && in.width() * in.height() > (double) w * h * 0.10) return true;
+            if (in.width() > 6 && in.height() > 6 && in.width() * in.height() > (double) w * h * 0.10) return true;
         }
         return false;
     }
@@ -1579,8 +1598,7 @@ public final class InworldManager implements NimbusClient {
     private static boolean floatingHidden(FloatingPositioning.PositionResult result) {
         Map<String, Object> hide = result.middlewareData().get("hide");
         if (hide == null) return false;
-        return Boolean.TRUE.equals(hide.get("referenceHidden"))
-                || Boolean.TRUE.equals(hide.get("escaped"));
+        return Boolean.TRUE.equals(hide.get("referenceHidden")) || Boolean.TRUE.equals(hide.get("escaped"));
     }
 
     /**
@@ -1591,13 +1609,13 @@ public final class InworldManager implements NimbusClient {
      * does it fold to a chrome strip. Either way the panel stays discoverable
      * and resolves back the moment the middleware chain fits again.
      */
-    private void clampOntoScreen(PanelRuntime runtime, FloatPos anchorPx,
-                                 List<Rect> obstacles, List<PanelRuntime> docked) {
+    private void clampOntoScreen(
+            PanelRuntime runtime, FloatPos anchorPx, List<Rect> obstacles, List<PanelRuntime> docked) {
         int W = mc.getWindow().getGuiScaledWidth();
         int H = mc.getWindow().getGuiScaledHeight();
         int fw = runtime.widget.width();
-        //folded panels collapsed — compare the remembered full height or the
-        //oversized check would flap fold→unfold→fold every other frame
+        // folded panels collapsed — compare the remembered full height or the
+        // oversized check would flap fold→unfold→fold every other frame
         int fh = runtime.widget.height();
         if (runtime.widget.folded) {
             fh = Math.max(fh, runtime.unfoldedHeight);
@@ -1612,21 +1630,20 @@ public final class InworldManager implements NimbusClient {
             fw = runtime.widget.width();
             fh = foldHeight(runtime);
         }
-        //hug the anchor horizontally, prefer sitting above it; every axis is
-        //clamped so the panel can never leak off-screen
+        // hug the anchor horizontally, prefer sitting above it; every axis is
+        // clamped so the panel can never leak off-screen
         int tx = (int) Math.max(2, Math.min(W - fw - 2, anchorPx.x - fw * 0.5));
         int ty = (int) Math.max(2, Math.min(H - fh - 2, anchorPx.y - fh - 10));
         if (blockedByChrome(tx, ty, fw, fh, obstacles)) {
-            //clamping back inside the viewport landed on committed chrome —
-            //the dock degrade is strictly better than covering another panel
+            // clamping back inside the viewport landed on committed chrome —
+            // the dock degrade is strictly better than covering another panel
             dockDegrade(runtime, docked);
             return;
         }
         runtime.presented = true;
         runtime.flat = true;
         runtime.smoothMove = true;
-        if (!runtime.posInit
-                || InworldLayout.retarget(runtime.targetX, runtime.targetY, tx, ty, 2)) {
+        if (!runtime.posInit || InworldLayout.retarget(runtime.targetX, runtime.targetY, tx, ty, 2)) {
             runtime.targetX = tx;
             runtime.targetY = ty;
         }
@@ -1635,26 +1652,24 @@ public final class InworldManager implements NimbusClient {
     private void resolveFollow(PanelRuntime runtime, Presentation.Follow follow) {
         FloatPos anchorPx = runtime.anchorScreen;
         if (anchorPx == null) {
-            runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+            runtime.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
             return;
         }
         runtime.presented = true;
         runtime.widget.setFolded(false);
-        //follow panels track their anchor tightly — no position smoothing,
-        //the interpolated anchor already moves smoothly
+        // follow panels track their anchor tightly — no position smoothing,
+        // the interpolated anchor already moves smoothly
         runtime.smoothMove = false;
-        //a pinned panel freezes where it is — the anchor keeps moving but the
-        //surface under a live trace must not
+        // a pinned panel freezes where it is — the anchor keeps moving but the
+        // surface under a live trace must not
         if (runtime.pinned) return;
-        runtime.widget.setScreenPos(
-                (int) (anchorPx.x - fullW(runtime) * 0.5 + follow.offsetX()),
-                (int) (anchorPx.y - fullH(runtime) * 0.5 + follow.offsetY())
-        );
+        runtime.widget.setScreenPos((int) (anchorPx.x - fullW(runtime) * 0.5 + follow.offsetX()), (int)
+                (anchorPx.y - fullH(runtime) * 0.5 + follow.offsetY()));
     }
 
     private void resolveDock(PanelRuntime runtime, Presentation.Dock dock, List<PanelRuntime> docked) {
         if (runtime.anchorScreen == null) {
-            runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+            runtime.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
             return;
         }
         runtime.presented = true;
@@ -1680,8 +1695,8 @@ public final class InworldManager implements NimbusClient {
         List<DockLayout.Item> items = new ArrayList<>(docked.size());
         for (PanelRuntime runtime : docked) {
             FloatPos a = runtime.anchorScreen;
-            //a folded panel's bounds collapsed to the chrome strip — budget
-            //against the remembered full size so the fold decision is stable
+            // a folded panel's bounds collapsed to the chrome strip — budget
+            // against the remembered full size so the fold decision is stable
             int h = runtime.widget.height();
             int w = runtime.widget.width();
             if (runtime.widget.folded) {
@@ -1692,9 +1707,12 @@ public final class InworldManager implements NimbusClient {
                 runtime.unfoldedWidth = w;
             }
             items.add(new DockLayout.Item(
-                    runtime.dockCorner, w, h,
+                    runtime.dockCorner,
+                    w,
+                    h,
                     foldHeight(runtime),
-                    a != null ? a.x : Double.NaN, a != null ? a.y : Double.NaN,
+                    a != null ? a.x : Double.NaN,
+                    a != null ? a.y : Double.NaN,
                     runtime.lastAutoCorner));
         }
         DockLayout.Result result = DockLayout.solve(items, W, H);
@@ -1705,7 +1723,7 @@ public final class InworldManager implements NimbusClient {
             runtime.folded = item.folded;
             if (item.hidden) {
                 runtime.presented = false;
-                runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+                runtime.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
                 continue;
             }
             runtime.widget.setFolded(item.folded);
@@ -1719,12 +1737,12 @@ public final class InworldManager implements NimbusClient {
 
     /** Height of a folded panel: title/hint chrome only, content hidden. */
     private static int foldHeight(PanelRuntime r) {
-        int padTop = r.spec.title() != null ? HackerTheme.TITLE_HEIGHT + 2 : HackerTheme.PADDING;
-        int padBottom = r.spec.hints().isEmpty() ? HackerTheme.PADDING : HackerTheme.HINT_HEIGHT + 2;
+        int padTop = r.spec.title() != null ? HackerTheme.titleHeight + 2 : HackerTheme.padding;
+        int padBottom = r.spec.hints().isEmpty() ? HackerTheme.padding : HackerTheme.hintHeight + 2;
         return padTop + padBottom;
     }
 
-    /** bottom edge (px) of the TOP_LEFT/TOP_RIGHT dock stacks — tag rails start below them */
+    /** bottom edge (px) of the topLeft/topRight dock stacks — tag rails start below them */
     private final int[] dockTopExtent = new int[2];
     /** per-corner count of panels that didn't fit even folded — drawn as "+N" chips */
     private final int[] dockOverflow = new int[Presentation.DockCorner.values().length];
@@ -1754,19 +1772,18 @@ public final class InworldManager implements NimbusClient {
 
         List<PanelRuntime> tags = new ArrayList<>();
         for (PanelRuntime r : panels.values()) {
-            if (r.presented && r.flat && !r.spec.interactive() && !r.docked
-                    && r.widget.visible()) {
+            if (r.presented && r.flat && !r.spec.interactive() && !r.docked && r.widget.visible()) {
                 tags.add(r);
             }
         }
-        //stable order: group → coarse distance bucket (2-block steps, so tiny
-        //distance wiggles don't reorder) → key — keeps slots from swapping
+        // stable order: group → coarse distance bucket (2-block steps, so tiny
+        // distance wiggles don't reorder) → key — keeps slots from swapping
         tags.sort(Comparator.comparing((PanelRuntime t) -> t.spec.hint().zone())
                 .thenComparingInt(t -> (int) (t.distance / 2))
                 .thenComparing(t -> String.valueOf(t.spec.key())));
 
-        //merge pass: a group shows at most groupLimit members; extras hide
-        //and the last visible member carries a "+N" badge
+        // merge pass: a group shows at most groupLimit members; extras hide
+        // and the last visible member carries a "+N" badge
         List<PanelRuntime> visible = new ArrayList<>(tags.size());
         Map<String, Integer> groupIdx = new HashMap<>();
         Map<String, PanelRuntime> groupLast = new HashMap<>();
@@ -1781,7 +1798,7 @@ public final class InworldManager implements NimbusClient {
             } else {
                 groupHidden.merge(g, 1, Integer::sum);
                 tag.presented = false;
-                tag.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+                tag.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
             }
         }
         for (var e : groupLast.entrySet()) {
@@ -1793,28 +1810,24 @@ public final class InworldManager implements NimbusClient {
         for (PanelRuntime tag : visible) {
             int w = tag.widget.width();
             int h = tag.widget.height();
-            //the tag's home this frame: a follow tag anchors at screenX (just
-            //rewritten by resolveFollow), a floating tag at its resolved target
-            int ix = (int) Math.max(2, Math.min(W - w - 2,
-                    tag.smoothMove ? tag.targetX : tag.widget.screenX));
-            int iy = (int) Math.max(2, Math.min(H - h - 2,
-                    tag.smoothMove ? tag.targetY : tag.widget.screenY));
+            // the tag's home this frame: a follow tag anchors at screenX (just
+            // rewritten by resolveFollow), a floating tag at its resolved target
+            int ix = (int) Math.max(2, Math.min(W - w - 2, tag.smoothMove ? tag.targetX : tag.widget.screenX));
+            int iy = (int) Math.max(2, Math.min(H - h - 2, tag.smoothMove ? tag.targetY : tag.widget.screenY));
 
-            TagFlow.Result res = TagFlow.resolve(ix, iy, w, h, occupied,
-                    tag.lastSlideDir, W, H);
+            TagFlow.Result res = TagFlow.resolve(ix, iy, w, h, occupied, tag.lastSlideDir, W, H);
             tag.lastSlideDir = res.slideDir();
             int wx = res.x(), wy = res.y();
-            if (res.outcome() == TagFlow.Outcome.RAIL) {
+            if (res.outcome() == TagFlow.Outcome.rail) {
                 railQueue.add(tag);
                 continue;
             }
 
-            //commit: a displaced (or still-gliding-home) tag uses the
-            //posX/targetX smoothing so escapes and returns animate; a tag at
-            //home snaps tight to its anchor with no lag
-            boolean displaced = res.outcome() == TagFlow.Outcome.SLIDED;
-            boolean settling = tag.posInit
-                    && (Math.abs(tag.posX - ix) > 1.5f || Math.abs(tag.posY - iy) > 1.5f);
+            // commit: a displaced (or still-gliding-home) tag uses the
+            // posX/targetX smoothing so escapes and returns animate; a tag at
+            // home snaps tight to its anchor with no lag
+            boolean displaced = res.outcome() == TagFlow.Outcome.slided;
+            boolean settling = tag.posInit && (Math.abs(tag.posX - ix) > 1.5f || Math.abs(tag.posY - iy) > 1.5f);
             if (displaced || settling) {
                 tag.smoothMove = true;
                 placeTag(tag, wx, wy);
@@ -1826,8 +1839,8 @@ public final class InworldManager implements NimbusClient {
             occupied.add(new Rect2i(wx, wy, w, h));
         }
 
-        //rails: packed columns on the left/right edge, below that side's
-        //top dock stack
+        // rails: packed columns on the left/right edge, below that side's
+        // top dock stack
         TagFlow.Rails rails = new TagFlow.Rails(W, H, dockTopExtent[0], dockTopExtent[1], occupied);
         for (PanelRuntime tag : railQueue) {
             int w = tag.widget.width();
@@ -1835,12 +1848,12 @@ public final class InworldManager implements NimbusClient {
             int side = rails.side(tag.anchorScreen != null ? tag.anchorScreen.x : Double.NaN);
             int[] slot = rails.claim(side, w, h);
             if (slot == null) {
-                //rail full — hide the tag this frame
-                tag.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+                // rail full — hide the tag this frame
+                tag.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
                 tag.smoothMove = false;
                 continue;
             }
-            tag.smoothMove = true; //glide into the rail slot
+            tag.smoothMove = true; // glide into the rail slot
             placeTag(tag, slot[0], slot[1]);
         }
     }
@@ -1885,15 +1898,14 @@ public final class InworldManager implements NimbusClient {
         Matrix4f mv = worldToView;
         Vec3 cam = mc.gameRenderer.getMainCamera().getPosition();
         if (mv != null) {
-            Vector4f v = new Vector4f(
-                    (float) anchor.x, (float) anchor.y, (float) anchor.z, 1f)
-                    .mul(mv); //world→view (already carries -cam translate)
+            Vector4f v = new Vector4f((float) anchor.x, (float) anchor.y, (float) anchor.z, 1f)
+                    .mul(mv); // world→view (already carries -cam translate)
             float sx = v.x(), sy = v.z() < 0 ? -v.y() : 1f;
             double len = Math.hypot(sx, sy);
             if (len > 1e-4) return new FloatPos(sx / len, sy / len);
         }
-        //fallback: camera-relative bearing from yaw — forward=(-sin,cos),
-        //right=(-cos,-sin) on the xz plane
+        // fallback: camera-relative bearing from yaw — forward=(-sin,cos),
+        // right=(-cos,-sin) on the xz plane
         Vec3 d = anchor.subtract(cam);
         double yaw = Math.toRadians(mc.gameRenderer.getMainCamera().getYRot());
         double sx = -d.x * Math.cos(yaw) - d.z * Math.sin(yaw);
@@ -1927,15 +1939,13 @@ public final class InworldManager implements NimbusClient {
         if (collapsed == null) return;
         collapsed.sort(Comparator.comparing(r -> String.valueOf(r.spec.key())));
 
-        //walk each bearing from center to the inset border
+        // walk each bearing from center to the inset border
         List<IndMark> marks = new ArrayList<>(collapsed.size());
         for (PanelRuntime r : collapsed) {
             FloatPos d = r.indicatorDir;
-            double tx = Math.abs(d.x) < 1e-4 ? Double.MAX_VALUE
-                    : (cx - margin) / Math.abs(d.x);
-            double ty = Math.abs(d.y) < 1e-4 ? Double.MAX_VALUE
-                    : (cy - margin) / Math.abs(d.y);
-            boolean side = tx < ty; //hits a vertical edge before a horizontal one
+            double tx = Math.abs(d.x) < 1e-4 ? Double.MAX_VALUE : (cx - margin) / Math.abs(d.x);
+            double ty = Math.abs(d.y) < 1e-4 ? Double.MAX_VALUE : (cy - margin) / Math.abs(d.y);
+            boolean side = tx < ty; // hits a vertical edge before a horizontal one
             double t = Math.min(tx, ty);
             IndMark m = new IndMark();
             m.runtime = r;
@@ -1947,7 +1957,7 @@ public final class InworldManager implements NimbusClient {
             marks.add(m);
         }
 
-        //spread marks sharing an edge with a fixed gap, then recenter the run
+        // spread marks sharing an edge with a fixed gap, then recenter the run
         for (int e = 0; e < 4; e++) {
             List<IndMark> g = new ArrayList<>();
             for (IndMark m : marks) if (m.edge == e) g.add(m);
@@ -1961,7 +1971,8 @@ public final class InworldManager implements NimbusClient {
             for (int i = 0; i < g.size(); i++) {
                 IndMark m = g.get(i);
                 m.tan = tan[i];
-                if (e < 2) m.py = m.tan; else m.px = m.tan;
+                if (e < 2) m.py = m.tan;
+                else m.px = m.tan;
             }
         }
 
@@ -1969,21 +1980,28 @@ public final class InworldManager implements NimbusClient {
             PanelRuntime r = m.runtime;
             FloatPos d = m.dir;
             float px = (float) m.px, py = (float) m.py;
-            int color = r.focused() ? HackerTheme.BORDER_FOCUSED : HackerTheme.ACCENT_DIM;
+            int color = r.focused() ? HackerTheme.borderFocused : HackerTheme.accentDim;
             drawLine(graphics, px, py - 5, px + 5, py, color);
             drawLine(graphics, px + 5, py, px, py + 5, color);
             drawLine(graphics, px, py + 5, px - 5, py, color);
             drawLine(graphics, px - 5, py, px, py - 5, color);
-            //bearing tick pointing further outward
-            drawLine(graphics, (float) (px + d.x * 6), (float) (py + d.y * 6),
-                    (float) (px + d.x * 10), (float) (py + d.y * 10), HackerTheme.ACCENT);
-            //distance sits on the inward side so it stays readable on any edge
+            // bearing tick pointing further outward
+            drawLine(
+                    graphics,
+                    (float) (px + d.x * 6),
+                    (float) (py + d.y * 6),
+                    (float) (px + d.x * 10),
+                    (float) (py + d.y * 10),
+                    HackerTheme.accent);
+            // distance sits on the inward side so it stays readable on any edge
             String dist = (int) r.distance + "m";
             double ix = px - d.x * 17, iy = py - d.y * 16;
-            graphics.drawString(font, dist,
+            graphics.drawString(
+                    font,
+                    dist,
                     (int) (ix - font.width(dist) * 0.5),
                     (int) (iy - font.lineHeight * 0.5),
-                    HackerTheme.TEXT_DIM);
+                    HackerTheme.textDim);
         }
     }
 
@@ -2003,16 +2021,14 @@ public final class InworldManager implements NimbusClient {
             String s = "+" + n;
             int tw = font.width(s) + 5;
             int x = DockLayout.isLeft(corners[c]) ? marginX : W - marginX - tw;
-            int y = DockLayout.isTop(corners[c])
-                    ? marginY + dockCursorEnd[c]
-                    : H - marginY - 9 - dockCursorEnd[c];
-            graphics.fill(x, y, x + tw, y + 9, HackerTheme.BG_FOCUSED);
-            //1px accent frame
-            graphics.fill(x, y, x + tw, y + 1, HackerTheme.ACCENT_DIM);
-            graphics.fill(x, y + 8, x + tw, y + 9, HackerTheme.ACCENT_DIM);
-            graphics.fill(x, y, x + 1, y + 9, HackerTheme.ACCENT_DIM);
-            graphics.fill(x + tw - 1, y, x + tw, y + 9, HackerTheme.ACCENT_DIM);
-            graphics.drawString(font, s, x + 3, y + 1, HackerTheme.ACCENT);
+            int y = DockLayout.isTop(corners[c]) ? marginY + dockCursorEnd[c] : H - marginY - 9 - dockCursorEnd[c];
+            graphics.fill(x, y, x + tw, y + 9, HackerTheme.bgFocused);
+            // 1px accent frame
+            graphics.fill(x, y, x + tw, y + 1, HackerTheme.accentDim);
+            graphics.fill(x, y + 8, x + tw, y + 9, HackerTheme.accentDim);
+            graphics.fill(x, y, x + 1, y + 9, HackerTheme.accentDim);
+            graphics.fill(x + tw - 1, y, x + tw, y + 9, HackerTheme.accentDim);
+            graphics.drawString(font, s, x + 3, y + 1, HackerTheme.accent);
         }
     }
 
@@ -2020,9 +2036,9 @@ public final class InworldManager implements NimbusClient {
     private static final class IndMark {
         PanelRuntime runtime;
         FloatPos dir;
-        int edge;      //0=left 1=right 2=top 3=bottom
-        double tan;    //slot coordinate along the edge
-        double px, py; //resolved screen position
+        int edge; // 0=left 1=right 2=top 3=bottom
+        double tan; // slot coordinate along the edge
+        double px, py; // resolved screen position
     }
 
     /**
@@ -2033,8 +2049,7 @@ public final class InworldManager implements NimbusClient {
         if (projection == null || r.faceOrigin == null || r.faceU == null || r.faceV == null) {
             return null;
         }
-        return quadScreenRect(projection, r.faceOrigin, r.faceU, r.faceV,
-                r.widget.width(), r.widget.height());
+        return quadScreenRect(projection, r.faceOrigin, r.faceU, r.faceV, r.widget.width(), r.widget.height());
     }
 
     /**
@@ -2046,7 +2061,7 @@ public final class InworldManager implements NimbusClient {
         float dt = mc.getTimer().getRealtimeDeltaTicks() / 20f;
         float k = 1f - (float) Math.exp(-dt * 14);
         for (PanelRuntime runtime : panels.values()) {
-            if (runtime.pinned) continue; //a live trace froze this panel
+            if (runtime.pinned) continue; // a live trace froze this panel
             if (runtime.presented && runtime.flat && runtime.smoothMove) {
                 if (!runtime.posInit) {
                     runtime.posX = runtime.targetX;
@@ -2072,17 +2087,16 @@ public final class InworldManager implements NimbusClient {
      * face panels. When every spot lands on occupied screen area the panel
      * hides rather than overlapping the chrome.
      */
-    private void resolveExpand(PanelRuntime runtime, Presentation.Expand expand,
-                               List<Rect2i> reserved) {
+    private void resolveExpand(PanelRuntime runtime, Presentation.Expand expand, List<Rect2i> reserved) {
         Vec3 anchor = runtime.anchorWorld;
         Projection proj = projection;
         if (anchor == null || proj == null || mc.level == null || mc.player == null) {
-            runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+            runtime.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
             return;
         }
 
-        //holograms never fold — a dock-strip fold from an earlier frame must
-        //not shrink the world quad or linger on the projected surface
+        // holograms never fold — a dock-strip fold from an earlier frame must
+        // not shrink the world quad or linger on the projected surface
         int pwPx = fullW(runtime);
         int phPx = fullH(runtime);
         runtime.widget.setFolded(false);
@@ -2096,8 +2110,8 @@ public final class InworldManager implements NimbusClient {
         ClientLevel level = mc.level;
         Vec3 eye = mc.player.getEyePosition(framePartialTick);
 
-        //a live trace froze this hologram: keep last frame's spot and basis
-        //untouched so the frozen ray-plane mapping in TraceMap stays exact
+        // a live trace froze this hologram: keep last frame's spot and basis
+        // untouched so the frozen ray-plane mapping in TraceMap stays exact
         if (runtime.pinned && runtime.expandPos != null && runtime.faceU != null) {
             runtime.presented = true;
             runtime.flat = false;
@@ -2107,7 +2121,7 @@ public final class InworldManager implements NimbusClient {
             return;
         }
 
-        //other world-space panels already occupy these spots
+        // other world-space panels already occupy these spots
         List<Vec3> occupiedWorld = new ArrayList<>();
         for (PanelRuntime other : panels.values()) {
             if (other != runtime && other.presented && other.expandPos != null) {
@@ -2119,9 +2133,9 @@ public final class InworldManager implements NimbusClient {
         Vec3 best = null;
         double bestFrac = 1;
 
-        //fast path: a spot that is still clear stays — the ring scan's scores
-        //are noisy (screen coverage flips as the view moves) and near-tied
-        //spots flipping every frame is what makes the hologram wander
+        // fast path: a spot that is still clear stays — the ring scan's scores
+        // are noisy (screen coverage flips as the view moves) and near-tied
+        // spots flipping every frame is what makes the hologram wander
         if (runtime.expandPos != null && !runtime.expandHidden) {
             boolean contested = false;
             for (Vec3 o : occupiedWorld) {
@@ -2131,10 +2145,10 @@ public final class InworldManager implements NimbusClient {
                 }
             }
             if (!contested) {
-                double curFrac = expandScreenOverlap(proj, eye, runtime.expandPos, vDown, s,
-                        pwPx, phPx, reserved);
+                double curFrac = expandScreenOverlap(proj, eye, runtime.expandPos, vDown, s, pwPx, phPx, reserved);
                 double cur = expandSpotScore(level, runtime.expandPos, pw, ph, anchor)
-                        + curFrac * 600 + (curFrac >= 0.999 ? 300 : 0);
+                        + curFrac * 600
+                        + (curFrac >= 0.999 ? 300 : 0);
                 if (ExpandPlacer.keepSpot(false, curFrac, cur)) {
                     best = runtime.expandPos;
                     bestFrac = curFrac;
@@ -2154,14 +2168,13 @@ public final class InworldManager implements NimbusClient {
                         double score = expandSpotScore(level, spot, pw, ph, anchor);
                         for (Vec3 o : occupiedWorld) {
                             if (spot.distanceToSqr(o) < (pw * 0.5 + 0.6) * (pw * 0.5 + 0.6)) {
-                                score += 64; //another hologram already there
+                                score += 64; // another hologram already there
                             }
                         }
-                        //screen-space cost: covering docked/flat panels is the worst outcome
-                        double frac = expandScreenOverlap(proj, eye, spot, vDown, s,
-                                pwPx, phPx, reserved);
+                        // screen-space cost: covering docked/flat panels is the worst outcome
+                        double frac = expandScreenOverlap(proj, eye, spot, vDown, s, pwPx, phPx, reserved);
                         score += frac * 600;
-                        if (frac >= 0.999) score += 300; //unprojectable / fully covered
+                        if (frac >= 0.999) score += 300; // unprojectable / fully covered
                         if (score < bestScore) {
                             bestScore = score;
                             best = spot;
@@ -2171,14 +2184,14 @@ public final class InworldManager implements NimbusClient {
                 }
             }
 
-            //hysteresis: the current spot only loses when the alternative is
-            //clearly better — an absolute margin, not a relative one, so the
-            //600-weighted coverage term can't flip the choice on a coin toss
+            // hysteresis: the current spot only loses when the alternative is
+            // clearly better — an absolute margin, not a relative one, so the
+            // 600-weighted coverage term can't flip the choice on a coin toss
             if (runtime.expandPos != null) {
-                double curFrac = expandScreenOverlap(proj, eye, runtime.expandPos, vDown, s,
-                        pwPx, phPx, reserved);
+                double curFrac = expandScreenOverlap(proj, eye, runtime.expandPos, vDown, s, pwPx, phPx, reserved);
                 double cur = expandSpotScore(level, runtime.expandPos, pw, ph, anchor)
-                        + curFrac * 600 + (curFrac >= 0.999 ? 300 : 0);
+                        + curFrac * 600
+                        + (curFrac >= 0.999 ? 300 : 0);
                 if (ExpandPlacer.preferCurrent(cur, bestScore)) {
                     best = runtime.expandPos;
                     bestFrac = curFrac;
@@ -2186,29 +2199,30 @@ public final class InworldManager implements NimbusClient {
             }
         }
 
-        //can't show it cleanly → don't show it; hysteresis keeps the
-        //show/hide edge from flickering
+        // can't show it cleanly → don't show it; hysteresis keeps the
+        // show/hide edge from flickering
         if (best == null || ExpandPlacer.shouldHide(bestFrac, runtime.expandHidden)) {
             runtime.expandHidden = true;
-            runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+            runtime.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
             return;
         }
         runtime.expandHidden = false;
         runtime.presented = true;
         runtime.flat = false;
 
-        //glide toward the chosen spot instead of teleporting — a relocating
-        //hologram reads as motion, a teleporting one reads as a bug
+        // glide toward the chosen spot instead of teleporting — a relocating
+        // hologram reads as motion, a teleporting one reads as a bug
         if (runtime.expandPos == null) {
             runtime.expandPos = best;
         } else {
-            runtime.expandPos = runtime.expandPos.add(best.subtract(runtime.expandPos).scale(0.25));
+            runtime.expandPos =
+                    runtime.expandPos.add(best.subtract(runtime.expandPos).scale(0.25));
             if (runtime.expandPos.distanceToSqr(best) < 0.0025) runtime.expandPos = best;
         }
         best = runtime.expandPos;
 
-        //yaw-billboard toward the player's eye: u×v faces away from the viewer
-        //(GUI winding, same convention as face panels)
+        // yaw-billboard toward the player's eye: u×v faces away from the viewer
+        // (GUI winding, same convention as face panels)
         Vec3 d = eye.subtract(best);
         double len = Math.hypot(d.x, d.z);
         Vec3 dH = len < 1e-4 ? new Vec3(0, 0, 1) : new Vec3(d.x / len, 0, d.z / len);
@@ -2216,9 +2230,7 @@ public final class InworldManager implements NimbusClient {
         runtime.faceU = u.scale(s);
         runtime.faceV = vDown;
         runtime.faceNormal = dH;
-        runtime.faceOrigin = best
-                .subtract(runtime.faceU.scale(pwPx * 0.5))
-                .subtract(runtime.faceV.scale(phPx * 0.5));
+        runtime.faceOrigin = best.subtract(runtime.faceU.scale(pwPx * 0.5)).subtract(runtime.faceV.scale(phPx * 0.5));
 
         int stripX = mc.getWindow().getGuiScaledWidth() + 16 + stripCursor;
         stripCursor += pwPx + 16;
@@ -2229,9 +2241,8 @@ public final class InworldManager implements NimbusClient {
      * Fraction (0..1) of a hologram's projected screen rect covered by
      * reserved foreground rects. 1 when the quad can't project at all.
      */
-    private static double expandScreenOverlap(Projection proj, Vec3 eye, Vec3 spot,
-                                              Vec3 vDown, double s, int wPx, int hPx,
-                                              List<Rect2i> reserved) {
+    private static double expandScreenOverlap(
+            Projection proj, Vec3 eye, Vec3 spot, Vec3 vDown, double s, int wPx, int hPx, List<Rect2i> reserved) {
         Vec3 d = eye.subtract(spot);
         double len = Math.hypot(d.x, d.z);
         Vec3 dH = len < 1e-4 ? new Vec3(0, 0, 1) : new Vec3(d.x / len, 0, d.z / len);
@@ -2241,20 +2252,23 @@ public final class InworldManager implements NimbusClient {
         if (rect == null) return 1;
         double over = 0;
         for (Rect2i r : reserved) {
-            int ix = Math.max(0, Math.min(rect.getX() + rect.getWidth(), r.getX() + r.getWidth())
-                    - Math.max(rect.getX(), r.getX()));
-            int iy = Math.max(0, Math.min(rect.getY() + rect.getHeight(), r.getY() + r.getHeight())
-                    - Math.max(rect.getY(), r.getY()));
+            int ix = Math.max(
+                    0,
+                    Math.min(rect.getX() + rect.getWidth(), r.getX() + r.getWidth()) - Math.max(rect.getX(), r.getX()));
+            int iy = Math.max(
+                    0,
+                    Math.min(rect.getY() + rect.getHeight(), r.getY() + r.getHeight())
+                            - Math.max(rect.getY(), r.getY()));
             over += (double) ix * iy;
         }
         return Math.min(1, over / ((double) rect.getWidth() * rect.getHeight()));
     }
 
     /** Projects a world quad (origin + u·w + v·h) to its screen bounding rect. */
-    private static @Nullable Rect2i quadScreenRect(Projection proj, Vec3 o, Vec3 u, Vec3 v,
-                                                   double w, double h) {
-        Vec3[] corners = {o, o.add(u.scale(w)), o.add(v.scale(h)),
-                o.add(u.scale(w)).add(v.scale(h))};
+    private static @Nullable Rect2i quadScreenRect(Projection proj, Vec3 o, Vec3 u, Vec3 v, double w, double h) {
+        Vec3[] corners = {
+            o, o.add(u.scale(w)), o.add(v.scale(h)), o.add(u.scale(w)).add(v.scale(h))
+        };
         int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
         boolean any = false;
@@ -2273,12 +2287,15 @@ public final class InworldManager implements NimbusClient {
     /** Prefers spots near the anchor with the panel's bounding volume in air. */
     private static double expandSpotScore(ClientLevel level, Vec3 spot, double pw, double ph, Vec3 anchor) {
         double score = spot.subtract(anchor).lengthSqr();
-        var box = new net.minecraft.world.phys.AABB(
-                spot.x - pw * 0.5, spot.y - ph * 0.5, spot.z - pw * 0.5,
-                spot.x + pw * 0.5, spot.y + ph * 0.5, spot.z + pw * 0.5);
+        var box = new AABB(
+                spot.x - pw * 0.5,
+                spot.y - ph * 0.5,
+                spot.z - pw * 0.5,
+                spot.x + pw * 0.5,
+                spot.y + ph * 0.5,
+                spot.z + pw * 0.5);
         for (BlockPos b : BlockPos.betweenClosed(
-                BlockPos.containing(box.minX, box.minY, box.minZ),
-                BlockPos.containing(box.maxX, box.maxY, box.maxZ))) {
+                BlockPos.containing(box.minX, box.minY, box.minZ), BlockPos.containing(box.maxX, box.maxY, box.maxZ))) {
             if (!level.getBlockState(b).isAir()) score += 16;
         }
         return score;
@@ -2292,14 +2309,14 @@ public final class InworldManager implements NimbusClient {
     private void resolveFace(PanelRuntime runtime, Presentation.Face face) {
         var blockPos = runtime.spec.anchor().blockPos();
         if (blockPos == null) {
-            //face placement requires a block-bound anchor
-            runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+            // face placement requires a block-bound anchor
+            runtime.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
             return;
         }
         runtime.flat = false;
         runtime.presented = true;
-        //face panels never fold — a dock-strip fold from an earlier frame
-        //(inspect projection, corner budget) must not linger into world space
+        // face panels never fold — a dock-strip fold from an earlier frame
+        // (inspect projection, corner budget) must not linger into world space
         runtime.widget.setFolded(false);
 
         double s = 1.0 / face.pixelsPerBlock();
@@ -2310,9 +2327,9 @@ public final class InworldManager implements NimbusClient {
         Vec3 uAxis = faceUAxis(dir);
         Vec3 vAxis = faceVAxis(dir);
 
-        //center of the panel on the face — the geometric offset only needs to
-        //cover the panel's own internal z-layering now that the render pass
-        //applies a polygon-offset decal bias against the block surface
+        // center of the panel on the face — the geometric offset only needs to
+        // cover the panel's own internal z-layering now that the render pass
+        // applies a polygon-offset decal bias against the block surface
         Vec3 facePoint = Vec3.atCenterOf(blockPos)
                 .add(n.scale(0.5))
                 .add(uAxis.scale(face.u() - 0.5))
@@ -2326,8 +2343,8 @@ public final class InworldManager implements NimbusClient {
                 .subtract(runtime.faceU.scale(fullW(runtime) * 0.5))
                 .subtract(runtime.faceV.scale(fullH(runtime) * 0.5));
 
-        //park inside the off-screen input strip: reachable by synthesized
-        //pointer coords (slotX + u, slotY + v) but never rendered on screen
+        // park inside the off-screen input strip: reachable by synthesized
+        // pointer coords (slotX + u, slotY + v) but never rendered on screen
         int stripX = mc.getWindow().getGuiScaledWidth() + 16 + stripCursor;
         stripCursor += fullW(runtime) + 16;
         runtime.widget.setScreenPos(stripX, 8);
@@ -2359,9 +2376,9 @@ public final class InworldManager implements NimbusClient {
         };
     }
 
-    //endregion
+    // endregion
 
-    //region pointing & focus
+    // region pointing & focus
 
     /**
      * Whether the world-mode pointer is allowed into panel surfaces this
@@ -2371,9 +2388,7 @@ public final class InworldManager implements NimbusClient {
      * path). A gesture already in flight keeps its pointer until release.
      */
     private boolean panelPointerLive() {
-        return NimbusKeyMappings.interact.isDown()
-                || heldSceneButton >= 0
-                || dragSession != null;
+        return NimbusKeyMappings.interact.isDown() || heldSceneButton >= 0 || dragSession != null;
     }
 
     /**
@@ -2393,17 +2408,22 @@ public final class InworldManager implements NimbusClient {
         Vec3 dir = proj.crosshairDirection();
         boolean pointerLive = panelPointerLive();
 
-        //1. crosshair ray against world-space panels (face + expand) — gated
-        //behind the interact key so looking at a panel does not hover it
+        // 1. crosshair ray against world-space panels (face + expand) — gated
+        // behind the interact key so looking at a panel does not hover it
         if (pointerLive) {
             double bestT = Double.MAX_VALUE;
             for (PanelRuntime runtime : panels.values()) {
                 if (!worldSpace(runtime.spec.presentation())) continue;
-                if (!runtime.presented || runtime.flat || !runtime.widget.visible()
-                        || runtime.faceU == null) continue;
-                FloatPos uv = Projection.rayPlane(origin, dir, runtime.faceOrigin,
-                        runtime.faceU, runtime.faceV, runtime.faceNormal,
-                        runtime.widget.width(), runtime.widget.height());
+                if (!runtime.presented || runtime.flat || !runtime.widget.visible() || runtime.faceU == null) continue;
+                FloatPos uv = Projection.rayPlane(
+                        origin,
+                        dir,
+                        runtime.faceOrigin,
+                        runtime.faceU,
+                        runtime.faceV,
+                        runtime.faceNormal,
+                        runtime.widget.width(),
+                        runtime.widget.height());
                 if (uv == null) continue;
                 double dist = distanceAlongRay(origin, dir, runtime);
                 if (dist < bestT) {
@@ -2414,7 +2434,7 @@ public final class InworldManager implements NimbusClient {
             }
             if (pointed != null) pointedInPanel = true;
 
-            //2. crosshair over a flat panel
+            // 2. crosshair over a flat panel
             if (pointed == null) {
                 double cx = mc.getWindow().getGuiScaledWidth() * 0.5;
                 double cy = mc.getWindow().getGuiScaledHeight() * 0.5;
@@ -2424,10 +2444,11 @@ public final class InworldManager implements NimbusClient {
             }
         }
 
-        //3. crosshair on an anchor block (focus only — clicks fall through to
-        //the game). Dormant panels count: aiming at a dormant anchor is what
-        //lights up its engage affordance.
-        if (pointed == null && mc.hitResult instanceof BlockHitResult blockHit
+        // 3. crosshair on an anchor block (focus only — clicks fall through to
+        // the game). Dormant panels count: aiming at a dormant anchor is what
+        // lights up its engage affordance.
+        if (pointed == null
+                && mc.hitResult instanceof BlockHitResult blockHit
                 && blockHit.getType() == HitResult.Type.BLOCK) {
             for (PanelRuntime runtime : panels.values()) {
                 if (runtime.anchorWorld != null
@@ -2444,23 +2465,23 @@ public final class InworldManager implements NimbusClient {
             pointedInPanel = false;
         }
 
-        //4. no exact hit — WD2-style soft focus: the interactive panel whose
-        //anchor is nearest the look vector inside a ~30° cone gets selected,
-        //so a hotkey press doesn't demand pixel-perfect crosshair aim. Only
-        //panels that declared a primary action participate.
+        // 4. no exact hit — WD2-style soft focus: the interactive panel whose
+        // anchor is nearest the look vector inside a ~30° cone gets selected,
+        // so a hotkey press doesn't demand pixel-perfect crosshair aim. Only
+        // panels that declared a primary action participate.
         if (pointed == null && !inspecting) {
             softPointed = pickSoftFocus(origin, dir);
         }
 
-        //world mode focus follows pointing — except while a manual cycle is
-        //fresh: then the cycled panel keeps focus until the player strictly
-        //points at something or the window expires
+        // world mode focus follows pointing — except while a manual cycle is
+        // fresh: then the cycled panel keeps focus until the player strictly
+        // points at something or the window expires
         if (!inspecting) {
-            boolean manual = focused != null && focused.presented
-                    && focused.spec.interactive() && tick - manualFocusTick < 100;
+            boolean manual =
+                    focused != null && focused.presented && focused.spec.interactive() && tick - manualFocusTick < 100;
             PanelRuntime newFocus;
             if (tracing != null) {
-                newFocus = tracing; //a live trace pins focus to its panel
+                newFocus = tracing; // a live trace pins focus to its panel
             } else if (pointed != null) {
                 newFocus = pointed;
                 manualFocusTick = -1000;
@@ -2489,27 +2510,33 @@ public final class InworldManager implements NimbusClient {
         for (PanelRuntime r : panels.values()) {
             boolean dormant = isDormant(r);
             if (!dormant && (!r.presented || !r.widget.visible() || !r.spec.interactive())) continue;
-            //every interactive panel is engageable — dormant → open,
-            //presented → expand/close, action/traceable own the verb first
+            // every interactive panel is engageable — dormant → open,
+            // presented → expand/close, action/traceable own the verb first
             if (r.anchorWorld == null) continue;
-            if (r.distance > Math.min(r.spec.maxDistance(), InworldLayout.SOFT_FOCUS_RANGE)) continue;
+            if (r.distance > Math.min(r.spec.maxDistance(), InworldLayout.softFocusRange)) continue;
             double score;
             FocusPolicy policy = r.spec.focusPolicy();
             if (policy != null) {
-                //custom policy: higher-is-better, UNFOCUSABLE excludes —
-                //mapped onto the internal lower-is-better ordering
+                // custom policy: higher-is-better, UNFOCUSABLE excludes —
+                // mapped onto the internal lower-is-better ordering
                 Vec3 toAnchor = r.anchorWorld.subtract(eye);
-                double angleCos = toAnchor.lengthSqr() < 1e-9 ? 1.0
-                        : look.dot(toAnchor.normalize());
+                double angleCos = toAnchor.lengthSqr() < 1e-9 ? 1.0 : look.dot(toAnchor.normalize());
                 double policyScore = policy.score(new FocusContext(
-                        r, eye, look, r.anchorWorld, angleCos, r.distance,
-                        pointed == r, r == focused, framePartialTick));
+                        r,
+                        eye,
+                        look,
+                        r.anchorWorld,
+                        angleCos,
+                        r.distance,
+                        pointed == r,
+                        r == focused,
+                        framePartialTick));
                 if (policyScore == FocusPolicy.UNFOCUSABLE) continue;
                 score = -policyScore;
             } else {
                 score = InworldLayout.softFocusScore(eye, look, r.anchorWorld);
                 if (score < 0) continue;
-                score += r.distance * 0.01; //angle decides, distance breaks near-ties
+                score += r.distance * 0.01; // angle decides, distance breaks near-ties
             }
             if (r == focused) incumbentScore = score;
             if (score < bestScore) {
@@ -2517,9 +2544,8 @@ public final class InworldManager implements NimbusClient {
                 best = r;
             }
         }
-        //hysteresis: the incumbent must be beaten by ~35% score to lose focus
-        if (incumbentScore >= 0 && best != null && best != focused
-                && incumbentScore < bestScore * 1.5 + 0.004) {
+        // hysteresis: the incumbent must be beaten by ~35% score to lose focus
+        if (incumbentScore >= 0 && best != null && best != focused && incumbentScore < bestScore * 1.5 + 0.004) {
             return focused;
         }
         return best;
@@ -2538,20 +2564,17 @@ public final class InworldManager implements NimbusClient {
      * Per-frame lifecycle of an engaged panel: it holds while the player is
      * still engaged with it — pointing at it, soft-focused on its anchor,
      * hosting a trace/drag, or the inspect projection is up — and releases
-     * after {@link #ENGAGE_GRACE_TICKS} ticks with none of those.
+     * after {@link #engageGraceTicks} ticks with none of those.
      */
     private void tickEngagement(PanelRuntime runtime) {
-        boolean held = inspecting
-                || tracing == runtime
-                || dragPanel == runtime
-                || pointed == runtime
-                || focused == runtime;
+        boolean held =
+                inspecting || tracing == runtime || dragPanel == runtime || pointed == runtime || focused == runtime;
         if (held) {
             runtime.engageIdleSince = -1;
             return;
         }
         if (runtime.engageIdleSince < 0) runtime.engageIdleSince = tick;
-        if (tick - runtime.engageIdleSince > ENGAGE_GRACE_TICKS) {
+        if (tick - runtime.engageIdleSince > engageGraceTicks) {
             runtime.engaged = false;
         }
     }
@@ -2615,8 +2638,8 @@ public final class InworldManager implements NimbusClient {
             fireAction(target);
             return;
         }
-        //no other verb owns the key — engage toggles the panel's expanded
-        //form (e.g. an always-on Face tag expanding to the world hologram)
+        // no other verb owns the key — engage toggles the panel's expanded
+        // form (e.g. an always-on Face tag expanding to the world hologram)
         engage(target);
     }
 
@@ -2628,7 +2651,7 @@ public final class InworldManager implements NimbusClient {
 
     /**
      * Tap-vs-hold resolution for the interact key on an engaged panel: a
-     * release within {@link #INTERACT_TAP_TICKS} ticks that didn't touch a
+     * release within {@link #interactTapTicks} ticks that didn't touch a
      * widget toggles the panel shut; a hold outlives the window and the press
      * stays pointer intent (or the mouse was used — also not a tap).
      */
@@ -2636,11 +2659,11 @@ public final class InworldManager implements NimbusClient {
         PanelRuntime armed = interactArm;
         if (armed == null) return;
         if (interactHeld()) {
-            if (tick - interactArmTick > INTERACT_TAP_TICKS) interactArm = null;
+            if (tick - interactArmTick > interactTapTicks) interactArm = null;
             return;
         }
         interactArm = null;
-        if (tick - interactArmTick <= INTERACT_TAP_TICKS && !interactArmUsed && armed.engaged) {
+        if (tick - interactArmTick <= interactTapTicks && !interactArmUsed && armed.engaged) {
             disengage(armed);
         }
     }
@@ -2651,7 +2674,7 @@ public final class InworldManager implements NimbusClient {
         action.accept(new InworldPanelContext(mc.level, mc.player, target));
     }
 
-    //region trace mode — Witness-style hold-and-drag on the panel surface
+    // region trace mode — Witness-style hold-and-drag on the panel surface
 
     /**
      * Starts a trace session on the panel: locks the camera behind a capture
@@ -2662,15 +2685,15 @@ public final class InworldManager implements NimbusClient {
     private void beginTrace(PanelRuntime runtime) {
         InworldTraceable traceable = runtime.traceable();
         if (traceable == null || mc.level == null || mc.player == null) return;
-        if (tracing != null) return; //already in a session — a re-entrant begin would wipe the stroke
-        if (mc.screen != null && !inspecting) return; //a foreign screen owns input
+        if (tracing != null) return; // already in a session — a re-entrant begin would wipe the stroke
+        if (mc.screen != null && !inspecting) return; // a foreign screen owns input
 
         FloatPos start = initialTracePoint(runtime);
         InworldPanelContext ctx = new InworldPanelContext(mc.level, mc.player, runtime);
 
-        //freeze the mapping inputs first: the camera frame and the panel's
-        //basis (or flat rect). The cursor snap below needs the frozen basis,
-        //and from here until commit a still mouse maps to a still cursor.
+        // freeze the mapping inputs first: the camera frame and the panel's
+        // basis (or flat rect). The cursor snap below needs the frozen basis,
+        // and from here until commit a still mouse maps to a still cursor.
         traceProj = projection;
         if (runtime.flat) {
             tracePanelX = runtime.widget.screenX;
@@ -2683,8 +2706,8 @@ public final class InworldManager implements NimbusClient {
             traceN = runtime.faceNormal;
         }
 
-        //Witness start-node semantics: the widget may declare a canonical
-        //start point — the cursor (and the session) begins there
+        // Witness start-node semantics: the widget may declare a canonical
+        // start point — the cursor (and the session) begins there
         FloatPos snap = traceable.traceCursorStart();
         if (snap != null) start = snap;
 
@@ -2704,17 +2727,17 @@ public final class InworldManager implements NimbusClient {
         manualFocusTick = tick;
 
         if (inspecting) {
-            traceInspectHosted = true; //the inspect screen already captures input
+            traceInspectHosted = true; // the inspect screen already captures input
         } else {
             traceInspectHosted = false;
-            KeyMapping.releaseAll(); //held walk keys would keep running under the screen
+            KeyMapping.releaseAll(); // held walk keys would keep running under the screen
             traceScreen = new InworldTraceScreen(this);
             mc.setScreen(traceScreen);
         }
 
-        //physical cursor follows the logical snap — otherwise the next real
-        //mouse event would map back to where the press landed and the stroke
-        //would visibly jump off the start node
+        // physical cursor follows the logical snap — otherwise the next real
+        // mouse event would map back to where the press landed and the stroke
+        // would visibly jump off the start node
         if (snap != null) warpCursorTo(runtime, snap);
     }
 
@@ -2756,8 +2779,7 @@ public final class InworldManager implements NimbusClient {
      */
     private FloatPos contentOffset(PanelRuntime runtime) {
         FloatPos scene = runtime.widget.content().localToScene(0, 0);
-        return new FloatPos((float) (scene.x - runtime.widget.screenX),
-                (float) (scene.y - runtime.widget.screenY));
+        return new FloatPos((float) (scene.x - runtime.widget.screenX), (float) (scene.y - runtime.widget.screenY));
     }
 
     /**
@@ -2771,14 +2793,13 @@ public final class InworldManager implements NimbusClient {
         }
         Projection proj = traceProj;
         if (proj == null || traceU == null) return null;
-        return TraceMap.worldUv(proj.cameraPos(), proj.rayDirection(sx, sy),
-                traceO, traceU, traceV, traceN);
+        return TraceMap.worldUv(proj.cameraPos(), proj.rayDirection(sx, sy), traceO, traceU, traceV, traceN);
     }
 
     void traceMouseMoved(double sx, double sy) {
         PanelRuntime runtime = tracing;
         if (runtime == null) return;
-        if (!runtime.presented) { //panel hid mid-trace (parked/offscreen) — drop the stroke
+        if (!runtime.presented) { // panel hid mid-trace (parked/offscreen) — drop the stroke
             endTrace(false);
             return;
         }
@@ -2788,11 +2809,10 @@ public final class InworldManager implements NimbusClient {
             return;
         }
         FloatPos px = tracePanelPoint(runtime, sx, sy);
-        if (px == null) return; //ray left the plane — keep the last cursor
+        if (px == null) return; // ray left the plane — keep the last cursor
         FloatPos off = contentOffset(runtime);
         Widget content = runtime.widget.content();
-        FloatPos cl = TraceMap.clampContent(px, off.x, off.y,
-                content.width(), content.height());
+        FloatPos cl = TraceMap.clampContent(px, off.x, off.y, content.width(), content.height());
         float cx = (float) cl.x, cy = (float) cl.y;
         traceMoved += Math.abs(cx - traceX) + Math.abs(cy - traceY);
         traceX = cx;
@@ -2819,8 +2839,8 @@ public final class InworldManager implements NimbusClient {
             boolean tap = commit && traceMoved < 4f && tick - traceStartTick < 6;
             if (tap) {
                 traceable.traceCancel();
-                //a V-opened panel toggles shut on a tap; an always-on panel
-                //has nothing to close, so the tap still fires its action
+                // a V-opened panel toggles shut on a tap; an always-on panel
+                // has nothing to close, so the tap still fires its action
                 if (runtime.spec.requiresEngage()) {
                     disengage(runtime);
                 } else {
@@ -2852,7 +2872,7 @@ public final class InworldManager implements NimbusClient {
 
     void onTraceScreenRemoved() {
         traceScreen = null;
-        //ESC or a foreign screen took over mid-trace — drop the stroke
+        // ESC or a foreign screen took over mid-trace — drop the stroke
         if (tracing != null && !traceInspectHosted) endTrace(false);
     }
 
@@ -2861,7 +2881,7 @@ public final class InworldManager implements NimbusClient {
         renderScreenSpace(graphics, mouseX, mouseY, partialTick);
     }
 
-    //endregion
+    // endregion
 
     private double distanceAlongRay(Vec3 origin, Vec3 dir, PanelRuntime runtime) {
         Vec3 to = runtime.faceOrigin.subtract(origin);
@@ -2874,10 +2894,10 @@ public final class InworldManager implements NimbusClient {
     private double[] virtualPointer() {
         updatePointing();
         if (pointed != null && pointedUv != null) {
-            return new double[]{pointed.inputSceneX() + pointedUv.x, pointed.inputSceneY() + pointedUv.y};
+            return new double[] {pointed.inputSceneX() + pointedUv.x, pointed.inputSceneY() + pointedUv.y};
         }
-        //parked off-screen — nothing under the bare crosshair counts as hovered
-        return new double[]{-10_000, -10_000};
+        // parked off-screen — nothing under the bare crosshair counts as hovered
+        return new double[] {-10_000, -10_000};
     }
 
     private @Nullable PanelRuntime panelOf(@Nullable Widget widget) {
@@ -2893,22 +2913,20 @@ public final class InworldManager implements NimbusClient {
 
     private void focusStep(int direction) {
         if (panels.isEmpty()) return;
-        //only interactive panels are worth cycling onto
+        // only interactive panels are worth cycling onto
         List<PanelRuntime> order = panels.values().stream()
                 .filter(r -> r.presented && r.spec.interactive())
                 .toList();
         if (order.isEmpty()) return;
         int idx = order.indexOf(focused);
-        int next = idx < 0
-                ? (direction > 0 ? 0 : order.size() - 1)
-                : (idx + direction + order.size()) % order.size();
+        int next = idx < 0 ? (direction > 0 ? 0 : order.size() - 1) : (idx + direction + order.size()) % order.size();
         focus(order.get(next));
         manualFocusTick = tick;
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     /** Face and Expand panels render in world space through the FBO quad path. */
     private static boolean worldSpace(Presentation p) {
@@ -2916,7 +2934,7 @@ public final class InworldManager implements NimbusClient {
     }
 
     /** Render-to-texture supersampling factor for world-space panels. */
-    private static final int FACE_SS = 2;
+    private static final int faceSs = 2;
     /** Dedicated buffer source for FBO passes — flushing the shared level source mid-pass would corrupt the world render. */
     private final MultiBufferSource.BufferSource panelBuffers =
             MultiBufferSource.immediate(new com.mojang.blaze3d.vertex.ByteBufferBuilder(1 << 18));
@@ -2949,9 +2967,8 @@ public final class InworldManager implements NimbusClient {
         RenderSystem.applyModelViewMatrix();
         for (PanelRuntime runtime : panels.values()) {
             if (!worldSpace(runtime.spec.presentation())) continue;
-            //inspect mode flattens expand panels to docks — nothing world-space to draw
-            if (!runtime.presented || runtime.flat || !runtime.widget.visible()
-                    || runtime.faceU == null) continue;
+            // inspect mode flattens expand panels to docks — nothing world-space to draw
+            if (!runtime.presented || runtime.flat || !runtime.widget.visible() || runtime.faceU == null) continue;
 
             RenderTarget target = faceTarget(runtime);
             renderPanelToTarget(runtime, target, pt);
@@ -2965,8 +2982,8 @@ public final class InworldManager implements NimbusClient {
     /** Lazily creates/resizes the panel's offscreen target at 2× its gui size. */
     private static RenderTarget faceTarget(PanelRuntime runtime) {
         RenderTarget target = runtime.faceTarget;
-        int w = runtime.widget.width() * FACE_SS;
-        int h = runtime.widget.height() * FACE_SS;
+        int w = runtime.widget.width() * faceSs;
+        int h = runtime.widget.height() * faceSs;
         if (target == null) {
             target = new TextureTarget(w, h, true, Minecraft.ON_OSX);
             target.setClearColor(0f, 0f, 0f, 0f);
@@ -2987,9 +3004,9 @@ public final class InworldManager implements NimbusClient {
         int w = runtime.widget.width();
         int h = runtime.widget.height();
 
-        //save the currently bound FBO + viewport — under Fabulous! graphics the
-        //translucent stage renders into a non-main target, so blindly rebinding
-        //the main target afterwards would break the level pass
+        // save the currently bound FBO + viewport — under Fabulous! graphics the
+        // translucent stage renders into a non-main target, so blindly rebinding
+        // the main target afterwards would break the level pass
         int prevFbo = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
         int[] prevVp = new int[4];
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, prevVp);
@@ -3004,20 +3021,17 @@ public final class InworldManager implements NimbusClient {
         mv.translate(0, 0, -11000);
         RenderSystem.applyModelViewMatrix();
         RenderSystem.setProjectionMatrix(
-                new Matrix4f().setOrtho(0, w, h, 0, 1000, 21000),
-                VertexSorting.ORTHOGRAPHIC_Z);
+                new Matrix4f().setOrtho(0, w, h, 0, 1000, 21000), VertexSorting.ORTHOGRAPHIC_Z);
         try {
-            //ortho is 0..w over a w*SS-px viewport — supersampling comes free,
-            //no pose scale needed
+            // ortho is 0..w over a w*SS-px viewport — supersampling comes free,
+            // no pose scale needed
             GuiGraphics graphics = new GuiGraphics(mc, new PoseStack(), panelBuffers);
             SceneCanvas canvas = SceneCanvas.create(graphics);
             FloatPos uv = runtime == pointed ? pointedUv : null;
             runtime.widget.setFrameState(runtime.focused(), uv != null);
-            runtime.widget.render(canvas,
-                    uv != null ? (int) uv.x : -1,
-                    uv != null ? (int) uv.y : -1, pt);
+            runtime.widget.render(canvas, uv != null ? (int) uv.x : -1, uv != null ? (int) uv.y : -1, pt);
             canvas.flushBatch();
-            //private buffer source — never endBatch() the shared level source mid-pass
+            // private buffer source — never endBatch() the shared level source mid-pass
             panelBuffers.endBatch();
         } finally {
             target.unbindWrite();
@@ -3037,8 +3051,8 @@ public final class InworldManager implements NimbusClient {
      * {@link #renderPanelToTarget} clobber them between panels).
      */
     private void drawFaceQuad(PanelRuntime runtime, RenderTarget target) {
-        BufferBuilder buffer = Tesselator.getInstance()
-                .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        BufferBuilder buffer =
+                Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         emitFaceQuad(buffer, runtime);
         if (oitActive) {
             oit.beginDraw();
@@ -3049,10 +3063,10 @@ public final class InworldManager implements NimbusClient {
             RenderSystem.enableDepthTest();
         }
         RenderSystem.setShaderTexture(0, target.getColorTextureId());
-        //the textured quad may wind clockwise from the viewing side; the
-        //polygon-offset decal bias makes it win against its own block face.
-        //Re-asserted per quad — rendertype clear-states inside the panel FBO
-        //fill (text uses POLYGON_OFFSET_LAYERING) silently drop it.
+        // the textured quad may wind clockwise from the viewing side; the
+        // polygon-offset decal bias makes it win against its own block face.
+        // Re-asserted per quad — rendertype clear-states inside the panel FBO
+        // fill (text uses POLYGON_OFFSET_LAYERING) silently drop it.
         RenderSystem.disableCull();
         RenderSystem.enablePolygonOffset();
         RenderSystem.polygonOffset(-1f, -4f);
@@ -3077,7 +3091,7 @@ public final class InworldManager implements NimbusClient {
         Vec3 p01 = o.add(v.scale(h));
         Vec3 p11 = p10.add(v.scale(h));
 
-        //open animation: scale the quad around its center
+        // open animation: scale the quad around its center
         float sc = runtime.openScale;
         if (sc < 0.999f) {
             Vec3 c = o.add(u.scale(w * 0.5)).add(v.scale(h * 0.5));
@@ -3101,7 +3115,7 @@ public final class InworldManager implements NimbusClient {
      * transparent texels from stamping depth.
      */
     private void stampPanelDepth() {
-        if (inspecting) return; //no face quads were accumulated — nothing to stamp
+        if (inspecting) return; // no face quads were accumulated — nothing to stamp
         var modelView = RenderSystem.getModelViewStack();
         modelView.pushMatrix();
         modelView.identity();
@@ -3116,13 +3130,12 @@ public final class InworldManager implements NimbusClient {
         RenderSystem.setShader(NimbusShaders::oitAccumTex);
         for (PanelRuntime runtime : panels.values()) {
             if (!worldSpace(runtime.spec.presentation())) continue;
-            if (!runtime.presented || runtime.flat || !runtime.widget.visible()
-                    || runtime.faceU == null) continue;
+            if (!runtime.presented || runtime.flat || !runtime.widget.visible() || runtime.faceU == null) continue;
             RenderTarget target = runtime.faceTarget;
             if (target == null) continue;
             RenderSystem.setShaderTexture(0, target.getColorTextureId());
-            BufferBuilder buffer = Tesselator.getInstance()
-                    .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+            BufferBuilder buffer =
+                    Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
             emitFaceQuad(buffer, runtime);
             BufferUploader.drawWithShader(buffer.buildOrThrow());
         }
@@ -3144,8 +3157,8 @@ public final class InworldManager implements NimbusClient {
             RenderSystem.setShader(NimbusShaders::oitAccumColor);
         } else {
             RenderSystem.enableBlend();
-            //must not x-ray through the level — the canvas batch disables
-            //depth testing and would leak it here
+            // must not x-ray through the level — the canvas batch disables
+            // depth testing and would leak it here
             RenderSystem.enableDepthTest();
             RenderSystem.setShader(GameRenderer::getPositionColorShader);
         }
@@ -3153,22 +3166,23 @@ public final class InworldManager implements NimbusClient {
         if (oitActive) oitDraws++;
     }
 
-    //region scan frame
+    // region scan frame
 
     /** world-space scan frame corners: which axis deltas each corner owns */
-    private static final int[][] SCAN_EDGES = {
-            {0, 1}, {1, 3}, {3, 2}, {2, 0},   //bottom loop
-            {4, 5}, {5, 7}, {7, 6}, {6, 4},   //top loop
-            {0, 4}, {1, 5}, {2, 6}, {3, 7}    //pillars
+    private static final int[][] scanEdges = {
+        {0, 1}, {1, 3}, {3, 2}, {2, 0}, // bottom loop
+        {4, 5}, {5, 7}, {7, 6}, {6, 4}, // top loop
+        {0, 4}, {1, 5}, {2, 6}, {3, 7} // pillars
     };
-    private static final int[][] SCAN_CORNERS = new int[8][3];
+
+    private static final int[][] scanCorners = new int[8][3];
 
     static {
         for (int i = 0; i < 8; i++) {
             int x = i & 1, y = (i >> 1) & 1, z = (i >> 2) & 1;
-            SCAN_CORNERS[i][0] = (x ^ 1) | (y << 1) | (z << 2); //x-neighbor
-            SCAN_CORNERS[i][1] = x | ((y ^ 1) << 1) | (z << 2); //y-neighbor
-            SCAN_CORNERS[i][2] = x | (y << 1) | ((z ^ 1) << 2); //z-neighbor
+            scanCorners[i][0] = (x ^ 1) | (y << 1) | (z << 2); // x-neighbor
+            scanCorners[i][1] = x | ((y ^ 1) << 1) | (z << 2); // y-neighbor
+            scanCorners[i][2] = x | (y << 1) | ((z ^ 1) << 2); // z-neighbor
         }
     }
 
@@ -3186,14 +3200,13 @@ public final class InworldManager implements NimbusClient {
         Map<BlockPos, Float> frameHeat = new HashMap<>();
         Map<Integer, Float> frameEntHeat = new HashMap<>();
         for (PanelRuntime runtime : panels.values()) {
-            //focus heat: ramps while this panel holds the player's attention,
-            //decays after — the frame/chip fade instead of popping on/off
+            // focus heat: ramps while this panel holds the player's attention,
+            // decays after — the frame/chip fade instead of popping on/off
             boolean hot = runtime.focused() || runtime == pointed || runtime == softPointed;
-            runtime.focusHeat = Mth.clamp(
-                    runtime.focusHeat + (hot ? 0.3f : -0.12f), 0f, 1f);
+            runtime.focusHeat = Mth.clamp(runtime.focusHeat + (hot ? 0.3f : -0.12f), 0f, 1f);
             if (!runtime.widget.visible()) continue;
-            //dormant panels present nothing — but a targeted one's anchor is
-            //exactly what the scan frame marks
+            // dormant panels present nothing — but a targeted one's anchor is
+            // exactly what the scan frame marks
             if (!runtime.presented && !isDormant(runtime)) continue;
             if (runtime.focusHeat <= 0.03f) continue;
             BlockPos pos = runtime.spec.anchor().blockPos();
@@ -3208,8 +3221,11 @@ public final class InworldManager implements NimbusClient {
         boolean hasExpand = false;
         for (PanelRuntime runtime : panels.values()) {
             if (runtime.spec.presentation() instanceof Presentation.Expand
-                    && runtime.presented && !runtime.flat && runtime.widget.visible()
-                    && runtime.anchorWorld != null && runtime.faceU != null) {
+                    && runtime.presented
+                    && !runtime.flat
+                    && runtime.widget.visible()
+                    && runtime.anchorWorld != null
+                    && runtime.faceU != null) {
                 hasExpand = true;
                 break;
             }
@@ -3221,26 +3237,35 @@ public final class InworldManager implements NimbusClient {
         modelView.identity();
         RenderSystem.applyModelViewMatrix();
 
-        //everything rides one raw DEBUG_LINES POSITION_COLOR mesh — the old
-        //RenderType.lines() pass bounced through rendertype output shards that
-        //escape to other framebuffers under Fabulous! and would fight the OIT
-        //accumulation target. Normals are simply dropped by the format.
+        // everything rides one raw DEBUG_LINES POSITION_COLOR mesh — the old
+        // RenderType.lines() pass bounced through rendertype output shards that
+        // escape to other framebuffers under Fabulous! and would fight the OIT
+        // accumulation target. Normals are simply dropped by the format.
         PoseStack pose = new PoseStack();
         pose.last().pose().set(worldToView);
         pose.last().normal().set(new Matrix3f(worldToView));
         var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
         Matrix4f mat = worldToView;
 
-        //vanilla-style outlines — the block's real voxel shape and entity
-        //hitboxes, same as the crosshair hit outline and the F3+B debug boxes
+        // vanilla-style outlines — the block's real voxel shape and entity
+        // hitboxes, same as the crosshair hit outline and the F3+B debug boxes
         for (BlockPos pos : framed) {
             float heat = frameHeat.getOrDefault(pos, 1f);
             BlockState state = mc.level.getBlockState(pos);
             VoxelShape shape = state.getShape(mc.level, pos, CollisionContext.empty());
             if (shape.isEmpty()) shape = Shapes.block();
-            int c = HackerTheme.SCAN_SHAPE_HOT;
-            emitShape(pose, buffer, shape, pos.getX(), pos.getY(), pos.getZ(),
-                    red(c), green(c), blue(c), alpha(c) * heat);
+            int c = HackerTheme.scanShapeHot;
+            emitShape(
+                    pose,
+                    buffer,
+                    shape,
+                    pos.getX(),
+                    pos.getY(),
+                    pos.getZ(),
+                    red(c),
+                    green(c),
+                    blue(c),
+                    alpha(c) * heat);
         }
         for (int id : framedEnts) {
             float heat = frameEntHeat.getOrDefault(id, 1f);
@@ -3249,14 +3274,12 @@ public final class InworldManager implements NimbusClient {
             Vec3 p = entity.getPosition(framePartialTick);
             var dims = entity.getDimensions(entity.getPose());
             double hw = dims.width() * 0.5;
-            AABB box = new AABB(p.x - hw, p.y, p.z - hw,
-                    p.x + hw, p.y + dims.height(), p.z + hw).inflate(0.03);
-            int c = HackerTheme.SCAN_SHAPE_HOT;
-            LevelRenderer.renderLineBox(pose, buffer, box,
-                    red(c), green(c), blue(c), alpha(c) * heat);
+            AABB box = new AABB(p.x - hw, p.y, p.z - hw, p.x + hw, p.y + dims.height(), p.z + hw).inflate(0.03);
+            int c = HackerTheme.scanShapeHot;
+            LevelRenderer.renderLineBox(pose, buffer, box, red(c), green(c), blue(c), alpha(c) * heat);
         }
 
-        //hacker accents — corner ticks, the top-loop sweep and expand connectors
+        // hacker accents — corner ticks, the top-loop sweep and expand connectors
         double t = (mc.level.getGameTime() + framePartialTick) * 0.9;
         for (BlockPos pos : framed) {
             emitScanFrame(buffer, mat, pos, t, true, frameHeat.getOrDefault(pos, 1f));
@@ -3271,7 +3294,7 @@ public final class InworldManager implements NimbusClient {
         RenderSystem.applyModelViewMatrix();
     }
 
-    //region world-drag rendering
+    // region world-drag rendering
 
     /**
      * In-world line pass for the drag session: hot scan frames on every trailed
@@ -3290,8 +3313,8 @@ public final class InworldManager implements NimbusClient {
         RenderSystem.applyModelViewMatrix();
 
         var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-        //trail containers get the same hacker scan frame as selected anchors;
-        //the live target (not yet swept long enough to trail) too
+        // trail containers get the same hacker scan frame as selected anchors;
+        // the live target (not yet swept long enough to trail) too
         double t = (mc.level.getGameTime() + framePartialTick) * 0.9;
         if (hasDrag) {
             for (BlockPos pos : dragTrail.targets()) {
@@ -3301,14 +3324,14 @@ public final class InworldManager implements NimbusClient {
                 emitScanFrame(buffer, worldToView, dragTarget, t, true);
             }
         }
-        //landing flashes fade a plain box outline — folded into the same mesh
-        //(was RenderType.lines(), which can't run inside the OIT pass)
+        // landing flashes fade a plain box outline — folded into the same mesh
+        // (was RenderType.lines(), which can't run inside the OIT pass)
         if (!landFlash.isEmpty()) {
             PoseStack pose = new PoseStack();
             pose.last().pose().set(worldToView);
             pose.last().normal().set(new Matrix3f(worldToView));
             for (var e : landFlash.entrySet()) {
-                float f = 1.0f - e.getValue() / (float) FlyingStack.FLASH_TICKS;
+                float f = 1.0f - e.getValue() / (float) FlyingStack.flashTicks;
                 AABB box = new AABB(e.getKey()).inflate(0.01);
                 LevelRenderer.renderLineBox(pose, buffer, box, 0.36f, 0.95f, 1.0f, 0.85f * f);
             }
@@ -3339,7 +3362,7 @@ public final class InworldManager implements NimbusClient {
         modelView.identity();
         RenderSystem.applyModelViewMatrix();
 
-        //item sprites — carried stack and in-flight shares, billboarded to the camera
+        // item sprites — carried stack and in-flight shares, billboarded to the camera
         PoseStack pose = new PoseStack();
         pose.last().pose().set(worldToView);
         pose.last().normal().set(new Matrix3f(worldToView));
@@ -3357,16 +3380,21 @@ public final class InworldManager implements NimbusClient {
         RenderSystem.applyModelViewMatrix();
     }
 
-    private void renderDragItem(ItemStack stack, Vec3 pos, float scale,
-                                PoseStack pose, MultiBufferSource.BufferSource buffers,
-                                Quaternionf camRot) {
+    private void renderDragItem(
+            ItemStack stack,
+            Vec3 pos,
+            float scale,
+            PoseStack pose,
+            MultiBufferSource.BufferSource buffers,
+            Quaternionf camRot) {
         pose.pushPose();
         pose.translate(pos.x, pos.y, pos.z);
         pose.mulPose(camRot);
         pose.scale(scale, scale, scale);
         int light = LevelRenderer.getLightColor(mc.level, BlockPos.containing(pos));
-        mc.getItemRenderer().renderStatic(stack, ItemDisplayContext.GROUND,
-                light, OverlayTexture.NO_OVERLAY, pose, buffers, mc.level, 0);
+        mc.getItemRenderer()
+                .renderStatic(
+                        stack, ItemDisplayContext.GROUND, light, OverlayTexture.NO_OVERLAY, pose, buffers, mc.level, 0);
         pose.popPose();
     }
 
@@ -3385,7 +3413,8 @@ public final class InworldManager implements NimbusClient {
                     : SplitPlan.oneEach(dragSession.carried().getCount(), targets.size());
             for (int i = 0; i < targets.size(); i++) {
                 if (shares[i] <= 0) continue;
-                FloatPos s = projection.worldToScreen(Vec3.atCenterOf(targets.get(i)).add(0, 0.75, 0));
+                FloatPos s =
+                        projection.worldToScreen(Vec3.atCenterOf(targets.get(i)).add(0, 0.75, 0));
                 if (s == null) continue;
                 String label = "+" + shares[i];
                 int w = mc.font.width(label);
@@ -3393,42 +3422,53 @@ public final class InworldManager implements NimbusClient {
                 g.drawString(mc.font, label, (int) s.x() - w / 2, (int) s.y() - 4, 0xFF6CF2FF, false);
             }
         }
-        //carried stack + count trail the active pointer — crosshair in world
-        //mode, cursor when the drag is inspect-hosted
+        // carried stack + count trail the active pointer — crosshair in world
+        // mode, cursor when the drag is inspect-hosted
         int cx = dragInspectHosted ? (int) dragCursorX : mc.getWindow().getGuiScaledWidth() / 2;
         int cy = dragInspectHosted ? (int) dragCursorY : mc.getWindow().getGuiScaledHeight() / 2;
         g.renderItem(dragSession.carried(), cx + 5, cy - 8);
         g.renderItemDecorations(mc.font, dragSession.carried(), cx + 5, cy - 8);
         if (dragSession.wholeStack() && dragSession.carried().getCount() > 1) {
-            g.drawString(mc.font, "×" + dragSession.carried().getCount(),
-                    cx + 5 + 17, cy - 3, 0xFF6CF2FF, false);
+            g.drawString(mc.font, "×" + dragSession.carried().getCount(), cx + 5 + 17, cy - 3, 0xFF6CF2FF, false);
         }
     }
 
-    //endregion
+    // endregion
 
     private void emitExpandConnectors(BufferBuilder buffer, Matrix4f mat) {
         for (PanelRuntime runtime : panels.values()) {
             if (!(runtime.spec.presentation() instanceof Presentation.Expand)) continue;
-            //inspect flattens expand panels to docks — no world quad, no connector
-            if (!runtime.presented || runtime.flat || !runtime.widget.visible()
-                    || runtime.anchorWorld == null || runtime.faceU == null) continue;
+            // inspect flattens expand panels to docks — no world quad, no connector
+            if (!runtime.presented
+                    || runtime.flat
+                    || !runtime.widget.visible()
+                    || runtime.anchorWorld == null
+                    || runtime.faceU == null) continue;
             Vec3 a = runtime.anchorWorld;
             Vec3 pb = runtime.faceOrigin
                     .add(runtime.faceU.scale(runtime.widget.width() * 0.5))
                     .add(runtime.faceV.scale(runtime.widget.height()));
-            line(buffer, mat,
-                    new double[]{a.x, a.y, a.z},
-                    new double[]{pb.x, pb.y, pb.z},
-                    runtime.focused() || runtime == pointed
-                            ? HackerTheme.LINE_FOCUSED : HackerTheme.LINE);
+            line(
+                    buffer,
+                    mat,
+                    new double[] {a.x, a.y, a.z},
+                    new double[] {pb.x, pb.y, pb.z},
+                    runtime.focused() || runtime == pointed ? HackerTheme.lineFocused : HackerTheme.line);
         }
     }
 
     /** Replica of vanilla's private {@code LevelRenderer.renderShape} — true voxel edges, not AABB slices. */
-    private static void emitShape(PoseStack pose, VertexConsumer out, VoxelShape shape,
-                                  double x, double y, double z,
-                                  float r, float g, float b, float a) {
+    private static void emitShape(
+            PoseStack pose,
+            VertexConsumer out,
+            VoxelShape shape,
+            double x,
+            double y,
+            double z,
+            float r,
+            float g,
+            float b,
+            float a) {
         PoseStack.Pose p = pose.last();
         shape.forAllEdges((x0, y0, z0, x1, y1, z1) -> {
             float nx = (float) (x1 - x0), ny = (float) (y1 - y0), nz = (float) (z1 - z0);
@@ -3439,9 +3479,11 @@ public final class InworldManager implements NimbusClient {
                 nz /= nl;
             }
             out.addVertex(p, (float) (x0 + x), (float) (y0 + y), (float) (z0 + z))
-                    .setColor(r, g, b, a).setNormal(p, nx, ny, nz);
+                    .setColor(r, g, b, a)
+                    .setNormal(p, nx, ny, nz);
             out.addVertex(p, (float) (x1 + x), (float) (y1 + y), (float) (z1 + z))
-                    .setColor(r, g, b, a).setNormal(p, nx, ny, nz);
+                    .setColor(r, g, b, a)
+                    .setNormal(p, nx, ny, nz);
         });
     }
 
@@ -3465,36 +3507,37 @@ public final class InworldManager implements NimbusClient {
         emitScanFrame(buffer, mat, pos, t, bright, 1f);
     }
 
-    private static void emitScanFrame(BufferBuilder buffer, Matrix4f mat, BlockPos pos, double t, boolean bright, float alphaScale) {
+    private static void emitScanFrame(
+            BufferBuilder buffer, Matrix4f mat, BlockPos pos, double t, boolean bright, float alphaScale) {
         double e = 0.003;
         double x0 = pos.getX() - e, y0 = pos.getY() - e, z0 = pos.getZ() - e;
         double x1 = pos.getX() + 1 + e, y1 = pos.getY() + 1 + e, z1 = pos.getZ() + 1 + e;
         double[][] c = {
-                {x0, y0, z0}, {x1, y0, z0}, {x0, y0, z1}, {x1, y0, z1},
-                {x0, y1, z0}, {x1, y1, z0}, {x0, y1, z1}, {x1, y1, z1}
+            {x0, y0, z0}, {x1, y0, z0}, {x0, y0, z1}, {x1, y0, z1},
+            {x0, y1, z0}, {x1, y1, z0}, {x0, y1, z1}, {x1, y1, z1}
         };
 
-        int tick = bright ? HackerTheme.SCAN_TICK_HOT : HackerTheme.SCAN_TICK;
-        //corner ticks: short brighter stubs from each corner along its edges
+        int tick = bright ? HackerTheme.scanTickHot : HackerTheme.scanTick;
+        // corner ticks: short brighter stubs from each corner along its edges
         double tl = 0.14;
         for (int i = 0; i < 8; i++) {
-            for (int nb : SCAN_CORNERS[i]) {
+            for (int nb : scanCorners[i]) {
                 double[] a = c[i], b = c[nb];
                 double dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2];
-                line(buffer, mat, a, new double[]{a[0] + dx * tl, a[1] + dy * tl, a[2] + dz * tl}, tick, alphaScale);
+                line(buffer, mat, a, new double[] {a[0] + dx * tl, a[1] + dy * tl, a[2] + dz * tl}, tick, alphaScale);
             }
         }
-        //scan segment sweeping the top loop
+        // scan segment sweeping the top loop
         double s = ((t % 4) + 4) % 4;
         int seg = (int) s;
         double f = s - seg;
-        double[] a = c[SCAN_EDGES[4 + seg][0]];
-        double[] b = c[SCAN_EDGES[4 + seg][1]];
+        double[] a = c[scanEdges[4 + seg][0]];
+        double[] b = c[scanEdges[4 + seg][1]];
         double len = 0.22;
         double f1 = Math.max(0, f - len);
         double[] p0 = {a[0] + (b[0] - a[0]) * f1, a[1] + (b[1] - a[1]) * f1, a[2] + (b[2] - a[2]) * f1};
         double[] p1 = {a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f};
-        line(buffer, mat, p0, p1, HackerTheme.SCAN_SWEEP, alphaScale);
+        line(buffer, mat, p0, p1, HackerTheme.scanSweep, alphaScale);
     }
 
     private static void line(BufferBuilder buffer, Matrix4f mat, double[] a, double[] b, int color) {
@@ -3510,7 +3553,7 @@ public final class InworldManager implements NimbusClient {
         buffer.addVertex(mat, (float) b[0], (float) b[1], (float) b[2]).setColor(r, g, bl, alpha);
     }
 
-    //endregion
+    // endregion
 
     /**
      * Local px → world basis: x→u, y→v, z→u×v (normalized back to 1px depth).
@@ -3524,9 +3567,15 @@ public final class InworldManager implements NimbusClient {
         double len = w.length();
         if (len > 0) w = w.scale(1.0 / len / runtime.facePpb);
         Matrix4f m = new Matrix4f();
-        m.m00((float) u.x); m.m10((float) u.y); m.m20((float) u.z);
-        m.m01((float) v.x); m.m11((float) v.y); m.m21((float) v.z);
-        m.m02((float) w.x); m.m12((float) w.y); m.m22((float) w.z);
+        m.m00((float) u.x);
+        m.m10((float) u.y);
+        m.m20((float) u.z);
+        m.m01((float) v.x);
+        m.m11((float) v.y);
+        m.m21((float) v.z);
+        m.m02((float) w.x);
+        m.m12((float) w.y);
+        m.m22((float) w.z);
         m.m33(1);
         return m;
     }
@@ -3564,7 +3613,8 @@ public final class InworldManager implements NimbusClient {
     private void renderTooltip(GuiGraphics graphics, double pointerX, double pointerY) {
         Widget hit = scene.hitTest(pointerX, pointerY);
         if (hit == null) return;
-        Tooltip tooltip = hit.hoverTooltip((int) (pointerX - hit.absolutePos().x()), (int) (pointerY - hit.absolutePos().y()));
+        Tooltip tooltip = hit.hoverTooltip((int) (pointerX - hit.absolutePos().x()), (int)
+                (pointerY - hit.absolutePos().y()));
         if (tooltip != null && tooltip.notEmpty()) {
             ScreenUtil.renderTooltip(graphics, tooltip, (int) pointerX, (int) pointerY);
         }
@@ -3575,7 +3625,7 @@ public final class InworldManager implements NimbusClient {
         for (PanelRuntime runtime : panels.values()) {
             if (!runtime.presented || !runtime.flat || !runtime.widget.visible()) continue;
             if (!runtime.spec.leaderLine()) continue;
-            if (runtime.widget.screenX < -900_000) continue; //parked/hidden — no line
+            if (runtime.widget.screenX < -900_000) continue; // parked/hidden — no line
             FloatPos from = leaderOrigin(runtime);
             if (from == null) continue;
 
@@ -3584,10 +3634,10 @@ public final class InworldManager implements NimbusClient {
             float px = runtime.widget.screenX;
             float py = runtime.widget.screenY;
 
-            //nearest point on the panel rect to the origin
+            // nearest point on the panel rect to the origin
             double ex = Math.max(px, Math.min(from.x, px + w));
             double ey = Math.max(py, Math.min(from.y, py + h));
-            //project the origin onto the rect border
+            // project the origin onto the rect border
             double cx = px + w * 0.5;
             double cy = py + h * 0.5;
             if (ex > px && ex < px + w) {
@@ -3597,25 +3647,25 @@ public final class InworldManager implements NimbusClient {
             }
             boolean inside = from.x >= px && from.x <= px + w && from.y >= py && from.y <= py + h;
 
-            //adaptive ink: sample the world behind the line's midpoint — a
-            //dark core + light halo over bright terrain, bright core + dark
-            //halo in the dark. Smoothed per panel so crossing a brightness
-            //edge doesn't flicker the line.
+            // adaptive ink: sample the world behind the line's midpoint — a
+            // dark core + light halo over bright terrain, bright core + dark
+            // halo in the dark. Smoothed per panel so crossing a brightness
+            // edge doesn't flicker the line.
             runtime.lineLum += (sampleLineLuminance(ex, ey, from.x, from.y) - runtime.lineLum) * 0.25f;
             boolean brightBg = runtime.lineLum > 0.5f;
             int color = runtime.focused()
-                    ? (brightBg ? HackerTheme.LINE_FOCUSED_DARK : HackerTheme.LINE_FOCUSED)
-                    : (brightBg ? HackerTheme.LINE_DARK : HackerTheme.LINE);
-            int edge = brightBg ? HackerTheme.LINE_EDGE_LIGHT : HackerTheme.LINE_EDGE;
+                    ? (brightBg ? HackerTheme.lineFocusedDark : HackerTheme.lineFocused)
+                    : (brightBg ? HackerTheme.lineDark : HackerTheme.line);
+            int edge = brightBg ? HackerTheme.lineEdgeLight : HackerTheme.lineEdge;
             if (!inside) {
                 drawLine(graphics, (float) ex + 1, (float) ey, (float) from.x + 1, (float) from.y, edge);
                 drawLine(graphics, (float) ex, (float) ey + 1, (float) from.x, (float) from.y + 1, edge);
                 drawLine(graphics, (float) ex, (float) ey, (float) from.x, (float) from.y, color);
             }
-            //filled diamond marking the source the line leads back to — drawn
-            //even when the anchor projects inside the panel (the panel sits
-            //right on its block): the marker is the standing "tracked" cue.
-            //Solid fill + contrasting core so it stays legible at a glance.
+            // filled diamond marking the source the line leads back to — drawn
+            // even when the anchor projects inside the panel (the panel sits
+            // right on its block): the marker is the standing "tracked" cue.
+            // Solid fill + contrasting core so it stays legible at a glance.
             int fx = (int) from.x, fy = (int) from.y;
             for (int i = -4; i <= 4; i++) {
                 int half = 4 - Math.abs(i);
@@ -3640,11 +3690,10 @@ public final class InworldManager implements NimbusClient {
         if (level == null || proj == null || player == null) return 0.2f;
         Vec3 eye = proj.cameraPos();
         Vec3 dir = proj.rayDirection((x0 + x1) * 0.5, (y0 + y1) * 0.5);
-        var hit = level.clip(new ClipContext(eye, eye.add(dir.scale(48)),
-                ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+        var hit = level.clip(new ClipContext(
+                eye, eye.add(dir.scale(48)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
         if (hit.getType() == HitResult.Type.BLOCK) {
-            int col = level.getBlockState(hit.getBlockPos())
-                    .getMapColor(level, hit.getBlockPos()).col;
+            int col = level.getBlockState(hit.getBlockPos()).getMapColor(level, hit.getBlockPos()).col;
             float r = ((col >> 16) & 0xFF) / 255f;
             float g = ((col >> 8) & 0xFF) / 255f;
             float b = (col & 0xFF) / 255f;
@@ -3667,7 +3716,7 @@ public final class InworldManager implements NimbusClient {
         float py = runtime.widget.screenY;
         int w = runtime.widget.width();
         int h = runtime.widget.height();
-        //panel rect center — pick the frame corner closest to it
+        // panel rect center — pick the frame corner closest to it
         double cx = px + w * 0.5;
         double cy = py + h * 0.5;
 
@@ -3705,9 +3754,9 @@ public final class InworldManager implements NimbusClient {
         if (mesh != null) BufferUploader.drawWithShader(mesh);
     }
 
-    //endregion
+    // endregion
 
-    //region inspect presentation
+    // region inspect presentation
 
     boolean inspectActive() {
         return inspecting;
@@ -3715,8 +3764,8 @@ public final class InworldManager implements NimbusClient {
 
     /** The render entry the inspect screen delegates to. */
     void renderInspect(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        //in inspect presentation the real cursor points; hover → focus (WD2 style)
-        //— a live drag keeps the source panel focused instead of chasing the cursor
+        // in inspect presentation the real cursor points; hover → focus (WD2 style)
+        // — a live drag keeps the source panel focused instead of chasing the cursor
         if (!(dragInspectHosted && dragSession != null)) {
             pointed = panelOf(scene.hitTest(mouseX, mouseY));
             if (pointed != null) focus(pointed);
@@ -3729,7 +3778,7 @@ public final class InworldManager implements NimbusClient {
         inspecting = false;
         inspectScreen = null;
         if (dragInspectHosted) cancelWorldDrag();
-        //closed by ESC/another screen while the key is still held — stay out until released
+        // closed by ESC/another screen while the key is still held — stay out until released
         if (inspectHeld()) inspectDismissed = true;
     }
 
@@ -3745,7 +3794,7 @@ public final class InworldManager implements NimbusClient {
         };
     }
 
-    //inspect-mode input — forwarded by InworldInspectScreen
+    // inspect-mode input — forwarded by InworldInspectScreen
     void inspectMouseMoved(double x, double y) {
         if (tracing != null) {
             traceMouseMoved(x, y);
@@ -3754,28 +3803,28 @@ public final class InworldManager implements NimbusClient {
         if (dragInspectHosted && dragSession != null) {
             dragCursorX = x;
             dragCursorY = y;
-            return; //a live drag owns the cursor — the world is the target surface
+            return; // a live drag owns the cursor — the world is the target surface
         }
         scene.mouseMoved(x, y);
     }
 
     boolean inspectMouseClicked(double x, double y, int button) {
         if (tracing != null) {
-            endTrace(true); //click mid-trace commits, same as releasing V
+            endTrace(true); // click mid-trace commits, same as releasing V
             return true;
         }
         if (dragInspectHosted && dragSession != null) {
-            return true; //a live drag owns the cursor — extra presses do nothing
+            return true; // a live drag owns the cursor — extra presses do nothing
         }
-        //world-as-UI: a press on a draggable widget starts a world-targeted
-        //drag — the cursor ray picks containers through the frozen camera
+        // world-as-UI: a press on a draggable widget starts a world-targeted
+        // drag — the cursor ray picks containers through the frozen camera
         Widget hit = scene.hitTest(x, y);
         WorldDraggable src = WorldDraggable.find(hit);
         if (src != null) {
             PanelRuntime srcPanel = panelOf((Widget) src);
             if (srcPanel != null) {
-                WorldDrag drag = src.beginWorldDrag(
-                        new InworldPanelContext(mc.level, mc.player, srcPanel), x, y, button);
+                WorldDrag drag =
+                        src.beginWorldDrag(new InworldPanelContext(mc.level, mc.player, srcPanel), x, y, button);
                 if (drag != null) {
                     dragSession = drag;
                     dragPanel = srcPanel;
@@ -3846,5 +3895,5 @@ public final class InworldManager implements NimbusClient {
         return scene.charTyped(codePoint, modifiers);
     }
 
-    //endregion
+    // endregion
 }

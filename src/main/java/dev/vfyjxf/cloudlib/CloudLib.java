@@ -23,55 +23,52 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public sealed abstract class CloudLib permits CloudLibClient, CloudLibServer {
+public abstract sealed class CloudLib permits CloudLibClient, CloudLibServer {
     public static final Logger logger = LoggerFactory.getLogger("CloudLib");
     protected final ImmutableList<CloudLibPlugin> plugins;
 
-    //TODO:Move thread unsafe operations to constructModEvent
+    // TODO:Move thread unsafe operations to constructModEvent
     public CloudLib(ModContainer container, IEventBus modBus, Dist dist) {
-        //region internal init
-        plugins = PluginLoader.loadPlugin(logger, "CloudLib Plugin", AnnotationPluginLookup.of(CloudLibPlugin.class)).toImmutable();
-        //endregion
+        // region internal init
+        plugins = PluginLoader.loadPlugin(logger, "CloudLib Plugin", AnnotationPluginLookup.of(CloudLibPlugin.class))
+                .toImmutable();
+        // endregion
 
-        //region debug & test init
+        // region debug & test init
         if (!FMLEnvironment.production) {
             TestRegistry.register(modBus);
             DebugConfig.register(container);
         }
-        //region
+        // region
 
-        //region fml lifecycle listener
+        // region fml lifecycle listener
         modBus.addListener(this::constructMod);
         modBus.addListener(this::commonSetup);
         modBus.addListener(this::loadComplete);
-        //region
+        // region
 
-        //region register
+        // region register
         modBus.addListener(CloudlibPayloads::register);
-        //endregion
+        // endregion
 
-        //region game-bus listeners
-        //At each level's tick end, flush the per-dimension block-entity sync batcher: one merged
-        //packet per dimension per tick, instead of one packet per block entity.
+        // region game-bus listeners
+        // At each level's tick end, flush the per-dimension block-entity sync batcher: one merged
+        // packet per dimension per tick, instead of one packet per block entity.
         NeoForge.EVENT_BUS.addListener((LevelTickEvent.Post event) -> {
             if (!event.getLevel().isClientSide) {
                 BlockEntitySyncBatcher.get(event.getLevel()).flush((ServerLevel) event.getLevel());
             }
         });
-        //endregion
+        // endregion
     }
 
-    protected void constructMod(FMLConstructModEvent event) {
-    }
+    protected void constructMod(FMLConstructModEvent event) {}
 
-    protected void commonSetup(FMLCommonSetupEvent event) {
-    }
+    protected void commonSetup(FMLCommonSetupEvent event) {}
 
-    protected void loadComplete(FMLLoadCompleteEvent event) {
-    }
+    protected void loadComplete(FMLLoadCompleteEvent event) {}
 
     public static ResourceLocation of(String path) {
         return Locations.ofMod(path);
     }
-
 }

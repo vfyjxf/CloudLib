@@ -5,12 +5,11 @@ package dev.vfyjxf.cloudlib.api.event;
  */
 public final class EventPriority {
 
-    public static final int HIGHEST = 100;
-    public static final int HIGH = 50;
-    public static final int DEFAULT = 10;
-    public static final int LOW = 5;
-    public static final int LOWEST = 0;
-
+    public static final int highest = 100;
+    public static final int high = 50;
+    public static final int normal = 10;
+    public static final int low = 5;
+    public static final int lowest = 0;
 
     private EventPriority() {
         throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");

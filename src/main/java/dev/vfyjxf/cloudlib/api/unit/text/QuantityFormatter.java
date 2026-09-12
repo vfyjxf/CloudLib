@@ -116,7 +116,8 @@ public final class QuantityFormatter {
         Unit<F> remainingUnit = quantity.unit();
         for (int i = 0; i < chain.length; i++) {
             Unit<F> target = Checks.checkNotNull(chain[i], "chain element");
-            Ratio converted = converter.convert(remaining, remainingUnit, target).value();
+            Ratio converted =
+                    converter.convert(remaining, remainingUnit, target).value();
             if (i == chain.length - 1) {
                 if (!converted.isZero()) {
                     result.add(Quantity.of(converted, target, converter));
@@ -125,13 +126,15 @@ public final class QuantityFormatter {
                 long amount = converted.floor();
                 if (amount != 0) {
                     result.add(Quantity.of(Ratio.of(amount), target, converter));
-                    Ratio used = converter.convert(Ratio.of(amount), target, remainingUnit).value();
+                    Ratio used = converter
+                            .convert(Ratio.of(amount), target, remainingUnit)
+                            .value();
                     remaining = remaining.subtract(used);
                 }
             }
         }
         if (result.isEmpty()) {
-            result.add(Quantity.of(Ratio.ZERO, chain[chain.length - 1], converter));
+            result.add(Quantity.of(Ratio.zero, chain[chain.length - 1], converter));
         }
         return List.copyOf(result);
     }
@@ -154,7 +157,7 @@ public final class QuantityFormatter {
     }
 
     public String ratioText(Unit<?> a, Unit<?> b, @Nullable Namespace material) {
-        return converter.convert(Ratio.ONE, a, b, material).value().describe();
+        return converter.convert(Ratio.one, a, b, material).value().describe();
     }
 
     public String shortName(Unit<?> unit) {

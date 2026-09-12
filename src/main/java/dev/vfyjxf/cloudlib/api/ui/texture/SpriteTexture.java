@@ -31,7 +31,7 @@ public class SpriteTexture implements SizedTexture, BatchableTexture {
         this(() -> sprite, width, height);
     }
 
-    //region factory
+    // region factory
 
     /**
      * Creates a sprite texture from a TextureAtlasSprite.
@@ -52,15 +52,18 @@ public class SpriteTexture implements SizedTexture, BatchableTexture {
      * This looks up the sprite from the GUI sprites atlas.
      */
     public static SpriteTexture fromGuiSprite(ResourceLocation spriteLocation, int width, int height) {
-        return new SpriteTexture(() -> {
-            var minecraft = Minecraft.getInstance();
-            return minecraft.getGuiSprites().getSprite(spriteLocation);
-        }, width, height);
+        return new SpriteTexture(
+                () -> {
+                    var minecraft = Minecraft.getInstance();
+                    return minecraft.getGuiSprites().getSprite(spriteLocation);
+                },
+                width,
+                height);
     }
 
-    //endregion
+    // endregion
 
-    //region query
+    // region query
 
     public TextureAtlasSprite sprite() {
         return spriteSupplier.get();
@@ -76,9 +79,9 @@ public class SpriteTexture implements SizedTexture, BatchableTexture {
         return height;
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     public void render(GuiGraphics graphics, int x, int y, int width, int height) {
@@ -86,16 +89,25 @@ public class SpriteTexture implements SizedTexture, BatchableTexture {
         graphics.blit(x, y, 0, width, height, sprite);
     }
 
-    //endregion
+    // endregion
 
-    //region batchable texture
+    // region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float w, float h, int color) {
         TextureAtlasSprite sprite = spriteSupplier.get();
-        emitter.textured(sprite.atlasLocation(), x, y, w, h,
-                sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), color);
+        emitter.textured(
+                sprite.atlasLocation(),
+                x,
+                y,
+                w,
+                h,
+                sprite.getU0(),
+                sprite.getV0(),
+                sprite.getU1(),
+                sprite.getV1(),
+                color);
     }
 
-    //endregion
+    // endregion
 }

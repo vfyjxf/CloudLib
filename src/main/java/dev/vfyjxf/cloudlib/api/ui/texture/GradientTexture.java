@@ -6,16 +6,14 @@ import net.minecraft.client.gui.GuiGraphics;
  * Linear gradient texture using strip-based rendering.
  */
 public record GradientTexture(
-        int colorTopLeft, int colorTopRight,
-        int colorBottomLeft, int colorBottomRight,
-        int segments
-) implements BatchableTexture {
+        int colorTopLeft, int colorTopRight, int colorBottomLeft, int colorBottomRight, int segments)
+        implements BatchableTexture {
 
     public GradientTexture {
         segments = Math.max(1, segments);
     }
 
-    //region factory
+    // region factory
 
     public static GradientTexture horizontal(int colorLeft, int colorRight) {
         return new GradientTexture(colorLeft, colorRight, colorLeft, colorRight, 16);
@@ -41,9 +39,9 @@ public record GradientTexture(
         return new GradientTexture(topLeft, topRight, bottomLeft, bottomRight, segments);
     }
 
-    //endregion
+    // endregion
 
-    //region batchable texture
+    // region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float width, float height, int tint) {
@@ -69,9 +67,9 @@ public record GradientTexture(
         }
     }
 
-    //endregion
+    // endregion
 
-    //region internal
+    // region internal
 
     private void emitHorizontal(VertexEmitter emitter, float x, float y, float width, float height) {
         float segmentWidth = width / segments;
@@ -125,10 +123,11 @@ public record GradientTexture(
                     float tx = (j + 0.5f) / segments;
                     int color = lerpColor(leftColor, rightColor, tx);
                     graphics.fill(
-                            x + (j * width / segments), y + (i * height / segments),
-                            x + ((j + 1) * width / segments), y + ((i + 1) * height / segments),
-                            color
-                    );
+                            x + (j * width / segments),
+                            y + (i * height / segments),
+                            x + ((j + 1) * width / segments),
+                            y + ((i + 1) * height / segments),
+                            color);
                 }
             }
         }
@@ -142,5 +141,5 @@ public record GradientTexture(
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
 
-    //endregion
+    // endregion
 }

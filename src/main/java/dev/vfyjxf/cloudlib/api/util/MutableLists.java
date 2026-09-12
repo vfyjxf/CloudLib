@@ -62,6 +62,5 @@ public final class MutableLists {
         return listFactory.ofAll(iterable);
     }
 
-    private MutableLists() {
-    }
+    private MutableLists() {}
 }

@@ -7,15 +7,14 @@ package dev.vfyjxf.nimbusprojection.api.presentation;
 public enum InspectPolicy {
 
     /** Flatten to a screen rect via {@link PresentationDriver#flatten} (default). */
-    FLATTEN,
+    flatten,
 
     /** Not shown in inspect mode at all. */
-    HIDDEN,
+    hidden,
 
     /**
      * The driver renders its own inspect-mode form — the runtime skips the
      * flat rect entirely for this panel.
      */
-    CUSTOM,
-
+    custom,
 }

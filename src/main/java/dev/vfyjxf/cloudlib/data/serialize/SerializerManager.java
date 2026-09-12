@@ -17,13 +17,14 @@ import java.util.function.Function;
 
 public class SerializerManager {
 
-    public static final SerializerManager INSTANCE = new SerializerManager();
+    public static final SerializerManager instance = new SerializerManager();
 
     private final MutableMap<Class<?>, ImmutableList<Field>> fieldsToSave = Maps.mutable.empty();
     /**
      * Should we support primitive types?
      */
     private final MutableMap<Field, Function<Object, Object>> fieldGetters = Maps.mutable.empty();
+
     private final MutableMap<Class<?>, SavableSerializer<?>> typeSerializers = Maps.mutable.empty();
 
     public ImmutableList<Field> getFieldsToSave(Class<?> clazz) {
@@ -57,9 +58,7 @@ public class SerializerManager {
         while (!typeTree.isEmpty()) {
             Class<?> currentType = typeTree.pop();
             SavableSerializer<?> serializer = typeSerializers.get(currentType);
-            if (serializer == null) {
-
-            }
+            if (serializer == null) {}
         }
         throw new UnsupportedOperationException("Not implemented yet");
     }
@@ -84,11 +83,7 @@ public class SerializerManager {
         JsonObject saveJson(T instance);
 
         CompoundTag saveNbt(T instance);
-
     }
 
-    private interface ArrayLikeSaveSerializer<T> {
-
-    }
-
+    private interface ArrayLikeSaveSerializer<T> {}
 }

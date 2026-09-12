@@ -9,7 +9,6 @@ import dev.vfyjxf.nimbusprojection.api.sync.SharedPanelSpec;
 import dev.vfyjxf.nimbusprojection.network.ClientboundPanelPayload;
 import dev.vfyjxf.nimbusprojection.network.SharedPanelRemovePayload;
 import dev.vfyjxf.nimbusprojection.network.SharedPanelSpawnPayload;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -79,8 +78,12 @@ public final class NimbusServerImpl implements NimbusServer {
 
     private SharedPanelSpawnPayload spawnFor(SharedPanelSpec spec, ServerPlayer watcher) {
         return new SharedPanelSpawnPayload(
-                spec.key(), spec.dimension(), spec.anchor(), spec.view(),
-                spec.presentation(), spec.maxDistance(),
+                spec.key(),
+                spec.dimension(),
+                spec.anchor(),
+                spec.view(),
+                spec.presentation(),
+                spec.maxDistance(),
                 spec.canInteract().test(watcher),
                 spec.payload());
     }
@@ -111,7 +114,8 @@ public final class NimbusServerImpl implements NimbusServer {
      *  custom anchors get no distance filter (visibleTo still applies). */
     private @Nullable Vec3 anchorPos(SharedPanelSpec spec, ServerLevel level) {
         InworldAnchor anchor = spec.anchor();
-        if (anchor instanceof InworldAnchor.Block b) return Vec3.atCenterOf(b.pos()).add(b.offset());
+        if (anchor instanceof InworldAnchor.Block b)
+            return Vec3.atCenterOf(b.pos()).add(b.offset());
         if (anchor instanceof InworldAnchor.Position p) return p.pos();
         if (anchor instanceof InworldAnchor.EntityTarget e) {
             Entity entity = level.getEntity(e.entityId());

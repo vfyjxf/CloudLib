@@ -20,28 +20,24 @@ public class DebugConfig {
     private static final ModConfigSpec.BooleanValue enableDebug;
     private static final ModConfigSpec.BooleanValue debugExpose;
 
-    private static final ModConfigSpec SPEC;
+    private static final ModConfigSpec spec;
 
     static {
         builder.push("common debug");
         {
-            enableDebug = builder
-                    .comment("Enable debug mode")
-                    .define("enable_debug", !FMLEnvironment.production);
+            enableDebug = builder.comment("Enable debug mode").define("enable_debug", !FMLEnvironment.production);
         }
         builder.pop();
 
         builder.push("network debug");
         {
-            debugExpose = builder.comment("Enable expose debug mode")
-                                 .define("debug_expose", false);
+            debugExpose = builder.comment("Enable expose debug mode").define("debug_expose", false);
         }
         builder.pop();
-        SPEC = builder.build();
+        spec = builder.build();
     }
 
     public static void register(ModContainer container) {
-        container.registerConfig(ModConfig.Type.COMMON, SPEC);
+        container.registerConfig(ModConfig.Type.COMMON, spec);
     }
-
 }

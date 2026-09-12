@@ -30,8 +30,7 @@ public final class TimeUnits {
     public static final ImmutableList<UnitRule> rules = Lists.immutable.of(
             UnitRule.fixedRule(second, tick, Ratio.of(20)),
             UnitRule.fixedRule(minute, second, Ratio.of(60)),
-            UnitRule.fixedRule(hour, minute, Ratio.of(60))
-    );
+            UnitRule.fixedRule(hour, minute, Ratio.of(60)));
 
     /**
      * Unmodifiable {@link List} view of {@link #rules}, for consumers working with
@@ -47,6 +46,5 @@ public final class TimeUnits {
         return UnitPack.of(rules);
     }
 
-    private TimeUnits() {
-    }
+    private TimeUnits() {}
 }

@@ -10,6 +10,5 @@ public final class SearchReference {
         return string.contains(s2);
     }
 
-    private SearchReference() {
-    }
+    private SearchReference() {}
 }

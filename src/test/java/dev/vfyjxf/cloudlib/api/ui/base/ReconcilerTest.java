@@ -102,13 +102,17 @@ class ReconcilerTest {
 
     @Test
     void testEnumKeys() {
-        enum ItemType { HEADER, CONTENT, FOOTER }
+        enum ItemType {
+            header,
+            content,
+            footer
+        }
 
         TestBlueprint bp1 = new TestBlueprint("a");
-        bp1.setKey(ItemType.HEADER);
+        bp1.setKey(ItemType.header);
 
         TestBlueprint bp2 = new TestBlueprint("b");
-        bp2.setKey(ItemType.HEADER);
+        bp2.setKey(ItemType.header);
 
         assertTrue(Reconciler.canUpdate(bp1, bp2));
     }
@@ -150,16 +154,10 @@ class ReconcilerTest {
         // New: [A, B, C]
         // Result: Update A, Update B, Create C
 
-        List<TestBlueprint> oldList = List.of(
-            createBlueprint("A", "key-a"),
-            createBlueprint("B", "key-b")
-        );
+        List<TestBlueprint> oldList = List.of(createBlueprint("A", "key-a"), createBlueprint("B", "key-b"));
 
         List<TestBlueprint> newList = List.of(
-            createBlueprint("A-new", "key-a"),
-            createBlueprint("B-new", "key-b"),
-            createBlueprint("C", "key-c")
-        );
+                createBlueprint("A-new", "key-a"), createBlueprint("B-new", "key-b"), createBlueprint("C", "key-c"));
 
         // First two should match by key
         assertTrue(Reconciler.canUpdate(oldList.get(0), newList.get(0)));
@@ -172,16 +170,10 @@ class ReconcilerTest {
         // New: [A, B, C]
         // Result: Create A, Update B, Update C
 
-        List<TestBlueprint> oldList = List.of(
-            createBlueprint("B", "key-b"),
-            createBlueprint("C", "key-c")
-        );
+        List<TestBlueprint> oldList = List.of(createBlueprint("B", "key-b"), createBlueprint("C", "key-c"));
 
         List<TestBlueprint> newList = List.of(
-            createBlueprint("A", "key-a"),
-            createBlueprint("B-new", "key-b"),
-            createBlueprint("C-new", "key-c")
-        );
+                createBlueprint("A", "key-a"), createBlueprint("B-new", "key-b"), createBlueprint("C-new", "key-c"));
 
         // key-a is new
         assertFalse(oldList.stream().anyMatch(bp -> "key-a".equals(bp.key())));
@@ -263,9 +255,7 @@ class ReconcilerTest {
 
         // Children should also be able to update
         assertTrue(Reconciler.canUpdate(
-            oldRoot.children().get(0),
-            newRoot.children().get(0)
-        ));
+                oldRoot.children().get(0), newRoot.children().get(0)));
     }
 
     // ==================== Subclass Handling ====================
@@ -386,8 +376,7 @@ class ReconcilerTest {
         }
 
         @Override
-        public void updateWidget(Widget widget, Scene scene, SceneContext context) {
-        }
+        public void updateWidget(Widget widget, Scene scene, SceneContext context) {}
 
         @Override
         public String toString() {
@@ -429,8 +418,7 @@ class ReconcilerTest {
         }
 
         @Override
-        public void updateWidget(CompositeWidget<Widget> widget, Scene scene, SceneContext context) {
-        }
+        public void updateWidget(CompositeWidget<Widget> widget, Scene scene, SceneContext context) {}
 
         @Override
         public MutableList<Blueprint<Widget>> children() {

@@ -30,6 +30,4 @@ public record FocusContext(
         double distance,
         boolean exactHit,
         boolean incumbent,
-        float partialTick
-) {
-}
+        float partialTick) {}

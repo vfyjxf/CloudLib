@@ -55,5 +55,4 @@ public record LangEntry(String key) {
         }
         return of(this.key + "." + suffix);
     }
-
 }

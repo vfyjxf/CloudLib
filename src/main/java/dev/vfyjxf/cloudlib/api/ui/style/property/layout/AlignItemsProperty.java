@@ -20,7 +20,7 @@ import java.util.Objects;
  *   <li>{@link AlignItems#FLEX_END} - align to end of cross axis</li>
  *   <li>{@link AlignItems#CENTER} - center along cross axis</li>
  *   <li>{@link AlignItems#BASELINE} - align baselines</li>
- *   <li>{@link AlignItems#STRETCH} - stretch to fill cross axis</li>
+ *   <li>{@link AlignItems#stretch} - stretch to fill cross axis</li>
  *   <li>{@link AlignItems#START} - align to logical start</li>
  *   <li>{@link AlignItems#END} - align to logical end</li>
  * </ul>
@@ -59,5 +59,4 @@ public record AlignItemsProperty(AlignItems align) implements LayoutProperty {
     public String toString() {
         return align.name().toLowerCase().replace("_", "-");
     }
-
 }

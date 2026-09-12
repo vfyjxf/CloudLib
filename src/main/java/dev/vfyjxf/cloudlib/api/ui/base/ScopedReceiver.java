@@ -22,12 +22,11 @@ import java.util.List;
  */
 public final class ScopedReceiver {
 
-    private static final ThreadLocal<ScopedReceiver> CURRENT = new ThreadLocal<>();
+    private static final ThreadLocal<ScopedReceiver> current = new ThreadLocal<>();
 
     private final List<Blueprint<?>> blueprints = new ArrayList<>();
 
-    private ScopedReceiver() {
-    }
+    private ScopedReceiver() {}
 
     /**
      * Adds a blueprint to the current scope.
@@ -37,7 +36,7 @@ public final class ScopedReceiver {
      * @return the same blueprint for chaining
      */
     public static <T extends Blueprint<?>> T add(T blueprint) {
-        ScopedReceiver scope = CURRENT.get();
+        ScopedReceiver scope = current.get();
         if (scope != null) {
             scope.blueprints.add(blueprint);
         }
@@ -51,15 +50,15 @@ public final class ScopedReceiver {
      * @return list of blueprints created in the block
      */
     public static List<Blueprint<?>> buildChildren(Runnable block) {
-        ScopedReceiver parent = CURRENT.get();
+        ScopedReceiver parent = current.get();
         ScopedReceiver newScope = new ScopedReceiver();
-        CURRENT.set(newScope);
+        current.set(newScope);
 
         try {
             block.run();
             return List.copyOf(newScope.blueprints);
         } finally {
-            CURRENT.set(parent);
+            current.set(parent);
         }
     }
 
@@ -69,6 +68,6 @@ public final class ScopedReceiver {
      * @return true if in scope
      */
     public static boolean inScope() {
-        return CURRENT.get() != null;
+        return current.get() != null;
     }
 }

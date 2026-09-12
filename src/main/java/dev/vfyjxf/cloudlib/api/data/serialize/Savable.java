@@ -8,7 +8,6 @@ import java.lang.reflect.Field;
 public interface Savable {
 
     default MutableList<Field> fieldsToSave() {
-        return SerializerManager.INSTANCE.getFieldsToSave(getClass()).toList();
+        return SerializerManager.instance.getFieldsToSave(getClass()).toList();
     }
-
 }

@@ -8,10 +8,10 @@ import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.Nullable;
 
-//@EventBusSubscriber(modid = Constants.modId, value = Dist.CLIENT)
+// @EventBusSubscriber(modid = Constants.modId, value = Dist.CLIENT)
 class SceneManagement {
 
-    //region fallback
+    // region fallback
     Scene fallbackScene = new Scene(new WidgetGroup<>());
 
     @SubscribeEvent
@@ -22,11 +22,9 @@ class SceneManagement {
         NeoForge.EVENT_BUS.register(management);
     }
 
-    //endregion
-
+    // endregion
 
     private static @Nullable Screen screen() {
         return Minecraft.getInstance().screen;
     }
-
 }

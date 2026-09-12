@@ -33,7 +33,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class LayoutScope {
 
-    //region state
+    // region state
 
     private final @Nullable Layout taffyLayout;
 
@@ -48,9 +48,9 @@ public final class LayoutScope {
      */
     private boolean resolved;
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     private LayoutScope(@Nullable Layout taffyLayout) {
         this.taffyLayout = taffyLayout;
@@ -69,9 +69,9 @@ public final class LayoutScope {
         return new LayoutScope(taffyLayout);
     }
 
-    //endregion
+    // endregion
 
-    //region taffy
+    // region taffy
 
     /**
      * @return the raw taffy layout, or {@code null} if not available
@@ -102,9 +102,9 @@ public final class LayoutScope {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region getters
+    // region getters
 
     public float x() {
         return x;
@@ -130,9 +130,9 @@ public final class LayoutScope {
         return resolved;
     }
 
-    //endregion
+    // endregion
 
-    //region mutation
+    // region mutation
 
     /**
      * Sets position and marks the scope as resolved.
@@ -199,9 +199,9 @@ public final class LayoutScope {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region conversion
+    // region conversion
 
     /**
      * @return the current position as an integer {@link Pos}
@@ -217,5 +217,5 @@ public final class LayoutScope {
         return new Size((int) width, (int) height);
     }
 
-    //endregion
+    // endregion
 }

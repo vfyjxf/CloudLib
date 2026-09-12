@@ -42,6 +42,5 @@ public final class SplitPlan {
         return n;
     }
 
-    private SplitPlan() {
-    }
+    private SplitPlan() {}
 }

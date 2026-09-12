@@ -28,14 +28,12 @@ import java.util.List;
 public record ContainerQueryPayload(BlockPos pos) implements ServerboundPayload {
 
     /** Reach bound for a query. */
-    private static final double REACH = 16.0;
+    private static final double reach = 16.0;
     /** Never ship more slots than this — a malformed block shouldn't spam the wire. */
-    private static final int MAX_SLOTS = 512;
+    private static final int maxSlots = 512;
 
     public static final ServerPayloadInfo<ContainerQueryPayload> info = CloudlibPayloads.createServerInfo(
-            StreamCodec.ofMember(ContainerQueryPayload::encode, ContainerQueryPayload::decode),
-            "container_query"
-    );
+            StreamCodec.ofMember(ContainerQueryPayload::encode, ContainerQueryPayload::decode), "container_query");
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -52,10 +50,10 @@ public record ContainerQueryPayload(BlockPos pos) implements ServerboundPayload 
 
     @Override
     public void handle(IPayloadContext context, ServerPlayer player) {
-        if (!pos.closerToCenterThan(player.getEyePosition(), REACH)) return;
+        if (!pos.closerToCenterThan(player.getEyePosition(), reach)) return;
         IItemHandler handler = player.level().getCapability(Capabilities.ItemHandler.BLOCK, pos, null);
         if (handler == null) return;
-        int slots = Math.min(handler.getSlots(), MAX_SLOTS);
+        int slots = Math.min(handler.getSlots(), maxSlots);
         List<ItemStack> stacks = new ArrayList<>(slots);
         for (int i = 0; i < slots; i++) {
             stacks.add(handler.getStackInSlot(i).copy());

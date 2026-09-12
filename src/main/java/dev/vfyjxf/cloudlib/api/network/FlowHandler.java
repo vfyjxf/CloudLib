@@ -22,5 +22,4 @@ public interface FlowHandler<T, R> extends FlowEncoder<T>, FlowDecoder<R> {
             }
         };
     }
-
 }

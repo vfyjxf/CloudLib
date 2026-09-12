@@ -50,17 +50,13 @@ public final class UnitConverter {
         return new Builder();
     }
 
-    private record EdgeKey(Unit<?> from, Unit<?> to, @Nullable Namespace material) {
-    }
+    private record EdgeKey(Unit<?> from, Unit<?> to, @Nullable Namespace material) {}
 
-    private record RuleDef(Ratio ratio, boolean fixed) {
-    }
+    private record RuleDef(Ratio ratio, boolean fixed) {}
 
-    private record MemoKey(Unit<?> from, Unit<?> to, @Nullable Namespace material) {
-    }
+    private record MemoKey(Unit<?> from, Unit<?> to, @Nullable Namespace material) {}
 
-    private record SearchNode(Unit<?> unit, Ratio ratio) {
-    }
+    private record SearchNode(Unit<?> unit, Ratio ratio) {}
 
     private final Map<EdgeKey, RuleDef> edges;
     private final Map<UnitFamily<?>, Unit<?>> baseUnits;
@@ -122,7 +118,8 @@ public final class UnitConverter {
         Checks.checkNotNull(material, "material");
         Unit<?> base = baseUnits.get(unit.family());
         if (base == null) {
-            throw new IllegalStateException("No base unit registered for family " + unit.family().id());
+            throw new IllegalStateException(
+                    "No base unit registered for family " + unit.family().id());
         }
         Ratio baseValue = convert(value, unit, base, material).value();
         return new MaterialAmount(material, baseValue, base, this);
@@ -156,19 +153,19 @@ public final class UnitConverter {
      * Resolves the exact ratio such that {@code 1 from = ratio to}.
      */
     public Ratio resolveRatio(Unit<?> from, Unit<?> to, @Nullable Namespace material) {
-        if (from.equals(to)) return Ratio.ONE;
+        if (from.equals(to)) return Ratio.one;
         return memo.computeIfAbsent(new MemoKey(from, to, material), key -> bfs(key.from(), key.to(), key.material()));
     }
 
     private Ratio bfs(Unit<?> from, Unit<?> to, @Nullable Namespace material) {
         Deque<SearchNode> queue = new ArrayDeque<>();
         Set<Unit<?>> visited = new HashSet<>();
-        queue.add(new SearchNode(from, Ratio.ONE));
+        queue.add(new SearchNode(from, Ratio.one));
         visited.add(from);
         while (!queue.isEmpty()) {
             SearchNode current = queue.poll();
             // material-specific edges first, then generic ones
-            for (boolean specific : new boolean[]{true, false}) {
+            for (boolean specific : new boolean[] {true, false}) {
                 for (Map.Entry<EdgeKey, RuleDef> entry : edges.entrySet()) {
                     EdgeKey edge = entry.getKey();
                     if (specific != (edge.material() != null)) continue;
@@ -200,8 +197,7 @@ public final class UnitConverter {
         private final Map<EdgeKey, RuleDef> edges = new LinkedHashMap<>();
         private final Map<UnitFamily<?>, Unit<?>> baseUnits = new LinkedHashMap<>();
 
-        private Builder() {
-        }
+        private Builder() {}
 
         /**
          * Starts a rule registration: {@code 1 from = ratio to}. At the terminal
@@ -248,13 +244,11 @@ public final class UnitConverter {
             Checks.checkArgument(
                     matterUnit.family().isMatter(),
                     "Base unit must belong to a matter family: %s",
-                    matterUnit.family().id()
-            );
+                    matterUnit.family().id());
             Unit<?> existing = baseUnits.putIfAbsent(matterUnit.family(), matterUnit);
             if (existing != null) {
                 throw new RuleConflictException(
-                        "Base unit of family " + matterUnit.family().id() + " already registered: " + existing.id()
-                );
+                        "Base unit of family " + matterUnit.family().id() + " already registered: " + existing.id());
             }
             return this;
         }
@@ -262,8 +256,7 @@ public final class UnitConverter {
         public UnitConverter build() {
             return new UnitConverter(
                     Collections.unmodifiableMap(new LinkedHashMap<>(edges)),
-                    Collections.unmodifiableMap(new LinkedHashMap<>(baseUnits))
-            );
+                    Collections.unmodifiableMap(new LinkedHashMap<>(baseUnits)));
         }
 
         /**
@@ -337,8 +330,8 @@ public final class UnitConverter {
             Checks.checkArgument(
                     from.family().equals(to.family()),
                     "Rule endpoints must be in the same family: %s vs %s",
-                    from.family().id(), to.family().id()
-            );
+                    from.family().id(),
+                    to.family().id());
             return put(new EdgeKey(from, to, material), new RuleDef(ratio, fixed));
         }
 
@@ -347,8 +340,7 @@ public final class UnitConverter {
             Checks.checkArgument(
                     !from.family().equals(to.family()),
                     "Bridge endpoints must be in different families: %s",
-                    from.family().id()
-            );
+                    from.family().id());
             return put(new EdgeKey(from, to, material), new RuleDef(ratio, fixed));
         }
 
@@ -356,10 +348,12 @@ public final class UnitConverter {
             RuleDef existing = edges.get(key);
             if (existing != null) {
                 if (existing.fixed()) {
-                    throw new RuleConflictException("Fixed rule " + key.from() + " -> " + key.to() + " can't be overridden");
+                    throw new RuleConflictException(
+                            "Fixed rule " + key.from() + " -> " + key.to() + " can't be overridden");
                 }
                 if (existing.ratio().equals(def.ratio())) {
-                    throw new RuleConflictException("Duplicate rule " + key.from() + " -> " + key.to() + " with ratio " + def.ratio());
+                    throw new RuleConflictException(
+                            "Duplicate rule " + key.from() + " -> " + key.to() + " with ratio " + def.ratio());
                 }
                 edges.put(key, def);
                 return this;
@@ -368,10 +362,12 @@ public final class UnitConverter {
             RuleDef existingReverse = edges.get(reverse);
             if (existingReverse != null) {
                 if (existingReverse.fixed()) {
-                    throw new RuleConflictException("Fixed rule " + reverse.from() + " -> " + reverse.to() + " can't be overridden");
+                    throw new RuleConflictException(
+                            "Fixed rule " + reverse.from() + " -> " + reverse.to() + " can't be overridden");
                 }
                 if (existingReverse.ratio().equals(def.ratio().inverse())) {
-                    throw new RuleConflictException("Duplicate rule " + key.from() + " -> " + key.to() + " (already defined in reverse)");
+                    throw new RuleConflictException(
+                            "Duplicate rule " + key.from() + " -> " + key.to() + " (already defined in reverse)");
                 }
                 edges.remove(reverse);
             }

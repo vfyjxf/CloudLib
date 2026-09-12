@@ -20,32 +20,28 @@ import java.util.stream.Collectors;
 @SuppressWarnings("UnstableApiUsage")
 public final class PluginLoader {
 
-    public static <T extends ModPlugin> LoadingResult<T> load(PluginLookup<T> lookup) throws CyclePresentException, IllegalStateException {
+    public static <T extends ModPlugin> LoadingResult<T> load(PluginLookup<T> lookup)
+            throws CyclePresentException, IllegalStateException {
         Checks.checkNotNull(lookup, "lookup");
 
-        var pluginsList = lookup.findPlugins()
-                                .stream()
-                                .map(LoadingPlugin::of)
-                                .collect(Collectors.groupingBy(LoadingPlugin::id, Collectors.toList()));
-        var duplicatePlugins = pluginsList.values()
-                                          .stream()
-                                          .filter(plugins -> plugins.size() > 1)
-                                          .toList();
+        var pluginsList = lookup.findPlugins().stream()
+                .map(LoadingPlugin::of)
+                .collect(Collectors.groupingBy(LoadingPlugin::id, Collectors.toList()));
+        var duplicatePlugins = pluginsList.values().stream()
+                .filter(plugins -> plugins.size() > 1)
+                .toList();
         if (!duplicatePlugins.isEmpty()) {
             String errorMessage = duplicatePlugins.stream()
-                                                  .flatMap(Collection::stream)
-                                                  .map(LoadingPlugin::id)
-                                                  .distinct()
-                                                  .map(Namespace::toString)
-                                                  .collect(Collectors.joining(", "));
+                    .flatMap(Collection::stream)
+                    .map(LoadingPlugin::id)
+                    .distinct()
+                    .map(Namespace::toString)
+                    .collect(Collectors.joining(", "));
             throw new IllegalStateException("Duplicate plugins: " + errorMessage);
         }
-        var loadingPlugins = pluginsList.values()
-                                        .stream()
-                                        .flatMap(Collection::stream)
-                                        .collect(Collectors.toSet());
-        var id2Plugin = loadingPlugins.stream()
-                                      .collect(Collectors.toMap(LoadingPlugin::id, plugin -> plugin));
+        var loadingPlugins =
+                pluginsList.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
+        var id2Plugin = loadingPlugins.stream().collect(Collectors.toMap(LoadingPlugin::id, plugin -> plugin));
 
         MutableGraph<LoadingPlugin<T>> graph = GraphBuilder.directed().build();
         loadingPlugins.forEach(graph::addNode);
@@ -70,24 +66,23 @@ public final class PluginLoader {
         for (var loadingPlugin : sorted) {
             T plugin = loadingPlugin.plugin;
 
-            var missingTargetDeps =
-                    loadingPlugin.dependencies()
-                                 .stream()
-                                 .filter(dep -> !id2Plugin.containsKey(dep.pluginId()))
-                                 .collect(Collectors2.groupBy(PluginDependency::constraint, Multimaps.mutable.list::empty));
+            var missingTargetDeps = loadingPlugin.dependencies().stream()
+                    .filter(dep -> !id2Plugin.containsKey(dep.pluginId()))
+                    .collect(Collectors2.groupBy(PluginDependency::constraint, Multimaps.mutable.list::empty));
 
             var required = missingTargetDeps.get(PluginDependency.Constraint.required);
             var ignorable = missingTargetDeps.get(PluginDependency.Constraint.optionalRequired);
             if (required.isEmpty() && ignorable.isEmpty()) {
                 plugins.add(plugin);
             } else {
-                var loadingFailures = ignorable.collect(dep -> new LoadingFailure<>(plugin, FailureType.warning, "Missing optional dependency: " + dep.pluginId()));
+                var loadingFailures = ignorable.collect(dep -> new LoadingFailure<>(
+                        plugin, FailureType.warning, "Missing optional dependency: " + dep.pluginId()));
                 failures.addAll(loadingFailures);
             }
 
-            var pluginFailures =
-                    required.select(dep -> !id2Plugin.containsKey(dep.pluginId()))
-                            .collect(dep -> new LoadingFailure<>(plugin, FailureType.fatal, "Missing required dependency: " + dep.pluginId()));
+            var pluginFailures = required.select(dep -> !id2Plugin.containsKey(dep.pluginId()))
+                    .collect(dep -> new LoadingFailure<>(
+                            plugin, FailureType.fatal, "Missing required dependency: " + dep.pluginId()));
 
             failures.addAll(pluginFailures);
         }
@@ -95,16 +90,21 @@ public final class PluginLoader {
         return new LoadingResult<>(plugins, failures);
     }
 
-    //region util
+    // region util
 
-    public static <T extends ModPlugin> MutableList<T> loadPlugin(Logger logger, String pluginCategory, PluginLookup<T> lookup) throws CyclePresentException, IllegalStateException {
+    public static <T extends ModPlugin> MutableList<T> loadPlugin(
+            Logger logger, String pluginCategory, PluginLookup<T> lookup)
+            throws CyclePresentException, IllegalStateException {
         PluginLoader.LoadingResult<T> loadingResult = PluginLoader.load(lookup);
         if (loadingResult.failures().notEmpty()) {
-            var failureByType = loadingResult.failures()
-                                             .groupBy(PluginLoader.LoadingFailure::type);
+            var failureByType = loadingResult.failures().groupBy(PluginLoader.LoadingFailure::type);
             var warnings = failureByType.get(PluginLoader.FailureType.warning);
             for (var warning : warnings) {
-                logger.warn("{}: {} is skipped because : {}", pluginCategory, warning.instance().pluginId(), warning.reason());
+                logger.warn(
+                        "{}: {} is skipped because : {}",
+                        pluginCategory,
+                        warning.instance().pluginId(),
+                        warning.reason());
             }
             var fatal = failureByType.get(PluginLoader.FailureType.fatal);
             if (fatal.notEmpty()) {
@@ -118,7 +118,9 @@ public final class PluginLoader {
     /**
      * Loads plugins synchronously and returns a {@link PluginDispatcher} for parallel event dispatch.
      */
-    public static <T extends ModPlugin> PluginDispatcher<T> loadAndDispatcher(Logger logger, String pluginCategory, PluginLookup<T> lookup) throws CyclePresentException, IllegalStateException {
+    public static <T extends ModPlugin> PluginDispatcher<T> loadAndDispatcher(
+            Logger logger, String pluginCategory, PluginLookup<T> lookup)
+            throws CyclePresentException, IllegalStateException {
         MutableList<T> plugins = loadPlugin(logger, pluginCategory, lookup);
         return PluginDispatcher.create(plugins);
     }
@@ -126,15 +128,16 @@ public final class PluginLoader {
     /**
      * Loads plugins synchronously and returns a {@link PluginDispatcher} using the given executor.
      */
-    public static <T extends ModPlugin> PluginDispatcher<T> loadAndDispatcher(Logger logger, String pluginCategory, PluginLookup<T> lookup, Executor executor) throws CyclePresentException, IllegalStateException {
+    public static <T extends ModPlugin> PluginDispatcher<T> loadAndDispatcher(
+            Logger logger, String pluginCategory, PluginLookup<T> lookup, Executor executor)
+            throws CyclePresentException, IllegalStateException {
         MutableList<T> plugins = loadPlugin(logger, pluginCategory, lookup);
         return PluginDispatcher.create(plugins, executor);
     }
 
-    //endregion
+    // endregion
 
-    public record LoadingResult<T extends ModPlugin>(MutableList<T> plugins, MutableList<LoadingFailure<T>> failures) {
-    }
+    public record LoadingResult<T extends ModPlugin>(MutableList<T> plugins, MutableList<LoadingFailure<T>> failures) {}
 
     public record LoadingFailure<T extends ModPlugin>(T instance, FailureType type, String reason) {
         @Override
@@ -170,11 +173,7 @@ public final class PluginLoader {
         public int hashCode() {
             return id.hashCode();
         }
-
     }
 
-
-    private PluginLoader() {
-    }
-
+    private PluginLoader() {}
 }

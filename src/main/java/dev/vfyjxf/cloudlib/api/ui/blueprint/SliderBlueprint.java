@@ -28,7 +28,7 @@ public final class SliderBlueprint implements Blueprint<SliderWidget> {
     private double min = 0.0;
     private double max = 1.0;
     private double step = 0.0;
-    private SliderWidget.Orientation orientation = SliderWidget.Orientation.HORIZONTAL;
+    private SliderWidget.Orientation orientation = SliderWidget.Orientation.horizontal;
     private @Nullable Consumer<Double> onValueChanged;
 
     private VisualTexture trackTexture = new ColorTexture(0xFF444444);
@@ -37,7 +37,7 @@ public final class SliderBlueprint implements Blueprint<SliderWidget> {
     private int thumbSize = 8;
 
     private @Nullable Object key;
-    private UIStyle style = UIStyle.EMPTY;
+    private UIStyle style = UIStyle.empty;
 
     private SliderBlueprint(double min, double max, double value) {
         this.min = min;
@@ -45,7 +45,7 @@ public final class SliderBlueprint implements Blueprint<SliderWidget> {
         this.value = value;
     }
 
-    //region dsl entry points
+    // region dsl entry points
 
     public static SliderBlueprint Slider(double min, double max) {
         return ScopedReceiver.add(new SliderBlueprint(min, max, min));
@@ -59,9 +59,9 @@ public final class SliderBlueprint implements Blueprint<SliderWidget> {
         return ScopedReceiver.add(new SliderBlueprint(min, max, min).onValueChanged(onValueChanged));
     }
 
-    //endregion
+    // endregion
 
-    //region builder methods
+    // region builder methods
 
     public SliderBlueprint value(double value) {
         this.value = value;
@@ -85,12 +85,12 @@ public final class SliderBlueprint implements Blueprint<SliderWidget> {
     }
 
     public SliderBlueprint horizontal() {
-        this.orientation = SliderWidget.Orientation.HORIZONTAL;
+        this.orientation = SliderWidget.Orientation.horizontal;
         return this;
     }
 
     public SliderBlueprint vertical() {
-        this.orientation = SliderWidget.Orientation.VERTICAL;
+        this.orientation = SliderWidget.Orientation.vertical;
         return this;
     }
 
@@ -121,9 +121,9 @@ public final class SliderBlueprint implements Blueprint<SliderWidget> {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region blueprint implementation
+    // region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -138,16 +138,16 @@ public final class SliderBlueprint implements Blueprint<SliderWidget> {
     @Override
     public void updateWidget(SliderWidget widget, Scene scene, SceneContext context) {
         widget.setRange(min, max)
-              .setValue(value)
-              .setStep(step)
-              .setOrientation(orientation)
-              .onValueChanged(onValueChanged)
-              .setTrackTexture(trackTexture)
-              .setFilledTrackTexture(filledTrackTexture)
-              .setThumbTexture(thumbTexture)
-              .setThumbSize(thumbSize)
-              .useStyle(style);
+                .setValue(value)
+                .setStep(step)
+                .setOrientation(orientation)
+                .onValueChanged(onValueChanged)
+                .setTrackTexture(trackTexture)
+                .setFilledTrackTexture(filledTrackTexture)
+                .setThumbTexture(thumbTexture)
+                .setThumbSize(thumbSize)
+                .useStyle(style);
     }
 
-    //endregion
+    // endregion
 }

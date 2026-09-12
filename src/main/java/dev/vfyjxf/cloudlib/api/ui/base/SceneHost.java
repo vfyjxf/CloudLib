@@ -35,5 +35,4 @@ public interface SceneHost {
      * @return the height of the scene host
      */
     int height();
-
 }

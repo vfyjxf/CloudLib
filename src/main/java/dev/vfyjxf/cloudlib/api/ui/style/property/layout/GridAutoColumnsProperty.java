@@ -39,5 +39,4 @@ public record GridAutoColumnsProperty(List<TrackSizingFunction> columns) impleme
     public String toString() {
         return columns.toString();
     }
-
 }

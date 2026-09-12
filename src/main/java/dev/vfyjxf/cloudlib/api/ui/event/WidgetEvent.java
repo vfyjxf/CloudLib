@@ -15,14 +15,13 @@ import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.SceneHandle;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragConsumer;
+import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 
 public interface WidgetEvent {
 
-
-    //region lifecycle
+    // region lifecycle
 
     EventDefinition<OnInit> onInit = Events.define(OnInit.class, listeners -> (self) -> {
         for (var listener : listeners) {
@@ -48,14 +47,15 @@ public interface WidgetEvent {
         }
     });
 
-    //endregion
+    // endregion
 
-    EventDefinition<OnPositionChanged> onPositionChanged = Events.define(OnPositionChanged.class, listeners -> (position, context) -> {
-        for (var listener : listeners) {
-            listener.onPositionChanged(position, context);
-            if (context.interrupted()) return;
-        }
-    });
+    EventDefinition<OnPositionChanged> onPositionChanged =
+            Events.define(OnPositionChanged.class, listeners -> (position, context) -> {
+                for (var listener : listeners) {
+                    listener.onPositionChanged(position, context);
+                    if (context.interrupted()) return;
+                }
+            });
 
     EventDefinition<OnSizeChanged> onSizeChanged = Events.define(OnSizeChanged.class, listeners -> (size, context) -> {
         for (var listener : listeners) {
@@ -64,46 +64,49 @@ public interface WidgetEvent {
         }
     });
 
+    // region render
 
-    //region render
+    EventDefinition<OnRender> onRender =
+            Events.define(OnRender.class, listeners -> (canvas, mouseX, mouseY, partialTicks, self, context) -> {
+                for (var listener : listeners) {
+                    listener.onRender(canvas, mouseX, mouseY, partialTicks, self, context);
+                    if (context.interrupted()) return;
+                }
+            });
 
-    EventDefinition<OnRender> onRender = Events.define(OnRender.class, listeners -> (canvas, mouseX, mouseY, partialTicks, self, context) -> {
-        for (var listener : listeners) {
-            listener.onRender(canvas, mouseX, mouseY, partialTicks, self, context);
-            if (context.interrupted()) return;
-        }
-    });
-
-    EventDefinition<OnRenderPost> onRenderPost = Events.define(OnRenderPost.class, listeners -> (canvas, mouseX, mouseY, partialTicks, self, context) -> {
-        for (var listener : listeners) {
-            listener.onRender(canvas, mouseX, mouseY, partialTicks, self, context);
-            if (context.interrupted()) return;
-        }
-    });
+    EventDefinition<OnRenderPost> onRenderPost =
+            Events.define(OnRenderPost.class, listeners -> (canvas, mouseX, mouseY, partialTicks, self, context) -> {
+                for (var listener : listeners) {
+                    listener.onRender(canvas, mouseX, mouseY, partialTicks, self, context);
+                    if (context.interrupted()) return;
+                }
+            });
 
     /**
      * Call when mouse over the widget
      */
-    EventDefinition<OnOverlayRender> onOverlayRender = Events.define(OnOverlayRender.class, listeners -> (canvas, mouseX, mouseY, partialTicks, context) -> {
-        for (var listener : listeners) {
-            listener.onRender(canvas, mouseX, mouseY, partialTicks, context);
-            if (context.interrupted()) return;
-        }
-    });
+    EventDefinition<OnOverlayRender> onOverlayRender =
+            Events.define(OnOverlayRender.class, listeners -> (canvas, mouseX, mouseY, partialTicks, context) -> {
+                for (var listener : listeners) {
+                    listener.onRender(canvas, mouseX, mouseY, partialTicks, context);
+                    if (context.interrupted()) return;
+                }
+            });
 
     /**
      * Call after tooltip render
      */
-    EventDefinition<OnOverlayRenderPost> onOverlayRenderPost = Events.define(OnOverlayRenderPost.class, listeners -> (canvas, mouseX, mouseY, partialTicks, context) -> {
-        for (var listener : listeners) {
-            listener.onRender(canvas, mouseX, mouseY, partialTicks, context);
-            if (context.interrupted()) return;
-        }
-    });
+    EventDefinition<OnOverlayRenderPost> onOverlayRenderPost =
+            Events.define(OnOverlayRenderPost.class, listeners -> (canvas, mouseX, mouseY, partialTicks, context) -> {
+                for (var listener : listeners) {
+                    listener.onRender(canvas, mouseX, mouseY, partialTicks, context);
+                    if (context.interrupted()) return;
+                }
+            });
 
-    //endregion
+    // endregion
 
-    //region tooltip
+    // region tooltip
 
     EventDefinition<OnTooltip> onTooltip = Events.define(OnTooltip.class, listeners -> (tooltip, context) -> {
         for (var listener : listeners) {
@@ -112,9 +115,9 @@ public interface WidgetEvent {
         }
     });
 
-    //endregion
+    // endregion
 
-    //region activity
+    // region activity
 
     EventDefinition<OnTick> onTick = Events.define(OnTick.class, listeners -> () -> {
         for (var listener : listeners) {
@@ -122,9 +125,9 @@ public interface WidgetEvent {
         }
     });
 
-    //endregion
+    // endregion
 
-    //region focus
+    // region focus
 
     EventDefinition<OnFocusIn> onFocusIn = Events.define(OnFocusIn.class, listeners -> (widget, context) -> {
         EventDispatch result = EventDispatch.pass;
@@ -160,9 +163,9 @@ public interface WidgetEvent {
         }
     });
 
-    //endregion
+    // endregion
 
-    //region click region
+    // region click region
 
     /**
      * Fired on each member of a click group when a mouse click
@@ -177,9 +180,9 @@ public interface WidgetEvent {
         }
     });
 
-    //endregion
+    // endregion
 
-    //region group hooks
+    // region group hooks
 
     EventDefinition<OnRemove> onRemove = Events.define(OnRemove.class, listeners -> (parent, self) -> {
         for (var listener : listeners) {
@@ -194,23 +197,25 @@ public interface WidgetEvent {
         }
     });
 
-    EventDefinition<OnChildAddedPost> onChildAddedPost = Events.define(OnChildAddedPost.class, listeners -> (widget, context) -> {
-        for (var listener : listeners) {
-            listener.onChildAdded(widget, context);
-            if (context.interrupted()) return;
-        }
-    });
+    EventDefinition<OnChildAddedPost> onChildAddedPost =
+            Events.define(OnChildAddedPost.class, listeners -> (widget, context) -> {
+                for (var listener : listeners) {
+                    listener.onChildAdded(widget, context);
+                    if (context.interrupted()) return;
+                }
+            });
 
-    EventDefinition<OnChildRemoved> onChildRemoved = Events.define(OnChildRemoved.class, listeners -> (widget, context) -> {
-        for (var listener : listeners) {
-            listener.onChildRemoved(widget, context);
-            if (context.interrupted()) return;
-        }
-    });
+    EventDefinition<OnChildRemoved> onChildRemoved =
+            Events.define(OnChildRemoved.class, listeners -> (widget, context) -> {
+                for (var listener : listeners) {
+                    listener.onChildRemoved(widget, context);
+                    if (context.interrupted()) return;
+                }
+            });
 
-    //endregion
+    // endregion
 
-    //region theme
+    // region theme
 
     EventDefinition<OnThemeUpdate> onThemeUpdate = Events.define(OnThemeUpdate.class, listeners -> () -> {
         for (var listener : listeners) {
@@ -218,87 +223,91 @@ public interface WidgetEvent {
         }
     });
 
-    //endregion
+    // endregion
 
-
-    //region drag
-
-    /**
-     * Post on the widget to be dragged
-     * <p>
-     * For widget itself to use
-     */
-    EventDefinition<OnWidgetDragStart> onWidgetDragStart = Events.define(OnWidgetDragStart.class, listeners -> (input, dragContext, eventContext) -> {
-        for (var listener : listeners) {
-            listener.onDragStart(input, dragContext, eventContext);
-            if (eventContext.interrupted()) return;
-        }
-    });
+    // region drag
 
     /**
      * Post on the widget to be dragged
      * <p>
      * For widget itself to use
      */
-    EventDefinition<OnWidgetDrag> onWidgetDrag = Events.define(OnWidgetDrag.class, listeners -> (input, deltaX, deltaY, dragContext, eventContext) -> {
-        for (var listener : listeners) {
-            listener.onDrag(input, deltaX, deltaY, dragContext, eventContext);
-            if (eventContext.interrupted()) return;
-        }
-    });
+    EventDefinition<OnWidgetDragStart> onWidgetDragStart =
+            Events.define(OnWidgetDragStart.class, listeners -> (input, dragContext, eventContext) -> {
+                for (var listener : listeners) {
+                    listener.onDragStart(input, dragContext, eventContext);
+                    if (eventContext.interrupted()) return;
+                }
+            });
 
     /**
      * Post on the widget to be dragged
      * <p>
      * For widget itself to use
      */
-    EventDefinition<OnWidgetDragEnd> onWidgetDragEnd = Events.define(OnWidgetDragEnd.class, listeners -> (input, dragContext, eventContext) -> {
-        for (var listener : listeners) {
-            listener.onDragEnd(input, dragContext, eventContext);
-            if (eventContext.interrupted()) return;
-        }
-    });
+    EventDefinition<OnWidgetDrag> onWidgetDrag =
+            Events.define(OnWidgetDrag.class, listeners -> (input, deltaX, deltaY, dragContext, eventContext) -> {
+                for (var listener : listeners) {
+                    listener.onDrag(input, deltaX, deltaY, dragContext, eventContext);
+                    if (eventContext.interrupted()) return;
+                }
+            });
+
+    /**
+     * Post on the widget to be dragged
+     * <p>
+     * For widget itself to use
+     */
+    EventDefinition<OnWidgetDragEnd> onWidgetDragEnd =
+            Events.define(OnWidgetDragEnd.class, listeners -> (input, dragContext, eventContext) -> {
+                for (var listener : listeners) {
+                    listener.onDragEnd(input, dragContext, eventContext);
+                    if (eventContext.interrupted()) return;
+                }
+            });
 
     /**
      * Post on MainGroup.
      * <p>
      * For {@link DragConsumer} to use
      */
-    EventDefinition<OnDragStart> onDragStart = Events.define(OnDragStart.class, listeners -> (toDrag, input, dragContext, eventContext) -> {
-        for (var listener : listeners) {
-            listener.onDragStart(toDrag, input, dragContext, eventContext);
-            if (eventContext.interrupted()) return;
-        }
-    });
+    EventDefinition<OnDragStart> onDragStart =
+            Events.define(OnDragStart.class, listeners -> (toDrag, input, dragContext, eventContext) -> {
+                for (var listener : listeners) {
+                    listener.onDragStart(toDrag, input, dragContext, eventContext);
+                    if (eventContext.interrupted()) return;
+                }
+            });
 
     /**
      * Post on MainGroup
      * <p>
      * For {@link DragConsumer} to use
      */
-    EventDefinition<OnDrag> onDrag = Events.define(OnDrag.class, listeners -> (dragging, input, deltaX, deltaY, dragContext, eventContext) -> {
-        for (var listener : listeners) {
-            listener.onDrag(dragging, input, deltaX, deltaY, dragContext, eventContext);
-            if (eventContext.interrupted()) return;
-        }
-    });
+    EventDefinition<OnDrag> onDrag =
+            Events.define(OnDrag.class, listeners -> (dragging, input, deltaX, deltaY, dragContext, eventContext) -> {
+                for (var listener : listeners) {
+                    listener.onDrag(dragging, input, deltaX, deltaY, dragContext, eventContext);
+                    if (eventContext.interrupted()) return;
+                }
+            });
 
     /**
      * Post on MainGroup
      * <p>
      * For {@link DragConsumer} to use
      */
-    EventDefinition<OnDragEnd> onDragEnd = Events.define(OnDragEnd.class, listeners -> (dragging, input, dragContext, eventContext) -> {
-        for (var listener : listeners) {
-            listener.onDragEnd(dragging, input, dragContext, eventContext);
-            if (eventContext.interrupted()) return;
-        }
-    });
+    EventDefinition<OnDragEnd> onDragEnd =
+            Events.define(OnDragEnd.class, listeners -> (dragging, input, dragContext, eventContext) -> {
+                for (var listener : listeners) {
+                    listener.onDragEnd(dragging, input, dragContext, eventContext);
+                    if (eventContext.interrupted()) return;
+                }
+            });
 
-    //endregion
+    // endregion
 
-
-    //region lifecycle
+    // region lifecycle
 
     interface OnInit extends WidgetEvent {
         void onInit(Widget self);
@@ -316,10 +325,9 @@ public interface WidgetEvent {
         void onDestroy(Widget self);
     }
 
+    // endregion
 
-    //endregion
-
-    //region layout
+    // region layout
 
     @FunctionalInterface
     interface OnPositionChanged extends WidgetEvent {
@@ -331,18 +339,25 @@ public interface WidgetEvent {
         void onSizeChanged(Size size, CommonContext context);
     }
 
-    //endregion
+    // endregion
 
-    //region render
+    // region render
 
     @FunctionalInterface
     interface OnRender extends WidgetEvent {
-        void onRender(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks, Widget self, CommonContext context);
+        void onRender(
+                SceneCanvas canvas, int mouseX, int mouseY, float partialTicks, Widget self, CommonContext context);
     }
 
     @FunctionalInterface
     interface OnRenderPost extends WidgetEvent {
-        void onRender(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks, Widget self, InterruptibleContext context);
+        void onRender(
+                SceneCanvas canvas,
+                int mouseX,
+                int mouseY,
+                float partialTicks,
+                Widget self,
+                InterruptibleContext context);
     }
 
     @FunctionalInterface
@@ -355,28 +370,27 @@ public interface WidgetEvent {
         void onRender(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks, InterruptibleContext context);
     }
 
-    //endregion
+    // endregion
 
-    //region tooltip
+    // region tooltip
 
     @FunctionalInterface
     interface OnTooltip extends WidgetEvent {
         void onTooltip(Tooltip tooltip, CommonContext context);
     }
 
-    //endregion
+    // endregion
 
-    //region activity
+    // region activity
 
     @FunctionalInterface
     interface OnTick extends WidgetEvent {
         void onTick();
     }
 
-    //endregion
+    // endregion
 
-
-    //region focus
+    // region focus
 
     @FunctionalInterface
     interface OnFocusIn extends WidgetEvent {
@@ -398,18 +412,18 @@ public interface WidgetEvent {
         void onFocusLost(InterruptibleContext context);
     }
 
-    //endregion
+    // endregion
 
-    //region click region
+    // region click region
 
     @FunctionalInterface
     interface OnClickOutside extends WidgetEvent {
         void onClickOutside(InterruptibleContext context);
     }
 
-    //endregion
+    // endregion
 
-    //region group hooks
+    // region group hooks
 
     @FunctionalInterface
     interface OnRemove extends WidgetEvent {
@@ -431,18 +445,18 @@ public interface WidgetEvent {
         void onChildRemoved(Widget widget, InterruptibleContext context);
     }
 
-    //endregion
+    // endregion
 
-    //region theme
+    // region theme
 
     @FunctionalInterface
     interface OnThemeUpdate extends WidgetEvent {
         void onThemeUpdate();
     }
 
-    //endregion
+    // endregion
 
-    //region drag
+    // region drag
 
     @FunctionalInterface
     interface OnWidgetDragStart extends WidgetEvent {
@@ -451,7 +465,8 @@ public interface WidgetEvent {
 
     @FunctionalInterface
     interface OnWidgetDrag extends WidgetEvent {
-        void onDrag(InputContext input, int deltaX, int deltaY, DragContext dragContext, InterruptibleContext eventContext);
+        void onDrag(
+                InputContext input, int deltaX, int deltaY, DragContext dragContext, InterruptibleContext eventContext);
     }
 
     @FunctionalInterface
@@ -466,7 +481,13 @@ public interface WidgetEvent {
 
     @FunctionalInterface
     interface OnDrag extends WidgetEvent {
-        void onDrag(Widget dragging, InputContext input, int deltaX, int deltaY, DragContext dragContext, InterruptibleContext eventContext);
+        void onDrag(
+                Widget dragging,
+                InputContext input,
+                int deltaX,
+                int deltaY,
+                DragContext dragContext,
+                InterruptibleContext eventContext);
     }
 
     @FunctionalInterface
@@ -474,6 +495,6 @@ public interface WidgetEvent {
         void onDragEnd(Widget dragging, InputContext input, DragContext dragContext, InterruptibleContext eventContext);
     }
 
-    //endregion
+    // endregion
 
 }

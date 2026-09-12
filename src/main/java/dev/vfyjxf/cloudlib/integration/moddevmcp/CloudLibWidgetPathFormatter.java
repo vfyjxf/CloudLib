@@ -5,8 +5,8 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetPath;
 
 public final class CloudLibWidgetPathFormatter {
-    private static final char SEPARATOR = '/';
-    private static final char INDEX_SEPARATOR = '#';
+    private static final char separator = '/';
+    private static final char indexSeparator = '#';
 
     private CloudLibWidgetPathFormatter() {
     }
@@ -18,7 +18,7 @@ public final class CloudLibWidgetPathFormatter {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < path.size(); i++) {
             if (i > 0) {
-                builder.append(SEPARATOR);
+                builder.append(separator);
             }
             builder.append(formatSegment(path.get(i), i));
         }
@@ -32,7 +32,7 @@ public final class CloudLibWidgetPathFormatter {
         }
 
         String typeName = typeNameOf(widget);
-        return typeName + INDEX_SEPARATOR + siblingOrdinal(widget, typeName, fallbackIndex);
+        return typeName + indexSeparator + siblingOrdinal(widget, typeName, fallbackIndex);
     }
 
     private static int siblingOrdinal(Widget widget, String typeName, int fallbackIndex) {

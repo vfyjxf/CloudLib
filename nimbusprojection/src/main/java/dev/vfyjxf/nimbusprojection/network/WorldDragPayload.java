@@ -38,36 +38,30 @@ import java.util.List;
  * non-null = the item-handler block at that position ({@link #slot} is an
  * {@code IItemHandler} slot) — e.g. dragging out of the container panel.
  */
-public record WorldDragPayload(
-        int slot,
-        int mode,
-        List<BlockPos> targets,
-        Vec3 look,
-        @Nullable BlockPos source
-) implements ServerboundPayload {
+public record WorldDragPayload(int slot, int mode, List<BlockPos> targets, Vec3 look, @Nullable BlockPos source)
+        implements ServerboundPayload {
 
     /** Split the whole source stack evenly across {@link #targets}. */
-    public static final int INSERT_EVEN = 0;
+    public static final int insertEven = 0;
     /** One item per target while supply lasts. */
-    public static final int INSERT_ONE = 1;
+    public static final int insertOne = 1;
     /** Released over air — toss the whole stack along the look vector. */
-    public static final int THROW_STACK = 2;
+    public static final int throwStack = 2;
     /** Released over air — toss a single item. */
-    public static final int THROW_ONE = 3;
+    public static final int throwOne = 3;
 
     /** Max distance from the player to a commit target or source — generous reach bound. */
-    private static final double REACH = 12.0;
-    private static final int MAX_TARGETS = DragTrailCap.CAPACITY;
+    private static final double reach = 12.0;
+
+    private static final int maxTargets = DragTrailCap.capacity;
 
     /** Bare codec — also registered as a channel type so the payload can
      *  travel nested inside a {@link PanelChannelPayload}. */
-    public static final StreamCodec<RegistryFriendlyByteBuf, WorldDragPayload> STREAM_CODEC =
+    public static final StreamCodec<RegistryFriendlyByteBuf, WorldDragPayload> streamCodec =
             StreamCodec.ofMember(WorldDragPayload::encode, WorldDragPayload::decode);
 
-    public static final ServerPayloadInfo<WorldDragPayload> info = NimbusPayloads.createServerInfo(
-            STREAM_CODEC,
-            "world_drag"
-    );
+    public static final ServerPayloadInfo<WorldDragPayload> info =
+            NimbusPayloads.createServerInfo(streamCodec, "world_drag");
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -87,7 +81,7 @@ public record WorldDragPayload(
     private static WorldDragPayload decode(RegistryFriendlyByteBuf buf) {
         int slot = buf.readVarInt();
         int mode = buf.readByte();
-        int n = Math.min(buf.readVarInt(), MAX_TARGETS * 4);
+        int n = Math.min(buf.readVarInt(), maxTargets * 4);
         List<BlockPos> targets = new ArrayList<>(n);
         for (int i = 0; i < n; i++) targets.add(buf.readBlockPos());
         Vec3 look = buf.readVec3();
@@ -100,17 +94,19 @@ public record WorldDragPayload(
         Level level = player.level();
         Vec3 eye = player.getEyePosition();
 
-        //resolve the source: player's inventory or a container's item handler
+        // resolve the source: player's inventory or a container's item handler
         ItemSource src = resolveSource(player, level, eye);
         if (src == null) return;
         ItemStack stack = src.read();
         if (stack.isEmpty()) return;
 
         switch (mode) {
-            case INSERT_EVEN, INSERT_ONE -> insert(player, level, eye, src, stack);
-            case THROW_STACK -> toss(player, src, stack.getCount());
-            case THROW_ONE -> toss(player, src, 1);
-            default -> NimbusPayloads.log.warn("Bad world-drag mode {} from {}", mode, player.getName().getString());
+            case insertEven, insertOne -> insert(player, level, eye, src, stack);
+            case throwStack -> toss(player, src, stack.getCount());
+            case throwOne -> toss(player, src, 1);
+            default ->
+                NimbusPayloads.log.warn(
+                        "Bad world-drag mode {} from {}", mode, player.getName().getString());
         }
     }
 
@@ -124,35 +120,50 @@ public record WorldDragPayload(
             Inventory inv = player.getInventory();
             if (slot < 0 || slot >= inv.getContainerSize()) return null;
             return new ItemSource() {
-                @Override public ItemStack read() { return inv.getItem(slot); }
-                @Override public ItemStack remove(int n) { return inv.removeItem(slot, n); }
+                @Override
+                public ItemStack read() {
+                    return inv.getItem(slot);
+                }
+
+                @Override
+                public ItemStack remove(int n) {
+                    return inv.removeItem(slot, n);
+                }
             };
         }
-        if (!source.closerToCenterThan(eye, REACH)) return null;
+        if (!source.closerToCenterThan(eye, reach)) return null;
         IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, source, null);
         if (handler == null || slot < 0 || slot >= handler.getSlots()) return null;
         return new ItemSource() {
-            @Override public ItemStack read() { return handler.getStackInSlot(slot); }
-            @Override public ItemStack remove(int n) { return handler.extractItem(slot, n, false); }
+            @Override
+            public ItemStack read() {
+                return handler.getStackInSlot(slot);
+            }
+
+            @Override
+            public ItemStack remove(int n) {
+                return handler.extractItem(slot, n, false);
+            }
         };
     }
 
     private interface ItemSource {
         ItemStack read();
+
         ItemStack remove(int n);
     }
 
     private void insert(ServerPlayer player, Level level, Vec3 eye, ItemSource src, ItemStack stack) {
         List<BlockPos> valid = new ArrayList<>(targets.size());
         for (BlockPos pos : targets) {
-            if (!pos.closerToCenterThan(eye, REACH)) continue;
+            if (!pos.closerToCenterThan(eye, reach)) continue;
             if (level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null) != null) {
                 valid.add(pos);
             }
         }
         if (valid.isEmpty()) return;
 
-        int[] shares = mode == INSERT_ONE
+        int[] shares = mode == insertOne
                 ? SplitPlan.oneEach(stack.getCount(), valid.size())
                 : SplitPlan.evenly(stack.getCount(), valid.size());
 
@@ -162,8 +173,8 @@ public record WorldDragPayload(
             if (share <= 0) continue;
             IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, valid.get(i), null);
             if (handler == null) continue;
-            //never feed a slot back into itself — dragging out of a container
-            //and dropping it on the same container would be a no-op anyway
+            // never feed a slot back into itself — dragging out of a container
+            // and dropping it on the same container would be a no-op anyway
             if (source != null && valid.get(i).equals(source)) continue;
             ItemStack remainder = ItemHandlerHelper.insertItem(handler, stack.copyWithCount(share), false);
             removed += share - remainder.getCount();
@@ -183,6 +194,6 @@ public record WorldDragPayload(
 
     /** Trail size cap mirrored for decode — kept separate so this record stays codec-local. */
     private static final class DragTrailCap {
-        static final int CAPACITY = 8;
+        static final int capacity = 8;
     }
 }

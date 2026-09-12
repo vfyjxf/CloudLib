@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
-
 @NotNullByDefault
 public class PluginLoaderTest {
 
@@ -19,14 +18,15 @@ public class PluginLoaderTest {
         Assertions.assertSame(TestPlugin.class, result.plugins().getFirst().getClass());
         Assertions.assertEquals(3, result.plugins().size());
         Assertions.assertEquals(
-            "plugin: cloudlib:test_plugin_e failed to load because: Missing required dependency: cloudlib:test_plugin_c,\n" +
-            "plugin: cloudlib:test_plugin_d failed to load because: Missing optional dependency: cloudlib:test_plugin_c",
-            result.failures().makeString("", ",\n", "")
-        );
-        Assertions.assertThrows(IllegalStateException.class, () -> PluginLoader.load(SpiPluginLookup.of(DuplicatePluginInterface.class)));
+                "plugin: cloudlib:test_plugin_e failed to load because: Missing required dependency: cloudlib:test_plugin_c,\n"
+                        + "plugin: cloudlib:test_plugin_d failed to load because: Missing optional dependency: cloudlib:test_plugin_c",
+                result.failures().makeString("", ",\n", ""));
+        Assertions.assertThrows(
+                IllegalStateException.class,
+                () -> PluginLoader.load(SpiPluginLookup.of(DuplicatePluginInterface.class)));
     }
 
-	@PluginMarker
+    @PluginMarker
     public static class TestPlugin implements ModPlugin {
 
         @Override
@@ -40,7 +40,7 @@ public class PluginLoaderTest {
         }
     }
 
-	@PluginMarker
+    @PluginMarker
     public static class TestPluginB implements ModPlugin {
 
         @Override
@@ -50,18 +50,15 @@ public class PluginLoaderTest {
 
         @Override
         public Set<PluginDependency> dependencies() {
-            return Set.of(
-                new PluginDependency(
+            return Set.of(new PluginDependency(
                     CloudNamespaces.ofMod("test_plugin_a"),
                     PluginDependency.Order.after,
-                    PluginDependency.Constraint.required
-                )
-            );
+                    PluginDependency.Constraint.required));
         }
     }
 
     //    @AutoService(ModPlugin.class)
-//	@PluginMarker
+    //	@PluginMarker
     public static class TestPluginC implements ModPlugin {
 
         @Override
@@ -71,17 +68,14 @@ public class PluginLoaderTest {
 
         @Override
         public Set<PluginDependency> dependencies() {
-            return Set.of(
-                new PluginDependency(
+            return Set.of(new PluginDependency(
                     CloudNamespaces.ofMod("test_plugin_b"),
                     PluginDependency.Order.after,
-                    PluginDependency.Constraint.optionalRequired
-                )
-            );
+                    PluginDependency.Constraint.optionalRequired));
         }
     }
 
-	@PluginMarker
+    @PluginMarker
     public static class TestPluginD implements ModPlugin {
 
         @Override
@@ -91,17 +85,14 @@ public class PluginLoaderTest {
 
         @Override
         public Set<PluginDependency> dependencies() {
-            return Set.of(
-                new PluginDependency(
+            return Set.of(new PluginDependency(
                     CloudNamespaces.ofMod("test_plugin_c"),
                     PluginDependency.Order.after,
-                    PluginDependency.Constraint.optionalRequired
-                )
-            );
+                    PluginDependency.Constraint.optionalRequired));
         }
     }
 
-	@PluginMarker
+    @PluginMarker
     public static class TestPluginE implements ModPlugin {
 
         @Override
@@ -111,19 +102,14 @@ public class PluginLoaderTest {
 
         @Override
         public Set<PluginDependency> dependencies() {
-            return Set.of(
-                new PluginDependency(
+            return Set.of(new PluginDependency(
                     CloudNamespaces.ofMod("test_plugin_c"),
                     PluginDependency.Order.after,
-                    PluginDependency.Constraint.required
-                )
-            );
+                    PluginDependency.Constraint.required));
         }
     }
 
-    interface DuplicatePluginInterface extends ModPlugin {
-
-    }
+    interface DuplicatePluginInterface extends ModPlugin {}
 
     @AutoService(DuplicatePluginInterface.class)
     public static class DuplicatePlugin implements DuplicatePluginInterface {
@@ -150,8 +136,4 @@ public class PluginLoaderTest {
             return Set.of();
         }
     }
-
 }
-
-
-

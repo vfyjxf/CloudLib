@@ -33,10 +33,9 @@ public interface VisualTexture {
     /**
      * An empty texture that renders nothing.
      */
-    VisualTexture empty = (graphics, x, y, width, height) -> {
-    };
+    VisualTexture empty = (graphics, x, y, width, height) -> {};
 
-    //region factory
+    // region factory
 
     /**
      * Creates a texture from a sprite ResourceLocation.
@@ -113,8 +112,7 @@ public interface VisualTexture {
      * Offsets the texture position.
      */
     static VisualTexture offset(VisualTexture texture, int offsetX, int offsetY) {
-        return (graphics, x, y, width, height) ->
-                texture.render(graphics, x + offsetX, y + offsetY, width, height);
+        return (graphics, x, y, width, height) -> texture.render(graphics, x + offsetX, y + offsetY, width, height);
     }
 
     /**
@@ -170,6 +168,6 @@ public interface VisualTexture {
         };
     }
 
-    //endregion
+    // endregion
 
 }

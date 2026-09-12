@@ -26,36 +26,31 @@ public final class CloudShaders {
     private static @Nullable ShaderInstance bezierCurve;
     private static @Nullable ShaderInstance shadow;
 
-    private CloudShaders() {
-    }
+    private CloudShaders() {}
 
-    //region registration
+    // region registration
 
     @SubscribeEvent
     public static void onRegisterShaders(RegisterShadersEvent event) throws IOException {
         var provider = event.getResourceProvider();
         event.registerShader(
                 new ShaderInstance(provider, Locations.ofMod("rounded_rect"), DefaultVertexFormat.POSITION_TEX),
-                s -> roundedRect = s
-        );
+                s -> roundedRect = s);
         event.registerShader(
                 new ShaderInstance(provider, Locations.ofMod("circle"), DefaultVertexFormat.POSITION_TEX),
-                s -> circle = s
-        );
+                s -> circle = s);
         event.registerShader(
                 new ShaderInstance(provider, Locations.ofMod("bezier_curve"), DefaultVertexFormat.POSITION_TEX),
-                s -> bezierCurve = s
-        );
+                s -> bezierCurve = s);
         event.registerShader(
                 new ShaderInstance(provider, Locations.ofMod("shadow"), DefaultVertexFormat.POSITION_TEX),
-                s -> shadow = s
-        );
+                s -> shadow = s);
         logger.info("Registered CloudLib SDF shaders");
     }
 
-    //endregion
+    // endregion
 
-    //region accessors
+    // region accessors
 
     public static @Nullable ShaderInstance roundedRect() {
         return roundedRect;
@@ -73,5 +68,5 @@ public final class CloudShaders {
         return shadow;
     }
 
-    //endregion
+    // endregion
 }

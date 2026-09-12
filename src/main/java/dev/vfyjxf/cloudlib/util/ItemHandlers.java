@@ -19,7 +19,6 @@ public final class ItemHandlers {
         return stack;
     }
 
-
     private ItemHandlers() {
         throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }

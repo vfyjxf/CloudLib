@@ -11,7 +11,7 @@ import dev.vfyjxf.cloudlib.api.ui.drag.DragProvider;
 import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.ApiStatus;
 
-//TODO:Refactor dragging system to blueprint based system.
+// TODO:Refactor dragging system to blueprint based system.
 @ApiStatus.Internal
 public class DraggableManager {
 
@@ -21,7 +21,7 @@ public class DraggableManager {
      * <p>
      * C magic number from testing.
      */
-    private static final double MIN_DRAG_DISTANCE = 3 * 3;
+    private static final double minDragDistance = 3 * 3;
 
     /**
      * main panel.
@@ -31,12 +31,13 @@ public class DraggableManager {
      * current drag context.
      */
     private DragContextImpl currentContext;
+
     private boolean dragging = false;
 
     public DraggableManager(CompositeWidget<? extends Widget> mainGroup) {
         this.mainGroup = mainGroup;
 
-//        throw new UnsupportedOperationException("Not Implemented");
+        //        throw new UnsupportedOperationException("Not Implemented");
 
         mainGroup.onMouseClicked(((input, context) -> {
             if (!input.isLeftClick()) return EventDispatch.pass;
@@ -63,7 +64,7 @@ public class DraggableManager {
             assert draggableElement != null;
             if (!dragging) {
                 var distance = deltaX * deltaX + deltaY * deltaY;
-                if (distance < MIN_DRAG_DISTANCE) return;
+                if (distance < minDragDistance) return;
                 var input = InputContext.fromMouse(mouseX, mouseY, 0);
                 draggableElement.dragStart(input, currentContext);
                 mainGroup.getPerformer(DragConsumer.scenario).dragStart(draggableElement, currentContext);
@@ -94,7 +95,6 @@ public class DraggableManager {
                 boolean consumed = dragConsumer.consume(draggableElement, currentContext);
                 draggableElement.dragEnd(input, currentContext, deltaX, deltaY, consumed);
                 dragConsumer.dragEnd(draggableElement, currentContext, deltaX, deltaY);
-
             }
         }
         dragging = false;
@@ -124,5 +124,4 @@ public class DraggableManager {
     public boolean draggable() {
         return currentContext != null && currentContext.draggingElement() != null;
     }
-
 }

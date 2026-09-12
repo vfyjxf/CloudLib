@@ -26,30 +26,25 @@ import org.jetbrains.annotations.Nullable;
  * @see UIStyles#rowGap(float)
  * @see UIStyles#columnGap(float)
  */
-public record GapProperty(
-        @Nullable LengthPercentage rowGap,
-        @Nullable LengthPercentage columnGap
-) implements LayoutProperty {
+public record GapProperty(@Nullable LengthPercentage rowGap, @Nullable LengthPercentage columnGap)
+        implements LayoutProperty {
 
-    //region types
+    // region types
 
     /**
      * Type-safe gap value.
      * <p>
      * Note: in taffy {@link TaffyStyle#gap}, {@code width = column-gap} and {@code height = row-gap}.
      */
-    public static final StyleType<TaffySize<LengthPercentage>> type = StyleType.of(
-            "gap",
-            () -> TaffySize.all(LengthPercentage.ZERO),
-            (context, gap) -> {
+    public static final StyleType<TaffySize<LengthPercentage>> type =
+            StyleType.of("gap", () -> TaffySize.all(LengthPercentage.ZERO), (context, gap) -> {
                 context.layoutStyle().gap.width = gap.width;
                 context.layoutStyle().gap.height = gap.height;
-            }
-    );
+            });
 
-    //endregion
+    // endregion
 
-    //region factory methods
+    // region factory methods
 
     public static GapProperty all(float gap) {
         return new GapProperty(LengthPercentage.length(gap), LengthPercentage.length(gap));
@@ -95,9 +90,9 @@ public record GapProperty(
         return new GapProperty(null, gap);
     }
 
-    //endregion
+    // endregion
 
-    //region LayoutProperty implementation
+    // region LayoutProperty implementation
 
     @Override
     public StyleType<?> type() {
@@ -127,7 +122,7 @@ public record GapProperty(
         }
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String toString() {

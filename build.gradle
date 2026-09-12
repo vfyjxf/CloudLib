@@ -6,6 +6,7 @@ plugins {
     id 'net.neoforged.moddev' version '2.0.122'
     id "me.champeau.jmh" version "0.7.2"
     id 'dev.vfyjxf.cloudlib.lang'
+    id 'dev.vfyjxf.cloudlib.style'
 //    id("net.ltgt.errorprone") version "4.1.0"
 //    id("net.ltgt.nullaway") version "2.1.0"
 }

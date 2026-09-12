@@ -15,6 +15,7 @@ repositories {
 
 dependencies {
     implementation 'org.yaml:snakeyaml:2.2'
+    implementation 'com.diffplug.spotless:spotless-plugin-gradle:7.0.4'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -30,6 +31,13 @@ gradlePlugin {
             displayName = 'CloudLib CloudLang'
             description = 'Distributed yaml translation system: per-locale multi-file yaml sources are packed into vanilla lang json at build time, together with a generated typed key class (configurable name, package and naming style).'
             tags.set(['minecraft', 'neoforge', 'translation', 'lang', 'yaml'])
+        }
+        cloudStyle {
+            id = 'dev.vfyjxf.cloudlib.style'
+            implementationClass = 'dev.vfyjxf.cloudlib.gradle.style.CloudStylePlugin'
+            displayName = 'CloudLib Style'
+            description = 'Shared Spotless rules for CloudLib-family projects: palantir-java-format, import order, unused-import removal and the lowerCamelCase constant naming lint.'
+            tags.set(['style', 'spotless', 'formatting'])
         }
     }
 }

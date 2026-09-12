@@ -9,5 +9,4 @@ public interface CloudLibPlugin extends ModPlugin {
 
     Namespace builtin = CloudNamespaces.ofMod("builtin");
     PluginDependency afterBuiltin = new PluginDependency(builtin, Order.after, Constraint.required);
-
 }

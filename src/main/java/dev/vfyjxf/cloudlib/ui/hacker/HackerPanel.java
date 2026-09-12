@@ -29,9 +29,11 @@ public class HackerPanel extends WidgetGroup<Widget> {
         useStyle(UIStyle.of(
                 flexColumn(),
                 rowGap(3),
-                padding(title != null ? HackerTheme.TITLE_HEIGHT + 2 : HackerTheme.PADDING,
-                        6, HackerTheme.PADDING + 1, 6)
-        ));
+                padding(
+                        title != null ? HackerTheme.titleHeight + 2 : HackerTheme.padding,
+                        6,
+                        HackerTheme.padding + 1,
+                        6)));
     }
 
     public <T extends Widget> T addChild(T widget) {
@@ -47,12 +49,12 @@ public class HackerPanel extends WidgetGroup<Widget> {
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         int w = width();
         int h = height();
-        canvas.fill(0, 0, w, h, HackerTheme.BG);
-        canvas.strokeRect(0, 0, w, h, HackerTheme.BORDER);
+        canvas.fill(0, 0, w, h, HackerTheme.bg);
+        canvas.strokeRect(0, 0, w, h, HackerTheme.border);
         if (title != null) {
-            canvas.fill(3, 5, 3, 3, HackerTheme.ACCENT);
-            canvas.text(title, 9, 3, HackerTheme.TEXT);
-            canvas.fill(0, HackerTheme.TITLE_HEIGHT + 1, w, 1, HackerTheme.TITLE_RULE);
+            canvas.fill(3, 5, 3, 3, HackerTheme.accent);
+            canvas.text(title, 9, 3, HackerTheme.text);
+            canvas.fill(0, HackerTheme.titleHeight + 1, w, 1, HackerTheme.titleRule);
         }
     }
 }

@@ -1,13 +1,11 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld;
 
 import net.minecraft.core.Direction;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,28 +24,25 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class PresentationCodecs {
 
-    private static final Map<ResourceLocation, StreamCodec<? super RegistryFriendlyByteBuf, ? extends Presentation>> BY_ID =
-            new ConcurrentHashMap<>();
+    private static final Map<ResourceLocation, StreamCodec<? super RegistryFriendlyByteBuf, ? extends Presentation>>
+            byId = new ConcurrentHashMap<>();
 
-    private PresentationCodecs() {
-    }
+    private PresentationCodecs() {}
 
     public static <P extends Presentation> void register(
-            ResourceLocation type,
-            StreamCodec<? super RegistryFriendlyByteBuf, P> codec
-    ) {
-        BY_ID.put(type, codec);
+            ResourceLocation type, StreamCodec<? super RegistryFriendlyByteBuf, P> codec) {
+        byId.put(type, codec);
     }
 
     /** The codec registered for this descriptor's type, or null = not shareable. */
     @SuppressWarnings("unchecked")
     public static @Nullable StreamCodec<? super RegistryFriendlyByteBuf, Presentation> of(Presentation presentation) {
-        return (StreamCodec<? super RegistryFriendlyByteBuf, Presentation>) BY_ID.get(presentation.type());
+        return (StreamCodec<? super RegistryFriendlyByteBuf, Presentation>) byId.get(presentation.type());
     }
 
     /** Whether this presentation may cross the network (a codec is registered). */
     public static boolean shareable(Presentation presentation) {
-        return BY_ID.containsKey(presentation.type());
+        return byId.containsKey(presentation.type());
     }
 
     /** Encodes a presentation as {@code typeId + payload}; fails fast when unshareable. */
@@ -63,7 +58,7 @@ public final class PresentationCodecs {
 
     public static Presentation read(RegistryFriendlyByteBuf buf) {
         ResourceLocation type = ResourceLocation.STREAM_CODEC.decode(buf);
-        StreamCodec<? super RegistryFriendlyByteBuf, ? extends Presentation> codec = BY_ID.get(type);
+        StreamCodec<? super RegistryFriendlyByteBuf, ? extends Presentation> codec = byId.get(type);
         if (codec == null) {
             throw new IllegalArgumentException("Unknown presentation type on the wire: " + type);
         }
@@ -71,31 +66,41 @@ public final class PresentationCodecs {
     }
 
     static {
-        register(Presentation.Builtin.FACE, StreamCodec.of(
-                (buf, p) -> {
-                    Presentation.Face f = (Presentation.Face) p;
-                    buf.writeEnum(f.face());
-                    buf.writeDouble(f.u());
-                    buf.writeDouble(f.v());
-                    buf.writeDouble(f.pixelsPerBlock());
-                },
-                buf -> new Presentation.Face(
-                        buf.readEnum(Direction.class), buf.readDouble(), buf.readDouble(), buf.readDouble())));
-        register(Presentation.Builtin.FOLLOW, StreamCodec.of(
-                (buf, p) -> {
-                    Presentation.Follow f = (Presentation.Follow) p;
-                    buf.writeDouble(f.offsetX());
-                    buf.writeDouble(f.offsetY());
-                },
-                buf -> new Presentation.Follow(buf.readDouble(), buf.readDouble())));
-        register(Presentation.Builtin.DOCK, StreamCodec.of(
-                (buf, p) -> buf.writeEnum(((Presentation.Dock) p).corner()),
-                buf -> new Presentation.Dock(buf.readEnum(Presentation.DockCorner.class))));
-        register(Presentation.Builtin.EXPAND, StreamCodec.of(
-                (buf, p) -> buf.writeDouble(((Presentation.Expand) p).pixelsPerBlock()),
-                buf -> new Presentation.Expand(buf.readDouble())));
-        register(Presentation.Builtin.INSPECT_ONLY, StreamCodec.of(
-                (buf, p) -> buf.writeBoolean(((Presentation.InspectOnly) p).affordance()),
-                buf -> new Presentation.InspectOnly(buf.readBoolean())));
+        register(
+                Presentation.Builtin.face,
+                StreamCodec.of(
+                        (buf, p) -> {
+                            Presentation.Face f = (Presentation.Face) p;
+                            buf.writeEnum(f.face());
+                            buf.writeDouble(f.u());
+                            buf.writeDouble(f.v());
+                            buf.writeDouble(f.pixelsPerBlock());
+                        },
+                        buf -> new Presentation.Face(
+                                buf.readEnum(Direction.class), buf.readDouble(), buf.readDouble(), buf.readDouble())));
+        register(
+                Presentation.Builtin.follow,
+                StreamCodec.of(
+                        (buf, p) -> {
+                            Presentation.Follow f = (Presentation.Follow) p;
+                            buf.writeDouble(f.offsetX());
+                            buf.writeDouble(f.offsetY());
+                        },
+                        buf -> new Presentation.Follow(buf.readDouble(), buf.readDouble())));
+        register(
+                Presentation.Builtin.dock,
+                StreamCodec.of(
+                        (buf, p) -> buf.writeEnum(((Presentation.Dock) p).corner()),
+                        buf -> new Presentation.Dock(buf.readEnum(Presentation.DockCorner.class))));
+        register(
+                Presentation.Builtin.expand,
+                StreamCodec.of(
+                        (buf, p) -> buf.writeDouble(((Presentation.Expand) p).pixelsPerBlock()),
+                        buf -> new Presentation.Expand(buf.readDouble())));
+        register(
+                Presentation.Builtin.inspectOnly,
+                StreamCodec.of(
+                        (buf, p) -> buf.writeBoolean(((Presentation.InspectOnly) p).affordance()),
+                        buf -> new Presentation.InspectOnly(buf.readBoolean())));
     }
 }

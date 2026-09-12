@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -24,39 +25,34 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * {@code extractItem}/{@code insertItem} decide what actually moves. A forged
  * or stale request can at most attempt a legal transfer.
  * <ul>
- *   <li>{@link #EXTRACT} — pull {@code count} (or the whole stack when -1)
+ *   <li>{@link #extract} — pull {@code count} (or the whole stack when -1)
  *       out of {@code container}[{@code slot}] into the player inventory</li>
- *   <li>{@link #INSERT} — push the player's inventory stack at
+ *   <li>{@link #insert} — push the player's inventory stack at
  *       {@code slot} (an {@link PlayerMainInvWrapper} index, -1 = held item)
  *       into {@code container}</li>
- *   <li>{@link #EXTRACT_ALL} — drain the whole handler into the player</li>
- *   <li>{@link #INSERT_ALL} — dump the player's main inventory into the handler</li>
+ *   <li>{@link #extractAll} — drain the whole handler into the player</li>
+ *   <li>{@link #insertAll} — dump the player's main inventory into the handler</li>
  * </ul>
  */
-public record ContainerOpsPayload(
-        int op,
-        BlockPos container,
-        int slot,
-        int count
-) implements ServerboundPayload {
+public record ContainerOpsPayload(int op, BlockPos container, int slot, int count) implements ServerboundPayload {
 
-    public static final int EXTRACT = 0;
-    public static final int INSERT = 1;
-    public static final int EXTRACT_ALL = 2;
-    public static final int INSERT_ALL = 3;
+    public static final int extract = 0;
+    public static final int insert = 1;
+    public static final int extractAll = 2;
+    public static final int insertAll = 3;
 
     /** Generous bound — a legit client only sends ops while inside its focus reach. */
-    private static final double REACH = 12.0;
+    private static final double reach = 12.0;
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, ContainerOpsPayload> STREAM_CODEC =
+    public static final StreamCodec<RegistryFriendlyByteBuf, ContainerOpsPayload> streamCodec =
             StreamCodec.ofMember(ContainerOpsPayload::encode, ContainerOpsPayload::decode);
 
-    public static final Type<ContainerOpsPayload> TYPE =
-            new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("nimbusprojection", "container_ops"));
+    public static final Type<ContainerOpsPayload> type =
+            new Type<>(ResourceLocation.fromNamespaceAndPath("nimbusprojection", "container_ops"));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+        return type;
     }
 
     private void encode(RegistryFriendlyByteBuf buf) {
@@ -74,27 +70,30 @@ public record ContainerOpsPayload(
     public void handle(IPayloadContext context, ServerPlayer player) {
         Level level = player.level();
         Vec3 eye = player.getEyePosition();
-        if (!container.closerToCenterThan(eye, REACH)) return;
+        if (!container.closerToCenterThan(eye, reach)) return;
         IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, container, null);
         if (handler == null) return;
 
         switch (op) {
-            case EXTRACT -> extract(player, handler);
-            case INSERT -> insert(player, handler);
-            case EXTRACT_ALL -> {
+            case extract -> extract(player, handler);
+            case insert -> insert(player, handler);
+            case extractAll -> {
                 for (int s = 0; s < handler.getSlots(); s++) {
                     moveToPlayer(player, handler, s, -1);
                 }
             }
-            case INSERT_ALL -> {
+            case insertAll -> {
                 IItemHandler inv = new PlayerMainInvWrapper(player.getInventory());
                 for (int s = 0; s < inv.getSlots(); s++) {
-                    ItemStack moved = ItemHandlerHelper.insertItem(handler, inv.getStackInSlot(s).copy(), false);
+                    ItemStack moved = ItemHandlerHelper.insertItem(
+                            handler, inv.getStackInSlot(s).copy(), false);
                     int took = inv.getStackInSlot(s).getCount() - moved.getCount();
                     if (took > 0) inv.extractItem(s, took, false);
                 }
             }
-            default -> NimbusPayloads.log.warn("Bad container op {} from {}", op, player.getName().getString());
+            default ->
+                NimbusPayloads.log.warn(
+                        "Bad container op {} from {}", op, player.getName().getString());
         }
     }
 
@@ -107,7 +106,7 @@ public record ContainerOpsPayload(
         ItemStack stack = handler.getStackInSlot(s);
         if (stack.isEmpty()) return;
         int take = wanted < 0 ? stack.getCount() : Math.min(wanted, stack.getCount());
-        //simulate the extraction first — the handler owns the permission
+        // simulate the extraction first — the handler owns the permission
         ItemStack pulled = handler.extractItem(s, take, true);
         if (pulled.isEmpty()) return;
         ItemStack real = handler.extractItem(s, pulled.getCount(), false);
@@ -115,9 +114,7 @@ public record ContainerOpsPayload(
     }
 
     private void insert(ServerPlayer player, IItemHandler handler) {
-        ItemStack held = slot >= 0
-                ? player.getInventory().getItem(slot)
-                : player.getMainHandItem();
+        ItemStack held = slot >= 0 ? player.getInventory().getItem(slot) : player.getMainHandItem();
         if (held.isEmpty()) return;
         int offer = count < 0 ? held.getCount() : Math.min(count, held.getCount());
         ItemStack remainder = ItemHandlerHelper.insertItem(handler, held.copyWithCount(offer), false);

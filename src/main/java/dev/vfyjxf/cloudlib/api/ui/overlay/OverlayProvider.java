@@ -16,6 +16,6 @@ public interface OverlayProvider<T extends Widget> {
      * Create the overlay widget for the given context, or return {@code null} if the overlay
      * should not be shown.
      */
-    @Nullable T create(OverlayContext context);
-
+    @Nullable
+    T create(OverlayContext context);
 }

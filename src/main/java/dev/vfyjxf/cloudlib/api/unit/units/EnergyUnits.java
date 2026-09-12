@@ -25,9 +25,7 @@ public final class EnergyUnits {
     public static final Unit<EnergyUnits> eu = Unit.of(family, Namespace.ofMc("eu"));
     public static final Unit<EnergyUnits> fe = Unit.of(family, Namespace.ofMc("fe"));
 
-    public static final ImmutableList<UnitRule> rules = Lists.immutable.of(
-            UnitRule.rule(eu, fe, Ratio.of(4))
-    );
+    public static final ImmutableList<UnitRule> rules = Lists.immutable.of(UnitRule.rule(eu, fe, Ratio.of(4)));
 
     /**
      * Unmodifiable {@link List} view of {@link #rules}, for consumers working with
@@ -43,6 +41,5 @@ public final class EnergyUnits {
         return UnitPack.of(rules);
     }
 
-    private EnergyUnits() {
-    }
+    private EnergyUnits() {}
 }

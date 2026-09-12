@@ -85,8 +85,6 @@ public interface Easing {
      * Combines two easings (first half uses this, second half uses other).
      */
     default Easing andThen(Easing other) {
-        return t -> t < 0.5f
-                ? this.apply(t * 2) * 0.5f
-                : other.apply((t - 0.5f) * 2) * 0.5f + 0.5f;
+        return t -> t < 0.5f ? this.apply(t * 2) * 0.5f : other.apply((t - 0.5f) * 2) * 0.5f + 0.5f;
     }
 }

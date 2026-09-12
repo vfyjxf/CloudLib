@@ -52,8 +52,8 @@ class ScrollEffectHoverRefreshTest {
         field.setAccessible(true);
         Tooltip tooltip = (Tooltip) field.get(scene);
         return tooltip.flatEntries().stream()
-            .map(ScrollEffectHoverRefreshTest::entryText)
-            .toList();
+                .map(ScrollEffectHoverRefreshTest::entryText)
+                .toList();
     }
 
     private static String entryText(TooltipEntry entry) {

@@ -14,7 +14,7 @@ import java.util.List;
 
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.sizeOf;
 
-//@TestScreen
+// @TestScreen
 public class TestShaderScreen extends BasicScreen {
 
     public TestShaderScreen() {
@@ -28,14 +28,14 @@ public class TestShaderScreen extends BasicScreen {
         super.init();
     }
 
-    //region data types
+    // region data types
 
     private static class GraphNode {
 
-        static final int HEADER_H = 18;
-        static final int PIN_ROW_H = 14;
-        static final int PIN_R = 4;
-        static final int BODY_PAD = 3;
+        static final int headerH = 18;
+        static final int pinRowH = 14;
+        static final int pinR = 4;
+        static final int bodyPad = 3;
 
         final String title;
         final int w;
@@ -48,9 +48,15 @@ public class TestShaderScreen extends BasicScreen {
         float x, y;
 
         GraphNode(
-                String title, float x, float y, int w, int headerColor,
-                String[] inputs, int[] inputColors,
-                String[] outputs, int[] outputColors) {
+                String title,
+                float x,
+                float y,
+                int w,
+                int headerColor,
+                String[] inputs,
+                int[] inputColors,
+                String[] outputs,
+                int[] outputColors) {
             this.title = title;
             this.x = x;
             this.y = y;
@@ -63,7 +69,7 @@ public class TestShaderScreen extends BasicScreen {
         }
 
         int height() {
-            return HEADER_H + BODY_PAD * 2 + Math.max(Math.max(inputs.length, outputs.length), 1) * PIN_ROW_H;
+            return headerH + bodyPad * 2 + Math.max(Math.max(inputs.length, outputs.length), 1) * pinRowH;
         }
 
         float inPinX() {
@@ -71,7 +77,7 @@ public class TestShaderScreen extends BasicScreen {
         }
 
         float inPinY(int i) {
-            return y + HEADER_H + BODY_PAD + i * PIN_ROW_H + PIN_ROW_H / 2f;
+            return y + headerH + bodyPad + i * pinRowH + pinRowH / 2f;
         }
 
         float outPinX() {
@@ -79,11 +85,11 @@ public class TestShaderScreen extends BasicScreen {
         }
 
         float outPinY(int i) {
-            return y + HEADER_H + BODY_PAD + i * PIN_ROW_H + PIN_ROW_H / 2f;
+            return y + headerH + bodyPad + i * pinRowH + pinRowH / 2f;
         }
 
         boolean hitHeader(double px, double py) {
-            return px >= x && px <= x + w && py >= y && py <= y + HEADER_H;
+            return px >= x && px <= x + w && py >= y && py <= y + headerH;
         }
 
         boolean hitBody(double px, double py) {
@@ -91,12 +97,11 @@ public class TestShaderScreen extends BasicScreen {
         }
     }
 
-    private record Connection(int srcNode, int srcPin, int dstNode, int dstPin) {
-    }
+    private record Connection(int srcNode, int srcPin, int dstNode, int dstPin) {}
 
     private static class FloatingPanel {
 
-        static final int TITLE_H = 16;
+        static final int titleH = 16;
 
         final String title;
         final int w, h;
@@ -116,7 +121,7 @@ public class TestShaderScreen extends BasicScreen {
         }
 
         boolean hitTitle(double px, double py) {
-            return px >= x && px <= x + w && py >= y && py <= y + TITLE_H;
+            return px >= x && px <= x + w && py >= y && py <= y + titleH;
         }
 
         boolean hitBody(double px, double py) {
@@ -124,30 +129,29 @@ public class TestShaderScreen extends BasicScreen {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region editor widget
+    // region editor widget
 
     private static class NodeGraphEditorWidget extends Widget {
 
-        static final int DRAG_NONE = 0;
-        static final int DRAG_NODE = 1;
-        static final int DRAG_PANEL = 2;
-        static final int DRAG_CONN = 3;
-        static final int DRAG_PAN = 4;
+        static final int dragNone = 0;
+        static final int dragNode = 1;
+        static final int dragPanel = 2;
+        static final int dragConn = 3;
+        static final int dragPan = 4;
 
         final List<GraphNode> nodes = new ArrayList<>();
         final List<Connection> connections = new ArrayList<>();
         final List<FloatingPanel> panels = new ArrayList<>();
 
-        int dragType = DRAG_NONE;
+        int dragType = dragNone;
         int dragIndex = -1;
 
         int connSrcNode = -1;
         int connSrcPin = -1;
         boolean connFromOutput = true;
         float connDragX, connDragY;
-
         float panX = 0, panY = 0;
 
         int hoverNode = -1;
@@ -164,33 +168,69 @@ public class TestShaderScreen extends BasicScreen {
             registerInputHandlers();
         }
 
-        //region graph setup
+        // region graph setup
 
         private void initGraph() {
-            nodes.add(new GraphNode("Texture Sample", 30, 40, 120, 0xFF1B6B3A,
-                    new String[]{}, new int[]{},
-                    new String[]{"RGB", "R", "G", "B", "A"},
-                    new int[]{0xFFF9E2AF, 0xFFF38BA8, 0xFFA6E3A1, 0xFF89B4FA, 0xFFCDD6F4}));
-            nodes.add(new GraphNode("Constant", 30, 180, 100, 0xFF6C3483,
-                    new String[]{}, new int[]{},
-                    new String[]{"Value"},
-                    new int[]{0xFFCBA6F7}));
-            nodes.add(new GraphNode("Multiply", 200, 170, 110, 0xFF7D6608,
-                    new String[]{"A", "B"}, new int[]{0xFFCDD6F4, 0xFFCDD6F4},
-                    new String[]{"Result"},
-                    new int[]{0xFFF9E2AF}));
-            nodes.add(new GraphNode("Lerp", 210, 50, 110, 0xFF1A5276,
-                    new String[]{"A", "B", "Alpha"}, new int[]{0xFFF9E2AF, 0xFFF9E2AF, 0xFFCDD6F4},
-                    new String[]{"Result"},
-                    new int[]{0xFFF9E2AF}));
-            nodes.add(new GraphNode("Add", 200, 260, 110, 0xFF7D6608,
-                    new String[]{"A", "B"}, new int[]{0xFFCDD6F4, 0xFFCDD6F4},
-                    new String[]{"Result"},
-                    new int[]{0xFFA6E3A1}));
-            nodes.add(new GraphNode("Material", 400, 30, 130, 0xFF922B21,
-                    new String[]{"Base Color", "Metallic", "Roughness", "Normal", "Emissive"},
-                    new int[]{0xFFF9E2AF, 0xFFCDD6F4, 0xFFCDD6F4, 0xFF89B4FA, 0xFFA6E3A1},
-                    new String[]{}, new int[]{}));
+            nodes.add(new GraphNode(
+                    "Texture Sample",
+                    30,
+                    40,
+                    120,
+                    0xFF1B6B3A,
+                    new String[] {},
+                    new int[] {},
+                    new String[] {"RGB", "R", "G", "B", "A"},
+                    new int[] {0xFFF9E2AF, 0xFFF38BA8, 0xFFA6E3A1, 0xFF89B4FA, 0xFFCDD6F4}));
+            nodes.add(new GraphNode(
+                    "Constant",
+                    30,
+                    180,
+                    100,
+                    0xFF6C3483,
+                    new String[] {},
+                    new int[] {},
+                    new String[] {"Value"},
+                    new int[] {0xFFCBA6F7}));
+            nodes.add(new GraphNode(
+                    "Multiply",
+                    200,
+                    170,
+                    110,
+                    0xFF7D6608,
+                    new String[] {"A", "B"},
+                    new int[] {0xFFCDD6F4, 0xFFCDD6F4},
+                    new String[] {"Result"},
+                    new int[] {0xFFF9E2AF}));
+            nodes.add(new GraphNode(
+                    "Lerp",
+                    210,
+                    50,
+                    110,
+                    0xFF1A5276,
+                    new String[] {"A", "B", "Alpha"},
+                    new int[] {0xFFF9E2AF, 0xFFF9E2AF, 0xFFCDD6F4},
+                    new String[] {"Result"},
+                    new int[] {0xFFF9E2AF}));
+            nodes.add(new GraphNode(
+                    "Add",
+                    200,
+                    260,
+                    110,
+                    0xFF7D6608,
+                    new String[] {"A", "B"},
+                    new int[] {0xFFCDD6F4, 0xFFCDD6F4},
+                    new String[] {"Result"},
+                    new int[] {0xFFA6E3A1}));
+            nodes.add(new GraphNode(
+                    "Material",
+                    400,
+                    30,
+                    130,
+                    0xFF922B21,
+                    new String[] {"Base Color", "Metallic", "Roughness", "Normal", "Emissive"},
+                    new int[] {0xFFF9E2AF, 0xFFCDD6F4, 0xFFCDD6F4, 0xFF89B4FA, 0xFFA6E3A1},
+                    new String[] {},
+                    new int[] {}));
 
             connections.add(new Connection(0, 0, 3, 0));
             connections.add(new Connection(1, 0, 2, 0));
@@ -199,20 +239,24 @@ public class TestShaderScreen extends BasicScreen {
             connections.add(new Connection(2, 0, 5, 2));
             connections.add(new Connection(4, 0, 5, 3));
 
-            panels.add(new FloatingPanel("Options", 420, 200, 130, 96, 0xFF585B70,
+            panels.add(new FloatingPanel(
+                    "Options",
+                    420,
+                    200,
+                    130,
+                    96,
+                    0xFF585B70,
                     "[G] Toggle glow: ON",
                     "[C] Toggle gradient: ON",
                     "Drag pins to connect",
                     "Node graph editor demo"));
-            panels.add(new FloatingPanel("Stats", 420, 300, 120, 60, 0xFF585B70,
-                    "Nodes: 6",
-                    "Connections: 6",
-                    "FPS: --"));
+            panels.add(
+                    new FloatingPanel("Stats", 420, 300, 120, 60, 0xFF585B70, "Nodes: 6", "Connections: 6", "FPS: --"));
         }
 
-        //endregion
+        // endregion
 
-        //region input handling
+        // region input handling
 
         private void registerInputHandlers() {
             onMouseClicked((input, ctx) -> {
@@ -247,7 +291,7 @@ public class TestShaderScreen extends BasicScreen {
                     for (int i = panels.size() - 1; i >= 0; i--) {
                         FloatingPanel p = panels.get(i);
                         if (p.hitTitle(mx, my)) {
-                            beginDrag(DRAG_PANEL, i);
+                            beginDrag(dragPanel, i);
                             return EventDispatch.consumed;
                         }
                         if (p.hitBody(mx, my)) return EventDispatch.consumed;
@@ -256,7 +300,7 @@ public class TestShaderScreen extends BasicScreen {
                     for (int i = nodes.size() - 1; i >= 0; i--) {
                         GraphNode n = nodes.get(i);
                         if (n.hitHeader(mx, my)) {
-                            beginDrag(DRAG_NODE, i);
+                            beginDrag(dragNode, i);
                             return EventDispatch.consumed;
                         }
                         if (n.hitBody(mx, my)) return EventDispatch.consumed;
@@ -264,7 +308,7 @@ public class TestShaderScreen extends BasicScreen {
                 }
 
                 if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT || button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
-                    beginDrag(DRAG_PAN, -1);
+                    beginDrag(dragPan, -1);
                     return EventDispatch.consumed;
                 }
                 return EventDispatch.pass;
@@ -275,21 +319,21 @@ public class TestShaderScreen extends BasicScreen {
                 float dx = (float) deltaX;
                 float dy = (float) deltaY;
                 switch (dragType) {
-                    case DRAG_NODE -> {
+                    case dragNode -> {
                         GraphNode n = nodes.get(dragIndex);
                         n.x += dx;
                         n.y += dy;
                     }
-                    case DRAG_PANEL -> {
+                    case dragPanel -> {
                         FloatingPanel p = panels.get(dragIndex);
                         p.x += dx;
                         p.y += dy;
                     }
-                    case DRAG_CONN -> {
+                    case dragConn -> {
                         connDragX += dx;
                         connDragY += dy;
                     }
-                    case DRAG_PAN -> {
+                    case dragPan -> {
                         panX += dx;
                         panY += dy;
                     }
@@ -301,7 +345,7 @@ public class TestShaderScreen extends BasicScreen {
             });
 
             onMouseReleased((input, ctx) -> {
-                if (dragType == DRAG_CONN) tryCompleteConnection();
+                if (dragType == dragConn) tryCompleteConnection();
                 resetDrag();
                 return EventDispatch.consumed;
             });
@@ -329,7 +373,7 @@ public class TestShaderScreen extends BasicScreen {
         }
 
         private void beginConnectionDrag(int nodeIdx, int pinIdx, boolean fromOutput, double mx, double my) {
-            dragType = DRAG_CONN;
+            dragType = dragConn;
             connSrcNode = nodeIdx;
             connSrcPin = pinIdx;
             connFromOutput = fromOutput;
@@ -338,7 +382,7 @@ public class TestShaderScreen extends BasicScreen {
         }
 
         private void resetDrag() {
-            dragType = DRAG_NONE;
+            dragType = dragNone;
             dragIndex = -1;
             connSrcNode = -1;
             connSrcPin = -1;
@@ -378,9 +422,9 @@ public class TestShaderScreen extends BasicScreen {
             }
         }
 
-        //endregion
+        // endregion
 
-        //region rendering
+        // region rendering
 
         @Override
         protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
@@ -425,39 +469,37 @@ public class TestShaderScreen extends BasicScreen {
             for (Connection c : connections) {
                 GraphNode src = nodes.get(c.srcNode);
                 GraphNode dst = nodes.get(c.dstNode);
-                float x0 = src.outPinX() + GraphNode.PIN_R;
+                float x0 = src.outPinX() + GraphNode.pinR;
                 float y0 = src.outPinY(c.srcPin);
-                float x1 = dst.inPinX() - GraphNode.PIN_R;
+                float x1 = dst.inPinX() - GraphNode.pinR;
                 float y1 = dst.inPinY(c.dstPin);
                 int cSrc = src.outputColors[c.srcPin];
                 int cDst = dst.inputColors[c.dstPin];
                 int cEnd = wireGradient ? cDst : cSrc;
                 float glow = wireGlow ? 6f : 0f;
                 int glowColor = wireGlow ? withAlpha(cSrc, 0x22) : 0;
-                canvas.horizontalSpline(x0, y0, x1, y1,
-                        2.5f, cSrc, cEnd, glow, glowColor);
+                canvas.horizontalSpline(x0, y0, x1, y1, 2.5f, cSrc, cEnd, glow, glowColor);
             }
         }
 
         private void drawTempConnection(SceneCanvas canvas) {
-            if (dragType != DRAG_CONN || connSrcNode < 0) return;
+            if (dragType != dragConn || connSrcNode < 0) return;
             GraphNode src = nodes.get(connSrcNode);
             float x0, y0;
             int color;
             if (connFromOutput) {
-                x0 = src.outPinX() + GraphNode.PIN_R;
+                x0 = src.outPinX() + GraphNode.pinR;
                 y0 = src.outPinY(connSrcPin);
                 color = src.outputColors[connSrcPin];
             } else {
-                x0 = src.inPinX() - GraphNode.PIN_R;
+                x0 = src.inPinX() - GraphNode.pinR;
                 y0 = src.inPinY(connSrcPin);
                 color = src.inputColors[connSrcPin];
             }
             float glow = wireGlow ? 4f : 0f;
             int glowColor = wireGlow ? withAlpha(color, 0x18) : 0;
             int cEnd = wireGradient ? 0xFFCDD6F4 : color;
-            canvas.horizontalSpline(x0, y0, connDragX, connDragY,
-                    2f, color, cEnd, glow, glowColor);
+            canvas.horizontalSpline(x0, y0, connDragX, connDragY, 2f, color, cEnd, glow, glowColor);
         }
 
         private void drawNodes(SceneCanvas canvas) {
@@ -473,27 +515,38 @@ public class TestShaderScreen extends BasicScreen {
 
             canvas.shadow(nx, ny, n.w, nh, r, 3f, 10f, 0xAA000000);
             canvas.roundedRect(nx, ny, n.w, nh, r, 0xFF1E1E2E, 1f, darken(n.headerColor, 0.6f));
-            canvas.roundedRect(nx, ny, n.w, GraphNode.HEADER_H, r, r, 0f, 0f, n.headerColor);
+            canvas.roundedRect(nx, ny, n.w, GraphNode.headerH, r, r, 0f, 0f, n.headerColor);
             canvas.drawString(n.title, nx + 6, ny + 4, 0xFFFFFFFF, true);
-            canvas.line(n.x + 1, n.y + GraphNode.HEADER_H, n.x + n.w - 1, n.y + GraphNode.HEADER_H, 1f, 0x60FFFFFF);
+            canvas.line(n.x + 1, n.y + GraphNode.headerH, n.x + n.w - 1, n.y + GraphNode.headerH, 1f, 0x60FFFFFF);
 
             for (int i = 0; i < n.inputs.length; i++) {
-                drawPin(canvas, n.inPinX(), n.inPinY(i), n.inputs[i], n.inputColors[i],
-                        true, nodeIndex == hoverNode && i == hoverPin && !hoverIsOutput);
+                drawPin(
+                        canvas,
+                        n.inPinX(),
+                        n.inPinY(i),
+                        n.inputs[i],
+                        n.inputColors[i],
+                        true,
+                        nodeIndex == hoverNode && i == hoverPin && !hoverIsOutput);
             }
             for (int i = 0; i < n.outputs.length; i++) {
-                drawPin(canvas, n.outPinX(), n.outPinY(i), n.outputs[i], n.outputColors[i],
-                        false, nodeIndex == hoverNode && i == hoverPin && hoverIsOutput);
+                drawPin(
+                        canvas,
+                        n.outPinX(),
+                        n.outPinY(i),
+                        n.outputs[i],
+                        n.outputColors[i],
+                        false,
+                        nodeIndex == hoverNode && i == hoverPin && hoverIsOutput);
             }
         }
 
         private void drawPin(
-                SceneCanvas canvas, float px, float py, String label, int color,
-                boolean isInput, boolean hovered) {
-            int radius = hovered ? GraphNode.PIN_R + 2 : GraphNode.PIN_R;
+                SceneCanvas canvas, float px, float py, String label, int color, boolean isInput, boolean hovered) {
+            int radius = hovered ? GraphNode.pinR + 2 : GraphNode.pinR;
             canvas.circle(px, py, radius, color);
             if (hovered) {
-                canvas.circle(px, py, GraphNode.PIN_R + 5, withAlpha(color, 0x30));
+                canvas.circle(px, py, GraphNode.pinR + 5, withAlpha(color, 0x30));
             }
             if (isInput) {
                 canvas.drawString(label, (int) px + 7, (int) py - 4, 0xFFBAC2DE, false);
@@ -509,17 +562,17 @@ public class TestShaderScreen extends BasicScreen {
                 float r = 6f;
                 canvas.shadow(px, py, p.w, p.h, r, 4f, 14f, 0x99000000);
                 canvas.roundedRect(px, py, p.w, p.h, r, 0xE6313244);
-                canvas.roundedRect(px, py, p.w, FloatingPanel.TITLE_H, r, r, 0f, 0f, p.titleColor);
+                canvas.roundedRect(px, py, p.w, FloatingPanel.titleH, r, r, 0f, 0f, p.titleColor);
                 canvas.drawString(p.title, px + 5, py + 3, 0xFFFFFFFF, true);
                 for (int i = 0; i < p.lines.length; i++) {
-                    canvas.drawString(p.lines[i], px + 5, py + FloatingPanel.TITLE_H + 4 + i * 11, 0xFFBAC2DE, false);
+                    canvas.drawString(p.lines[i], px + 5, py + FloatingPanel.titleH + 4 + i * 11, 0xFFBAC2DE, false);
                 }
             }
         }
 
-        //endregion
+        // endregion
 
-        //region utilities
+        // region utilities
 
         private void updateHover(double mx, double my) {
             hoverNode = -1;
@@ -562,6 +615,6 @@ public class TestShaderScreen extends BasicScreen {
             return (rgb & 0x00FFFFFF) | (alpha << 24);
         }
 
-        //endregion
+        // endregion
     }
 }

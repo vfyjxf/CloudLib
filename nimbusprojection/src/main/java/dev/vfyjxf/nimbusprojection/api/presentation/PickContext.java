@@ -25,6 +25,4 @@ public record PickContext<P extends Presentation>(
         Vec3 rayOrigin,
         Vec3 rayDirection,
         @Nullable Pos screenPoint,
-        float partialTick
-) {
-}
+        float partialTick) {}

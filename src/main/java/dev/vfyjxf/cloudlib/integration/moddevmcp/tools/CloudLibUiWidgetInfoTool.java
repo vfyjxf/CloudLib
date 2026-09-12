@@ -16,14 +16,14 @@ import java.util.Set;
 
 public final class CloudLibUiWidgetInfoTool {
 
-    private static final String OPERATION_ID = "cloudlib.ui.widget_info";
+    private static final String operationId = "cloudlib.ui.widget_info";
 
     private CloudLibUiWidgetInfoTool() {
     }
 
     public static OperationDefinition definition() {
         return new OperationDefinition(
-                OPERATION_ID,
+                operationId,
                 "ui",
                 "CloudLib Widget Info",
                 "Returns inspection details for a specific CloudLib widget.",
@@ -40,7 +40,7 @@ public final class CloudLibUiWidgetInfoTool {
                         List.of()
                 ),
                 Map.of(
-                        "operationId", OPERATION_ID,
+                        "operationId", operationId,
                         "targetSide", "client",
                         "input", Map.of("targetId", "root")
                 )

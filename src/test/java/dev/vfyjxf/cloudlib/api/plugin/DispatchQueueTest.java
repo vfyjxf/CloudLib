@@ -49,16 +49,23 @@ public class DispatchQueueTest {
         try {
             queue.enqueue(plugin -> {
                 threadNames.add(Thread.currentThread().getName());
-                try { Thread.sleep(50); } catch (InterruptedException ignored) {}
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ignored) {
+                }
             });
             queue.enqueue(plugin -> {
                 threadNames.add(Thread.currentThread().getName());
-                try { Thread.sleep(50); } catch (InterruptedException ignored) {}
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ignored) {
+                }
             });
             queue.execute();
 
-            assertTrue(threadNames.size() >= 2,
-                "Expected parallel task execution, but only " + threadNames.size() + " threads were used");
+            assertTrue(
+                    threadNames.size() >= 2,
+                    "Expected parallel task execution, but only " + threadNames.size() + " threads were used");
         } finally {
             executor.shutdown();
         }
@@ -112,10 +119,11 @@ public class DispatchQueueTest {
         var dispatcher = PluginDispatcher.create(MutableLists.of(a));
         var counter = new AtomicInteger(0);
 
-        dispatcher.createQueue()
-                  .enqueue(plugin -> counter.incrementAndGet())
-                  .enqueue(plugin -> counter.incrementAndGet())
-                  .execute();
+        dispatcher
+                .createQueue()
+                .enqueue(plugin -> counter.incrementAndGet())
+                .enqueue(plugin -> counter.incrementAndGet())
+                .execute();
 
         assertEquals(2, counter.get());
     }
@@ -138,8 +146,7 @@ public class DispatchQueueTest {
         // batch2 must come after all batch1 entries
         int lastBatch1 = Math.max(log.indexOf("batch1-taskA"), log.indexOf("batch1-taskB"));
         int firstBatch2 = log.indexOf("batch2-taskA");
-        assertTrue(lastBatch1 < firstBatch2,
-            "Batch 1 should complete before batch 2 starts. Log: " + log);
+        assertTrue(lastBatch1 < firstBatch2, "Batch 1 should complete before batch 2 starts. Log: " + log);
     }
 
     @Test
@@ -153,8 +160,12 @@ public class DispatchQueueTest {
 
         try {
             // Both tasks will fail for both plugins
-            queue.enqueue(plugin -> { throw new RuntimeException("task1 fail"); });
-            queue.enqueue(plugin -> { throw new RuntimeException("task2 fail"); });
+            queue.enqueue(plugin -> {
+                throw new RuntimeException("task1 fail");
+            });
+            queue.enqueue(plugin -> {
+                throw new RuntimeException("task2 fail");
+            });
 
             var exception = assertThrows(PluginLoadingException.class, queue::execute);
             assertTrue(exception.failures().size() >= 2);
@@ -171,7 +182,7 @@ public class DispatchQueueTest {
         var counter = new AtomicInteger(0);
 
         queue.enqueue("registerContentType", plugin -> counter.incrementAndGet())
-             .enqueue("registerRecipeSystem", plugin -> counter.incrementAndGet());
+                .enqueue("registerRecipeSystem", plugin -> counter.incrementAndGet());
 
         assertEquals(2, queue.size());
         queue.execute();
@@ -211,23 +222,32 @@ public class DispatchQueueTest {
             queue.enqueue(plugin -> {
                 allTasksActive.countDown();
                 try {
-                    assertTrue(allTasksActive.await(5, TimeUnit.SECONDS),
-                        "Task 1 timed out: not all tasks running concurrently");
-                } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                    assertTrue(
+                            allTasksActive.await(5, TimeUnit.SECONDS),
+                            "Task 1 timed out: not all tasks running concurrently");
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             });
             queue.enqueue(plugin -> {
                 allTasksActive.countDown();
                 try {
-                    assertTrue(allTasksActive.await(5, TimeUnit.SECONDS),
-                        "Task 2 timed out: not all tasks running concurrently");
-                } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                    assertTrue(
+                            allTasksActive.await(5, TimeUnit.SECONDS),
+                            "Task 2 timed out: not all tasks running concurrently");
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             });
             queue.enqueue(plugin -> {
                 allTasksActive.countDown();
                 try {
-                    assertTrue(allTasksActive.await(5, TimeUnit.SECONDS),
-                        "Task 3 timed out: not all tasks running concurrently");
-                } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                    assertTrue(
+                            allTasksActive.await(5, TimeUnit.SECONDS),
+                            "Task 3 timed out: not all tasks running concurrently");
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             });
             queue.execute();
         } finally {
@@ -260,9 +280,10 @@ public class DispatchQueueTest {
                 if (name.equals("b") || name.equals("c")) {
                     task1BC.countDown();
                     try {
-                        assertTrue(task1BC.await(5, TimeUnit.SECONDS),
-                            "Task1: B and C should run in parallel");
-                    } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                        assertTrue(task1BC.await(5, TimeUnit.SECONDS), "Task1: B and C should run in parallel");
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
                 order1.add(name);
             });
@@ -271,9 +292,10 @@ public class DispatchQueueTest {
                 if (name.equals("b") || name.equals("c")) {
                     task2BC.countDown();
                     try {
-                        assertTrue(task2BC.await(5, TimeUnit.SECONDS),
-                            "Task2: B and C should run in parallel");
-                    } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                        assertTrue(task2BC.await(5, TimeUnit.SECONDS), "Task2: B and C should run in parallel");
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
                 order2.add(name);
             });
@@ -304,7 +326,7 @@ public class DispatchQueueTest {
         assertEquals(2, counter.get());
     }
 
-    //region helpers
+    // region helpers
 
     private static ModPlugin plugin(String name, PluginDependency... deps) {
         return new SimplePlugin(CloudNamespaces.ofMod(name), Set.of(deps));
@@ -316,6 +338,6 @@ public class DispatchQueueTest {
 
     private record SimplePlugin(Namespace pluginId, Set<PluginDependency> dependencies) implements ModPlugin {}
 
-    //endregion
+    // endregion
 
 }

@@ -54,7 +54,7 @@ public class DataContainer {
         this.owner = owner;
     }
 
-    //region core operations
+    // region core operations
 
     /**
      * Stores a value for the given key.
@@ -148,9 +148,9 @@ public class DataContainer {
         return (T) data.remove(key);
     }
 
-    //endregion
+    // endregion
 
-    //region compute operations
+    // region compute operations
 
     /**
      * Gets the value if present, otherwise computes and stores a new value.
@@ -227,9 +227,9 @@ public class DataContainer {
         return newValue;
     }
 
-    //endregion
+    // endregion
 
-    //region query operations
+    // region query operations
 
     /**
      * Checks if a value is present for the given key.
@@ -262,5 +262,5 @@ public class DataContainer {
         data.clear();
     }
 
-    //endregion
+    // endregion
 }

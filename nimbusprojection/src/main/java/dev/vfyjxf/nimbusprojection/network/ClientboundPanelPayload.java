@@ -20,19 +20,20 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  */
 public record ClientboundPanelPayload(PanelKey key, CustomPacketPayload payload) implements ClientboundPayload {
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, ClientboundPanelPayload> STREAM_CODEC = StreamCodec.composite(
-            PanelKey.STREAM_CODEC.cast(),
-            ClientboundPanelPayload::key,
-            PanelChannelPayload.payloadCodec(),
-            ClientboundPanelPayload::payload,
-            ClientboundPanelPayload::new);
+    public static final StreamCodec<RegistryFriendlyByteBuf, ClientboundPanelPayload> streamCodec =
+            StreamCodec.composite(
+                    PanelKey.streamCodec.cast(),
+                    ClientboundPanelPayload::key,
+                    PanelChannelPayload.payloadCodec(),
+                    ClientboundPanelPayload::payload,
+                    ClientboundPanelPayload::new);
 
-    public static final Type<ClientboundPanelPayload> TYPE =
+    public static final Type<ClientboundPanelPayload> type =
             new Type<>(ResourceLocation.fromNamespaceAndPath("nimbusprojection", "panel_channel_s2c"));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+        return type;
     }
 
     @Override

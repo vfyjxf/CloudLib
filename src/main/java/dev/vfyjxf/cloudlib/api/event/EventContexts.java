@@ -49,5 +49,4 @@ public final class EventContexts {
     static InterruptibleContext emptyInterruptible = new InterruptibleContext(null);
     static BubbleContext emptyBubble = new BubbleContext(null);
     static IntentContext emptyIntent = new IntentContext(null);
-
 }

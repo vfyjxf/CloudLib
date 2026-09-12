@@ -60,7 +60,9 @@ public final class MaterialAmount {
         Checks.checkNotNull(other, "other");
         if (!material.equals(other.material)) return false;
         if (baseUnit.equals(other.baseUnit)) return value.equals(other.value);
-        Ratio converted = converter.convert(other.value, other.baseUnit, baseUnit, material).value();
+        Ratio converted = converter
+                .convert(other.value, other.baseUnit, baseUnit, material)
+                .value();
         return value.equals(converted);
     }
 

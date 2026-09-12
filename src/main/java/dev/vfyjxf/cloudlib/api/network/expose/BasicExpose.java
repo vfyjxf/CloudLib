@@ -6,9 +6,7 @@ import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Internal
-sealed abstract class BasicExpose<T> implements Expose<T>
-        permits BasicDownstreamExpose,
-                StandardReversed {
+abstract sealed class BasicExpose<T> implements Expose<T> permits BasicDownstreamExpose, StandardReversed {
 
     private final String name;
     private final short id;
@@ -18,10 +16,12 @@ sealed abstract class BasicExpose<T> implements Expose<T>
     protected final FlowDecoder<T> decoder;
 
     protected BasicExpose(
-            String name, short id,
-            Snapshot<T> snapshot, ValueSupplier<T> supplier,
-            FlowEncoder<T> encoder, FlowDecoder<T> decoder
-    ) {
+            String name,
+            short id,
+            Snapshot<T> snapshot,
+            ValueSupplier<T> supplier,
+            FlowEncoder<T> encoder,
+            FlowDecoder<T> decoder) {
         this.name = name;
         this.id = id;
         this.snapshot = snapshot;
@@ -66,10 +66,6 @@ sealed abstract class BasicExpose<T> implements Expose<T>
 
     @Override
     public String toString() {
-        return "BasicExpose{" +
-                "name='" + name + '\'' +
-                ", id=" + id +
-                ", snapshot=" + snapshot +
-                '}';
+        return "BasicExpose{" + "name='" + name + '\'' + ", id=" + id + ", snapshot=" + snapshot + '}';
     }
 }

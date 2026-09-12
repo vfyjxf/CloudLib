@@ -34,7 +34,7 @@ class HandleTest {
         AtomicInteger fires = new AtomicInteger();
         h.onChange(v -> fires.incrementAndGet());
 
-        h.set("a"); //unchanged
+        h.set("a"); // unchanged
         assertEquals(0, fires.get());
         assertFalse(h.dirty());
 
@@ -51,8 +51,8 @@ class HandleTest {
 
         h.apply(5);
         assertEquals(5, h.get());
-        assertFalse(h.dirty());        //no dirty
-        assertEquals(List.of(5), seen); //listeners fired
+        assertFalse(h.dirty()); // no dirty
+        assertEquals(List.of(5), seen); // listeners fired
     }
 
     @Test
@@ -82,7 +82,7 @@ class HandleTest {
         h.set(1);
         assertTrue(h.dirty());
 
-        h.load(2); //a load mid-tick must not suppress an already-queued change
+        h.load(2); // a load mid-tick must not suppress an already-queued change
         assertTrue(h.dirty());
         assertEquals(2, h.get());
     }
@@ -91,7 +91,7 @@ class HandleTest {
     void pairListenerReceivesPrevAndCurrent() {
         Handle<Integer> h = Handle.of(10);
         List<int[]> pairs = new ArrayList<>();
-        h.onChange((prev, cur) -> pairs.add(new int[]{prev, cur}));
+        h.onChange((prev, cur) -> pairs.add(new int[] {prev, cur}));
 
         h.set(20);
         assertEquals(1, pairs.size());
@@ -110,7 +110,7 @@ class HandleTest {
 
         sub.unsubscribe();
         h.set(2);
-        assertEquals(1, count.get()); //not fired after unsubscribe
+        assertEquals(1, count.get()); // not fired after unsubscribe
     }
 
     @Test
@@ -129,7 +129,7 @@ class HandleTest {
         ReadOnlyHandle<Integer> ro = h.readOnly();
         AtomicInteger seen = new AtomicInteger();
         ro.onChange(v -> seen.set(v));
-        h.set(7); //fires on the read-only view too (shared events)
+        h.set(7); // fires on the read-only view too (shared events)
         assertEquals(7, ro.get());
         assertEquals(7, seen.get());
     }
@@ -143,11 +143,11 @@ class HandleTest {
         assertFalse(h.changed());
 
         value.markChanged("delta");
-        //in-place mutation surfaces via value.changed() even though handle.set was never called
+        // in-place mutation surfaces via value.changed() even though handle.set was never called
         assertTrue(h.changed());
         assertEquals("delta", h.difference());
 
-        //difference() resets the value's internal state
+        // difference() resets the value's internal state
         assertFalse(value.changed());
     }
 
@@ -156,30 +156,30 @@ class HandleTest {
         var value = new TestDiffObservable();
         DiffHandle<TestDiffObservable, String> h = DiffHandle.of(value);
 
-        h.set(value); //set to the same reference: strategy is observable() -> value.changed() is false -> no-op
-        //force a real change by setting a new value
+        h.set(value); // set to the same reference: strategy is observable() -> value.changed() is false -> no-op
+        // force a real change by setting a new value
         var value2 = new TestDiffObservable();
         h.set(value2);
         assertTrue(h.dirty());
         assertTrue(h.changed());
         h.clearDirty();
-        //now value2 has no change; union is false
+        // now value2 has no change; union is false
         assertFalse(h.changed());
     }
 
     @Test
     void diffHandleToleratesNullValue() {
         DiffHandle<TestDiffObservable, String> h = DiffHandle.of(new TestDiffObservable());
-        h.load(null); //store null
+        h.load(null); // store null
         assertNull(h.get());
-        assertFalse(h.changed()); //must not NPE on get().changed()
+        assertFalse(h.changed()); // must not NPE on get().changed()
 
-        h.set(new TestDiffObservable()); //set a non-null value (previous null -> strategy says changed)
+        h.set(new TestDiffObservable()); // set a non-null value (previous null -> strategy says changed)
         assertTrue(h.dirty());
         h.clearDirty();
 
-        h.load(null); //back to null
-        assertFalse(h.changed()); //dirty false, value null -> false, no NPE
+        h.load(null); // back to null
+        assertFalse(h.changed()); // dirty false, value null -> false, no NPE
     }
 
     @Test
@@ -190,7 +190,7 @@ class HandleTest {
         h.onChange(v -> {
             seen.add(v);
             if (depth[0]++ == 0) {
-                h.set(2); //reentrant set during fire()
+                h.set(2); // reentrant set during fire()
             }
         });
         h.set(1);
@@ -206,11 +206,11 @@ class HandleTest {
         Subscription[] sub = new Subscription[1];
         sub[0] = h.onChange(v -> {
             seen.add(v);
-            sub[0].unsubscribe(); //self-unsubscribe during fire()
+            sub[0].unsubscribe(); // self-unsubscribe during fire()
         });
         h.set(1);
         assertEquals(List.of(1), seen);
-        h.set(2); //no longer subscribed
+        h.set(2); // no longer subscribed
         assertEquals(List.of(1), seen);
     }
 

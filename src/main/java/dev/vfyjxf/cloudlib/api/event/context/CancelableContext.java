@@ -26,5 +26,4 @@ public final class CancelableContext {
     public void cancel() {
         cancelled = true;
     }
-
 }

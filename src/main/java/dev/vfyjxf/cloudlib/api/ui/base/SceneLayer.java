@@ -42,7 +42,6 @@ public enum SceneLayer {
      */
     debug(HitTestAction.enabled);
 
-
     public static final ImmutableList<SceneLayer> layers = Lists.immutable.with(values());
     public static final ImmutableList<SceneLayer> extraLayers = layers.reject(l -> l == content || l == debug);
 
@@ -60,6 +59,4 @@ public enum SceneLayer {
     SceneLayer(HitTestAction hitTestAction) {
         this.hitTestAction = hitTestAction;
     }
-
 }
-

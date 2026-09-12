@@ -26,18 +26,18 @@ import java.util.function.Supplier;
  */
 public final class StyleType<T> {
 
-    //region static registry
+    // region static registry
 
-    private static final LinkedHashMap<String, StyleType<?>> TYPES = new LinkedHashMap<>();
+    private static final LinkedHashMap<String, StyleType<?>> types = new LinkedHashMap<>();
 
     /**
-     * Gets a registered StyleType by ID.
+     * Gets a registered StyleType by id.
      *
-     * @param id the style type ID
+     * @param id the style type id
      * @return the StyleType, or null if not found
      */
     public static @Nullable StyleType<?> get(String id) {
-        return TYPES.get(id);
+        return types.get(id);
     }
 
     /**
@@ -46,12 +46,12 @@ public final class StyleType<T> {
      * @return an unmodifiable view of all registered types
      */
     public static Iterable<StyleType<?>> all() {
-        return TYPES.values();
+        return types.values();
     }
 
-    //endregion
+    // endregion
 
-    //region fields
+    // region fields
 
     private final String id;
     private final String displayName;
@@ -60,9 +60,9 @@ public final class StyleType<T> {
     private final @Nullable Applier<T> applier;
     private final @Nullable Function<T, String> formatter;
 
-    //endregion
+    // endregion
 
-    //region constructors
+    // region constructors
 
     private StyleType(
             String id,
@@ -70,8 +70,7 @@ public final class StyleType<T> {
             String category,
             @Nullable Supplier<T> initValue,
             @Nullable Applier<T> applier,
-            @Nullable Function<T, String> formatter
-    ) {
+            @Nullable Function<T, String> formatter) {
         this.id = Objects.requireNonNull(id, "id");
         this.displayName = Objects.requireNonNull(displayName, "displayName");
         this.category = Objects.requireNonNull(category, "category");
@@ -79,14 +78,14 @@ public final class StyleType<T> {
         this.applier = applier;
         this.formatter = formatter;
 
-        if (TYPES.put(id, this) != null) {
-            throw new IllegalArgumentException("Duplicate style type ID: " + id);
+        if (types.put(id, this) != null) {
+            throw new IllegalArgumentException("Duplicate style type id: " + id);
         }
     }
 
-    //endregion
+    // endregion
 
-    //region factory methods
+    // region factory methods
 
     /**
      * Creates a new StyleType builder.
@@ -151,9 +150,9 @@ public final class StyleType<T> {
         return new StyleType<>(id, id, InspectionProperty.categoryVisual, initValue, applier, null);
     }
 
-    //endregion
+    // endregion
 
-    //region getters
+    // region getters
 
     /**
      * Gets the unique identifier.
@@ -206,9 +205,9 @@ public final class StyleType<T> {
         return initValue != null ? initValue.get() : null;
     }
 
-    //endregion
+    // endregion
 
-    //region formatting
+    // region formatting
 
     /**
      * Formats a value for inspection display.
@@ -234,9 +233,9 @@ public final class StyleType<T> {
         };
     }
 
-    //endregion
+    // endregion
 
-    //region equals/hashCode
+    // region equals/hashCode
 
     @Override
     public boolean equals(Object o) {
@@ -255,9 +254,9 @@ public final class StyleType<T> {
         return "StyleType[" + id + "]";
     }
 
-    //endregion
+    // endregion
 
-    //region inner types
+    // region inner types
 
     /**
      * Functional interface for applying style values to a context.
@@ -343,5 +342,5 @@ public final class StyleType<T> {
         }
     }
 
-    //endregion
+    // endregion
 }

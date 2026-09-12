@@ -13,9 +13,9 @@ import net.minecraft.world.entity.LivingEntity;
  */
 public final class EntityTagWidget extends Widget {
 
-    private static final int MIN_W = 26;
+    private static final int minW = 26;
     private static final int H = 12;
-    private static final int HP_LOW = 0xFFE06666;
+    private static final int hpLow = 0xFFE06666;
 
     private final LivingEntity entity;
     private final String label;
@@ -27,13 +27,12 @@ public final class EntityTagWidget extends Widget {
     public EntityTagWidget(LivingEntity entity, String label) {
         this.entity = entity;
         this.label = label;
-        onMount((scene, context, handle) ->
-                scene.layoutTree().setMeasureFunc(nodeId(), (style, space) -> {
-                    var font = context.font();
-                    //name + room for a two-digit hp suffix
-                    int w = font.width("◇ " + name()) + font.width(" 99");
-                    return new FloatSize(Math.max(MIN_W, w), H);
-                }));
+        onMount((scene, context, handle) -> scene.layoutTree().setMeasureFunc(nodeId(), (style, space) -> {
+            var font = context.font();
+            // name + room for a two-digit hp suffix
+            int w = font.width("◇ " + name()) + font.width(" 99");
+            return new FloatSize(Math.max(minW, w), H);
+        }));
     }
 
     private String name() {
@@ -45,16 +44,16 @@ public final class EntityTagWidget extends Widget {
         var font = context().font();
         int w = width();
 
-        canvas.text("◇ " + name(), 0, 0, HackerTheme.ACCENT);
+        canvas.text("◇ " + name(), 0, 0, HackerTheme.accent);
         String hp = (int) Math.ceil(entity.getHealth()) + "";
-        canvas.text(hp, w - font.width(hp), 0, HackerTheme.TEXT_DIM);
+        canvas.text(hp, w - font.width(hp), 0, HackerTheme.textDim);
 
         float frac = entity.getMaxHealth() > 0 ? entity.getHealth() / entity.getMaxHealth() : 0;
         int barY = font.lineHeight + 1;
         canvas.fill(0, barY, w, 2, 0x66061012);
         int fill = (int) (w * Math.clamp(frac, 0f, 1f));
         if (fill > 0) {
-            canvas.fill(0, barY, fill, 2, frac < 0.3f ? HP_LOW : HackerTheme.ACCENT);
+            canvas.fill(0, barY, fill, 2, frac < 0.3f ? hpLow : HackerTheme.accent);
         }
     }
 }

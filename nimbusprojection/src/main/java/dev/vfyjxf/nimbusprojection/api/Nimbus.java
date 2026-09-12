@@ -23,8 +23,7 @@ public final class Nimbus {
     private static @Nullable NimbusClient client;
     private static @Nullable NimbusServer server;
 
-    private Nimbus() {
-    }
+    private Nimbus() {}
 
     /**
      * Installs the runtime services. Called by the implementing mod during
@@ -58,5 +57,4 @@ public final class Nimbus {
     public static @Nullable NimbusServer server() {
         return server;
     }
-
 }

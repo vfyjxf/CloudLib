@@ -123,14 +123,12 @@ class SceneHandleTest {
             parentRegistry.add("child-data");
             parentHandle.onCleanup(() -> parentRegistry.remove("child-data"));
 
-            assertTrue(parentRegistry.contains("child-data"),
-                "Child's data should be in parent's registry");
+            assertTrue(parentRegistry.contains("child-data"), "Child's data should be in parent's registry");
 
             // Parent unmounts -> cleanup
             parentHandle.cleanup();
 
-            assertFalse(parentRegistry.contains("child-data"),
-                "Child's data should be removed when parent unmounts");
+            assertFalse(parentRegistry.contains("child-data"), "Child's data should be removed when parent unmounts");
         }
 
         /**
@@ -192,12 +190,10 @@ class SceneHandleTest {
 
             // LIFO order: grandparent's last-registered runs first (which triggers parent cleanup),
             // then grandparent's first-registered runs
-            assertEquals(List.of(
-                "parent-detach-from-grandparent",
-                "child-detach-from-parent",
-                "parent",
-                "grandparent"
-            ), cleanupOrder, "Cleanup should cascade properly in LIFO order");
+            assertEquals(
+                    List.of("parent-detach-from-grandparent", "child-detach-from-parent", "parent", "grandparent"),
+                    cleanupOrder,
+                    "Cleanup should cascade properly in LIFO order");
         }
     }
 

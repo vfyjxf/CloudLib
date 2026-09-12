@@ -19,15 +19,16 @@ import org.jetbrains.annotations.Nullable;
  */
 public class FocusNode {
 
-    @Nullable Widget owner;
+    @Nullable
+    Widget owner;
+
     boolean hasFocus;
     boolean hasPrimaryFocus;
     boolean canRequestFocus = true;
 
-    public FocusNode() {
-    }
+    public FocusNode() {}
 
-    //region getters
+    // region getters
 
     /**
      * @return the widget this focus node is attached to, or null if not yet attached.
@@ -65,9 +66,9 @@ public class FocusNode {
         return canRequestFocus;
     }
 
-    //endregion
+    // endregion
 
-    //region setters
+    // region setters
 
     /**
      * Sets whether this node is allowed to request focus.
@@ -80,9 +81,9 @@ public class FocusNode {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region actions
+    // region actions
 
     /**
      * Requests the focus for this node.
@@ -110,9 +111,9 @@ public class FocusNode {
         owner.scene.unfocus(this);
     }
 
-    //endregion
+    // endregion
 
-    //region tree traversal
+    // region tree traversal
 
     /**
      * Finds the nearest enclosing {@link FocusScopeNode} by walking up the widget tree
@@ -132,7 +133,7 @@ public class FocusNode {
         return null;
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String toString() {

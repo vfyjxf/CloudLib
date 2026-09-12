@@ -12,8 +12,6 @@ public record FlattenedGeometry(FloatPos pos, Size size) {
     /** Default flatten target: a natural-sized rect right of the anchor projection. */
     public static FlattenedGeometry beside(FloatPos anchorScreen, Size naturalSize) {
         return new FlattenedGeometry(
-                new FloatPos(anchorScreen.x() + 24, anchorScreen.y() - naturalSize.height() / 2f),
-                naturalSize);
+                new FloatPos(anchorScreen.x() + 24, anchorScreen.y() - naturalSize.height() / 2f), naturalSize);
     }
-
 }

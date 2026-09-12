@@ -30,16 +30,15 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class DividerBlueprint implements Blueprint<DividerWidget> {
 
-    private DividerWidget.Orientation orientation = DividerWidget.Orientation.HORIZONTAL;
+    private DividerWidget.Orientation orientation = DividerWidget.Orientation.horizontal;
     private int thickness = 1;
     private VisualTexture texture = new ColorTexture(0xFFAAAAAA);
     private @Nullable Object key;
-    private UIStyle style = UIStyle.EMPTY;
+    private UIStyle style = UIStyle.empty;
 
-    private DividerBlueprint() {
-    }
+    private DividerBlueprint() {}
 
-    //region dsl entry points
+    // region dsl entry points
 
     /**
      * Creates a horizontal divider.
@@ -57,17 +56,17 @@ public final class DividerBlueprint implements Blueprint<DividerWidget> {
         return ScopedReceiver.add(new DividerBlueprint().color(color));
     }
 
-    //endregion
+    // endregion
 
-    //region builder methods
+    // region builder methods
 
     public DividerBlueprint horizontal() {
-        this.orientation = DividerWidget.Orientation.HORIZONTAL;
+        this.orientation = DividerWidget.Orientation.horizontal;
         return this;
     }
 
     public DividerBlueprint vertical() {
-        this.orientation = DividerWidget.Orientation.VERTICAL;
+        this.orientation = DividerWidget.Orientation.vertical;
         return this;
     }
 
@@ -101,9 +100,9 @@ public final class DividerBlueprint implements Blueprint<DividerWidget> {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region blueprint implementation
+    // region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -118,10 +117,10 @@ public final class DividerBlueprint implements Blueprint<DividerWidget> {
     @Override
     public void updateWidget(DividerWidget widget, Scene scene, SceneContext context) {
         widget.setOrientation(orientation)
-              .setThickness(thickness)
-              .setTexture(texture)
-              .useStyle(style);
+                .setThickness(thickness)
+                .setTexture(texture)
+                .useStyle(style);
     }
 
-    //endregion
+    // endregion
 }

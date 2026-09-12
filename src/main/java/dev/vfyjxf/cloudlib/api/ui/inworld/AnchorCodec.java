@@ -19,5 +19,4 @@ public interface AnchorCodec<A extends InworldAnchor> {
 
     /** Anchor data ↔ buffer. */
     StreamCodec<? super RegistryFriendlyByteBuf, A> codec();
-
 }

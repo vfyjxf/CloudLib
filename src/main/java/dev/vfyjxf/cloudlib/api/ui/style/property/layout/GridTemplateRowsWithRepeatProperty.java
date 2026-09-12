@@ -20,7 +20,8 @@ import java.util.List;
  */
 public record GridTemplateRowsWithRepeatProperty(@Nullable List<GridTemplateComponent> rows) implements LayoutProperty {
 
-    public static final StyleType<List<GridTemplateComponent>> type = StyleType.of("grid-template-rows-with-repeat", () -> null);
+    public static final StyleType<List<GridTemplateComponent>> type =
+            StyleType.of("grid-template-rows-with-repeat", () -> null);
 
     public GridTemplateRowsWithRepeatProperty {
         rows = (rows == null) ? null : List.copyOf(rows);

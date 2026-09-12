@@ -51,7 +51,7 @@ public final class Scene {
         this.rootScope = (FocusScopeNode) root.focusNode;
     }
 
-    //region tree
+    // region tree
     private final WidgetGroup<? extends Widget> root;
     final TaffyTree tree = new TaffyTree();
     private final PathCache pathCache = new PathCache();
@@ -59,9 +59,9 @@ public final class Scene {
     public WidgetGroup<? extends Widget> root() {
         return root;
     }
-    //endregion
+    // endregion
 
-    //region scheduler task
+    // region scheduler task
 
     private final Deque<Runnable> deferredTasks = new ArrayDeque<>();
     private MutableList<Runnable> postLayoutTasks = MutableLists.empty();
@@ -109,7 +109,7 @@ public final class Scene {
         }
     }
 
-    //region One-shot callbacks
+    // region One-shot callbacks
 
     /**
      * Runs a callback <b>once</b> after the current (or next) frame
@@ -238,9 +238,9 @@ public final class Scene {
         });
     }
 
-    //endregion
+    // endregion
 
-    //region Persistent (recurring) callbacks
+    // region Persistent (recurring) callbacks
 
     /**
      * Registers a callback that runs <b>every frame</b> after rendering,
@@ -262,9 +262,9 @@ public final class Scene {
         perRenderTasks.add(new RecurringTask(task, active));
     }
 
-    //endregion
+    // endregion
 
-    //region Delayed & periodic tasks
+    // region Delayed & periodic tasks
 
     /**
      * Runs a one-shot callback after a specified number of game ticks.
@@ -335,9 +335,9 @@ public final class Scene {
         timedTasks.add(new TimedTask(task, active, initialDelay, intervalTicks));
     }
 
-    //endregion
+    // endregion
 
-    //region Internal execution hooks
+    // region Internal execution hooks
 
     /**
      * Drains all deferred tasks. Called at the start of each frame before layout.
@@ -406,11 +406,11 @@ public final class Scene {
         }
     }
 
-    //endregion
+    // endregion
 
-    //endregion
+    // endregion
 
-    //region activity
+    // region activity
 
     public void tick() {
         if (!root.lifecycle.mounted()) {
@@ -428,9 +428,9 @@ public final class Scene {
         context.tick();
     }
 
-    //endregion
+    // endregion
 
-    //region layout
+    // region layout
 
     private float width = Float.NaN;
     private float height = Float.NaN;
@@ -445,15 +445,16 @@ public final class Scene {
     }
 
     public void layout() {
-        tree.computeLayout(root.nodeId(), new TaffySize<>(
-                Float.isNaN(width) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(width),
-                Float.isNaN(height) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(height)
-        ));
+        tree.computeLayout(
+                root.nodeId(),
+                new TaffySize<>(
+                        Float.isNaN(width) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(width),
+                        Float.isNaN(height) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(height)));
     }
 
-    //endregion
+    // endregion
 
-    //region lifecycle management
+    // region lifecycle management
 
     private final ObjectSet<Widget> createdWidgets = new ObjectLinkedOpenHashSet<>();
     private final ObjectSet<Widget> remountWidgets = new ObjectLinkedOpenHashSet<>();
@@ -461,7 +462,7 @@ public final class Scene {
     private final ObjectSet<Widget> retainedWidgets = new ObjectLinkedOpenHashSet<>();
     private SceneContext context;
 
-    //region scene handle
+    // region scene handle
 
     final SceneHandle globalHandle = SceneHandle.create(this);
     private final Object2ObjectOpenHashMap<Widget, SceneHandle> widgetHandles = new Object2ObjectOpenHashMap<>();
@@ -476,7 +477,7 @@ public final class Scene {
             handle.cleanup();
         }
     }
-    //endregion
+    // endregion
 
     void addCreatedWidget(Widget widget) {
         if (widget.lifecycle != Lifecycle.created) {
@@ -515,10 +516,10 @@ public final class Scene {
         if (!widget.lifecycle.unmounted()) {
             throw new IllegalArgumentException("Cannot reuse widget: " + widget + " because it is not unmounted!");
         }
-//        if (!destroyingWidgets.remove(widget)) {
-//            throw new IllegalStateException("Widget: " + widget + " is not being destroyed!");
-//        }
-        //TODO:完善reuse的流程，让上面的检查能够工作
+        //        if (!destroyingWidgets.remove(widget)) {
+        //            throw new IllegalStateException("Widget: " + widget + " is not being destroyed!");
+        //        }
+        // TODO:完善reuse的流程，让上面的检查能够工作
         WidgetTree.walkBreadthFirst(widget, true, -1, (w, depth) -> {
             destroyingWidgets.remove(w);
             retainedWidgets.add(w);
@@ -606,9 +607,9 @@ public final class Scene {
             }
             remountWidgets.clear();
         }
-        //needsVisit only reflects layout computed in a previous pass; a freshly
-        //markDirty'd node has an empty cache instead — check both so dirty
-        //marking actually triggers a relayout
+        // needsVisit only reflects layout computed in a previous pass; a freshly
+        // markDirty'd node has an empty cache instead — check both so dirty
+        // marking actually triggers a relayout
         if (tree.needsVisit(root.nodeId()) || tree.isDirty(root.nodeId())) {
             layout();
             root.applyLayout();
@@ -642,11 +643,11 @@ public final class Scene {
         runPostLayout();
     }
 
-    //endregion
+    // endregion
 
-    //region render
+    // region render
 
-    //region layer management
+    // region layer management
 
     private final Map<SceneLayer, MutableList<Widget>> extraLayers = new Object2ObjectLinkedOpenHashMap<>();
 
@@ -717,10 +718,9 @@ public final class Scene {
         extraLayers.get(layer).sortThis(Comparator.comparingInt(Widget::zIndex));
     }
 
+    // endregion
 
-    //endregion
-
-    //region tooltip
+    // region tooltip
 
     private Tooltip hoverTooltip = new Tooltip();
     private boolean hoverRefreshQueued = false;
@@ -771,10 +771,9 @@ public final class Scene {
         return null;
     }
 
-    private record TooltipInstance(Tooltip tooltip, ClientTooltipPositioner positioner) {
-    }
+    private record TooltipInstance(Tooltip tooltip, ClientTooltipPositioner positioner) {}
 
-    //endregion
+    // endregion
 
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         drainDeferred();
@@ -837,12 +836,12 @@ public final class Scene {
         cleanWidgets();
     }
 
-    //endregion
+    // endregion
 
-    //region user input
+    // region user input
 
-    private static final int doubleClickThreshold = 500;//500ms
-    private static final int doubleClickRadius = 5;//5px
+    private static final int doubleClickThreshold = 500; // 500ms
+    private static final int doubleClickRadius = 5; // 5px
 
     private final DraggableManager draggableManager;
     private @Nullable Widget currentClickWidget;
@@ -855,7 +854,7 @@ public final class Scene {
 
     private FloatPos lastClickPos;
 
-    //region click region
+    // region click region
 
     /**
      * Registry of click-region groups.
@@ -910,17 +909,16 @@ public final class Scene {
                 for (int i = 0; i < snapshot.size(); i++) {
                     Widget member = snapshot.get(i);
                     if (member.lifecycle.mounted()) {
-                        member.listeners(WidgetEvent.onClickOutside)
-                              .onClickOutside(member.interruptible());
+                        member.listeners(WidgetEvent.onClickOutside).onClickOutside(member.interruptible());
                     }
                 }
             }
         }
     }
 
-    //endregion
+    // endregion
 
-    //region focus
+    // region focus
 
     private final FocusScopeNode rootScope;
     private @Nullable FocusNode primaryFocus;
@@ -991,7 +989,7 @@ public final class Scene {
         if (primaryFocus != null) doClearFocus();
     }
 
-    //endregion
+    // endregion
 
     /**
      * Called when a mouse button is clicked within the GUI element.
@@ -1014,9 +1012,7 @@ public final class Scene {
             currentClickWidget = target;
             lastClickButton = button;
             boolean result = handleBubbleEvent(
-                    target, bubble, InputEvents.onMouseClicked,
-                    (listener) -> listener.onClicked(input, bubble)
-            );
+                    target, bubble, InputEvents.onMouseClicked, (listener) -> listener.onClicked(input, bubble));
             refreshHoverTooltip(mouseX, mouseY);
             return result;
         }
@@ -1051,24 +1047,27 @@ public final class Scene {
             InputContext input = InputContext.fromMouse(mouseX, mouseY, button);
             var releaseContext = target.bubble();
             var result = handleBubbleEvent(
-                    target, releaseContext, InputEvents.onMouseReleased,
-                    (listener) -> listener.onReleased(input, releaseContext)
-            );
+                    target,
+                    releaseContext,
+                    InputEvents.onMouseReleased,
+                    (listener) -> listener.onReleased(input, releaseContext));
 
             if (currentClickWidget == target && target.isMouseOver(mouseX, mouseY)) {
                 boolean isContinuousClick = lastClickedWidget == target
                         && lastClickButton == button
                         && System.currentTimeMillis() - lastClickTime <= doubleClickThreshold
                         && lastClickPos != null
-                        && Math.sqrt(Math.pow(mouseX - lastClickPos.x(), 2) + Math.pow(mouseY - lastClickPos.y(), 2)) <= doubleClickRadius;
+                        && Math.sqrt(Math.pow(mouseX - lastClickPos.x(), 2) + Math.pow(mouseY - lastClickPos.y(), 2))
+                                <= doubleClickRadius;
 
                 clickCount = isContinuousClick ? clickCount + 1 : 1;
 
                 var clickContext = target.bubble();
                 result |= handleBubbleEvent(
-                        target, clickContext, InputEvents.onMouseClick,
-                        (listener) -> listener.onClick(input, clickCount, clickContext)
-                );
+                        target,
+                        clickContext,
+                        InputEvents.onMouseClick,
+                        (listener) -> listener.onClick(input, clickCount, clickContext));
                 lastClickedWidget = target;
                 lastClickPos = new FloatPos(mouseX, mouseY);
                 lastClickButton = button;
@@ -1102,7 +1101,7 @@ public final class Scene {
                 target = null;
             }
         }
-        //region mouse enter/leave
+        // region mouse enter/leave
         if (target != null) {
             WidgetPath currentPath = target.path();
             if (lastHoveredPath == null) {
@@ -1137,7 +1136,7 @@ public final class Scene {
             }
             lastHoveredPath = null;
         }
-        //endregion
+        // endregion
         refreshHoverTooltip(mouseX, mouseY);
     }
 
@@ -1158,9 +1157,10 @@ public final class Scene {
             var input = InputContext.fromMouse(mouseX, mouseY, button);
             var bubble = target.bubble();
             return handleBubbleEvent(
-                    target, bubble, InputEvents.onMouseDragged,
-                    (listener) -> listener.onDragged(input, dragX, dragY, bubble)
-            );
+                    target,
+                    bubble,
+                    InputEvents.onMouseDragged,
+                    (listener) -> listener.onDragged(input, dragX, dragY, bubble));
         }
         return false;
     }
@@ -1170,9 +1170,10 @@ public final class Scene {
         if (target != null) {
             var bubble = target.bubble();
             boolean result = handleBubbleEvent(
-                    target, bubble, InputEvents.onMouseScrolled,
-                    (listener) -> listener.onScrolled(mouseX, mouseY, scrollX, scrollY, bubble)
-            );
+                    target,
+                    bubble,
+                    InputEvents.onMouseScrolled,
+                    (listener) -> listener.onScrolled(mouseX, mouseY, scrollX, scrollY, bubble));
             refreshHoverTooltip(mouseX, mouseY);
             return result;
         }
@@ -1197,9 +1198,7 @@ public final class Scene {
         var input = InputContext.fromKeyboard(keyCode, scanCode, modifiers, mouseX, mouseY);
         var bubble = fw.bubble();
         return handleBubbleEvent(
-                fw, bubble, InputEvents.onKeyPressed,
-                (listener) -> listener.onKeyPressed(input, bubble)
-        );
+                fw, bubble, InputEvents.onKeyPressed, (listener) -> listener.onKeyPressed(input, bubble));
     }
 
     /**
@@ -1220,9 +1219,7 @@ public final class Scene {
         var input = InputContext.fromKeyboard(keyCode, scanCode, modifiers, mouseX, mouseY);
         var bubble = fw.bubble();
         return handleBubbleEvent(
-                fw, bubble, InputEvents.onKeyReleased,
-                (listener) -> listener.onKeyReleased(input, bubble)
-        );
+                fw, bubble, InputEvents.onKeyReleased, (listener) -> listener.onKeyReleased(input, bubble));
     }
 
     /**
@@ -1238,16 +1235,17 @@ public final class Scene {
         if (fw != null && fw.lifecycle.mounted()) {
             var bubble = fw.bubble();
             return handleBubbleEvent(
-                    fw, bubble, InputEvents.onCharTyped,
-                    (listener) -> listener.onCharTyped(codePoint, modifiers, bubble)
-            );
+                    fw,
+                    bubble,
+                    InputEvents.onCharTyped,
+                    (listener) -> listener.onCharTyped(codePoint, modifiers, bubble));
         }
         return false;
     }
 
-    //endregion
+    // endregion
 
-    //region hit test & bubble event
+    // region hit test & bubble event
 
     public @Nullable Widget hitTest(double mouseX, double mouseY) {
         if (!isMountedInThisScene(root)) {
@@ -1263,7 +1261,8 @@ public final class Scene {
                 Widget layerWidget = widgets.get(j);
                 if (!isMountedInThisScene(layerWidget)) continue;
                 double hitX, hitY;
-                boolean inSceneSpace = layerWidget.coordinateSpace == CoordinateSpace.scene || layerWidget.parent() == null;
+                boolean inSceneSpace =
+                        layerWidget.coordinateSpace == CoordinateSpace.scene || layerWidget.parent() == null;
                 if (inSceneSpace) {
                     hitX = mouseX;
                     hitY = mouseY;
@@ -1302,13 +1301,11 @@ public final class Scene {
     }
 
     public static <E extends WidgetEvent> boolean handleBubbleEvent(
-            Widget target, BubbleContext bubble,
-            EventDefinition<E> event, Function<E, EventDispatch> listenerInvoke
-    ) {
+            Widget target, BubbleContext bubble, EventDefinition<E> event, Function<E, EventDispatch> listenerInvoke) {
         WidgetPath path = target.path();
         EventDispatch action = EventDispatch.pass;
-        //NOTE:target index is path.size() - 1
-        //stage 1: capture — skip inactive widgets
+        // NOTE:target index is path.size() - 1
+        // stage 1: capture — skip inactive widgets
         bubble.setPhase(BubbleContext.Phase.capture);
         for (int i = 0; i < path.size() - 1; i++) {
             Widget widget = path.get(i);
@@ -1317,14 +1314,14 @@ public final class Scene {
             action = EventDispatch.max(listenerInvoke.apply(widget.listeners(event)), action);
             if (bubble.consumed() || bubble.cancelled()) return action.handled();
         }
-        //stage 2: target — skip if inactive
+        // stage 2: target — skip if inactive
         if (target.active()) {
             bubble.setPhase(BubbleContext.Phase.target);
             bubble.setCurrent(target.events());
             action = EventDispatch.max(listenerInvoke.apply(target.listeners(event)), action);
             if (bubble.consumed() || bubble.cancelled()) return action.handled();
         }
-        //stage 3: bubble — skip inactive widgets
+        // stage 3: bubble — skip inactive widgets
         bubble.setPhase(BubbleContext.Phase.bubble);
         for (int i = path.size() - 2; i >= 0; i--) {
             Widget widget = path.get(i);
@@ -1336,9 +1333,9 @@ public final class Scene {
         return action.handled();
     }
 
-    //endregion
+    // endregion
 
-    //region internal
+    // region internal
 
     final PerformerContainer performers = new PerformerContainer();
 
@@ -1361,7 +1358,7 @@ public final class Scene {
         pathCache.invalidate();
     }
 
-    //region focus internals
+    // region focus internals
 
     private void handleFocusWidgetUnmount(Widget widget) {
         if (primaryFocus == null) return;
@@ -1409,9 +1406,8 @@ public final class Scene {
             oldFocus.hasPrimaryFocus = false;
 
             var bubble = oldWidget.bubble();
-            handleBubbleEvent(oldWidget, bubble, WidgetEvent.onFocusOut,
-                    (listener) -> listener.onFocusOut(oldWidget, bubble)
-            );
+            handleBubbleEvent(
+                    oldWidget, bubble, WidgetEvent.onFocusOut, (listener) -> listener.onFocusOut(oldWidget, bubble));
             oldWidget.listeners(WidgetEvent.onFocusLost).onFocusLost(oldWidget.interruptible());
 
             for (int i = forkIndex + 1; i < newPath.size(); i++) {
@@ -1437,9 +1433,7 @@ public final class Scene {
 
         var bubble = newWidget.bubble();
         handleBubbleEvent(
-                newWidget, bubble, WidgetEvent.onFocusIn,
-                (listener) -> listener.onFocusIn(newWidget, bubble)
-        );
+                newWidget, bubble, WidgetEvent.onFocusIn, (listener) -> listener.onFocusIn(newWidget, bubble));
         newWidget.listeners(WidgetEvent.onFocus).onFocus(newWidget.interruptible());
     }
 
@@ -1458,9 +1452,8 @@ public final class Scene {
             oldFocus.hasPrimaryFocus = false;
 
             var bubble = oldWidget.bubble();
-            handleBubbleEvent(oldWidget, bubble, WidgetEvent.onFocusOut,
-                    (listener) -> listener.onFocusOut(oldWidget, bubble)
-            );
+            handleBubbleEvent(
+                    oldWidget, bubble, WidgetEvent.onFocusOut, (listener) -> listener.onFocusOut(oldWidget, bubble));
             oldWidget.listeners(WidgetEvent.onFocusLost).onFocusLost(oldWidget.interruptible());
         } else {
             oldFocus.hasPrimaryFocus = false;
@@ -1476,9 +1469,8 @@ public final class Scene {
         }
     }
 
-    //endregion
+    // endregion
 
-    //endregion
-
+    // endregion
 
 }

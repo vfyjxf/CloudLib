@@ -36,6 +36,7 @@ public final class ItemUnits {
      * material or via a convention pack such as {@link TicUnits}.
      */
     public static final Unit<ItemUnits> gem = Unit.of(family, Namespace.ofMc("gem"));
+
     public static final Unit<ItemUnits> plate = Unit.of(family, Namespace.ofMc("plate"));
     public static final Unit<ItemUnits> gear = Unit.of(family, Namespace.ofMc("gear"));
     public static final Unit<ItemUnits> rod = Unit.of(family, Namespace.ofMc("rod"));
@@ -49,8 +50,7 @@ public final class ItemUnits {
             UnitRule.matter(ingot, nugget, Ratio.of(9)),
             UnitRule.matter(block, ingot, Ratio.of(9)),
             UnitRule.matter(dust, smallDust, Ratio.of(4)),
-            UnitRule.matter(dust, tinyDust, Ratio.of(9))
-    );
+            UnitRule.matter(dust, tinyDust, Ratio.of(9)));
 
     /**
      * Unmodifiable {@link List} view of {@link #rules}, for consumers working with
@@ -66,6 +66,5 @@ public final class ItemUnits {
         return UnitPack.of(rules, base);
     }
 
-    private ItemUnits() {
-    }
+    private ItemUnits() {}
 }

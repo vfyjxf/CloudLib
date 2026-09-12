@@ -12,16 +12,15 @@ import org.jetbrains.annotations.Nullable;
 @NotNullByDefault
 public final class Games {
 
-    //region server
+    // region server
 
     public static @Nullable MinecraftServer server() {
         return ServerLifecycleHooks.getCurrentServer();
     }
 
-    //endregion
+    // endregion
 
-
-    //region recipe manager
+    // region recipe manager
 
     public static RecipeManager recipeManager() {
         var server = ServerLifecycleHooks.getCurrentServer();
@@ -37,7 +36,7 @@ public final class Games {
         return server.getRecipeManager();
     }
 
-    //endregion
+    // endregion
 
     public static RegistryAccess registryAccess() {
         var server = ServerLifecycleHooks.getCurrentServer();
@@ -56,5 +55,4 @@ public final class Games {
     private Games() {
         throw new AssertionError("This class should not be instantiated!");
     }
-
 }

@@ -14,9 +14,9 @@ import java.util.Objects;
  * <p>
  * The text align values supported by taffy include:
  * <ul>
- *   <li>{@link TextAlign#AUTO} - automatic based on direction</li>
- *   <li>{@link TextAlign#LEFT} - align to left</li>
- *   <li>{@link TextAlign#RIGHT} - align to right</li>
+ *   <li>{@link TextAlign#auto} - automatic based on direction</li>
+ *   <li>{@link TextAlign#left} - align to left</li>
+ *   <li>{@link TextAlign#right} - align to right</li>
  *   <li>{@link TextAlign#CENTER} - center align</li>
  *   <li>{@link TextAlign#START} - align to logical start</li>
  *   <li>{@link TextAlign#END} - align to logical end</li>

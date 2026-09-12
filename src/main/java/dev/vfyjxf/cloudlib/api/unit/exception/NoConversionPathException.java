@@ -10,7 +10,7 @@ import dev.vfyjxf.cloudlib.api.unit.Unit;
 public class NoConversionPathException extends UnitConversionException {
 
     public NoConversionPathException(Unit from, Unit to) {
-        super("No conversion path from " + from + " (family " + from.family().id() + ") to "
-                + to + " (family " + to.family().id() + ")");
+        super("No conversion path from " + from + " (family " + from.family().id() + ") to " + to + " (family "
+                + to.family().id() + ")");
     }
 }

@@ -52,7 +52,7 @@ class WidgetTreeTest {
         }
 
         public TestContainer addChild(Widget child) {
-            addWidget(child);  // Use parent class method which handles parent assignment and position update
+            addWidget(child); // Use parent class method which handles parent assignment and position update
             return this;
         }
 
@@ -167,7 +167,7 @@ class WidgetTreeTest {
             // Create overlapping widgets
             TestContainer parent = new TestContainer("parent", 0, 0, 200, 200);
             TestWidget first = new TestWidget("first", 10, 10, 100, 100);
-            TestWidget second = new TestWidget("second", 50, 50, 100, 100);  // overlaps with first
+            TestWidget second = new TestWidget("second", 50, 50, 100, 100); // overlaps with first
             parent.addChild(first).addChild(second);
 
             // Click in overlap area (60, 60) - second should win (added later)
@@ -221,7 +221,7 @@ class WidgetTreeTest {
         @Test
         void hitTest_withCustomPredicate_HIT_STOP() {
             // Use HIT_STOP to stop at panel2 without checking children
-            // The predicate receives LOCAL coordinates (after viewport transform)
+            // The predicate receives local coordinates (after viewport transform)
             Widget hit = WidgetTree.hitTest(root, 230, 70, (w, localX, localY) -> {
                 if (!w.visible()) return WidgetTree.HitTestResult.miss;
                 // Check bounds in local space: (0,0) to (w,h)
@@ -249,8 +249,8 @@ class WidgetTreeTest {
                 return WidgetTree.TraversalControl.proceed;
             });
 
-            assertEquals(List.of("root", "panel1", "button1", "button2",
-                    "panel2", "label1", "nested", "deep"), visited);
+            assertEquals(
+                    List.of("root", "panel1", "button1", "button2", "panel2", "label1", "nested", "deep"), visited);
         }
 
         @Test
@@ -330,8 +330,8 @@ class WidgetTreeTest {
             });
 
             // Children before parents
-            assertEquals(List.of("button1", "button2", "panel1",
-                    "label1", "deep", "nested", "panel2", "root"), visited);
+            assertEquals(
+                    List.of("button1", "button2", "panel1", "label1", "deep", "nested", "panel2", "root"), visited);
         }
 
         @Test
@@ -357,8 +357,8 @@ class WidgetTreeTest {
             // Level 1: panel1, panel2
             // Level 2: button1, button2, label1, nested
             // Level 3: deep
-            assertEquals(List.of("root", "panel1", "panel2",
-                    "button1", "button2", "label1", "nested", "deep"), visited);
+            assertEquals(
+                    List.of("root", "panel1", "panel2", "button1", "button2", "label1", "nested", "deep"), visited);
         }
 
         @Test
@@ -454,16 +454,16 @@ class WidgetTreeTest {
 
         @Test
         void findFirst_findsMatchingWidget() {
-            Widget found = WidgetTree.findFirst(root, true, -1,
-                    w -> w.toString().equals("button2"));
+            Widget found =
+                    WidgetTree.findFirst(root, true, -1, w -> w.toString().equals("button2"));
 
             assertEquals(button2, found);
         }
 
         @Test
         void findFirst_returnsNullWhenNotFound() {
-            Widget found = WidgetTree.findFirst(root, true, -1,
-                    w -> w.toString().equals("nonexistent"));
+            Widget found =
+                    WidgetTree.findFirst(root, true, -1, w -> w.toString().equals("nonexistent"));
 
             assertNull(found);
         }
@@ -471,8 +471,7 @@ class WidgetTreeTest {
         @Test
         void collectInto_collectsAllMatching() {
             List<Widget> results = new ArrayList<>();
-            WidgetTree.collectInto(root, true, -1,
-                    w -> w.toString().startsWith("button"), results);
+            WidgetTree.collectInto(root, true, -1, w -> w.toString().startsWith("button"), results);
 
             assertEquals(2, results.size());
             assertTrue(results.contains(button1));
@@ -481,8 +480,7 @@ class WidgetTreeTest {
 
         @Test
         void count_countsMatchingWidgets() {
-            int count = WidgetTree.count(root, true, -1,
-                    w -> w instanceof TestContainer);
+            int count = WidgetTree.count(root, true, -1, w -> w instanceof TestContainer);
 
             assertEquals(4, count); // root, panel1, panel2, nested
         }
@@ -593,7 +591,7 @@ class WidgetTreeTest {
         @Test
         void subPath_byWidget() {
             WidgetPath path = WidgetTree.pathToRoot(deep);
-            WidgetPath sub = path.subPath(nested);  // up to but not including nested
+            WidgetPath sub = path.subPath(nested); // up to but not including nested
 
             assertEquals(2, sub.size());
             assertEquals(root, sub.root());
@@ -602,17 +600,17 @@ class WidgetTreeTest {
 
         @Test
         void commonHeadLength_findsSharedPrefix() {
-            WidgetPath path1 = WidgetTree.pathToRoot(button1);  // root -> panel1 -> button1
-            WidgetPath path2 = WidgetTree.pathToRoot(button2);  // root -> panel1 -> button2
+            WidgetPath path1 = WidgetTree.pathToRoot(button1); // root -> panel1 -> button1
+            WidgetPath path2 = WidgetTree.pathToRoot(button2); // root -> panel1 -> button2
 
             int common = path1.commonHeadLength(path2);
-            assertEquals(2, common);  // root, panel1
+            assertEquals(2, common); // root, panel1
         }
 
         @Test
         void commonAncestor_findsLCA() {
-            WidgetPath path1 = WidgetTree.pathToRoot(button1);  // root -> panel1 -> button1
-            WidgetPath path2 = WidgetTree.pathToRoot(deep);     // root -> panel2 -> nested -> deep
+            WidgetPath path1 = WidgetTree.pathToRoot(button1); // root -> panel1 -> button1
+            WidgetPath path2 = WidgetTree.pathToRoot(deep); // root -> panel2 -> nested -> deep
 
             Widget lca = path1.commonAncestor(path2);
             assertEquals(root, lca);
@@ -657,7 +655,7 @@ class WidgetTreeTest {
             WidgetPath path = WidgetTree.pathToRoot(deep);
 
             Widget found = path.findFirst(w -> w instanceof TestContainer);
-            assertEquals(root, found);  // root is first TestContainer in root->leaf order
+            assertEquals(root, found); // root is first TestContainer in root->leaf order
         }
     }
 }

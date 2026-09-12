@@ -30,7 +30,7 @@ public final class ProgressTracker {
     private volatile float totalWeight;
     private @Nullable Consumer<ProgressTracker> listener;
 
-    //region configuration
+    // region configuration
 
     /**
      * Creates a {@link DispatchProgress} that contributes {@code weight} to the overall percentage.
@@ -67,9 +67,9 @@ public final class ProgressTracker {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region query
+    // region query
 
     /**
      * Overall progress as a percentage in [0, 100].
@@ -168,8 +168,13 @@ public final class ProgressTracker {
                 var phase = phases.get(i);
                 cumulativeWeight += phase.weight;
                 int pct = tw > 0 ? Math.round(cumulativeWeight / tw * 100f) : 0;
-                logger.info("{}", String.format("  [%3d%%] %-" + maxNameLen + "s  %" + msWidth + "dms",
-                        pct, nameOf(i), phase.elapsedMs()));
+                logger.info(
+                        "{}",
+                        String.format(
+                                "  [%3d%%] %-" + maxNameLen + "s  %" + msWidth + "dms",
+                                pct,
+                                nameOf(i),
+                                phase.elapsedMs()));
             }
 
             // footer
@@ -184,9 +189,9 @@ public final class ProgressTracker {
         return name != null ? name : "phase-" + index;
     }
 
-    //endregion
+    // endregion
 
-    //region internal
+    // region internal
 
     private void notifyListener() {
         var l = listener;
@@ -251,9 +256,8 @@ public final class ProgressTracker {
     /**
      * Timing snapshot for a single phase.
      */
-    public record PhaseTiming(@Nullable String name, long elapsedMs, boolean complete) {
-    }
+    public record PhaseTiming(@Nullable String name, long elapsedMs, boolean complete) {}
 
-    //endregion
+    // endregion
 
 }

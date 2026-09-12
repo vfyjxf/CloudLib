@@ -26,7 +26,7 @@ import java.util.function.Function;
  * <p>
  * Subclasses only need to:
  * <ol>
- *   <li>Define their StyleTypes (TYPE_ALL, TYPE_TOP, etc.)</li>
+ *   <li>Define their StyleTypes (typeAll, typeTop, etc.)</li>
  *   <li>Implement {@link #applyToStyle(TaffyStyle)} to write to the appropriate TaffyStyle field</li>
  *   <li>Implement {@link #formatValue(Object)} for inspection display</li>
  * </ol>
@@ -35,15 +35,15 @@ import java.util.function.Function;
  */
 public abstract class EdgeStyleProperty<T> implements LayoutProperty {
 
-    //region fields
+    // region fields
 
     private final EdgeRect<T> edges;
     private final EdgeMask mask;
     private final StyleType<?> propertyType;
 
-    //endregion
+    // endregion
 
-    //region constructor
+    // region constructor
 
     /**
      * Creates a new edge style property.
@@ -58,9 +58,9 @@ public abstract class EdgeStyleProperty<T> implements LayoutProperty {
         this.propertyType = Objects.requireNonNull(propertyType, "propertyType");
     }
 
-    //endregion
+    // endregion
 
-    //region abstract methods
+    // region abstract methods
 
     /**
      * Gets the StyleType for the "all edges" variant.
@@ -110,9 +110,9 @@ public abstract class EdgeStyleProperty<T> implements LayoutProperty {
      */
     protected abstract String baseName();
 
-    //endregion
+    // endregion
 
-    //region getters
+    // region getters
 
     /**
      * Gets the edge values.
@@ -156,9 +156,9 @@ public abstract class EdgeStyleProperty<T> implements LayoutProperty {
         return edges.left();
     }
 
-    //endregion
+    // endregion
 
-    //region StyleProperty implementation
+    // region StyleProperty implementation
 
     @Override
     public StyleType<?> type() {
@@ -179,7 +179,7 @@ public abstract class EdgeStyleProperty<T> implements LayoutProperty {
     public void collectInspection(InspectionInfoCollector collector) {
         String category = type().category();
 
-        if (mask == EdgeMask.ALL && edges.hasAll()) {
+        if (mask == EdgeMask.all && edges.hasAll()) {
             T top = edges.top();
             T right = edges.right();
             T bottom = edges.bottom();
@@ -191,8 +191,8 @@ public abstract class EdgeStyleProperty<T> implements LayoutProperty {
             } else if (Objects.equals(top, bottom) && Objects.equals(left, right)) {
                 formatted = formatValue(top) + " " + formatValue(right);
             } else {
-                formatted = formatValue(top) + " " + formatValue(right) + " " +
-                        formatValue(bottom) + " " + formatValue(left);
+                formatted = formatValue(top) + " " + formatValue(right) + " " + formatValue(bottom) + " "
+                        + formatValue(left);
             }
             collector.addFormatted(baseName(), formatted, null, category);
             return;
@@ -212,70 +212,70 @@ public abstract class EdgeStyleProperty<T> implements LayoutProperty {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region toString
+    // region toString
 
     @Override
     public String toString() {
-        if (mask == EdgeMask.ALL) {
+        if (mask == EdgeMask.all) {
             return baseName() + "(" + edges.toShortString() + ")";
         }
         return baseName() + mask.suffix() + "(" + edges.format(this::formatValue) + ")";
     }
 
-    //endregion
+    // endregion
 
-    //region EdgeMask enum
+    // region EdgeMask enum
 
     /**
      * Specifies which edges a property affects.
      */
     public enum EdgeMask {
-        ALL(true, true, true, true, ""),
-        TOP(true, false, false, false, "Top"),
-        RIGHT(false, true, false, false, "Right"),
-        BOTTOM(false, false, true, false, "Bottom"),
-        LEFT(false, false, false, true, "Left"),
-        HORIZONTAL(false, true, false, true, "Horizontal"),
-        VERTICAL(true, false, true, false, "Vertical");
+        all(true, true, true, true, ""),
+        top(true, false, false, false, "Top"),
+        right(false, true, false, false, "Right"),
+        bottom(false, false, true, false, "Bottom"),
+        left(false, false, false, true, "Left"),
+        horizontal(false, true, false, true, "Horizontal"),
+        vertical(true, false, true, false, "Vertical");
 
-        private final boolean top;
-        private final boolean right;
-        private final boolean bottom;
-        private final boolean left;
+        private final boolean hasTop;
+        private final boolean hasRight;
+        private final boolean hasBottom;
+        private final boolean hasLeft;
         private final String suffix;
 
         EdgeMask(boolean top, boolean right, boolean bottom, boolean left, String suffix) {
-            this.top = top;
-            this.right = right;
-            this.bottom = bottom;
-            this.left = left;
+            this.hasTop = top;
+            this.hasRight = right;
+            this.hasBottom = bottom;
+            this.hasLeft = left;
             this.suffix = suffix;
         }
 
         public boolean affectsTop() {
-            return top;
+            return hasTop;
         }
 
         public boolean affectsRight() {
-            return right;
+            return hasRight;
         }
 
         public boolean affectsBottom() {
-            return bottom;
+            return hasBottom;
         }
 
         public boolean affectsLeft() {
-            return left;
+            return hasLeft;
         }
 
         public boolean affects(Edge edge) {
             return switch (edge) {
-                case TOP -> top;
-                case RIGHT -> right;
-                case BOTTOM -> bottom;
-                case LEFT -> left;
+                case top -> hasTop;
+                case right -> hasRight;
+                case bottom -> hasBottom;
+                case left -> hasLeft;
             };
         }
 
@@ -288,17 +288,17 @@ public abstract class EdgeStyleProperty<T> implements LayoutProperty {
          */
         public static EdgeMask forEdge(Edge edge) {
             return switch (edge) {
-                case TOP -> TOP;
-                case RIGHT -> RIGHT;
-                case BOTTOM -> BOTTOM;
-                case LEFT -> LEFT;
+                case top -> EdgeMask.top;
+                case right -> EdgeMask.right;
+                case bottom -> EdgeMask.bottom;
+                case left -> EdgeMask.left;
             };
         }
     }
 
-    //endregion
+    // endregion
 
-    //region helper for applying with existing values
+    // region helper for applying with existing values
 
     /**
      * Helper to apply edge values to a TaffyStyle Rect, merging with existing values.
@@ -309,21 +309,18 @@ public abstract class EdgeStyleProperty<T> implements LayoutProperty {
      * @param getter   function to get the current value for an edge
      * @param setter   function to set the new value for an edge
      */
-    protected void applyEdges(
-            Function<Edge, T> getter,
-            EdgeSetter<T> setter
-    ) {
+    protected void applyEdges(Function<Edge, T> getter, EdgeSetter<T> setter) {
         if (mask.affectsTop() && edges.top() != null) {
-            setter.set(Edge.TOP, edges.top());
+            setter.set(Edge.top, edges.top());
         }
         if (mask.affectsRight() && edges.right() != null) {
-            setter.set(Edge.RIGHT, edges.right());
+            setter.set(Edge.right, edges.right());
         }
         if (mask.affectsBottom() && edges.bottom() != null) {
-            setter.set(Edge.BOTTOM, edges.bottom());
+            setter.set(Edge.bottom, edges.bottom());
         }
         if (mask.affectsLeft() && edges.left() != null) {
-            setter.set(Edge.LEFT, edges.left());
+            setter.set(Edge.left, edges.left());
         }
     }
 
@@ -335,5 +332,5 @@ public abstract class EdgeStyleProperty<T> implements LayoutProperty {
         void set(Edge edge, T value);
     }
 
-    //endregion
+    // endregion
 }

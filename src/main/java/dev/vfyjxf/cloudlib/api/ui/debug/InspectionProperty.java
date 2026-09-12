@@ -6,12 +6,7 @@ import org.jetbrains.annotations.Nullable;
  * A single inspected property. Values are pre-formatted as strings
  * to avoid recursive {@code toString()} calls on complex objects.
  */
-public record InspectionProperty(
-        String name,
-        String value,
-        @Nullable String defaultValue,
-        String category
-) {
+public record InspectionProperty(String name, String value, @Nullable String defaultValue, String category) {
 
     public static final String categoryBasic = "basic";
     public static final String categoryLayout = "layout";

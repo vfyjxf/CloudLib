@@ -2,13 +2,14 @@ package dev.vfyjxf.nimbusprojection.internal;
 
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.ui.base.FocusScopeNode;
-import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree.TraversalControl;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree;
+import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree.TraversalControl;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.nimbusprojection.api.panel.PanelSpec;
+import dev.vfyjxf.taffy.style.TaffyDisplay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
@@ -16,8 +17,6 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import dev.vfyjxf.taffy.style.TaffyDisplay;
 
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.display;
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.minWidth;
@@ -41,7 +40,7 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
     private @Nullable Component title;
     private List<String> hints;
 
-    //per-frame chrome state, driven by the manager
+    // per-frame chrome state, driven by the manager
     boolean focused;
     boolean pointed;
     int screenX;
@@ -51,7 +50,8 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
     /** distance falloff scale for non-interactive tags; driven by the manager */
     float distScale = 1f;
     /** merge badge drawn at the top-right corner ("+3") — null = none */
-    @Nullable String overflow;
+    @Nullable
+    String overflow;
     /** dock-column overflow: render only the chrome (title/hints), content hidden */
     boolean folded;
 
@@ -65,13 +65,11 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         useStyle(
                 positionAbsolute(),
                 padding(
-                        spec.title() != null ? HackerTheme.TITLE_HEIGHT + 2 : HackerTheme.PADDING,
-                        HackerTheme.PADDING,
-                        spec.hints().isEmpty() ? HackerTheme.PADDING : HackerTheme.HINT_HEIGHT + 2,
-                        HackerTheme.PADDING
-                )
-        );
-        //tab / shift+tab cycles focus through the panel's focusable content
+                        spec.title() != null ? HackerTheme.titleHeight + 2 : HackerTheme.padding,
+                        HackerTheme.padding,
+                        spec.hints().isEmpty() ? HackerTheme.padding : HackerTheme.hintHeight + 2,
+                        HackerTheme.padding));
+        // tab / shift+tab cycles focus through the panel's focusable content
         onKeyPressed((input, context) -> {
             if (input.isKey(GLFW.GLFW_KEY_TAB)) {
                 focusCycle(!input.isShiftDown());
@@ -92,10 +90,10 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         var font = Minecraft.getInstance().font;
         int need = 0;
         if (title != null) {
-            need = Math.max(need, font.width(title) + 12 + HackerTheme.PADDING);
+            need = Math.max(need, font.width(title) + 12 + HackerTheme.padding);
         }
         if (!hints.isEmpty()) {
-            int row = HackerTheme.PADDING * 2;
+            int row = HackerTheme.padding * 2;
             for (String hint : hints) {
                 int sep = hint.indexOf(':');
                 String key = sep > 0 ? hint.substring(0, sep) : hint;
@@ -136,7 +134,7 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         return content;
     }
 
-    //region runtime drive
+    // region runtime drive
 
     /**
      * Sets the scene-space position applied by the next layout pass.
@@ -188,18 +186,18 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         if (this.folded == folded) return;
         this.folded = folded;
         content.setVisible(!folded);
-        //display:none collapses the content out of layout as well — an
-        //invisible-but-laid-out subtree would leave a full-height ghost that
-        //swallows clicks meant for the panel stacked below this dock slot
+        // display:none collapses the content out of layout as well — an
+        // invisible-but-laid-out subtree would leave a full-height ghost that
+        // swallows clicks meant for the panel stacked below this dock slot
         content.useStyle(display(folded ? TaffyDisplay.NONE : TaffyDisplay.FLEX));
         if (lifecycle().mounted()) {
             scene().layoutTree().markDirty(nodeId());
         }
     }
 
-    //endregion
+    // endregion
 
-    //region render
+    // region render
 
     /**
      * Visible chrome height while folded — the layout bounds stay full-height
@@ -208,36 +206,36 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
      * remaining bounds stay visually transparent.
      */
     private int foldHeightPx() {
-        int padTop = title != null ? HackerTheme.TITLE_HEIGHT + 2 : HackerTheme.PADDING;
-        int padBottom = hints.isEmpty() ? HackerTheme.PADDING : HackerTheme.HINT_HEIGHT + 2;
+        int padTop = title != null ? HackerTheme.titleHeight + 2 : HackerTheme.padding;
+        int padBottom = hints.isEmpty() ? HackerTheme.padding : HackerTheme.hintHeight + 2;
         return padTop + padBottom;
     }
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         int w = width();
-        //folded: draw only the chrome strip — filling the full-height bounds
-        //would paint a translucent box over whatever stacks below this slot
+        // folded: draw only the chrome strip — filling the full-height bounds
+        // would paint a translucent box over whatever stacks below this slot
         int h = folded ? foldHeightPx() : height();
 
-        canvas.fill(0, 0, w, h, focused ? HackerTheme.BG_FOCUSED : HackerTheme.BG);
-        //idle panels carry no frame — the leader line is the only chrome; the
-        //outline appears only when the panel is focused/pointed
+        canvas.fill(0, 0, w, h, focused ? HackerTheme.bgFocused : HackerTheme.bg);
+        // idle panels carry no frame — the leader line is the only chrome; the
+        // outline appears only when the panel is focused/pointed
         if (focused || pointed) {
-            canvas.strokeRect(0, 0, w, h, HackerTheme.BORDER_FOCUSED);
+            canvas.strokeRect(0, 0, w, h, HackerTheme.borderFocused);
         }
 
         if (title != null) {
-            //header: accent chip + text + hairline rule
-            canvas.fill(3, 5, 3, 3, HackerTheme.ACCENT);
-            canvas.text(title, 9, 3, HackerTheme.TEXT);
-            canvas.fill(0, HackerTheme.TITLE_HEIGHT + 1, w, 1, HackerTheme.TITLE_RULE);
+            // header: accent chip + text + hairline rule
+            canvas.fill(3, 5, 3, 3, HackerTheme.accent);
+            canvas.text(title, 9, 3, HackerTheme.text);
+            canvas.fill(0, HackerTheme.titleHeight + 1, w, 1, HackerTheme.titleRule);
         }
 
         if (!hints.isEmpty()) {
             var font = Minecraft.getInstance().font;
-            int hx = w - HackerTheme.PADDING;
-            int hy = h - HackerTheme.HINT_HEIGHT + 1;
+            int hx = w - HackerTheme.padding;
+            int hy = h - HackerTheme.hintHeight + 1;
             for (int i = hints.size() - 1; i >= 0; i--) {
                 String hint = hints.get(i);
                 int sep = hint.indexOf(':');
@@ -246,22 +244,22 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
                 int keyW = font.width(key) + 4;
                 int labelW = label.isEmpty() ? 0 : font.width(label) + 3;
                 hx -= keyW + labelW;
-                canvas.strokeRect(hx, hy - 1, keyW, 9, HackerTheme.ACCENT_DIM);
-                canvas.text(key, hx + 2, hy, HackerTheme.HINT_KEY);
+                canvas.strokeRect(hx, hy - 1, keyW, 9, HackerTheme.accentDim);
+                canvas.text(key, hx + 2, hy, HackerTheme.hintKey);
                 if (labelW > 0) {
-                    canvas.text(label, hx + keyW + 3, hy, HackerTheme.TEXT_DIM);
+                    canvas.text(label, hx + keyW + 3, hy, HackerTheme.textDim);
                 }
                 hx -= 4;
             }
         }
 
-        //merge badge: "+N" chip hanging off the top-right corner
+        // merge badge: "+N" chip hanging off the top-right corner
         if (overflow != null) {
             var font = Minecraft.getInstance().font;
             int tw = font.width(overflow) + 5;
-            canvas.fill(w - tw - 2, -4, tw, 9, HackerTheme.BG_FOCUSED);
-            canvas.strokeRect(w - tw - 2, -4, tw, 9, HackerTheme.ACCENT);
-            canvas.text(overflow, w - tw + 1, -3, HackerTheme.ACCENT);
+            canvas.fill(w - tw - 2, -4, tw, 9, HackerTheme.bgFocused);
+            canvas.strokeRect(w - tw - 2, -4, tw, 9, HackerTheme.accent);
+            canvas.text(overflow, w - tw + 1, -3, HackerTheme.accent);
         }
     }
 
@@ -270,7 +268,7 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         float scale = openScale * distScale;
         boolean animating = scale < 0.999f;
         if (animating) {
-            //grow out of the bottom-center — toward the leader line/anchor
+            // grow out of the bottom-center — toward the leader line/anchor
             canvas.pushTransform();
             canvas.translate(width() * 0.5f, height());
             canvas.scale(scale);
@@ -291,25 +289,25 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
     private void drawBrackets(SceneCanvas canvas) {
         int w = width();
         int h = folded ? foldHeightPx() : height();
-        int b = HackerTheme.BRACKET;
-        int color = focused ? HackerTheme.ACCENT : HackerTheme.ACCENT_DIM;
-        //top-left
+        int b = HackerTheme.bracket;
+        int color = focused ? HackerTheme.accent : HackerTheme.accentDim;
+        // top-left
         canvas.fill(-2, -2, b, 1, color);
         canvas.fill(-2, -2, 1, b, color);
-        //top-right
+        // top-right
         canvas.fill(w - b + 2, -2, b, 1, color);
         canvas.fill(w + 1, -2, 1, b, color);
-        //bottom-left
+        // bottom-left
         canvas.fill(-2, h + 1, b, 1, color);
         canvas.fill(-2, h - b + 2, 1, b, color);
-        //bottom-right
+        // bottom-right
         canvas.fill(w - b + 2, h + 1, b, 1, color);
         canvas.fill(w + 1, h - b + 2, 1, b, color);
     }
 
-    //endregion
+    // endregion
 
-    //region misc
+    // region misc
 
     @Override
     public String inspectionTypeName() {
@@ -321,5 +319,5 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         return "InworldPanel[" + runtime.key() + "]";
     }
 
-    //endregion
+    // endregion
 }

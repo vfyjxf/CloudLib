@@ -58,6 +58,5 @@ public interface InworldTraceable {
      * The session was aborted: ESC, the panel closing, or a tap that fell
      * back to the primary action. Clean up any in-progress stroke.
      */
-    default void traceCancel() {
-    }
+    default void traceCancel() {}
 }

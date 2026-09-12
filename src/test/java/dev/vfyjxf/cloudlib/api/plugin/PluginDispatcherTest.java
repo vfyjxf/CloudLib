@@ -1,9 +1,9 @@
 package dev.vfyjxf.cloudlib.api.plugin;
 
 import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.CloudNamespaces;
-import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -63,15 +63,13 @@ public class PluginDispatcherTest {
         var log = Collections.synchronizedList(new ArrayList<String>());
 
         dispatcher.dispatchAll(
-            plugin -> log.add("phase1:" + plugin.pluginId().path()),
-            plugin -> log.add("phase2:" + plugin.pluginId().path())
-        );
+                plugin -> log.add("phase1:" + plugin.pluginId().path()),
+                plugin -> log.add("phase2:" + plugin.pluginId().path()));
 
         // Phase 1 must complete before phase 2
         int phase1LastIndex = Math.max(log.indexOf("phase1:a"), log.indexOf("phase1:b"));
         int phase2FirstIndex = Math.min(log.indexOf("phase2:a"), log.indexOf("phase2:b"));
-        assertTrue(phase1LastIndex < phase2FirstIndex,
-            "Phase 1 should complete before phase 2 starts. Log: " + log);
+        assertTrue(phase1LastIndex < phase2FirstIndex, "Phase 1 should complete before phase 2 starts. Log: " + log);
     }
 
     @Test
@@ -98,9 +96,9 @@ public class PluginDispatcherTest {
         var dispatcher = PluginDispatcher.fromGraph(graph);
         var counter = new AtomicInteger(0);
 
-        dispatcher.dispatchAsync(plugin ->
-            CompletableFuture.runAsync(() -> counter.incrementAndGet())
-        ).join();
+        dispatcher
+                .dispatchAsync(plugin -> CompletableFuture.runAsync(() -> counter.incrementAndGet()))
+                .join();
 
         assertEquals(2, counter.get());
     }
@@ -116,9 +114,9 @@ public class PluginDispatcherTest {
         var counter = new AtomicInteger(0);
 
         try {
-            dispatcher.dispatchAsyncOn(plugin ->
-                CompletableFuture.runAsync(() -> counter.incrementAndGet(), executor)
-            ).join();
+            dispatcher
+                    .dispatchAsyncOn(plugin -> CompletableFuture.runAsync(() -> counter.incrementAndGet(), executor))
+                    .join();
 
             assertEquals(2, counter.get());
         } finally {
@@ -134,13 +132,13 @@ public class PluginDispatcherTest {
         var graph = DependencyGraph.build(List.of(a, b));
         var dispatcher = PluginDispatcher.fromGraph(graph);
 
-        var exception = assertThrows(PluginLoadingException.class, () ->
-            dispatcher.dispatch(plugin -> {
-                if (plugin.pluginId().path().equals("a")) {
-                    throw new RuntimeException("Test failure");
-                }
-            })
-        );
+        var exception = assertThrows(
+                PluginLoadingException.class,
+                () -> dispatcher.dispatch(plugin -> {
+                    if (plugin.pluginId().path().equals("a")) {
+                        throw new RuntimeException("Test failure");
+                    }
+                }));
 
         assertEquals(1, exception.failures().size());
         assertEquals(CloudNamespaces.ofMod("a"), exception.failures().getFirst().pluginId());
@@ -172,8 +170,9 @@ public class PluginDispatcherTest {
             executor.shutdown();
         }
 
-        assertTrue(threadNames.size() >= 2,
-            "Expected parallel execution, but only " + threadNames.size() + " threads were used");
+        assertTrue(
+                threadNames.size() >= 2,
+                "Expected parallel execution, but only " + threadNames.size() + " threads were used");
     }
 
     @Test
@@ -186,11 +185,12 @@ public class PluginDispatcherTest {
         var dispatcher = PluginDispatcher.fromGraph(graph, executor);
 
         try {
-            var exception = assertThrows(PluginLoadingException.class, () ->
-                dispatcher.dispatch(plugin -> {
-                    throw new RuntimeException("Failure in " + plugin.pluginId().path());
-                })
-            );
+            var exception = assertThrows(
+                    PluginLoadingException.class,
+                    () -> dispatcher.dispatch(plugin -> {
+                        throw new RuntimeException(
+                                "Failure in " + plugin.pluginId().path());
+                    }));
 
             assertEquals(2, exception.failures().size());
         } finally {
@@ -214,9 +214,7 @@ public class PluginDispatcherTest {
         var a = plugin("a");
         var b = plugin("b", dep("a", PluginDependency.Order.after));
 
-        var dispatcher = PluginDispatcher.create(
-            MutableLists.of(a, b)
-        );
+        var dispatcher = PluginDispatcher.create(MutableLists.of(a, b));
 
         assertEquals(2, dispatcher.plugins().size());
         assertEquals(2, dispatcher.graph().depth());
@@ -235,9 +233,8 @@ public class PluginDispatcherTest {
         var log = Collections.synchronizedList(new ArrayList<String>());
 
         dispatcher.dispatchAll(
-            plugin -> log.add("register:" + plugin.pluginId().path()),
-            plugin -> log.add("init:" + plugin.pluginId().path())
-        );
+                plugin -> log.add("register:" + plugin.pluginId().path()),
+                plugin -> log.add("init:" + plugin.pluginId().path()));
 
         // All register events must complete before any init event
         int lastRegister = -1;
@@ -246,14 +243,13 @@ public class PluginDispatcherTest {
             if (log.get(i).startsWith("register:")) lastRegister = Math.max(lastRegister, i);
             if (log.get(i).startsWith("init:")) firstInit = Math.min(firstInit, i);
         }
-        assertTrue(lastRegister < firstInit,
-            "All register events should complete before init starts. Log: " + log);
+        assertTrue(lastRegister < firstInit, "All register events should complete before init starts. Log: " + log);
     }
 
     @Test
     void testSameLevelPluginsRunConcurrently() throws InterruptedException {
         // 4 independent plugins → all at level 0 → must run in parallel.
-        // Each plugin waits on a latch that only releases when ALL 4 are running.
+        // Each plugin waits on a latch that only releases when all 4 are running.
         // If not parallel, this deadlocks → timeout fails the test.
         var a = plugin("a");
         var b = plugin("b");
@@ -273,8 +269,9 @@ public class PluginDispatcherTest {
                 allArrived.countDown();
                 try {
                     // Wait for all 4 to arrive — proves they are running concurrently
-                    assertTrue(allArrived.await(5, TimeUnit.SECONDS),
-                        "Timed out waiting for parallel execution: not all plugins arrived");
+                    assertTrue(
+                            allArrived.await(5, TimeUnit.SECONDS),
+                            "Timed out waiting for parallel execution: not all plugins arrived");
                     proceed.await(5, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -301,16 +298,20 @@ public class PluginDispatcherTest {
 
         dispatcher.dispatch(plugin -> {
             long start = System.nanoTime();
-            try { Thread.sleep(30); } catch (InterruptedException ignored) {}
+            try {
+                Thread.sleep(30);
+            } catch (InterruptedException ignored) {
+            }
             long end = System.nanoTime();
-            timestamps.add(new long[]{start, end});
+            timestamps.add(new long[] {start, end});
         });
 
         assertEquals(3, timestamps.size());
         // Each level's start must be after the previous level's end
         for (int i = 1; i < timestamps.size(); i++) {
-            assertTrue(timestamps.get(i)[0] >= timestamps.get(i - 1)[1],
-                "Level " + i + " started before level " + (i - 1) + " finished");
+            assertTrue(
+                    timestamps.get(i)[0] >= timestamps.get(i - 1)[1],
+                    "Level " + i + " started before level " + (i - 1) + " finished");
         }
     }
 
@@ -339,8 +340,8 @@ public class PluginDispatcherTest {
                 if (name.equals("b") || name.equals("c")) {
                     bothArrived.countDown();
                     try {
-                        assertTrue(bothArrived.await(5, TimeUnit.SECONDS),
-                            "B and C should run in parallel but timed out");
+                        assertTrue(
+                                bothArrived.await(5, TimeUnit.SECONDS), "B and C should run in parallel but timed out");
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
@@ -368,18 +369,21 @@ public class PluginDispatcherTest {
 
         var allArrived = new CountDownLatch(3);
 
-        dispatcher.dispatchAsync(plugin -> CompletableFuture.runAsync(() -> {
-            allArrived.countDown();
-            try {
-                assertTrue(allArrived.await(5, TimeUnit.SECONDS),
-                    "Async dispatch should run same-level plugins concurrently");
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        })).get(10, TimeUnit.SECONDS);
+        dispatcher
+                .dispatchAsync(plugin -> CompletableFuture.runAsync(() -> {
+                    allArrived.countDown();
+                    try {
+                        assertTrue(
+                                allArrived.await(5, TimeUnit.SECONDS),
+                                "Async dispatch should run same-level plugins concurrently");
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }))
+                .get(10, TimeUnit.SECONDS);
     }
 
-    //region helpers
+    // region helpers
 
     private static ModPlugin plugin(String name, PluginDependency... deps) {
         return new SimplePlugin(CloudNamespaces.ofMod(name), Set.of(deps));
@@ -391,6 +395,6 @@ public class PluginDispatcherTest {
 
     private record SimplePlugin(Namespace pluginId, Set<PluginDependency> dependencies) implements ModPlugin {}
 
-    //endregion
+    // endregion
 
 }

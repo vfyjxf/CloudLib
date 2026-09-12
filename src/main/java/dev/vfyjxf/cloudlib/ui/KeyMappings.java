@@ -15,7 +15,5 @@ public final class KeyMappings {
             KeyModifier.ALT,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_R,
-            CloudLang.Keys.debug.key()
-    );
-
+            CloudLang.Keys.debug.key());
 }

@@ -11,12 +11,7 @@ import dev.vfyjxf.cloudlib.util.Checks;
  *
  * @param <T> the value type
  */
-public record Schema<T>(
-        String name,
-        T initial,
-        Codec<T> nbtCodec,
-        UnaryFlowHandler<T> netCodec
-) {
+public record Schema<T>(String name, T initial, Codec<T> nbtCodec, UnaryFlowHandler<T> netCodec) {
 
     public static <T> Schema<T> of(String name, T initial, Codec<T> nbtCodec, UnaryFlowHandler<T> netCodec) {
         Checks.checkNotNull(name, "name");

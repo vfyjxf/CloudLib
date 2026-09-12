@@ -7,7 +7,7 @@ import java.util.Set;
 
 public interface ModPlugin {
 
-    //region plugin info
+    // region plugin info
 
     Namespace pluginId();
 
@@ -15,6 +15,6 @@ public interface ModPlugin {
         return Collections.emptySet();
     }
 
-    //endregion
+    // endregion
 
 }

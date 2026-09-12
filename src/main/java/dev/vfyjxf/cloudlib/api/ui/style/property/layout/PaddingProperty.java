@@ -27,7 +27,7 @@ import java.util.Objects;
  *   <li>{@link LengthPercentage#percent(float)} - percentage of parent (0.0 to 1.0)</li>
  * </ul>
  * <p>
- * Note: Unlike margin, padding does not support AUTO values.
+ * Note: Unlike margin, padding does not support auto values.
  *
  * @see TaffyStyle#padding
  * @see LengthPercentage
@@ -35,51 +35,51 @@ import java.util.Objects;
  */
 public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
 
-    //region types
+    // region types
 
     /**
      * StyleType for setting all four padding edges at once.
      */
-    public static final StyleType<PaddingProperty> TYPE_ALL = StyleType.of("padding", () -> null);
+    public static final StyleType<PaddingProperty> typeAll = StyleType.of("padding", () -> null);
 
     /**
      * StyleType for setting only the top padding edge.
      */
-    public static final StyleType<PaddingProperty> TYPE_TOP = StyleType.of("padding-top", () -> null);
+    public static final StyleType<PaddingProperty> typeTop = StyleType.of("padding-top", () -> null);
 
     /**
      * StyleType for setting only the right padding edge.
      */
-    public static final StyleType<PaddingProperty> TYPE_RIGHT = StyleType.of("padding-right", () -> null);
+    public static final StyleType<PaddingProperty> typeRight = StyleType.of("padding-right", () -> null);
 
     /**
      * StyleType for setting only the bottom padding edge.
      */
-    public static final StyleType<PaddingProperty> TYPE_BOTTOM = StyleType.of("padding-bottom", () -> null);
+    public static final StyleType<PaddingProperty> typeBottom = StyleType.of("padding-bottom", () -> null);
 
     /**
      * StyleType for setting only the left padding edge.
      */
-    public static final StyleType<PaddingProperty> TYPE_LEFT = StyleType.of("padding-left", () -> null);
+    public static final StyleType<PaddingProperty> typeLeft = StyleType.of("padding-left", () -> null);
 
     /**
      * StyleType for setting horizontal padding edges (left and right).
      */
-    public static final StyleType<PaddingProperty> TYPE_HORIZONTAL = StyleType.of("padding-horizontal", () -> null);
+    public static final StyleType<PaddingProperty> typeHorizontal = StyleType.of("padding-horizontal", () -> null);
 
     /**
      * StyleType for setting vertical padding edges (top and bottom).
      */
-    public static final StyleType<PaddingProperty> TYPE_VERTICAL = StyleType.of("padding-vertical", () -> null);
+    public static final StyleType<PaddingProperty> typeVertical = StyleType.of("padding-vertical", () -> null);
 
     /**
      * Legacy type alias for backward compatibility.
      */
-    public static final StyleType<PaddingProperty> type = TYPE_ALL;
+    public static final StyleType<PaddingProperty> type = typeAll;
 
-    //endregion
+    // endregion
 
-    //region constructors
+    // region constructors
 
     private PaddingProperty(EdgeRect<LengthPercentage> edges, EdgeMask mask, StyleType<?> type) {
         super(edges, mask, type);
@@ -89,14 +89,14 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
      * Creates a padding property with equal padding on all sides.
      */
     public PaddingProperty(LengthPercentage all) {
-        this(EdgeRect.all(all), EdgeMask.ALL, TYPE_ALL);
+        this(EdgeRect.all(all), EdgeMask.all, typeAll);
     }
 
     /**
      * Creates a padding property with vertical and horizontal values.
      */
     public PaddingProperty(LengthPercentage vertical, LengthPercentage horizontal) {
-        this(EdgeRect.symmetric(vertical, horizontal), EdgeMask.ALL, TYPE_ALL);
+        this(EdgeRect.symmetric(vertical, horizontal), EdgeMask.all, typeAll);
     }
 
     /**
@@ -122,16 +122,14 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
                         LengthPercentage.length(top),
                         LengthPercentage.length(right),
                         LengthPercentage.length(bottom),
-                        LengthPercentage.length(left)
-                ),
-                EdgeMask.ALL,
-                TYPE_ALL
-        );
+                        LengthPercentage.length(left)),
+                EdgeMask.all,
+                typeAll);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - all edges
+    // region factory - all edges
 
     /**
      * Creates a padding property with individual LengthPercentage values for each side.
@@ -142,13 +140,14 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
      * @param left   the left padding
      * @return a padding property affecting all edges
      */
-    public static PaddingProperty of(LengthPercentage top, LengthPercentage right, LengthPercentage bottom, LengthPercentage left) {
-        return new PaddingProperty(EdgeRect.of(top, right, bottom, left), EdgeMask.ALL, TYPE_ALL);
+    public static PaddingProperty of(
+            LengthPercentage top, LengthPercentage right, LengthPercentage bottom, LengthPercentage left) {
+        return new PaddingProperty(EdgeRect.of(top, right, bottom, left), EdgeMask.all, typeAll);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - single edge
+    // region factory - single edge
 
     /**
      * Creates a padding property with only the top edge set.
@@ -164,7 +163,7 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public static PaddingProperty top(LengthPercentage value) {
         Objects.requireNonNull(value, "value");
-        return new PaddingProperty(EdgeRect.top(value), EdgeMask.TOP, TYPE_TOP);
+        return new PaddingProperty(EdgeRect.top(value), EdgeMask.top, typeTop);
     }
 
     /**
@@ -181,7 +180,7 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public static PaddingProperty right(LengthPercentage value) {
         Objects.requireNonNull(value, "value");
-        return new PaddingProperty(EdgeRect.right(value), EdgeMask.RIGHT, TYPE_RIGHT);
+        return new PaddingProperty(EdgeRect.right(value), EdgeMask.right, typeRight);
     }
 
     /**
@@ -198,7 +197,7 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public static PaddingProperty bottom(LengthPercentage value) {
         Objects.requireNonNull(value, "value");
-        return new PaddingProperty(EdgeRect.bottom(value), EdgeMask.BOTTOM, TYPE_BOTTOM);
+        return new PaddingProperty(EdgeRect.bottom(value), EdgeMask.bottom, typeBottom);
     }
 
     /**
@@ -215,7 +214,7 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public static PaddingProperty left(LengthPercentage value) {
         Objects.requireNonNull(value, "value");
-        return new PaddingProperty(EdgeRect.left(value), EdgeMask.LEFT, TYPE_LEFT);
+        return new PaddingProperty(EdgeRect.left(value), EdgeMask.left, typeLeft);
     }
 
     /**
@@ -234,16 +233,16 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
         Objects.requireNonNull(edge, "edge");
         Objects.requireNonNull(value, "value");
         return switch (edge) {
-            case TOP -> top(value);
-            case RIGHT -> right(value);
-            case BOTTOM -> bottom(value);
-            case LEFT -> left(value);
+            case top -> top(value);
+            case right -> right(value);
+            case bottom -> bottom(value);
+            case left -> left(value);
         };
     }
 
-    //endregion
+    // endregion
 
-    //region factory - horizontal/vertical
+    // region factory - horizontal/vertical
 
     /**
      * Creates a padding property with only horizontal edges (left and right) set.
@@ -259,7 +258,7 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public static PaddingProperty horizontal(LengthPercentage value) {
         Objects.requireNonNull(value, "value");
-        return new PaddingProperty(EdgeRect.horizontal(value), EdgeMask.HORIZONTAL, TYPE_HORIZONTAL);
+        return new PaddingProperty(EdgeRect.horizontal(value), EdgeMask.horizontal, typeHorizontal);
     }
 
     /**
@@ -276,12 +275,12 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public static PaddingProperty vertical(LengthPercentage value) {
         Objects.requireNonNull(value, "value");
-        return new PaddingProperty(EdgeRect.vertical(value), EdgeMask.VERTICAL, TYPE_VERTICAL);
+        return new PaddingProperty(EdgeRect.vertical(value), EdgeMask.vertical, typeVertical);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - percentage
+    // region factory - percentage
 
     /**
      * Creates a padding with percentage values for all sides.
@@ -306,16 +305,14 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
                         LengthPercentage.percent(top),
                         LengthPercentage.percent(right),
                         LengthPercentage.percent(bottom),
-                        LengthPercentage.percent(left)
-                ),
-                EdgeMask.ALL,
-                TYPE_ALL
-        );
+                        LengthPercentage.percent(left)),
+                EdgeMask.all,
+                typeAll);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - common patterns
+    // region factory - common patterns
 
     /**
      * Creates a padding with zero on all sides.
@@ -324,43 +321,43 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
         return new PaddingProperty(LengthPercentage.ZERO);
     }
 
-    //endregion
+    // endregion
 
-    //region EdgeStyleProperty implementation
+    // region EdgeStyleProperty implementation
 
     @Override
     protected StyleType<?> typeAll() {
-        return TYPE_ALL;
+        return typeAll;
     }
 
     @Override
     protected StyleType<?> typeTop() {
-        return TYPE_TOP;
+        return typeTop;
     }
 
     @Override
     protected StyleType<?> typeRight() {
-        return TYPE_RIGHT;
+        return typeRight;
     }
 
     @Override
     protected StyleType<?> typeBottom() {
-        return TYPE_BOTTOM;
+        return typeBottom;
     }
 
     @Override
     protected StyleType<?> typeLeft() {
-        return TYPE_LEFT;
+        return typeLeft;
     }
 
     @Override
     protected StyleType<?> typeHorizontal() {
-        return TYPE_HORIZONTAL;
+        return typeHorizontal;
     }
 
     @Override
     protected StyleType<?> typeVertical() {
-        return TYPE_VERTICAL;
+        return typeVertical;
     }
 
     @Override
@@ -373,29 +370,28 @@ public final class PaddingProperty extends EdgeStyleProperty<LengthPercentage> {
         return "padding";
     }
 
-    //endregion
+    // endregion
 
-    //region LayoutProperty implementation
+    // region LayoutProperty implementation
 
     @Override
     public void applyToStyle(TaffyStyle style) {
         applyEdges(
                 edge -> switch (edge) {
-                    case TOP -> style.padding.top;
-                    case RIGHT -> style.padding.right;
-                    case BOTTOM -> style.padding.bottom;
-                    case LEFT -> style.padding.left;
+                    case top -> style.padding.top;
+                    case right -> style.padding.right;
+                    case bottom -> style.padding.bottom;
+                    case left -> style.padding.left;
                 },
                 (edge, value) -> {
                     switch (edge) {
-                        case TOP -> style.padding.top = value;
-                        case RIGHT -> style.padding.right = value;
-                        case BOTTOM -> style.padding.bottom = value;
-                        case LEFT -> style.padding.left = value;
+                        case top -> style.padding.top = value;
+                        case right -> style.padding.right = value;
+                        case bottom -> style.padding.bottom = value;
+                        case left -> style.padding.left = value;
                     }
-                }
-        );
+                });
     }
 
-    //endregion
+    // endregion
 }

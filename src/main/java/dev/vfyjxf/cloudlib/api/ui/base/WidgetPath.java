@@ -25,7 +25,7 @@ import java.util.stream.StreamSupport;
  */
 public final class WidgetPath implements Iterable<Widget> {
 
-    private static final WidgetPath EMPTY = new WidgetPath(new Widget[0], 0, false);
+    private static final WidgetPath empty = new WidgetPath(new Widget[0], 0, false);
 
     private final Widget[] nodes;
     private final int size;
@@ -48,7 +48,7 @@ public final class WidgetPath implements Iterable<Widget> {
      * @return the singleton empty path
      */
     public static WidgetPath empty() {
-        return EMPTY;
+        return empty;
     }
 
     /**
@@ -59,7 +59,7 @@ public final class WidgetPath implements Iterable<Widget> {
      */
     public static WidgetPath of(Widget widget) {
         Objects.requireNonNull(widget, "widget");
-        return new WidgetPath(new Widget[]{widget}, 1, false);
+        return new WidgetPath(new Widget[] {widget}, 1, false);
     }
 
     /**
@@ -70,7 +70,7 @@ public final class WidgetPath implements Iterable<Widget> {
      * @throws NullPointerException if any widget is null
      */
     public static WidgetPath of(Widget... widgets) {
-        if (widgets.length == 0) return EMPTY;
+        if (widgets.length == 0) return empty;
         for (Widget w : widgets) {
             Objects.requireNonNull(w, "widget must not be null");
         }
@@ -100,7 +100,7 @@ public final class WidgetPath implements Iterable<Widget> {
             }
         }
 
-        if (depth == 0) return EMPTY;
+        if (depth == 0) return empty;
 
         // Second pass: fill array in root→leaf order
         Widget[] arr = new Widget[depth];
@@ -121,7 +121,7 @@ public final class WidgetPath implements Iterable<Widget> {
      */
     static WidgetPath fromAncestry(WidgetTree.AncestryView ancestry) {
         int size = ancestry.size();
-        if (size == 0) return EMPTY;
+        if (size == 0) return empty;
 
         Widget[] arr = new Widget[size];
         for (int i = 0; i < size; i++) {
@@ -191,11 +191,10 @@ public final class WidgetPath implements Iterable<Widget> {
         return StreamSupport.stream(spliterator(), false);
     }
 
-
     @Override
     public Spliterator<Widget> spliterator() {
-        return Spliterators.spliterator(nodes, 0, size,
-                Spliterator.ORDERED | Spliterator.SIZED | Spliterator.NONNULL | Spliterator.IMMUTABLE);
+        return Spliterators.spliterator(
+                nodes, 0, size, Spliterator.ORDERED | Spliterator.SIZED | Spliterator.NONNULL | Spliterator.IMMUTABLE);
     }
 
     /**
@@ -313,7 +312,7 @@ public final class WidgetPath implements Iterable<Widget> {
 
         int newSize = toIndex - fromIndex;
         if (newSize == 0) {
-            return EMPTY;
+            return empty;
         }
 
         Widget[] newNodes = Arrays.copyOfRange(nodes, fromIndex, toIndex);
@@ -406,7 +405,7 @@ public final class WidgetPath implements Iterable<Widget> {
     public WidgetPath commonHead(WidgetPath other) {
         Objects.requireNonNull(other, "other");
         int head = commonHeadLength(other);
-        if (head == 0) return EMPTY;
+        if (head == 0) return empty;
         return subPath(0, head);
     }
 

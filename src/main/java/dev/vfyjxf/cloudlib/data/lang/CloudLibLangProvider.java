@@ -19,5 +19,4 @@ public final class CloudLibLangProvider extends DistributedLangProvider {
     protected void addTranslations() {
         file("blocks").add(TestRegistry.testBlock.get(), "Test Block");
     }
-
 }

@@ -15,17 +15,14 @@ import dev.vfyjxf.cloudlib.api.ui.style.property.VisualProperty;
  */
 public record ZIndexProperty(int zIndex) implements VisualProperty {
 
-    //region types
+    // region types
 
-    public static final StyleType<Integer> type = StyleType.of(
-            "zIndex",
-            () -> 0,
-            (ctx, value) -> ctx.visualContext().setZIndex(value)
-    );
+    public static final StyleType<Integer> type =
+            StyleType.of("zIndex", () -> 0, (ctx, value) -> ctx.visualContext().setZIndex(value));
 
-    //endregion
+    // endregion
 
-    //region VisualProperty implementation
+    // region VisualProperty implementation
 
     @Override
     public StyleType<?> type() {
@@ -43,7 +40,7 @@ public record ZIndexProperty(int zIndex) implements VisualProperty {
         context.setZIndex(zIndex);
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String toString() {

@@ -28,7 +28,7 @@ public final class DispatchQueue<T extends ModPlugin> {
         this.pending = MutableLists.empty();
     }
 
-    //region enqueue
+    // region enqueue
 
     public DispatchQueue<T> enqueue(Consumer<T> event) {
         return enqueue(null, event);
@@ -40,9 +40,9 @@ public final class DispatchQueue<T extends ModPlugin> {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region execute
+    // region execute
 
     public void execute() throws PluginLoadingException {
         executeBatch(null, null);
@@ -64,9 +64,9 @@ public final class DispatchQueue<T extends ModPlugin> {
         executeBatch(tracker, logger);
     }
 
-    //endregion
+    // endregion
 
-    //region query
+    // region query
 
     public int size() {
         return pending.size();
@@ -76,11 +76,12 @@ public final class DispatchQueue<T extends ModPlugin> {
         return pending.isEmpty();
     }
 
-    //endregion
+    // endregion
 
-    //region internal
+    // region internal
 
-    private void executeBatch(@Nullable ProgressTracker tracker, @Nullable Logger logger) throws PluginLoadingException {
+    private void executeBatch(@Nullable ProgressTracker tracker, @Nullable Logger logger)
+            throws PluginLoadingException {
         if (pending.isEmpty()) return;
 
         var batch = MutableLists.withAll(pending);
@@ -108,15 +109,17 @@ public final class DispatchQueue<T extends ModPlugin> {
         CompletableFuture<?>[] futures = new CompletableFuture[batch.size()];
         batch.forEachWithIndex((task, index) -> {
             var progress = tracker != null ? tracker.phase(weight) : DispatchProgress.empty();
-            futures[index] = CompletableFuture.runAsync(() -> {
-                try {
-                    dispatchTask(task, index, progress, logger);
-                } catch (PluginLoadingException e) {
-                    synchronized (failures) {
-                        failures.addAll(e.failures());
-                    }
-                }
-            }, executor);
+            futures[index] = CompletableFuture.runAsync(
+                    () -> {
+                        try {
+                            dispatchTask(task, index, progress, logger);
+                        } catch (PluginLoadingException e) {
+                            synchronized (failures) {
+                                failures.addAll(e.failures());
+                            }
+                        }
+                    },
+                    executor);
         });
 
         CompletableFuture.allOf(futures).join();
@@ -128,7 +131,8 @@ public final class DispatchQueue<T extends ModPlugin> {
         if (failures.notEmpty()) throw new PluginLoadingException(failures);
     }
 
-    private void dispatchSingle(NamedTask<T> task, @Nullable ProgressTracker tracker, @Nullable Logger logger) throws PluginLoadingException {
+    private void dispatchSingle(NamedTask<T> task, @Nullable ProgressTracker tracker, @Nullable Logger logger)
+            throws PluginLoadingException {
         var progress = tracker != null ? tracker.phase(1) : DispatchProgress.empty();
         if (logger != null) {
             var name = task.name() != null ? task.name() : "dispatch";
@@ -138,7 +142,8 @@ public final class DispatchQueue<T extends ModPlugin> {
         }
     }
 
-    private void dispatchTask(NamedTask<T> task, int index, DispatchProgress progress, @Nullable Logger logger) throws PluginLoadingException {
+    private void dispatchTask(NamedTask<T> task, int index, DispatchProgress progress, @Nullable Logger logger)
+            throws PluginLoadingException {
         if (logger != null) {
             var name = task.name() != null ? task.name() : "task-" + index;
             dispatcher.dispatchLogged(task.event(), name, logger, progress);
@@ -147,9 +152,7 @@ public final class DispatchQueue<T extends ModPlugin> {
         }
     }
 
-    //endregion
+    // endregion
 
-    private record NamedTask<T extends ModPlugin>(@Nullable String name, Consumer<T> event) {
-    }
-
+    private record NamedTask<T extends ModPlugin>(@Nullable String name, Consumer<T> event) {}
 }

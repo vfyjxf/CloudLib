@@ -22,5 +22,4 @@ public interface PanelSink {
      * {@link PanelGroup} for the membership rules.
      */
     void offerGroup(PanelGroup group);
-
 }

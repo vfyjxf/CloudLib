@@ -20,50 +20,47 @@ public final class NimbusPayloads {
         PayloadRegistrar registrar = event.registrar(Constants.modId);
         WorldDragPayload.info.registerPlay(registrar);
         ServerPayloadInfo.create(
-                        PanelChannelPayload.STREAM_CODEC,
+                        PanelChannelPayload.streamCodec,
                         ResourceLocation.fromNamespaceAndPath(Constants.namespace, "panel_channel"))
                 .registerPlay(registrar);
         ClientPayloadInfo.create(
-                        ClientboundPanelPayload.STREAM_CODEC,
+                        ClientboundPanelPayload.streamCodec,
                         ResourceLocation.fromNamespaceAndPath(Constants.namespace, "panel_channel_s2c"))
                 .registerPlay(registrar);
         ServerPayloadInfo.create(
-                        PresenceReportPayload.STREAM_CODEC,
+                        PresenceReportPayload.streamCodec,
                         ResourceLocation.fromNamespaceAndPath(Constants.namespace, "presence_report"))
                 .registerPlay(registrar);
         ClientPayloadInfo.create(
-                        PresenceBroadcastPayload.STREAM_CODEC,
+                        PresenceBroadcastPayload.streamCodec,
                         ResourceLocation.fromNamespaceAndPath(Constants.namespace, "presence_broadcast"))
                 .registerPlay(registrar);
         ServerPayloadInfo.create(
-                        ContainerOpsPayload.STREAM_CODEC,
+                        ContainerOpsPayload.streamCodec,
                         ResourceLocation.fromNamespaceAndPath(Constants.namespace, "container_ops"))
                 .registerPlay(registrar);
         ClientPayloadInfo.create(
-                        SharedPanelSpawnPayload.STREAM_CODEC,
+                        SharedPanelSpawnPayload.streamCodec,
                         ResourceLocation.fromNamespaceAndPath(Constants.namespace, "shared_spawn"))
                 .registerPlay(registrar);
         ClientPayloadInfo.create(
-                        SharedPanelRemovePayload.STREAM_CODEC,
+                        SharedPanelRemovePayload.streamCodec,
                         ResourceLocation.fromNamespaceAndPath(Constants.namespace, "shared_remove"))
                 .registerPlay(registrar);
         ServerPayloadInfo.create(
-                        TransferPayload.STREAM_CODEC,
+                        TransferPayload.streamCodec,
                         ResourceLocation.fromNamespaceAndPath(Constants.namespace, "transfer"))
                 .registerPlay(registrar);
-        //payloads that travel nested inside a PanelChannel transport
-        PanelChannelPayload.registerChannelType(WorldDragPayload.info.type(), WorldDragPayload.STREAM_CODEC);
-        PanelChannelPayload.registerChannelType(ContainerOpsPayload.TYPE, ContainerOpsPayload.STREAM_CODEC);
-        PanelChannelPayload.registerChannelType(TransferPayload.TYPE, TransferPayload.STREAM_CODEC);
+        // payloads that travel nested inside a PanelChannel transport
+        PanelChannelPayload.registerChannelType(WorldDragPayload.info.type(), WorldDragPayload.streamCodec);
+        PanelChannelPayload.registerChannelType(ContainerOpsPayload.type, ContainerOpsPayload.streamCodec);
+        PanelChannelPayload.registerChannelType(TransferPayload.type, TransferPayload.streamCodec);
     }
 
     public static <T extends ServerboundPayload> ServerPayloadInfo<T> createServerInfo(
-            StreamCodec<? super RegistryFriendlyByteBuf, T> codec,
-            String path
-    ) {
+            StreamCodec<? super RegistryFriendlyByteBuf, T> codec, String path) {
         return ServerPayloadInfo.create(codec, ResourceLocation.fromNamespaceAndPath(Constants.namespace, path));
     }
 
-    private NimbusPayloads() {
-    }
+    private NimbusPayloads() {}
 }

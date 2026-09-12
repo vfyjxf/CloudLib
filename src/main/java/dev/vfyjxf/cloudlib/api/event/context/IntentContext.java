@@ -13,5 +13,4 @@ public final class IntentContext {
     public EventChannel<?> source() {
         return source;
     }
-
 }

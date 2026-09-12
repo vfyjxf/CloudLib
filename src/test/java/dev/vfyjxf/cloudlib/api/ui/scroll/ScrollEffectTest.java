@@ -11,11 +11,11 @@ class ScrollEffectTest {
     @Test
     void middleMouseAutoScrollAdvancesFromAnchorDistance() {
         ScrollState state = ScrollState.create(ScrollDirection.vertical)
-            .middleMouseAutoScroll(true)
-            .smooth(false)
-            .autoScrollDeadZone(5.0f)
-            .autoScrollSpeed(2.0f)
-            .autoScrollMaxSpeed(12.0f);
+                .middleMouseAutoScroll(true)
+                .smooth(false)
+                .autoScrollDeadZone(5.0f)
+                .autoScrollSpeed(2.0f)
+                .autoScrollMaxSpeed(12.0f);
         state.updateViewport(40, 40);
         state.updateContentSize(40, 120);
 
@@ -33,8 +33,7 @@ class ScrollEffectTest {
 
     @Test
     void middleMouseAutoScrollDoesNotStartWithoutScrollableContent() {
-        ScrollState state = ScrollState.create(ScrollDirection.vertical)
-            .middleMouseAutoScroll(true);
+        ScrollState state = ScrollState.create(ScrollDirection.vertical).middleMouseAutoScroll(true);
         state.updateViewport(40, 40);
         state.updateContentSize(40, 40);
 
@@ -46,8 +45,7 @@ class ScrollEffectTest {
 
     @Test
     void disabledMiddleMouseAutoScrollStopsRunningMode() {
-        ScrollState state = ScrollState.create(ScrollDirection.vertical)
-            .middleMouseAutoScroll(true);
+        ScrollState state = ScrollState.create(ScrollDirection.vertical).middleMouseAutoScroll(true);
         state.updateViewport(40, 40);
         state.updateContentSize(40, 120);
 

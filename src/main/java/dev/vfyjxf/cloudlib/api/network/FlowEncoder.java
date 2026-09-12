@@ -15,5 +15,4 @@ public interface FlowEncoder<T> extends StreamEncoder<RegistryFriendlyByteBuf, T
     }
 
     void encode(RegistryFriendlyByteBuf byteBuf, T element);
-
 }

@@ -81,8 +81,7 @@ public final class ExposeManagement {
     }
 
     public boolean anyToServer() {
-        return exposes.selectInstancesOf(Reversed.class)
-                      .anySatisfy(Reversed::hasReversedData);
+        return exposes.selectInstancesOf(Reversed.class).anySatisfy(Reversed::hasReversedData);
     }
 
     public void writeAllToClient(RegistryFriendlyByteBuf byteBuf) {
@@ -117,7 +116,7 @@ public final class ExposeManagement {
      */
     public void writeToClient(RegistryFriendlyByteBuf byteBuf, SyncStrategy strategy, boolean clearDirty) {
         if (strategy == SyncStrategy.full) {
-            byteBuf.writeBoolean(true);//flag:send all
+            byteBuf.writeBoolean(true); // flag:send all
             for (ExposeCommon expose : exposes) {
                 if (expose instanceof ReversedOnly<?, ?>) continue;
                 byteBuf.writeShort(expose.id());
@@ -125,22 +124,22 @@ public final class ExposeManagement {
                 if (clearDirty) expose.updateSnapshot();
             }
         } else {
-            byteBuf.writeBoolean(false);//flag:send diff
+            byteBuf.writeBoolean(false); // flag:send diff
             for (ExposeCommon expose : exposes) {
                 try {
                     if (!expose.changed()) continue;
                     byteBuf.writeShort(expose.id());
-                    if (strategy == SyncStrategy.difference &&
-                            expose instanceof Transcoder transcoder &&
-                            expose instanceof Differential<?> differential
-                    ) {
+                    if (strategy == SyncStrategy.difference
+                            && expose instanceof Transcoder transcoder
+                            && expose instanceof Differential<?> differential) {
                         writeDiff(transcoder, differential, byteBuf);
                     } else {
                         writeExpose(expose, byteBuf);
                     }
                     expose.updateSnapshot();
                 } catch (Exception e) {
-                    throw new RuntimeException("Failed to write expose: (id:" + expose.id() + " name:" + expose.name() + ")", e);
+                    throw new RuntimeException(
+                            "Failed to write expose: (id:" + expose.id() + " name:" + expose.name() + ")", e);
                 }
             }
         }
@@ -156,7 +155,8 @@ public final class ExposeManagement {
     }
 
     @SuppressWarnings("ConstantConditions")
-    private static <D> void writeDiff(Transcoder transcoder, Differential<D> differential, RegistryFriendlyByteBuf byteBuf) {
+    private static <D> void writeDiff(
+            Transcoder transcoder, Differential<D> differential, RegistryFriendlyByteBuf byteBuf) {
         Maybe<D> difference = differential.difference();
         if (difference.defined()) {
             byteBuf.writeBoolean(true);
@@ -180,7 +180,8 @@ public final class ExposeManagement {
                     transcoder.readFromServer(byteBuf);
                 }
             } catch (Exception e) {
-                throw new RuntimeException("Failed to read expose: (id:" + expose.id() + " name:" + expose.name() + ")", e);
+                throw new RuntimeException(
+                        "Failed to read expose: (id:" + expose.id() + " name:" + expose.name() + ")", e);
             }
         }
     }
@@ -210,5 +211,4 @@ public final class ExposeManagement {
             }
         }
     }
-
 }

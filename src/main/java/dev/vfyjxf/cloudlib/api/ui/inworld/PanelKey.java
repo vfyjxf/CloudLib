@@ -17,19 +17,14 @@ import net.minecraft.resources.ResourceLocation;
  */
 public record PanelKey(String namespace, String path) {
 
-    public static final StreamCodec<ByteBuf, PanelKey> STREAM_CODEC =
-            ResourceLocation.STREAM_CODEC.map(
-                    rl -> new PanelKey(rl.getNamespace(), rl.getPath()),
-                    key -> ResourceLocation.fromNamespaceAndPath(key.namespace, key.path)
-            );
+    public static final StreamCodec<ByteBuf, PanelKey> streamCodec = ResourceLocation.STREAM_CODEC.map(
+            rl -> new PanelKey(rl.getNamespace(), rl.getPath()),
+            key -> ResourceLocation.fromNamespaceAndPath(key.namespace, key.path));
 
     public PanelKey {
         Checks.checkArgument(
-                ResourceLocation.isValidNamespace(namespace),
-                "invalid panel key namespace '%s'", namespace);
-        Checks.checkArgument(
-                ResourceLocation.isValidPath(path),
-                "invalid panel key path '%s'", path);
+                ResourceLocation.isValidNamespace(namespace), "invalid panel key namespace '%s'", namespace);
+        Checks.checkArgument(ResourceLocation.isValidPath(path), "invalid panel key path '%s'", path);
     }
 
     public static PanelKey of(String namespace, String path) {
@@ -52,5 +47,4 @@ public record PanelKey(String namespace, String path) {
     public String toString() {
         return namespace + ":" + path;
     }
-
 }

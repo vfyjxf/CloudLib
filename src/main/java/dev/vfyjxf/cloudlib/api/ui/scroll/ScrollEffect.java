@@ -36,7 +36,7 @@ import org.lwjgl.glfw.GLFW;
  * <h3>Usage</h3>
  * <pre>{@code
  * // 1. Create scroll state — no need to set content size, it's auto-computed
- * ScrollState state = ScrollState.create(ScrollDirection.VERTICAL)
+ * ScrollState state = ScrollState.create(ScrollDirection.vertical)
  *     .scrollSpeed(12)
  *     .smooth(true);
  *
@@ -65,7 +65,7 @@ public final class ScrollEffect implements Effect {
 
     private final ScrollState state;
 
-    //region drag state
+    // region drag state
 
     /**
      * Whether the user is currently dragging the vertical scrollbar thumb.
@@ -84,17 +84,17 @@ public final class ScrollEffect implements Effect {
      */
     private double dragOffsetX = 0;
 
-    //endregion
+    // endregion
 
-    //region auto-scroll state
+    // region auto-scroll state
 
     private boolean autoScrolling = false;
     private double autoScrollAnchorX = 0;
     private double autoScrollAnchorY = 0;
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     /**
      * Creates a scroll effect with the given state.
@@ -138,7 +138,7 @@ public final class ScrollEffect implements Effect {
         this.state = state;
     }
 
-    //endregion
+    // endregion
 
     /**
      * Returns the scroll state managed by this effect.
@@ -150,9 +150,8 @@ public final class ScrollEffect implements Effect {
     @Override
     public void apply(Widget widget) {
         if (!(widget instanceof CompositeWidget<?> composite)) {
-            throw new IllegalArgumentException(
-                    "ScrollEffect can only be applied to CompositeWidget, got: " + widget.getClass().getSimpleName()
-            );
+            throw new IllegalArgumentException("ScrollEffect can only be applied to CompositeWidget, got: "
+                    + widget.getClass().getSimpleName());
         }
 
         // Set overflow: SCROLL on the container so Taffy tracks content overflow correctly
@@ -240,7 +239,6 @@ public final class ScrollEffect implements Effect {
             return EventDispatch.consumed;
         });
 
-
         widget.onMouseReleased((input, context) -> {
             if (!state.enabled()) {
                 stopScrollbarDrag();
@@ -265,7 +263,7 @@ public final class ScrollEffect implements Effect {
         });
     }
 
-    //region content measurement
+    // region content measurement
 
     /**
      * Reads the content size from the Taffy {@link Layout} record.
@@ -283,10 +281,16 @@ public final class ScrollEffect implements Effect {
             if (contentSize != null && !Float.isNaN(contentSize.width) && !Float.isNaN(contentSize.height)) {
                 // contentSize reports the content box extent; add padding/border back
                 // since viewport (widget.width/height) includes padding+border
-                int contentWidth = (int) Math.ceil(contentSize.width + layout.padding().left + layout.padding().right
-                        + layout.border().left + layout.border().right);
-                int contentHeight = (int) Math.ceil(contentSize.height + layout.padding().top + layout.padding().bottom
-                        + layout.border().top + layout.border().bottom);
+                int contentWidth = (int) Math.ceil(contentSize.width
+                        + layout.padding().left
+                        + layout.padding().right
+                        + layout.border().left
+                        + layout.border().right);
+                int contentHeight = (int) Math.ceil(contentSize.height
+                        + layout.padding().top
+                        + layout.padding().bottom
+                        + layout.border().top
+                        + layout.border().bottom);
                 state.updateContentSize(contentWidth, contentHeight);
                 return;
             }
@@ -307,9 +311,9 @@ public final class ScrollEffect implements Effect {
         state.updateContentSize(maxRight, maxBottom);
     }
 
-    //endregion
+    // endregion
 
-    //region scrollbar drag
+    // region scrollbar drag
 
     /**
      * Handles mouse press — checks if the press is within a scrollbar thumb and starts dragging.
@@ -334,15 +338,22 @@ public final class ScrollEffect implements Effect {
             int maxThumbY = track.length() - thumbHeight;
             int thumbY = track.start() + (int) (state.scrollProgressY() * maxThumbY);
 
-            if (localX >= track.cross() && localX < track.cross() + barWidth && localY >= thumbY && localY < thumbY + thumbHeight) {
+            if (localX >= track.cross()
+                    && localX < track.cross() + barWidth
+                    && localY >= thumbY
+                    && localY < thumbY + thumbHeight) {
                 draggingVertical = true;
                 dragOffsetY = localY - thumbY;
                 return EventDispatch.consumed;
             }
 
             // Click on track (not thumb) — jump to that position
-            if (localX >= track.cross() && localX < track.cross() + barWidth && localY >= track.start() && localY < track.start() + track.length()) {
-                float progress = (float) (localY - track.start() - thumbHeight * 0.5) / Math.max(1, track.length() - thumbHeight);
+            if (localX >= track.cross()
+                    && localX < track.cross() + barWidth
+                    && localY >= track.start()
+                    && localY < track.start() + track.length()) {
+                float progress = (float) (localY - track.start() - thumbHeight * 0.5)
+                        / Math.max(1, track.length() - thumbHeight);
                 progress = Math.clamp(progress, 0f, 1f);
                 state.jumpTo(state.scrollX(), progress * state.maxScrollY());
                 return EventDispatch.consumed;
@@ -356,15 +367,22 @@ public final class ScrollEffect implements Effect {
             int maxThumbX = track.length() - thumbWidth;
             int thumbX = track.start() + (int) (state.scrollProgressX() * maxThumbX);
 
-            if (localY >= track.cross() && localY < track.cross() + barWidth && localX >= thumbX && localX < thumbX + thumbWidth) {
+            if (localY >= track.cross()
+                    && localY < track.cross() + barWidth
+                    && localX >= thumbX
+                    && localX < thumbX + thumbWidth) {
                 draggingHorizontal = true;
                 dragOffsetX = localX - thumbX;
                 return EventDispatch.consumed;
             }
 
             // Click on track — jump
-            if (localY >= track.cross() && localY < track.cross() + barWidth && localX >= track.start() && localX < track.start() + track.length()) {
-                float progress = (float) (localX - track.start() - thumbWidth * 0.5) / Math.max(1, track.length() - thumbWidth);
+            if (localY >= track.cross()
+                    && localY < track.cross() + barWidth
+                    && localX >= track.start()
+                    && localX < track.start() + track.length()) {
+                float progress =
+                        (float) (localX - track.start() - thumbWidth * 0.5) / Math.max(1, track.length() - thumbWidth);
                 progress = Math.clamp(progress, 0f, 1f);
                 state.jumpTo(progress * state.maxScrollX(), state.scrollY());
                 return EventDispatch.consumed;
@@ -430,19 +448,22 @@ public final class ScrollEffect implements Effect {
 
     private int computeVerticalThumbHeight(int barHeight) {
         if (barHeight <= 0 || state.contentHeight() <= 0) return Math.max(0, barHeight);
-        return Math.min(barHeight, Math.max(state.minThumbSize(), (int) ((float) state.viewportHeight() / state.contentHeight() * barHeight)));
+        return Math.min(barHeight, Math.max(state.minThumbSize(), (int)
+                ((float) state.viewportHeight() / state.contentHeight() * barHeight)));
     }
 
     private int computeHorizontalThumbWidth(int barLength) {
         if (barLength <= 0 || state.contentWidth() <= 0) return Math.max(0, barLength);
-        return Math.min(barLength, Math.max(state.minThumbSize(), (int) ((float) state.viewportWidth() / state.contentWidth() * barLength)));
+        return Math.min(barLength, Math.max(state.minThumbSize(), (int)
+                ((float) state.viewportWidth() / state.contentWidth() * barLength)));
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
-    private void renderScrollable(SceneCanvas canvas, CompositeWidget<?> composite, int mouseX, int mouseY, float partialTicks) {
+    private void renderScrollable(
+            SceneCanvas canvas, CompositeWidget<?> composite, int mouseX, int mouseY, float partialTicks) {
         int width = composite.width();
         int height = composite.height();
         Insets insets = effectiveInsets(width, height);
@@ -593,9 +614,9 @@ public final class ScrollEffect implements Effect {
         return new Insets(top, right, bottom, left);
     }
 
-    //endregion
+    // endregion
 
-    //region middle mouse auto-scroll
+    // region middle mouse auto-scroll
 
     private EventDispatch handleMiddleMouseAutoScroll(CompositeWidget<?> composite, double sceneX, double sceneY) {
         if (autoScrolling) {
@@ -666,11 +687,9 @@ public final class ScrollEffect implements Effect {
         canvas.fill(right, top, 1, bottom - top + 1, 0x99000000);
     }
 
-    //endregion
+    // endregion
 
-    private record Insets(int top, int right, int bottom, int left) {
-    }
+    private record Insets(int top, int right, int bottom, int left) {}
 
-    private record ScrollbarTrack(int cross, int start, int length) {
-    }
+    private record ScrollbarTrack(int cross, int start, int length) {}
 }

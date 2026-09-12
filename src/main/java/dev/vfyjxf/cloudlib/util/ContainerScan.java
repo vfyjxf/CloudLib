@@ -26,16 +26,14 @@ import java.util.List;
  */
 public final class ContainerScan {
 
-    private ContainerScan() {
-    }
+    private ContainerScan() {}
 
     /**
      * Nearest-to-ray container inside the cone and reach. Angle decides;
      * distance breaks near-ties. Returns null when nothing qualifies.
      */
-    public static @Nullable BlockPos nearest(Level level, Entity entity,
-                                             Vec3 eye, Vec3 dir,
-                                             double reach, double coneCos) {
+    public static @Nullable BlockPos nearest(
+            Level level, Entity entity, Vec3 eye, Vec3 dir, double reach, double coneCos) {
         BlockPos base = BlockPos.containing(eye);
         int R = (int) Math.ceil(reach) + 1;
         double maxDistSq = (reach + 1.5) * (reach + 1.5);
@@ -45,7 +43,7 @@ public final class ContainerScan {
         for (int dx = -R; dx <= R; dx++) {
             for (int dy = -R; dy <= R; dy++) {
                 for (int dz = -R; dz <= R; dz++) {
-                    //cheap sphere cull before any vector or capability work
+                    // cheap sphere cull before any vector or capability work
                     if (dx * dx + dy * dy + dz * dz > maxDistSq) continue;
                     double tx = base.getX() + dx + 0.5 - eye.x;
                     double ty = base.getY() + dy + 0.5 - eye.y;
@@ -72,9 +70,7 @@ public final class ContainerScan {
      * Every item-handling block inside the cone and reach — the multi-panel
      * counterpart of {@link #nearest}: each position gets its own offer.
      */
-    public static List<BlockPos> all(Level level, Entity entity,
-                                     Vec3 eye, Vec3 dir,
-                                     double reach, double coneCos) {
+    public static List<BlockPos> all(Level level, Entity entity, Vec3 eye, Vec3 dir, double reach, double coneCos) {
         BlockPos base = BlockPos.containing(eye);
         int R = (int) Math.ceil(reach) + 1;
         double maxDistSq = (reach + 1.5) * (reach + 1.5);
@@ -105,9 +101,8 @@ public final class ContainerScan {
      * True while the position stays a visible container inside the (usually
      * wider) cone — the incumbent-hold check that stops cone-edge flicker.
      */
-    public static boolean holds(Level level, Entity entity,
-                                Vec3 eye, Vec3 dir,
-                                BlockPos pos, double reach, double coneCos) {
+    public static boolean holds(
+            Level level, Entity entity, Vec3 eye, Vec3 dir, BlockPos pos, double reach, double coneCos) {
         double tx = pos.getX() + 0.5 - eye.x;
         double ty = pos.getY() + 0.5 - eye.y;
         double tz = pos.getZ() + 0.5 - eye.z;
@@ -120,12 +115,10 @@ public final class ContainerScan {
     }
 
     /** The ray to the block centre must not be blocked by a different block first. */
-    private static boolean lineOfSight(Level level, Entity entity,
-                                       Vec3 eye, double tx, double ty, double tz, BlockPos pos) {
-        BlockHitResult los = level.clip(new ClipContext(
-                eye, eye.add(tx, ty, tz),
-                ClipContext.Block.COLLIDER,
-                ClipContext.Fluid.NONE, entity));
+    private static boolean lineOfSight(
+            Level level, Entity entity, Vec3 eye, double tx, double ty, double tz, BlockPos pos) {
+        BlockHitResult los = level.clip(
+                new ClipContext(eye, eye.add(tx, ty, tz), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity));
         return los.getType() != HitResult.Type.BLOCK || los.getBlockPos().equals(pos);
     }
 }

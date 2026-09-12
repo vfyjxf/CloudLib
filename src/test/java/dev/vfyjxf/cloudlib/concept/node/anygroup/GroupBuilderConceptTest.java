@@ -21,9 +21,7 @@ public class GroupBuilderConceptTest {
                         scope.element(() -> new SpecificElement("Specific Element A"));
                         scope.element(new SpecificElement("Specific Element B"));
                         scope.elements(List.of(
-                            new SpecificElement("Specific Element C"),
-                            new SpecificElement("Specific Element D")
-                        ));
+                                new SpecificElement("Specific Element C"), new SpecificElement("Specific Element D")));
 
                         return new GroupElement<>("Specific Group");
                     }
@@ -35,31 +33,24 @@ public class GroupBuilderConceptTest {
 
                         scope.element(() -> new Element("Element A"));
                         scope.element(new Element("Element B"));
-                        scope.elements(List.of(
-                            new Element("Element C"),
-                            new Element("Element D")
-                        ));
+                        scope.elements(List.of(new Element("Element C"), new Element("Element D")));
 
                         return new GroupElement<>("Element Group");
                     }
                 });
 
-                return new GroupElement<>(
-                    "Root"
-                );
+                return new GroupElement<>("Root");
             }
         };
 
         GroupElement<Element> groupElement = BuildScope.create(blueprint).down();
         System.out.println(groupElement);
     }
-
 }
 
-
-//region basic type
-//标记接口，密封确保直接实现类只有 GroupElement
-//由于java的相交类型必须为类类型和接口类型的混合，所以将Group的约束定义为接口，而不是直接使用GroupElement<E>
+// region basic type
+// 标记接口，密封确保直接实现类只有 GroupElement
+// 由于java的相交类型必须为类类型和接口类型的混合，所以将Group的约束定义为接口，而不是直接使用GroupElement<E>
 sealed interface Group<E> permits GroupElement {
     default GroupElement<E> down() {
         return (GroupElement<E>) this;
@@ -73,36 +64,37 @@ sealed interface Group<E> permits GroupElement {
 class Element {
     final String description;
 
-    Element(String description) {this.description = description;}
+    Element(String description) {
+        this.description = description;
+    }
 
     @Override
     public String toString() {
-        return "Element{" +
-            "description='" + description + '\'' +
-            '}';
+        return "Element{" + "description='" + description + '\'' + '}';
     }
 }
 
 class SpecificElement extends Element {
-    SpecificElement(String description) {super(description);}
+    SpecificElement(String description) {
+        super(description);
+    }
 }
 
 non-sealed class GroupElement<E> extends Element implements Group<E> {
     final MutableList<E> elements = MutableLists.empty();
 
-    GroupElement(String desc) {super("Group:" + desc);}
+    GroupElement(String desc) {
+        super("Group:" + desc);
+    }
 
     @Override
     public String toString() {
-        return "GroupElement{" +
-            "description='" + description + '\'' +
-            ", elements=" + elements +
-            '}';
+        return "GroupElement{" + "description='" + description + '\'' + ", elements=" + elements + '}';
     }
 }
-//endregion
+// endregion
 
-//region builder
+// region builder
 
 interface ElementBlueprint<E> {
     E construct();
@@ -122,7 +114,6 @@ sealed interface Scope<E extends Element> {
     void elements(Collection<? extends E> elements);
 
     <T extends Element> void group(GroupBlueprint<? extends E, T> blueprint);
-
 }
 
 sealed interface BuildScope<T extends GroupElement<E>, E extends Element> extends Scope<E> {
@@ -191,12 +182,11 @@ final class AnyGroupBuildScope<E extends Element> implements BuildScope<GroupEle
 
     private record ElementEntry<E extends Element>(E element) implements Entry<E> {}
 
-    private record ElementBlueprintEntry<E extends Element>(
-        ElementBlueprint<? extends E> blueprint) implements Entry<E> {}
+    private record ElementBlueprintEntry<E extends Element>(ElementBlueprint<? extends E> blueprint)
+            implements Entry<E> {}
 
-    private record GroupEntry<E extends Element, T extends Element>(
-        GroupBlueprint<? extends E, T> blueprint) implements Entry<E> {}
-
+    private record GroupEntry<E extends Element, T extends Element>(GroupBlueprint<? extends E, T> blueprint)
+            implements Entry<E> {}
 }
 
-//endregion
+// endregion

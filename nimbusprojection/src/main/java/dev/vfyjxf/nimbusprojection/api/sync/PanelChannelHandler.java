@@ -14,5 +14,4 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 public interface PanelChannelHandler {
 
     void receive(InworldPanelContext context, CustomPacketPayload payload);
-
 }

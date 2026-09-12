@@ -15,14 +15,14 @@ import java.util.Set;
 
 public final class CloudLibUiHitTestTool {
 
-    private static final String OPERATION_ID = "cloudlib.ui.hit_test";
+    private static final String operationId = "cloudlib.ui.hit_test";
 
     private CloudLibUiHitTestTool() {
     }
 
     public static OperationDefinition definition() {
         return new OperationDefinition(
-                OPERATION_ID,
+                operationId,
                 "ui",
                 "CloudLib Hit Test",
                 "Returns the widget path at the specified coordinates.",
@@ -38,7 +38,7 @@ public final class CloudLibUiHitTestTool {
                         List.of("x", "y")
                 ),
                 Map.of(
-                        "operationId", OPERATION_ID,
+                        "operationId", operationId,
                         "targetSide", "client",
                         "input", Map.of("x", 0, "y", 0)
                 )

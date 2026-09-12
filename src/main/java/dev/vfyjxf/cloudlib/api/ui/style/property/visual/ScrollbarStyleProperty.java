@@ -41,24 +41,22 @@ import org.jetbrains.annotations.Nullable;
  */
 public record ScrollbarStyleProperty(ScrollbarStyleData data) implements VisualProperty {
 
-    //region types
+    // region types
 
     /**
      * The style type key for scrollbar styling.
      */
-    public static final StyleType<ScrollbarStyleData> type = StyleType.visual(
-            "scrollbar-style",
-            ScrollbarStyleData::empty
-    );
+    public static final StyleType<ScrollbarStyleData> type =
+            StyleType.visual("scrollbar-style", ScrollbarStyleData::empty);
 
     /**
      * The custom property key used in {@link VisualContext}.
      */
-    public static final String PROPERTY_KEY = "scrollbar-style";
+    public static final String propertyKey = "scrollbar-style";
 
-    //endregion
+    // endregion
 
-    //region constructors
+    // region constructors
 
     /**
      * Creates a scrollbar style property with track and thumb textures.
@@ -93,9 +91,9 @@ public record ScrollbarStyleProperty(ScrollbarStyleData data) implements VisualP
         this(new ScrollbarStyleData(track, thumb, width, minThumbSize));
     }
 
-    //endregion
+    // endregion
 
-    //region VisualProperty implementation
+    // region VisualProperty implementation
 
     @Override
     public StyleType<?> type() {
@@ -104,12 +102,12 @@ public record ScrollbarStyleProperty(ScrollbarStyleData data) implements VisualP
 
     @Override
     public void applyToWidget(VisualContext context) {
-        context.setProperty(PROPERTY_KEY, data);
+        context.setProperty(propertyKey, data);
     }
 
-    //endregion
+    // endregion
 
-    //region utility
+    // region utility
 
     /**
      * Retrieves the scrollbar style data from a widget's visual context.
@@ -118,12 +116,12 @@ public record ScrollbarStyleProperty(ScrollbarStyleData data) implements VisualP
      * @return the scrollbar style data, or null if not set
      */
     public static @Nullable ScrollbarStyleData getFrom(Widget widget) {
-        return widget.style().visualContext().getProperty(PROPERTY_KEY, ScrollbarStyleData.class);
+        return widget.style().visualContext().getProperty(propertyKey, ScrollbarStyleData.class);
     }
 
-    //endregion
+    // endregion
 
-    //region data record
+    // region data record
 
     /**
      * Immutable data holder for scrollbar styling.
@@ -134,11 +132,7 @@ public record ScrollbarStyleProperty(ScrollbarStyleData data) implements VisualP
      * @param minThumbSize the minimum thumb size (-1 means keep existing/default)
      */
     public record ScrollbarStyleData(
-            @Nullable VisualTexture track,
-            @Nullable VisualTexture thumb,
-            int width,
-            int minThumbSize
-    ) {
+            @Nullable VisualTexture track, @Nullable VisualTexture thumb, int width, int minThumbSize) {
 
         public static ScrollbarStyleData empty() {
             return new ScrollbarStyleData(null, null, -1, -1);
@@ -158,7 +152,7 @@ public record ScrollbarStyleProperty(ScrollbarStyleData data) implements VisualP
         }
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String toString() {

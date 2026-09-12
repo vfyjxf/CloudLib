@@ -19,7 +19,8 @@ public class Checks {
         return obj;
     }
 
-    public static <X extends Throwable, T> T checkNotNull(@Nullable T obj, Supplier<? extends X> exceptionSupplier) throws X {
+    public static <X extends Throwable, T> T checkNotNull(@Nullable T obj, Supplier<? extends X> exceptionSupplier)
+            throws X {
         if (obj == null) {
             throw exceptionSupplier.get();
         }
@@ -71,5 +72,4 @@ public class Checks {
     public static void checkRangeClosed(double value, double size) {
         checkRangeClosed(value, 0, size);
     }
-
 }

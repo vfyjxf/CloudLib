@@ -25,17 +25,16 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class ContainerContents {
 
     /** Ticks between re-queries for a watched position (~0.4s). */
-    private static final int REPOLL_TICKS = 8;
+    private static final int repollTicks = 8;
 
     private static final Map<BlockPos, List<ItemStack>> cache = new ConcurrentHashMap<>();
     private static final Map<BlockPos, Long> lastQuery = new ConcurrentHashMap<>();
 
-    private ContainerContents() {
-    }
+    private ContainerContents() {}
 
     /**
      * Latest snapshot for the position (null = nothing received yet), and
-     * keeps it subscribed: the first call and every {@link #REPOLL_TICKS}
+     * keeps it subscribed: the first call and every {@link #repollTicks}
      * ticks after sends a fresh query. Cheap to call every frame.
      */
     public static @Nullable List<ItemStack> watch(BlockPos pos) {
@@ -43,7 +42,7 @@ public final class ContainerContents {
         if (mc.level == null || mc.player == null || mc.getConnection() == null) return null;
         long now = mc.level.getGameTime();
         Long last = lastQuery.get(pos.immutable());
-        if (last == null || now - last >= REPOLL_TICKS) {
+        if (last == null || now - last >= repollTicks) {
             lastQuery.put(pos.immutable(), now);
             PacketDistributor.sendToServer(new ContainerQueryPayload(pos.immutable()));
         }

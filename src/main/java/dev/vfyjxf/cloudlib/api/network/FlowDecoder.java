@@ -15,5 +15,4 @@ public interface FlowDecoder<T> extends StreamDecoder<RegistryFriendlyByteBuf, T
     }
 
     T decode(RegistryFriendlyByteBuf byteBuf);
-
 }

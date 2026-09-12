@@ -141,5 +141,4 @@ public interface DataAttachable {
     default boolean has(DataKey<?> key) {
         return data().has(key);
     }
-
 }

@@ -23,12 +23,11 @@ final class TraceMap {
      * the panel plane — the intersection runs off to infinity and the cursor
      * would teleport. Keep the last cursor instead.
      */
-    static final double GRAZE_MIN = 0.12;
+    static final double grazeMin = 0.12;
     /** Cursor may leave the content rect by this many px before clamping. */
-    static final float EDGE_SLACK = 4f;
+    static final float edgeSlack = 4f;
 
-    private TraceMap() {
-    }
+    private TraceMap() {}
 
     /**
      * Ray → panel-pixel coordinates on a world-space quad.
@@ -43,16 +42,13 @@ final class TraceMap {
      * ray grazes the plane or points away — callers keep the last
      * cursor rather than letting it teleport
      */
-    static @Nullable FloatPos worldUv(Vec3 eye, Vec3 dir,
-                                      Vec3 origin, Vec3 u, Vec3 v, Vec3 normal) {
+    static @Nullable FloatPos worldUv(Vec3 eye, Vec3 dir, Vec3 origin, Vec3 u, Vec3 v, Vec3 normal) {
         double dn = dir.dot(normal);
-        if (Math.abs(dn) < GRAZE_MIN) return null;
+        if (Math.abs(dn) < grazeMin) return null;
         double t = origin.subtract(eye).dot(normal) / dn;
-        if (t <= 0) return null; //panel behind the eye
+        if (t <= 0) return null; // panel behind the eye
         Vec3 hit = eye.add(dir.scale(t)).subtract(origin);
-        return new FloatPos(
-                hit.dot(u) / u.lengthSqr(),
-                hit.dot(v) / v.lengthSqr());
+        return new FloatPos(hit.dot(u) / u.lengthSqr(), hit.dot(v) / v.lengthSqr());
     }
 
     /** Cursor → panel pixels for a flat (screen-space) panel, against its frozen rect. */
@@ -60,13 +56,10 @@ final class TraceMap {
         return new FloatPos(sx - panelX, sy - panelY);
     }
 
-    /** Clamps a panel-space point into the content rect with {@link #EDGE_SLACK} of slack. */
+    /** Clamps a panel-space point into the content rect with {@link #edgeSlack} of slack. */
     static FloatPos clampContent(FloatPos px, double offX, double offY, int w, int h) {
-        float cx = (float) Math.max(-EDGE_SLACK,
-                Math.min(w + EDGE_SLACK, px.x - offX));
-        float cy = (float) Math.max(-EDGE_SLACK,
-                Math.min(h + EDGE_SLACK, px.y - offY));
+        float cx = (float) Math.max(-edgeSlack, Math.min(w + edgeSlack, px.x - offX));
+        float cy = (float) Math.max(-edgeSlack, Math.min(h + edgeSlack, px.y - offY));
         return new FloatPos(cx, cy);
     }
-
 }

@@ -42,5 +42,4 @@ public record FlexProperty(float flex) implements LayoutProperty {
         }
         return String.valueOf(flex);
     }
-
 }

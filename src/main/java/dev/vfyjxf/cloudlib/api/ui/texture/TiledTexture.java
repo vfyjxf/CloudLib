@@ -20,52 +20,54 @@ import org.joml.Matrix4f;
  */
 public record TiledTexture(
         ResourceLocation texture,
-        int tileWidth, int tileHeight,
-        int textureWidth, int textureHeight,
-        TileMode horizontalMode, TileMode verticalMode,
-        boolean atlasSprite
-) implements BatchableTexture {
+        int tileWidth,
+        int tileHeight,
+        int textureWidth,
+        int textureHeight,
+        TileMode horizontalMode,
+        TileMode verticalMode,
+        boolean atlasSprite)
+        implements BatchableTexture {
 
     public enum TileMode {
-        REPEAT,
-        STRETCH,
-        CLAMP
+        repeat,
+        stretch,
+        clamp
     }
 
-    //region factory
+    // region factory
 
     /**
      * Creates a standard tiled texture.
      */
     public static TiledTexture of(ResourceLocation texture, int tileWidth, int tileHeight) {
-        return new TiledTexture(texture, tileWidth, tileHeight, tileWidth, tileHeight,
-                TileMode.REPEAT, TileMode.REPEAT, false);
+        return new TiledTexture(
+                texture, tileWidth, tileHeight, tileWidth, tileHeight, TileMode.repeat, TileMode.repeat, false);
     }
 
     /**
      * Creates a standard tiled texture with custom texture size.
      */
     public static TiledTexture of(
-            ResourceLocation texture, int tileWidth, int tileHeight,
-            int textureWidth, int textureHeight) {
-        return new TiledTexture(texture, tileWidth, tileHeight, textureWidth, textureHeight,
-                TileMode.REPEAT, TileMode.REPEAT, false);
+            ResourceLocation texture, int tileWidth, int tileHeight, int textureWidth, int textureHeight) {
+        return new TiledTexture(
+                texture, tileWidth, tileHeight, textureWidth, textureHeight, TileMode.repeat, TileMode.repeat, false);
     }
 
     /**
      * Creates a standard horizontally tiled texture.
      */
     public static TiledTexture horizontal(ResourceLocation texture, int tileWidth, int tileHeight) {
-        return new TiledTexture(texture, tileWidth, tileHeight, tileWidth, tileHeight,
-                TileMode.REPEAT, TileMode.STRETCH, false);
+        return new TiledTexture(
+                texture, tileWidth, tileHeight, tileWidth, tileHeight, TileMode.repeat, TileMode.stretch, false);
     }
 
     /**
      * Creates a standard vertically tiled texture.
      */
     public static TiledTexture vertical(ResourceLocation texture, int tileWidth, int tileHeight) {
-        return new TiledTexture(texture, tileWidth, tileHeight, tileWidth, tileHeight,
-                TileMode.STRETCH, TileMode.REPEAT, false);
+        return new TiledTexture(
+                texture, tileWidth, tileHeight, tileWidth, tileHeight, TileMode.stretch, TileMode.repeat, false);
     }
 
     /**
@@ -73,38 +75,38 @@ public record TiledTexture(
      * The texture should be a sprite location registered in the GUI atlas.
      */
     public static TiledTexture sprite(ResourceLocation spriteLocation, int tileWidth, int tileHeight) {
-        return new TiledTexture(spriteLocation, tileWidth, tileHeight, tileWidth, tileHeight,
-                TileMode.REPEAT, TileMode.REPEAT, true);
+        return new TiledTexture(
+                spriteLocation, tileWidth, tileHeight, tileWidth, tileHeight, TileMode.repeat, TileMode.repeat, true);
     }
 
     /**
      * Creates an atlas sprite horizontally tiled texture.
      */
     public static TiledTexture spriteHorizontal(ResourceLocation spriteLocation, int tileWidth, int tileHeight) {
-        return new TiledTexture(spriteLocation, tileWidth, tileHeight, tileWidth, tileHeight,
-                TileMode.REPEAT, TileMode.STRETCH, true);
+        return new TiledTexture(
+                spriteLocation, tileWidth, tileHeight, tileWidth, tileHeight, TileMode.repeat, TileMode.stretch, true);
     }
 
     /**
      * Creates an atlas sprite vertically tiled texture.
      */
     public static TiledTexture spriteVertical(ResourceLocation spriteLocation, int tileWidth, int tileHeight) {
-        return new TiledTexture(spriteLocation, tileWidth, tileHeight, tileWidth, tileHeight,
-                TileMode.STRETCH, TileMode.REPEAT, true);
+        return new TiledTexture(
+                spriteLocation, tileWidth, tileHeight, tileWidth, tileHeight, TileMode.stretch, TileMode.repeat, true);
     }
 
-    //endregion
+    // endregion
 
-    //region modification
+    // region modification
 
     public TiledTexture withModes(TileMode horizontal, TileMode vertical) {
-        return new TiledTexture(texture, tileWidth, tileHeight, textureWidth, textureHeight,
-                horizontal, vertical, atlasSprite);
+        return new TiledTexture(
+                texture, tileWidth, tileHeight, textureWidth, textureHeight, horizontal, vertical, atlasSprite);
     }
 
     public TiledTexture withTileSize(int width, int height) {
-        return new TiledTexture(texture, width, height, textureWidth, textureHeight,
-                horizontalMode, verticalMode, atlasSprite);
+        return new TiledTexture(
+                texture, width, height, textureWidth, textureHeight, horizontalMode, verticalMode, atlasSprite);
     }
 
     /**
@@ -118,21 +120,39 @@ public record TiledTexture(
      * Converts this texture to an atlas sprite texture.
      */
     public TiledTexture asAtlasSprite() {
-        return atlasSprite ? this : new TiledTexture(texture, tileWidth, tileHeight, textureWidth, textureHeight,
-                horizontalMode, verticalMode, true);
+        return atlasSprite
+                ? this
+                : new TiledTexture(
+                        texture,
+                        tileWidth,
+                        tileHeight,
+                        textureWidth,
+                        textureHeight,
+                        horizontalMode,
+                        verticalMode,
+                        true);
     }
 
     /**
      * Converts this texture to a standard texture.
      */
     public TiledTexture asStandardTexture() {
-        return atlasSprite ? new TiledTexture(texture, tileWidth, tileHeight, textureWidth, textureHeight,
-                horizontalMode, verticalMode, false) : this;
+        return atlasSprite
+                ? new TiledTexture(
+                        texture,
+                        tileWidth,
+                        tileHeight,
+                        textureWidth,
+                        textureHeight,
+                        horizontalMode,
+                        verticalMode,
+                        false)
+                : this;
     }
 
-    //endregion
+    // endregion
 
-    //region batchable texture
+    // region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float width, float height, int tint) {
@@ -148,15 +168,15 @@ public record TiledTexture(
             float spriteU1 = sprite.getU1();
             float spriteV1 = sprite.getV1();
 
-            if (horizontalMode == TileMode.STRETCH && verticalMode == TileMode.STRETCH) {
+            if (horizontalMode == TileMode.stretch && verticalMode == TileMode.stretch) {
                 emitter.textured(atlasLocation, x, y, width, height, spriteU0, spriteV0, spriteU1, spriteV1, tint);
                 return;
             }
 
-            int tilesX = horizontalMode == TileMode.REPEAT ? (int) Math.ceil(width / tileWidth) : 1;
-            int tilesY = verticalMode == TileMode.REPEAT ? (int) Math.ceil(height / tileHeight) : 1;
-            float effW = horizontalMode == TileMode.STRETCH ? width : tileWidth;
-            float effH = verticalMode == TileMode.STRETCH ? height : tileHeight;
+            int tilesX = horizontalMode == TileMode.repeat ? (int) Math.ceil(width / tileWidth) : 1;
+            int tilesY = verticalMode == TileMode.repeat ? (int) Math.ceil(height / tileHeight) : 1;
+            float effW = horizontalMode == TileMode.stretch ? width : tileWidth;
+            float effH = verticalMode == TileMode.stretch ? height : tileHeight;
 
             for (int ty = 0; ty < tilesY; ty++) {
                 for (int tx = 0; tx < tilesX; tx++) {
@@ -169,22 +189,23 @@ public record TiledTexture(
                     // Calculate UV for partial tiles
                     float tileU1 = spriteU0 + (spriteU1 - spriteU0) * (actualW / effW);
                     float tileV1 = spriteV0 + (spriteV1 - spriteV0) * (actualH / effH);
-                    emitter.textured(atlasLocation, tileX, tileY, actualW, actualH, spriteU0, spriteV0, tileU1, tileV1, tint);
+                    emitter.textured(
+                            atlasLocation, tileX, tileY, actualW, actualH, spriteU0, spriteV0, tileU1, tileV1, tint);
                 }
             }
         } else {
             float u1 = (float) tileWidth / textureWidth;
             float v1 = (float) tileHeight / textureHeight;
 
-            if (horizontalMode == TileMode.STRETCH && verticalMode == TileMode.STRETCH) {
+            if (horizontalMode == TileMode.stretch && verticalMode == TileMode.stretch) {
                 emitter.textured(texture, x, y, width, height, 0, 0, u1, v1, tint);
                 return;
             }
 
-            int tilesX = horizontalMode == TileMode.REPEAT ? (int) Math.ceil(width / tileWidth) : 1;
-            int tilesY = verticalMode == TileMode.REPEAT ? (int) Math.ceil(height / tileHeight) : 1;
-            float effW = horizontalMode == TileMode.STRETCH ? width : tileWidth;
-            float effH = verticalMode == TileMode.STRETCH ? height : tileHeight;
+            int tilesX = horizontalMode == TileMode.repeat ? (int) Math.ceil(width / tileWidth) : 1;
+            int tilesY = verticalMode == TileMode.repeat ? (int) Math.ceil(height / tileHeight) : 1;
+            float effW = horizontalMode == TileMode.stretch ? width : tileWidth;
+            float effH = verticalMode == TileMode.stretch ? height : tileHeight;
 
             for (int ty = 0; ty < tilesY; ty++) {
                 for (int tx = 0; tx < tilesX; tx++) {
@@ -210,7 +231,7 @@ public record TiledTexture(
             var guiSprites = minecraft.getGuiSprites();
             TextureAtlasSprite sprite = guiSprites.getSprite(texture);
 
-            if (horizontalMode == TileMode.STRETCH && verticalMode == TileMode.STRETCH) {
+            if (horizontalMode == TileMode.stretch && verticalMode == TileMode.stretch) {
                 graphics.blit(x, y, 0, width, height, sprite);
                 return;
             }
@@ -222,15 +243,16 @@ public record TiledTexture(
             float spriteWidth = spriteU1 - spriteU0;
             float spriteHeight = spriteV1 - spriteV0;
 
-            int tilesX = horizontalMode == TileMode.REPEAT ? (int) Math.ceil((float) width / tileWidth) : 1;
-            int tilesY = verticalMode == TileMode.REPEAT ? (int) Math.ceil((float) height / tileHeight) : 1;
-            int effW = horizontalMode == TileMode.STRETCH ? width : tileWidth;
-            int effH = verticalMode == TileMode.STRETCH ? height : tileHeight;
+            int tilesX = horizontalMode == TileMode.repeat ? (int) Math.ceil((float) width / tileWidth) : 1;
+            int tilesY = verticalMode == TileMode.repeat ? (int) Math.ceil((float) height / tileHeight) : 1;
+            int effW = horizontalMode == TileMode.stretch ? width : tileWidth;
+            int effH = verticalMode == TileMode.stretch ? height : tileHeight;
 
             RenderSystem.setShaderTexture(0, sprite.atlasLocation());
             RenderSystem.setShader(GameRenderer::getPositionTexShader);
             Matrix4f matrix = graphics.pose().last().pose();
-            BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+            BufferBuilder buffer =
+                    Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
             for (int ty = 0; ty < tilesY; ty++) {
                 for (int tx = 0; tx < tilesX; tx++) {
@@ -246,22 +268,23 @@ public record TiledTexture(
 
                     buffer.addVertex(matrix, tileXPos, tileYPos, 0).setUv(spriteU0, spriteV0);
                     buffer.addVertex(matrix, tileXPos, tileYPos + actualH, 0).setUv(spriteU0, tileV1);
-                    buffer.addVertex(matrix, tileXPos + actualW, tileYPos + actualH, 0).setUv(tileU1, tileV1);
+                    buffer.addVertex(matrix, tileXPos + actualW, tileYPos + actualH, 0)
+                            .setUv(tileU1, tileV1);
                     buffer.addVertex(matrix, tileXPos + actualW, tileYPos, 0).setUv(tileU1, spriteV0);
                 }
             }
 
             BufferUploader.drawWithShader(buffer.buildOrThrow());
         } else {
-            if (horizontalMode == TileMode.STRETCH && verticalMode == TileMode.STRETCH) {
+            if (horizontalMode == TileMode.stretch && verticalMode == TileMode.stretch) {
                 graphics.blit(texture, x, y, 0, 0, width, height, textureWidth, textureHeight);
                 return;
             }
 
-            int tilesX = horizontalMode == TileMode.REPEAT ? (int) Math.ceil((float) width / tileWidth) : 1;
-            int tilesY = verticalMode == TileMode.REPEAT ? (int) Math.ceil((float) height / tileHeight) : 1;
-            int effW = horizontalMode == TileMode.STRETCH ? width : tileWidth;
-            int effH = verticalMode == TileMode.STRETCH ? height : tileHeight;
+            int tilesX = horizontalMode == TileMode.repeat ? (int) Math.ceil((float) width / tileWidth) : 1;
+            int tilesY = verticalMode == TileMode.repeat ? (int) Math.ceil((float) height / tileHeight) : 1;
+            int effW = horizontalMode == TileMode.stretch ? width : tileWidth;
+            int effH = verticalMode == TileMode.stretch ? height : tileHeight;
 
             for (int ty = 0; ty < tilesY; ty++) {
                 for (int tx = 0; tx < tilesX; tx++) {
@@ -276,5 +299,5 @@ public record TiledTexture(
         }
     }
 
-    //endregion
+    // endregion
 }

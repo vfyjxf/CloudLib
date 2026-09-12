@@ -29,7 +29,7 @@ import java.util.Objects;
  *   <li>{@link LengthPercentage#percent(float)} - percentage of parent (0.0 to 1.0)</li>
  * </ul>
  * <p>
- * Note: Unlike margin, border does not support AUTO values.
+ * Note: Unlike margin, border does not support auto values.
  *
  * @see TaffyStyle#border
  * @see LengthPercentage
@@ -37,51 +37,51 @@ import java.util.Objects;
  */
 public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
 
-    //region types
+    // region types
 
     /**
      * StyleType for setting all four border edges at once.
      */
-    public static final StyleType<BorderProperty> TYPE_ALL = StyleType.of("border", () -> null);
+    public static final StyleType<BorderProperty> typeAll = StyleType.of("border", () -> null);
 
     /**
      * StyleType for setting only the top border edge.
      */
-    public static final StyleType<BorderProperty> TYPE_TOP = StyleType.of("border-top", () -> null);
+    public static final StyleType<BorderProperty> typeTop = StyleType.of("border-top", () -> null);
 
     /**
      * StyleType for setting only the right border edge.
      */
-    public static final StyleType<BorderProperty> TYPE_RIGHT = StyleType.of("border-right", () -> null);
+    public static final StyleType<BorderProperty> typeRight = StyleType.of("border-right", () -> null);
 
     /**
      * StyleType for setting only the bottom border edge.
      */
-    public static final StyleType<BorderProperty> TYPE_BOTTOM = StyleType.of("border-bottom", () -> null);
+    public static final StyleType<BorderProperty> typeBottom = StyleType.of("border-bottom", () -> null);
 
     /**
      * StyleType for setting only the left border edge.
      */
-    public static final StyleType<BorderProperty> TYPE_LEFT = StyleType.of("border-left", () -> null);
+    public static final StyleType<BorderProperty> typeLeft = StyleType.of("border-left", () -> null);
 
     /**
      * StyleType for setting horizontal border edges (left and right).
      */
-    public static final StyleType<BorderProperty> TYPE_HORIZONTAL = StyleType.of("border-horizontal", () -> null);
+    public static final StyleType<BorderProperty> typeHorizontal = StyleType.of("border-horizontal", () -> null);
 
     /**
      * StyleType for setting vertical border edges (top and bottom).
      */
-    public static final StyleType<BorderProperty> TYPE_VERTICAL = StyleType.of("border-vertical", () -> null);
+    public static final StyleType<BorderProperty> typeVertical = StyleType.of("border-vertical", () -> null);
 
     /**
      * Legacy type alias for backward compatibility.
      */
-    public static final StyleType<BorderProperty> type = TYPE_ALL;
+    public static final StyleType<BorderProperty> type = typeAll;
 
-    //endregion
+    // endregion
 
-    //region constructors
+    // region constructors
 
     private BorderProperty(EdgeRect<LengthPercentage> edges, EdgeMask mask, StyleType<?> type) {
         super(edges, mask, type);
@@ -91,14 +91,14 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
      * Creates a border property with equal border on all sides.
      */
     public BorderProperty(LengthPercentage all) {
-        this(EdgeRect.all(all), EdgeMask.ALL, TYPE_ALL);
+        this(EdgeRect.all(all), EdgeMask.all, typeAll);
     }
 
     /**
      * Creates a border property with vertical and horizontal values.
      */
     public BorderProperty(LengthPercentage vertical, LengthPercentage horizontal) {
-        this(EdgeRect.symmetric(vertical, horizontal), EdgeMask.ALL, TYPE_ALL);
+        this(EdgeRect.symmetric(vertical, horizontal), EdgeMask.all, typeAll);
     }
 
     /**
@@ -124,16 +124,14 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
                         LengthPercentage.length(top),
                         LengthPercentage.length(right),
                         LengthPercentage.length(bottom),
-                        LengthPercentage.length(left)
-                ),
-                EdgeMask.ALL,
-                TYPE_ALL
-        );
+                        LengthPercentage.length(left)),
+                EdgeMask.all,
+                typeAll);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - all edges
+    // region factory - all edges
 
     /**
      * Creates a border property with individual LengthPercentage values for each side.
@@ -144,13 +142,14 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
      * @param left   the left border
      * @return a border property affecting all edges
      */
-    public static BorderProperty of(LengthPercentage top, LengthPercentage right, LengthPercentage bottom, LengthPercentage left) {
-        return new BorderProperty(EdgeRect.of(top, right, bottom, left), EdgeMask.ALL, TYPE_ALL);
+    public static BorderProperty of(
+            LengthPercentage top, LengthPercentage right, LengthPercentage bottom, LengthPercentage left) {
+        return new BorderProperty(EdgeRect.of(top, right, bottom, left), EdgeMask.all, typeAll);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - single edge
+    // region factory - single edge
 
     /**
      * Creates a border property with only the top edge set.
@@ -166,7 +165,7 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public static BorderProperty top(LengthPercentage value) {
         Objects.requireNonNull(value, "value");
-        return new BorderProperty(EdgeRect.top(value), EdgeMask.TOP, TYPE_TOP);
+        return new BorderProperty(EdgeRect.top(value), EdgeMask.top, typeTop);
     }
 
     /**
@@ -183,7 +182,7 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public static BorderProperty right(LengthPercentage value) {
         Objects.requireNonNull(value, "value");
-        return new BorderProperty(EdgeRect.right(value), EdgeMask.RIGHT, TYPE_RIGHT);
+        return new BorderProperty(EdgeRect.right(value), EdgeMask.right, typeRight);
     }
 
     /**
@@ -200,7 +199,7 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public static BorderProperty bottom(LengthPercentage value) {
         Objects.requireNonNull(value, "value");
-        return new BorderProperty(EdgeRect.bottom(value), EdgeMask.BOTTOM, TYPE_BOTTOM);
+        return new BorderProperty(EdgeRect.bottom(value), EdgeMask.bottom, typeBottom);
     }
 
     /**
@@ -217,7 +216,7 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public static BorderProperty left(LengthPercentage value) {
         Objects.requireNonNull(value, "value");
-        return new BorderProperty(EdgeRect.left(value), EdgeMask.LEFT, TYPE_LEFT);
+        return new BorderProperty(EdgeRect.left(value), EdgeMask.left, typeLeft);
     }
 
     /**
@@ -236,16 +235,16 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
         Objects.requireNonNull(edge, "edge");
         Objects.requireNonNull(value, "value");
         return switch (edge) {
-            case TOP -> top(value);
-            case RIGHT -> right(value);
-            case BOTTOM -> bottom(value);
-            case LEFT -> left(value);
+            case top -> top(value);
+            case right -> right(value);
+            case bottom -> bottom(value);
+            case left -> left(value);
         };
     }
 
-    //endregion
+    // endregion
 
-    //region factory - horizontal/vertical
+    // region factory - horizontal/vertical
 
     /**
      * Creates a border property with only horizontal edges (left and right) set.
@@ -261,7 +260,7 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public static BorderProperty horizontal(LengthPercentage value) {
         Objects.requireNonNull(value, "value");
-        return new BorderProperty(EdgeRect.horizontal(value), EdgeMask.HORIZONTAL, TYPE_HORIZONTAL);
+        return new BorderProperty(EdgeRect.horizontal(value), EdgeMask.horizontal, typeHorizontal);
     }
 
     /**
@@ -278,12 +277,12 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
      */
     public static BorderProperty vertical(LengthPercentage value) {
         Objects.requireNonNull(value, "value");
-        return new BorderProperty(EdgeRect.vertical(value), EdgeMask.VERTICAL, TYPE_VERTICAL);
+        return new BorderProperty(EdgeRect.vertical(value), EdgeMask.vertical, typeVertical);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - percentage
+    // region factory - percentage
 
     /**
      * Creates a border with percentage values for all sides.
@@ -308,16 +307,14 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
                         LengthPercentage.percent(top),
                         LengthPercentage.percent(right),
                         LengthPercentage.percent(bottom),
-                        LengthPercentage.percent(left)
-                ),
-                EdgeMask.ALL,
-                TYPE_ALL
-        );
+                        LengthPercentage.percent(left)),
+                EdgeMask.all,
+                typeAll);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - common patterns
+    // region factory - common patterns
 
     /**
      * Creates a border with zero on all sides.
@@ -326,43 +323,43 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
         return new BorderProperty(LengthPercentage.ZERO);
     }
 
-    //endregion
+    // endregion
 
-    //region EdgeStyleProperty implementation
+    // region EdgeStyleProperty implementation
 
     @Override
     protected StyleType<?> typeAll() {
-        return TYPE_ALL;
+        return typeAll;
     }
 
     @Override
     protected StyleType<?> typeTop() {
-        return TYPE_TOP;
+        return typeTop;
     }
 
     @Override
     protected StyleType<?> typeRight() {
-        return TYPE_RIGHT;
+        return typeRight;
     }
 
     @Override
     protected StyleType<?> typeBottom() {
-        return TYPE_BOTTOM;
+        return typeBottom;
     }
 
     @Override
     protected StyleType<?> typeLeft() {
-        return TYPE_LEFT;
+        return typeLeft;
     }
 
     @Override
     protected StyleType<?> typeHorizontal() {
-        return TYPE_HORIZONTAL;
+        return typeHorizontal;
     }
 
     @Override
     protected StyleType<?> typeVertical() {
-        return TYPE_VERTICAL;
+        return typeVertical;
     }
 
     @Override
@@ -375,29 +372,28 @@ public final class BorderProperty extends EdgeStyleProperty<LengthPercentage> {
         return "border";
     }
 
-    //endregion
+    // endregion
 
-    //region LayoutProperty implementation
+    // region LayoutProperty implementation
 
     @Override
     public void applyToStyle(TaffyStyle style) {
         applyEdges(
                 edge -> switch (edge) {
-                    case TOP -> style.border.top;
-                    case RIGHT -> style.border.right;
-                    case BOTTOM -> style.border.bottom;
-                    case LEFT -> style.border.left;
+                    case top -> style.border.top;
+                    case right -> style.border.right;
+                    case bottom -> style.border.bottom;
+                    case left -> style.border.left;
                 },
                 (edge, value) -> {
                     switch (edge) {
-                        case TOP -> style.border.top = value;
-                        case RIGHT -> style.border.right = value;
-                        case BOTTOM -> style.border.bottom = value;
-                        case LEFT -> style.border.left = value;
+                        case top -> style.border.top = value;
+                        case right -> style.border.right = value;
+                        case bottom -> style.border.bottom = value;
+                        case left -> style.border.left = value;
                     }
-                }
-        );
+                });
     }
 
-    //endregion
+    // endregion
 }

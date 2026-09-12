@@ -11,9 +11,7 @@ import org.jetbrains.annotations.UnknownNullability;
 public interface DragProvider {
 
     CompositeScenario<DragProvider> scenario = new CompositeScenario<>(
-            Namespace.of(Constants.modId, "drag_provider"),
-            DragProvider.class,
-            listeners -> new DragProvider() {
+            Namespace.of(Constants.modId, "drag_provider"), DragProvider.class, listeners -> new DragProvider() {
                 @Override
                 public boolean draggable(@UnknownNullability Scene scene, InputContext input, DragContext dragContext) {
                     for (DragProvider listener : listeners) {
@@ -25,15 +23,15 @@ public interface DragProvider {
                 }
 
                 @Override
-                public DraggableElement<?> getDraggableElement(@UnknownNullability Scene scene, InputContext input, DragContext dragContext) {
+                public DraggableElement<?> getDraggableElement(
+                        @UnknownNullability Scene scene, InputContext input, DragContext dragContext) {
                     for (DragProvider listener : listeners) {
                         DraggableElement<?> element = listener.getDraggableElement(scene, input, dragContext);
                         if (!element.isEmpty()) return element;
                     }
                     return DraggableElement.empty();
                 }
-            }
-    );
+            });
 
     static DragProvider fromWidget(Widget widget) {
         return new DragProvider() {
@@ -43,7 +41,8 @@ public interface DragProvider {
             }
 
             @Override
-            public DraggableElement<?> getDraggableElement(@UnknownNullability Scene scene, InputContext input, DragContext dragContext) {
+            public DraggableElement<?> getDraggableElement(
+                    @UnknownNullability Scene scene, InputContext input, DragContext dragContext) {
                 if (widget.parent() != null && widget.isMouseOver(input)) return DraggableElement.draggable(widget);
                 else return DraggableElement.empty();
             }
@@ -52,7 +51,6 @@ public interface DragProvider {
 
     boolean draggable(@UnknownNullability Scene scene, InputContext input, DragContext dragContext);
 
-    DraggableElement<?> getDraggableElement(@UnknownNullability Scene scene, InputContext input, DragContext dragContext);
-
-
+    DraggableElement<?> getDraggableElement(
+            @UnknownNullability Scene scene, InputContext input, DragContext dragContext);
 }

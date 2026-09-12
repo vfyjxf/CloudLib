@@ -24,33 +24,28 @@ public class CloudlibPayloads {
     public static final Logger log = LoggerFactory.getLogger("CloudlibNetworkPayloads");
 
     public static void register(RegisterPayloadHandlersEvent event) {
-        //TODO:provide a meaningful version.
+        // TODO:provide a meaningful version.
         PayloadRegistrar registrar = event.registrar(Constants.modId);
-        //region play 2 client
+        // region play 2 client
         MenuSyncDownstreamPacket.info.registerPlay(registrar);
         MenuDataReversedPacket.info.registerPlay(registrar);
         BlockEntitySyncPacket.info.registerPlay(registrar);
         ContainerContentsPayload.info.registerPlay(registrar);
-        //endregion
+        // endregion
 
-        //region play 2 server
+        // region play 2 server
         BlockEntityReversedPacket.info.registerPlay(registrar);
         ContainerQueryPayload.info.registerPlay(registrar);
-        //endregion
+        // endregion
     }
 
-
     public static <T extends ClientboundPayload> ClientPayloadInfo<T> createClientInfo(
-            StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec,
-            String path
-    ) {
+            StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec, String path) {
         return ClientPayloadInfo.create(streamCodec, Locations.ofMod(path));
     }
 
     public static <T extends ServerboundPayload> ServerPayloadInfo<T> createServerInfo(
-            StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec,
-            String path
-    ) {
+            StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec, String path) {
         return ServerPayloadInfo.create(streamCodec, Locations.ofMod(path));
     }
 }

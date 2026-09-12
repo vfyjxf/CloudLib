@@ -30,27 +30,23 @@ public final class NimbusShaders {
     private static @Nullable ShaderInstance oitAccumTex;
     /** Accum pass for vertex-colored geometry (scan frames, drag trail) — POSITION_COLOR. */
     private static @Nullable ShaderInstance oitAccumColor;
-    /** Fullscreen composite into the scene target — POSITION. */
+    /** Fullscreen composite into the scene target — position. */
     private static @Nullable ShaderInstance oitResolve;
 
-    private NimbusShaders() {
-    }
+    private NimbusShaders() {}
 
     @SubscribeEvent
     public static void onRegisterShaders(RegisterShadersEvent event) throws IOException {
         var provider = event.getResourceProvider();
         event.registerShader(
                 new ShaderInstance(provider, location("oit_accum_tex"), DefaultVertexFormat.POSITION_TEX),
-                s -> oitAccumTex = s
-        );
+                s -> oitAccumTex = s);
         event.registerShader(
                 new ShaderInstance(provider, location("oit_accum_color"), DefaultVertexFormat.POSITION_COLOR),
-                s -> oitAccumColor = s
-        );
+                s -> oitAccumColor = s);
         event.registerShader(
                 new ShaderInstance(provider, location("oit_resolve"), DefaultVertexFormat.POSITION),
-                s -> oitResolve = s
-        );
+                s -> oitResolve = s);
         logger.info("Registered NimbusProjection OIT shaders");
     }
 

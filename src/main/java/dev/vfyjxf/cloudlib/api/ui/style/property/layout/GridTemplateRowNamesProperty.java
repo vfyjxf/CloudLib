@@ -46,5 +46,4 @@ public record GridTemplateRowNamesProperty(List<NamedGridLine> rowNames) impleme
     public String toString() {
         return rowNames.toString();
     }
-
 }

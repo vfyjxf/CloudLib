@@ -39,7 +39,6 @@ public sealed interface Snapshot<T> {
         return None.instance();
     }
 
-
     static <T> Snapshot<T> copyOf(UnaryOperator<T> copier, CheckStrategy<T> strategy) {
         return new CopyInstance<>(null, copier, strategy);
     }
@@ -64,8 +63,7 @@ public sealed interface Snapshot<T> {
     }
 
     default boolean mutable() {
-        return this instanceof MutableRef<T> ||
-                this instanceof CopyInstance<T>;
+        return this instanceof MutableRef<T> || this instanceof CopyInstance<T>;
     }
 
     /**
@@ -155,10 +153,8 @@ public sealed interface Snapshot<T> {
             this.strategy = (current -> current == this.value && Objects.hashCode(current) == hash);
         }
 
-
         public Predicate<T> strategy() {
             return strategy;
-
         }
 
         @Override
@@ -181,8 +177,7 @@ public sealed interface Snapshot<T> {
         @Override
         public boolean updateState(T current) {
             State state = currentState(current);
-            if (state == State.illegal)
-                throw new IllegalStateException("The snapshot has been changed illegally");
+            if (state == State.illegal) throw new IllegalStateException("The snapshot has been changed illegally");
             else return false;
         }
 
@@ -204,9 +199,7 @@ public sealed interface Snapshot<T> {
 
         @Override
         public String toString() {
-            return "Readonly{" +
-                    "value=" + value +
-                    '}';
+            return "Readonly{" + "value=" + value + '}';
         }
     }
 
@@ -250,10 +243,7 @@ public sealed interface Snapshot<T> {
 
         @Override
         public String toString() {
-            return "ImmutableRef{" +
-                    "value=" + value +
-                    '}';
-
+            return "ImmutableRef{" + "value=" + value + '}';
         }
 
         @Override
@@ -261,15 +251,13 @@ public sealed interface Snapshot<T> {
             if (obj == this) return true;
             if (obj == null || obj.getClass() != this.getClass()) return false;
             var that = (ImmutableRef<?>) obj;
-            return Objects.equals(this.value, that.value) &&
-                    Objects.equals(this.strategy, that.strategy);
+            return Objects.equals(this.value, that.value) && Objects.equals(this.strategy, that.strategy);
         }
 
         @Override
         public int hashCode() {
             return Objects.hash(value, strategy);
         }
-
     }
 
     /**
@@ -334,9 +322,7 @@ public sealed interface Snapshot<T> {
 
         @Override
         public String toString() {
-            return "MutableRef{" +
-                    "value=" + value +
-                    '}';
+            return "MutableRef{" + "value=" + value + '}';
         }
     }
 
@@ -410,9 +396,7 @@ public sealed interface Snapshot<T> {
 
         @Override
         public String toString() {
-            return "CopyInstance{" +
-                    ", value=" + value +
-                    '}';
+            return "CopyInstance{" + ", value=" + value + '}';
         }
     }
 
@@ -446,9 +430,9 @@ public sealed interface Snapshot<T> {
 
         @Override
         public State currentState(T current) {
-            //handle.changed() is the change signal: for a plain Handle it is dirty(); for a DiffHandle
-            //it is dirty() || get().changed(), so in-place mutation of a DiffObservable value surfaces too.
-            //`current` is handle.get() and is intentionally ignored.
+            // handle.changed() is the change signal: for a plain Handle it is dirty(); for a DiffHandle
+            // it is dirty() || get().changed(), so in-place mutation of a DiffObservable value surfaces too.
+            // `current` is handle.get() and is intentionally ignored.
             return handle.changed() ? State.changed : State.unchanged;
         }
 
@@ -474,5 +458,4 @@ public sealed interface Snapshot<T> {
             return "HandleSnapshot{" + handle + '}';
         }
     }
-
 }

@@ -19,7 +19,7 @@ import java.util.function.Supplier;
  */
 public interface InworldAnchor {
 
-    //region factories
+    // region factories
 
     /** Anchor at the center of a block. */
     static InworldAnchor of(BlockPos pos) {
@@ -46,7 +46,7 @@ public interface InworldAnchor {
         return new EntityTarget(entityId, offset);
     }
 
-    //endregion
+    // endregion
 
     /**
      * The anchor kind's identity token — see {@link AnchorType}. Custom
@@ -84,14 +84,14 @@ public interface InworldAnchor {
         return null;
     }
 
-    //region impls
+    // region impls
 
     /** A block-bound anchor; {@code offset} is in block units from the block's min corner. */
     record Block(BlockPos pos, Vec3 offset) implements InworldAnchor {
 
         @Override
         public AnchorType<?> type() {
-            return AnchorType.BLOCK;
+            return AnchorType.block;
         }
 
         @Override
@@ -110,7 +110,7 @@ public interface InworldAnchor {
     record Position(Vec3 pos) implements InworldAnchor {
         @Override
         public AnchorType<?> type() {
-            return AnchorType.POSITION;
+            return AnchorType.position;
         }
 
         @Override
@@ -123,7 +123,7 @@ public interface InworldAnchor {
     record Tracked(Supplier<@Nullable Vec3> pos) implements InworldAnchor {
         @Override
         public AnchorType<?> type() {
-            return AnchorType.TRACKED;
+            return AnchorType.tracked;
         }
 
         @Override
@@ -136,7 +136,7 @@ public interface InworldAnchor {
     record EntityTarget(int entityId, Vec3 offset) implements InworldAnchor {
         @Override
         public AnchorType<?> type() {
-            return AnchorType.ENTITY;
+            return AnchorType.entity;
         }
 
         @Override
@@ -154,5 +154,5 @@ public interface InworldAnchor {
         }
     }
 
-    //endregion
+    // endregion
 }

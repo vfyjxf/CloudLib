@@ -21,7 +21,8 @@ import java.util.Objects;
  */
 public record GridTemplateColumnNamesProperty(List<NamedGridLine> columnNames) implements LayoutProperty {
 
-    public static final StyleType<List<NamedGridLine>> type = StyleType.of("grid-template-column-names", ArrayList::new);
+    public static final StyleType<List<NamedGridLine>> type =
+            StyleType.of("grid-template-column-names", ArrayList::new);
 
     public GridTemplateColumnNamesProperty(List<NamedGridLine> columnNames) {
         this.columnNames = Objects.requireNonNull(columnNames, "columnNames");
@@ -46,5 +47,4 @@ public record GridTemplateColumnNamesProperty(List<NamedGridLine> columnNames) i
     public String toString() {
         return columnNames.toString();
     }
-
 }

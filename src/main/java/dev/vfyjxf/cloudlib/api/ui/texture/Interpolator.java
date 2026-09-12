@@ -18,11 +18,11 @@ public interface Interpolator<T> {
      */
     T interpolate(T start, T end, float t);
 
-    Interpolator<Float> FLOAT = (start, end, t) -> start + (end - start) * t;
+    Interpolator<Float> floatLerp = (start, end, t) -> start + (end - start) * t;
 
-    Interpolator<Integer> INT = (start, end, t) -> Math.round(start + (end - start) * t);
+    Interpolator<Integer> intLerp = (start, end, t) -> Math.round(start + (end - start) * t);
 
-    Interpolator<Double> DOUBLE = (start, end, t) -> start + (end - start) * t;
+    Interpolator<Double> doubleLerp = (start, end, t) -> start + (end - start) * t;
 
     /**
      * ARGB color interpolation.

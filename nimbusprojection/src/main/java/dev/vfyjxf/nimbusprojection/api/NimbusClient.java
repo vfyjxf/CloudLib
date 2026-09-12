@@ -56,7 +56,7 @@ import java.util.List;
  */
 public interface NimbusClient {
 
-    //region imperative panels
+    // region imperative panels
 
     /** Shows (or replaces) a panel. The spec key is the panel's identity. */
     InworldPanel open(PanelSpec spec);
@@ -64,9 +64,9 @@ public interface NimbusClient {
     /** Closes the panel with the given key, if present. */
     void close(PanelKey key);
 
-    //endregion
+    // endregion
 
-    //region providers
+    // region providers
 
     /** Registers a provider evaluated every {@code intervalTicks} client ticks. */
     default void registerProvider(PanelProvider provider, int intervalTicks) {
@@ -85,9 +85,9 @@ public interface NimbusClient {
 
     void unregisterProvider(PanelProvider provider);
 
-    //endregion
+    // endregion
 
-    //region presentation drivers
+    // region presentation drivers
 
     /**
      * Registers the solver for a {@code Presentation.type()} id — the open
@@ -96,9 +96,9 @@ public interface NimbusClient {
      */
     void registerPresentation(PresentationDriver<?> driver);
 
-    //endregion
+    // endregion
 
-    //region shared-panel views
+    // region shared-panel views
 
     /**
      * Registers the client-side materializer for a server-declared shared
@@ -117,19 +117,20 @@ public interface NimbusClient {
             ResourceLocation view,
             CustomPacketPayload.Type<P> type,
             StreamCodec<? super RegistryFriendlyByteBuf, P> codec,
-            SharedPanelView<P> factory
-    );
+            SharedPanelView<P> factory);
 
-    //endregion
+    // endregion
 
-    //region state
+    // region state
 
     Collection<? extends InworldPanel> panels();
 
-    @Nullable InworldPanel panel(PanelKey key);
+    @Nullable
+    InworldPanel panel(PanelKey key);
 
     /** The panel currently holding the in-world focus, if any. */
-    @Nullable InworldPanel focused();
+    @Nullable
+    InworldPanel focused();
 
     /** Moves the panel focus to the next visible panel (keynav). */
     void focusNext();
@@ -149,9 +150,9 @@ public interface NimbusClient {
     /** The shared scene hosting every panel. */
     Scene scene();
 
-    //endregion
+    // endregion
 
-    //region presence
+    // region presence
 
     /**
      * Interaction presence of <em>remote</em> players — who is looking at,
@@ -163,5 +164,5 @@ public interface NimbusClient {
     /** Presence entries for one panel key. */
     Collection<PresenceInfo> presence(PanelKey key);
 
-    //endregion
+    // endregion
 }

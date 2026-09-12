@@ -34,7 +34,9 @@ public final class PanelSpec {
     Presentation presentation;
     Function<InworldPanelContext, ? extends Widget> content;
 
-    @Nullable Component title;
+    @Nullable
+    Component title;
+
     List<String> hints = List.of();
     boolean interactive = true;
     boolean leaderLine = true;
@@ -58,45 +60,50 @@ public final class PanelSpec {
      * fade-out — toasts, pick-up hints, operation feedback. {@code null} =
      * lives until its key stops being offered (or closed imperatively).
      */
-    @Nullable Decay decay;
+    @Nullable
+    Decay decay;
     /**
      * Cross-anchor group membership: joins the {@link PanelGroup} offered
      * under this key regardless of where this panel's anchor sits — the
      * multi-block-structure case (every part of a door shares the group's
      * affordance).
      */
-    @Nullable PanelKey groupKey;
+    @Nullable
+    PanelKey groupKey;
     /**
      * The role this panel claims inside a container. In an explicit
      * {@link PanelGroup} the member's declared role wins; in an implicit
-     * same-anchor merge the first {@link GroupRole#PRIMARY} claimant is
+     * same-anchor merge the first {@link GroupRole#primary} claimant is
      * primary and the rest demote to secondary.
      */
-    GroupRole groupRole = GroupRole.PRIMARY;
+    GroupRole groupRole = GroupRole.primary;
     /**
      * Refuses implicit same-anchor merging: this panel keeps its own
      * affordance even when another panel resolves to the same anchor.
      */
     boolean standalone = false;
     /** Focus-selection override — {@code null} = the runtime's soft-cone default. */
-    @Nullable FocusPolicy focusPolicy;
+    @Nullable
+    FocusPolicy focusPolicy;
     /** Suspend/close policy override — {@code null} = {@link SuspendPolicy#standard()}. */
-    @Nullable SuspendPolicy suspendPolicy;
+    @Nullable
+    SuspendPolicy suspendPolicy;
     /**
      * The panel's primary action — invoked by the interact hotkey while
      * focused. Panels declaring an action are eligible for cone-based soft
      * focus even without an exact crosshair hit.
      */
-    @Nullable Consumer<InworldPanelContext> action;
+    @Nullable
+    Consumer<InworldPanelContext> action;
     /** Server → client channel handler; sends go through {@link InworldPanelContext#channel()}. */
-    @Nullable PanelChannelHandler channel;
+    @Nullable
+    PanelChannelHandler channel;
 
     private PanelSpec(
             PanelKey key,
             InworldAnchor anchor,
             Presentation presentation,
-            Function<InworldPanelContext, ? extends Widget> content
-    ) {
+            Function<InworldPanelContext, ? extends Widget> content) {
         this.key = key;
         this.anchor = anchor;
         this.presentation = presentation;
@@ -107,8 +114,7 @@ public final class PanelSpec {
             PanelKey key,
             InworldAnchor anchor,
             Presentation presentation,
-            Function<InworldPanelContext, ? extends Widget> content
-    ) {
+            Function<InworldPanelContext, ? extends Widget> content) {
         return new PanelSpec(key, anchor, presentation, content);
     }
 
@@ -210,7 +216,7 @@ public final class PanelSpec {
         return interactive && onDemand;
     }
 
-    //region mutation
+    // region mutation
 
     public PanelSpec title(@Nullable Component title) {
         this.title = title;
@@ -327,5 +333,5 @@ public final class PanelSpec {
         return this;
     }
 
-    //endregion
+    // endregion
 }

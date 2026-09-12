@@ -5,10 +5,10 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.sync.BasicMenuScreen;
-import dev.vfyjxf.cloudlib.ui.widget.ChipWidget;
-import dev.vfyjxf.cloudlib.ui.widget.ItemStripWidget;
 import dev.vfyjxf.cloudlib.ui.hacker.HackerPanel;
 import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.cloudlib.ui.widget.ChipWidget;
+import dev.vfyjxf.cloudlib.ui.widget.ItemStripWidget;
 import dev.vfyjxf.cloudlib.ui.widget.TextWidget;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.JustifyContent;
@@ -21,11 +21,9 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.alignItemsCenter;
-import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.alignItemsFlexStart;
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.columnGap;
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.flexColumn;
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.justifyCenter;
-import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.justifyFlexStart;
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.widthOf;
 
 /**
@@ -45,32 +43,32 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
         panel.useStyle(widthOf(190));
         mainGroup.addWidget(panel);
 
-        //region live scalars
-        var basic = TextWidget.of("basic --").setColor(HackerTheme.TEXT);
+        // region live scalars
+        var basic = TextWidget.of("basic --").setColor(HackerTheme.text);
         menu.basic.whenReceive(v -> basic.setText("basic " + v));
         panel.addChild(basic);
 
-        var reference = TextWidget.of("ref --").setColor(HackerTheme.TEXT_DIM);
+        var reference = TextWidget.of("ref --").setColor(HackerTheme.textDim);
         menu.reference.whenReceive(v -> reference.setText("ref " + v));
         panel.addChild(reference);
-        //endregion
+        // endregion
 
-        //region register entry (single live item)
-        panel.addChild(TextWidget.of("entry").setColor(HackerTheme.TEXT_DIM));
+        // region register entry (single live item)
+        panel.addChild(TextWidget.of("entry").setColor(HackerTheme.textDim));
         var entry = new ItemStripWidget();
         panel.addChild(entry);
         menu.registerEntry.whenReceive(stack -> entry.setItems(List.of(stack)));
-        //endregion
+        // endregion
 
-        //region transform inventory (9 slots, live layer expose)
-        panel.addChild(TextWidget.of("transform").setColor(HackerTheme.TEXT_DIM));
+        // region transform inventory (9 slots, live layer expose)
+        panel.addChild(TextWidget.of("transform").setColor(HackerTheme.textDim));
         var transform = new ItemStripWidget();
         panel.addChild(transform);
         menu.layerExpose.whenReceive(transform::setItems);
-        //endregion
+        // endregion
 
-        //region selected — client → server reversed channel
-        panel.addChild(TextWidget.of("select → server").setColor(HackerTheme.TEXT_DIM));
+        // region selected — client → server reversed channel
+        panel.addChild(TextWidget.of("select → server").setColor(HackerTheme.textDim));
         WidgetGroup<Widget> chips = Widgets.row(JustifyContent.FLEX_START, AlignItems.FLEX_START);
         chips.useStyle(columnGap(2));
         List<ItemStack> options = List.of(
@@ -78,25 +76,25 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
                 Items.DIAMOND.getDefaultInstance(),
                 Items.EMERALD.getDefaultInstance(),
                 Items.ENDER_PEARL.getDefaultInstance(),
-                Items.NETHERITE_SCRAP.getDefaultInstance()
-        );
+                Items.NETHERITE_SCRAP.getDefaultInstance());
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        var lastSent = TextWidget.of("--").setColor(HackerTheme.ACCENT);
+        var lastSent = TextWidget.of("--").setColor(HackerTheme.accent);
         for (int i = 0; i < options.size(); i++) {
             ItemStack stack = options.get(i);
             chips.addWidget(ChipWidget.of(String.valueOf(i + 1), () -> {
                 ItemStack sent = stack.copyWithCount(random.nextInt(1, 64));
                 menu.selected.sendToServer(sent);
-                lastSent.setText("sent " + sent.getCount() + "x " + sent.getHoverName().getString());
+                lastSent.setText(
+                        "sent " + sent.getCount() + "x " + sent.getHoverName().getString());
             }));
         }
         panel.addChild(chips);
         panel.addChild(lastSent);
-        //endregion
+        // endregion
 
-        //region difference logging (kept — this is what the expose demonstrates)
+        // region difference logging (kept — this is what the expose demonstrates)
         menu.diffable.whenReceive(x -> System.out.println("all data received" + x));
         menu.diffable.whenDiffReceive(x -> System.out.println("diff data received" + x));
-        //endregion
+        // endregion
     }
 }

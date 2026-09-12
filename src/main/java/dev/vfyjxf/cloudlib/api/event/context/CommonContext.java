@@ -35,5 +35,4 @@ public final class CommonContext {
     public void interrupt() {
         interrupted = true;
     }
-
 }

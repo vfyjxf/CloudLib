@@ -15,7 +15,7 @@ public final class SizeMiddleware implements FloatingMiddleware {
     private final SizeApplier applier;
     private final int padding;
 
-    //region callback
+    // region callback
 
     /**
      * Callback invoked with the available dimensions. Implementations should
@@ -33,9 +33,9 @@ public final class SizeMiddleware implements FloatingMiddleware {
         void apply(FloatingState state, int availableWidth, int availableHeight);
     }
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     /**
      * Creates a size middleware with the given applier.
@@ -63,7 +63,7 @@ public final class SizeMiddleware implements FloatingMiddleware {
         this.padding = padding;
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String name() {
@@ -100,14 +100,10 @@ public final class SizeMiddleware implements FloatingMiddleware {
         double maxClipHeight = floatingHeight - overflow.top() - overflow.bottom();
         double maxClipWidth = floatingWidth - overflow.left() - overflow.right();
 
-        double availableHeight = Math.min(
-                floatingHeight - FloatingPositioning.getSide(overflow, heightSide),
-                maxClipHeight
-        );
-        double availableWidth = Math.min(
-                floatingWidth - FloatingPositioning.getSide(overflow, widthSide),
-                maxClipWidth
-        );
+        double availableHeight =
+                Math.min(floatingHeight - FloatingPositioning.getSide(overflow, heightSide), maxClipHeight);
+        double availableWidth =
+                Math.min(floatingWidth - FloatingPositioning.getSide(overflow, widthSide), maxClipWidth);
 
         // Clamp to non-negative
         int width = (int) Math.max(0, availableWidth);

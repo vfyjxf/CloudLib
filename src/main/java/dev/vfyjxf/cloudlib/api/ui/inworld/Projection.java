@@ -42,10 +42,7 @@ public final class Projection {
     private final int screenWidth;
     private final int screenHeight;
 
-    private Projection(
-            Matrix4f worldToView, Matrix4f viewToClip,
-            Vec3 cameraPos, int screenWidth, int screenHeight
-    ) {
+    private Projection(Matrix4f worldToView, Matrix4f viewToClip, Vec3 cameraPos, int screenWidth, int screenHeight) {
         this.worldToClip = new Matrix4f(viewToClip).mul(worldToView);
         this.clipToWorld = new Matrix4f(worldToClip).invert();
         this.cameraPos = cameraPos;
@@ -63,13 +60,11 @@ public final class Projection {
      * @param screenH     gui-scaled screen height
      */
     public static Projection capture(
-            Matrix4f worldToView, Matrix4f viewToClip,
-            Vec3 cameraPos, int screenW, int screenH
-    ) {
+            Matrix4f worldToView, Matrix4f viewToClip, Vec3 cameraPos, int screenW, int screenH) {
         return new Projection(worldToView, viewToClip, cameraPos, screenW, screenH);
     }
 
-    //region getters
+    // region getters
 
     public Vec3 cameraPos() {
         return cameraPos;
@@ -83,9 +78,9 @@ public final class Projection {
         return screenHeight;
     }
 
-    //endregion
+    // endregion
 
-    //region world → screen
+    // region world → screen
 
     /**
      * Projects a world position to gui-scaled screen coordinates.
@@ -94,15 +89,11 @@ public final class Projection {
      * the camera (clip.w ≤ 0 — projected coordinates would flip)
      */
     public @Nullable FloatPos worldToScreen(Vec3 world) {
-        Vector4f clip = worldToClip.transform(new Vector4f(
-                (float) world.x, (float) world.y, (float) world.z, 1.0f));
+        Vector4f clip = worldToClip.transform(new Vector4f((float) world.x, (float) world.y, (float) world.z, 1.0f));
         if (clip.w <= 1.0e-6f) return null;
         float ndcX = clip.x / clip.w;
         float ndcY = clip.y / clip.w;
-        return new FloatPos(
-                (ndcX + 1f) * 0.5f * screenWidth,
-                (1f - ndcY) * 0.5f * screenHeight
-        );
+        return new FloatPos((ndcX + 1f) * 0.5f * screenWidth, (1f - ndcY) * 0.5f * screenHeight);
     }
 
     /**
@@ -111,22 +102,16 @@ public final class Projection {
      * @return screen x/y plus the point's view-space depth, or null when behind the camera
      */
     public @Nullable float[] worldToScreenDepth(Vec3 world) {
-        Vector4f clip = worldToClip.transform(new Vector4f(
-                (float) world.x, (float) world.y, (float) world.z, 1.0f));
+        Vector4f clip = worldToClip.transform(new Vector4f((float) world.x, (float) world.y, (float) world.z, 1.0f));
         if (clip.w <= 1.0e-6f) return null;
         float ndcX = clip.x / clip.w;
         float ndcY = clip.y / clip.w;
-        return new float[]{
-                (ndcX + 1f) * 0.5f * screenWidth,
-                (1f - ndcY) * 0.5f * screenHeight,
-                clip.w
-        };
+        return new float[] {(ndcX + 1f) * 0.5f * screenWidth, (1f - ndcY) * 0.5f * screenHeight, clip.w};
     }
 
     /** @return true when the world position is in front of the camera */
     public boolean inFront(Vec3 world) {
-        Vector4f clip = worldToClip.transform(new Vector4f(
-                (float) world.x, (float) world.y, (float) world.z, 1.0f));
+        Vector4f clip = worldToClip.transform(new Vector4f((float) world.x, (float) world.y, (float) world.z, 1.0f));
         return clip.w > 1.0e-6f;
     }
 
@@ -135,9 +120,9 @@ public final class Projection {
         return cameraPos.distanceTo(world);
     }
 
-    //endregion
+    // endregion
 
-    //region screen → world
+    // region screen → world
 
     /**
      * Builds the normalized world-space ray direction through a gui-scaled
@@ -177,10 +162,14 @@ public final class Projection {
      * @return panel-local hit position in pixels, or null when the ray misses
      */
     public static @Nullable FloatPos rayPlane(
-            Vec3 origin, Vec3 dir,
-            Vec3 originPx, Vec3 uAxis, Vec3 vAxis, Vec3 normal,
-            double widthPx, double heightPx
-    ) {
+            Vec3 origin,
+            Vec3 dir,
+            Vec3 originPx,
+            Vec3 uAxis,
+            Vec3 vAxis,
+            Vec3 normal,
+            double widthPx,
+            double heightPx) {
         FloatPos uv = rayPlaneUV(origin, dir, originPx, uAxis, vAxis, normal);
         if (uv == null) return null;
         if (uv.x < 0 || uv.y < 0 || uv.x > widthPx || uv.y > heightPx) return null;
@@ -194,9 +183,7 @@ public final class Projection {
      * of freezing at the border.
      */
     public static @Nullable FloatPos rayPlaneUV(
-            Vec3 origin, Vec3 dir,
-            Vec3 originPx, Vec3 uAxis, Vec3 vAxis, Vec3 normal
-    ) {
+            Vec3 origin, Vec3 dir, Vec3 originPx, Vec3 uAxis, Vec3 vAxis, Vec3 normal) {
         double denom = dir.dot(normal);
         if (Math.abs(denom) < 1.0e-7) return null;
         double t = originPx.subtract(origin).dot(normal) / denom;
@@ -207,5 +194,5 @@ public final class Projection {
         return new FloatPos(u, v);
     }
 
-    //endregion
+    // endregion
 }

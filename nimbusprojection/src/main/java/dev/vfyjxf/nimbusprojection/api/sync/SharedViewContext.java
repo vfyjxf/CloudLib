@@ -28,6 +28,4 @@ public record SharedViewContext<P extends CustomPacketPayload>(
         PanelKey key,
         InworldAnchor anchor,
         Presentation presentation,
-        @Nullable P payload
-) {
-}
+        @Nullable P payload) {}

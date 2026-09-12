@@ -26,7 +26,7 @@ import java.util.Objects;
  *   <li>{@link JustifyContent#SPACE_EVENLY} - distribute items with even space</li>
  *   <li>{@link JustifyContent#START} - pack items to logical start</li>
  *   <li>{@link JustifyContent#END} - pack items to logical end</li>
- *   <li>{@link JustifyContent#STRETCH} - stretch items to fill main axis</li>
+ *   <li>{@link JustifyContent#stretch} - stretch items to fill main axis</li>
  * </ul>
  *
  * @see TaffyStyle#justifyContent
@@ -36,8 +36,8 @@ import java.util.Objects;
  */
 public record JustifyContentProperty(JustifyContent justify) implements LayoutProperty {
 
-
-    public static final StyleType<JustifyContent> type = StyleType.of("justify-content", () -> JustifyContent.FLEX_START);
+    public static final StyleType<JustifyContent> type =
+            StyleType.of("justify-content", () -> JustifyContent.FLEX_START);
 
     public JustifyContentProperty(JustifyContent justify) {
         this.justify = Objects.requireNonNull(justify, "justify");

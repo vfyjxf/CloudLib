@@ -56,5 +56,4 @@ public final class LangFile {
     public LangFile add(MobEffect effect, String value) {
         return add(effect.getDescriptionId(), value);
     }
-
 }

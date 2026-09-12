@@ -115,11 +115,6 @@ public record Rect(int x, int y, int width, int height) {
 
     @Override
     public String toString() {
-        return "Rect{" +
-                "x=" + x +
-                ", y=" + y +
-                ", width=" + width +
-                ", height=" + height +
-                '}';
+        return "Rect{" + "x=" + x + ", y=" + y + ", width=" + width + ", height=" + height + '}';
     }
 }

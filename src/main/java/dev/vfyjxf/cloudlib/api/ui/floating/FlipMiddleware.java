@@ -25,7 +25,7 @@ public final class FlipMiddleware implements FloatingMiddleware {
     private final boolean flipAlignment;
     private final int padding;
 
-    //region options
+    // region options
 
     /**
      * Strategy when no placement fits.
@@ -45,12 +45,14 @@ public final class FlipMiddleware implements FloatingMiddleware {
      * Direction to try on the perpendicular axis when the main axis doesn't fit.
      */
     public enum FallbackAxisSideDirection {
-        none, start, end
+        none,
+        start,
+        end
     }
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     /**
      * Creates a flip middleware with default settings.
@@ -65,7 +67,8 @@ public final class FlipMiddleware implements FloatingMiddleware {
      * @param padding the padding for overflow detection
      */
     public static FlipMiddleware create(int padding) {
-        return new FlipMiddleware(true, true, null, FallbackStrategy.bestFit, FallbackAxisSideDirection.none, true, padding);
+        return new FlipMiddleware(
+                true, true, null, FallbackStrategy.bestFit, FallbackAxisSideDirection.none, true, padding);
     }
 
     /**
@@ -86,9 +89,15 @@ public final class FlipMiddleware implements FloatingMiddleware {
             FallbackStrategy fallbackStrategy,
             FallbackAxisSideDirection fallbackAxisSideDirection,
             boolean flipAlignment,
-            int padding
-    ) {
-        return new FlipMiddleware(checkMainAxis, checkCrossAxis, fallbackPlacements, fallbackStrategy, fallbackAxisSideDirection, flipAlignment, padding);
+            int padding) {
+        return new FlipMiddleware(
+                checkMainAxis,
+                checkCrossAxis,
+                fallbackPlacements,
+                fallbackStrategy,
+                fallbackAxisSideDirection,
+                flipAlignment,
+                padding);
     }
 
     private FlipMiddleware(
@@ -98,8 +107,7 @@ public final class FlipMiddleware implements FloatingMiddleware {
             FallbackStrategy fallbackStrategy,
             FallbackAxisSideDirection fallbackAxisSideDirection,
             boolean flipAlignment,
-            int padding
-    ) {
+            int padding) {
         this.checkMainAxis = checkMainAxis;
         this.checkCrossAxis = checkCrossAxis;
         this.fallbackPlacements = fallbackPlacements;
@@ -109,7 +117,7 @@ public final class FlipMiddleware implements FloatingMiddleware {
         this.padding = padding;
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String name() {
@@ -140,7 +148,8 @@ public final class FlipMiddleware implements FloatingMiddleware {
 
             // Add perpendicular axis placements if configured
             if (fallbackAxisSideDirection != FallbackAxisSideDirection.none) {
-                List<FloatingPlacement> perpendicularPlacements = getOppositeAxisPlacements(initialPlacement, fallbackAxisSideDirection);
+                List<FloatingPlacement> perpendicularPlacements =
+                        getOppositeAxisPlacements(initialPlacement, fallbackAxisSideDirection);
                 for (FloatingPlacement p : perpendicularPlacements) {
                     if (!computedFallbacks.contains(p)) {
                         computedFallbacks.add(p);
@@ -163,7 +172,8 @@ public final class FlipMiddleware implements FloatingMiddleware {
             overflowValues.add(FloatingPositioning.getSide(overflow, side));
         }
         if (checkCrossAxis) {
-            int[] alignmentOverflow = FloatingPositioning.alignmentSides(overflow, placement, state.referenceRect(), state.floatingRect());
+            int[] alignmentOverflow = FloatingPositioning.alignmentSides(
+                    overflow, placement, state.referenceRect(), state.floatingRect());
             overflowValues.add(alignmentOverflow[0]);
             overflowValues.add(alignmentOverflow[1]);
         }
@@ -188,9 +198,7 @@ public final class FlipMiddleware implements FloatingMiddleware {
 
                 // Check if we should leave the current main axis
                 boolean allMainAxisOverflow = overflowsData.stream()
-                                                           .allMatch(d -> d.placement.sideAxis() == initialSideAxis
-                                                                   ? d.mainAxisOverflow() > 0
-                                                                   : true);
+                        .allMatch(d -> d.placement.sideAxis() == initialSideAxis ? d.mainAxisOverflow() > 0 : true);
 
                 boolean shouldTryNext = allMainAxisOverflow || nextPlacement.sideAxis() == initialSideAxis;
 
@@ -212,24 +220,28 @@ public final class FlipMiddleware implements FloatingMiddleware {
         return Result.done();
     }
 
-    //region helpers
+    // region helpers
 
-    private FloatingPlacement findBestPlacement(List<OverflowEntry> overflowsData, FloatingPlacement.Axis initialSideAxis, FloatingPlacement initialPlacement) {
+    private FloatingPlacement findBestPlacement(
+            List<OverflowEntry> overflowsData,
+            FloatingPlacement.Axis initialSideAxis,
+            FloatingPlacement initialPlacement) {
         // First, find candidates that don't overflow the main axis
         FloatingPlacement candidate = overflowsData.stream()
-                                                   .filter(d -> d.mainAxisOverflow() <= 0)
-                                                   .min((a, b) -> Integer.compare(a.crossAxisTotalOverflow(), b.crossAxisTotalOverflow()))
-                                                   .map(d -> d.placement)
-                                                   .orElse(null);
+                .filter(d -> d.mainAxisOverflow() <= 0)
+                .min((a, b) -> Integer.compare(a.crossAxisTotalOverflow(), b.crossAxisTotalOverflow()))
+                .map(d -> d.placement)
+                .orElse(null);
 
         if (candidate != null) return candidate;
 
         // Fallback strategy
         return switch (fallbackStrategy) {
-            case bestFit -> overflowsData.stream()
-                                         .min(Comparator.comparingInt(OverflowEntry::totalPositiveOverflow))
-                                         .map(d -> d.placement)
-                                         .orElse(initialPlacement);
+            case bestFit ->
+                overflowsData.stream()
+                        .min(Comparator.comparingInt(OverflowEntry::totalPositiveOverflow))
+                        .map(d -> d.placement)
+                        .orElse(initialPlacement);
             case initialPlacement -> initialPlacement;
         };
     }
@@ -237,7 +249,8 @@ public final class FlipMiddleware implements FloatingMiddleware {
     /**
      * Gets placements on the opposite axis.
      */
-    private static List<FloatingPlacement> getOppositeAxisPlacements(FloatingPlacement placement, FallbackAxisSideDirection direction) {
+    private static List<FloatingPlacement> getOppositeAxisPlacements(
+            FloatingPlacement placement, FallbackAxisSideDirection direction) {
         FloatingPlacement.Side side = placement.side();
         FloatingPlacement.Alignment alignment = placement.alignment();
         List<FloatingPlacement> result = new ArrayList<>();
@@ -247,13 +260,13 @@ public final class FlipMiddleware implements FloatingMiddleware {
         switch (side) {
             case top, bottom -> {
                 perpendicularSides = isStart
-                        ? new FloatingPlacement.Side[]{FloatingPlacement.Side.left, FloatingPlacement.Side.right}
-                        : new FloatingPlacement.Side[]{FloatingPlacement.Side.right, FloatingPlacement.Side.left};
+                        ? new FloatingPlacement.Side[] {FloatingPlacement.Side.left, FloatingPlacement.Side.right}
+                        : new FloatingPlacement.Side[] {FloatingPlacement.Side.right, FloatingPlacement.Side.left};
             }
             case left, right -> {
                 perpendicularSides = isStart
-                        ? new FloatingPlacement.Side[]{FloatingPlacement.Side.top, FloatingPlacement.Side.bottom}
-                        : new FloatingPlacement.Side[]{FloatingPlacement.Side.bottom, FloatingPlacement.Side.top};
+                        ? new FloatingPlacement.Side[] {FloatingPlacement.Side.top, FloatingPlacement.Side.bottom}
+                        : new FloatingPlacement.Side[] {FloatingPlacement.Side.bottom, FloatingPlacement.Side.top};
             }
             default -> {
                 return result;
@@ -272,9 +285,9 @@ public final class FlipMiddleware implements FloatingMiddleware {
         return result;
     }
 
-    //endregion
+    // endregion
 
-    //region overflow entry
+    // region overflow entry
 
     /**
      * Records the overflow at a particular placement for later comparison.
@@ -302,5 +315,5 @@ public final class FlipMiddleware implements FloatingMiddleware {
         }
     }
 
-    //endregion
+    // endregion
 }

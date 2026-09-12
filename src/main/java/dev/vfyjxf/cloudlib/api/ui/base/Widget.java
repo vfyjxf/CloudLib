@@ -42,7 +42,6 @@ import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.Objects;
 
-
 /**
  * The basic unit of the UI system.
  * <p>
@@ -60,17 +59,15 @@ import java.util.Objects;
  */
 @SuppressWarnings("unchecked")
 @CanIgnoreReturnValue
-public class Widget implements Renderable,
-                               EventHandler<WidgetEvent>,
-                               DataAttachable,
-                               Backstage {
+public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttachable, Backstage {
 
     @FunctionalInterface
     public interface HoverTooltipProvider {
-        @Nullable Tooltip tooltip(int mouseX, int mouseY);
+        @Nullable
+        Tooltip tooltip(int mouseX, int mouseY);
     }
 
-    //region core
+    // region core
 
     Lifecycle lifecycle = Lifecycle.created;
 
@@ -83,23 +80,26 @@ public class Widget implements Renderable,
     @UnknownNullability
     CompositeWidget<?> parent;
 
-    @Nullable Object key;
+    @Nullable
+    Object key;
 
-    //TODO:WIP
+    // TODO:WIP
     /**
      * The blueprint of the widget.
      */
-    @Nullable Blueprint<?> blueprint;
+    @Nullable
+    Blueprint<?> blueprint;
 
     final StateSlot.StateContext stateContext = new StateSlot.StateContext();
 
     boolean tickable = false;
 
-    //endregion
+    // endregion
 
-    //region layout & style
+    // region layout & style
 
-    @Nullable NodeId nodeId;
+    @Nullable
+    NodeId nodeId;
 
     protected final StyleContext style = new StyleContext(this);
 
@@ -108,11 +108,12 @@ public class Widget implements Renderable,
     /**
      * Optional handler that controls how this widget's layout is resolved.
      */
-    @Nullable LayoutHandler layoutHandler;
+    @Nullable
+    LayoutHandler layoutHandler;
 
-    //endregion
+    // endregion
 
-    //region area & visual
+    // region area & visual
 
     /**
      * Size of the widget.
@@ -135,7 +136,8 @@ public class Widget implements Renderable,
      * Cached absolute (scene-space) position of this widget.
      * Cleared when this widget's or any ancestor's viewport is invalidated.
      */
-    @Nullable Pos cachedAbsolutePos;
+    @Nullable
+    Pos cachedAbsolutePos;
 
     /**
      * The scene layer this widget belongs to.
@@ -151,45 +153,49 @@ public class Widget implements Renderable,
     final VisualContext visualContext = style.visualContext();
     boolean visible = true;
     Tooltip tooltip = new Tooltip();
-    @Nullable HoverTooltipProvider hoverTooltipProvider;
-    //endregion
 
-    //region state
+    @Nullable
+    HoverTooltipProvider hoverTooltipProvider;
+    // endregion
 
-    //region draggable
+    // region state
+
+    // region draggable
     boolean draggable = false;
     boolean dragging = false;
 
-    //region focus
-    @Nullable FocusNode focusNode;
-    //endregion
+    // region focus
+    @Nullable
+    FocusNode focusNode;
+    // endregion
 
-    //region click
+    // region click
     /**
      * An arbitrary key identifying which click-region group this widget belongs to.
      * All widgets sharing the same non-null key form a group: when a click lands
      * outside every member of the group, {@link WidgetEvent#onClickOutside} fires on each member.
      */
-    @Nullable Object clickGroup;
+    @Nullable
+    Object clickGroup;
 
     boolean active = true;
     boolean interactive = true;
 
-    //endregion
+    // endregion
 
-    //region hover
+    // region hover
     boolean hovered = false;
-    //endregion
+    // endregion
 
-    //region event
+    // region event
     protected final EventChannel<WidgetEvent> eventChannel = EventChannel.create(this);
-    //endregion
+    // endregion
 
-    //region data attachment
+    // region data attachment
     protected final DataContainer dataContainer = new DataContainer(this);
-    //endregion
+    // endregion
 
-    //region z-index management
+    // region z-index management
     {
         // Register listener for zIndex changes
         style.addChangeListener(ZIndexProperty.type, (oldValue, newValue) -> {
@@ -205,9 +211,9 @@ public class Widget implements Renderable,
         });
     }
 
-    //endregion
+    // endregion
 
-    //region capability
+    // region capability
 
     @Override
     public DataContainer data() {
@@ -224,9 +230,9 @@ public class Widget implements Renderable,
         return eventChannel;
     }
 
-    //endregion
+    // endregion
 
-    //region basic
+    // region basic
 
     public final Lifecycle lifecycle() {
         return lifecycle;
@@ -266,9 +272,9 @@ public class Widget implements Renderable,
         return Checks.checkNotNull(nodeId, "Widget is not mounted or destroyed!");
     }
 
-    //endregion
+    // endregion
 
-    //region lifecycle
+    // region lifecycle
 
     public Widget onInit(WidgetEvent.OnInit listener) {
         events().register(WidgetEvent.onInit, listener);
@@ -310,7 +316,7 @@ public class Widget implements Renderable,
         this.scene = scene;
         this.context = context;
         this.nodeId = scene.tree.newLeaf(this.style.layoutStyle());
-        //TODO:Blueprint support!
+        // TODO:Blueprint support!
         if (parent != null) {
             scene.tree.insertChildAtIndex(parent.nodeId(), parent.children.indexOf(this), nodeId);
         }
@@ -327,7 +333,7 @@ public class Widget implements Renderable,
     }
 
     void unmount() {
-        //TODO:Blueprint support!
+        // TODO:Blueprint support!
         var scene = this.scene;
         if (parent != null) {
             scene.tree.removeChild(parent.nodeId(), nodeId);
@@ -346,7 +352,7 @@ public class Widget implements Renderable,
     }
 
     void destroy() {
-        //TODO:Should we destroy a widget doesn't unmount?
+        // TODO:Should we destroy a widget doesn't unmount?
         if (!lifecycle.unmounted()) {
             throw new IllegalArgumentException("Widget is not unmounted!");
         }
@@ -360,13 +366,11 @@ public class Widget implements Renderable,
         lifecycle = Lifecycle.destroyed;
     }
 
-    public void onStateChanged() {
+    public void onStateChanged() {}
 
-    }
+    // endregion
 
-    //endregion
-
-    //region activity
+    // region activity
 
     public Widget onTick(WidgetEvent.OnTick listener) {
         events().register(WidgetEvent.onTick, listener);
@@ -378,9 +382,9 @@ public class Widget implements Renderable,
         listeners(WidgetEvent.onTick).onTick();
     }
 
-    //endregion
+    // endregion
 
-    //region area
+    // region area
 
     /**
      * Returns this widget's viewport for coordinate transform management.
@@ -570,8 +574,7 @@ public class Widget implements Renderable,
     }
 
     protected Widget setBound(int x, int y, int width, int height) {
-        return setPos(x, y)
-                .setSize(width, height);
+        return setPos(x, y).setSize(width, height);
     }
 
     protected Widget setBound(Rect rect) {
@@ -596,9 +599,9 @@ public class Widget implements Renderable,
         return setSize(size().width(), height);
     }
 
-    //endregion
+    // endregion
 
-    //region area test
+    // region area test
 
     /**
      * Tests whether the given scene-space mouse position is over this widget.
@@ -610,8 +613,7 @@ public class Widget implements Renderable,
      */
     public boolean isMouseOver(double mouseX, double mouseY) {
         FloatPos local = sceneToLocal(mouseX, mouseY);
-        return local.x >= 0 && local.x <= size.width()
-                && local.y >= 0 && local.y <= size.height();
+        return local.x >= 0 && local.x <= size.width() && local.y >= 0 && local.y <= size.height();
     }
 
     public boolean isMouseOver(InputContext input) {
@@ -624,18 +626,19 @@ public class Widget implements Renderable,
 
     public boolean intersects(int x, int y, int width, int height) {
         Pos p = pos();
-        return p.x() >= x && p.y() >= y &&
-                p.x() + this.size.width() <= x + width &&
-                p.y() + this.size.height() <= y + height;
+        return p.x() >= x
+                && p.y() >= y
+                && p.x() + this.size.width() <= x + width
+                && p.y() + this.size.height() <= y + height;
     }
 
     public boolean intersects(Rect bound) {
         return bound.intersects(absoluteBounds());
     }
 
-    //endregion
+    // endregion
 
-    //region render
+    // region render
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
@@ -693,9 +696,9 @@ public class Widget implements Renderable,
         canvas.texture(visualContext.icon(), 0, 0, width(), height());
     }
 
-    //endregion
+    // endregion
 
-    //region visibility & active
+    // region visibility & active
 
     public boolean visible() {
         return visible;
@@ -778,9 +781,9 @@ public class Widget implements Renderable,
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region scene layer & zIndex
+    // region scene layer & zIndex
 
     /**
      * Gets the scene layer this widget belongs to.
@@ -861,9 +864,9 @@ public class Widget implements Renderable,
         return visualContext.zIndex();
     }
 
-    //endregion
+    // endregion
 
-    //region tooltip
+    // region tooltip
 
     public final Tooltip tooltip() {
         return tooltip;
@@ -909,9 +912,9 @@ public class Widget implements Renderable,
         return tooltip.notEmpty() ? tooltip : null;
     }
 
-    //endregion
+    // endregion
 
-    //region render hooks
+    // region render hooks
 
     @Contract("_ -> this")
     public final Widget onRender(WidgetEvent.OnRender listener) {
@@ -927,9 +930,9 @@ public class Widget implements Renderable,
         return onEvent(WidgetEvent.onOverlayRender, listener);
     }
 
-    //endregion
+    // endregion
 
-    //region style & layout
+    // region style & layout
 
     public StyleContext style() {
         return style;
@@ -953,7 +956,7 @@ public class Widget implements Renderable,
         return this;
     }
 
-    //region effect
+    // region effect
 
     /**
      * Applies multiple effects to this widget.
@@ -968,7 +971,7 @@ public class Widget implements Renderable,
         return this;
     }
 
-    //endregion
+    // endregion
 
     public Layout layout() {
         Checks.checkArgument(layout != null, "layout is not applied");
@@ -1041,9 +1044,9 @@ public class Widget implements Renderable,
         return scene().layoutTree().needsVisit(nodeId());
     }
 
-    //endregion
+    // endregion
 
-    //region input
+    // region input
 
     @Contract("_ -> this")
     public final Widget onMouseClicked(InputEvent.OnMouseClicked listener) {
@@ -1187,9 +1190,9 @@ public class Widget implements Renderable,
         }));
     }
 
-    //endregion
+    // endregion
 
-    //region focus
+    // region focus
 
     /**
      * @return the focus node attached to this widget, or null if not focusable.
@@ -1269,9 +1272,9 @@ public class Widget implements Renderable,
         return onEvent(WidgetEvent.onFocusOut, listener);
     }
 
-    //endregion
+    // endregion
 
-    //region click region
+    // region click region
 
     /**
      * @return the click-region group key, or null if this widget is not in any group.
@@ -1304,9 +1307,9 @@ public class Widget implements Renderable,
         return onEvent(WidgetEvent.onClickOutside, listener);
     }
 
-    //endregion
+    // endregion
 
-    //region draggable
+    // region draggable
     public boolean draggable() {
         return draggable;
     }
@@ -1314,20 +1317,20 @@ public class Widget implements Renderable,
     @Contract("_ -> this")
     public Widget setDraggable(boolean draggable) {
         throw new UnsupportedOperationException("Not Implemented");
-//        this.draggable = draggable;
-//        if (draggable) {
-//            onMount((Scene scene, SceneContext context, SceneHandle handle) -> {
-//                addWeakPerformer(DragProvider.scenario, DragProvider.fromWidget(this), this);
-//            });
-//        }
-//        return this;
+        //        this.draggable = draggable;
+        //        if (draggable) {
+        //            onMount((Scene scene, SceneContext context, SceneHandle handle) -> {
+        //                addWeakPerformer(DragProvider.scenario, DragProvider.fromWidget(this), this);
+        //            });
+        //        }
+        //        return this;
     }
 
     public boolean dragging() {
         return dragging;
     }
 
-    //TODO:set this by framework
+    // TODO:set this by framework
     @Contract("_ -> this")
     public Widget setDragging(boolean dragging) {
         this.dragging = dragging;
@@ -1338,9 +1341,9 @@ public class Widget implements Renderable,
         return hovered;
     }
 
-    //endregion
+    // endregion
 
-    //region utils
+    // region utils
 
     public final <T extends WidgetEvent> Widget onEvent(EventDefinition<T> definition, T listener) {
         EventHandler.super.onEvent(definition, listener);
@@ -1363,9 +1366,9 @@ public class Widget implements Renderable,
         return (O) this;
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @MustBeInvokedByOverriders
     public void collectInspectionInfo(InspectionInfoCollector collector) {
@@ -1387,7 +1390,8 @@ public class Widget implements Renderable,
         collector.addWithDefault("focused", focused(), false, InspectionProperty.categoryState);
         collector.addWithDefault("hasFocus", hasFocus(), false, InspectionProperty.categoryState);
         collector.addWithDefault("focusable", focusable(), false, InspectionProperty.categoryState);
-        collector.addWithDefault("focusScope", focusNode instanceof FocusScopeNode, false, InspectionProperty.categoryState);
+        collector.addWithDefault(
+                "focusScope", focusNode instanceof FocusScopeNode, false, InspectionProperty.categoryState);
         collector.addWithDefault("hovered", hovered, false, InspectionProperty.categoryState);
         collector.addWithDefault("draggable", draggable, false, InspectionProperty.categoryState);
         collector.addWithDefault("dragging", dragging, false, InspectionProperty.categoryState);
@@ -1403,10 +1407,8 @@ public class Widget implements Renderable,
         var styleCollector = InspectionInfoCollector.create();
         style.collectStyleInspection(styleCollector);
         for (var prop : styleCollector.getAll()) {
-            collector.addProperty(new InspectionProperty(
-                    prop.name(), prop.value(), prop.defaultValue(),
-                    "style-" + prop.category()
-            ));
+            collector.addProperty(
+                    new InspectionProperty(prop.name(), prop.value(), prop.defaultValue(), "style-" + prop.category()));
         }
     }
 
@@ -1421,6 +1423,6 @@ public class Widget implements Renderable,
         return name + "@" + Integer.toHexString(System.identityHashCode(this));
     }
 
-    //endregion
+    // endregion
 
 }

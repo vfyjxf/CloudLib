@@ -23,7 +23,7 @@ import java.util.Objects;
  * <p>
  * The margin types supported by taffy include:
  * <ul>
- *   <li>{@link LengthPercentageAuto#AUTO} - automatic margin</li>
+ *   <li>{@link LengthPercentageAuto#auto} - automatic margin</li>
  *   <li>{@link LengthPercentageAuto#length(float)} - fixed pixel length</li>
  *   <li>{@link LengthPercentageAuto#percent(float)} - percentage of parent (0.0 to 1.0)</li>
  *   <li>{@link LengthPercentageAuto#minContent()} - minimum content size</li>
@@ -38,51 +38,51 @@ import java.util.Objects;
  */
 public final class MarginProperty extends EdgeStyleProperty<LengthPercentageAuto> {
 
-    //region types
+    // region types
 
     /**
      * StyleType for setting all four margin edges at once.
      */
-    public static final StyleType<MarginProperty> TYPE_ALL = StyleType.of("margin", () -> null);
+    public static final StyleType<MarginProperty> typeAll = StyleType.of("margin", () -> null);
 
     /**
      * StyleType for setting only the top margin edge.
      */
-    public static final StyleType<MarginProperty> TYPE_TOP = StyleType.of("margin-top", () -> null);
+    public static final StyleType<MarginProperty> typeTop = StyleType.of("margin-top", () -> null);
 
     /**
      * StyleType for setting only the right margin edge.
      */
-    public static final StyleType<MarginProperty> TYPE_RIGHT = StyleType.of("margin-right", () -> null);
+    public static final StyleType<MarginProperty> typeRight = StyleType.of("margin-right", () -> null);
 
     /**
      * StyleType for setting only the bottom margin edge.
      */
-    public static final StyleType<MarginProperty> TYPE_BOTTOM = StyleType.of("margin-bottom", () -> null);
+    public static final StyleType<MarginProperty> typeBottom = StyleType.of("margin-bottom", () -> null);
 
     /**
      * StyleType for setting only the left margin edge.
      */
-    public static final StyleType<MarginProperty> TYPE_LEFT = StyleType.of("margin-left", () -> null);
+    public static final StyleType<MarginProperty> typeLeft = StyleType.of("margin-left", () -> null);
 
     /**
      * StyleType for setting horizontal margin edges (left and right).
      */
-    public static final StyleType<MarginProperty> TYPE_HORIZONTAL = StyleType.of("margin-horizontal", () -> null);
+    public static final StyleType<MarginProperty> typeHorizontal = StyleType.of("margin-horizontal", () -> null);
 
     /**
      * StyleType for setting vertical margin edges (top and bottom).
      */
-    public static final StyleType<MarginProperty> TYPE_VERTICAL = StyleType.of("margin-vertical", () -> null);
+    public static final StyleType<MarginProperty> typeVertical = StyleType.of("margin-vertical", () -> null);
 
     /**
      * Legacy type alias for backward compatibility.
      */
-    public static final StyleType<MarginProperty> type = TYPE_ALL;
+    public static final StyleType<MarginProperty> type = typeAll;
 
-    //endregion
+    // endregion
 
-    //region constructors
+    // region constructors
 
     private MarginProperty(EdgeRect<LengthPercentageAuto> edges, EdgeMask mask, StyleType<?> type) {
         super(edges, mask, type);
@@ -92,14 +92,14 @@ public final class MarginProperty extends EdgeStyleProperty<LengthPercentageAuto
      * Creates a margin property with equal margin on all sides.
      */
     public MarginProperty(LengthPercentageAuto all) {
-        this(EdgeRect.all(all), EdgeMask.ALL, TYPE_ALL);
+        this(EdgeRect.all(all), EdgeMask.all, typeAll);
     }
 
     /**
      * Creates a margin property with vertical and horizontal values.
      */
     public MarginProperty(LengthPercentageAuto vertical, LengthPercentageAuto horizontal) {
-        this(EdgeRect.symmetric(vertical, horizontal), EdgeMask.ALL, TYPE_ALL);
+        this(EdgeRect.symmetric(vertical, horizontal), EdgeMask.all, typeAll);
     }
 
     /**
@@ -125,16 +125,14 @@ public final class MarginProperty extends EdgeStyleProperty<LengthPercentageAuto
                         LengthPercentageAuto.length(top),
                         LengthPercentageAuto.length(right),
                         LengthPercentageAuto.length(bottom),
-                        LengthPercentageAuto.length(left)
-                ),
-                EdgeMask.ALL,
-                TYPE_ALL
-        );
+                        LengthPercentageAuto.length(left)),
+                EdgeMask.all,
+                typeAll);
     }
 
-    //endregion
+    // endregion
 
-    //region factory methods
+    // region factory methods
 
     /**
      * Creates a margin with auto on all sides.
@@ -173,9 +171,9 @@ public final class MarginProperty extends EdgeStyleProperty<LengthPercentageAuto
         return new MarginProperty(LengthPercentageAuto.percent(vertical), LengthPercentageAuto.percent(horizontal));
     }
 
-    //endregion
+    // endregion
 
-    //region factory - all edges
+    // region factory - all edges
 
     /**
      * Creates a margin property with individual LengthPercentageAuto values for each side.
@@ -186,13 +184,17 @@ public final class MarginProperty extends EdgeStyleProperty<LengthPercentageAuto
      * @param left   the left margin
      * @return a margin property affecting all edges
      */
-    public static MarginProperty of(LengthPercentageAuto top, LengthPercentageAuto right, LengthPercentageAuto bottom, LengthPercentageAuto left) {
-        return new MarginProperty(EdgeRect.of(top, right, bottom, left), EdgeMask.ALL, TYPE_ALL);
+    public static MarginProperty of(
+            LengthPercentageAuto top,
+            LengthPercentageAuto right,
+            LengthPercentageAuto bottom,
+            LengthPercentageAuto left) {
+        return new MarginProperty(EdgeRect.of(top, right, bottom, left), EdgeMask.all, typeAll);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - single edge
+    // region factory - single edge
 
     /**
      * Creates a margin property with only the top edge set.
@@ -208,7 +210,7 @@ public final class MarginProperty extends EdgeStyleProperty<LengthPercentageAuto
      */
     public static MarginProperty top(LengthPercentageAuto value) {
         Objects.requireNonNull(value, "value");
-        return new MarginProperty(EdgeRect.top(value), EdgeMask.TOP, TYPE_TOP);
+        return new MarginProperty(EdgeRect.top(value), EdgeMask.top, typeTop);
     }
 
     /**
@@ -225,7 +227,7 @@ public final class MarginProperty extends EdgeStyleProperty<LengthPercentageAuto
      */
     public static MarginProperty right(LengthPercentageAuto value) {
         Objects.requireNonNull(value, "value");
-        return new MarginProperty(EdgeRect.right(value), EdgeMask.RIGHT, TYPE_RIGHT);
+        return new MarginProperty(EdgeRect.right(value), EdgeMask.right, typeRight);
     }
 
     /**
@@ -242,7 +244,7 @@ public final class MarginProperty extends EdgeStyleProperty<LengthPercentageAuto
      */
     public static MarginProperty bottom(LengthPercentageAuto value) {
         Objects.requireNonNull(value, "value");
-        return new MarginProperty(EdgeRect.bottom(value), EdgeMask.BOTTOM, TYPE_BOTTOM);
+        return new MarginProperty(EdgeRect.bottom(value), EdgeMask.bottom, typeBottom);
     }
 
     /**
@@ -259,7 +261,7 @@ public final class MarginProperty extends EdgeStyleProperty<LengthPercentageAuto
      */
     public static MarginProperty left(LengthPercentageAuto value) {
         Objects.requireNonNull(value, "value");
-        return new MarginProperty(EdgeRect.left(value), EdgeMask.LEFT, TYPE_LEFT);
+        return new MarginProperty(EdgeRect.left(value), EdgeMask.left, typeLeft);
     }
 
     /**
@@ -278,16 +280,16 @@ public final class MarginProperty extends EdgeStyleProperty<LengthPercentageAuto
         Objects.requireNonNull(edge, "edge");
         Objects.requireNonNull(value, "value");
         return switch (edge) {
-            case TOP -> top(value);
-            case RIGHT -> right(value);
-            case BOTTOM -> bottom(value);
-            case LEFT -> left(value);
+            case top -> top(value);
+            case right -> right(value);
+            case bottom -> bottom(value);
+            case left -> left(value);
         };
     }
 
-    //endregion
+    // endregion
 
-    //region factory - horizontal/vertical
+    // region factory - horizontal/vertical
 
     /**
      * Creates a margin property with only horizontal edges (left and right) set.
@@ -303,7 +305,7 @@ public final class MarginProperty extends EdgeStyleProperty<LengthPercentageAuto
      */
     public static MarginProperty horizontal(LengthPercentageAuto value) {
         Objects.requireNonNull(value, "value");
-        return new MarginProperty(EdgeRect.horizontal(value), EdgeMask.HORIZONTAL, TYPE_HORIZONTAL);
+        return new MarginProperty(EdgeRect.horizontal(value), EdgeMask.horizontal, typeHorizontal);
     }
 
     /**
@@ -320,46 +322,46 @@ public final class MarginProperty extends EdgeStyleProperty<LengthPercentageAuto
      */
     public static MarginProperty vertical(LengthPercentageAuto value) {
         Objects.requireNonNull(value, "value");
-        return new MarginProperty(EdgeRect.vertical(value), EdgeMask.VERTICAL, TYPE_VERTICAL);
+        return new MarginProperty(EdgeRect.vertical(value), EdgeMask.vertical, typeVertical);
     }
 
-    //endregion
+    // endregion
 
-    //region EdgeStyleProperty implementation
+    // region EdgeStyleProperty implementation
 
     @Override
     protected StyleType<?> typeAll() {
-        return TYPE_ALL;
+        return typeAll;
     }
 
     @Override
     protected StyleType<?> typeTop() {
-        return TYPE_TOP;
+        return typeTop;
     }
 
     @Override
     protected StyleType<?> typeRight() {
-        return TYPE_RIGHT;
+        return typeRight;
     }
 
     @Override
     protected StyleType<?> typeBottom() {
-        return TYPE_BOTTOM;
+        return typeBottom;
     }
 
     @Override
     protected StyleType<?> typeLeft() {
-        return TYPE_LEFT;
+        return typeLeft;
     }
 
     @Override
     protected StyleType<?> typeHorizontal() {
-        return TYPE_HORIZONTAL;
+        return typeHorizontal;
     }
 
     @Override
     protected StyleType<?> typeVertical() {
-        return TYPE_VERTICAL;
+        return typeVertical;
     }
 
     @Override
@@ -372,29 +374,28 @@ public final class MarginProperty extends EdgeStyleProperty<LengthPercentageAuto
         return "margin";
     }
 
-    //endregion
+    // endregion
 
-    //region LayoutProperty implementation
+    // region LayoutProperty implementation
 
     @Override
     public void applyToStyle(TaffyStyle style) {
         applyEdges(
                 edge -> switch (edge) {
-                    case TOP -> style.margin.top;
-                    case RIGHT -> style.margin.right;
-                    case BOTTOM -> style.margin.bottom;
-                    case LEFT -> style.margin.left;
+                    case top -> style.margin.top;
+                    case right -> style.margin.right;
+                    case bottom -> style.margin.bottom;
+                    case left -> style.margin.left;
                 },
                 (edge, value) -> {
                     switch (edge) {
-                        case TOP -> style.margin.top = value;
-                        case RIGHT -> style.margin.right = value;
-                        case BOTTOM -> style.margin.bottom = value;
-                        case LEFT -> style.margin.left = value;
+                        case top -> style.margin.top = value;
+                        case right -> style.margin.right = value;
+                        case bottom -> style.margin.bottom = value;
+                        case left -> style.margin.left = value;
                     }
-                }
-        );
+                });
     }
 
-    //endregion
+    // endregion
 }

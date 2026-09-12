@@ -44,8 +44,7 @@ public final class GtUnits {
             UnitRule.fixedBridge(ItemUnits.gear, FluidUnits.millibucket, Ratio.of(576)),
             UnitRule.matter(ItemUnits.plate, ItemUnits.ingot, Ratio.of(1)),
             UnitRule.matter(ItemUnits.rod, ItemUnits.ingot, Ratio.of(1, 2)),
-            UnitRule.matter(ItemUnits.gear, ItemUnits.ingot, Ratio.of(4))
-    );
+            UnitRule.matter(ItemUnits.gear, ItemUnits.ingot, Ratio.of(4)));
 
     /**
      * Unmodifiable {@link List} view of {@link #rules}, for consumers working with
@@ -61,6 +60,5 @@ public final class GtUnits {
         return UnitPack.of(rules);
     }
 
-    private GtUnits() {
-    }
+    private GtUnits() {}
 }

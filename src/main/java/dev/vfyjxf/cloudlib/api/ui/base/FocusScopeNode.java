@@ -16,13 +16,14 @@ import org.jetbrains.annotations.Nullable;
  */
 public class FocusScopeNode extends FocusNode {
 
-    @Nullable FocusNode focusedChild;
+    @Nullable
+    FocusNode focusedChild;
+
     boolean autofocus;
 
-    public FocusScopeNode() {
-    }
+    public FocusScopeNode() {}
 
-    //region getters
+    // region getters
 
     /**
      * Returns the most recently primary-focused descendant within this scope.
@@ -44,17 +45,17 @@ public class FocusScopeNode extends FocusNode {
         return autofocus;
     }
 
-    //endregion
+    // endregion
 
-    //region setters
+    // region setters
 
     public void setAutofocus(boolean autofocus) {
         this.autofocus = autofocus;
     }
 
-    //endregion
+    // endregion
 
-    //region actions
+    // region actions
 
     /**
      * Requests focus for this scope.
@@ -75,7 +76,7 @@ public class FocusScopeNode extends FocusNode {
         }
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String toString() {

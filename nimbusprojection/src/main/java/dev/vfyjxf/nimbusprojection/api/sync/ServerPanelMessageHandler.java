@@ -15,5 +15,4 @@ import net.minecraft.server.level.ServerPlayer;
 public interface ServerPanelMessageHandler {
 
     void receive(SharedPanel panel, ServerPlayer sender, CustomPacketPayload payload);
-
 }

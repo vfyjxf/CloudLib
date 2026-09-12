@@ -37,7 +37,7 @@ import java.util.List;
  */
 public final class Viewport {
 
-    //region transform pipeline
+    // region transform pipeline
 
     /**
      * The layout position, stored as a dedicated field.
@@ -49,6 +49,7 @@ public final class Viewport {
      * Used by scroll containers.
      */
     float contentOffsetX;
+
     float contentOffsetY;
 
     /**
@@ -60,74 +61,83 @@ public final class Viewport {
     /**
      * Callback invoked whenever cached matrices are invalidated.
      */
-    @Nullable Runnable onInvalidate;
+    @Nullable
+    Runnable onInvalidate;
 
-    //endregion
+    // endregion
 
-    //region dimensions
+    // region dimensions
 
     /**
      * Size of the visible window (widget-local pixels).
      */
     private int viewportWidth;
+
     private int viewportHeight;
 
     /**
      * Size of the full content area (content-space pixels).
      */
     private int contentWidth;
+
     private int contentHeight;
 
-    //endregion
+    // endregion
 
-    //region transform origin
+    // region transform origin
 
     /**
      * Transform origin expressed as a ratio of the viewport dimensions (0–1).
      * {@code (0, 0)} = top-left (default); {@code (0.5, 0.5)} = center.
      */
     private double originX;
+
     private double originY;
 
-    //endregion
+    // endregion
 
-    //region scale limits
+    // region scale limits
 
     private double minScale = 0.1;
     private double maxScale = 10.0;
 
-    //endregion
+    // endregion
 
-    //region cached matrices
+    // region cached matrices
 
     /**
      * Forward: local → parent.
      */
-    @Nullable Matrix3x2f forwardMatrix;
+    @Nullable
+    Matrix3x2f forwardMatrix;
 
     /**
      * Forward matrix as Matrix4f for GPU use.
      */
-    @Nullable Matrix4f forwardMatrix4f;
+    @Nullable
+    Matrix4f forwardMatrix4f;
 
     /**
      * Inverse: parent → local.
      */
-    @Nullable Matrix3x2f inverseMatrix;
+    @Nullable
+    Matrix3x2f inverseMatrix;
 
     /**
      * View matrix: user transforms only (excludes layout).
      */
-    @Nullable Matrix3x2f viewMatrixCache;
+    @Nullable
+    Matrix3x2f viewMatrixCache;
 
     /**
      * View matrix as Matrix4f for GPU use.
      */
-    @Nullable Matrix4f viewMatrix4fCache;
+    @Nullable
+    Matrix4f viewMatrix4fCache;
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     /**
      * Creates a viewport with a default {@code Layout(0, 0)} transform.
@@ -149,9 +159,7 @@ public final class Viewport {
     /**
      * Creates a viewport with both viewport and content dimensions.
      */
-    public static Viewport create(
-            int viewportWidth, int viewportHeight,
-            int contentWidth, int contentHeight) {
+    public static Viewport create(int viewportWidth, int viewportHeight, int contentWidth, int contentHeight) {
         Viewport vp = create(viewportWidth, viewportHeight);
         vp.contentWidth = contentWidth;
         vp.contentHeight = contentHeight;
@@ -169,17 +177,16 @@ public final class Viewport {
      * Creates a viewport from the given widget size and content size.
      */
     public static Viewport create(Size viewportSize, Size contentSize) {
-        return create(viewportSize.width(), viewportSize.height(),
-                contentSize.width(), contentSize.height());
+        return create(viewportSize.width(), viewportSize.height(), contentSize.width(), contentSize.height());
     }
 
     private Viewport() {
         // layout is initialised in-line; transforms list starts empty (user-only)
     }
 
-    //endregion
+    // endregion
 
-    //region layout
+    // region layout
 
     /**
      * Returns the layout position.
@@ -225,9 +232,9 @@ public final class Viewport {
         return setLayout(pos.x(), pos.y());
     }
 
-    //endregion
+    // endregion
 
-    //region content offset
+    // region content offset
 
     /**
      * @return content offset X (horizontal scroll amount), default 0
@@ -263,9 +270,9 @@ public final class Viewport {
         if (onInvalidate != null) onInvalidate.run();
     }
 
-    //endregion
+    // endregion
 
-    //region pipeline access
+    // region pipeline access
 
     /**
      * Returns the full transform pipeline as an unmodifiable list.
@@ -377,9 +384,9 @@ public final class Viewport {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region pipeline lookup
+    // region pipeline lookup
 
     /**
      * Returns the index of the first transform assignable to the given type, or {@code -1}.
@@ -415,9 +422,9 @@ public final class Viewport {
         return null;
     }
 
-    //endregion
+    // endregion
 
-    //region dimensions
+    // region dimensions
 
     public int viewportWidth() {
         return viewportWidth;
@@ -469,9 +476,9 @@ public final class Viewport {
         return setContentSize(size.width(), size.height());
     }
 
-    //endregion
+    // endregion
 
-    //region origin
+    // region origin
 
     /**
      * Returns the transform origin as a ratio of viewport dimensions.
@@ -521,9 +528,9 @@ public final class Viewport {
         return setOrigin(0.0, 0.0);
     }
 
-    //endregion
+    // endregion
 
-    //region scale limits
+    // region scale limits
 
     public double minScale() {
         return minScale;
@@ -543,9 +550,9 @@ public final class Viewport {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region coordinate transform — local ↔ parent
+    // region coordinate transform — local ↔ parent
 
     /**
      * Transforms a point from local space to parent space.
@@ -617,9 +624,9 @@ public final class Viewport {
         return new FloatPos(vx, vy);
     }
 
-    //endregion
+    // endregion
 
-    //region view matrix (excludes layout)
+    // region view matrix (excludes layout)
 
     /**
      * Builds the view matrix — user transforms only, excludes the layout step.
@@ -685,17 +692,16 @@ public final class Viewport {
         return new FloatPos(v.x, v.y);
     }
 
-    //endregion
+    // endregion
 
-    //region hit-testing
+    // region hit-testing
 
     /**
      * Tests whether a point in the widget's own local space falls within the
      * viewport bounds (0,0 → viewportWidth×viewportHeight).
      */
     public boolean isInsideViewport(double localX, double localY) {
-        return localX >= 0 && localX < viewportWidth
-                && localY >= 0 && localY < viewportHeight;
+        return localX >= 0 && localX < viewportWidth && localY >= 0 && localY < viewportHeight;
     }
 
     /**
@@ -709,12 +715,9 @@ public final class Viewport {
     /**
      * Tests whether a parent-space point hits a local-space rectangle.
      */
-    public boolean hitTest(
-            double parentX, double parentY,
-            int cx, int cy, int cw, int ch) {
+    public boolean hitTest(double parentX, double parentY, int cx, int cy, int cw, int ch) {
         FloatPos local = parentToLocal(parentX, parentY);
-        return local.x >= cx && local.x < cx + cw
-                && local.y >= cy && local.y < cy + ch;
+        return local.x >= cx && local.x < cx + cw && local.y >= cy && local.y < cy + ch;
     }
 
     /**
@@ -723,9 +726,7 @@ public final class Viewport {
      * @see #hitTest(double, double, int, int, int, int)
      */
     public boolean hitTest(double parentX, double parentY, Rect localRect) {
-        return hitTest(parentX, parentY,
-                localRect.x(), localRect.y(),
-                localRect.width(), localRect.height());
+        return hitTest(parentX, parentY, localRect.x(), localRect.y(), localRect.width(), localRect.height());
     }
 
     /**
@@ -749,8 +750,7 @@ public final class Viewport {
 
         return new Rect(
                 (int) Math.floor(minX), (int) Math.floor(minY),
-                (int) Math.ceil(maxX - minX), (int) Math.ceil(maxY - minY)
-        );
+                (int) Math.ceil(maxX - minX), (int) Math.ceil(maxY - minY));
     }
 
     /**
@@ -780,8 +780,7 @@ public final class Viewport {
 
         return new Rect(
                 (int) Math.floor(minX), (int) Math.floor(minY),
-                (int) Math.ceil(maxX - minX), (int) Math.ceil(maxY - minY)
-        );
+                (int) Math.ceil(maxX - minX), (int) Math.ceil(maxY - minY));
     }
 
     /**
@@ -809,9 +808,9 @@ public final class Viewport {
         return Math.sqrt(m.m10 * m.m10 + m.m11 * m.m11);
     }
 
-    //endregion
+    // endregion
 
-    //region scrollbar helpers
+    // region scrollbar helpers
 
     /**
      * Horizontal scroll fraction in [0, 1], derived from the view matrix.
@@ -879,9 +878,9 @@ public final class Viewport {
         return Math.abs(bl.y - tl.y) < contentHeight;
     }
 
-    //endregion
+    // endregion
 
-    //region pivot adjustment
+    // region pivot adjustment
 
     /**
      * Adjusts the Translate at the given pipeline index so that
@@ -889,9 +888,7 @@ public final class Viewport {
      */
     @Contract("_,_,_,_,_ -> this")
     public Viewport adjustTranslateForPivot(
-            int translateIndex,
-            double localX, double localY,
-            double parentX, double parentY) {
+            int translateIndex, double localX, double localY, double parentX, double parentY) {
         float ox = (float) (originX * viewportWidth);
         float oy = (float) (originY * viewportHeight);
 
@@ -928,10 +925,7 @@ public final class Viewport {
      * keep the cursor point stationary.
      */
     @Contract("_,_,_,_,_ -> this")
-    public Viewport zoomAt(
-            int scaleIndex, int translateIndex,
-            double factor,
-            double parentX, double parentY) {
+    public Viewport zoomAt(int scaleIndex, int translateIndex, double factor, double parentX, double parentY) {
         return zoomAt(scaleIndex, translateIndex, factor, factor, parentX, parentY);
     }
 
@@ -940,9 +934,7 @@ public final class Viewport {
      */
     @Contract("_,_,_,_,_,_ -> this")
     public Viewport zoomAt(
-            int scaleIndex, int translateIndex,
-            double factorX, double factorY,
-            double parentX, double parentY) {
+            int scaleIndex, int translateIndex, double factorX, double factorY, double parentX, double parentY) {
         FloatPos localPt = parentToLocal(parentX, parentY);
 
         ViewportTransform.Scale s = (ViewportTransform.Scale) pipelineGet(scaleIndex);
@@ -951,8 +943,7 @@ public final class Viewport {
         pipelineSet(scaleIndex, ViewportTransform.scale(newSx, newSy));
         invalidate();
 
-        adjustTranslateForPivot(translateIndex,
-                localPt.x, localPt.y, parentX, parentY);
+        adjustTranslateForPivot(translateIndex, localPt.x, localPt.y, parentX, parentY);
         return this;
     }
 
@@ -961,10 +952,7 @@ public final class Viewport {
      * at {@code translateIndex} to keep the cursor point stationary.
      */
     @Contract("_,_,_,_,_ -> this")
-    public Viewport rotateAt(
-            int rotateIndex, int translateIndex,
-            double deltaRadians,
-            double parentX, double parentY) {
+    public Viewport rotateAt(int rotateIndex, int translateIndex, double deltaRadians, double parentX, double parentY) {
         FloatPos localPt = parentToLocal(parentX, parentY);
 
         ViewportTransform.Rotate r = (ViewportTransform.Rotate) pipelineGet(rotateIndex);
@@ -972,8 +960,7 @@ public final class Viewport {
         pipelineSet(rotateIndex, ViewportTransform.rotate(newAngle));
         invalidate();
 
-        adjustTranslateForPivot(translateIndex,
-                localPt.x, localPt.y, parentX, parentY);
+        adjustTranslateForPivot(translateIndex, localPt.x, localPt.y, parentX, parentY);
         return this;
     }
 
@@ -984,8 +971,7 @@ public final class Viewport {
     public Viewport clampTranslate(int translateIndex) {
         if (contentWidth <= 0 && contentHeight <= 0) return this;
 
-        ViewportTransform.Translate t =
-                (ViewportTransform.Translate) pipelineGet(translateIndex);
+        ViewportTransform.Translate t = (ViewportTransform.Translate) pipelineGet(translateIndex);
         double dx = t.dx();
         double dy = t.dy();
 
@@ -1010,9 +996,9 @@ public final class Viewport {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region matrix access
+    // region matrix access
 
     /**
      * Returns the forward (local → parent) affine matrix. Defensive copy.
@@ -1081,14 +1067,12 @@ public final class Viewport {
      */
     public boolean isIdentity() {
         Matrix3x2f m = forwardMatrixDirect();
-        return m.m00 == 1 && m.m01 == 0
-                && m.m10 == 0 && m.m11 == 1
-                && m.m20 == 0 && m.m21 == 0;
+        return m.m00 == 1 && m.m01 == 0 && m.m10 == 0 && m.m11 == 1 && m.m20 == 0 && m.m21 == 0;
     }
 
-    //endregion
+    // endregion
 
-    //region reset / copy
+    // region reset / copy
 
     /**
      * Resets to a clean state: only {@code Layout(0,0)}, origin at top-left.
@@ -1125,9 +1109,9 @@ public final class Viewport {
         return v;
     }
 
-    //endregion
+    // endregion
 
-    //region internal
+    // region internal
 
     void invalidate() {
         forwardMatrix = null;
@@ -1214,12 +1198,7 @@ public final class Viewport {
     }
 
     private static Matrix4f to4f(Matrix3x2f m) {
-        return new Matrix4f(
-                m.m00, m.m01, 0, 0,
-                m.m10, m.m11, 0, 0,
-                0, 0, 1, 0,
-                m.m20, m.m21, 0, 1
-        );
+        return new Matrix4f(m.m00, m.m01, 0, 0, m.m10, m.m11, 0, 0, 0, 0, 1, 0, m.m20, m.m21, 0, 1);
     }
 
     private static double clamp(double value, double min, double max) {
@@ -1233,17 +1212,16 @@ public final class Viewport {
         return radians;
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String toString() {
-        return "Viewport{" +
-                "layout=" + layout +
-                ", contentOffset=(" + contentOffsetX + ", " + contentOffsetY + ")" +
-                ", userTransforms=" + transforms +
-                ", viewport=" + viewportWidth + "x" + viewportHeight +
-                ", content=" + contentWidth + "x" + contentHeight +
-                ", origin=(" + originX + ", " + originY + ")" +
-                '}';
+        return "Viewport{" + "layout="
+                + layout + ", contentOffset=("
+                + contentOffsetX + ", " + contentOffsetY + ")" + ", userTransforms="
+                + transforms + ", viewport="
+                + viewportWidth + "x" + viewportHeight + ", content="
+                + contentWidth + "x" + contentHeight + ", origin=("
+                + originX + ", " + originY + ")" + '}';
     }
 }

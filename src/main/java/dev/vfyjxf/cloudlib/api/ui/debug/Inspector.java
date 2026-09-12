@@ -27,48 +27,52 @@ import java.util.function.Supplier;
  */
 public class Inspector extends Widget {
 
-    public enum DisplayMode {MINIMIZED, COMPACT, FULL}
+    public enum DisplayMode {
+        minimized,
+        compact,
+        full
+    }
 
-    //region constants
+    // region constants
 
-    private static final int PADDING = 4;
-    private static final int LINE_HEIGHT = 10;
-    private static final int CATEGORY_INDENT = 2;
-    private static final int PROPERTY_INDENT = 8;
-    private static final int TITLE_BAR_HEIGHT = 12;
-    private static final int SCROLLBAR_AREA = 8;
+    private static final int padding = 4;
+    private static final int lineHeight = 10;
+    private static final int categoryIndent = 2;
+    private static final int propertyIndent = 8;
+    private static final int titleBarHeight = 12;
+    private static final int scrollbarArea = 8;
 
-    private static final int COMPACT_W = 250, COMPACT_H = 100;
-    private static final int FULL_W = 300, FULL_H = 400;
+    private static final int compactW = 250, compactH = 100;
+    private static final int fullW = 300, fullH = 400;
 
-    //endregion
+    // endregion
 
-    //region colors
+    // region colors
 
-    private static final int BG = 0xCC000000;
-    private static final int BORDER = 0xFF444444;
-    private static final int TEXT = 0xFFFFFFFF;
-    private static final int CATEGORY = 0xFF88FFFF;
-    private static final int VALUE = 0xFFAAFFAA;
-    private static final int DIM = 0xFF888888;
-    private static final int HL_FILL = 0x3300CCFF;
-    private static final int HL_BORDER = 0xAA00CCFF;
-    private static final int TITLE_BG = 0xFF333333;
+    private static final int bg = 0xCC000000;
+    private static final int border = 0xFF444444;
+    private static final int text = 0xFFFFFFFF;
+    private static final int categoryColor = 0xFF88FFFF;
+    private static final int value = 0xFFAAFFAA;
+    private static final int dim = 0xFF888888;
+    private static final int hlFill = 0x3300CCFF;
+    private static final int hlBorder = 0xAA00CCFF;
+    private static final int titleBg = 0xFF333333;
 
-    //endregion
+    // endregion
 
-    //region configuration
+    // region configuration
 
     private boolean showAllProperties;
     private boolean showHierarchy = true;
     private boolean showHighlight = true;
     private boolean includeRoot;
     private boolean trackMouse;
-    private DisplayMode displayMode = DisplayMode.COMPACT;
+    private DisplayMode displayMode = DisplayMode.compact;
 
-    //endregion
+    // endregion
 
-    //region state
+    // region state
 
     private @Nullable Widget target;
     private @Nullable Supplier<Widget> targetSupplier;
@@ -78,7 +82,7 @@ public class Inspector extends Widget {
     private int maxScrollOffset;
     private @Nullable Widget lastRenderedTarget;
 
-    //endregion
+    // endregion
 
     public static Inspector create() {
         return new Inspector();
@@ -86,12 +90,12 @@ public class Inspector extends Widget {
 
     private Inspector() {
         setTickable(true);
-        setSize(COMPACT_W, COMPACT_H);
+        setSize(compactW, compactH);
         setFocusable(true);
         registerInputHandlers();
     }
 
-    //region configuration
+    // region configuration
 
     public Inspector setTarget(@Nullable Widget target) {
         this.target = target;
@@ -135,9 +139,9 @@ public class Inspector extends Widget {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region lifecycle
+    // region lifecycle
 
     @Override
     public void tick() {
@@ -149,9 +153,9 @@ public class Inspector extends Widget {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
@@ -164,25 +168,23 @@ public class Inspector extends Widget {
             lastRenderedTarget = currentTarget;
         }
 
-        canvas.fill(0, 0, width(), height(), BG);
-        canvas.strokeRect(0, 0, width(), height(), BORDER, 1);
+        canvas.fill(0, 0, width(), height(), bg);
+        canvas.strokeRect(0, 0, width(), height(), border, 1);
 
         int contentY = renderTitleBar(canvas, currentTarget);
-        if (displayMode == DisplayMode.MINIMIZED) return;
+        if (displayMode == DisplayMode.minimized) return;
 
         if (currentTarget == null) {
             canvas.drawString(
-                    trackMouse ? "Hover over a widget..." : "No target set",
-                    PADDING, contentY + 2, DIM, false
-            );
+                    trackMouse ? "Hover over a widget..." : "No target set", padding, contentY + 2, dim, false);
             return;
         }
 
         if (showHighlight) renderHighlight(canvas, currentTarget);
 
         switch (displayMode) {
-            case COMPACT -> renderCompact(canvas, currentTarget, contentY);
-            case FULL -> renderFull(canvas, currentTarget, contentY);
+            case compact -> renderCompact(canvas, currentTarget, contentY);
+            case full -> renderFull(canvas, currentTarget, contentY);
         }
     }
 
@@ -199,29 +201,30 @@ public class Inspector extends Widget {
     }
 
     private int renderTitleBar(SceneCanvas canvas, @Nullable Widget target) {
-        canvas.fill(0, 0, width(), TITLE_BAR_HEIGHT, TITLE_BG);
+        canvas.fill(0, 0, width(), titleBarHeight, titleBg);
         Font font = Minecraft.getInstance().font;
-        int x = PADDING, y = 2;
+        int x = padding, y = 2;
 
-        String modeIcon = switch (displayMode) {
-            case MINIMIZED -> "[-]";
-            case COMPACT -> "[=]";
-            case FULL -> "[+]";
-        };
-        canvas.drawString(modeIcon, x, y, TEXT, false);
+        String modeIcon =
+                switch (displayMode) {
+                    case minimized -> "[-]";
+                    case compact -> "[=]";
+                    case full -> "[+]";
+                };
+        canvas.drawString(modeIcon, x, y, text, false);
         x += font.width(modeIcon) + 4;
 
-        canvas.drawString("(I)", x, y, DIM, false);
+        canvas.drawString("(I)", x, y, dim, false);
         x += font.width("(I)") + 4;
 
         String title = target != null ? target.inspectionTypeName() : "Inspector";
         if (target != null && target.key() != null) title += "[" + target.key() + "]";
-        int maxW = width() - x - PADDING;
+        int maxW = width() - x - padding;
         if (font.width(title) > maxW) title = truncate(title, font, maxW);
-        canvas.drawString(title, x, y, CATEGORY, false);
+        canvas.drawString(title, x, y, categoryColor, false);
 
-        canvas.line(0, TITLE_BAR_HEIGHT, width(), TITLE_BAR_HEIGHT, 1f, BORDER);
-        return TITLE_BAR_HEIGHT + 2;
+        canvas.line(0, titleBarHeight, width(), titleBarHeight, 1f, border);
+        return titleBarHeight + 2;
     }
 
     private void renderHighlight(SceneCanvas canvas, Widget target) {
@@ -230,27 +233,29 @@ public class Inspector extends Widget {
         int rx = (int) local.x, ry = (int) local.y;
         int rw = target.width(), rh = target.height();
 
-        canvas.fill(rx, ry, rw, rh, HL_FILL);
-        canvas.fill(rx, ry, rw, 1, HL_BORDER);
-        canvas.fill(rx, ry + rh - 1, rw, 1, HL_BORDER);
-        canvas.fill(rx, ry, 1, rh, HL_BORDER);
-        canvas.fill(rx + rw - 1, ry, 1, rh, HL_BORDER);
+        canvas.fill(rx, ry, rw, rh, hlFill);
+        canvas.fill(rx, ry, rw, 1, hlBorder);
+        canvas.fill(rx, ry + rh - 1, rw, 1, hlBorder);
+        canvas.fill(rx, ry, 1, rh, hlBorder);
+        canvas.fill(rx + rw - 1, ry, 1, rh, hlBorder);
     }
 
     private void renderCompact(SceneCanvas canvas, Widget target, int startY) {
         var collector = InspectionInfoCollector.from(target);
         Font font = Minecraft.getInstance().font;
-        int x = PADDING, y = startY;
+        int x = padding, y = startY;
 
         var pos = target.pos();
         var size = target.size();
         canvas.drawString(
                 String.format("pos(%d,%d) size(%d,%d)", pos.x(), pos.y(), size.width(), size.height()),
-                x, y, VALUE, false
-        );
-        y += LINE_HEIGHT;
+                x,
+                y,
+                value,
+                false);
+        y += lineHeight;
 
-        int maxLines = (height() - y - PADDING) / LINE_HEIGHT;
+        int maxLines = (height() - y - padding) / lineHeight;
         int lineCount = 0;
 
         for (String category : collector.getCategories().toSortedList()) {
@@ -258,18 +263,18 @@ public class Inspector extends Widget {
             var props = collector.getByCategory(category).select(InspectionProperty::isNonDefault);
             if (props.isEmpty()) continue;
 
-            canvas.drawString(category + ":", x, y, CATEGORY, false);
-            y += LINE_HEIGHT;
+            canvas.drawString(category + ":", x, y, categoryColor, false);
+            y += lineHeight;
             lineCount++;
 
             for (var prop : props) {
                 if (lineCount >= maxLines) break;
                 String text = "  " + prop.name() + ": " + prop.value();
-                if (font.width(text) > width() - PADDING * 2) {
-                    text = truncate(text, font, width() - PADDING * 2);
+                if (font.width(text) > width() - padding * 2) {
+                    text = truncate(text, font, width() - padding * 2);
                 }
-                canvas.drawString(text, x, y, VALUE, false);
-                y += LINE_HEIGHT;
+                canvas.drawString(text, x, y, value, false);
+                y += lineHeight;
                 lineCount++;
             }
         }
@@ -278,9 +283,9 @@ public class Inspector extends Widget {
     private void renderFull(SceneCanvas canvas, Widget target, int startY) {
         var collector = InspectionInfoCollector.from(target);
         Font font = Minecraft.getInstance().font;
-        int x = PADDING;
+        int x = padding;
         int y = startY - scrollOffset;
-        int maxY = height() - PADDING - SCROLLBAR_AREA;
+        int maxY = height() - padding - scrollbarArea;
         int minY = startY;
         int totalH = 0;
 
@@ -290,7 +295,7 @@ public class Inspector extends Widget {
             y = endY;
         }
 
-        if (y >= minY && y <= maxY) canvas.line(x, y, x + width() - PADDING * 2, y, 1f, BORDER);
+        if (y >= minY && y <= maxY) canvas.line(x, y, x + width() - padding * 2, y, 1f, border);
         y += 4;
         totalH += 4;
 
@@ -301,24 +306,24 @@ public class Inspector extends Widget {
             if (props.isEmpty()) continue;
 
             if (y >= minY && y <= maxY) {
-                canvas.drawString(category + ":", x + CATEGORY_INDENT, y, CATEGORY, false);
+                canvas.drawString(category + ":", x + categoryIndent, y, categoryColor, false);
             }
-            y += LINE_HEIGHT;
-            totalH += LINE_HEIGHT;
+            y += lineHeight;
+            totalH += lineHeight;
 
             for (var prop : props) {
-                if (y >= minY - LINE_HEIGHT && y <= maxY) {
+                if (y >= minY - lineHeight && y <= maxY) {
                     String label = prop.name() + ": ";
-                    canvas.drawString(label, x + PROPERTY_INDENT, y, TEXT, false);
-                    int valueX = x + PROPERTY_INDENT + font.width(label);
-                    int color = prop.isNonDefault() ? VALUE : DIM;
+                    canvas.drawString(label, x + propertyIndent, y, text, false);
+                    int valueX = x + propertyIndent + font.width(label);
+                    int color = prop.isNonDefault() ? value : dim;
                     String value = prop.value();
-                    int maxW = width() - valueX - PADDING;
+                    int maxW = width() - valueX - padding;
                     if (font.width(value) > maxW) value = truncate(value, font, maxW);
                     canvas.drawString(value, valueX, y, color, false);
                 }
-                y += LINE_HEIGHT;
-                totalH += LINE_HEIGHT;
+                y += lineHeight;
+                totalH += lineHeight;
             }
             y += 2;
             totalH += 2;
@@ -333,7 +338,7 @@ public class Inspector extends Widget {
         List<Widget> ancestors = new ArrayList<>();
         for (Widget w = target; w != null; w = w.parent()) ancestors.addFirst(w);
 
-        int maxX = x + width() - PADDING * 2;
+        int maxX = x + width() - padding * 2;
         List<String> segments = new ArrayList<>(ancestors.size());
         for (Widget w : ancestors) {
             String name = w.inspectionTypeName();
@@ -346,16 +351,16 @@ public class Inspector extends Widget {
             if (cy > maxY) break;
             String segment = segments.get(i);
             boolean last = i == segments.size() - 1;
-            int color = last ? HL_BORDER : DIM;
+            int color = last ? hlBorder : dim;
 
             String text = i == 0 ? segment : "/" + segment;
             int tw = font.width(text);
 
             if (cx + tw > maxX && cx > x) {
-                cy += LINE_HEIGHT;
+                cy += lineHeight;
                 cx = x + 4;
                 if (cy > maxY) {
-                    if (cy >= minY) canvas.drawString("...", cx, cy, DIM, false);
+                    if (cy >= minY) canvas.drawString("...", cx, cy, dim, false);
                     break;
                 }
                 text = segment;
@@ -366,13 +371,13 @@ public class Inspector extends Widget {
             cx += tw;
         }
 
-        return cy + LINE_HEIGHT + 2;
+        return cy + lineHeight + 2;
     }
 
     private void renderScrollbar(SceneCanvas canvas, int top, int bottom, int totalHeight) {
         int barX = width() - 3;
-        int trackTop = top + PADDING;
-        int trackH = bottom - PADDING - trackTop;
+        int trackTop = top + padding;
+        int trackH = bottom - padding - trackTop;
         if (trackH <= 0) return;
 
         canvas.fill(barX, trackTop, 2, trackH, 0x33FFFFFF);
@@ -390,9 +395,9 @@ public class Inspector extends Widget {
         return text.substring(0, end) + "...";
     }
 
-    //endregion
+    // endregion
 
-    //region input
+    // region input
 
     private void registerInputHandlers() {
         events().register(InputEvents.onKeyPressed, (input, context) -> {
@@ -401,13 +406,13 @@ public class Inspector extends Widget {
                 context.consume();
                 return EventDispatch.consumed;
             }
-            return displayMode == DisplayMode.FULL ? handleScrollKey(input, context) : EventDispatch.pass;
+            return displayMode == DisplayMode.full ? handleScrollKey(input, context) : EventDispatch.pass;
         });
 
         events().register(InputEvents.onMouseClicked, (input, context) -> {
             if (input.key().getType() == InputConstants.Type.MOUSE
                     && input.key().getValue() == 0
-                    && input.mouseY() < TITLE_BAR_HEIGHT) {
+                    && input.mouseY() < titleBarHeight) {
                 cycleDisplayMode();
                 context.consume();
                 return EventDispatch.consumed;
@@ -418,10 +423,10 @@ public class Inspector extends Widget {
 
     private EventDispatch handleScrollKey(InputContext input, BubbleContext context) {
         int amount = 0;
-        if (input.isKey(InputConstants.KEY_UP)) amount = -LINE_HEIGHT;
-        else if (input.isKey(InputConstants.KEY_DOWN)) amount = LINE_HEIGHT;
-        else if (input.isKey(InputConstants.KEY_PAGEUP)) amount = -(height() - TITLE_BAR_HEIGHT - PADDING * 2);
-        else if (input.isKey(InputConstants.KEY_PAGEDOWN)) amount = height() - TITLE_BAR_HEIGHT - PADDING * 2;
+        if (input.isKey(InputConstants.KEY_UP)) amount = -lineHeight;
+        else if (input.isKey(InputConstants.KEY_DOWN)) amount = lineHeight;
+        else if (input.isKey(InputConstants.KEY_PAGEUP)) amount = -(height() - titleBarHeight - padding * 2);
+        else if (input.isKey(InputConstants.KEY_PAGEDOWN)) amount = height() - titleBarHeight - padding * 2;
         else if (input.isKey(InputConstants.KEY_HOME)) {
             scrollOffset = 0;
             context.consume();
@@ -443,22 +448,22 @@ public class Inspector extends Widget {
     private void cycleDisplayMode() {
         DisplayMode prev = displayMode;
         displayMode = switch (displayMode) {
-            case MINIMIZED -> DisplayMode.COMPACT;
-            case COMPACT -> DisplayMode.FULL;
-            case FULL -> DisplayMode.MINIMIZED;
+            case minimized -> DisplayMode.compact;
+            case compact -> DisplayMode.full;
+            case full -> DisplayMode.minimized;
         };
         switch (displayMode) {
-            case MINIMIZED -> setSize(width(), TITLE_BAR_HEIGHT + 4);
-            case COMPACT -> setSize(COMPACT_W, COMPACT_H);
-            case FULL -> setSize(FULL_W, FULL_H);
+            case minimized -> setSize(width(), titleBarHeight + 4);
+            case compact -> setSize(compactW, compactH);
+            case full -> setSize(fullW, fullH);
         }
         scrollOffset = 0;
         maxScrollOffset = 0;
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
@@ -472,5 +477,5 @@ public class Inspector extends Widget {
         collector.add("hasTarget", resolveTarget() != null, InspectionProperty.categoryState);
     }
 
-    //endregion
+    // endregion
 }

@@ -44,5 +44,4 @@ interface Differential<D> {
      * @return the difference
      */
     D decodeDifference(RegistryFriendlyByteBuf byteBuf);
-
 }

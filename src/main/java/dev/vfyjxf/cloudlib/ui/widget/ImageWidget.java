@@ -17,14 +17,14 @@ import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.sizeOf;
  */
 public class ImageWidget extends Widget {
 
-    //region state
+    // region state
 
     private VisualTexture texture;
     private boolean preserveAspectRatio = false;
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     public static ImageWidget of(VisualTexture texture) {
         return new ImageWidget(texture);
@@ -45,9 +45,9 @@ public class ImageWidget extends Widget {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region configuration
+    // region configuration
 
     public @Nullable VisualTexture texture() {
         return texture;
@@ -67,18 +67,18 @@ public class ImageWidget extends Widget {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         canvas.texture(texture, 0, 0, width(), height());
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
@@ -90,5 +90,5 @@ public class ImageWidget extends Widget {
         collector.addWithDefault("preserveAspect", preserveAspectRatio, false, InspectionProperty.categoryVisual);
     }
 
-    //endregion
+    // endregion
 }

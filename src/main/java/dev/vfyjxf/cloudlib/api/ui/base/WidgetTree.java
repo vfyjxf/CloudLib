@@ -20,15 +20,14 @@ import java.util.function.Predicate;
  */
 public final class WidgetTree {
 
-    private WidgetTree() {
-    }
+    private WidgetTree() {}
 
     /**
      * Maximum tree depth to prevent stack overflow from cycles.
      */
-    private static final int MAX_DEPTH_GUARD = 1_000_000;
+    private static final int maxDepthGuard = 1_000_000;
 
-    //region visitor & view
+    // region visitor & view
 
     /**
      * Controls the traversal flow during tree walks.
@@ -128,9 +127,9 @@ public final class WidgetTree {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region hit testing
+    // region hit testing
 
     /**
      * Result of a hit test operation.
@@ -192,8 +191,7 @@ public final class WidgetTree {
                 frame.localY = local.y;
 
                 // Check if local coords are within widget bounds
-                if (local.x < 0 || local.x > frame.widget.width()
-                        || local.y < 0 || local.y > frame.widget.height()) {
+                if (local.x < 0 || local.x > frame.widget.width() || local.y < 0 || local.y > frame.widget.height()) {
                     stack.pop();
                     continue;
                 }
@@ -382,8 +380,7 @@ public final class WidgetTree {
                 FloatPos local = frame.widget.viewport.parentToLocal(frame.parentX, frame.parentY);
                 frame.localX = local.x;
                 frame.localY = local.y;
-                if (local.x < 0 || local.x > frame.widget.width()
-                        || local.y < 0 || local.y > frame.widget.height()) {
+                if (local.x < 0 || local.x > frame.widget.width() || local.y < 0 || local.y > frame.widget.height()) {
                     stack.pop();
                     continue;
                 }
@@ -425,9 +422,9 @@ public final class WidgetTree {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region ancestry & path operations
+    // region ancestry & path operations
 
     /**
      * Builds the ancestry path from a widget up to the root.
@@ -439,7 +436,7 @@ public final class WidgetTree {
      */
     public static WidgetPath pathToRoot(Widget start) {
         Objects.requireNonNull(start, "start");
-        return WidgetPath.fromLeafToRoot(start, MAX_DEPTH_GUARD);
+        return WidgetPath.fromLeafToRoot(start, maxDepthGuard);
     }
 
     /**
@@ -477,7 +474,7 @@ public final class WidgetTree {
             }
             current = current.parent();
 
-            if (++guard > MAX_DEPTH_GUARD) {
+            if (++guard > maxDepthGuard) {
                 throw new IllegalStateException("Possible widget parent-cycle detected");
             }
         }
@@ -499,7 +496,7 @@ public final class WidgetTree {
             depth++;
             current = current.parent();
 
-            if (++guard > MAX_DEPTH_GUARD) {
+            if (++guard > maxDepthGuard) {
                 throw new IllegalStateException("Possible widget parent-cycle detected");
             }
         }
@@ -507,9 +504,9 @@ public final class WidgetTree {
         return depth;
     }
 
-    //endregion
+    // endregion
 
-    //region tree traversal
+    // region tree traversal
 
     /**
      * Depth-first pre-order traversal (visit node before children).
@@ -580,7 +577,8 @@ public final class WidgetTree {
      * @param visitor     callback for each visited widget with path
      * @return the final traversal control signal
      */
-    public static TraversalControl walkPreOrderWithPath(Widget root, boolean includeRoot, int maxDepth, PathVisitor visitor) {
+    public static TraversalControl walkPreOrderWithPath(
+            Widget root, boolean includeRoot, int maxDepth, PathVisitor visitor) {
         Objects.requireNonNull(root, "root");
         Objects.requireNonNull(visitor, "visitor");
 
@@ -748,9 +746,9 @@ public final class WidgetTree {
         return TraversalControl.proceed;
     }
 
-    //endregion
+    // endregion
 
-    //region query operations
+    // region query operations
 
     /**
      * Finds the first widget matching a predicate in pre-order.
@@ -761,7 +759,8 @@ public final class WidgetTree {
      * @param predicate   condition to match
      * @return the first matching widget, or null
      */
-    public static @Nullable Widget findFirst(Widget root, boolean includeRoot, int maxDepth, Predicate<? super Widget> predicate) {
+    public static @Nullable Widget findFirst(
+            Widget root, boolean includeRoot, int maxDepth, Predicate<? super Widget> predicate) {
         Objects.requireNonNull(root, "root");
         Objects.requireNonNull(predicate, "predicate");
 
@@ -786,7 +785,8 @@ public final class WidgetTree {
      * @param predicate   condition to match (widget, depth) -&gt; boolean
      * @return the first matching widget, or null
      */
-    public static @Nullable Widget findFirst(Widget root, boolean includeRoot, int maxDepth, BiPredicate<Widget, Integer> predicate) {
+    public static @Nullable Widget findFirst(
+            Widget root, boolean includeRoot, int maxDepth, BiPredicate<Widget, Integer> predicate) {
         Objects.requireNonNull(root, "root");
         Objects.requireNonNull(predicate, "predicate");
 
@@ -813,8 +813,11 @@ public final class WidgetTree {
      * @return number of widgets collected
      */
     public static int collectInto(
-            Widget root, boolean includeRoot, int maxDepth,
-            Predicate<? super Widget> predicate, List<? super Widget> out) {
+            Widget root,
+            boolean includeRoot,
+            int maxDepth,
+            Predicate<? super Widget> predicate,
+            List<? super Widget> out) {
         Objects.requireNonNull(root, "root");
         Objects.requireNonNull(predicate, "predicate");
         Objects.requireNonNull(out, "out");
@@ -840,7 +843,8 @@ public final class WidgetTree {
      * @param predicate   condition to match
      * @return list of matching widgets
      */
-    public static List<Widget> collect(Widget root, boolean includeRoot, int maxDepth, Predicate<? super Widget> predicate) {
+    public static List<Widget> collect(
+            Widget root, boolean includeRoot, int maxDepth, Predicate<? super Widget> predicate) {
         List<Widget> result = new ArrayList<>();
         collectInto(root, includeRoot, maxDepth, predicate, result);
         return result;
@@ -879,9 +883,9 @@ public final class WidgetTree {
         return count(root, includeRoot, -1, w -> true);
     }
 
-    //endregion
+    // endregion
 
-    //region leaf-first traversal
+    // region leaf-first traversal
 
     /**
      * Traverses the widget tree from leaves to root (bottom-up).
@@ -1005,7 +1009,7 @@ public final class WidgetTree {
         return TraversalControl.proceed;
     }
 
-    //endregion
+    // endregion
 
     private record AncestryViewList(List<Widget> ancestry) implements AncestryView {
 

@@ -43,5 +43,4 @@ public record FlexGrowProperty(float grow) implements LayoutProperty {
     public String toString() {
         return String.valueOf(grow);
     }
-
 }

@@ -17,10 +17,4 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.Projection;
  * @param naturalSize  the panel's natural content size in gui pixels
  */
 public record FlattenContext<P extends Presentation>(
-        P presentation,
-        InworldPanel panel,
-        Projection projection,
-        FloatPos anchorScreen,
-        Size naturalSize
-) {
-}
+        P presentation, InworldPanel panel, Projection projection, FloatPos anchorScreen, Size naturalSize) {}

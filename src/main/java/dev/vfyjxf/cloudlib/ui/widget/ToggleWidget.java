@@ -16,22 +16,22 @@ import java.util.function.Consumer;
  */
 public class ToggleWidget extends Widget {
 
-    //region state
+    // region state
 
     private boolean toggled = false;
     private @Nullable Consumer<Boolean> onToggle;
 
-    //endregion
+    // endregion
 
-    //region textures
+    // region textures
 
     private VisualTexture offTexture = new ColorTexture(0xFF666666);
     private VisualTexture onTexture = new ColorTexture(0xFF00AA00);
     private @Nullable VisualTexture hoverTexture = null;
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     public static ToggleWidget create() {
         return new ToggleWidget();
@@ -48,9 +48,9 @@ public class ToggleWidget extends Widget {
         });
     }
 
-    //endregion
+    // endregion
 
-    //region configuration
+    // region configuration
 
     public boolean toggled() {
         return toggled;
@@ -91,9 +91,9 @@ public class ToggleWidget extends Widget {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
@@ -109,9 +109,9 @@ public class ToggleWidget extends Widget {
         canvas.texture(texture, 0, 0, width(), height());
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
@@ -119,5 +119,5 @@ public class ToggleWidget extends Widget {
         collector.addWithDefault("toggled", toggled, false, InspectionProperty.categoryState);
     }
 
-    //endregion
+    // endregion
 }

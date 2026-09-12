@@ -7,8 +7,8 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.Presentation;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Predicate;
@@ -45,13 +45,12 @@ public record SharedPanelSpec(
         double maxDistance,
         @Nullable ServerPanelMessageHandler channel,
         Predicate<ServerPlayer> visibleTo,
-        Predicate<ServerPlayer> canInteract
-) {
+        Predicate<ServerPlayer> canInteract) {
 
-    private static final Predicate<ServerPlayer> ANY = p -> true;
+    private static final Predicate<ServerPlayer> any = p -> true;
 
     public SharedPanelSpec(PanelKey key, ResourceKey<Level> dimension, InworldAnchor anchor, ResourceLocation view) {
-        this(key, dimension, anchor, view, null, Presentation.floating(), 32, null, ANY, ANY);
+        this(key, dimension, anchor, view, null, Presentation.floating(), 32, null, any, any);
     }
 
     /** Attaches the client → server receive handler. */
@@ -87,11 +86,8 @@ public record SharedPanelSpec(
             double maxDistance,
             @Nullable ServerPanelMessageHandler channel,
             Predicate<ServerPlayer> visibleTo,
-            Predicate<ServerPlayer> canInteract
-    ) {
+            Predicate<ServerPlayer> canInteract) {
         return new SharedPanelSpec(
-                key, dimension, anchor, view, payload, presentation, maxDistance,
-                channel, visibleTo, canInteract);
+                key, dimension, anchor, view, payload, presentation, maxDistance, channel, visibleTo, canInteract);
     }
-
 }

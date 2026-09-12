@@ -13,7 +13,7 @@ import java.util.Comparator;
 
 public class CompositeWidget<T extends Widget> extends Widget {
 
-    //region child
+    // region child
 
     final MutableList<T> children = MutableLists.empty();
     protected final MutableList<T> childrenView = children.asUnmodifiable();
@@ -29,9 +29,9 @@ public class CompositeWidget<T extends Widget> extends Widget {
      */
     boolean childrenOrderDirty = true;
 
-    //endregion
+    // endregion
 
-    //region composite extra
+    // region composite extra
 
     @MustBeInvokedByOverriders
     public void tick() {
@@ -48,9 +48,9 @@ public class CompositeWidget<T extends Widget> extends Widget {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region lifecycle
+    // region lifecycle
 
     @Override
     void init() {
@@ -72,9 +72,9 @@ public class CompositeWidget<T extends Widget> extends Widget {
         super.destroy();
     }
 
-    //endregion
+    // endregion
 
-    //region group basic
+    // region group basic
 
     public @Unmodifiable MutableList<T> children() {
         return childrenView;
@@ -105,8 +105,7 @@ public class CompositeWidget<T extends Widget> extends Widget {
     }
 
     protected final boolean add(int index, T widget) {
-        if (widget == this)
-            throw new IllegalArgumentException("Cannot addGroup a widget to itself");
+        if (widget == this) throw new IllegalArgumentException("Cannot addGroup a widget to itself");
         if (!children.contains(widget)) {
             var context = common();
             listeners(WidgetEvent.onChildAdded).onChildAdded(widget, context);
@@ -121,7 +120,8 @@ public class CompositeWidget<T extends Widget> extends Widget {
                         scene.remountWidget(widget);
                     }
                     default ->
-                            throw new IllegalArgumentException("Illegal lifecycle: " + widget.lifecycle + " for widget: " + widget);
+                        throw new IllegalArgumentException(
+                                "Illegal lifecycle: " + widget.lifecycle + " for widget: " + widget);
                 }
                 scene.invalidatePathCache();
             }
@@ -219,7 +219,6 @@ public class CompositeWidget<T extends Widget> extends Widget {
         return renderOrderChildren;
     }
 
-
     protected static <T extends Widget> boolean needsZIndexSorting(MutableList<T> children) {
         if (children.size() <= 1) return false;
         for (T child : children) {
@@ -276,9 +275,9 @@ public class CompositeWidget<T extends Widget> extends Widget {
         canvas.renderChildren(renderOrderChildren(), mouseX, mouseY, partialTicks);
     }
 
-    //endregion
+    // endregion
 
-    //region debug
+    // region debug
 
     @Override
     @MustBeInvokedByOverriders
@@ -287,6 +286,6 @@ public class CompositeWidget<T extends Widget> extends Widget {
         collector.add("childCount", children.size(), InspectionProperty.categoryBasic);
     }
 
-    //endregion
+    // endregion
 
 }

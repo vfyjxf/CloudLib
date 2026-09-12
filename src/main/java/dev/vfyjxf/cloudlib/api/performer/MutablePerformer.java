@@ -16,5 +16,4 @@ public interface MutablePerformer<T> extends Performer<T> {
     void put(T performer);
 
     void remove(@NotNull T performer);
-
 }

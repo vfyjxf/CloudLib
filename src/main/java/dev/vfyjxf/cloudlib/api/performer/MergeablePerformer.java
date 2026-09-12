@@ -31,7 +31,7 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
 
     @Override
     public void put(T performer) {
-        put(performer, PerformerPriorities.DEFAULT);
+        put(performer, PerformerPriorities.normal);
     }
 
     @Override
@@ -42,7 +42,7 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
     }
 
     public void putWeak(Object key, T performer) {
-        putWeak(key, performer, PerformerPriorities.DEFAULT);
+        putWeak(key, performer, PerformerPriorities.normal);
     }
 
     public void put(T performer, int priority) {
@@ -87,7 +87,8 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
         return cleaned;
     }
 
-    protected static abstract sealed class PerformerEntry<T> implements Comparable<PerformerEntry<T>> permits DirectPerformerEntry, WeakReferencePerformerEntry {
+    protected abstract static sealed class PerformerEntry<T> implements Comparable<PerformerEntry<T>>
+            permits DirectPerformerEntry, WeakReferencePerformerEntry {
         private final int priority;
 
         protected PerformerEntry(int priority) {
@@ -109,7 +110,6 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
             super(priority);
             this.performer = performer;
         }
-
 
         @Override
         public T performer() {

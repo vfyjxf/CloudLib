@@ -5,9 +5,9 @@ import dev.vfyjxf.cloudlib.api.ui.base.Scene;
 import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.ScopedReceiver;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
+import dev.vfyjxf.cloudlib.api.ui.texture.ImageTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import dev.vfyjxf.cloudlib.ui.widget.ImageWidget;
-import dev.vfyjxf.cloudlib.api.ui.texture.ImageTexture;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,31 +25,29 @@ public final class ImageBlueprint implements Blueprint<ImageWidget> {
     private @Nullable VisualTexture texture;
     private boolean preserveAspectRatio = false;
     private @Nullable Object key;
-    private UIStyle style = UIStyle.EMPTY;
+    private UIStyle style = UIStyle.empty;
 
     private ImageBlueprint(@Nullable VisualTexture texture) {
         this.texture = texture;
     }
 
-    //region dsl entry points
+    // region dsl entry points
 
     public static ImageBlueprint Image(VisualTexture texture) {
         return ScopedReceiver.add(new ImageBlueprint(texture));
     }
 
     public static ImageBlueprint Image(ResourceLocation location, int width, int height) {
-        return ScopedReceiver.add(new ImageBlueprint(
-                new ImageTexture(location, width, height)
-        ));
+        return ScopedReceiver.add(new ImageBlueprint(new ImageTexture(location, width, height)));
     }
 
     public static ImageBlueprint EmptyImage() {
         return ScopedReceiver.add(new ImageBlueprint(null));
     }
 
-    //endregion
+    // endregion
 
-    //region builder methods
+    // region builder methods
 
     public ImageBlueprint texture(VisualTexture texture) {
         this.texture = texture;
@@ -71,9 +69,9 @@ public final class ImageBlueprint implements Blueprint<ImageWidget> {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region blueprint implementation
+    // region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -87,10 +85,8 @@ public final class ImageBlueprint implements Blueprint<ImageWidget> {
 
     @Override
     public void updateWidget(ImageWidget widget, Scene scene, SceneContext context) {
-        widget.setTexture(texture)
-              .setPreserveAspectRatio(preserveAspectRatio)
-              .useStyle(style);
+        widget.setTexture(texture).setPreserveAspectRatio(preserveAspectRatio).useStyle(style);
     }
 
-    //endregion
+    // endregion
 }

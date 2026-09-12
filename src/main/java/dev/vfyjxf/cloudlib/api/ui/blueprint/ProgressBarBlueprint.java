@@ -18,24 +18,24 @@ import java.util.function.DoubleSupplier;
  * Usage:
  * <pre>{@code
  * ProgressBar(() -> 0.5)
- * ProgressBar(() -> progress).direction(Direction.LEFT_TO_RIGHT)
+ * ProgressBar(() -> progress).direction(Direction.leftToRight)
  * ProgressBar(0.75).colors(0xFF333333, 0xFF00AA00)
  * }</pre>
  */
 public final class ProgressBarBlueprint implements Blueprint<ProgressBarWidget> {
 
     private DoubleSupplier progressSupplier;
-    private ProgressBarWidget.Direction direction = ProgressBarWidget.Direction.LEFT_TO_RIGHT;
+    private ProgressBarWidget.Direction direction = ProgressBarWidget.Direction.leftToRight;
     private VisualTexture backgroundTexture = new ColorTexture(0xFF333333);
     private VisualTexture fillTexture = new ColorTexture(0xFF00AA00);
     private @Nullable Object key;
-    private UIStyle style = UIStyle.EMPTY;
+    private UIStyle style = UIStyle.empty;
 
     private ProgressBarBlueprint(DoubleSupplier progressSupplier) {
         this.progressSupplier = progressSupplier;
     }
 
-    //region dsl entry points
+    // region dsl entry points
 
     public static ProgressBarBlueprint ProgressBar(DoubleSupplier progressSupplier) {
         return ScopedReceiver.add(new ProgressBarBlueprint(progressSupplier));
@@ -45,9 +45,9 @@ public final class ProgressBarBlueprint implements Blueprint<ProgressBarWidget> 
         return ScopedReceiver.add(new ProgressBarBlueprint(() -> progress));
     }
 
-    //endregion
+    // endregion
 
-    //region builder methods
+    // region builder methods
 
     public ProgressBarBlueprint progress(DoubleSupplier supplier) {
         this.progressSupplier = supplier;
@@ -81,9 +81,9 @@ public final class ProgressBarBlueprint implements Blueprint<ProgressBarWidget> 
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region blueprint implementation
+    // region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -98,11 +98,11 @@ public final class ProgressBarBlueprint implements Blueprint<ProgressBarWidget> 
     @Override
     public void updateWidget(ProgressBarWidget widget, Scene scene, SceneContext context) {
         widget.setProgressSupplier(progressSupplier)
-              .setDirection(direction)
-              .setBackgroundTexture(backgroundTexture)
-              .setFillTexture(fillTexture)
-              .useStyle(style);
+                .setDirection(direction)
+                .setBackgroundTexture(backgroundTexture)
+                .setFillTexture(fillTexture)
+                .useStyle(style);
     }
 
-    //endregion
+    // endregion
 }

@@ -10,12 +10,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.StringUtil;
 import net.neoforged.neoforge.client.event.InputEvent;
 
-public record InputContext(
-        InputConstants.Key key,
-        double mouseX, double mouseY,
-        int modifiers,
-        KeyAction action
-) {
+public record InputContext(InputConstants.Key key, double mouseX, double mouseY, int modifiers, KeyAction action) {
 
     public static InputContext fromEvent(InputEvent.Key event) {
         var key = InputConstants.getKey(event.getKey(), event.getScanCode());
@@ -37,7 +32,8 @@ public record InputContext(
         return new InputContext(InputConstants.Type.MOUSE.getOrCreate(button), x, y, 0, false);
     }
 
-    public static InputContext fromKeyboard(int keyCode, int scanCode, int modifiers, double mouseX, double mouseY, boolean isReleased) {
+    public static InputContext fromKeyboard(
+            int keyCode, int scanCode, int modifiers, double mouseX, double mouseY, boolean isReleased) {
         return new InputContext(InputConstants.getKey(keyCode, scanCode), mouseX, mouseY, modifiers, isReleased);
     }
 
@@ -45,12 +41,7 @@ public record InputContext(
         return new InputContext(InputConstants.getKey(keyCode, scanCode), mouseX, mouseY, modifiers, false);
     }
 
-    public InputContext(
-            InputConstants.Key key,
-            double mouseX, double mouseY,
-            int modifiers,
-            boolean isReleased
-    ) {
+    public InputContext(InputConstants.Key key, double mouseX, double mouseY, int modifiers, boolean isReleased) {
         this(key, mouseX, mouseY, modifiers, isReleased ? KeyAction.release : KeyAction.press);
     }
 

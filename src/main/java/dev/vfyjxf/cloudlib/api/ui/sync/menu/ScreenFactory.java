@@ -9,5 +9,4 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 public interface ScreenFactory<M extends AbstractContainerMenu, S extends Screen & MenuAccess<M>> {
 
     S createScreen(M menu, Inventory inventory);
-
 }

@@ -18,14 +18,10 @@ import java.util.function.Consumer;
 public record MenuDataReversedPacket(int containerId, byte[] syncData) implements ServerboundPayload {
 
     public static final ServerPayloadInfo<MenuDataReversedPacket> info = CloudlibPayloads.createServerInfo(
-            StreamCodec.ofMember(
-                    MenuDataReversedPacket::encode,
-                    MenuDataReversedPacket::decode
-            ),
-            "menu_sync_reversed"
-    );
+            StreamCodec.ofMember(MenuDataReversedPacket::encode, MenuDataReversedPacket::decode), "menu_sync_reversed");
 
-    public MenuDataReversedPacket(int containerId, Consumer<RegistryFriendlyByteBuf> writer, RegistryAccess registryAccess) {
+    public MenuDataReversedPacket(
+            int containerId, Consumer<RegistryFriendlyByteBuf> writer, RegistryAccess registryAccess) {
         this(containerId, writeData(writer, registryAccess));
     }
 
@@ -54,11 +50,14 @@ public record MenuDataReversedPacket(int containerId, byte[] syncData) implement
     @Override
     public void handle(IPayloadContext context, ServerPlayer player) {
         if (player.containerMenu instanceof BasicMenu<?> menu && menu.containerId == containerId) {
-            var buffer = new RegistryFriendlyByteBuf(Unpooled.wrappedBuffer(syncData), player.registryAccess(), ConnectionType.OTHER);
+            var buffer = new RegistryFriendlyByteBuf(
+                    Unpooled.wrappedBuffer(syncData), player.registryAccess(), ConnectionType.OTHER);
             menu.receiveFromClient(buffer);
         } else {
-            CloudlibPayloads.log.warn("Received menu data reversed packet for non-matching menu: {} != {}", containerId, player.containerMenu.containerId);
+            CloudlibPayloads.log.warn(
+                    "Received menu data reversed packet for non-matching menu: {} != {}",
+                    containerId,
+                    player.containerMenu.containerId);
         }
     }
-
 }

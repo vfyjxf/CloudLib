@@ -14,8 +14,7 @@ final class StandardExpose<T> extends BasicDownstreamExpose<T> implements Transc
             Snapshot<T> snapshot,
             ValueSupplier<T> valueSupplier,
             FlowEncoder<T> encoder,
-            FlowDecoder<T> decoder
-    ) {
+            FlowDecoder<T> decoder) {
         super(name, id, snapshot, valueSupplier, encoder, decoder);
     }
 }

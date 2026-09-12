@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld;
 
 import dev.vfyjxf.cloudlib.api.network.expose.ExposeManagement;
+import dev.vfyjxf.cloudlib.blockentity.BlockEntitySync;
 import dev.vfyjxf.cloudlib.blockentity.SyncedBlockEntity;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -19,11 +20,7 @@ import org.jetbrains.annotations.Nullable;
  * {@code Handle}.
  */
 public record InworldPanelContext(
-        ClientLevel level,
-        LocalPlayer player,
-        InworldPanel panel,
-        @Nullable PanelChannel channel
-) {
+        ClientLevel level, LocalPlayer player, InworldPanel panel, @Nullable PanelChannel channel) {
 
     public InworldPanelContext(ClientLevel level, LocalPlayer player, InworldPanel panel) {
         this(level, player, panel, null);
@@ -43,7 +40,7 @@ public record InworldPanelContext(
      * The block entity's live sync channel when it implements
      * {@link SyncedBlockEntity}, else null.
      */
-    public @Nullable dev.vfyjxf.cloudlib.blockentity.BlockEntitySync sync() {
+    public @Nullable BlockEntitySync sync() {
         return blockEntity() instanceof SyncedBlockEntity synced ? synced.sync() : null;
     }
 }

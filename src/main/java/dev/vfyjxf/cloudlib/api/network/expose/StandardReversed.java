@@ -20,13 +20,10 @@ sealed class StandardReversed<S, R> extends BasicExpose<Void> implements Reverse
     private final FlowDecoder<R> reversedDecoder;
     private Maybe<S> reversedData = Maybe.empty();
 
-    StandardReversed(
-            String name,
-            short id,
-            FlowEncoder<S> reversedEncoder,
-            FlowDecoder<R> reversedDecoder
-    ) {
-        super(name, id,
+    StandardReversed(String name, short id, FlowEncoder<S> reversedEncoder, FlowDecoder<R> reversedDecoder) {
+        super(
+                name,
+                id,
                 Snapshot.noneOf(),
                 () -> {
                     throw new UnsupportedOperationException("StandardReversed doesn't bound to a value");
@@ -36,8 +33,7 @@ sealed class StandardReversed<S, R> extends BasicExpose<Void> implements Reverse
                 },
                 (byteBuf -> {
                     throw new UnsupportedOperationException("StandardReversed can't receive data from server");
-                })
-        );
+                }));
         this.reversedEncoder = reversedEncoder;
         this.reversedDecoder = reversedDecoder;
     }
@@ -50,7 +46,8 @@ sealed class StandardReversed<S, R> extends BasicExpose<Void> implements Reverse
     @Override
     public void sendToServer(S toSend) {
         if (reversedData.defined()) {
-            throw new IllegalStateException("There is already a value going to send,data shouldn't be updated at tick end.");
+            throw new IllegalStateException(
+                    "There is already a value going to send,data shouldn't be updated at tick end.");
         }
         this.reversedData = Maybe.of(toSend);
     }

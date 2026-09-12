@@ -44,5 +44,4 @@ public record DisplayProperty(TaffyDisplay display) implements LayoutProperty {
     public String toString() {
         return display.toString();
     }
-
 }

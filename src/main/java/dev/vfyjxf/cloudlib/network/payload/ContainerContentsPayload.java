@@ -5,7 +5,6 @@ import dev.vfyjxf.cloudlib.api.network.payload.ClientboundPayload;
 import dev.vfyjxf.cloudlib.network.CloudlibPayloads;
 import dev.vfyjxf.cloudlib.ui.sync.ContainerContents;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -21,16 +20,16 @@ import java.util.List;
  * {@link ContainerContents}; grid widgets render the latest snapshot and
  * re-query on a slow poll while their panel is up.
  */
-public record ContainerContentsPayload(BlockPos pos, List<ItemStack> stacks)
-        implements ClientboundPayload {
+public record ContainerContentsPayload(BlockPos pos, List<ItemStack> stacks) implements ClientboundPayload {
 
     public static final ClientPayloadInfo<ContainerContentsPayload> info = CloudlibPayloads.createClientInfo(
             StreamCodec.composite(
-                    BlockPos.STREAM_CODEC, ContainerContentsPayload::pos,
-                    ItemStack.OPTIONAL_STREAM_CODEC.apply(ByteBufCodecs.list(512)), ContainerContentsPayload::stacks,
+                    BlockPos.STREAM_CODEC,
+                    ContainerContentsPayload::pos,
+                    ItemStack.OPTIONAL_STREAM_CODEC.apply(ByteBufCodecs.list(512)),
+                    ContainerContentsPayload::stacks,
                     ContainerContentsPayload::new),
-            "container_contents"
-    );
+            "container_contents");
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

@@ -10,19 +10,18 @@ public enum OcclusionClass {
      * block is simply not visible. UI chrome still follows the avoidance /
      * folding rules.
      */
-    OCCLUDED_BY_WORLD,
+    occludedByWorld,
 
     /**
      * World geometry may not occlude the panel — it renders through terrain —
      * but other UI chrome may still cover it (subject to
      * {@link LayoutHint#occlusionTolerance}).
      */
-    OCCLUDED_BY_UI_ONLY,
+    occludedByUiOnly,
 
     /**
      * Nothing covers the panel: it renders on top of world geometry and all
      * other UI chrome. Reserved for markers that must stay visible.
      */
-    ALWAYS_ON_TOP,
-
+    alwaysOnTop,
 }

@@ -16,35 +16,15 @@ import java.util.function.Consumer;
  * @param <S> the type of the value to send to the server
  * @param <R> the type of the value received at the server
  */
-public sealed interface ReversedOnly<S, R>
-        extends Reversed<S, R>
-        permits StandardReversed, UnaryReversed {
+public sealed interface ReversedOnly<S, R> extends Reversed<S, R> permits StandardReversed, UnaryReversed {
 
     static <S, R> ReversedOnly<S, R> create(
-            String name,
-            short id,
-            FlowEncoder<S> reversedEncoder,
-            FlowDecoder<R> reversedDecoder
-    ) {
-        return new StandardReversed<>(
-                name,
-                id,
-                reversedEncoder,
-                reversedDecoder
-        );
+            String name, short id, FlowEncoder<S> reversedEncoder, FlowDecoder<R> reversedDecoder) {
+        return new StandardReversed<>(name, id, reversedEncoder, reversedDecoder);
     }
 
-    static <S, R> ReversedOnly<S, R> create(
-            String name,
-            short id,
-            FlowHandler<S, R> reverseCodec
-    ) {
-        return new StandardReversed<>(
-                name,
-                id,
-                reverseCodec,
-                reverseCodec
-        );
+    static <S, R> ReversedOnly<S, R> create(String name, short id, FlowHandler<S, R> reverseCodec) {
+        return new StandardReversed<>(name, id, reverseCodec, reverseCodec);
     }
 
     @Override

@@ -23,10 +23,7 @@ import java.util.function.Supplier;
  * @see DataContainer
  * @see DataAttachable
  */
-public record DataKey<T>(
-        Namespace id,
-        @Nullable Function<@Nullable DataAttachable, T> defaultValueFunction
-) {
+public record DataKey<T>(Namespace id, @Nullable Function<@Nullable DataAttachable, T> defaultValueFunction) {
 
     /**
      * Creates a simple key with no default value.

@@ -14,9 +14,9 @@ import java.util.List;
  * <ul>
  *   <li>One {@link Item} per panel, in stable offer order — output order never
  *       changes, so slots don't churn frame to frame.</li>
- *   <li>{@link Presentation.DockCorner#AUTO} resolves to the quadrant the
+ *   <li>{@link Presentation.DockCorner#auto} resolves to the quadrant the
  *       anchor projects into, with a deadband around the screen centre lines:
- *       an anchor has to push {@value #CORNER_DEADBAND}px past centre before the
+ *       an anchor has to push {@value #cornerDeadband}px past centre before the
  *       panel flips sides.</li>
  *   <li>Each screen <em>side</em> (left/right) is one shared vertical budget
  *       {@code H − 2·margin} — top and bottom columns grow toward each other
@@ -28,38 +28,46 @@ import java.util.List;
  */
 final class DockLayout {
 
-    /** Centre-line deadband for AUTO corner flips (gui px). */
-    static final int CORNER_DEADBAND = 72;
-    static final int MARGIN_X = 8;
-    static final int MARGIN_Y = 8;
-    static final int GAP = 6;
+    /** Centre-line deadband for auto corner flips (gui px). */
+    static final int cornerDeadband = 72;
 
-    private DockLayout() {
-    }
+    static final int marginX = 8;
+    static final int marginY = 8;
+    static final int gap = 6;
+
+    private DockLayout() {}
 
     /** One docked panel: inputs on construction, outputs written by {@link #solve}. */
     static final class Item {
-        /** Requested corner (may be AUTO) — resolved corner written back to {@link #resolved}. */
+        /** Requested corner (may be auto) — resolved corner written back to {@link #resolved}. */
         final Presentation.DockCorner corner;
+
         final int w;
         final int h;
         /** Folded height (chrome strip only) used when the column runs out of room. */
         final int foldH;
         /** Anchor's projected screen position, {@link Double#NaN} when off-screen. */
         final double anchorX;
+
         final double anchorY;
-        /** The corner this panel sat in last frame — AUTO hysteresis input. */
+        /** The corner this panel sat in last frame — auto hysteresis input. */
         final @Nullable Presentation.DockCorner prevCorner;
 
-        //outputs
+        // outputs
         Presentation.DockCorner resolved;
         int x;
         int y;
         boolean folded;
         boolean hidden;
 
-        Item(Presentation.DockCorner corner, int w, int h, int foldH,
-             double anchorX, double anchorY, @Nullable Presentation.DockCorner prevCorner) {
+        Item(
+                Presentation.DockCorner corner,
+                int w,
+                int h,
+                int foldH,
+                double anchorX,
+                double anchorY,
+                @Nullable Presentation.DockCorner prevCorner) {
             this.corner = corner;
             this.w = w;
             this.h = h;
@@ -74,7 +82,7 @@ final class DockLayout {
     static final class Result {
         /** per-corner count of panels hidden because even folded they didn't fit */
         final int[] overflow = new int[Presentation.DockCorner.values().length];
-        /** bottom edge of the TOP_LEFT/TOP_RIGHT stacks — rail starts hang below them */
+        /** bottom edge of the topLeft/topRight stacks — rail starts hang below them */
         final int[] topExtent = new int[2];
         /** per-corner final stack extent — where the overflow chip hangs */
         final int[] cursorEnd = new int[Presentation.DockCorner.values().length];
@@ -84,11 +92,11 @@ final class DockLayout {
         Result out = new Result();
         int[] cursors = new int[Presentation.DockCorner.values().length];
         int[] sideUsed = new int[2];
-        int budget = H - MARGIN_Y * 2;
+        int budget = H - marginY * 2;
 
         for (Item item : items) {
             Presentation.DockCorner corner = item.corner;
-            if (corner == Presentation.DockCorner.AUTO) {
+            if (corner == Presentation.DockCorner.auto) {
                 corner = autoCorner(item.anchorX, item.anchorY, W, H, item.prevCorner);
             }
             item.resolved = corner;
@@ -97,20 +105,20 @@ final class DockLayout {
             int h = item.h;
 
             item.folded = false;
-            if (sideUsed[side] + h + GAP > budget) {
-                //the home column is full — an empty column on the other side
-                //beats a folded strip: cross over at full size first, fold at
-                //home next, fold across after that, overflow only when even a
-                //folded strip fits nowhere
+            if (sideUsed[side] + h + gap > budget) {
+                // the home column is full — an empty column on the other side
+                // beats a folded strip: cross over at full size first, fold at
+                // home next, fold across after that, overflow only when even a
+                // folded strip fits nowhere
                 int other = side ^ 1;
-                if (sideUsed[other] + h + GAP <= budget) {
+                if (sideUsed[other] + h + gap <= budget) {
                     corner = flipSide(corner);
                     item.resolved = corner;
                     side = other;
-                } else if (sideUsed[side] + item.foldH + GAP <= budget) {
+                } else if (sideUsed[side] + item.foldH + gap <= budget) {
                     item.folded = true;
                     h = item.foldH;
-                } else if (sideUsed[other] + item.foldH + GAP <= budget) {
+                } else if (sideUsed[other] + item.foldH + gap <= budget) {
                     corner = flipSide(corner);
                     item.resolved = corner;
                     side = other;
@@ -125,18 +133,18 @@ final class DockLayout {
 
             int slot = cursors[corner.ordinal()];
             item.x = switch (corner) {
-                case TOP_LEFT, BOTTOM_LEFT -> MARGIN_X;
-                default -> W - MARGIN_X - item.w;
+                case topLeft, bottomLeft -> marginX;
+                default -> W - marginX - item.w;
             };
-            //a panel wider than the screen still pins its left edge inside
-            //the viewport rather than leaking off the side
+            // a panel wider than the screen still pins its left edge inside
+            // the viewport rather than leaking off the side
             item.x = Math.max(2, Math.min(item.x, W - item.w - 2));
-            item.y = top ? MARGIN_Y + slot : H - MARGIN_Y - h - slot;
-            cursors[corner.ordinal()] = slot + h + GAP;
-            sideUsed[side] += h + GAP;
-            if (corner == Presentation.DockCorner.TOP_LEFT) {
+            item.y = top ? marginY + slot : H - marginY - h - slot;
+            cursors[corner.ordinal()] = slot + h + gap;
+            sideUsed[side] += h + gap;
+            if (corner == Presentation.DockCorner.topLeft) {
                 out.topExtent[0] = Math.max(out.topExtent[0], item.y + h);
-            } else if (corner == Presentation.DockCorner.TOP_RIGHT) {
+            } else if (corner == Presentation.DockCorner.topRight) {
                 out.topExtent[1] = Math.max(out.topExtent[1], item.y + h);
             }
         }
@@ -145,45 +153,43 @@ final class DockLayout {
     }
 
     /**
-     * AUTO-corner pick with hysteresis: the anchor has to push a deadband past
+     * auto-corner pick with hysteresis: the anchor has to push a deadband past
      * the screen's centre lines before the panel switches sides, so crossing
      * the centre doesn't slam the panel to the opposite corner.
      */
     static Presentation.DockCorner autoCorner(
-            double anchorX, double anchorY, int W, int H,
-            @Nullable Presentation.DockCorner prev) {
+            double anchorX, double anchorY, int W, int H, @Nullable Presentation.DockCorner prev) {
         boolean left, top;
         boolean known = !Double.isNaN(anchorX) && !Double.isNaN(anchorY);
         if (!known || prev == null) {
             left = !known || anchorX < W * 0.5;
             top = !known || anchorY < H * 0.5;
         } else {
-            int db = CORNER_DEADBAND;
+            int db = cornerDeadband;
             left = anchorX < W * 0.5 + (isLeft(prev) ? db : -db);
             top = anchorY < H * 0.5 + (isTop(prev) ? db : -db);
         }
         return top
-                ? (left ? Presentation.DockCorner.TOP_LEFT : Presentation.DockCorner.TOP_RIGHT)
-                : (left ? Presentation.DockCorner.BOTTOM_LEFT : Presentation.DockCorner.BOTTOM_RIGHT);
+                ? (left ? Presentation.DockCorner.topLeft : Presentation.DockCorner.topRight)
+                : (left ? Presentation.DockCorner.bottomLeft : Presentation.DockCorner.bottomRight);
     }
 
     /** Mirror to the same top/bottom slot on the opposite screen side. */
     static Presentation.DockCorner flipSide(Presentation.DockCorner c) {
         return switch (c) {
-            case TOP_LEFT -> Presentation.DockCorner.TOP_RIGHT;
-            case TOP_RIGHT -> Presentation.DockCorner.TOP_LEFT;
-            case BOTTOM_LEFT -> Presentation.DockCorner.BOTTOM_RIGHT;
-            case BOTTOM_RIGHT -> Presentation.DockCorner.BOTTOM_LEFT;
-            case AUTO -> Presentation.DockCorner.AUTO; //unreachable — resolved before packing
+            case topLeft -> Presentation.DockCorner.topRight;
+            case topRight -> Presentation.DockCorner.topLeft;
+            case bottomLeft -> Presentation.DockCorner.bottomRight;
+            case bottomRight -> Presentation.DockCorner.bottomLeft;
+            case auto -> Presentation.DockCorner.auto; // unreachable — resolved before packing
         };
     }
 
     static boolean isLeft(Presentation.DockCorner c) {
-        return c == Presentation.DockCorner.TOP_LEFT || c == Presentation.DockCorner.BOTTOM_LEFT;
+        return c == Presentation.DockCorner.topLeft || c == Presentation.DockCorner.bottomLeft;
     }
 
     static boolean isTop(Presentation.DockCorner c) {
-        return c == Presentation.DockCorner.TOP_LEFT || c == Presentation.DockCorner.TOP_RIGHT;
+        return c == Presentation.DockCorner.topLeft || c == Presentation.DockCorner.topRight;
     }
-
 }

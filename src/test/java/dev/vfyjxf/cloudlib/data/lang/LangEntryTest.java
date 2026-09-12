@@ -28,5 +28,4 @@ class LangEntryTest {
         assertEquals("cloudlib.ui.test.parent.desc", child.key());
         assertSame(entry, entry.suffix(" "));
     }
-
 }

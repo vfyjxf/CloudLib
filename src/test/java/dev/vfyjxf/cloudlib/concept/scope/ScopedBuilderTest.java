@@ -33,9 +33,7 @@ public class ScopedBuilderTest {
         }
         Assertions.assertThrows(IllegalStateException.class, Scope::current);
     }
-
 }
-
 
 sealed interface Scope extends AutoCloseable {
 

@@ -9,5 +9,4 @@ package dev.vfyjxf.cloudlib.api.ui.inworld;
  * "any open screen" as "the player is in a menu" should special-case this
  * marker.
  */
-public interface InworldOverlayScreen {
-}
+public interface InworldOverlayScreen {}

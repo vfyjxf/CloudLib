@@ -16,38 +16,38 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class PresenceTracker {
 
-    private static final Map<UUID, List<PresenceReportPayload.Entry>> REPORTS = new ConcurrentHashMap<>();
+    private static final Map<UUID, List<PresenceReportPayload.Entry>> reports = new ConcurrentHashMap<>();
 
-    private PresenceTracker() {
-    }
+    private PresenceTracker() {}
 
     /** Records a player's latest report (empty list = fully disengaged). */
     public static void report(ServerPlayer player, List<PresenceReportPayload.Entry> entries) {
         if (entries.isEmpty()) {
-            REPORTS.remove(player.getUUID());
+            reports.remove(player.getUUID());
         } else {
-            REPORTS.put(player.getUUID(), entries);
+            reports.put(player.getUUID(), entries);
         }
     }
 
     /** Drops a player's presence on disconnect and notifies the dimension. */
     public static void remove(MinecraftServer server, ServerPlayer player) {
-        if (REPORTS.remove(player.getUUID()) != null) {
+        if (reports.remove(player.getUUID()) != null) {
             PacketDistributor.sendToPlayersInDimension(
                     player.serverLevel(),
-                    new PresenceBroadcastPayload(player.getUUID(), List.of(), player.level().getGameTime()));
+                    new PresenceBroadcastPayload(
+                            player.getUUID(), List.of(), player.level().getGameTime()));
         }
     }
 
     /** Join sync: sends the joining player every live report in its dimension. */
     public static void syncTo(MinecraftServer server, ServerPlayer joining) {
         long now = joining.level().getGameTime();
-        for (var entry : REPORTS.entrySet()) {
+        for (var entry : reports.entrySet()) {
             if (entry.getKey().equals(joining.getUUID()) || entry.getValue().isEmpty()) continue;
             ServerPlayer source = server.getPlayerList().getPlayer(entry.getKey());
             if (source == null || source.level() != joining.level()) continue;
-            PacketDistributor.sendToPlayer(joining,
-                    new PresenceBroadcastPayload(entry.getKey(), entry.getValue(), now));
+            PacketDistributor.sendToPlayer(
+                    joining, new PresenceBroadcastPayload(entry.getKey(), entry.getValue(), now));
         }
     }
 }

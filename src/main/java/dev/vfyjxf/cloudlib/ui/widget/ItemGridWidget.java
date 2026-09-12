@@ -2,10 +2,10 @@ package dev.vfyjxf.cloudlib.ui.widget;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.data.lang.CloudLang;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDraggable;
+import dev.vfyjxf.cloudlib.data.lang.CloudLang;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Inventory;
@@ -31,11 +31,11 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class ItemGridWidget extends Widget implements WorldDraggable {
 
-    private static final int CELL = 18;
-    private static final int COLS = 9;
-    private static final int SLOT_BG = 0x330F1C24;
+    private static final int cell = 18;
+    private static final int cols = 9;
+    private static final int slotBg = 0x330F1C24;
     /** main-inventory rows first, hotbar row last — same order as vanilla */
-    private static final int ROWS = 4;
+    private static final int rows = 4;
 
     /** The live client player — never cache the entity instance. */
     private static Inventory inventory() {
@@ -44,18 +44,17 @@ public final class ItemGridWidget extends Widget implements WorldDraggable {
     }
 
     public ItemGridWidget() {
-        onMount((scene, context, handle) ->
-                scene.layoutTree().setMeasureFunc(nodeId(), (style, space) ->
-                        new FloatSize(COLS * CELL, ROWS * CELL + 2)));
+        onMount((scene, context, handle) -> scene.layoutTree()
+                .setMeasureFunc(nodeId(), (style, space) -> new FloatSize(cols * cell, rows * cell + 2)));
     }
 
     /** Vanilla slot index under scene coords, or -1 off-grid. */
     private int slotAt(double sceneX, double sceneY) {
         var local = sceneToLocal(sceneX, sceneY);
-        int cx = (int) Math.floor(local.x() / CELL);
-        int cy = (int) Math.floor(local.y() / CELL);
-        if (cx < 0 || cx >= COLS || cy < 0 || cy >= ROWS) return -1;
-        return cy == ROWS - 1 ? cx : 9 + cy * COLS + cx;
+        int cx = (int) Math.floor(local.x() / cell);
+        int cy = (int) Math.floor(local.y() / cell);
+        if (cx < 0 || cx >= cols || cy < 0 || cy >= rows) return -1;
+        return cy == rows - 1 ? cx : 9 + cy * cols + cx;
     }
 
     @Override
@@ -74,18 +73,17 @@ public final class ItemGridWidget extends Widget implements WorldDraggable {
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         Inventory inv = inventory();
         if (inv == null) return;
-        //renderInternal receives widget-local mouse coords already
+        // renderInternal receives widget-local mouse coords already
         int localX = mouseX, localY = mouseY;
         boolean any = false;
-        for (int row = 0; row < ROWS; row++) {
-            for (int col = 0; col < COLS; col++) {
-                int x = col * CELL;
-                int y = row * CELL;
-                int slot = row == ROWS - 1 ? col : 9 + row * COLS + col;
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                int x = col * cell;
+                int y = row * cell;
+                int slot = row == rows - 1 ? col : 9 + row * cols + col;
                 ItemStack stack = inv.getItem(slot);
-                boolean hover = localX >= x && localX < x + CELL && localY >= y && localY < y + CELL;
-                canvas.fill(x, y, CELL - 1, CELL - 1,
-                        hover ? 0x5536C4D8 : SLOT_BG);
+                boolean hover = localX >= x && localX < x + cell && localY >= y && localY < y + cell;
+                canvas.fill(x, y, cell - 1, cell - 1, hover ? 0x5536C4D8 : slotBg);
                 if (!stack.isEmpty()) {
                     any = true;
                     canvas.renderItem(stack, x, y);
@@ -93,12 +91,10 @@ public final class ItemGridWidget extends Widget implements WorldDraggable {
                 }
             }
         }
-        //all-empty grid would look like a render failure — say so explicitly
+        // all-empty grid would look like a render failure — say so explicitly
         if (!any) {
             String label = CloudLang.Ui.empty.string();
-            canvas.text(label, COLS * CELL / 2 - canvas.font().width(label) / 2,
-                    ROWS * CELL / 2 - 4, 0x5536C4D8);
+            canvas.text(label, cols * cell / 2 - canvas.font().width(label) / 2, rows * cell / 2 - 4, 0x5536C4D8);
         }
     }
-
 }

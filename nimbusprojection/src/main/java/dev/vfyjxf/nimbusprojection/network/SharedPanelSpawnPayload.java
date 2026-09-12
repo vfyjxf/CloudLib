@@ -38,25 +38,25 @@ public record SharedPanelSpawnPayload(
         Presentation presentation,
         double maxDistance,
         boolean canInteract,
-        @Nullable CustomPacketPayload payload
-) implements ClientboundPayload {
+        @Nullable CustomPacketPayload payload)
+        implements ClientboundPayload {
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, SharedPanelSpawnPayload> STREAM_CODEC =
+    public static final StreamCodec<RegistryFriendlyByteBuf, SharedPanelSpawnPayload> streamCodec =
             StreamCodec.ofMember(SharedPanelSpawnPayload::encode, SharedPanelSpawnPayload::decode);
 
-    public static final Type<SharedPanelSpawnPayload> TYPE =
+    public static final Type<SharedPanelSpawnPayload> type =
             new Type<>(ResourceLocation.fromNamespaceAndPath("nimbusprojection", "shared_spawn"));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+        return type;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void encode(RegistryFriendlyByteBuf buf) {
-        PanelKey.STREAM_CODEC.encode(buf, key);
+        PanelKey.streamCodec.encode(buf, key);
         ResourceKey.streamCodec(Registries.DIMENSION).encode(buf, dimension);
-        //anchor: type id + registered codec
+        // anchor: type id + registered codec
         AnchorCodec anchorCodec = AnchorCodecs.of(anchor);
         if (anchorCodec == null) {
             throw new IllegalArgumentException("Anchor " + anchor.type().id() + " has no codec — not shareable");
@@ -74,8 +74,9 @@ public record SharedPanelSpawnPayload(
     }
 
     private static SharedPanelSpawnPayload decode(RegistryFriendlyByteBuf buf) {
-        PanelKey key = PanelKey.STREAM_CODEC.decode(buf);
-        ResourceKey<Level> dimension = ResourceKey.streamCodec(Registries.DIMENSION).decode(buf);
+        PanelKey key = PanelKey.streamCodec.decode(buf);
+        ResourceKey<Level> dimension =
+                ResourceKey.streamCodec(Registries.DIMENSION).decode(buf);
         ResourceLocation anchorType = ResourceLocation.STREAM_CODEC.decode(buf);
         AnchorCodec<?> codec = AnchorCodecs.byId(anchorType);
         if (codec == null) {
@@ -86,9 +87,8 @@ public record SharedPanelSpawnPayload(
         Presentation presentation = PresentationCodecs.read(buf);
         double maxDistance = buf.readDouble();
         boolean canInteract = buf.readBoolean();
-        CustomPacketPayload payload = buf.readBoolean()
-                ? PanelChannelPayload.payloadCodec().decode(buf)
-                : null;
+        CustomPacketPayload payload =
+                buf.readBoolean() ? PanelChannelPayload.payloadCodec().decode(buf) : null;
         return new SharedPanelSpawnPayload(
                 key, dimension, anchor, view, presentation, maxDistance, canInteract, payload);
     }

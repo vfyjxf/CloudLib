@@ -14,14 +14,14 @@ import java.util.Set;
 
 public final class CloudLibUiTreeTool {
 
-    private static final String OPERATION_ID = "cloudlib.ui.tree";
+    private static final String operationId = "cloudlib.ui.tree";
 
     private CloudLibUiTreeTool() {
     }
 
     public static OperationDefinition definition() {
         return new OperationDefinition(
-                OPERATION_ID,
+                operationId,
                 "ui",
                 "CloudLib UI Tree",
                 "Returns the widget tree for the active CloudLib screen.",
@@ -37,7 +37,7 @@ public final class CloudLibUiTreeTool {
                         List.of()
                 ),
                 Map.of(
-                        "operationId", OPERATION_ID,
+                        "operationId", operationId,
                         "targetSide", "client",
                         "input", Map.of()
                 )

@@ -38,7 +38,7 @@ public final class InworldInspectScreen extends Screen implements InworldOverlay
         return false;
     }
 
-    //region render
+    // region render
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
@@ -47,12 +47,12 @@ public final class InworldInspectScreen extends Screen implements InworldOverlay
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        //inspect mode keeps the world fully visible — no dimming, no blur
+        // inspect mode keeps the world fully visible — no dimming, no blur
     }
 
-    //endregion
+    // endregion
 
-    //region input → in-world scene
+    // region input → in-world scene
 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
@@ -107,9 +107,14 @@ public final class InworldInspectScreen extends Screen implements InworldOverlay
     private void forwardGameplayKey(int keyCode, int scanCode, boolean down) {
         InputConstants.Key key = InputConstants.getKey(keyCode, scanCode);
         var options = Minecraft.getInstance().options;
-        for (KeyMapping mapping : new KeyMapping[]{
-                options.keyUp, options.keyDown, options.keyLeft, options.keyRight,
-                options.keyJump, options.keySprint, options.keyShift
+        for (KeyMapping mapping : new KeyMapping[] {
+            options.keyUp,
+            options.keyDown,
+            options.keyLeft,
+            options.keyRight,
+            options.keyJump,
+            options.keySprint,
+            options.keyShift
         }) {
             if (mapping.isActiveAndMatches(key)) {
                 KeyMapping.set(key, down);
@@ -118,9 +123,9 @@ public final class InworldInspectScreen extends Screen implements InworldOverlay
         }
     }
 
-    //endregion
+    // endregion
 
-    //region lifecycle
+    // region lifecycle
 
     @Override
     public void tick() {
@@ -136,5 +141,5 @@ public final class InworldInspectScreen extends Screen implements InworldOverlay
         manager.onInspectScreenRemoved();
     }
 
-    //endregion
+    // endregion
 }

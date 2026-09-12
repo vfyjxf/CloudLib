@@ -43,9 +43,10 @@ public class ChipWidget extends Widget {
             pressed = false;
             return EventDispatch.pass;
         });
-        //keyboard/controller activation: enter or space presses the chip
+        // keyboard/controller activation: enter or space presses the chip
         onKeyPressed((input, context) -> {
-            if (input.isKey(GLFW.GLFW_KEY_ENTER) || input.isKey(GLFW.GLFW_KEY_KP_ENTER)
+            if (input.isKey(GLFW.GLFW_KEY_ENTER)
+                    || input.isKey(GLFW.GLFW_KEY_KP_ENTER)
                     || input.isKey(GLFW.GLFW_KEY_SPACE)) {
                 if (this.onClick != null) {
                     this.onClick.run();
@@ -54,9 +55,11 @@ public class ChipWidget extends Widget {
             }
             return EventDispatch.pass;
         });
-        onMount((scene, context, handle) ->
-                scene.layoutTree().setMeasureFunc(nodeId(), (style, space) ->
-                        new FloatSize(context.font().width(this.label) + 8, context.font().lineHeight + 4)));
+        onMount((scene, context, handle) -> scene.layoutTree()
+                .setMeasureFunc(
+                        nodeId(),
+                        (style, space) ->
+                                new FloatSize(context.font().width(this.label) + 8, context.font().lineHeight + 4)));
     }
 
     public ChipWidget setLabel(String label) {
@@ -69,16 +72,19 @@ public class ChipWidget extends Widget {
         int w = width();
         int h = height();
         boolean hot = hovered() || focused();
-        int border = hot ? HackerTheme.ACCENT : HackerTheme.BORDER;
+        int border = hot ? HackerTheme.accent : HackerTheme.border;
         if (pressed) {
             canvas.fill(0, 0, w, h, 0xF22E4E4C);
         } else if (hot) {
-            //near-solid dark fill — translucent fills read as "see-through" on world panels
+            // near-solid dark fill — translucent fills read as "see-through" on world panels
             canvas.fill(0, 0, w, h, 0xF2162226);
         }
         canvas.strokeRect(0, 0, w, h, border);
         var font = context().font();
-        canvas.text(label, (w - font.width(label)) / 2, (h - font.lineHeight) / 2 + 1,
-                hot ? HackerTheme.TEXT : HackerTheme.TEXT_DIM);
+        canvas.text(
+                label,
+                (w - font.width(label)) / 2,
+                (h - font.lineHeight) / 2 + 1,
+                hot ? HackerTheme.text : HackerTheme.textDim);
     }
 }

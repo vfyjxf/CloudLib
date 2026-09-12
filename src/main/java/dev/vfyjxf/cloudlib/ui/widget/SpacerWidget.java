@@ -12,14 +12,14 @@ import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
  */
 public class SpacerWidget extends Widget {
 
-    //region state
+    // region state
 
     private float minLength = 0;
     private float flexGrow = 1;
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     public static SpacerWidget create() {
         return new SpacerWidget();
@@ -37,9 +37,9 @@ public class SpacerWidget extends Widget {
         useStyle(UIStyle.of(UIStyles.flexGrow(1)));
     }
 
-    //endregion
+    // endregion
 
-    //region configuration
+    // region configuration
 
     public float minLength() {
         return minLength;
@@ -57,18 +57,18 @@ public class SpacerWidget extends Widget {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         // Renders nothing
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
@@ -77,5 +77,5 @@ public class SpacerWidget extends Widget {
         collector.addWithDefault("flexGrow", flexGrow, 1f, InspectionProperty.categoryLayout);
     }
 
-    //endregion
+    // endregion
 }

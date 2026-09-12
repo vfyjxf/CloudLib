@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
-import dev.vfyjxf.cloudlib.util.Checks;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
+import dev.vfyjxf.cloudlib.util.Checks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +57,7 @@ public final class SceneHandle {
         return scene.globalHandle;
     }
 
-    //region cleanup registration
+    // region cleanup registration
 
     /**
      * Registers a cleanup action to be executed when the widget is unmounted.
@@ -138,5 +138,5 @@ public final class SceneHandle {
         return !cleanupActions.isEmpty();
     }
 
-    //endregion
+    // endregion
 }

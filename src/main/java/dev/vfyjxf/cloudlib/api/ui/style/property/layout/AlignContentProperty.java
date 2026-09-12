@@ -19,7 +19,7 @@ import java.util.Objects;
  *   <li>{@link AlignContent#FLEX_START} - pack lines to start of cross axis</li>
  *   <li>{@link AlignContent#FLEX_END} - pack lines to end of cross axis</li>
  *   <li>{@link AlignContent#CENTER} - center lines along cross axis</li>
- *   <li>{@link AlignContent#STRETCH} - stretch lines to fill cross axis</li>
+ *   <li>{@link AlignContent#stretch} - stretch lines to fill cross axis</li>
  *   <li>{@link AlignContent#SPACE_BETWEEN} - distribute lines with space between</li>
  *   <li>{@link AlignContent#SPACE_AROUND} - distribute lines with space around</li>
  *   <li>{@link AlignContent#SPACE_EVENLY} - distribute lines with even space</li>
@@ -61,5 +61,4 @@ public record AlignContentProperty(AlignContent align) implements LayoutProperty
     public String toString() {
         return align.name().toLowerCase().replace("_", "-");
     }
-
 }

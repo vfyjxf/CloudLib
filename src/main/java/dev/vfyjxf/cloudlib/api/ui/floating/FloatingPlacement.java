@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public enum FloatingPlacement {
 
-    //region placements
+    // region placements
 
     top(Side.top, null),
     topStart(Side.top, Alignment.start),
@@ -32,9 +32,9 @@ public enum FloatingPlacement {
     leftStart(Side.left, Alignment.start),
     leftEnd(Side.left, Alignment.end);
 
-    //endregion
+    // endregion
 
-    private static final FloatingPlacement[] VALUES = values();
+    private static final FloatingPlacement[] values = values();
 
     private final Side side;
     private final @Nullable Alignment alignment;
@@ -58,7 +58,7 @@ public enum FloatingPlacement {
         return alignment;
     }
 
-    //region axis utilities
+    // region axis utilities
 
     /**
      * @return the axis that runs along the side (the "side axis")
@@ -74,9 +74,9 @@ public enum FloatingPlacement {
         return side.axis().opposite();
     }
 
-    //endregion
+    // endregion
 
-    //region opposite & expanded placements
+    // region opposite & expanded placements
 
     /**
      * Returns the placement on the opposite side with the same alignment.
@@ -101,12 +101,12 @@ public enum FloatingPlacement {
      * Returns all 12 placements as an array.
      */
     public static FloatingPlacement[] all() {
-        return VALUES.clone();
+        return values.clone();
     }
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     /**
      * Finds the placement with the given side and alignment.
@@ -116,7 +116,7 @@ public enum FloatingPlacement {
      * @return the matching placement
      */
     public static FloatingPlacement of(Side side, @Nullable Alignment alignment) {
-        for (FloatingPlacement p : VALUES) {
+        for (FloatingPlacement p : values) {
             if (p.side == side && p.alignment == alignment) {
                 return p;
             }
@@ -124,15 +124,18 @@ public enum FloatingPlacement {
         throw new IllegalArgumentException("No placement for side=" + side + " alignment=" + alignment);
     }
 
-    //endregion
+    // endregion
 
-    //region inner types
+    // region inner types
 
     /**
      * The four sides of a rectangle.
      */
     public enum Side {
-        top, right, bottom, left;
+        top,
+        right,
+        bottom,
+        left;
 
         /**
          * @return the axis this side lies on
@@ -165,7 +168,8 @@ public enum FloatingPlacement {
      * Alignment along the cross axis.
      */
     public enum Alignment {
-        start, end;
+        start,
+        end;
 
         public Alignment opposite() {
             return this == start ? end : start;
@@ -176,12 +180,13 @@ public enum FloatingPlacement {
      * A spatial axis.
      */
     public enum Axis {
-        x, y;
+        x,
+        y;
 
         public Axis opposite() {
             return this == x ? y : x;
         }
     }
 
-    //endregion
+    // endregion
 }

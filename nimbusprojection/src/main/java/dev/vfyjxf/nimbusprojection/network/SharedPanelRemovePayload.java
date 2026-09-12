@@ -13,15 +13,17 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 /** Server → client: a shared panel was unshared — tear the local copy down. */
 public record SharedPanelRemovePayload(PanelKey key) implements ClientboundPayload {
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, SharedPanelRemovePayload> STREAM_CODEC =
-            PanelKey.STREAM_CODEC.map(SharedPanelRemovePayload::new, SharedPanelRemovePayload::key).cast();
+    public static final StreamCodec<RegistryFriendlyByteBuf, SharedPanelRemovePayload> streamCodec =
+            PanelKey.streamCodec
+                    .map(SharedPanelRemovePayload::new, SharedPanelRemovePayload::key)
+                    .cast();
 
-    public static final Type<SharedPanelRemovePayload> TYPE =
+    public static final Type<SharedPanelRemovePayload> type =
             new Type<>(ResourceLocation.fromNamespaceAndPath("nimbusprojection", "shared_remove"));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+        return type;
     }
 
     @Override

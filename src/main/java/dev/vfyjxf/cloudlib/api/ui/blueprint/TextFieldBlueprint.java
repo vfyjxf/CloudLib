@@ -32,13 +32,13 @@ public final class TextFieldBlueprint implements Blueprint<TextFieldWidget> {
     private @Nullable Consumer<String> onTextChanged;
     private @Nullable Consumer<String> onEnterPressed;
     private @Nullable Object key;
-    private UIStyle style = UIStyle.EMPTY;
+    private UIStyle style = UIStyle.empty;
 
     private TextFieldBlueprint(String text) {
         this.text = text != null ? text : "";
     }
 
-    //region dsl entry points
+    // region dsl entry points
 
     public static TextFieldBlueprint TextField(String text) {
         return ScopedReceiver.add(new TextFieldBlueprint(text));
@@ -48,9 +48,9 @@ public final class TextFieldBlueprint implements Blueprint<TextFieldWidget> {
         return ScopedReceiver.add(new TextFieldBlueprint(text).onTextChanged(onTextChanged));
     }
 
-    //endregion
+    // endregion
 
-    //region builder methods
+    // region builder methods
 
     public TextFieldBlueprint text(String text) {
         this.text = text;
@@ -102,9 +102,9 @@ public final class TextFieldBlueprint implements Blueprint<TextFieldWidget> {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region blueprint implementation
+    // region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -119,15 +119,15 @@ public final class TextFieldBlueprint implements Blueprint<TextFieldWidget> {
     @Override
     public void updateWidget(TextFieldWidget widget, Scene scene, SceneContext context) {
         widget.setText(text)
-              .setPlaceholder(placeholder)
-              .setMaxLength(maxLength)
-              .setEditable(editable)
-              .setTextColor(textColor)
-              .setPlaceholderColor(placeholderColor)
-              .onTextChanged(onTextChanged)
-              .onEnterPressed(onEnterPressed)
-              .useStyle(style);
+                .setPlaceholder(placeholder)
+                .setMaxLength(maxLength)
+                .setEditable(editable)
+                .setTextColor(textColor)
+                .setPlaceholderColor(placeholderColor)
+                .onTextChanged(onTextChanged)
+                .onEnterPressed(onEnterPressed)
+                .useStyle(style);
     }
 
-    //endregion
+    // endregion
 }

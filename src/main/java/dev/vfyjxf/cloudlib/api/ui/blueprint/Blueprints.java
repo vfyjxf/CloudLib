@@ -37,8 +37,7 @@ import java.util.function.Consumer;
  */
 public final class Blueprints {
 
-    private Blueprints() {
-    }
+    private Blueprints() {}
 
     // ==================== Text ====================
 
@@ -189,8 +188,6 @@ public final class Blueprints {
         }
 
         @Override
-        public void updateWidget(CompositeWidget<T> widget, Scene scene, SceneContext context) {
-
-        }
+        public void updateWidget(CompositeWidget<T> widget, Scene scene, SceneContext context) {}
     }
 }

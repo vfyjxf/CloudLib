@@ -45,5 +45,4 @@ public record DirectionProperty(TaffyDirection direction) implements LayoutPrope
     public String toString() {
         return direction.toString();
     }
-
 }

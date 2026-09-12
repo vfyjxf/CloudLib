@@ -19,7 +19,8 @@ public final class LayoutHint {
      * side rail keyed by {@code zone}; members of one zone stay adjacent.
      * {@code null} = derive from the panel key's parent path.
      */
-    @Nullable String zone;
+    @Nullable
+    String zone;
     /** Merge cap for the zone: at most this many members show; extras collapse into a "+N" badge. */
     int zoneLimit = Integer.MAX_VALUE;
     /**
@@ -27,7 +28,8 @@ public final class LayoutHint {
      * leaves the camera view shrinks to a small edge indicator (diamond +
      * bearing tick + distance) instead of rendering the full panel.
      */
-    @Nullable BooleanSupplier offscreenIndicator;
+    @Nullable
+    BooleanSupplier offscreenIndicator;
     /**
      * Whether the panel may fold to a chrome strip under space pressure.
      * The fold → hide → "+N" chain only applies to foldable panels.
@@ -40,7 +42,7 @@ public final class LayoutHint {
      */
     double occlusionTolerance = 0.1;
     /** What may cover this panel at all — see {@link OcclusionClass}. */
-    OcclusionClass occlusion = OcclusionClass.OCCLUDED_BY_WORLD;
+    OcclusionClass occlusion = OcclusionClass.occludedByWorld;
 
     public static LayoutHint defaults() {
         return new LayoutHint();
@@ -70,7 +72,7 @@ public final class LayoutHint {
         return occlusion;
     }
 
-    //region mutation
+    // region mutation
 
     /** Overrides the zoning group (see {@link #zone}). */
     public LayoutHint zone(@Nullable String zone) {
@@ -111,5 +113,5 @@ public final class LayoutHint {
         return this;
     }
 
-    //endregion
+    // endregion
 }

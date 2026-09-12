@@ -31,5 +31,4 @@ public sealed interface ExposeCommon permits Expose, LayerExpose {
     void updateSnapshot();
 
     void forceUpdateSnapshot();
-
 }

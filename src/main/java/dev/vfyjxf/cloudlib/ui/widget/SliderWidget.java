@@ -16,27 +16,28 @@ import java.util.function.Consumer;
  */
 public class SliderWidget extends Widget {
 
-    //region types
+    // region types
 
     public enum Orientation {
-        HORIZONTAL, VERTICAL
+        horizontal,
+        vertical
     }
 
-    //endregion
+    // endregion
 
-    //region state
+    // region state
 
     private double value = 0.0;
     private double min = 0.0;
     private double max = 1.0;
     private double step = 0.0;
-    private Orientation orientation = Orientation.HORIZONTAL;
+    private Orientation orientation = Orientation.horizontal;
     private boolean dragging = false;
     private @Nullable Consumer<Double> onValueChanged;
 
-    //endregion
+    // endregion
 
-    //region textures
+    // region textures
 
     private VisualTexture trackTexture = new ColorTexture(0xFF444444);
     private VisualTexture filledTrackTexture = new ColorTexture(0xFF00AA00);
@@ -44,9 +45,9 @@ public class SliderWidget extends Widget {
     private VisualTexture thumbHoverTexture = new ColorTexture(0xFFCCCCCC);
     private int thumbSize = 8;
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     public static SliderWidget create() {
         return new SliderWidget();
@@ -80,16 +81,16 @@ public class SliderWidget extends Widget {
         });
     }
 
-    //endregion
+    // endregion
 
-    //region input
+    // region input
 
     private void updateValueFromMouse(double mouseX, double mouseY) {
-        //input coordinates are scene-space — convert through the transform
-        //chain so the slider works inside nested/translated containers too
+        // input coordinates are scene-space — convert through the transform
+        // chain so the slider works inside nested/translated containers too
         var local = sceneToLocal(mouseX, mouseY);
         double ratio;
-        if (orientation == Orientation.HORIZONTAL) {
+        if (orientation == Orientation.horizontal) {
             int trackStart = thumbSize / 2;
             int trackEnd = width() - thumbSize / 2;
             ratio = (local.x() - trackStart) / (trackEnd - trackStart);
@@ -109,9 +110,9 @@ public class SliderWidget extends Widget {
         setValue(newValue);
     }
 
-    //endregion
+    // endregion
 
-    //region configuration
+    // region configuration
 
     public double value() {
         return value;
@@ -198,16 +199,16 @@ public class SliderWidget extends Widget {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         super.renderInternal(canvas, mouseX, mouseY, partialTicks);
         double ratio = (value - min) / (max - min);
 
-        if (orientation == Orientation.HORIZONTAL) {
+        if (orientation == Orientation.horizontal) {
             renderHorizontal(canvas, ratio);
         } else {
             renderVertical(canvas, ratio);
@@ -245,9 +246,9 @@ public class SliderWidget extends Widget {
         canvas.texture(currentThumb, thumbX, thumbY, thumbSize, thumbSize);
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
@@ -256,9 +257,9 @@ public class SliderWidget extends Widget {
         collector.addWithDefault("min", min, 0.0, InspectionProperty.categoryData);
         collector.addWithDefault("max", max, 1.0, InspectionProperty.categoryData);
         collector.addWithDefault("step", step, 0.0, InspectionProperty.categoryData);
-        collector.addWithDefault("orientation", orientation, Orientation.HORIZONTAL, InspectionProperty.categoryVisual);
+        collector.addWithDefault("orientation", orientation, Orientation.horizontal, InspectionProperty.categoryVisual);
         collector.addWithDefault("dragging", dragging, false, InspectionProperty.categoryState);
     }
 
-    //endregion
+    // endregion
 }

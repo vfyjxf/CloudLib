@@ -34,13 +34,13 @@ public final class ButtonBlueprint implements Blueprint<ButtonWidget> {
     private int textColor = 0xFFFFFF;
 
     private @Nullable Object key;
-    private UIStyle style = UIStyle.EMPTY;
+    private UIStyle style = UIStyle.empty;
 
     private ButtonBlueprint(Component label) {
         this.label = label;
     }
 
-    //region dsl entry points
+    // region dsl entry points
 
     public static ButtonBlueprint Button(String label) {
         return ScopedReceiver.add(new ButtonBlueprint(Component.literal(label)));
@@ -58,9 +58,9 @@ public final class ButtonBlueprint implements Blueprint<ButtonWidget> {
         return ScopedReceiver.add(new ButtonBlueprint(label).onClick(onClick));
     }
 
-    //endregion
+    // endregion
 
-    //region builder methods
+    // region builder methods
 
     public ButtonBlueprint onClick(@Nullable Runnable onClick) {
         this.onClick = onClick;
@@ -106,9 +106,9 @@ public final class ButtonBlueprint implements Blueprint<ButtonWidget> {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region blueprint implementation
+    // region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -123,13 +123,13 @@ public final class ButtonBlueprint implements Blueprint<ButtonWidget> {
     @Override
     public void updateWidget(ButtonWidget widget, Scene scene, SceneContext context) {
         widget.setLabel(label)
-              .onClick(onClick)
-              .setEnabled(enabled)
-              .setTextures(normalTexture, hoverTexture, pressedTexture)
-              .setIconTexture(iconTexture)
-              .setTextColor(textColor)
-              .useStyle(style);
+                .onClick(onClick)
+                .setEnabled(enabled)
+                .setTextures(normalTexture, hoverTexture, pressedTexture)
+                .setIconTexture(iconTexture)
+                .setTextColor(textColor)
+                .useStyle(style);
     }
 
-    //endregion
+    // endregion
 }

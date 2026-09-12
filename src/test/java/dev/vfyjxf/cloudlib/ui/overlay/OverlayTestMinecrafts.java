@@ -10,8 +10,7 @@ import java.lang.reflect.Field;
 
 final class OverlayTestMinecrafts {
 
-    private OverlayTestMinecrafts() {
-    }
+    private OverlayTestMinecrafts() {}
 
     static Minecraft dummyMinecraft() {
         try {

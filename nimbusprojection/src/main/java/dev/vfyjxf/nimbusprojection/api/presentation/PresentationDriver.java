@@ -37,7 +37,8 @@ public interface PresentationDriver<P extends Presentation> {
      * inspect mode) onto the surface, returning surface-local uv in gui
      * pixels, or null when it misses.
      */
-    @Nullable FloatPos pick(PickContext<P> ctx);
+    @Nullable
+    FloatPos pick(PickContext<P> ctx);
 
     /**
      * What this presentation becomes under inspect flattening. Default:
@@ -49,7 +50,6 @@ public interface PresentationDriver<P extends Presentation> {
 
     /** How this presentation participates in inspect mode. */
     default InspectPolicy inspectPolicy() {
-        return InspectPolicy.FLATTEN;
+        return InspectPolicy.flatten;
     }
-
 }

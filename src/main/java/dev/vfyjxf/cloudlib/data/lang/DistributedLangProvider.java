@@ -6,7 +6,6 @@ import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -100,5 +99,4 @@ public abstract class DistributedLangProvider implements DataProvider {
     public String getName() {
         return "Distributed lang files (" + modId + ":" + locale + ")";
     }
-
 }

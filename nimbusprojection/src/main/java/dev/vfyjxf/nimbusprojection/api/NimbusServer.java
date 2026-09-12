@@ -34,5 +34,4 @@ public interface NimbusServer {
 
     /** All currently shared panels. */
     Collection<? extends SharedPanel> shared();
-
 }

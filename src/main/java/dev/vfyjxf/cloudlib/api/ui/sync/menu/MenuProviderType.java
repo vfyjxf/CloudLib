@@ -22,5 +22,4 @@ public interface MenuProviderType<P> {
 
     @Nullable
     P readProvider(Player player, RegistryFriendlyByteBuf byteBuf);
-
 }

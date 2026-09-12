@@ -71,7 +71,7 @@ final class BasicDiffHandle<T extends DiffObservable<D>, D> implements DiffHandl
 
     @Override
     public boolean changed() {
-        //union of the handle's own dirty flag and the value's reported change; null-safe on the value half
+        // union of the handle's own dirty flag and the value's reported change; null-safe on the value half
         T current = delegate.get();
         return delegate.dirty() || (current != null && current.changed());
     }

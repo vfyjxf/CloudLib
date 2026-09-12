@@ -12,42 +12,42 @@ import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
  */
 public class DividerWidget extends Widget {
 
-    //region types
+    // region types
 
     public enum Orientation {
-        HORIZONTAL, VERTICAL
+        horizontal,
+        vertical
     }
 
-    //endregion
+    // endregion
 
-    //region state
+    // region state
 
-    private Orientation orientation = Orientation.HORIZONTAL;
+    private Orientation orientation = Orientation.horizontal;
     private int thickness = 1;
     private VisualTexture texture = new ColorTexture(0xFFAAAAAA);
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     public static DividerWidget horizontal() {
-        return new DividerWidget().setOrientation(Orientation.HORIZONTAL);
+        return new DividerWidget().setOrientation(Orientation.horizontal);
     }
 
     public static DividerWidget vertical() {
-        return new DividerWidget().setOrientation(Orientation.VERTICAL);
+        return new DividerWidget().setOrientation(Orientation.vertical);
     }
 
     public static DividerWidget create() {
         return new DividerWidget();
     }
 
-    private DividerWidget() {
-    }
+    private DividerWidget() {}
 
-    //endregion
+    // endregion
 
-    //region configuration
+    // region configuration
 
     public Orientation orientation() {
         return orientation;
@@ -77,14 +77,14 @@ public class DividerWidget extends Widget {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         int w, h;
-        if (orientation == Orientation.HORIZONTAL) {
+        if (orientation == Orientation.horizontal) {
             w = width();
             h = thickness;
         } else {
@@ -98,16 +98,17 @@ public class DividerWidget extends Widget {
         canvas.texture(texture, x, y, w, h);
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
-        collector.addWithDefault("orientation", orientation.name(), Orientation.HORIZONTAL.name(), InspectionProperty.categoryVisual);
+        collector.addWithDefault(
+                "orientation", orientation.name(), Orientation.horizontal.name(), InspectionProperty.categoryVisual);
         collector.addWithDefault("thickness", thickness, 1, InspectionProperty.categoryVisual);
     }
 
-    //endregion
+    // endregion
 }

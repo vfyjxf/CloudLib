@@ -53,7 +53,7 @@ final class BasicHandle<T> implements Handle<T> {
 
     @Override
     public void load(T value) {
-        //silent: store only, no listeners, dirty flag untouched
+        // silent: store only, no listeners, dirty flag untouched
         this.value = value;
     }
 

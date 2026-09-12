@@ -40,7 +40,7 @@ public sealed interface ViewportTransform {
      */
     void apply(Matrix3x2f matrix);
 
-    //region factory methods
+    // region factory methods
 
     /**
      * Creates a translation (scroll / pan) transform.
@@ -100,9 +100,9 @@ public sealed interface ViewportTransform {
         return new Affine(new Matrix3x2f(matrix));
     }
 
-    //endregion
+    // endregion
 
-    //region record types
+    // region record types
 
     /**
      * The layout-position transform. Semantically equivalent to a {@link Translate}
@@ -213,5 +213,5 @@ public sealed interface ViewportTransform {
         }
     }
 
-    //endregion
+    // endregion
 }

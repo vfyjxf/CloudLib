@@ -7,12 +7,7 @@ import java.util.function.Consumer;
 
 final class StandardUnaryReversed<T> extends StandardReversed<T, T> implements UnaryReversed<T> {
 
-    StandardUnaryReversed(
-            String name,
-            short id,
-            FlowEncoder<T> reversedEncoder,
-            FlowDecoder<T> reversedDecoder
-    ) {
+    StandardUnaryReversed(String name, short id, FlowEncoder<T> reversedEncoder, FlowDecoder<T> reversedDecoder) {
         super(name, id, reversedEncoder, reversedDecoder);
     }
 

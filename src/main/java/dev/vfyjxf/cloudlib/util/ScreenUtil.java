@@ -15,7 +15,8 @@ public final class ScreenUtil {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft == null || minecraft.mouseHandler == null) return 0;
         MouseHandler mouseHelper = minecraft.mouseHandler;
-        double scale = (double) minecraft.getWindow().getGuiScaledWidth() / (double) minecraft.getWindow().getScreenWidth();
+        double scale = (double) minecraft.getWindow().getGuiScaledWidth()
+                / (double) minecraft.getWindow().getScreenWidth();
         return mouseHelper.xpos() * scale;
     }
 
@@ -23,7 +24,8 @@ public final class ScreenUtil {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft == null || minecraft.mouseHandler == null) return 0;
         MouseHandler mouseHelper = minecraft.mouseHandler;
-        double scale = (double) minecraft.getWindow().getGuiScaledHeight() / (double) minecraft.getWindow().getScreenHeight();
+        double scale = (double) minecraft.getWindow().getGuiScaledHeight()
+                / (double) minecraft.getWindow().getScreenHeight();
         return mouseHelper.ypos() * scale;
     }
 
@@ -31,7 +33,8 @@ public final class ScreenUtil {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft == null || minecraft.mouseHandler == null) return new FloatPos(0, 0);
         MouseHandler mouseHelper = minecraft.mouseHandler;
-        double scale = (double) minecraft.getWindow().getGuiScaledWidth() / (double) minecraft.getWindow().getScreenWidth();
+        double scale = (double) minecraft.getWindow().getGuiScaledWidth()
+                / (double) minecraft.getWindow().getScreenWidth();
         var mouseX = mouseHelper.xpos() * scale;
         var mouseY = mouseHelper.ypos() * scale;
         return new FloatPos(mouseX, mouseY);
@@ -51,5 +54,4 @@ public final class ScreenUtil {
         }
         graphics.renderComponentTooltipFromElements(font, tooltip.toVanilla(), mouseX, mouseY, stackValue);
     }
-
 }

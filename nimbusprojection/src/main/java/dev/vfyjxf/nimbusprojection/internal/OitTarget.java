@@ -25,9 +25,9 @@ import org.slf4j.LoggerFactory;
  * this is a hand-rolled FBO with two draw buffers:
  * <ul>
  *   <li>{@code GL_COLOR_ATTACHMENT0} — RGBA16F "accum", cleared to
- *       {@code (0,0,0,0)}, blended with {@code (ONE, ONE)};</li>
+ *       {@code (0,0,0,0)}, blended with {@code (one, one)};</li>
  *   <li>{@code GL_COLOR_ATTACHMENT1} — R16F "reveal", cleared to
- *       {@code (1,1,1,1)}, blended with {@code (ZERO, ONE_MINUS_SRC_COLOR)}.</li>
+ *       {@code (1,1,1,1)}, blended with {@code (zero, ONE_MINUS_SRC_COLOR)}.</li>
  * </ul>
  * The scene's own depth texture is borrowed per frame so UI geometry is
  * occluded by the opaque world; nothing inside the pass writes depth
@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  */
 final class OitTarget {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("NimbusProjection OIT");
+    private static final Logger logger = LoggerFactory.getLogger("NimbusProjection OIT");
 
     private int fbo = -1;
     private int accumTex = -1;
@@ -51,6 +51,7 @@ final class OitTarget {
 
     /** FBO that was bound when {@link #beginAccum} ran — the pass resolves into it. */
     private int prevFbo;
+
     private final int[] prevViewport = new int[4];
 
     /**
@@ -77,15 +78,18 @@ final class OitTarget {
         initTexture(revealTex, GL30.GL_R16F, GL11.GL_RED, w, h);
 
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, fbo);
-        GlStateManager._glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, accumTex, 0);
-        GlStateManager._glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1, GL11.GL_TEXTURE_2D, revealTex, 0);
-        GL20.glDrawBuffers(new int[]{GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1});
-        //checked without the depth attachment — the scene depth texture is only
-        //borrowed per-frame inside beginAccum
+        GlStateManager._glFramebufferTexture2D(
+                GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, accumTex, 0);
+        GlStateManager._glFramebufferTexture2D(
+                GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1, GL11.GL_TEXTURE_2D, revealTex, 0);
+        GL20.glDrawBuffers(new int[] {GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1});
+        // checked without the depth attachment — the scene depth texture is only
+        // borrowed per-frame inside beginAccum
         int status = GlStateManager.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER);
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, prev);
         if (status != GL30.GL_FRAMEBUFFER_COMPLETE) {
-            LOGGER.error("OIT accumulation framebuffer incomplete (status {:#x}) — falling back to direct draws", status);
+            logger.error(
+                    "OIT accumulation framebuffer incomplete (status {:#x}) — falling back to direct draws", status);
             destroy();
             return false;
         }
@@ -96,7 +100,7 @@ final class OitTarget {
         GlStateManager._bindTexture(tex);
         GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
         GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-        GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, 33071); //GL_CLAMP_TO_EDGE
+        GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, 33071); // GL_CLAMP_TO_EDGE
         GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, 33071);
         GlStateManager._texImage2D(GL11.GL_TEXTURE_2D, 0, internalFormat, w, h, 0, format, GL11.GL_UNSIGNED_BYTE, null);
     }
@@ -136,12 +140,13 @@ final class OitTarget {
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, prevViewport);
 
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, fbo);
-        //borrow the scene depth buffer — UI tests against the opaque world
-        GlStateManager._glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, GL11.GL_TEXTURE_2D, sceneDepthTex, 0);
+        // borrow the scene depth buffer — UI tests against the opaque world
+        GlStateManager._glFramebufferTexture2D(
+                GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, GL11.GL_TEXTURE_2D, sceneDepthTex, 0);
         RenderSystem.viewport(0, 0, width, height);
-        //accum → black, reveal → white
-        GL30.glClearBufferfv(GL11.GL_COLOR, 0, new float[]{0f, 0f, 0f, 0f});
-        GL30.glClearBufferfv(GL11.GL_COLOR, 1, new float[]{1f, 1f, 1f, 1f});
+        // accum → black, reveal → white
+        GL30.glClearBufferfv(GL11.GL_COLOR, 0, new float[] {0f, 0f, 0f, 0f});
+        GL30.glClearBufferfv(GL11.GL_COLOR, 1, new float[] {1f, 1f, 1f, 1f});
         beginDraw();
     }
 
@@ -150,7 +155,7 @@ final class OitTarget {
      * every {@code drawWithShader} inside the pass: anything calling the
      * non-indexed {@code glBlendFuncSeparate} in between (rendertype output
      * shards inside a panel FBO fill do exactly that) silently resets the
-     * per-attachment funcs on ALL draw buffers, including attachment 1's.
+     * per-attachment funcs on all draw buffers, including attachment 1's.
      */
     void beginDraw() {
         RenderSystem.enableDepthTest();
@@ -158,8 +163,8 @@ final class OitTarget {
         RenderSystem.depthMask(false);
         RenderSystem.enableBlend();
         applyAccumBlend();
-        //FUNC_ADD is the ambient default and nothing in vanilla changes it,
-        //but the equation is context-global — re-arm with the funcs
+        // FUNC_ADD is the ambient default and nothing in vanilla changes it,
+        // but the equation is context-global — re-arm with the funcs
         GlStateManager._blendEquation(GL14.GL_FUNC_ADD);
         RenderSystem.disableCull();
         RenderSystem.colorMask(true, true, true, true);
@@ -167,8 +172,8 @@ final class OitTarget {
 
     /** The per-attachment blend functions of the accumulation pass. */
     static void applyAccumBlend() {
-        //indexed calls are invisible to GlStateManager's BlendState cache —
-        //endAccum() restores ambient state with a raw call to compensate
+        // indexed calls are invisible to GlStateManager's BlendState cache —
+        // endAccum() restores ambient state with a raw call to compensate
         GL40C.glBlendFunci(0, GL11.GL_ONE, GL11.GL_ONE);
         GL40C.glBlendFunci(1, GL11.GL_ZERO, GL11.GL_ONE_MINUS_SRC_COLOR);
     }
@@ -194,9 +199,9 @@ final class OitTarget {
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.enableBlend();
-        //raw first so the real call isn't skipped by a desynced cache — the
-        //indexed blendi calls inside the pass never touched it — then the
-        //RenderSystem call syncs the cache to the same values
+        // raw first so the real call isn't skipped by a desynced cache — the
+        // indexed blendi calls inside the pass never touched it — then the
+        // RenderSystem call syncs the cache to the same values
         GlStateManager._blendFuncSeparate(
                 GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_SRC_ALPHA,
                 GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_SRC_ALPHA);
@@ -207,8 +212,8 @@ final class OitTarget {
         RenderSystem.setShader(NimbusShaders::oitResolve);
         RenderSystem.setShaderTexture(0, accumTex);
         RenderSystem.setShaderTexture(1, revealTex);
-        BufferBuilder buffer = Tesselator.getInstance()
-                .begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION);
+        BufferBuilder buffer =
+                Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION);
         buffer.addVertex(-1f, -1f, 0f);
         buffer.addVertex(3f, -1f, 0f);
         buffer.addVertex(-1f, 3f, 0f);

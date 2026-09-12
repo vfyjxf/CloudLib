@@ -43,5 +43,4 @@ public record FlexShrinkProperty(float shrink) implements LayoutProperty {
     public String toString() {
         return String.valueOf(shrink);
     }
-
 }

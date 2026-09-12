@@ -85,4 +85,3 @@ class ScopedReceiverTest {
         assertEquals("SimpleBlueprint{outer-2}", outer.get(1).toString());
     }
 }
-

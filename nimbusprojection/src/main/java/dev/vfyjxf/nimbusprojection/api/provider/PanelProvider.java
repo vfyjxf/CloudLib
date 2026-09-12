@@ -24,5 +24,4 @@ import dev.vfyjxf.nimbusprojection.api.panel.PanelSpec;
 public interface PanelProvider {
 
     void provide(ProviderContext context, PanelSink sink);
-
 }

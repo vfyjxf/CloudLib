@@ -34,7 +34,5 @@ public final class Functions {
         boolean applyAsBoolean(T value);
     }
 
-
-    private Functions() {
-    }
+    private Functions() {}
 }

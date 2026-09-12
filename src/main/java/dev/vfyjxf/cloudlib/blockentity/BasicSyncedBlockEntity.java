@@ -28,9 +28,9 @@ import net.minecraft.world.level.block.state.BlockState;
  * <pre>{@code
  * class MyBE extends BasicSyncedBlockEntity {
  *     private static final class Network {
- *         static final Schema<Integer> COUNT = Schema.of("count", 0, Codec.INT, UnaryFlowHandler.codecOf(ByteBufCodecs.INT));
+ *         static final Schema<Integer> count = Schema.of("count", 0, Codec.INT, UnaryFlowHandler.codecOf(ByteBufCodecs.INT));
  *     }
- *     private final Handle<Integer> count = useSynced(Network.COUNT);
+ *     private final Handle<Integer> count = useSynced(Network.count);
  * }
  * }</pre>
  * Sync flushing is automatic (one batched packet per dimension per tick). Save/load/update hooks
@@ -90,8 +90,7 @@ public abstract class BasicSyncedBlockEntity extends BasicBlockEntity
     }
 
     protected <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> diffLayerExpose(
-            String name, DiffHandle<T, D> handle, FlowHandler<T, E> codec, UnaryFlowHandler<D> diffCodec
-    ) {
+            String name, DiffHandle<T, D> handle, FlowHandler<T, E> codec, UnaryFlowHandler<D> diffCodec) {
         return sync.diffLayerExpose(name, handle, codec, diffCodec);
     }
 

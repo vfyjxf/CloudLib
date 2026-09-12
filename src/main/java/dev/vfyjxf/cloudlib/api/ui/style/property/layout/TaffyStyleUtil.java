@@ -16,23 +16,22 @@ import org.jetbrains.annotations.Nullable;
  */
 final class TaffyStyleUtil {
 
-    private TaffyStyleUtil() {
-    }
+    private TaffyStyleUtil() {}
 
-    //region rect operations
+    // region rect operations
 
     static <T> void setRectEdge(TaffyRect<T> rect, Edge edge, T value) {
         switch (edge) {
-            case TOP -> rect.top = value;
-            case RIGHT -> rect.right = value;
-            case BOTTOM -> rect.bottom = value;
-            case LEFT -> rect.left = value;
+            case top -> rect.top = value;
+            case right -> rect.right = value;
+            case bottom -> rect.bottom = value;
+            case left -> rect.left = value;
         }
     }
 
-    //endregion
+    // endregion
 
-    //region conversions
+    // region conversions
 
     static AlignContent toAlignContent(JustifyContent justify) {
         return switch (justify) {
@@ -48,9 +47,9 @@ final class TaffyStyleUtil {
         };
     }
 
-    //endregion
+    // endregion
 
-    //region formatting
+    // region formatting
 
     /**
      * Formats a LengthPercentage value for display.
@@ -81,5 +80,5 @@ final class TaffyStyleUtil {
         return value.toString();
     }
 
-    //endregion
+    // endregion
 }

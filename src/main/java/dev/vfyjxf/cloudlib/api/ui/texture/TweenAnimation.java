@@ -33,15 +33,15 @@ public class TweenAnimation<T> implements Playable<T> {
     }
 
     public static TweenAnimation<Float> ofFloat(float start, float end, float duration) {
-        return new TweenAnimation<>(start, end, duration, Interpolator.FLOAT);
+        return new TweenAnimation<>(start, end, duration, Interpolator.floatLerp);
     }
 
     public static TweenAnimation<Float> ofFloat(float start, float end, float duration, Easing easing) {
-        return new TweenAnimation<>(start, end, duration, Interpolator.FLOAT, easing);
+        return new TweenAnimation<>(start, end, duration, Interpolator.floatLerp, easing);
     }
 
     public static TweenAnimation<Integer> ofInt(int start, int end, float duration) {
-        return new TweenAnimation<>(start, end, duration, Interpolator.INT);
+        return new TweenAnimation<>(start, end, duration, Interpolator.intLerp);
     }
 
     public static TweenAnimation<Integer> ofColor(int startColor, int endColor, float duration) {

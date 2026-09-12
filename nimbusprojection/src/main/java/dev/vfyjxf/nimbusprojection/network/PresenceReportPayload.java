@@ -28,34 +28,34 @@ public record PresenceReportPayload(List<Entry> entries) implements ServerboundP
 
     public record Entry(PanelKey key, PresenceKind kind) {
 
-        private static final StreamCodec<ByteBuf, PresenceKind> KIND_CODEC =
-                ByteBufCodecs.VAR_INT.map(i -> PresenceKind.values()[i], PresenceKind::ordinal).cast();
+        private static final StreamCodec<ByteBuf, PresenceKind> kindCodec = ByteBufCodecs.VAR_INT
+                .map(i -> PresenceKind.values()[i], PresenceKind::ordinal)
+                .cast();
 
-        public static final StreamCodec<RegistryFriendlyByteBuf, Entry> STREAM_CODEC = StreamCodec.composite(
-                PanelKey.STREAM_CODEC.cast(), Entry::key,
-                KIND_CODEC.cast(), Entry::kind,
-                Entry::new);
+        public static final StreamCodec<RegistryFriendlyByteBuf, Entry> streamCodec = StreamCodec.composite(
+                PanelKey.streamCodec.cast(), Entry::key, kindCodec.cast(), Entry::kind, Entry::new);
     }
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, PresenceReportPayload> STREAM_CODEC =
-            Entry.STREAM_CODEC.apply(ByteBufCodecs.list())
-                    .map(PresenceReportPayload::new, PresenceReportPayload::entries);
+    public static final StreamCodec<RegistryFriendlyByteBuf, PresenceReportPayload> streamCodec = Entry.streamCodec
+            .apply(ByteBufCodecs.list())
+            .map(PresenceReportPayload::new, PresenceReportPayload::entries);
 
-    public static final Type<PresenceReportPayload> TYPE =
+    public static final Type<PresenceReportPayload> type =
             new Type<>(ResourceLocation.fromNamespaceAndPath("nimbusprojection", "presence_report"));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+        return type;
     }
 
     @Override
     public void handle(IPayloadContext context, ServerPlayer player) {
         PresenceTracker.report(player, entries);
-        //relay to the other players in the same dimension — they see this
-        //player's operation state on the shared keys
+        // relay to the other players in the same dimension — they see this
+        // player's operation state on the shared keys
         PacketDistributor.sendToPlayersInDimension(
                 player.serverLevel(),
-                new PresenceBroadcastPayload(player.getUUID(), entries, player.level().getGameTime()));
+                new PresenceBroadcastPayload(
+                        player.getUUID(), entries, player.level().getGameTime()));
     }
 }

@@ -12,7 +12,7 @@ public final class OffsetMiddleware implements FloatingMiddleware {
     private final int crossAxis;
     private final Integer alignmentAxis;
 
-    //region factory
+    // region factory
 
     /**
      * Creates an offset middleware with equal distance on the main axis.
@@ -53,7 +53,7 @@ public final class OffsetMiddleware implements FloatingMiddleware {
         this.alignmentAxis = alignmentAxis;
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String name() {
@@ -73,9 +73,7 @@ public final class OffsetMiddleware implements FloatingMiddleware {
 
         double effectiveCrossAxis = this.crossAxis;
         if (alignment != null && alignmentAxis != null) {
-            effectiveCrossAxis = alignment == FloatingPlacement.Alignment.end
-                    ? -alignmentAxis
-                    : alignmentAxis;
+            effectiveCrossAxis = alignment == FloatingPlacement.Alignment.end ? -alignmentAxis : alignmentAxis;
         }
 
         double dx;

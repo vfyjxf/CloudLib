@@ -16,23 +16,23 @@ import org.jetbrains.annotations.Nullable;
  */
 public class ButtonWidget extends Widget {
 
-    //region state
+    // region state
 
     private Component label;
     private @Nullable Runnable onClick;
     private boolean enabled = true;
     private boolean pressed = false;
 
-    //endregion
+    // endregion
 
-    //region colors
+    // region colors
 
     private int textColor = 0xFFFFFF;
     private int disabledTextColor = 0xA0A0A0;
 
-    //endregion
+    // endregion
 
-    //region textures
+    // region textures
 
     private VisualTexture normalTexture = new ColorTexture(0xFF555555);
     private VisualTexture hoverTexture = new ColorTexture(0xFF777777);
@@ -40,9 +40,9 @@ public class ButtonWidget extends Widget {
     private VisualTexture disabledTexture = new ColorTexture(0xFF444444);
     private @Nullable VisualTexture iconTexture = null;
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     public static ButtonWidget of(String label) {
         return new ButtonWidget(Component.literal(label));
@@ -83,9 +83,9 @@ public class ButtonWidget extends Widget {
         });
     }
 
-    //endregion
+    // endregion
 
-    //region configuration
+    // region configuration
 
     public Component label() {
         return label;
@@ -149,9 +149,9 @@ public class ButtonWidget extends Widget {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
@@ -187,9 +187,9 @@ public class ButtonWidget extends Widget {
         canvas.text(label, textX, textY, color, true);
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
@@ -206,5 +206,5 @@ public class ButtonWidget extends Widget {
         }
     }
 
-    //endregion
+    // endregion
 }

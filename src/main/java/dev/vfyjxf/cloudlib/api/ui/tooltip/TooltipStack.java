@@ -26,7 +26,7 @@ public sealed interface TooltipStack<T> {
 
     /**
      * Converts the held value to an {@link ItemStack} for vanilla / NeoForge rendering hooks.
-     * Returns {@link ItemStack#EMPTY} when no meaningful conversion exists.
+     * Returns {@link ItemStack#empty} when no meaningful conversion exists.
      */
     ItemStack asStack();
 
@@ -40,7 +40,7 @@ public sealed interface TooltipStack<T> {
         return stack.isEmpty() ? defaultFont : ClientHooks.getTooltipFont(stack, defaultFont);
     }
 
-    //region built-in implementations
+    // region built-in implementations
 
     /**
      * A tooltip stack backed by an {@link ItemStack}.
@@ -59,7 +59,9 @@ public sealed interface TooltipStack<T> {
     record Fluid(FluidStack value) implements TooltipStack<FluidStack> {
         @Override
         public ItemStack asStack() {
-            return value.isEmpty() ? ItemStack.EMPTY : new ItemStack(value.getFluid().getBucket());
+            return value.isEmpty()
+                    ? ItemStack.EMPTY
+                    : new ItemStack(value.getFluid().getBucket());
         }
     }
 
@@ -73,9 +75,9 @@ public sealed interface TooltipStack<T> {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     /**
      * Wraps an {@link ItemStack}.
@@ -98,6 +100,6 @@ public sealed interface TooltipStack<T> {
         return new Custom<>(value, toItemStack);
     }
 
-    //endregion
+    // endregion
 
 }

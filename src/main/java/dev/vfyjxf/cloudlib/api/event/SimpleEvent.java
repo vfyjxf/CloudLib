@@ -45,5 +45,4 @@ public sealed interface SimpleEvent<T> permits Events.SimpleEventImpl {
      * Unregister all listener.
      */
     void clearListeners();
-
 }

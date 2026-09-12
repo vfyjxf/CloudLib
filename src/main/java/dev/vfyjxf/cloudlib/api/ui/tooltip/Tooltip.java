@@ -49,7 +49,7 @@ import static dev.vfyjxf.cloudlib.api.ui.tooltip.TooltipLocator.*;
  */
 public final class Tooltip {
 
-    //region built-in markers
+    // region built-in markers
 
     /**
      * Title section — typically rendered at the very top.
@@ -76,19 +76,17 @@ public final class Tooltip {
      */
     public static final Namespace footer = Namespace.of(Constants.namespace, "footer");
 
-    //endregion
+    // endregion
 
-    //region sentinel
+    // region sentinel
 
-    private record TaggedEntry(TooltipEntry entry, Namespace marker) {
-    }
+    private record TaggedEntry(TooltipEntry entry, Namespace marker) {}
 
-    //endregion
+    // endregion
 
     private final MutableList<TaggedEntry> entries;
     private final MutableList<Consumer<Tooltip>> transforms;
     private @Nullable TooltipStack<?> stack;
-
 
     public static Tooltip create() {
         return new Tooltip();
@@ -103,14 +101,13 @@ public final class Tooltip {
     private Tooltip(
             MutableList<TaggedEntry> entries,
             MutableList<Consumer<Tooltip>> transforms,
-            @Nullable TooltipStack<?> stack
-    ) {
+            @Nullable TooltipStack<?> stack) {
         this.entries = entries;
         this.transforms = transforms;
         this.stack = stack;
     }
 
-    //region add (body marker defaults)
+    // region add (body marker defaults)
 
     @Contract("_ -> this")
     public Tooltip add(Component text) {
@@ -132,9 +129,9 @@ public final class Tooltip {
         return add(entry, body);
     }
 
-    //endregion
+    // endregion
 
-    //region add (explicit marker)
+    // region add (explicit marker)
 
     @Contract("_, _ -> this")
     public Tooltip add(Component text, Namespace marker) {
@@ -157,9 +154,9 @@ public final class Tooltip {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region insert (locator-based)
+    // region insert (locator-based)
 
     /**
      * Inserts an entry at the position determined by the given locator, tagged with {@link #body}.
@@ -223,9 +220,9 @@ public final class Tooltip {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region mark / remove
+    // region mark / remove
 
     /**
      * Reassigns the marker for all entries matching {@code matcher}.
@@ -249,7 +246,8 @@ public final class Tooltip {
      */
     @Contract("_, _ -> this")
     public Tooltip remark(Namespace oldMarker, Namespace newMarker) {
-        entries.replaceAll(tagged -> tagged.marker.equals(oldMarker) ? new TaggedEntry(tagged.entry(), newMarker) : tagged);
+        entries.replaceAll(
+                tagged -> tagged.marker.equals(oldMarker) ? new TaggedEntry(tagged.entry(), newMarker) : tagged);
         return this;
     }
 
@@ -273,9 +271,9 @@ public final class Tooltip {
         return !isEmpty();
     }
 
-    //endregion
+    // endregion
 
-    //region transforms
+    // region transforms
 
     /**
      * Registers a lazy transform that will be applied when the tooltip is built.
@@ -300,9 +298,9 @@ public final class Tooltip {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region merge
+    // region merge
 
     /**
      * Appends all entries and transforms from {@code other} into this tooltip.
@@ -314,9 +312,9 @@ public final class Tooltip {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region stack
+    // region stack
 
     @Nullable
     public TooltipStack<?> stack() {
@@ -329,9 +327,9 @@ public final class Tooltip {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region conversion
+    // region conversion
 
     /**
      * Applies pending transforms, then returns all entries in insertion order.
@@ -349,18 +347,19 @@ public final class Tooltip {
         MutableList<TooltipEntry> flat = flatEntries();
         MutableList<Either<FormattedText, TooltipComponent>> result = MutableLists.empty();
         for (TooltipEntry entry : flat) {
-            result.add(switch (entry) {
-                case TooltipEntry.TextEntry(var text) -> Either.left(text);
-                case TooltipEntry.DynamicEntry(var provider) -> Either.left(provider.get());
-                case TooltipEntry.ComponentEntry(var component) -> Either.right(component);
-            });
+            result.add(
+                    switch (entry) {
+                        case TooltipEntry.TextEntry(var text) -> Either.left(text);
+                        case TooltipEntry.DynamicEntry(var provider) -> Either.left(provider.get());
+                        case TooltipEntry.ComponentEntry(var component) -> Either.right(component);
+                    });
         }
         return result;
     }
 
-    //endregion
+    // endregion
 
-    //region copy
+    // region copy
 
     /**
      * Creates a shallow copy of the entry list. Immutable {@link TooltipEntry} records are shared;
@@ -370,9 +369,9 @@ public final class Tooltip {
         return new Tooltip(MutableLists.ofAll(entries), MutableLists.ofAll(transforms), stack);
     }
 
-    //endregion
+    // endregion
 
-    //region locator resolution
+    // region locator resolution
 
     private int resolveIndex(TooltipLocator locator) {
         return switch (locator) {
@@ -382,10 +381,11 @@ public final class Tooltip {
             case Relative(var anchor, var finder, var offset, var matchPriority) -> {
                 int matchIdx = findMatch(finder, matchPriority);
                 if (matchIdx < 0) yield entries.size();
-                int base = switch (anchor) {
-                    case before -> matchIdx;
-                    case after -> matchIdx + 1;
-                };
+                int base =
+                        switch (anchor) {
+                            case before -> matchIdx;
+                            case after -> matchIdx + 1;
+                        };
                 yield Math.clamp(base + offset, 0, entries.size());
             }
         };
@@ -393,7 +393,8 @@ public final class Tooltip {
 
     private int findMatch(TooltipFinder finder, MatchPriority priority) {
         return switch (finder) {
-            case TooltipFinder.ByMarker(var marker) -> scanEntries(tagged -> tagged.marker().equals(marker), priority);
+            case TooltipFinder.ByMarker(var marker) ->
+                scanEntries(tagged -> tagged.marker().equals(marker), priority);
             case TooltipFinder.ByEntry(var matcher) -> scanEntries(tagged -> matcher.test(tagged.entry()), priority);
         };
     }
@@ -414,6 +415,6 @@ public final class Tooltip {
         return result;
     }
 
-    //endregion
+    // endregion
 
 }

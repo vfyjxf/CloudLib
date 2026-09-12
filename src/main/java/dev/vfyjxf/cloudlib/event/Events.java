@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.event;
 
-
 import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.neoforge.common.NeoForge;
@@ -12,9 +11,7 @@ import java.util.function.Consumer;
  */
 public final class Events {
 
-    private Events() {
-
-    }
+    private Events() {}
 
     public static <T extends Event> void register(Class<T> type, Consumer<T> listener) {
         NeoForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, type, listener);
@@ -27,6 +24,4 @@ public final class Events {
     public static void unregister(Object listener) {
         NeoForge.EVENT_BUS.unregister(listener);
     }
-
-
 }

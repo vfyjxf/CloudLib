@@ -3,8 +3,8 @@ package dev.vfyjxf.cloudlib.api.ui.texture;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiSpriteManager;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiSpriteManager;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
@@ -36,10 +36,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul>
  */
 public record NineSliceTexture(
-        ResourceLocation location, int width, int height,
-        int left, int right, int top, int bottom,
-        boolean atlasSprite
-) implements SizedTexture, BatchableTexture {
+        ResourceLocation location, int width, int height, int left, int right, int top, int bottom, boolean atlasSprite)
+        implements SizedTexture, BatchableTexture {
     private static final Map<ResourceLocation, SpriteRegion> spriteRegions = new ConcurrentHashMap<>();
 
     /**
@@ -52,11 +50,12 @@ public record NineSliceTexture(
     /**
      * Creates a nine-slice texture with custom border sizes (standard mode).
      */
-    public NineSliceTexture(ResourceLocation location, int width, int height, int left, int right, int top, int bottom) {
+    public NineSliceTexture(
+            ResourceLocation location, int width, int height, int left, int right, int top, int bottom) {
         this(location, width, height, left, right, top, bottom, false);
     }
 
-    //region factory
+    // region factory
 
     /**
      * Creates a standard nine-slice texture with uniform border.
@@ -68,7 +67,8 @@ public record NineSliceTexture(
     /**
      * Creates a standard nine-slice texture with custom borders.
      */
-    public static NineSliceTexture of(ResourceLocation location, int width, int height, int left, int right, int top, int bottom) {
+    public static NineSliceTexture of(
+            ResourceLocation location, int width, int height, int left, int right, int top, int bottom) {
         return new NineSliceTexture(location, width, height, left, right, top, bottom, false);
     }
 
@@ -84,11 +84,12 @@ public record NineSliceTexture(
      * Creates an atlas sprite nine-slice texture with custom borders.
      * The location should be a sprite location registered in the GUI atlas.
      */
-    public static NineSliceTexture sprite(ResourceLocation spriteLocation, int width, int height, int left, int right, int top, int bottom) {
+    public static NineSliceTexture sprite(
+            ResourceLocation spriteLocation, int width, int height, int left, int right, int top, int bottom) {
         return new NineSliceTexture(spriteLocation, width, height, left, right, top, bottom, true);
     }
 
-    //endregion
+    // endregion
 
     /**
      * Creates a nine-slice texture with custom border sizes.
@@ -102,12 +103,11 @@ public record NineSliceTexture(
      * @param bottom      bottom border height
      * @param atlasSprite whether this is an atlas sprite
      */
-    public NineSliceTexture {
-    }
+    public NineSliceTexture {}
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     public void render(GuiGraphics graphics, int x, int y, int w, int h) {
@@ -127,31 +127,121 @@ public record NineSliceTexture(
 
         // Four corners (fixed size, never tiled)
         addQuad(buffer, matrix, region.uMin(), region.vMin(), region.uLeft(), region.vTop(), x, y, left, top);
-        addQuad(buffer, matrix, region.uRight(), region.vMin(), region.uMax(), region.vTop(), x + w - right, y, right, top);
-        addQuad(buffer, matrix, region.uMin(), region.vBottom(), region.uLeft(), region.vMax(), x, y + h - bottom, left, bottom);
-        addQuad(buffer, matrix, region.uRight(), region.vBottom(), region.uMax(), region.vMax(), x + w - right, y + h - bottom, right, bottom);
+        addQuad(
+                buffer,
+                matrix,
+                region.uRight(),
+                region.vMin(),
+                region.uMax(),
+                region.vTop(),
+                x + w - right,
+                y,
+                right,
+                top);
+        addQuad(
+                buffer,
+                matrix,
+                region.uMin(),
+                region.vBottom(),
+                region.uLeft(),
+                region.vMax(),
+                x,
+                y + h - bottom,
+                left,
+                bottom);
+        addQuad(
+                buffer,
+                matrix,
+                region.uRight(),
+                region.vBottom(),
+                region.uMax(),
+                region.vMax(),
+                x + w - right,
+                y + h - bottom,
+                right,
+                bottom);
 
         boolean hasHorizontalTiling = tiledMiddleWidth > 0 && middleWidth > 0;
         if (hasHorizontalTiling && top > 0) {
             // Top edge
-            addTiled(buffer, matrix, region.uLeft(), region.vMin(), region.uRight(), region.vTop(), x + left, y, tiledMiddleWidth, top, middleWidth, top);
+            addTiled(
+                    buffer,
+                    matrix,
+                    region.uLeft(),
+                    region.vMin(),
+                    region.uRight(),
+                    region.vTop(),
+                    x + left,
+                    y,
+                    tiledMiddleWidth,
+                    top,
+                    middleWidth,
+                    top);
         }
         if (hasHorizontalTiling && bottom > 0) {
             // Bottom edge
-            addTiled(buffer, matrix, region.uLeft(), region.vBottom(), region.uRight(), region.vMax(), x + left, y + h - bottom, tiledMiddleWidth, bottom, middleWidth, bottom);
+            addTiled(
+                    buffer,
+                    matrix,
+                    region.uLeft(),
+                    region.vBottom(),
+                    region.uRight(),
+                    region.vMax(),
+                    x + left,
+                    y + h - bottom,
+                    tiledMiddleWidth,
+                    bottom,
+                    middleWidth,
+                    bottom);
         }
         boolean hasVerticalTiling = tiledMiddleHeight > 0 && middleHeight > 0;
         if (hasVerticalTiling && left > 0) {
             // Left edge
-            addTiled(buffer, matrix, region.uMin(), region.vTop(), region.uLeft(), region.vBottom(), x, y + top, left, tiledMiddleHeight, left, middleHeight);
+            addTiled(
+                    buffer,
+                    matrix,
+                    region.uMin(),
+                    region.vTop(),
+                    region.uLeft(),
+                    region.vBottom(),
+                    x,
+                    y + top,
+                    left,
+                    tiledMiddleHeight,
+                    left,
+                    middleHeight);
         }
         if (hasVerticalTiling && right > 0) {
             // Right edge
-            addTiled(buffer, matrix, region.uRight(), region.vTop(), region.uMax(), region.vBottom(), x + w - right, y + top, right, tiledMiddleHeight, right, middleHeight);
+            addTiled(
+                    buffer,
+                    matrix,
+                    region.uRight(),
+                    region.vTop(),
+                    region.uMax(),
+                    region.vBottom(),
+                    x + w - right,
+                    y + top,
+                    right,
+                    tiledMiddleHeight,
+                    right,
+                    middleHeight);
         }
         if (tiledMiddleWidth > 0 && tiledMiddleHeight > 0 && middleWidth > 0 && middleHeight > 0) {
             // Center
-            addTiled(buffer, matrix, region.uLeft(), region.vTop(), region.uRight(), region.vBottom(), x + left, y + top, tiledMiddleWidth, tiledMiddleHeight, middleWidth, middleHeight);
+            addTiled(
+                    buffer,
+                    matrix,
+                    region.uLeft(),
+                    region.vTop(),
+                    region.uRight(),
+                    region.vBottom(),
+                    x + left,
+                    y + top,
+                    tiledMiddleWidth,
+                    tiledMiddleHeight,
+                    middleWidth,
+                    middleHeight);
         }
 
         BufferUploader.drawWithShader(buffer.buildOrThrow());
@@ -161,10 +251,18 @@ public record NineSliceTexture(
      * Adds tiled quads to the buffer, repeating the texture region to fill the target area.
      */
     private static void addTiled(
-            BufferBuilder buffer, Matrix4f matrix,
-            float uMin, float vMin, float uMax, float vMax,
-            int xOffset, int yOffset, int tiledWidth, int tiledHeight,
-            int tileWidth, int tileHeight) {
+            BufferBuilder buffer,
+            Matrix4f matrix,
+            float uMin,
+            float vMin,
+            float uMax,
+            float vMax,
+            int xOffset,
+            int yOffset,
+            int tiledWidth,
+            int tiledHeight,
+            int tileWidth,
+            int tileHeight) {
         int xTileCount = tiledWidth / tileWidth;
         int xRemainder = tiledWidth - (xTileCount * tileWidth);
         int yTileCount = tiledHeight / tileHeight;
@@ -196,18 +294,25 @@ public record NineSliceTexture(
      * Adds a single textured quad to the buffer.
      */
     private static void addQuad(
-            BufferBuilder buffer, Matrix4f matrix,
-            float uMin, float vMin, float uMax, float vMax,
-            int x, int y, int w, int h) {
+            BufferBuilder buffer,
+            Matrix4f matrix,
+            float uMin,
+            float vMin,
+            float uMax,
+            float vMax,
+            int x,
+            int y,
+            int w,
+            int h) {
         buffer.addVertex(matrix, x, y + h, 0).setUv(uMin, vMax);
         buffer.addVertex(matrix, x + w, y + h, 0).setUv(uMax, vMax);
         buffer.addVertex(matrix, x + w, y, 0).setUv(uMax, vMin);
         buffer.addVertex(matrix, x, y, 0).setUv(uMin, vMin);
     }
 
-    //endregion
+    // endregion
 
-    //region batchable texture
+    // region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float w, float h, int color) {
@@ -219,32 +324,128 @@ public record NineSliceTexture(
         float tiledMiddleHeight = h - top - bottom;
 
         // Four corners
-        emitter.textured(region.texture(), x, y, left, top, region.uMin(), region.vMin(), region.uLeft(), region.vTop(), color);
-        emitter.textured(region.texture(), x + w - right, y, right, top, region.uRight(), region.vMin(), region.uMax(), region.vTop(), color);
-        emitter.textured(region.texture(), x, y + h - bottom, left, bottom, region.uMin(), region.vBottom(), region.uLeft(), region.vMax(), color);
-        emitter.textured(region.texture(), x + w - right, y + h - bottom, right, bottom, region.uRight(), region.vBottom(), region.uMax(), region.vMax(), color);
+        emitter.textured(
+                region.texture(), x, y, left, top, region.uMin(), region.vMin(), region.uLeft(), region.vTop(), color);
+        emitter.textured(
+                region.texture(),
+                x + w - right,
+                y,
+                right,
+                top,
+                region.uRight(),
+                region.vMin(),
+                region.uMax(),
+                region.vTop(),
+                color);
+        emitter.textured(
+                region.texture(),
+                x,
+                y + h - bottom,
+                left,
+                bottom,
+                region.uMin(),
+                region.vBottom(),
+                region.uLeft(),
+                region.vMax(),
+                color);
+        emitter.textured(
+                region.texture(),
+                x + w - right,
+                y + h - bottom,
+                right,
+                bottom,
+                region.uRight(),
+                region.vBottom(),
+                region.uMax(),
+                region.vMax(),
+                color);
 
         boolean hasHorizontalTiling = tiledMiddleWidth > 0 && middleWidth > 0;
         if (hasHorizontalTiling && top > 0) {
             // Top edge
-            emitTiled(emitter, region.texture(), region.uLeft(), region.vMin(), region.uRight(), region.vTop(), x + left, y, tiledMiddleWidth, top, middleWidth, top, color);
+            emitTiled(
+                    emitter,
+                    region.texture(),
+                    region.uLeft(),
+                    region.vMin(),
+                    region.uRight(),
+                    region.vTop(),
+                    x + left,
+                    y,
+                    tiledMiddleWidth,
+                    top,
+                    middleWidth,
+                    top,
+                    color);
         }
         if (hasHorizontalTiling && bottom > 0) {
             // Bottom edge
-            emitTiled(emitter, region.texture(), region.uLeft(), region.vBottom(), region.uRight(), region.vMax(), x + left, y + h - bottom, tiledMiddleWidth, bottom, middleWidth, bottom, color);
+            emitTiled(
+                    emitter,
+                    region.texture(),
+                    region.uLeft(),
+                    region.vBottom(),
+                    region.uRight(),
+                    region.vMax(),
+                    x + left,
+                    y + h - bottom,
+                    tiledMiddleWidth,
+                    bottom,
+                    middleWidth,
+                    bottom,
+                    color);
         }
         boolean hasVerticalTiling = tiledMiddleHeight > 0 && middleHeight > 0;
         if (hasVerticalTiling && left > 0) {
             // Left edge
-            emitTiled(emitter, region.texture(), region.uMin(), region.vTop(), region.uLeft(), region.vBottom(), x, y + top, left, tiledMiddleHeight, left, middleHeight, color);
+            emitTiled(
+                    emitter,
+                    region.texture(),
+                    region.uMin(),
+                    region.vTop(),
+                    region.uLeft(),
+                    region.vBottom(),
+                    x,
+                    y + top,
+                    left,
+                    tiledMiddleHeight,
+                    left,
+                    middleHeight,
+                    color);
         }
         if (hasVerticalTiling && right > 0) {
             // Right edge
-            emitTiled(emitter, region.texture(), region.uRight(), region.vTop(), region.uMax(), region.vBottom(), x + w - right, y + top, right, tiledMiddleHeight, right, middleHeight, color);
+            emitTiled(
+                    emitter,
+                    region.texture(),
+                    region.uRight(),
+                    region.vTop(),
+                    region.uMax(),
+                    region.vBottom(),
+                    x + w - right,
+                    y + top,
+                    right,
+                    tiledMiddleHeight,
+                    right,
+                    middleHeight,
+                    color);
         }
         if (tiledMiddleWidth > 0 && tiledMiddleHeight > 0 && middleWidth > 0 && middleHeight > 0) {
             // Center
-            emitTiled(emitter, region.texture(), region.uLeft(), region.vTop(), region.uRight(), region.vBottom(), x + left, y + top, tiledMiddleWidth, tiledMiddleHeight, middleWidth, middleHeight, color);
+            emitTiled(
+                    emitter,
+                    region.texture(),
+                    region.uLeft(),
+                    region.vTop(),
+                    region.uRight(),
+                    region.vBottom(),
+                    x + left,
+                    y + top,
+                    tiledMiddleWidth,
+                    tiledMiddleHeight,
+                    middleWidth,
+                    middleHeight,
+                    color);
         }
     }
 
@@ -286,26 +487,13 @@ public record NineSliceTexture(
         }
         TextureAtlasSprite sprite = sprites.getSprite(location);
         SpriteRegion region = new SpriteRegion(
-                sprites,
-                sprite.atlasLocation(),
-                sprite.getU0(),
-                sprite.getV0(),
-                sprite.getU1(),
-                sprite.getV1()
-        );
+                sprites, sprite.atlasLocation(), sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1());
         spriteRegions.put(location, region);
         return region;
     }
 
     private record SpriteRegion(
-            GuiSpriteManager owner,
-            ResourceLocation texture,
-            float uMin,
-            float vMin,
-            float uMax,
-            float vMax
-    ) {
-    }
+            GuiSpriteManager owner, ResourceLocation texture, float uMin, float vMin, float uMax, float vMax) {}
 
     private record TextureRegion(
             ResourceLocation texture,
@@ -316,18 +504,25 @@ public record NineSliceTexture(
             float uLeft,
             float uRight,
             float vTop,
-            float vBottom
-    ) {
-    }
+            float vBottom) {}
 
     /**
      * Emits tiled quads via the emitter, repeating the texture region to fill the target area.
      */
     private static void emitTiled(
-            VertexEmitter emitter, ResourceLocation texture,
-            float uMin, float vMin, float uMax, float vMax,
-            float xOffset, float yOffset, float tiledWidth, float tiledHeight,
-            int tileWidth, int tileHeight, int color) {
+            VertexEmitter emitter,
+            ResourceLocation texture,
+            float uMin,
+            float vMin,
+            float uMax,
+            float vMax,
+            float xOffset,
+            float yOffset,
+            float tiledWidth,
+            float tiledHeight,
+            int tileWidth,
+            int tileHeight,
+            int color) {
         int xTileCount = (int) (tiledWidth / tileWidth);
         float xRemainder = tiledWidth - (xTileCount * tileWidth);
         int yTileCount = (int) (tiledHeight / tileHeight);
@@ -349,15 +544,16 @@ public record NineSliceTexture(
                     float maskTop = tileHeight - th;
                     float uOffset = (maskRight / tileWidth) * uSize;
                     float vOffset = (maskTop / tileHeight) * vSize;
-                    emitter.textured(texture, tx, ty + maskTop, tw, th, uMin, vMin + vOffset, uMax - uOffset, vMax, color);
+                    emitter.textured(
+                            texture, tx, ty + maskTop, tw, th, uMin, vMin + vOffset, uMax - uOffset, vMax, color);
                 }
             }
         }
     }
 
-    //endregion
+    // endregion
 
-    //region modification
+    // region modification
 
     /**
      * Converts this texture to an atlas sprite texture.
@@ -373,5 +569,5 @@ public record NineSliceTexture(
         return atlasSprite ? new NineSliceTexture(location, width, height, left, right, top, bottom, false) : this;
     }
 
-    //endregion
+    // endregion
 }

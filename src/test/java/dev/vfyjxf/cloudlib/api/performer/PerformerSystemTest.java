@@ -9,24 +9,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(EphemeralTestServerProvider.class)
 public class PerformerSystemTest {
 
-    private static final CompositeScenario<TestPerformer> CHAINED_SCENARIO = new CompositeScenario<>(
-            Namespace.of("test", "mergeable"),
-            TestPerformer.class,
-            performers -> new TestPerformer() {
+    private static final CompositeScenario<TestPerformer> chainedScenario = new CompositeScenario<>(
+            Namespace.of("test", "mergeable"), TestPerformer.class, performers -> new TestPerformer() {
                 @Override
                 public void test() {
                     for (TestPerformer performer : performers) {
                         performer.test();
                     }
                 }
-            }
-    );
+            });
     private MergeablePerformer<TestPerformer> mergeablePerformer;
-
 
     @BeforeEach
     void setup() {
-        mergeablePerformer = new TestMergeablePerformer<>(CHAINED_SCENARIO);
+        mergeablePerformer = new TestMergeablePerformer<>(chainedScenario);
         mergeablePerformer.put(() -> System.out.println("test1"));
         mergeablePerformer.put(() -> System.out.println("test2"));
         mergeablePerformer.put(() -> System.out.println("test high"), 100);

@@ -6,11 +6,17 @@ import net.minecraft.client.gui.GuiGraphics;
  * Rectangular border texture with configurable sides.
  */
 public record BorderTexture(
-        int colorTop, int colorRight, int colorBottom, int colorLeft,
-        int thicknessTop, int thicknessRight, int thicknessBottom, int thicknessLeft
-) implements BatchableTexture {
+        int colorTop,
+        int colorRight,
+        int colorBottom,
+        int colorLeft,
+        int thicknessTop,
+        int thicknessRight,
+        int thicknessBottom,
+        int thicknessLeft)
+        implements BatchableTexture {
 
-    //region factory
+    // region factory
 
     public static BorderTexture of(int color, int thickness) {
         return new BorderTexture(color, color, color, color, thickness, thickness, thickness, thickness);
@@ -21,8 +27,7 @@ public record BorderTexture(
     }
 
     public static BorderTexture sides(
-            int cTop, int cRight, int cBottom, int cLeft,
-            int tTop, int tRight, int tBottom, int tLeft) {
+            int cTop, int cRight, int cBottom, int cLeft, int tTop, int tRight, int tBottom, int tLeft) {
         return new BorderTexture(cTop, cRight, cBottom, cLeft, tTop, tRight, tBottom, tLeft);
     }
 
@@ -54,35 +59,39 @@ public record BorderTexture(
         return new BorderTexture(0, color, 0, 0, 0, thickness, 0, 0);
     }
 
-    //endregion
+    // endregion
 
-    //region modification
+    // region modification
 
     public BorderTexture withColor(int color) {
-        return new BorderTexture(color, color, color, color,
-                thicknessTop, thicknessRight, thicknessBottom, thicknessLeft);
+        return new BorderTexture(
+                color, color, color, color, thicknessTop, thicknessRight, thicknessBottom, thicknessLeft);
     }
 
     public BorderTexture withThickness(int thickness) {
-        return new BorderTexture(colorTop, colorRight, colorBottom, colorLeft,
-                thickness, thickness, thickness, thickness);
+        return new BorderTexture(
+                colorTop, colorRight, colorBottom, colorLeft, thickness, thickness, thickness, thickness);
     }
 
     public BorderTexture withAlpha(int alpha) {
         return new BorderTexture(
-                setAlpha(colorTop, alpha), setAlpha(colorRight, alpha),
-                setAlpha(colorBottom, alpha), setAlpha(colorLeft, alpha),
-                thicknessTop, thicknessRight, thicknessBottom, thicknessLeft
-        );
+                setAlpha(colorTop, alpha),
+                setAlpha(colorRight, alpha),
+                setAlpha(colorBottom, alpha),
+                setAlpha(colorLeft, alpha),
+                thicknessTop,
+                thicknessRight,
+                thicknessBottom,
+                thicknessLeft);
     }
 
     private static int setAlpha(int color, int alpha) {
         return (color & 0x00FFFFFF) | ((alpha & 0xFF) << 24);
     }
 
-    //endregion
+    // endregion
 
-    //region query
+    // region query
 
     public boolean isEmpty() {
         return thicknessTop == 0 && thicknessRight == 0 && thicknessBottom == 0 && thicknessLeft == 0;
@@ -96,9 +105,9 @@ public record BorderTexture(
         return thicknessTop == thicknessRight && thicknessTop == thicknessBottom && thicknessTop == thicknessLeft;
     }
 
-    //endregion
+    // endregion
 
-    //region batchable texture
+    // region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float width, float height, int tint) {
@@ -140,5 +149,5 @@ public record BorderTexture(
         }
     }
 
-    //endregion
+    // endregion
 }

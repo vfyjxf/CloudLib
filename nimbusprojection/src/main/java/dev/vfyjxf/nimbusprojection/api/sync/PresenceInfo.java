@@ -17,10 +17,4 @@ import java.util.UUID;
  * @param kind     what the player is doing
  * @param sinceTick server tick the state began — for ordering/freshness
  */
-public record PresenceInfo(
-        UUID playerId,
-        PanelKey panelKey,
-        PresenceKind kind,
-        long sinceTick
-) {
-}
+public record PresenceInfo(UUID playerId, PanelKey panelKey, PresenceKind kind, long sinceTick) {}

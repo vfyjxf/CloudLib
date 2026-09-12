@@ -53,9 +53,10 @@ public final class UIStyle {
     /**
      * Empty style with no properties.
      */
-    public static final UIStyle EMPTY = new UIStyle(Collections.emptyList());
+    public static final UIStyle empty = new UIStyle(Collections.emptyList());
 
     private final List<StyleProperty> properties;
+
     @Nullable
     private Map<String, StyleProperty> propertyMap;
 
@@ -71,7 +72,7 @@ public final class UIStyle {
      */
     public static UIStyle of(StyleProperty... properties) {
         if (properties.length == 0) {
-            return EMPTY;
+            return empty;
         }
         return new UIStyle(deduplicateProperties(Arrays.asList(properties)));
     }
@@ -94,7 +95,7 @@ public final class UIStyle {
      */
     public static UIStyle of(List<StyleProperty> properties) {
         if (properties.isEmpty()) {
-            return EMPTY;
+            return empty;
         }
         return new UIStyle(properties);
     }
@@ -166,8 +167,8 @@ public final class UIStyle {
      */
     public UIStyle without(String propertyName) {
         List<StyleProperty> filtered = properties.stream()
-                                                 .filter(p -> !p.type().id().equals(propertyName))
-                                                 .collect(Collectors.toList());
+                .filter(p -> !p.type().id().equals(propertyName))
+                .collect(Collectors.toList());
         return new UIStyle(filtered);
     }
 
@@ -326,8 +327,7 @@ public final class UIStyle {
 
         private final List<StyleProperty> properties = new ArrayList<>();
 
-        private Builder() {
-        }
+        private Builder() {}
 
         /**
          * Adds a property to the builder.
@@ -390,7 +390,7 @@ public final class UIStyle {
          */
         public UIStyle build() {
             if (properties.isEmpty()) {
-                return EMPTY;
+                return empty;
             }
             return new UIStyle(deduplicateProperties(properties));
         }

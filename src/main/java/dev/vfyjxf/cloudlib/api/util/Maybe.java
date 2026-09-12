@@ -14,7 +14,7 @@ import java.util.function.Function;
  */
 public sealed interface Maybe<T extends @Nullable Object> {
 
-    //region factories
+    // region factories
 
     static <T> Maybe<T> none() {
         return Empty.empty();
@@ -35,13 +35,13 @@ public sealed interface Maybe<T extends @Nullable Object> {
         return new Some<>(value);
     }
 
-    //endregion
+    // endregion
 
-    //region utils
+    // region utils
 
-    //TODO:add more utils
+    // TODO:add more utils
     default boolean isEmpty() {
-        return this == Empty.INSTANCE;
+        return this == Empty.instance;
     }
 
     default boolean defined() {
@@ -56,24 +56,23 @@ public sealed interface Maybe<T extends @Nullable Object> {
         return isEmpty() ? other : get();
     }
 
-    //endregion
+    // endregion
 
     T get();
 
     @SuppressWarnings("rawtypes")
     enum Empty implements Maybe {
-        INSTANCE;
+        instance;
 
         @SuppressWarnings("unchecked")
         static <T> Maybe<T> empty() {
-            return (Maybe<T>) INSTANCE;
+            return (Maybe<T>) instance;
         }
 
         @Override
         public Void get() {
             throw new NoSuchElementException("Maybe is empty");
         }
-
     }
 
     record Some<T>(T value) implements Maybe<T> {
@@ -83,6 +82,4 @@ public sealed interface Maybe<T extends @Nullable Object> {
             return value;
         }
     }
-
-
 }

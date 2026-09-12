@@ -50,5 +50,4 @@ public record BoxSizingProperty(BoxSizing boxSizing) implements LayoutProperty {
     public String toString() {
         return boxSizing.toString();
     }
-
 }

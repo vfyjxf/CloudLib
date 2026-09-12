@@ -18,8 +18,8 @@ import java.math.BigInteger;
 @NotNullByDefault
 public final class Ratio implements Comparable<Ratio> {
 
-    public static final Ratio ZERO = new Ratio(BigInteger.ZERO, BigInteger.ONE, true);
-    public static final Ratio ONE = new Ratio(BigInteger.ONE, BigInteger.ONE, true);
+    public static final Ratio zero = new Ratio(BigInteger.ZERO, BigInteger.ONE, true);
+    public static final Ratio one = new Ratio(BigInteger.ONE, BigInteger.ONE, true);
 
     public static Ratio of(long value) {
         return new Ratio(BigInteger.valueOf(value), BigInteger.ONE, true);
@@ -96,7 +96,7 @@ public final class Ratio implements Comparable<Ratio> {
     private static Ratio create(BigInteger numerator, BigInteger denominator, boolean exact) {
         if (denominator.signum() == 0) throw new IllegalArgumentException("denominator can't be zero");
         if (numerator.signum() == 0) {
-            return exact ? ZERO : new Ratio(BigInteger.ZERO, BigInteger.ONE, false);
+            return exact ? zero : new Ratio(BigInteger.ZERO, BigInteger.ONE, false);
         }
         if (denominator.signum() < 0) {
             numerator = numerator.negate();
@@ -108,7 +108,7 @@ public final class Ratio implements Comparable<Ratio> {
             denominator = denominator.divide(gcd);
         }
         if (exact && denominator.equals(BigInteger.ONE) && numerator.equals(BigInteger.ONE)) {
-            return ONE;
+            return one;
         }
         return new Ratio(numerator, denominator, exact);
     }
@@ -153,10 +153,7 @@ public final class Ratio implements Comparable<Ratio> {
     public Ratio multiply(Ratio other) {
         Checks.checkNotNull(other, "other");
         return create(
-                numerator.multiply(other.numerator),
-                denominator.multiply(other.denominator),
-                exact && other.exact
-        );
+                numerator.multiply(other.numerator), denominator.multiply(other.denominator), exact && other.exact);
     }
 
     public Ratio multiply(long value) {
@@ -167,10 +164,7 @@ public final class Ratio implements Comparable<Ratio> {
         Checks.checkNotNull(other, "other");
         if (other.isZero()) throw new IllegalArgumentException("can't divide by zero");
         return create(
-                numerator.multiply(other.denominator),
-                denominator.multiply(other.numerator),
-                exact && other.exact
-        );
+                numerator.multiply(other.denominator), denominator.multiply(other.numerator), exact && other.exact);
     }
 
     public Ratio divide(long value) {
@@ -188,8 +182,7 @@ public final class Ratio implements Comparable<Ratio> {
         return create(
                 numerator.multiply(other.denominator).add(other.numerator.multiply(denominator)),
                 denominator.multiply(other.denominator),
-                exact && other.exact
-        );
+                exact && other.exact);
     }
 
     public Ratio subtract(Ratio other) {
@@ -197,8 +190,7 @@ public final class Ratio implements Comparable<Ratio> {
         return create(
                 numerator.multiply(other.denominator).subtract(other.numerator.multiply(denominator)),
                 denominator.multiply(other.denominator),
-                exact && other.exact
-        );
+                exact && other.exact);
     }
 
     public Ratio negate() {

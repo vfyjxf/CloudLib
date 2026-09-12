@@ -22,5 +22,4 @@ public interface Performer<T> {
      * @return the performer
      */
     T performer();
-
 }

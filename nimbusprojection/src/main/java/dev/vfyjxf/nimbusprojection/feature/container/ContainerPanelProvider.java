@@ -27,22 +27,25 @@ import java.util.List;
  */
 public final class ContainerPanelProvider implements PanelProvider {
 
-    private static final double REACH = 6.0;
+    private static final double reach = 6.0;
     /** ~31° cone covers the whole 30° soft-focus cone — a panel exists
      *  wherever the interact key could reach it. */
-    private static final double CONE_COS_ENTER = Math.cos(Math.toRadians(31));
+    private static final double coneCosEnter = Math.cos(Math.toRadians(31));
 
     @Override
     public void provide(ProviderContext context, PanelSink sink) {
         Vec3 eye = context.player().getEyePosition();
         List<BlockPos> found = ContainerScan.all(
-                context.level(), context.player(),
-                eye, context.player().getLookAngle().normalize(),
-                REACH, CONE_COS_ENTER);
+                context.level(),
+                context.player(),
+                eye,
+                context.player().getLookAngle().normalize(),
+                reach,
+                coneCosEnter);
         for (BlockPos pos : found) {
             if (context.level().getCapability(Capabilities.ItemHandler.BLOCK, pos, null) == null) continue;
-            sink.offer(PanelSpec
-                    .of(keyOf(pos),
+            sink.offer(PanelSpec.of(
+                            keyOf(pos),
                             InworldAnchor.of(pos, new Vec3(0.5, 0.55, 0.5)),
                             Presentation.face(faceToward(eye, pos)),
                             ctx -> new ContainerPanelWidget(ctx, () -> pos))
@@ -53,8 +56,7 @@ public final class ContainerPanelProvider implements PanelProvider {
 
     /** Position-stable shared-domain key — same chest, same identity across clients. */
     public static PanelKey keyOf(BlockPos pos) {
-        return PanelKey.of("nimbusprojection",
-                "container/" + pos.getX() + "," + pos.getY() + "," + pos.getZ());
+        return PanelKey.of("nimbusprojection", "container/" + pos.getX() + "," + pos.getY() + "," + pos.getZ());
     }
 
     /** The block face most directly facing the viewer — re-picked each offer. */

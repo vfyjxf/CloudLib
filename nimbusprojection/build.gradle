@@ -4,6 +4,7 @@ plugins {
     id 'idea'
     id 'net.neoforged.moddev' version '2.0.122'
     id 'dev.vfyjxf.cloudlib.lang'
+    id 'dev.vfyjxf.cloudlib.style'
 }
 
 cloudLang {

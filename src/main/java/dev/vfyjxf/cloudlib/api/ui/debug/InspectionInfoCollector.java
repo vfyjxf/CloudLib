@@ -26,25 +26,23 @@ public final class InspectionInfoCollector {
         return collector;
     }
 
-    private InspectionInfoCollector() {
-    }
+    private InspectionInfoCollector() {}
 
-    //region add
+    // region add
 
     public InspectionInfoCollector add(String name, @Nullable Object value) {
         return add(name, value, InspectionProperty.categoryBasic);
     }
 
     public InspectionInfoCollector add(String name, @Nullable Object value, String category) {
-        return addProperty(new InspectionProperty(
-                name, InspectionProperty.format(value), null, category
-        ));
+        return addProperty(new InspectionProperty(name, InspectionProperty.format(value), null, category));
     }
 
     /**
      * Adds a property with a pre-formatted string value.
      */
-    public InspectionInfoCollector addFormatted(String name, String value, @Nullable String defaultValue, String category) {
+    public InspectionInfoCollector addFormatted(
+            String name, String value, @Nullable String defaultValue, String category) {
         return addProperty(new InspectionProperty(name, value, defaultValue, category));
     }
 
@@ -52,13 +50,10 @@ public final class InspectionInfoCollector {
         return addWithDefault(name, value, defaultValue, InspectionProperty.categoryBasic);
     }
 
-    public InspectionInfoCollector addWithDefault(String name, @Nullable Object value, @Nullable Object defaultValue, String category) {
+    public InspectionInfoCollector addWithDefault(
+            String name, @Nullable Object value, @Nullable Object defaultValue, String category) {
         return addProperty(new InspectionProperty(
-                name,
-                InspectionProperty.format(value),
-                InspectionProperty.format(defaultValue),
-                category
-        ));
+                name, InspectionProperty.format(value), InspectionProperty.format(defaultValue), category));
     }
 
     /**
@@ -70,9 +65,9 @@ public final class InspectionInfoCollector {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region query
+    // region query
 
     public MutableList<InspectionProperty> getAll() {
         return properties.asUnmodifiable();
@@ -90,5 +85,5 @@ public final class InspectionInfoCollector {
         return properties.isEmpty();
     }
 
-    //endregion
+    // endregion
 }

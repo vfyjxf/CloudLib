@@ -143,7 +143,8 @@ public final class Quantity<F> {
         Ratio converted = converter.convert(value, unit, target, material).value();
         long amount = converted.floor();
         Ratio remainderInTarget = converted.subtract(Ratio.of(amount));
-        Ratio remainderInSource = converter.convert(remainderInTarget, target, unit, material).value();
+        Ratio remainderInSource =
+                converter.convert(remainderInTarget, target, unit, material).value();
         Quantity<F> remainder = new Quantity<>(remainderInSource, unit, converter);
         return new DiscreteResult<>(amount, remainder, remainderInSource.isZero());
     }

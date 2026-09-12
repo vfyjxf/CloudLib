@@ -8,4 +8,3 @@ public interface ClientboundPayload extends CustomPacketPayload {
 
     void handle(IPayloadContext context, Player player);
 }
-

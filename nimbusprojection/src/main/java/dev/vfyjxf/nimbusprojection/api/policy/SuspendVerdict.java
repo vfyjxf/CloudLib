@@ -6,12 +6,11 @@ package dev.vfyjxf.nimbusprojection.api.policy;
 public enum SuspendVerdict {
 
     /** Panel lives and renders normally. */
-    LIVE,
+    live,
 
     /** Panel suspends: hidden and non-interactive this tick, but kept. */
-    SUSPEND,
+    suspend,
 
     /** Panel closes permanently (its anchor is gone, the world changed). */
-    CLOSE,
-
+    close,
 }

@@ -15,7 +15,7 @@ public final class ShiftMiddleware implements FloatingMiddleware {
     private final boolean checkCrossAxis;
     private final int padding;
 
-    //region factory
+    // region factory
 
     /**
      * Creates a shift middleware with default settings (main axis only).
@@ -50,7 +50,7 @@ public final class ShiftMiddleware implements FloatingMiddleware {
         this.padding = padding;
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String name() {

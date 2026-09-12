@@ -48,5 +48,4 @@ final class PathCache {
         Object epoch;
         WidgetPath path;
     }
-
 }

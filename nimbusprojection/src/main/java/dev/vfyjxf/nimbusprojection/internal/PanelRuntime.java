@@ -26,27 +26,32 @@ final class PanelRuntime implements InworldPanel {
     InworldPanelWidget widget;
 
     /** the group this panel belongs to, null for standalone panels */
-    @Nullable PanelKey groupKey;
-    GroupRole groupRole = GroupRole.PRIMARY;
+    @Nullable
+    PanelKey groupKey;
 
-    //region per-frame state
+    GroupRole groupRole = GroupRole.primary;
+
+    // region per-frame state
 
     /** resolved world-space anchor position this frame, null when not alive */
-    @Nullable Vec3 anchorWorld;
+    @Nullable
+    Vec3 anchorWorld;
     /** projected anchor point in gui px, null when behind the camera */
-    @Nullable FloatPos anchorScreen;
+    @Nullable
+    FloatPos anchorScreen;
     /** distance camera → anchor in blocks */
     double distance;
     /** whether the panel should be drawn this frame */
     boolean presented;
     /** whether the panel is currently presented flat in screen space */
     boolean flat;
-    /** resolved dock corner this frame (AUTO resolved to a concrete corner) */
-    Presentation.DockCorner dockCorner = Presentation.DockCorner.AUTO;
+    /** resolved dock corner this frame (auto resolved to a concrete corner) */
+    Presentation.DockCorner dockCorner = Presentation.DockCorner.auto;
     /** dock layout already placed this panel this frame — the conflict pass must leave it alone */
     boolean docked;
-    /** last resolved AUTO dock corner — hysteresis keeps it until the anchor crosses far past center */
-    @Nullable Presentation.DockCorner lastAutoCorner;
+    /** last resolved auto dock corner — hysteresis keeps it until the anchor crosses far past center */
+    @Nullable
+    Presentation.DockCorner lastAutoCorner;
 
     /** whether the resolved flat position should glide to its target (dock/floating/expand) */
     boolean smoothMove;
@@ -66,7 +71,8 @@ final class PanelRuntime implements InworldPanel {
     /** smoothed scene luminance behind the leader line's midpoint — picks dark/bright ink */
     float lineLum = 0.2f;
     /** normalized screen-space direction from the center toward the off-screen anchor */
-    @Nullable FloatPos indicatorDir;
+    @Nullable
+    FloatPos indicatorDir;
 
     /** this frame the dock column ran out of room and the panel shows chrome only */
     boolean folded;
@@ -95,7 +101,7 @@ final class PanelRuntime implements InworldPanel {
     /** current open-animation scale driven by the manager (1 = fully open) */
     float openScale = 1f;
 
-    //face presentation geometry (world space)
+    // face presentation geometry (world space)
     Vec3 faceOrigin;
     Vec3 faceU;
     Vec3 faceV;
@@ -106,12 +112,15 @@ final class PanelRuntime implements InworldPanel {
     /** true while every expand spot overlaps foreground screen area too much —
      *  the panel hides instead of covering the chrome (with hysteresis). */
     boolean expandHidden;
+
     double facePpb;
     /** offscreen target the face panel's widget tree is rendered into each frame */
-    @Nullable com.mojang.blaze3d.pipeline.RenderTarget faceTarget;
+    @Nullable
+    com.mojang.blaze3d.pipeline.RenderTarget faceTarget;
 
     /** panel-local pointer position when crosshair-pointed in world mode */
-    @Nullable FloatPos pointedUv;
+    @Nullable
+    FloatPos pointedUv;
 
     /**
      * 0..1 focus "heat": ramps up while this panel owns the player's attention
@@ -124,7 +133,7 @@ final class PanelRuntime implements InworldPanel {
     /** ticks since creation — decay countdown baseline */
     long bornTick;
 
-    //endregion
+    // endregion
 
     private boolean closed;
 
@@ -136,7 +145,7 @@ final class PanelRuntime implements InworldPanel {
         if (spec.groupRole() != null) this.groupRole = spec.groupRole();
     }
 
-    //region InworldPanel
+    // region InworldPanel
 
     @Override
     public PanelKey key() {
@@ -206,14 +215,15 @@ final class PanelRuntime implements InworldPanel {
         return widget.size();
     }
 
-    //endregion
+    // endregion
 
     boolean closed() {
         return closed;
     }
 
     /** The content's trace-mode handler, when it implements {@link InworldTraceable}. */
-    @Nullable InworldTraceable traceable() {
+    @Nullable
+    InworldTraceable traceable() {
         return widget.content() instanceof InworldTraceable t ? t : null;
     }
 

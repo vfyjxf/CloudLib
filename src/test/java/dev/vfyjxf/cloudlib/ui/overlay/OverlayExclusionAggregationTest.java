@@ -14,8 +14,7 @@ class OverlayExclusionAggregationTest {
     @Test
     void aggregatesExclusionAreasAcrossActiveOverlays() {
         var register = new OverlayRegisterImpl();
-        register.register(OverlayEntry.global("one", context -> new Widget(),
-                OverlayExclusion.fixed(0, 0, 10, 10)));
+        register.register(OverlayEntry.global("one", context -> new Widget(), OverlayExclusion.fixed(0, 0, 10, 10)));
 
         OverlayManager manager = newManager(register);
         Screen screen = new TestScreen();

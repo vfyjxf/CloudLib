@@ -30,7 +30,7 @@ import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
  *   <li>Child (red): 100x100 (fixed width, aspect ratio determines height)</li>
  * </ul>
  */
-//@TestScreen
+// @TestScreen
 public class TestNestedLayoutScreen extends BasicScreen {
 
     public TestNestedLayoutScreen() {
@@ -63,22 +63,18 @@ public class TestNestedLayoutScreen extends BasicScreen {
         wrapper.setSpacing(4);
 
         var label = LabelWidget.of("Case1: w=100%,max=100x100,ar=1")
-                               .setColor(0xFFFFFFFF).setShadow(true);
+                .setColor(0xFFFFFFFF)
+                .setShadow(true);
         label.useStyle(UIStyle.of(sizeOf(200, 12)));
         wrapper.addWidget(label);
 
         // Grandparent: Column, fixed 200x200
         var grandparent = ColumnWidget.create();
-        grandparent.useStyle(UIStyle.of(
-                sizeOf(200, 200),
-                background(new ColorTexture(0xFF333333))
-        ));
+        grandparent.useStyle(UIStyle.of(sizeOf(200, 200), background(new ColorTexture(0xFF333333))));
 
         // Parent: green, auto height
         var parent = new WidgetGroup<>();
-        parent.useStyle(UIStyle.of(
-                background(new ColorTexture(0xFF00FF00))
-        ));
+        parent.useStyle(UIStyle.of(background(new ColorTexture(0xFF00FF00))));
 
         // Child: red, width=100%, maxSize(100,100), aspectRatio=1
         var child = new Widget();
@@ -87,8 +83,7 @@ public class TestNestedLayoutScreen extends BasicScreen {
                 maxWidth(100),
                 maxHeight(100),
                 aspectRatio(1.0f),
-                background(new ColorTexture(0xFFFF0000))
-        ));
+                background(new ColorTexture(0xFFFF0000))));
 
         parent.addWidget(child);
         grandparent.addWidget(parent);
@@ -107,30 +102,22 @@ public class TestNestedLayoutScreen extends BasicScreen {
         wrapper.setSpacing(4);
 
         var label = LabelWidget.of("Case2: w=100px,ar=1 (no max)")
-                               .setColor(0xFFFFFFFF).setShadow(true);
+                .setColor(0xFFFFFFFF)
+                .setShadow(true);
         label.useStyle(UIStyle.of(sizeOf(200, 12)));
         wrapper.addWidget(label);
 
         // Grandparent: Column, fixed 200x200
         var grandparent = ColumnWidget.create();
-        grandparent.useStyle(UIStyle.of(
-                sizeOf(200, 200),
-                background(new ColorTexture(0xFF333333))
-        ));
+        grandparent.useStyle(UIStyle.of(sizeOf(200, 200), background(new ColorTexture(0xFF333333))));
 
         // Parent: green, auto height
         var parent = new WidgetGroup<>();
-        parent.useStyle(UIStyle.of(
-                background(new ColorTexture(0xFF00FF00))
-        ));
+        parent.useStyle(UIStyle.of(background(new ColorTexture(0xFF00FF00))));
 
         // Child: red, width=100px, aspectRatio=1
         var child = new Widget();
-        child.useStyle(UIStyle.of(
-                widthOf(100),
-                aspectRatio(1.0f),
-                background(new ColorTexture(0xFFFF0000))
-        ));
+        child.useStyle(UIStyle.of(widthOf(100), aspectRatio(1.0f), background(new ColorTexture(0xFFFF0000))));
 
         parent.addWidget(child);
         grandparent.addWidget(parent);

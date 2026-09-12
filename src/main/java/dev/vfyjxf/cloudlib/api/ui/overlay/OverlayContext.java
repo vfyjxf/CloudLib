@@ -17,5 +17,4 @@ public record OverlayContext(@Nullable Screen screen, Minecraft minecraft, int w
     public boolean is(Class<? extends Screen> type) {
         return type.isInstance(screen);
     }
-
 }

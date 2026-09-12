@@ -7,8 +7,7 @@ import dev.vfyjxf.cloudlib.api.ui.InputContext;
 
 public interface InputEvent extends WidgetEvent {
 
-
-    //region mouse click callbacks
+    // region mouse click callbacks
 
     @FunctionalInterface
     interface OnMouseClicked extends InputEvent {
@@ -24,10 +23,9 @@ public interface InputEvent extends WidgetEvent {
         EventDispatch onClick(InputContext input, int clickCount, BubbleContext context);
     }
 
-    //endregion
+    // endregion
 
-
-    //region mouse movement callbacks
+    // region mouse movement callbacks
 
     @FunctionalInterface
     interface OnMouseDragged extends InputEvent {
@@ -54,10 +52,9 @@ public interface InputEvent extends WidgetEvent {
         void onLeave(double mouseX, double mouseY, InterruptibleContext context);
     }
 
-    //endregion
+    // endregion
 
-
-    //region keyboard callbacks
+    // region keyboard callbacks
 
     @FunctionalInterface
     interface OnKeyPressed extends InputEvent {
@@ -73,5 +70,5 @@ public interface InputEvent extends WidgetEvent {
         EventDispatch onCharTyped(char codePoint, int modifiers, BubbleContext context);
     }
 
-    //endregion
+    // endregion
 }

@@ -29,21 +29,21 @@ public final class BoxBlueprint implements Blueprint.Group<BoxWidget, Widget> {
 
     private final Supplier<List<Blueprint<?>>> childrenSupplier;
     private @Nullable Object key;
-    private UIStyle style = UIStyle.EMPTY;
+    private UIStyle style = UIStyle.empty;
 
     private BoxBlueprint(Supplier<List<Blueprint<?>>> childrenSupplier) {
         this.childrenSupplier = childrenSupplier;
     }
 
-    //region dsl entry points
+    // region dsl entry points
 
     public static BoxBlueprint Box(Runnable content) {
         return ScopedReceiver.add(new BoxBlueprint(() -> ScopedReceiver.buildChildren(content)));
     }
 
-    //endregion
+    // endregion
 
-    //region builder methods
+    // region builder methods
 
     public BoxBlueprint key(@Nullable Object key) {
         this.key = key;
@@ -55,9 +55,9 @@ public final class BoxBlueprint implements Blueprint.Group<BoxWidget, Widget> {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region blueprint implementation
+    // region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -80,5 +80,5 @@ public final class BoxBlueprint implements Blueprint.Group<BoxWidget, Widget> {
         widget.useStyle(style);
     }
 
-    //endregion
+    // endregion
 }

@@ -18,7 +18,7 @@ import java.util.function.Consumer;
  */
 public class TextFieldWidget extends Widget {
 
-    //region state
+    // region state
 
     private String text = "";
     private String placeholder = "";
@@ -28,31 +28,31 @@ public class TextFieldWidget extends Widget {
     private boolean editable = true;
     private long cursorBlinkTime = 0;
 
-    //endregion
+    // endregion
 
-    //region colors
+    // region colors
 
     private int textColor = 0xFFFFFF;
     private int placeholderColor = 0x808080;
     private int cursorColor = 0xFFFFFF;
 
-    //endregion
+    // endregion
 
-    //region textures
+    // region textures
 
     private VisualTexture backgroundTexture = new ColorTexture(0xFF000000);
     private VisualTexture borderTexture = new ColorTexture(0xFFA0A0A0);
 
-    //endregion
+    // endregion
 
-    //region callbacks
+    // region callbacks
 
     private @Nullable Consumer<String> onTextChanged;
     private @Nullable Consumer<String> onEnterPressed;
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     public static TextFieldWidget create() {
         return new TextFieldWidget();
@@ -76,15 +76,15 @@ public class TextFieldWidget extends Widget {
         setupInputHandlers();
     }
 
-    //endregion
+    // endregion
 
-    //region input
+    // region input
 
     private void setupInputHandlers() {
         onMouseClick((input, clickCount, context) -> {
             if (!editable) return EventDispatch.pass;
             var font = context().font();
-            //input coords are scene-space — convert to local for the caret hit test
+            // input coords are scene-space — convert to local for the caret hit test
             int clickX = (int) sceneToLocal(input.mouseX(), input.mouseY()).x() - 4;
             int pos = 0;
             int width = 0;
@@ -118,7 +118,8 @@ public class TextFieldWidget extends Widget {
                 cursorPos = 0;
             } else if (keyCode == InputConstants.KEY_END) {
                 cursorPos = text.length();
-            } else if ((keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) && onEnterPressed != null) { // Enter
+            } else if ((keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER)
+                    && onEnterPressed != null) { // Enter
                 onEnterPressed.accept(text);
             }
             return EventDispatch.consumed;
@@ -143,9 +144,9 @@ public class TextFieldWidget extends Widget {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region configuration
+    // region configuration
 
     public String text() {
         return text;
@@ -214,9 +215,9 @@ public class TextFieldWidget extends Widget {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region lifecycle
+    // region lifecycle
 
     @Override
     public void tick() {
@@ -224,9 +225,9 @@ public class TextFieldWidget extends Widget {
         cursorBlinkTime++;
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
@@ -258,14 +259,15 @@ public class TextFieldWidget extends Widget {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
-        collector.addWithDefault("text", text.isEmpty() ? "(empty)" : truncate(text, 20), "(empty)", InspectionProperty.categoryData);
+        collector.addWithDefault(
+                "text", text.isEmpty() ? "(empty)" : truncate(text, 20), "(empty)", InspectionProperty.categoryData);
         collector.addWithDefault("textLength", text.length(), 0, InspectionProperty.categoryData);
         collector.addWithDefault("cursorPos", cursorPos, 0, InspectionProperty.categoryData);
         collector.addWithDefault("maxLength", maxLength, 256, InspectionProperty.categoryData);
@@ -279,5 +281,5 @@ public class TextFieldWidget extends Widget {
         return s.length() <= max ? s : s.substring(0, max - 3) + "...";
     }
 
-    //endregion
+    // endregion
 }

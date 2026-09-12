@@ -6,11 +6,11 @@
  * <p>
  * <h2>Key Types from taffy-java</h2>
  * <ul>
- *   <li>{@link dev.vfyjxf.taffy.style.TaffyDimension} - Size values supporting LENGTH, PERCENT, AUTO,
- *       MIN_CONTENT, MAX_CONTENT, FIT_CONTENT, STRETCH</li>
+ *   <li>{@link dev.vfyjxf.taffy.style.TaffyDimension} - Size values supporting LENGTH, PERCENT, auto,
+ *       MIN_CONTENT, MAX_CONTENT, FIT_CONTENT, stretch</li>
  *   <li>{@link dev.vfyjxf.taffy.style.LengthPercentage} - Values supporting LENGTH, PERCENT (for padding, border, gap)</li>
- *   <li>{@link dev.vfyjxf.taffy.style.LengthPercentageAuto} - Values supporting LENGTH, PERCENT, AUTO,
- *       MIN_CONTENT, MAX_CONTENT, FIT_CONTENT, STRETCH (for margin, inset)</li>
+ *   <li>{@link dev.vfyjxf.taffy.style.LengthPercentageAuto} - Values supporting LENGTH, PERCENT, auto,
+ *       MIN_CONTENT, MAX_CONTENT, FIT_CONTENT, stretch (for margin, inset)</li>
  * </ul>
  * <p>
  * <h2>Property Categories</h2>
@@ -45,4 +45,3 @@
  */
 @dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
 package dev.vfyjxf.cloudlib.api.ui.style.property.layout;
-

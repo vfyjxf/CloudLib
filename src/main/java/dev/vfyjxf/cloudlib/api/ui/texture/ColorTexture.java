@@ -27,7 +27,7 @@ import net.minecraft.client.gui.GuiGraphics;
  */
 public record ColorTexture(int color) implements BatchableTexture {
 
-    //region factory
+    // region factory
 
     /**
      * Creates a ColorTexture from RGB components (alpha = 255).
@@ -43,9 +43,9 @@ public record ColorTexture(int color) implements BatchableTexture {
         this((a << 24) | (r << 16) | (g << 8) | b);
     }
 
-    //endregion
+    // endregion
 
-    //region modification
+    // region modification
 
     /**
      * Creates a new ColorTexture with a different color.
@@ -61,18 +61,18 @@ public record ColorTexture(int color) implements BatchableTexture {
         return new ColorTexture((alpha << 24) | (color & 0x00FFFFFF));
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     public void render(GuiGraphics graphics, int x, int y, int width, int height) {
         graphics.fill(x, y, x + width, y + height, color);
     }
 
-    //endregion
+    // endregion
 
-    //region batchable texture
+    // region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float width, float height, int tintColor) {
@@ -80,9 +80,9 @@ public record ColorTexture(int color) implements BatchableTexture {
         emitter.colored(x, y, width, height, color);
     }
 
-    //endregion
+    // endregion
 
-    //region color utilities
+    // region color utilities
 
     /**
      * Extracts the alpha component (0-255).
@@ -112,5 +112,5 @@ public record ColorTexture(int color) implements BatchableTexture {
         return color & 0xFF;
     }
 
-    //endregion
+    // endregion
 }

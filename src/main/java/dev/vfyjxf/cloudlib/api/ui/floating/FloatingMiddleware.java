@@ -42,13 +42,13 @@ public interface FloatingMiddleware {
      */
     record Result(@Nullable FloatingPlacement resetPlacement, boolean rectsChanged) {
 
-        private static final Result DONE = new Result(null, false);
+        private static final Result done = new Result(null, false);
 
         /**
          * Continue to the next middleware without resetting.
          */
         public static Result done() {
-            return DONE;
+            return done;
         }
 
         /**

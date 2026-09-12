@@ -9,10 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class QuantityTest {
 
-    private final UnitConverter converter = UnitConverter.builder()
-            .add(TimeUnits.pack())
-            .add(ItemUnits.pack())
-            .build();
+    private final UnitConverter converter =
+            UnitConverter.builder().add(TimeUnits.pack()).add(ItemUnits.pack()).build();
 
     @Test
     void fluentConversionIsExact() {
@@ -32,8 +30,7 @@ class QuantityTest {
 
     @Test
     void addConvertsRightHandSideToLeftUnit() {
-        Quantity<TimeUnits> sum = converter.quantity(1, TimeUnits.minute)
-                .add(converter.quantity(30, TimeUnits.second));
+        Quantity<TimeUnits> sum = converter.quantity(1, TimeUnits.minute).add(converter.quantity(30, TimeUnits.second));
 
         assertEquals(Ratio.of(3, 2), sum.value());
         assertEquals(TimeUnits.minute, sum.unit());
@@ -41,8 +38,8 @@ class QuantityTest {
 
     @Test
     void subtractConvertsRightHandSideToLeftUnit() {
-        Quantity<TimeUnits> difference = converter.quantity(90, TimeUnits.second)
-                .subtract(converter.quantity(1, TimeUnits.minute));
+        Quantity<TimeUnits> difference =
+                converter.quantity(90, TimeUnits.second).subtract(converter.quantity(1, TimeUnits.minute));
 
         assertEquals(Ratio.of(30), difference.value());
         assertEquals(TimeUnits.second, difference.unit());

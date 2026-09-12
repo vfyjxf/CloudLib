@@ -8,5 +8,4 @@ public final class CloudNamespaces {
     public static Namespace ofMod(String path) {
         return Namespace.of(Constants.modId, path);
     }
-
 }

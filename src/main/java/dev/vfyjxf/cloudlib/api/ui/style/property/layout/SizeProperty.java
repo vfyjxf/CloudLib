@@ -17,7 +17,7 @@ import java.util.Objects;
  * <p>
  * The dimension types supported by taffy include:
  * <ul>
- *   <li>{@link TaffyDimension#AUTO} - automatic sizing</li>
+ *   <li>{@link TaffyDimension#auto} - automatic sizing</li>
  *   <li>{@link TaffyDimension#length(float)} - fixed pixel length</li>
  *   <li>{@link TaffyDimension#percent(float)} - percentage of parent (0.0 to 1.0)</li>
  *   <li>{@link TaffyDimension#minContent()} - minimum content size</li>
@@ -32,32 +32,31 @@ import java.util.Objects;
  */
 public record SizeProperty(TaffyDimension width, TaffyDimension height) implements LayoutProperty {
 
-    //region types
+    // region types
 
-    public static final StyleType<TaffySize<TaffyDimension>> type = StyleType.of(
-            "size",
-            () -> TaffySize.of(TaffyDimension.AUTO, TaffyDimension.AUTO),
-            (context, size) -> {
+    public static final StyleType<TaffySize<TaffyDimension>> type =
+            StyleType.of("size", () -> TaffySize.of(TaffyDimension.AUTO, TaffyDimension.AUTO), (context, size) -> {
                 context.layoutStyle().size.width = size.width;
                 context.layoutStyle().size.height = size.height;
-            }
-    );
+            });
 
-    //endregion
+    // endregion
 
-    //region constructors
+    // region constructors
 
     public SizeProperty(float width, float height) {
-        this(width < 0 ? TaffyDimension.AUTO : TaffyDimension.length(width), height < 0 ? TaffyDimension.AUTO : TaffyDimension.length(height));
+        this(
+                width < 0 ? TaffyDimension.AUTO : TaffyDimension.length(width),
+                height < 0 ? TaffyDimension.AUTO : TaffyDimension.length(height));
     }
 
     public SizeProperty(float size) {
         this(size, size);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - single dimension
+    // region factory - single dimension
 
     /**
      * Creates a size property with only the width set.
@@ -89,9 +88,9 @@ public record SizeProperty(TaffyDimension width, TaffyDimension height) implemen
         return new SizeProperty(null, value);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - percentage
+    // region factory - percentage
 
     /**
      * Creates a size property with percentage values for width and height.
@@ -121,9 +120,9 @@ public record SizeProperty(TaffyDimension width, TaffyDimension height) implemen
         return height(TaffyDimension.percent(percent));
     }
 
-    //endregion
+    // endregion
 
-    //region factory - special values
+    // region factory - special values
 
     /**
      * Creates a size property with auto sizing for both dimensions.
@@ -195,9 +194,9 @@ public record SizeProperty(TaffyDimension width, TaffyDimension height) implemen
         return new SizeProperty(TaffyDimension.maxContent(), TaffyDimension.maxContent());
     }
 
-    //endregion
+    // endregion
 
-    //region LayoutProperty implementation
+    // region LayoutProperty implementation
 
     @Override
     public StyleType<?> type() {
@@ -208,10 +207,8 @@ public record SizeProperty(TaffyDimension width, TaffyDimension height) implemen
     public void apply(StyleContext context) {
         TaffySize<TaffyDimension> current = context.get(type);
 
-        TaffySize<TaffyDimension> merged = TaffySize.of(
-                width != null ? width : current.width,
-                height != null ? height : current.height
-        );
+        TaffySize<TaffyDimension> merged =
+                TaffySize.of(width != null ? width : current.width, height != null ? height : current.height);
 
         context.set(type, merged);
         context.applyGeneric(this);
@@ -227,7 +224,7 @@ public record SizeProperty(TaffyDimension width, TaffyDimension height) implemen
         }
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String toString() {

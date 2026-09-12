@@ -24,12 +24,7 @@ import org.jetbrains.annotations.Nullable;
  * re-reads and re-validates the source on commit — the preview never moves
  * items by itself.
  */
-public record WorldDrag(
-        ItemStack carried,
-        int sourceSlot,
-        int button,
-        @Nullable BlockPos sourceContainer
-) {
+public record WorldDrag(ItemStack carried, int sourceSlot, int button, @Nullable BlockPos sourceContainer) {
 
     /** Player-inventory source — the common case. */
     public WorldDrag(ItemStack carried, int sourceSlot, int button) {
@@ -45,10 +40,7 @@ public record WorldDrag(
      * Narrows/reorders the collected trail before commit. Default: the trail
      * as gathered (every crossed container, earliest first, deduplicated).
      */
-    public java.util.List<BlockPos> commitTargets(
-            java.util.List<BlockPos> trail,
-            InworldPanelContext ctx
-    ) {
+    public java.util.List<BlockPos> commitTargets(java.util.List<BlockPos> trail, InworldPanelContext ctx) {
         return trail;
     }
 }

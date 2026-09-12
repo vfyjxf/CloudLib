@@ -13,12 +13,13 @@ import org.jetbrains.annotations.Nullable;
 public class TestBlock extends BasicEntityBlock<TestBlockEntity> {
 
     public TestBlock() {
-        super(TestRegistry.testBlockEntity, TestBlockEntity.Menu.INFO, BlockBehaviour.Properties.of());
+        super(TestRegistry.testBlockEntity, TestBlockEntity.Menu.info, BlockBehaviour.Properties.of());
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
+    public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(
+            Level level, BlockState state, BlockEntityType<T> blockEntityType) {
         return (BlockEntityTicker<T>) TestBlockEntity.ticker();
     }
 }

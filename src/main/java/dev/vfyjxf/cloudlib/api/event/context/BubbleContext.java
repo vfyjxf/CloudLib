@@ -13,11 +13,9 @@ public final class BubbleContext {
     private boolean cancelled = false;
     private boolean interrupted = false;
 
-
     public BubbleContext(EventChannel<?> source) {
         this.source = source;
     }
-
 
     public EventChannel<?> target() {
         return source;

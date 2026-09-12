@@ -11,11 +11,11 @@ import org.jetbrains.annotations.Nullable;
 public enum BlockEntityProviderType implements MenuProviderType<BlockEntity> {
     instance;
 
-    private static final ResourceLocation ID = MenuProviderType.createId("block_entity");
+    private static final ResourceLocation id = MenuProviderType.createId("block_entity");
 
     @Override
     public ResourceLocation id() {
-        return ID;
+        return id;
     }
 
     @Override

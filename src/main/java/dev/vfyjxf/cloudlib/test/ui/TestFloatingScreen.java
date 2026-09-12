@@ -34,7 +34,7 @@ import static dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares.*;
  *   <li>Dynamic placement switching</li>
  * </ul>
  */
-//@TestScreen
+// @TestScreen
 public class TestFloatingScreen extends BasicScreen {
 
     // ========== State ==========
@@ -60,8 +60,7 @@ public class TestFloatingScreen extends BasicScreen {
                 UIStyles.flex(1),
                 UIStyles.minSize(0, 0),
                 UIStyles.padding(12),
-                UIStyles.background(new ColorTexture(0xCC222222))
-        ));
+                UIStyles.background(new ColorTexture(0xCC222222))));
 
         // Title
         root.addWidget(createTitle());
@@ -83,13 +82,12 @@ public class TestFloatingScreen extends BasicScreen {
         // Status bar
         root.addWidget(createStatusBar());
 
-        mainGroup().addWidget(
-                Inspector.create()
-                         .setTrackMouse(true)
-                         .setDisplayMode(Inspector.DisplayMode.FULL)
-                         .useStyle(UIStyles.positionAbsolute(), UIStyles.sizeOf(280, 180))
-                         .setSceneLayer(SceneLayer.debug)
-        );
+        mainGroup()
+                .addWidget(Inspector.create()
+                        .setTrackMouse(true)
+                        .setDisplayMode(Inspector.DisplayMode.full)
+                        .useStyle(UIStyles.positionAbsolute(), UIStyles.sizeOf(280, 180))
+                        .setSceneLayer(SceneLayer.debug));
 
         mainGroup().addWidget(root);
     }
@@ -100,9 +98,7 @@ public class TestFloatingScreen extends BasicScreen {
         var header = RowWidget.create(8);
         header.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
-        var title = LabelWidget.of("FloatingEffect Test")
-                               .setColor(0xFFFFAA00)
-                               .setShadow(true);
+        var title = LabelWidget.of("FloatingEffect Test").setColor(0xFFFFAA00).setShadow(true);
         title.useStyle(UIStyle.of(UIStyles.sizeOf(200, 12)));
         header.addWidget(title);
 
@@ -113,10 +109,7 @@ public class TestFloatingScreen extends BasicScreen {
 
     private Widget createPlacementControls() {
         var panel = ColumnWidget.create(4);
-        panel.useStyle(UIStyle.of(
-                UIStyles.padding(6),
-                UIStyles.background(new ColorTexture(0x40000000))
-        ));
+        panel.useStyle(UIStyle.of(UIStyles.padding(6), UIStyles.background(new ColorTexture(0x40000000))));
 
         var label = LabelWidget.of("FloatingPlacement:").setColor(0xFFAAAA00);
         label.useStyle(UIStyle.of(UIStyles.heightOf(12)));
@@ -162,8 +155,7 @@ public class TestFloatingScreen extends BasicScreen {
                 UIStyles.padding(6),
                 UIStyles.flexWrap(),
                 UIStyles.rowGap(4),
-                UIStyles.background(new ColorTexture(0x40000000))
-        ));
+                UIStyles.background(new ColorTexture(0x40000000))));
 
         panel.addWidget(LabelWidget.of("FloatingMiddleware:").setColor(0xFF00AAAA));
         panel.addWidget(createButton("Toggle Flip", this::toggleFlip, 0xFF885500));
@@ -185,8 +177,7 @@ public class TestFloatingScreen extends BasicScreen {
                 UIStyles.padding(0),
                 UIStyles.alignItemsCenter(),
                 UIStyles.justifyCenter(),
-                UIStyles.background(new ColorTexture(0x20446688))
-        ));
+                UIStyles.background(new ColorTexture(0x20446688))));
 
         // Reference element — a colored box in the center
         referenceBox = BoxWidget.create();
@@ -194,23 +185,17 @@ public class TestFloatingScreen extends BasicScreen {
                 UIStyles.sizeOf(80, 32),
                 UIStyles.background(new ColorTexture(0xFF4488CC)),
                 UIStyles.alignItemsCenter(),
-                UIStyles.justifyCenter()
-        ));
-        var refLabel = LabelWidget.of("Reference")
-                                  .setColor(0xFFFFFFFF)
-                                  .setShadow(true);
+                UIStyles.justifyCenter()));
+        var refLabel = LabelWidget.of("Reference").setColor(0xFFFFFFFF).setShadow(true);
         refLabel.useStyle(UIStyle.of(UIStyles.sizeOf(60, 12)));
         referenceBox.addChild(refLabel);
         area.addChild(referenceBox);
 
         // Floating element — a tooltip-like label
         floatingLabel = LabelWidget.of("Floating: " + currentPlacement.name())
-                                   .setColor(0xFFFFFF88)
-                                   .setShadow(true);
-        floatingLabel.useStyle(UIStyle.of(
-                UIStyles.padding(4, 8),
-                UIStyles.background(new ColorTexture(0xEE333333))
-        ));
+                .setColor(0xFFFFFF88)
+                .setShadow(true);
+        floatingLabel.useStyle(UIStyle.of(UIStyles.padding(4, 8), UIStyles.background(new ColorTexture(0xEE333333))));
 
         // Apply the floating effect
         activeEffect = FloatingEffect.create(referenceBox, currentPlacement, buildMiddleware());
@@ -227,14 +212,11 @@ public class TestFloatingScreen extends BasicScreen {
      */
     private Widget createPlacementShowcase() {
         var container = ColumnWidget.create(4);
-        container.useStyle(UIStyle.of(
-                UIStyles.padding(6),
-                UIStyles.background(new ColorTexture(0x30000000))
-        ));
+        container.useStyle(UIStyle.of(UIStyles.padding(6), UIStyles.background(new ColorTexture(0x30000000))));
 
         var label = LabelWidget.of("All Placements Preview (offset + flip + shift):")
-                               .setColor(0xFF88AACC)
-                               .setShadow(true);
+                .setColor(0xFF88AACC)
+                .setShadow(true);
         label.useStyle(UIStyle.of(UIStyles.heightOf(12)));
         container.addWidget(label);
 
@@ -243,8 +225,7 @@ public class TestFloatingScreen extends BasicScreen {
                 UIStyles.heightOf(100),
                 UIStyles.alignItemsCenter(),
                 UIStyles.justifyCenter(),
-                UIStyles.background(new ColorTexture(0x15FFFFFF))
-        ));
+                UIStyles.background(new ColorTexture(0x15FFFFFF))));
 
         // Small reference
         var smallRef = BoxWidget.create();
@@ -252,29 +233,22 @@ public class TestFloatingScreen extends BasicScreen {
                 UIStyles.sizeOf(48, 24),
                 UIStyles.background(new ColorTexture(0xFF558866)),
                 UIStyles.alignItemsCenter(),
-                UIStyles.justifyCenter()
-        ));
-        var smallRefLabel = LabelWidget.of("Ref")
-                                       .setColor(0xFFFFFFFF);
+                UIStyles.justifyCenter()));
+        var smallRefLabel = LabelWidget.of("Ref").setColor(0xFFFFFFFF);
         smallRefLabel.useStyle(UIStyle.of(UIStyles.sizeOf(24, 10)));
         smallRef.addChild(smallRefLabel);
         area.addChild(smallRef);
 
         // Create a tiny floating label for each of the 4 main placements
         FloatingPlacement[] showcasePlacements = {
-                FloatingPlacement.top, FloatingPlacement.bottom, FloatingPlacement.left, FloatingPlacement.right
+            FloatingPlacement.top, FloatingPlacement.bottom, FloatingPlacement.left, FloatingPlacement.right
         };
         int[] colors = {0xFF6688CC, 0xFF66CC88, 0xFFCC8866, 0xFFCC6688};
 
         for (int i = 0; i < showcasePlacements.length; i++) {
             var p = showcasePlacements[i];
-            var floater = LabelWidget.of(p.name())
-                                     .setColor(colors[i])
-                                     .setShadow(true);
-            floater.useStyle(UIStyle.of(
-                    UIStyles.padding(2, 4),
-                    UIStyles.background(new ColorTexture(0xCC222222))
-            ));
+            var floater = LabelWidget.of(p.name()).setColor(colors[i]).setShadow(true);
+            floater.useStyle(UIStyle.of(UIStyles.padding(2, 4), UIStyles.background(new ColorTexture(0xCC222222))));
             floater.useEffect(floating(smallRef, p, offset(4), flip(), shift(2)));
             area.addChild(floater);
         }
@@ -289,8 +263,7 @@ public class TestFloatingScreen extends BasicScreen {
         var bar = RowWidget.create(8);
         bar.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
-        statusLabel = LabelWidget.of(buildStatusText())
-                                 .setColor(0xFFAAAAAA);
+        statusLabel = LabelWidget.of(buildStatusText()).setColor(0xFFAAAAAA);
         statusLabel.useStyle(UIStyle.of(UIStyles.flexGrow(1)));
         bar.addWidget(statusLabel);
 
@@ -333,10 +306,8 @@ public class TestFloatingScreen extends BasicScreen {
     }
 
     private FloatingMiddleware[] buildMiddleware() {
-        return new FloatingMiddleware[]{
-                offset(offsetDistance),
-                enableFlip ? flip() : null,
-                enableShift ? shift(4) : null
+        return new FloatingMiddleware[] {
+            offset(offsetDistance), enableFlip ? flip() : null, enableShift ? shift(4) : null
         };
     }
 
@@ -349,10 +320,7 @@ public class TestFloatingScreen extends BasicScreen {
     private String buildStatusText() {
         return String.format(
                 "FloatingPlacement: %s | Offset: %d | Flip: %s | Shift: %s",
-                currentPlacement.name(), offsetDistance,
-                enableFlip ? "ON" : "OFF",
-                enableShift ? "ON" : "OFF"
-        );
+                currentPlacement.name(), offsetDistance, enableFlip ? "ON" : "OFF", enableShift ? "ON" : "OFF");
     }
 
     // ========== Helpers ==========
@@ -364,15 +332,13 @@ public class TestFloatingScreen extends BasicScreen {
     }
 
     private ButtonWidget createPlacementButton(String label, FloatingPlacement placement, int color) {
-        var btn = ButtonWidget.of(label, () -> setPlacement(placement))
-                              .setColors(color, lighten(color), darken(color));
+        var btn = ButtonWidget.of(label, () -> setPlacement(placement)).setColors(color, lighten(color), darken(color));
         btn.useStyle(UIStyle.of(UIStyles.minWidth(70), UIStyles.heightOf(14), UIStyles.padding(1, 4)));
         return btn;
     }
 
     private ButtonWidget createButton(String label, Runnable action, int color) {
-        var btn = ButtonWidget.of(label, action)
-                              .setColors(color, lighten(color), darken(color));
+        var btn = ButtonWidget.of(label, action).setColors(color, lighten(color), darken(color));
         btn.useStyle(UIStyle.of(UIStyles.minWidth(70), UIStyles.heightOf(16), UIStyles.padding(2)));
         return btn;
     }

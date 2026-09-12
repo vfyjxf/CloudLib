@@ -13,13 +13,14 @@ import org.jetbrains.annotations.Nullable;
 public class SyncedTestBlock extends BasicEntityBlock<SyncedTestBlockEntity> {
 
     public SyncedTestBlock() {
-        //no menu info — this block has no menu; BasicEntityBlock.useWithoutItem null-checks it.
+        // no menu info — this block has no menu; BasicEntityBlock.useWithoutItem null-checks it.
         super(TestRegistry.testSyncedBlockEntity, null, BlockBehaviour.Properties.of());
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
+    public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(
+            Level level, BlockState state, BlockEntityType<T> blockEntityType) {
         return (BlockEntityTicker<T>) SyncedTestBlockEntity.ticker();
     }
 }

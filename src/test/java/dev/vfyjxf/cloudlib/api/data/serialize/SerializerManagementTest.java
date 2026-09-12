@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SerializerManagementTest {
 
     private static HolderLookup.Provider provider() {
-        //an empty provider suffices for primitive codecs (INT/STRING), which do not consult registries
+        // an empty provider suffices for primitive codecs (INT/STRING), which do not consult registries
         return HolderLookup.Provider.create(Stream.empty());
     }
 
@@ -35,7 +35,7 @@ class SerializerManagementTest {
         assertTrue(saved.contains("count"));
         assertTrue(saved.contains("label"));
 
-        //load into fresh handles — must be silent (no dirty, no listeners)
+        // load into fresh handles — must be silent (no dirty, no listeners)
         Handle<Integer> count2 = Handle.of(0);
         Handle<String> label2 = Handle.of("");
         var management2 = new SerializerManagement();
@@ -45,14 +45,15 @@ class SerializerManagementTest {
 
         assertEquals(42, count2.get());
         assertEquals("hello", label2.get());
-        assertFalse(count2.dirty()); //silent load
+        assertFalse(count2.dirty()); // silent load
     }
 
     @Test
     void duplicateNameRejected() {
         var management = new SerializerManagement();
         management.register(Serialize.create("x", Handle.of(0), Codec.INT));
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> management.register(Serialize.create("x", Handle.of(0), Codec.INT)));
     }
 
@@ -69,7 +70,7 @@ class SerializerManagementTest {
         management.loadAll(tag, provider());
 
         assertEquals(7, h.get());
-        assertEquals(0, fires[0]); //load must not fire listeners
+        assertEquals(0, fires[0]); // load must not fire listeners
         assertFalse(h.dirty());
     }
 
@@ -80,7 +81,7 @@ class SerializerManagementTest {
         management.register(Serialize.create("a", Handle.of(0), Codec.INT));
         assertTrue(management.hasSerializers());
 
-        //save/load of an empty tag is a no-op
+        // save/load of an empty tag is a no-op
         management.loadAll(new CompoundTag(), provider());
     }
 }

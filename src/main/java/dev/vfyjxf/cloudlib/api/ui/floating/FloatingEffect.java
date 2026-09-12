@@ -6,9 +6,9 @@ import dev.vfyjxf.cloudlib.api.ui.base.CoordinateSpace;
 import dev.vfyjxf.cloudlib.api.ui.base.SceneLayer;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.effect.Effect;
+import dev.vfyjxf.cloudlib.api.ui.layout.LayoutHandler;
 import dev.vfyjxf.cloudlib.api.ui.layout.LayoutScope;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
-import dev.vfyjxf.cloudlib.api.ui.layout.LayoutHandler;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -58,7 +58,7 @@ import java.util.Objects;
  */
 public final class FloatingEffect implements Effect {
 
-    //region state
+    // region state
 
     private final Widget reference;
     private final FloatingPlacement placement;
@@ -69,9 +69,9 @@ public final class FloatingEffect implements Effect {
      */
     private @Nullable FloatingPositioning.PositionResult lastResult;
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     /**
      * Creates a floating effect that positions the target widget relative to the reference.
@@ -81,8 +81,11 @@ public final class FloatingEffect implements Effect {
      * @param middleware ordered middleware to apply (nulls are filtered out)
      * @return the effect
      */
-    public static FloatingEffect create(Widget reference, FloatingPlacement placement, FloatingMiddleware... middleware) {
-        return new FloatingEffect(reference, placement,
+    public static FloatingEffect create(
+            Widget reference, FloatingPlacement placement, FloatingMiddleware... middleware) {
+        return new FloatingEffect(
+                reference,
+                placement,
                 Arrays.stream(middleware).filter(Objects::nonNull).toList());
     }
 
@@ -94,7 +97,8 @@ public final class FloatingEffect implements Effect {
      * @param middleware ordered middleware to apply
      * @return the effect
      */
-    public static FloatingEffect create(Widget reference, FloatingPlacement placement, List<FloatingMiddleware> middleware) {
+    public static FloatingEffect create(
+            Widget reference, FloatingPlacement placement, List<FloatingMiddleware> middleware) {
         return new FloatingEffect(reference, placement, middleware);
     }
 
@@ -104,9 +108,9 @@ public final class FloatingEffect implements Effect {
         this.middleware = middleware;
     }
 
-    //endregion
+    // endregion
 
-    //region accessors
+    // region accessors
 
     /**
      * @return the last computed position result, or null if not yet computed
@@ -130,7 +134,7 @@ public final class FloatingEffect implements Effect {
         return (T) data.get(key);
     }
 
-    //endregion
+    // endregion
 
     @Override
     public void apply(Widget widget) {
@@ -140,7 +144,7 @@ public final class FloatingEffect implements Effect {
         widget.onLayout(this::resolveLayout);
     }
 
-    //region layout resolution
+    // region layout resolution
 
     private void resolveLayout(Widget widget, LayoutScope scope) {
         scope.useTaffy();
@@ -161,10 +165,8 @@ public final class FloatingEffect implements Effect {
         Rect boundary = new Rect(0, 0, root.width(), root.height());
 
         // Run the positioning engine
-        FloatingPositioning.PositionResult result = FloatingPositioning.compute(
-                referenceRect, floatingRect, boundary,
-                placement, middleware
-        );
+        FloatingPositioning.PositionResult result =
+                FloatingPositioning.compute(referenceRect, floatingRect, boundary, placement, middleware);
         lastResult = result;
 
         // Set position directly in scene space — extra-layer rendering
@@ -173,5 +175,5 @@ public final class FloatingEffect implements Effect {
         scope.setPosition((float) result.x(), (float) result.y());
     }
 
-    //endregion
+    // endregion
 }

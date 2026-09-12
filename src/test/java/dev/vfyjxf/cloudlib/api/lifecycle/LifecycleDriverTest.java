@@ -26,7 +26,9 @@ class LifecycleDriverTest {
         receiver.context(context, "one", "context");
 
         assertFalse(driver.isLoaded());
-        assertEquals(List.of("test.recipes"), driver.missing().stream().map(LifecycleState::id).toList());
+        assertEquals(
+                List.of("test.recipes"),
+                driver.missing().stream().map(LifecycleState::id).toList());
 
         receiver.event(recipes, "recipes");
 
@@ -82,7 +84,9 @@ class LifecycleDriverTest {
         receiver.event(recipes, "recipes");
 
         assertFalse(driver.isLoaded());
-        assertEquals(List.of("test.tags"), driver.missing().stream().map(LifecycleState::id).toList());
+        assertEquals(
+                List.of("test.tags"),
+                driver.missing().stream().map(LifecycleState::id).toList());
         assertEquals(List.of("load", "unload"), calls);
     }
 

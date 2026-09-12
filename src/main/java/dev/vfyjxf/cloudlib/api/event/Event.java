@@ -43,7 +43,7 @@ public sealed interface Event<T> permits Events.EventImpl {
      */
     @CanIgnoreReturnValue
     default T register(T listener) {
-        return register(listener, EventPriority.DEFAULT);
+        return register(listener, EventPriority.normal);
     }
 
     /**
@@ -104,5 +104,4 @@ public sealed interface Event<T> permits Events.EventImpl {
      * Unregister all listener.
      */
     void clearListeners();
-
 }

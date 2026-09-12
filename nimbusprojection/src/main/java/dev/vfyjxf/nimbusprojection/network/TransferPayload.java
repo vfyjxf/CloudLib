@@ -7,11 +7,14 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.wrapper.InvWrapper;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,24 +32,20 @@ import org.jetbrains.annotations.Nullable;
  * {@code destSlot} -1 = first fitting slot in the destination.
  */
 public record TransferPayload(
-        @Nullable BlockPos source,
-        int sourceSlot,
-        @Nullable BlockPos dest,
-        int destSlot,
-        int count
-) implements ServerboundPayload {
+        @Nullable BlockPos source, int sourceSlot, @Nullable BlockPos dest, int destSlot, int count)
+        implements ServerboundPayload {
 
-    private static final double REACH = 12.0;
+    private static final double reach = 12.0;
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, TransferPayload> STREAM_CODEC =
+    public static final StreamCodec<RegistryFriendlyByteBuf, TransferPayload> streamCodec =
             StreamCodec.ofMember(TransferPayload::encode, TransferPayload::decode);
 
-    public static final Type<TransferPayload> TYPE =
+    public static final Type<TransferPayload> type =
             new Type<>(ResourceLocation.fromNamespaceAndPath("nimbusprojection", "transfer"));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+        return type;
     }
 
     private void encode(RegistryFriendlyByteBuf buf) {
@@ -80,25 +79,21 @@ public record TransferPayload(
         ItemStack stack = src.getStackInSlot(sourceSlot);
         if (stack.isEmpty()) return;
         int want = count < 0 ? stack.getCount() : Math.min(count, stack.getCount());
-        //equipment slots only take equippables — the slot index is client
-        //input, so the legality check lives here
+        // equipment slots only take equippables — the slot index is client
+        // input, so the legality check lives here
         if (dest == null && destSlot >= 36 && !fitsEquipment(destSlot, stack)) return;
 
-        //the source's own rules decide what may leave — simulate first
+        // the source's own rules decide what may leave — simulate first
         ItemStack pulled = src.extractItem(sourceSlot, want, true);
         if (pulled.isEmpty()) return;
 
-        //the destination decides what may enter — simulate, then commit both
-        ItemStack remainder = destSlot < 0
-                ? insertAnywhere(dst, pulled, dest)
-                : dst.insertItem(destSlot, pulled, true);
+        // the destination decides what may enter — simulate, then commit both
+        ItemStack remainder = destSlot < 0 ? insertAnywhere(dst, pulled, dest) : dst.insertItem(destSlot, pulled, true);
         int moved = pulled.getCount() - remainder.getCount();
         if (moved <= 0) return;
         ItemStack real = src.extractItem(sourceSlot, moved, false);
-        ItemStack left = destSlot < 0
-                ? insertAnywhere(dst, real, dest)
-                : dst.insertItem(destSlot, real, false);
-        //the sim promised more than reality accepted — push the difference back
+        ItemStack left = destSlot < 0 ? insertAnywhere(dst, real, dest) : dst.insertItem(destSlot, real, false);
+        // the sim promised more than reality accepted — push the difference back
         if (!left.isEmpty()) {
             ItemStack back = src.insertItem(sourceSlot, left, false);
             if (!back.isEmpty() && source == null) {
@@ -119,28 +114,26 @@ public record TransferPayload(
 
     /** 36-39 = armor (feet→head), 40 = offhand — the stack must declare that slot. */
     private static boolean fitsEquipment(int slot, ItemStack stack) {
-        net.minecraft.world.item.Equipable equipable = net.minecraft.world.item.Equipable.get(stack);
+        Equipable equipable = Equipable.get(stack);
         if (equipable == null) return false;
         return switch (slot) {
-            case 36 -> equipable.getEquipmentSlot() == net.minecraft.world.entity.EquipmentSlot.FEET;
-            case 37 -> equipable.getEquipmentSlot() == net.minecraft.world.entity.EquipmentSlot.LEGS;
-            case 38 -> equipable.getEquipmentSlot() == net.minecraft.world.entity.EquipmentSlot.CHEST;
-            case 39 -> equipable.getEquipmentSlot() == net.minecraft.world.entity.EquipmentSlot.HEAD;
-            case 40 -> true; //offhand takes anything vanilla does
+            case 36 -> equipable.getEquipmentSlot() == EquipmentSlot.FEET;
+            case 37 -> equipable.getEquipmentSlot() == EquipmentSlot.LEGS;
+            case 38 -> equipable.getEquipmentSlot() == EquipmentSlot.CHEST;
+            case 39 -> equipable.getEquipmentSlot() == EquipmentSlot.HEAD;
+            case 40 -> true; // offhand takes anything vanilla does
             default -> true;
         };
     }
 
-    private @Nullable IItemHandler side(
-            @Nullable BlockPos pos, int slot, Level level, Vec3 eye, ServerPlayer player
-    ) {
+    private @Nullable IItemHandler side(@Nullable BlockPos pos, int slot, Level level, Vec3 eye, ServerPlayer player) {
         if (pos == null) {
-            //player inventory as an IItemHandler — slot bounds validated by caller
+            // player inventory as an IItemHandler — slot bounds validated by caller
             return slot >= 0 && slot < player.getInventory().getContainerSize()
-                    ? new net.neoforged.neoforge.items.wrapper.InvWrapper(player.getInventory())
+                    ? new InvWrapper(player.getInventory())
                     : null;
         }
-        if (!pos.closerToCenterThan(eye, REACH)) return null;
+        if (!pos.closerToCenterThan(eye, reach)) return null;
         return level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null);
     }
 }

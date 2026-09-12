@@ -2,11 +2,7 @@ package dev.vfyjxf.cloudlib.api.plugin;
 
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 
-public record PluginDependency(
-        Namespace pluginId,
-        Order order,
-        Constraint constraint
-) {
+public record PluginDependency(Namespace pluginId, Order order, Constraint constraint) {
 
     public enum Order {
         before,

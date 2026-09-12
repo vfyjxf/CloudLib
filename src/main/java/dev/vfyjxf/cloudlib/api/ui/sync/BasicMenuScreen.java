@@ -19,7 +19,7 @@ import org.jetbrains.annotations.MustBeInvokedByOverriders;
 
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.sizeOf;
 
-//TODO:Rework
+// TODO:Rework
 public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractContainerScreen<T> {
 
     protected final WidgetGroup<Widget> mainGroup;
@@ -29,17 +29,17 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
     public BasicMenuScreen(T menu, Inventory playerInventory) {
         super(menu, playerInventory, Component.empty());
 
-        //region common usage
+        // region common usage
         this.player = playerInventory.player;
-        //endregion
+        // endregion
 
-        //region setup main panel
+        // region setup main panel
         mainGroup = new WidgetGroup<>();
         {
             mainGroup.setFocusNode(new FocusScopeNode());
         }
         scene = new Scene(mainGroup);
-        //endregion
+        // endregion
     }
 
     protected CompositeWidget<Widget> mainGroup() {
@@ -86,9 +86,7 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
     }
 
     @Override
-    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
-
-    }
+    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {}
 
     @Override
     public void resize(Minecraft minecraft, int width, int height) {
@@ -140,5 +138,4 @@ public abstract class BasicMenuScreen<T extends BasicMenu<?>> extends AbstractCo
     public void mouseMoved(double mouseX, double mouseY) {
         scene.mouseMoved(mouseX, mouseY);
     }
-
 }

@@ -14,8 +14,5 @@ package dev.vfyjxf.cloudlib.api.ui.texture;
  */
 public final class Textures {
 
-    private Textures() {
-    }
-
-
+    private Textures() {}
 }

@@ -7,15 +7,14 @@ package dev.vfyjxf.nimbusprojection.api.sync;
 public enum PresenceKind {
 
     /** The panel is inside the player's focus cone — the weakest signal. */
-    WATCHING,
+    watching,
 
     /** The player has engaged the panel (opened an on-demand panel). */
-    ENGAGED,
+    engaged,
 
     /** The player is dragging content between the panel and the world. */
-    DRAGGING,
+    dragging,
 
     /** The player is tracing a stroke on the panel surface. */
-    TRACING,
-
+    tracing,
 }

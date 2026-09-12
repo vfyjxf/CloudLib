@@ -29,5 +29,4 @@ public interface SharedPanel {
 
     /** Revokes the panel for all watchers. */
     void unshare();
-
 }

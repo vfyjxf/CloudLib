@@ -2,8 +2,7 @@ package dev.vfyjxf.cloudlib.util;
 
 public class NumberUtils {
 
-    private static final char[] ENCODED_POSTFIXES = "KMGTPE".toCharArray();
-
+    private static final char[] encodedPostfixes = "KMGTPE".toCharArray();
 
     public static String toSuffix(long number) {
         String numberStr = Long.toString(number);
@@ -20,7 +19,6 @@ public class NumberUtils {
             exponent++;
         }
 
-        return reslut + ENCODED_POSTFIXES[exponent];
+        return reslut + encodedPostfixes[exponent];
     }
-
 }

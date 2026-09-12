@@ -5,10 +5,10 @@ import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.data.lang.CloudLang;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDraggable;
+import dev.vfyjxf.cloudlib.data.lang.CloudLang;
 import dev.vfyjxf.cloudlib.ui.sync.ContainerContents;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.core.BlockPos;
@@ -43,11 +43,11 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
         void onSlot(int slot, int button, InputContext input);
     }
 
-    private static final int CELL = 18;
-    private static final int COLS = 9;
-    private static final int MAX_ROWS = 6;
-    private static final int SLOT_BG = 0x33121F2B;
-    private static final int SLOT_BG_HOT = 0x5536C4D8;
+    private static final int cell = 18;
+    private static final int cols = 9;
+    private static final int maxRows = 6;
+    private static final int slotBg = 0x33121F2B;
+    private static final int slotBgHot = 0x5536C4D8;
 
     private final Supplier<BlockPos> pos;
     private BlockPos lastPos;
@@ -59,9 +59,8 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
 
     public ContainerGridWidget(Supplier<BlockPos> pos, @Nullable SlotAction action) {
         this.pos = pos;
-        onMount((scene, context, handle) ->
-                scene.layoutTree().setMeasureFunc(nodeId(), (style, space) ->
-                        new FloatSize(COLS * CELL, rows() * CELL + 2)));
+        onMount((scene, context, handle) -> scene.layoutTree()
+                .setMeasureFunc(nodeId(), (style, space) -> new FloatSize(cols * cell, rows() * cell + 2)));
         if (action != null) {
             onMouseClicked((input, context) -> {
                 int slot = slotAt(input.mouseX(), input.mouseY());
@@ -80,20 +79,20 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
 
     private int slotCount() {
         BlockPos p = pos.get();
-        return p != null ? ContainerContents.slotsOf(p, COLS * 3) : COLS * 3;
+        return p != null ? ContainerContents.slotsOf(p, cols * 3) : cols * 3;
     }
 
     private int rows() {
-        return Math.max(1, Math.min(MAX_ROWS, (slotCount() + COLS - 1) / COLS));
+        return Math.max(1, Math.min(maxRows, (slotCount() + cols - 1) / cols));
     }
 
     /** Handler slot index under scene coords, or -1 off-grid/out of range. */
     private int slotAt(double sceneX, double sceneY) {
         FloatPos local = sceneToLocal(sceneX, sceneY);
-        int cx = (int) Math.floor(local.x() / CELL);
-        int cy = (int) Math.floor(local.y() / CELL);
-        if (cx < 0 || cx >= COLS || cy < 0 || cy >= rows()) return -1;
-        int slot = cy * COLS + cx;
+        int cx = (int) Math.floor(local.x() / cell);
+        int cy = (int) Math.floor(local.y() / cell);
+        if (cx < 0 || cx >= cols || cy < 0 || cy >= rows()) return -1;
+        int slot = cy * cols + cx;
         return slot < slotCount() ? slot : -1;
     }
 
@@ -111,8 +110,8 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        //the panel outlives its anchor — re-measure when the container moves
-        //or the first snapshot lands with a different slot count
+        // the panel outlives its anchor — re-measure when the container moves
+        // or the first snapshot lands with a different slot count
         BlockPos p = pos.get();
         int sc = slotCount();
         if (!java.util.Objects.equals(p, lastPos) || sc != lastSlotCount) {
@@ -131,15 +130,15 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
         }
         int rows = rows();
         boolean any = false;
-        int slots = Math.min(stacks.size(), COLS * MAX_ROWS);
+        int slots = Math.min(stacks.size(), cols * maxRows);
         for (int i = 0; i < slots; i++) {
-            int col = i % COLS;
-            int row = i / COLS;
-            int x = col * CELL;
-            int y = row * CELL;
+            int col = i % cols;
+            int row = i / cols;
+            int x = col * cell;
+            int y = row * cell;
             ItemStack stack = stacks.get(i);
-            boolean hover = mouseX >= x && mouseX < x + CELL && mouseY >= y && mouseY < y + CELL;
-            canvas.fill(x, y, CELL - 1, CELL - 1, hover ? SLOT_BG_HOT : SLOT_BG);
+            boolean hover = mouseX >= x && mouseX < x + cell && mouseY >= y && mouseY < y + cell;
+            canvas.fill(x, y, cell - 1, cell - 1, hover ? slotBgHot : slotBg);
             if (!stack.isEmpty()) {
                 any = true;
                 canvas.renderItem(stack, x, y);
@@ -148,8 +147,7 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
         }
         if (!any) {
             String label = CloudLang.Ui.empty.string();
-            canvas.text(label, COLS * CELL / 2 - canvas.font().width(label) / 2,
-                    rows * CELL / 2 - 4, 0x5536C4D8);
+            canvas.text(label, cols * cell / 2 - canvas.font().width(label) / 2, rows * cell / 2 - 4, 0x5536C4D8);
         }
     }
 }

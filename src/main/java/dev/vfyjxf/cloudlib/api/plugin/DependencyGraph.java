@@ -34,15 +34,14 @@ public final class DependencyGraph<T extends ModPlugin> {
             ImmutableGraph<Namespace> graph,
             ImmutableList<T> sorted,
             ImmutableList<LoadingLevel<T>> levels,
-            Map<Namespace, T> pluginById
-    ) {
+            Map<Namespace, T> pluginById) {
         this.graph = graph;
         this.sorted = sorted;
         this.levels = levels;
         this.pluginById = pluginById;
     }
 
-    //region factory
+    // region factory
 
     /**
      * Builds from an unsorted collection. Performs topological sorting and level decomposition.
@@ -63,8 +62,7 @@ public final class DependencyGraph<T extends ModPlugin> {
                 ImmutableGraph.copyOf(mutableGraph),
                 sorted.toImmutable(),
                 computeLevels(sortedIds, mutableGraph, id2Plugin).toImmutable(),
-                Collections.unmodifiableMap(id2Plugin)
-        );
+                Collections.unmodifiableMap(id2Plugin));
     }
 
     /**
@@ -80,13 +78,12 @@ public final class DependencyGraph<T extends ModPlugin> {
                 ImmutableGraph.copyOf(mutableGraph),
                 MutableLists.withAll(id2Plugin.values()).toImmutable(),
                 computeLevels(sortedIds, mutableGraph, id2Plugin).toImmutable(),
-                Collections.unmodifiableMap(id2Plugin)
-        );
+                Collections.unmodifiableMap(id2Plugin));
     }
 
-    //endregion
+    // endregion
 
-    //region accessors
+    // region accessors
 
     public ImmutableList<T> sorted() {
         return sorted;
@@ -107,9 +104,9 @@ public final class DependencyGraph<T extends ModPlugin> {
         return pluginById.get(pluginId);
     }
 
-    //endregion
+    // endregion
 
-    //region queries
+    // region queries
 
     public Set<Namespace> directDependenciesOf(Namespace pluginId) {
         Checks.checkNotNull(pluginId, "pluginId");
@@ -145,9 +142,9 @@ public final class DependencyGraph<T extends ModPlugin> {
                 && !transitiveDependenciesOf(b).contains(a);
     }
 
-    //endregion
+    // endregion
 
-    //region internal
+    // region internal
 
     private static <T extends ModPlugin> Map<Namespace, T> collectPlugins(Collection<T> plugins) {
         var id2Plugin = new LinkedHashMap<Namespace, T>();
@@ -180,10 +177,7 @@ public final class DependencyGraph<T extends ModPlugin> {
     }
 
     private static <T extends ModPlugin> MutableList<LoadingLevel<T>> computeLevels(
-            List<Namespace> sortedIds,
-            MutableGraph<Namespace> graph,
-            Map<Namespace, T> id2Plugin
-    ) {
+            List<Namespace> sortedIds, MutableGraph<Namespace> graph, Map<Namespace, T> id2Plugin) {
         var levelMap = new Object2IntOpenHashMap<Namespace>();
         int maxLevel = -1;
 
@@ -216,13 +210,11 @@ public final class DependencyGraph<T extends ModPlugin> {
         return levels;
     }
 
-    //endregion
+    // endregion
 
     /**
      * @param depth   the level depth (0 = root, no dependencies)
      * @param plugins the plugins at this level
      */
-    public record LoadingLevel<T extends ModPlugin>(int depth, ImmutableList<T> plugins) {
-    }
-
+    public record LoadingLevel<T extends ModPlugin>(int depth, ImmutableList<T> plugins) {}
 }

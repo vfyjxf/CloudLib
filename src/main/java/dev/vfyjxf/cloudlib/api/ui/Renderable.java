@@ -15,5 +15,4 @@ public interface Renderable {
     default void render(GuiGraphics graphics) {
         render(graphics, 0, 0, 0);
     }
-
 }

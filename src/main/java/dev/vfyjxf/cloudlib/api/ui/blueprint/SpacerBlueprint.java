@@ -31,12 +31,11 @@ public final class SpacerBlueprint implements Blueprint<SpacerWidget> {
     private float minLength = 0;
     private float flexGrow = 1;
     private @Nullable Object key;
-    private UIStyle style = UIStyle.EMPTY;
+    private UIStyle style = UIStyle.empty;
 
-    private SpacerBlueprint() {
-    }
+    private SpacerBlueprint() {}
 
-    //region dsl entry points
+    // region dsl entry points
 
     /**
      * Creates a flexible spacer that expands to fill available space.
@@ -63,9 +62,9 @@ public final class SpacerBlueprint implements Blueprint<SpacerWidget> {
         return ScopedReceiver.add(new SpacerBlueprint().minLength(size).flexGrow(0));
     }
 
-    //endregion
+    // endregion
 
-    //region builder methods
+    // region builder methods
 
     public SpacerBlueprint minLength(float minLength) {
         this.minLength = minLength;
@@ -87,9 +86,9 @@ public final class SpacerBlueprint implements Blueprint<SpacerWidget> {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region blueprint implementation
+    // region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -103,10 +102,8 @@ public final class SpacerBlueprint implements Blueprint<SpacerWidget> {
 
     @Override
     public void updateWidget(SpacerWidget widget, Scene scene, SceneContext context) {
-        widget.setMinLength(minLength)
-              .setFlexGrow(flexGrow)
-              .useStyle(style);
+        widget.setMinLength(minLength).setFlexGrow(flexGrow).useStyle(style);
     }
 
-    //endregion
+    // endregion
 }

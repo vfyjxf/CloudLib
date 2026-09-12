@@ -7,8 +7,8 @@ package dev.vfyjxf.cloudlib.api.ui.style;
  * (margin/padding/border/inset).
  */
 public enum Edge {
-    TOP,
-    RIGHT,
-    BOTTOM,
-    LEFT;
+    top,
+    right,
+    bottom,
+    left;
 }

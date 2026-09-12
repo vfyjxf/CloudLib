@@ -22,5 +22,4 @@ public record ProviderOptions(boolean sharedDomain) {
     public static ProviderOptions shared() {
         return new ProviderOptions(true);
     }
-
 }

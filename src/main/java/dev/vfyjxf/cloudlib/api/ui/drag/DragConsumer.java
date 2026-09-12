@@ -11,9 +11,7 @@ import java.util.function.BiPredicate;
 public interface DragConsumer {
 
     CompositeScenario<DragConsumer> scenario = new CompositeScenario<>(
-            Namespace.of(Constants.modId, "drag_consumer"),
-            DragConsumer.class,
-            listeners -> new DragConsumer() {
+            Namespace.of(Constants.modId, "drag_consumer"), DragConsumer.class, listeners -> new DragConsumer() {
 
                 @Override
                 public void dragStart(DraggableElement<?> element, DragContext context) {
@@ -45,8 +43,7 @@ public interface DragConsumer {
                     }
                     return false;
                 }
-            }
-    );
+            });
 
     static DragConsumer consumeWidget(BiFunction<DraggableElement<?>, DragContext, Boolean> consumer) {
         return new DragConsumer() {
@@ -60,9 +57,8 @@ public interface DragConsumer {
     @SuppressWarnings("unchecked")
     static DragConsumer consumeSpecificWidget(
             BiPredicate<Widget, DragContext> predicate,
-            BiFunction<DraggableElement<Widget>, DragContext, Boolean> consumer
+            BiFunction<DraggableElement<Widget>, DragContext, Boolean> consumer) {
 
-    ) {
         return new DragConsumer() {
             @Override
             public boolean consume(DraggableElement<?> element, DragContext context) {
@@ -78,8 +74,7 @@ public interface DragConsumer {
     @SuppressWarnings("unchecked")
     static DragConsumer forGroupConsumer(
             BiPredicate<DraggableElement<?>, DragContext> predicate,
-            BiFunction<DraggableElement<Widget>, DragContext, Boolean> consumer
-    ) {
+            BiFunction<DraggableElement<Widget>, DragContext, Boolean> consumer) {
         return new DragConsumer() {
             @Override
             public boolean consume(DraggableElement<?> element, DragContext context) {
@@ -92,17 +87,11 @@ public interface DragConsumer {
         };
     }
 
-    default void dragStart(DraggableElement<?> element, DragContext context) {
+    default void dragStart(DraggableElement<?> element, DragContext context) {}
 
-    }
+    default void onDrag(DraggableElement<?> element, DragContext context, double deltaX, double deltaY) {}
 
-    default void onDrag(DraggableElement<?> element, DragContext context, double deltaX, double deltaY) {
-
-    }
-
-    default void dragEnd(DraggableElement<?> element, DragContext context, double deltaX, double deltaY) {
-
-    }
+    default void dragEnd(DraggableElement<?> element, DragContext context, double deltaX, double deltaY) {}
 
     /**
      * @param widget the widget that is being dragged
@@ -111,5 +100,4 @@ public interface DragConsumer {
     default boolean consume(DraggableElement<?> widget, DragContext context) {
         return false;
     }
-
 }

@@ -87,7 +87,7 @@ public final class SceneCanvas {
         return this;
     }
 
-    //region batch
+    // region batch
 
     private static final class BatchState {
         /**
@@ -95,9 +95,19 @@ public final class SceneCanvas {
          * Vertices are stored in order: bottom-left, bottom-right, top-right, top-left.
          */
         private record TexturedQuad(
-                float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3,
-                float u0, float v0, float u1, float v1, int color
-        ) {}
+                float x0,
+                float y0,
+                float x1,
+                float y1,
+                float x2,
+                float y2,
+                float x3,
+                float y3,
+                float u0,
+                float v0,
+                float u1,
+                float v1,
+                int color) {}
 
         /**
          * Stores a colored quad with pre-transformed vertex positions
@@ -105,15 +115,22 @@ public final class SceneCanvas {
          * Vertices are stored in order: bottom-left, bottom-right, top-right, top-left.
          */
         private record ColoredQuad(
-                float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3,
-                int c0, int c1, int c2, int c3
-        ) {
+                float x0,
+                float y0,
+                float x1,
+                float y1,
+                float x2,
+                float y2,
+                float x3,
+                float y3,
+                int c0,
+                int c1,
+                int c2,
+                int c3) {
             /**
              * Uniform-colour convenience.
              */
-            ColoredQuad(
-                    float x0, float y0, float x1, float y1,
-                    float x2, float y2, float x3, float y3, int color) {
+            ColoredQuad(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, int color) {
                 this(x0, y0, x1, y1, x2, y2, x3, y3, color, color, color, color);
             }
         }
@@ -133,7 +150,9 @@ public final class SceneCanvas {
             final ResourceLocation texture;
             final List<TexturedQuad> quads = new ArrayList<>();
 
-            TexturedBatch(ResourceLocation texture) {this.texture = texture;}
+            TexturedBatch(ResourceLocation texture) {
+                this.texture = texture;
+            }
         }
 
         private static final class ColoredBatch implements BatchCommand {
@@ -144,9 +163,19 @@ public final class SceneCanvas {
 
         void addTextured(
                 ResourceLocation texture,
-                float x0, float y0, float x1, float y1,
-                float x2, float y2, float x3, float y3,
-                float u0, float v0, float u1, float v1, int color) {
+                float x0,
+                float y0,
+                float x1,
+                float y1,
+                float x2,
+                float y2,
+                float x3,
+                float y3,
+                float u0,
+                float v0,
+                float u1,
+                float v1,
+                int color) {
             var quad = new TexturedQuad(x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, color);
             if (!commands.isEmpty()) {
                 var last = commands.get(commands.size() - 1);
@@ -160,16 +189,23 @@ public final class SceneCanvas {
             commands.add(batch);
         }
 
-        void addColored(
-                float x0, float y0, float x1, float y1,
-                float x2, float y2, float x3, float y3, int color) {
+        void addColored(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, int color) {
             addColoredQuad(new ColoredQuad(x0, y0, x1, y1, x2, y2, x3, y3, color));
         }
 
         void addColoredGradient(
-                float x0, float y0, float x1, float y1,
-                float x2, float y2, float x3, float y3,
-                int c0, int c1, int c2, int c3) {
+                float x0,
+                float y0,
+                float x1,
+                float y1,
+                float x2,
+                float y2,
+                float x3,
+                float y3,
+                int c0,
+                int c1,
+                int c2,
+                int c3) {
             addColoredQuad(new ColoredQuad(x0, y0, x1, y1, x2, y2, x3, y3, c0, c1, c2, c3));
         }
 
@@ -198,8 +234,16 @@ public final class SceneCanvas {
     private final BatchableTexture.VertexEmitter batchEmitter = new BatchableTexture.VertexEmitter() {
         @Override
         public void textured(
-                ResourceLocation texture, float x, float y, float width, float height,
-                float u0, float v0, float u1, float v1, int color) {
+                ResourceLocation texture,
+                float x,
+                float y,
+                float width,
+                float height,
+                float u0,
+                float v0,
+                float u1,
+                float v1,
+                int color) {
             if (width <= 0 || height <= 0) {
                 return;
             }
@@ -219,8 +263,7 @@ public final class SceneCanvas {
             if (quadOutsideClip(blX, blY, brX, brY, trX, trY, tlX, tlY)) {
                 return;
             }
-            batchState.addTextured(texture, blX, blY, brX, brY, trX, trY, tlX, tlY,
-                    u0, v0, u1, v1, color);
+            batchState.addTextured(texture, blX, blY, brX, brY, trX, trY, tlX, tlY, u0, v0, u1, v1, color);
         }
 
         @Override
@@ -248,11 +291,7 @@ public final class SceneCanvas {
         }
     };
 
-    private boolean quadOutsideClip(
-            float x0, float y0,
-            float x1, float y1,
-            float x2, float y2,
-            float x3, float y3) {
+    private boolean quadOutsideClip(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3) {
         Rect clip = clipStack.current();
         if (clip == null) {
             return false;
@@ -261,10 +300,7 @@ public final class SceneCanvas {
         float maxX = Math.max(Math.max(x0, x1), Math.max(x2, x3));
         float minY = Math.min(Math.min(y0, y1), Math.min(y2, y3));
         float maxY = Math.max(Math.max(y0, y1), Math.max(y2, y3));
-        return maxX <= clip.x()
-                || minX >= clip.right()
-                || maxY <= clip.y()
-                || minY >= clip.bottom();
+        return maxX <= clip.x() || minX >= clip.right() || maxY <= clip.y() || minY >= clip.bottom();
     }
 
     public BatchableTexture.VertexEmitter emitter() {
@@ -326,8 +362,8 @@ public final class SceneCanvas {
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
 
-                BufferBuilder buffer = Tesselator.getInstance().begin(
-                        VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+                BufferBuilder buffer =
+                        Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
                 for (var quad : tb.quads) {
                     int c = quad.color;
@@ -336,10 +372,18 @@ public final class SceneCanvas {
                     float g = ((c >> 8) & 0xFF) / 255f;
                     float b = (c & 0xFF) / 255f;
 
-                    buffer.addVertex(matrix, quad.x0, quad.y0, 0).setUv(quad.u0, quad.v1).setColor(r, g, b, a);
-                    buffer.addVertex(matrix, quad.x1, quad.y1, 0).setUv(quad.u1, quad.v1).setColor(r, g, b, a);
-                    buffer.addVertex(matrix, quad.x2, quad.y2, 0).setUv(quad.u1, quad.v0).setColor(r, g, b, a);
-                    buffer.addVertex(matrix, quad.x3, quad.y3, 0).setUv(quad.u0, quad.v0).setColor(r, g, b, a);
+                    buffer.addVertex(matrix, quad.x0, quad.y0, 0)
+                            .setUv(quad.u0, quad.v1)
+                            .setColor(r, g, b, a);
+                    buffer.addVertex(matrix, quad.x1, quad.y1, 0)
+                            .setUv(quad.u1, quad.v1)
+                            .setColor(r, g, b, a);
+                    buffer.addVertex(matrix, quad.x2, quad.y2, 0)
+                            .setUv(quad.u1, quad.v0)
+                            .setColor(r, g, b, a);
+                    buffer.addVertex(matrix, quad.x3, quad.y3, 0)
+                            .setUv(quad.u0, quad.v0)
+                            .setColor(r, g, b, a);
                 }
 
                 MeshData meshData = buffer.build();
@@ -349,8 +393,8 @@ public final class SceneCanvas {
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
 
-                BufferBuilder buffer = Tesselator.getInstance().begin(
-                        VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+                BufferBuilder buffer =
+                        Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
                 for (var quad : cb.quads) {
                     addColorVertex(buffer, matrix, quad.x0, quad.y0, quad.c0);
@@ -384,9 +428,9 @@ public final class SceneCanvas {
         buffer.addVertex(matrix, x, y, 0).setColor(r, g, b, a);
     }
 
-    //endregion
+    // endregion
 
-    //region render - drawing API
+    // region render - drawing API
 
     /**
      * Shared pass-through graphics for forwarded vanilla / interop rendering.
@@ -404,7 +448,7 @@ public final class SceneCanvas {
         return beginForwardedDraw(true);
     }
 
-    //region color
+    // region color
 
     public SceneCanvas color(int argb) {
         this.currentColor = argb;
@@ -420,7 +464,7 @@ public final class SceneCanvas {
         return currentColor;
     }
 
-    //endregion
+    // endregion
 
     /**
      * Executes a draw call with transform and clip applied.
@@ -444,7 +488,7 @@ public final class SceneCanvas {
         return new Matrix4f(currentTransform);
     }
 
-    //region texture
+    // region texture
 
     public SceneCanvas texture(VisualTexture texture, int x, int y, int width, int height) {
         if (width <= 0 || height <= 0) {
@@ -478,8 +522,7 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas quad(
-            ResourceLocation texture, int x, int y, int width, int height,
-            float u0, float v0, float u1, float v1) {
+            ResourceLocation texture, int x, int y, int width, int height, float u0, float v0, float u1, float v1) {
         if (width <= 0 || height <= 0) {
             return this;
         }
@@ -489,9 +532,17 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas quad(
-            ResourceLocation texture, int x, int y, int width, int height,
-            int u, int v, int regionWidth, int regionHeight,
-            int textureWidth, int textureHeight) {
+            ResourceLocation texture,
+            int x,
+            int y,
+            int width,
+            int height,
+            int u,
+            int v,
+            int regionWidth,
+            int regionHeight,
+            int textureWidth,
+            int textureHeight) {
         float u0 = (float) u / textureWidth;
         float v0 = (float) v / textureHeight;
         float u1 = (float) (u + regionWidth) / textureWidth;
@@ -511,21 +562,45 @@ public final class SceneCanvas {
             return this;
         }
         flushForwardedDraw();
-        batchEmitter.textured(sprite.atlasLocation(), x, y, width, height,
-                sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), currentColor);
+        batchEmitter.textured(
+                sprite.atlasLocation(),
+                x,
+                y,
+                width,
+                height,
+                sprite.getU0(),
+                sprite.getV0(),
+                sprite.getU1(),
+                sprite.getV1(),
+                currentColor);
         return this;
     }
 
     public SceneCanvas blit(
-            ResourceLocation texture, int x, int y, int width, int height,
-            int u, int v, int regionWidth, int regionHeight,
-            int textureWidth, int textureHeight) {
+            ResourceLocation texture,
+            int x,
+            int y,
+            int width,
+            int height,
+            int u,
+            int v,
+            int regionWidth,
+            int regionHeight,
+            int textureWidth,
+            int textureHeight) {
         return quad(texture, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
     }
 
     public SceneCanvas blit(
-            ResourceLocation texture, int x, int y, int u, int v,
-            int width, int height, int textureWidth, int textureHeight) {
+            ResourceLocation texture,
+            int x,
+            int y,
+            int u,
+            int v,
+            int width,
+            int height,
+            int textureWidth,
+            int textureHeight) {
         return quad(texture, x, y, width, height, u, v, width, height, textureWidth, textureHeight);
     }
 
@@ -533,9 +608,9 @@ public final class SceneCanvas {
         return sprite(spriteLocation, x, y, width, height);
     }
 
-    //endregion
+    // endregion
 
-    //region fill & shape
+    // region fill & shape
 
     public SceneCanvas fill(int x, int y, int width, int height, int color) {
         if (width <= 0 || height <= 0) {
@@ -560,8 +635,7 @@ public final class SceneCanvas {
      * @param colorBR bottom-right color (ARGB)
      */
     public SceneCanvas fillGradient(
-            int x, int y, int width, int height,
-            int colorTL, int colorTR, int colorBL, int colorBR) {
+            int x, int y, int width, int height, int colorTL, int colorTR, int colorBL, int colorBR) {
         flushForwardedDraw();
         // Transform corners: bottom-left, bottom-right, top-right, top-left
         float[] bl = transformPointLocal(x, y + height);
@@ -569,8 +643,7 @@ public final class SceneCanvas {
         float[] tr = transformPointLocal(x + width, y);
         float[] tl = transformPointLocal(x, y);
         batchState.addColoredGradient(
-                bl[0], bl[1], br[0], br[1], tr[0], tr[1], tl[0], tl[1],
-                colorBL, colorBR, colorTR, colorTL);
+                bl[0], bl[1], br[0], br[1], tr[0], tr[1], tl[0], tl[1], colorBL, colorBR, colorTR, colorTL);
         return this;
     }
 
@@ -585,9 +658,9 @@ public final class SceneCanvas {
      * Strokes a rectangle outline with the given thickness.
      */
     public SceneCanvas strokeRect(int x, int y, int width, int height, int color, int thickness) {
-        fill(x, y, width, thickness, color);                                     // top
-        fill(x, y + height - thickness, width, thickness, color);                 // bottom
-        fill(x, y + thickness, thickness, height - 2 * thickness, color);         // left
+        fill(x, y, width, thickness, color); // top
+        fill(x, y + height - thickness, width, thickness, color); // bottom
+        fill(x, y + thickness, thickness, height - 2 * thickness, color); // left
         fill(x + width - thickness, y + thickness, thickness, height - 2 * thickness, color); // right
         return this;
     }
@@ -629,7 +702,7 @@ public final class SceneCanvas {
         return line(x1, y1, x2, y2, 1f, color);
     }
 
-    //region shader shapes
+    // region shader shapes
 
     /**
      * Emits a single quad with UV [0,1] mapping for shader-based drawing.
@@ -638,8 +711,8 @@ public final class SceneCanvas {
      */
     private void drawShaderQuad(float x, float y, float width, float height) {
         RenderSystem.enableBlend();
-        BufferBuilder buffer = Tesselator.getInstance().begin(
-                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        BufferBuilder buffer =
+                Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         Matrix4f matrix = graphics.pose().last().pose();
         buffer.addVertex(matrix, x, y + height, 0).setUv(0, 1);
         buffer.addVertex(matrix, x + width, y + height, 0).setUv(1, 1);
@@ -662,15 +735,15 @@ public final class SceneCanvas {
      */
     @SuppressWarnings("DataFlowIssue")
     private static void setColorUniform(ShaderInstance shader, String name, int argb) {
-        shader.getUniform(name).set(
-                ((argb >> 16) & 0xFF) / 255f,
-                ((argb >> 8) & 0xFF) / 255f,
-                (argb & 0xFF) / 255f,
-                ((argb >> 24) & 0xFF) / 255f
-        );
+        shader.getUniform(name)
+                .set(
+                        ((argb >> 16) & 0xFF) / 255f,
+                        ((argb >> 8) & 0xFF) / 255f,
+                        (argb & 0xFF) / 255f,
+                        ((argb >> 24) & 0xFF) / 255f);
     }
 
-    //region rounded rectangle
+    // region rounded rectangle
 
     /**
      * Draws a filled rounded rectangle with uniform corner radius.
@@ -683,10 +756,15 @@ public final class SceneCanvas {
      * Draws a filled rounded rectangle with per-corner radii.
      */
     public SceneCanvas roundedRect(
-            int x, int y, int width, int height,
-            float radiusTL, float radiusTR, float radiusBR, float radiusBL,
-            int color
-    ) {
+            int x,
+            int y,
+            int width,
+            int height,
+            float radiusTL,
+            float radiusTR,
+            float radiusBR,
+            float radiusBL,
+            int color) {
         return roundedRect(x, y, width, height, radiusTL, radiusTR, radiusBR, radiusBL, color, 0, 0);
     }
 
@@ -698,11 +776,8 @@ public final class SceneCanvas {
      * @param borderColor border colour (ARGB)
      */
     public SceneCanvas roundedRect(
-            int x, int y, int width, int height, float radius,
-            int fillColor, float borderWidth, int borderColor
-    ) {
-        return roundedRect(x, y, width, height, radius, radius, radius, radius,
-                fillColor, borderWidth, borderColor);
+            int x, int y, int width, int height, float radius, int fillColor, float borderWidth, int borderColor) {
+        return roundedRect(x, y, width, height, radius, radius, radius, radius, fillColor, borderWidth, borderColor);
     }
 
     /**
@@ -711,13 +786,19 @@ public final class SceneCanvas {
      * delegate here. Not batchable.
      */
     public SceneCanvas roundedRect(
-            int x, int y, int width, int height,
-            float radiusTL, float radiusTR, float radiusBR, float radiusBL,
-            int fillColor, float borderWidth, int borderColor
-    ) {
-        return roundedRectTextured(x, y, width, height,
-                radiusTL, radiusTR, radiusBR, radiusBL,
-                fillColor, borderWidth, borderColor, null);
+            int x,
+            int y,
+            int width,
+            int height,
+            float radiusTL,
+            float radiusTR,
+            float radiusBR,
+            float radiusBL,
+            int fillColor,
+            float borderWidth,
+            int borderColor) {
+        return roundedRectTextured(
+                x, y, width, height, radiusTL, radiusTR, radiusBR, radiusBL, fillColor, borderWidth, borderColor, null);
     }
 
     /**
@@ -727,12 +808,17 @@ public final class SceneCanvas {
      * @param texture texture to bind (or {@code null} for colour-only)
      */
     public SceneCanvas roundedRectTextured(
-            int x, int y, int width, int height, float radius,
-            int fillColor, float borderWidth, int borderColor,
-            @Nullable ResourceLocation texture
-    ) {
-        return roundedRectTextured(x, y, width, height, radius, radius, radius, radius,
-                fillColor, borderWidth, borderColor, texture);
+            int x,
+            int y,
+            int width,
+            int height,
+            float radius,
+            int fillColor,
+            float borderWidth,
+            int borderColor,
+            @Nullable ResourceLocation texture) {
+        return roundedRectTextured(
+                x, y, width, height, radius, radius, radius, radius, fillColor, borderWidth, borderColor, texture);
     }
 
     /**
@@ -740,11 +826,18 @@ public final class SceneCanvas {
      */
     @SuppressWarnings("DataFlowIssue")
     public SceneCanvas roundedRectTextured(
-            int x, int y, int width, int height,
-            float radiusTL, float radiusTR, float radiusBR, float radiusBL,
-            int fillColor, float borderWidth, int borderColor,
-            @Nullable ResourceLocation texture
-    ) {
+            int x,
+            int y,
+            int width,
+            int height,
+            float radiusTL,
+            float radiusTR,
+            float radiusBR,
+            float radiusBL,
+            int fillColor,
+            float borderWidth,
+            int borderColor,
+            @Nullable ResourceLocation texture) {
         ShaderInstance shader = CloudShaders.roundedRect();
         if (shader == null) return this;
 
@@ -767,9 +860,9 @@ public final class SceneCanvas {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region circle / ellipse
+    // region circle / ellipse
 
     /**
      * Draws a filled circle.
@@ -782,10 +875,8 @@ public final class SceneCanvas {
      * Draws a circle with optional border.
      */
     public SceneCanvas circle(
-            float centerX, float centerY, float radius,
-            int fillColor, float borderWidth, int borderColor) {
-        return ellipse(centerX - radius, centerY - radius, radius * 2, radius * 2,
-                fillColor, borderWidth, borderColor);
+            float centerX, float centerY, float radius, int fillColor, float borderWidth, int borderColor) {
+        return ellipse(centerX - radius, centerY - radius, radius * 2, radius * 2, fillColor, borderWidth, borderColor);
     }
 
     /**
@@ -799,9 +890,7 @@ public final class SceneCanvas {
      * Draws an ellipse with optional border and optional texture.
      */
     public SceneCanvas ellipse(
-            float x, float y, float width, float height,
-            int fillColor, float borderWidth, int borderColor
-    ) {
+            float x, float y, float width, float height, int fillColor, float borderWidth, int borderColor) {
         return ellipseTextured(x, y, width, height, fillColor, borderWidth, borderColor, null);
     }
 
@@ -810,10 +899,14 @@ public final class SceneCanvas {
      */
     @SuppressWarnings("DataFlowIssue")
     public SceneCanvas ellipseTextured(
-            float x, float y, float width, float height,
-            int fillColor, float borderWidth, int borderColor,
-            @Nullable ResourceLocation texture
-    ) {
+            float x,
+            float y,
+            float width,
+            float height,
+            int fillColor,
+            float borderWidth,
+            int borderColor,
+            @Nullable ResourceLocation texture) {
         ShaderInstance shader = CloudShaders.circle();
         if (shader == null) return this;
 
@@ -835,9 +928,9 @@ public final class SceneCanvas {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region bezier curves
+    // region bezier curves
 
     /**
      * Draws a quadratic Bézier curve with uniform colour. Not batchable.
@@ -852,11 +945,8 @@ public final class SceneCanvas {
      * @param color     stroke colour (ARGB)
      */
     public SceneCanvas bezierQuadratic(
-            float x0, float y0, float cx, float cy,
-            float x1, float y1, float lineWidth, int color
-    ) {
-        return bezierInternal(0, x0, y0, cx, cy, x1, y1, x1, y1,
-                lineWidth, color, color, 0, 0);
+            float x0, float y0, float cx, float cy, float x1, float y1, float lineWidth, int color) {
+        return bezierInternal(0, x0, y0, cx, cy, x1, y1, x1, y1, lineWidth, color, color, 0, 0);
     }
 
     /**
@@ -866,12 +956,17 @@ public final class SceneCanvas {
      * {@link #bezierCubic(float, float, float, float, float, float, float, float, float, int, int, float, int)}.
      */
     public SceneCanvas bezierCubic(
-            float x0, float y0, float cx0, float cy0,
-            float cx1, float cy1, float x1, float y1,
-            float lineWidth, int color
-    ) {
-        return bezierInternal(1, x0, y0, cx0, cy0, cx1, cy1, x1, y1,
-                lineWidth, color, color, 0, 0);
+            float x0,
+            float y0,
+            float cx0,
+            float cy0,
+            float cx1,
+            float cy1,
+            float x1,
+            float y1,
+            float lineWidth,
+            int color) {
+        return bezierInternal(1, x0, y0, cx0, cy0, cx1, cy1, x1, y1, lineWidth, color, color, 0, 0);
     }
 
     /**
@@ -886,14 +981,21 @@ public final class SceneCanvas {
      * @param glowColor  glow colour (ARGB)
      */
     public SceneCanvas bezierCubic(
-            float x0, float y0, float cx0, float cy0,
-            float cx1, float cy1, float x1, float y1,
+            float x0,
+            float y0,
+            float cx0,
+            float cy0,
+            float cx1,
+            float cy1,
+            float x1,
+            float y1,
             float lineWidth,
-            int colorStart, int colorEnd,
-            float glowWidth, int glowColor
-    ) {
-        return bezierInternal(1, x0, y0, cx0, cy0, cx1, cy1, x1, y1,
-                lineWidth, colorStart, colorEnd, glowWidth, glowColor);
+            int colorStart,
+            int colorEnd,
+            float glowWidth,
+            int glowColor) {
+        return bezierInternal(
+                1, x0, y0, cx0, cy0, cx1, cy1, x1, y1, lineWidth, colorStart, colorEnd, glowWidth, glowColor);
     }
 
     /**
@@ -901,15 +1003,31 @@ public final class SceneCanvas {
      * tangent computation. Useful for node-graph connection wires.
      */
     public SceneCanvas horizontalSpline(
-            float x0, float y0, float x1, float y1,
+            float x0,
+            float y0,
+            float x1,
+            float y1,
             float lineWidth,
-            int colorStart, int colorEnd,
-            float glowWidth, int glowColor
-    ) {
+            int colorStart,
+            int colorEnd,
+            float glowWidth,
+            int glowColor) {
         float dx = Math.abs(x1 - x0);
         float tangent = Math.max(dx * 0.5f, 30f);
-        return bezierCubic(x0, y0, x0 + tangent, y0, x1 - tangent, y1, x1, y1,
-                lineWidth, colorStart, colorEnd, glowWidth, glowColor);
+        return bezierCubic(
+                x0,
+                y0,
+                x0 + tangent,
+                y0,
+                x1 - tangent,
+                y1,
+                x1,
+                y1,
+                lineWidth,
+                colorStart,
+                colorEnd,
+                glowWidth,
+                glowColor);
     }
 
     /**
@@ -920,12 +1038,19 @@ public final class SceneCanvas {
     @SuppressWarnings("DataFlowIssue")
     private SceneCanvas bezierInternal(
             int curveType,
-            float ax, float ay, float bx, float by,
-            float cx, float cy, float dx, float dy,
+            float ax,
+            float ay,
+            float bx,
+            float by,
+            float cx,
+            float cy,
+            float dx,
+            float dy,
             float lineWidth,
-            int colorStart, int colorEnd,
-            float glowWidth, int glowColor
-    ) {
+            int colorStart,
+            int colorEnd,
+            float glowWidth,
+            int glowColor) {
         ShaderInstance shader = CloudShaders.bezierCurve();
         if (shader == null) return this;
 
@@ -956,9 +1081,9 @@ public final class SceneCanvas {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region drop shadow
+    // region drop shadow
 
     /**
      * Draws a soft drop shadow behind a rounded rectangle (uniform radius).
@@ -969,11 +1094,8 @@ public final class SceneCanvas {
      * @param shadowColor shadow colour (ARGB)
      */
     public SceneCanvas shadow(
-            int x, int y, int width, int height,
-            float radius, float spread, float softness, int shadowColor
-    ) {
-        return shadow(x, y, width, height, radius, radius, radius, radius,
-                spread, softness, shadowColor);
+            int x, int y, int width, int height, float radius, float spread, float softness, int shadowColor) {
+        return shadow(x, y, width, height, radius, radius, radius, radius, spread, softness, shadowColor);
     }
 
     /**
@@ -981,10 +1103,17 @@ public final class SceneCanvas {
      */
     @SuppressWarnings("DataFlowIssue")
     public SceneCanvas shadow(
-            int x, int y, int width, int height,
-            float radiusTL, float radiusTR, float radiusBR, float radiusBL,
-            float spread, float softness, int shadowColor
-    ) {
+            int x,
+            int y,
+            int width,
+            int height,
+            float radiusTL,
+            float radiusTR,
+            float radiusBR,
+            float radiusBL,
+            float spread,
+            float softness,
+            int shadowColor) {
         ShaderInstance shader = CloudShaders.shadow();
         if (shader == null) return this;
 
@@ -1006,13 +1135,13 @@ public final class SceneCanvas {
         return this;
     }
 
-    //endregion drop shadow
+    // endregion drop shadow
 
-    //endregion shader shapes
+    // endregion shader shapes
 
-    //endregion fill & shape
+    // endregion fill & shape
 
-    //region text
+    // region text
 
     public SceneCanvas drawString(String text, int x, int y, int color) {
         return drawString(text, x, y, color, false);
@@ -1118,8 +1247,7 @@ public final class SceneCanvas {
                     graphics.bufferSource(),
                     Font.DisplayMode.NORMAL,
                     0,
-                    15728880
-            );
+                    15728880);
         }
 
         public void drawStringClipped(String text, int x, int y, int maxWidth, int color, boolean dropShadow) {
@@ -1150,8 +1278,7 @@ public final class SceneCanvas {
                     graphics.bufferSource(),
                     Font.DisplayMode.NORMAL,
                     0,
-                    15728880
-            );
+                    15728880);
         }
 
         private String clipText(String text, int maxWidth) {
@@ -1169,11 +1296,11 @@ public final class SceneCanvas {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region item
+    // region item
 
-    private static final float Z_INCREMENT = 1f;
+    private static final float zIncrement = 1f;
 
     public SceneCanvas renderItem(ItemStack stack, int x, int y) {
         layeredGraphics().renderItem(stack, x, y);
@@ -1189,9 +1316,9 @@ public final class SceneCanvas {
         return renderItemDecorations(stack, x, y, null);
     }
 
-    //endregion
+    // endregion
 
-    //region layered
+    // region layered
 
     /**
      * Renders content that changes z-level (items, tooltips, etc.).
@@ -1203,7 +1330,7 @@ public final class SceneCanvas {
         return this;
     }
 
-    //endregion
+    // endregion
 
     /**
      * Executes a custom draw operation with transform and clip applied.
@@ -1214,7 +1341,7 @@ public final class SceneCanvas {
         return this;
     }
 
-    //region scoped
+    // region scoped
 
     public SceneCanvas withTransform(Runnable action) {
         pushTransform();
@@ -1268,11 +1395,11 @@ public final class SceneCanvas {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //endregion render
+    // endregion render
 
-    //region internal helpers
+    // region internal helpers
 
     public Font font() {
         return Minecraft.getInstance().font;
@@ -1362,7 +1489,7 @@ public final class SceneCanvas {
             if (!preserveDepth) {
                 RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
             }
-            zOffset += Z_INCREMENT;
+            zOffset += zIncrement;
         }
         forwardedLayered = false;
     }
@@ -1387,8 +1514,8 @@ public final class SceneCanvas {
         return true;
     }
 
-    //endregion
-    //region transform
+    // endregion
+    // region transform
 
     public SceneCanvas pushTransform() {
         flushForwardedDraw();
@@ -1467,18 +1594,18 @@ public final class SceneCanvas {
         Matrix4f matrix = graphics.pose().last().pose();
         transformTemp.set(px, py, 0, 1);
         matrix.transform(transformTemp);
-        return new float[]{transformTemp.x, transformTemp.y};
+        return new float[] {transformTemp.x, transformTemp.y};
     }
 
     public float[] transformPointLocal(float x, float y) {
         transformTemp.set(x, y, 0, 1);
         localTransform().transform(transformTemp);
-        return new float[]{transformTemp.x, transformTemp.y};
+        return new float[] {transformTemp.x, transformTemp.y};
     }
 
-    //endregion
+    // endregion
 
-    //region widget rendering
+    // region widget rendering
 
     /**
      * Renders a list of widgets with proper viewport-aware transform handling.
@@ -1517,12 +1644,8 @@ public final class SceneCanvas {
         double minY = Math.min(Math.min(tl.y, tr.y), Math.min(bl.y, br.y));
         double maxX = Math.max(Math.max(tl.x, tr.x), Math.max(bl.x, br.x));
         double maxY = Math.max(Math.max(tl.y, tr.y), Math.max(bl.y, br.y));
-        return new Rect(
-                (int) Math.floor(minX),
-                (int) Math.floor(minY),
-                (int) Math.ceil(maxX - minX),
-                (int) Math.ceil(maxY - minY)
-        );
+        return new Rect((int) Math.floor(minX), (int) Math.floor(minY), (int) Math.ceil(maxX - minX), (int)
+                Math.ceil(maxY - minY));
     }
 
     /**
@@ -1532,9 +1655,9 @@ public final class SceneCanvas {
         renderWidgets(widgets, mouseX, mouseY, partialTicks);
     }
 
-    //endregion
+    // endregion
 
-    //region viewport
+    // region viewport
 
     /**
      * Pushes the given viewport's forward matrix onto the canvas transform stack.
@@ -1568,9 +1691,9 @@ public final class SceneCanvas {
         return popTransform();
     }
 
-    //endregion
+    // endregion
 
-    //region clipping
+    // region clipping
 
     public SceneCanvas pushClip(int x, int y, int width, int height) {
         // Flush pending text + batch under the current clip before changing it
@@ -1620,5 +1743,5 @@ public final class SceneCanvas {
         restoreScissor();
     }
 
-    //endregion
+    // endregion
 }

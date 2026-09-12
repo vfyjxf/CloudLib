@@ -7,17 +7,20 @@ import net.minecraft.client.gui.GuiGraphics;
  */
 public record RoundedRectTexture(
         int fillColor,
-        int radiusTopLeft, int radiusTopRight,
-        int radiusBottomLeft, int radiusBottomRight,
-        int borderColor, int borderThickness,
-        int segments
-) implements BatchableTexture {
+        int radiusTopLeft,
+        int radiusTopRight,
+        int radiusBottomLeft,
+        int radiusBottomRight,
+        int borderColor,
+        int borderThickness,
+        int segments)
+        implements BatchableTexture {
 
     public RoundedRectTexture {
         segments = Math.max(4, segments);
     }
 
-    //region factory
+    // region factory
 
     public static RoundedRectTexture of(int fillColor, int radius) {
         return new RoundedRectTexture(fillColor, radius, radius, radius, radius, 0, 0, 8);
@@ -35,28 +38,49 @@ public record RoundedRectTexture(
         return new RoundedRectTexture(fillColor, radius, radius, radius, radius, borderColor, borderThickness, 8);
     }
 
-    //endregion
+    // endregion
 
-    //region modification
+    // region modification
 
     public RoundedRectTexture withBorder(int color, int thickness) {
-        return new RoundedRectTexture(fillColor, radiusTopLeft, radiusTopRight,
-                radiusBottomLeft, radiusBottomRight, color, thickness, segments);
+        return new RoundedRectTexture(
+                fillColor,
+                radiusTopLeft,
+                radiusTopRight,
+                radiusBottomLeft,
+                radiusBottomRight,
+                color,
+                thickness,
+                segments);
     }
 
     public RoundedRectTexture withColor(int color) {
-        return new RoundedRectTexture(color, radiusTopLeft, radiusTopRight,
-                radiusBottomLeft, radiusBottomRight, borderColor, borderThickness, segments);
+        return new RoundedRectTexture(
+                color,
+                radiusTopLeft,
+                radiusTopRight,
+                radiusBottomLeft,
+                radiusBottomRight,
+                borderColor,
+                borderThickness,
+                segments);
     }
 
     public RoundedRectTexture withSegments(int segments) {
-        return new RoundedRectTexture(fillColor, radiusTopLeft, radiusTopRight,
-                radiusBottomLeft, radiusBottomRight, borderColor, borderThickness, segments);
+        return new RoundedRectTexture(
+                fillColor,
+                radiusTopLeft,
+                radiusTopRight,
+                radiusBottomLeft,
+                radiusBottomRight,
+                borderColor,
+                borderThickness,
+                segments);
     }
 
-    //endregion
+    // endregion
 
-    //region batchable texture
+    // region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float width, float height, int tint) {
@@ -88,10 +112,10 @@ public record RoundedRectTexture(
         }
 
         // Corners
-        if (rTL > 0) emitCorner(emitter, x + rTL, y + rTL, rTL, color, Corner.TOP_LEFT);
-        if (rTR > 0) emitCorner(emitter, x + width - rTR, y + rTR, rTR, color, Corner.TOP_RIGHT);
-        if (rBL > 0) emitCorner(emitter, x + rBL, y + height - rBL, rBL, color, Corner.BOTTOM_LEFT);
-        if (rBR > 0) emitCorner(emitter, x + width - rBR, y + height - rBR, rBR, color, Corner.BOTTOM_RIGHT);
+        if (rTL > 0) emitCorner(emitter, x + rTL, y + rTL, rTL, color, Corner.topLeft);
+        if (rTR > 0) emitCorner(emitter, x + width - rTR, y + rTR, rTR, color, Corner.topRight);
+        if (rBL > 0) emitCorner(emitter, x + rBL, y + height - rBL, rBL, color, Corner.bottomLeft);
+        if (rBR > 0) emitCorner(emitter, x + width - rBR, y + height - rBR, rBR, color, Corner.bottomRight);
 
         // Border
         if (borderThickness > 0 && borderColor != 0) {
@@ -102,8 +126,9 @@ public record RoundedRectTexture(
     @Override
     public void render(GuiGraphics graphics, int x, int y, int width, int height) {
         float maxRadius = Math.min(width, height) / 2f;
-        int r = (int) Math.min(Math.max(radiusTopLeft, Math.max(radiusTopRight,
-                Math.max(radiusBottomLeft, radiusBottomRight))), maxRadius);
+        int r = (int) Math.min(
+                Math.max(radiusTopLeft, Math.max(radiusTopRight, Math.max(radiusBottomLeft, radiusBottomRight))),
+                maxRadius);
 
         graphics.fill(x + r, y, x + width - r, y + height, fillColor);
         graphics.fill(x, y + r, x + width, y + height - r, fillColor);
@@ -121,19 +146,25 @@ public record RoundedRectTexture(
         }
     }
 
-    //endregion
+    // endregion
 
-    //region internal
+    // region internal
 
-    private enum Corner {TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT}
+    private enum Corner {
+        topLeft,
+        topRight,
+        bottomLeft,
+        bottomRight
+    }
 
     private void emitCorner(VertexEmitter emitter, float cx, float cy, float radius, int color, Corner corner) {
-        float startAngle = switch (corner) {
-            case TOP_LEFT -> (float) Math.PI;
-            case TOP_RIGHT -> (float) (Math.PI * 1.5);
-            case BOTTOM_LEFT -> (float) (Math.PI * 0.5);
-            case BOTTOM_RIGHT -> 0;
-        };
+        float startAngle =
+                switch (corner) {
+                    case topLeft -> (float) Math.PI;
+                    case topRight -> (float) (Math.PI * 1.5);
+                    case bottomLeft -> (float) (Math.PI * 0.5);
+                    case bottomRight -> 0;
+                };
         float angleStep = (float) (Math.PI / 2) / segments;
 
         for (int i = 0; i < segments; i++) {
@@ -159,8 +190,15 @@ public record RoundedRectTexture(
     }
 
     private void emitBorder(
-            VertexEmitter emitter, float x, float y, float width, float height,
-            float rTL, float rTR, float rBL, float rBR) {
+            VertexEmitter emitter,
+            float x,
+            float y,
+            float width,
+            float height,
+            float rTL,
+            float rTR,
+            float rBL,
+            float rBR) {
         float t = borderThickness;
         if (x + width - rTR > x + rTL) {
             emitter.colored(x + rTL, y, width - rTL - rTR, t, borderColor);
@@ -186,5 +224,5 @@ public record RoundedRectTexture(
         }
     }
 
-    //endregion
+    // endregion
 }

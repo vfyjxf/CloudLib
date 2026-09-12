@@ -30,9 +30,8 @@ public final class FluidUnits {
      */
     public static final Unit<FluidUnits> base = millibucket;
 
-    public static final ImmutableList<UnitRule> rules = Lists.immutable.of(
-            UnitRule.matter(bucket, millibucket, Ratio.of(1000))
-    );
+    public static final ImmutableList<UnitRule> rules =
+            Lists.immutable.of(UnitRule.matter(bucket, millibucket, Ratio.of(1000)));
 
     /**
      * Unmodifiable {@link List} view of {@link #rules}, for consumers working with
@@ -48,6 +47,5 @@ public final class FluidUnits {
         return UnitPack.of(rules, base);
     }
 
-    private FluidUnits() {
-    }
+    private FluidUnits() {}
 }

@@ -19,7 +19,7 @@ public interface UnitNames {
      * Derives names from unit id paths: {@code minecraft:millibucket} → {@code "millibucket"}.
      */
     static UnitNames defaults() {
-        return DerivedNames.INSTANCE;
+        return DerivedNames.instance;
     }
 
     static Builder builder() {
@@ -44,8 +44,7 @@ public interface UnitNames {
         private final Map<Unit<?>, String> names = new HashMap<>();
         private final Map<Unit<?>, Map<Namespace, String>> qualifiedNames = new HashMap<>();
 
-        private Builder() {
-        }
+        private Builder() {}
 
         public Builder name(Unit<?> unit, String name) {
             Checks.checkNotNull(unit, "unit");
@@ -92,7 +91,7 @@ public interface UnitNames {
 
     final class DerivedNames implements UnitNames {
 
-        private static final DerivedNames INSTANCE = new DerivedNames();
+        private static final DerivedNames instance = new DerivedNames();
 
         @Override
         public String name(Unit<?> unit) {

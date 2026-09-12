@@ -7,7 +7,9 @@ import dev.vfyjxf.nimbusprojection.api.Nimbus;
 import dev.vfyjxf.nimbusprojection.api.NimbusClient;
 import dev.vfyjxf.nimbusprojection.api.panel.PanelSpec;
 import dev.vfyjxf.nimbusprojection.internal.InworldManager;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,8 +31,8 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class InventoryFeature {
 
-    private static final PanelKey SATELLITE = PanelKey.of("nimbusprojection", "inventory/self");
-    private static final PanelKey HOTBAR = PanelKey.of("nimbusprojection", "inventory/hotbar");
+    private static final PanelKey satellite = PanelKey.of("nimbusprojection", "inventory/self");
+    private static final PanelKey hotbar = PanelKey.of("nimbusprojection", "inventory/hotbar");
 
     /** The container the satellite is currently linked to — read by the
      *  widget's quick-insert; swaps silently when another chest engages. */
@@ -41,19 +43,18 @@ public final class InventoryFeature {
      *  resurrect the pair until that engagement ends. */
     private static boolean dismissed;
 
-    private InventoryFeature() {
-    }
+    private InventoryFeature() {}
 
     /** Keybind toggle — a manual summon ignores the auto-link lifecycle. */
     public static void toggle() {
         NimbusClient client = Nimbus.client();
         if (client == null) return;
-        if (client.panel(SATELLITE) != null) {
-            client.close(SATELLITE);
-            client.close(HOTBAR);
+        if (client.panel(satellite) != null) {
+            client.close(satellite);
+            client.close(hotbar);
             autoSummoned = false;
             linked = null;
-            dismissed = true;   //a live container link won't reopen it
+            dismissed = true; // a live container link won't reopen it
         } else {
             open(client, null);
             autoSummoned = false;
@@ -70,7 +71,7 @@ public final class InventoryFeature {
         if (client == null) return;
 
         BlockPos engaged = engagedContainer(manager);
-        boolean open = client.panel(SATELLITE) != null;
+        boolean open = client.panel(satellite) != null;
 
         if (engaged != null) {
             linked = engaged;
@@ -79,10 +80,10 @@ public final class InventoryFeature {
                 autoSummoned = true;
             }
         } else {
-            dismissed = false;   //no engagement — the veto lapses
+            dismissed = false; // no engagement — the veto lapses
             if (open && autoSummoned) {
-                client.close(SATELLITE);
-                client.close(HOTBAR);
+                client.close(satellite);
+                client.close(hotbar);
                 autoSummoned = false;
                 linked = null;
             }
@@ -91,36 +92,35 @@ public final class InventoryFeature {
 
     private static void open(NimbusClient client, @Nullable BlockPos link) {
         linked = link;
-        client.open(PanelSpec
-                .of(SATELLITE, satelliteAnchor(link), Presentation.floating(),
-                        ctx -> new InventoryPanelWidget(
-                                ctx.player(), InventoryPanelWidget.Section.MAIN, () -> linked))
-                .title(net.minecraft.network.chat.Component.translatable("container.inventory"))
+        client.open(PanelSpec.of(
+                        satellite,
+                        satelliteAnchor(link),
+                        Presentation.floating(),
+                        ctx -> new InventoryPanelWidget(ctx.player(), InventoryPanelWidget.Section.main, () -> linked))
+                .title(Component.translatable("container.inventory"))
                 .hints("LMB/RMB:insert"));
-        //the hotbar strip: player-anchored follow — a stable projection just
-        //under the viewer regardless of which container is engaged
-        client.open(PanelSpec
-                .of(HOTBAR, playerAnchor(0.9), Presentation.follow(0, 0),
+        // the hotbar strip: player-anchored follow — a stable projection just
+        // under the viewer regardless of which container is engaged
+        client.open(PanelSpec.of(
+                        hotbar,
+                        playerAnchor(0.9),
+                        Presentation.follow(0, 0),
                         ctx -> new InventoryPanelWidget(
-                                ctx.player(), InventoryPanelWidget.Section.HOTBAR, () -> linked))
-                .title(net.minecraft.network.chat.Component.literal("hotbar"))
+                                ctx.player(), InventoryPanelWidget.Section.hotbar, () -> linked))
+                .title(Component.literal("hotbar"))
                 .interactive(true));
     }
 
     private static InworldAnchor satelliteAnchor(@Nullable BlockPos link) {
-        return link != null
-                ? InworldAnchor.of(link, new Vec3(0.5, 1.3, 0.5))
-                : playerAnchor(0.5);
+        return link != null ? InworldAnchor.of(link, new Vec3(0.5, 1.3, 0.5)) : playerAnchor(0.5);
     }
 
     /** A tracked anchor hovering below the player's eye — unshareable by
      *  design (a personal panel is nobody else's business). */
     private static InworldAnchor playerAnchor(double drop) {
         return InworldAnchor.of(() -> {
-            var mc = net.minecraft.client.Minecraft.getInstance();
-            return mc.player != null
-                    ? mc.player.getEyePosition().subtract(0, drop, 0)
-                    : Vec3.ZERO;
+            var mc = Minecraft.getInstance();
+            return mc.player != null ? mc.player.getEyePosition().subtract(0, drop, 0) : Vec3.ZERO;
         });
     }
 

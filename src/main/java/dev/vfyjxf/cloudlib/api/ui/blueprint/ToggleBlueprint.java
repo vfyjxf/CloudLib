@@ -30,13 +30,13 @@ public final class ToggleBlueprint implements Blueprint<ToggleWidget> {
     private VisualTexture onTexture = new ColorTexture(0xFF00AA00);
     private @Nullable VisualTexture hoverTexture;
     private @Nullable Object key;
-    private UIStyle style = UIStyle.EMPTY;
+    private UIStyle style = UIStyle.empty;
 
     private ToggleBlueprint(boolean initial) {
         this.toggled = initial;
     }
 
-    //region dsl entry points
+    // region dsl entry points
 
     public static ToggleBlueprint Toggle(boolean initial) {
         return ScopedReceiver.add(new ToggleBlueprint(initial));
@@ -46,9 +46,9 @@ public final class ToggleBlueprint implements Blueprint<ToggleWidget> {
         return ScopedReceiver.add(new ToggleBlueprint(initial).onToggle(onToggle));
     }
 
-    //endregion
+    // endregion
 
-    //region builder methods
+    // region builder methods
 
     public ToggleBlueprint toggled(boolean toggled) {
         this.toggled = toggled;
@@ -87,9 +87,9 @@ public final class ToggleBlueprint implements Blueprint<ToggleWidget> {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region blueprint implementation
+    // region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -104,11 +104,11 @@ public final class ToggleBlueprint implements Blueprint<ToggleWidget> {
     @Override
     public void updateWidget(ToggleWidget widget, Scene scene, SceneContext context) {
         widget.setToggled(toggled)
-              .onToggle(onToggle)
-              .setTextures(offTexture, onTexture)
-              .setHoverTexture(hoverTexture)
-              .useStyle(style);
+                .onToggle(onToggle)
+                .setTextures(offTexture, onTexture)
+                .setHoverTexture(hoverTexture)
+                .useStyle(style);
     }
 
-    //endregion
+    // endregion
 }

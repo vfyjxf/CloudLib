@@ -12,13 +12,12 @@ import java.util.List;
  */
 final class InworldLayout {
 
-    private InworldLayout() {
-    }
+    private InworldLayout() {}
 
     /** Soft-focus cone half-angle — anchors within ~30° of the look vector are selectable. */
-    static final double SOFT_FOCUS_COS = Math.cos(Math.toRadians(30));
+    static final double softFocusCos = Math.cos(Math.toRadians(30));
     /** Soft-focus distance cap — roughly the usual block-interaction reach. */
-    static final double SOFT_FOCUS_RANGE = 12.0;
+    static final double softFocusRange = 12.0;
 
     /**
      * Angular score of a soft-focus candidate: {@code 1 - cos(angle)} between
@@ -31,7 +30,7 @@ final class InworldLayout {
         double len = to.length();
         if (len < 1e-4) return 0;
         double cos = to.dot(look) / len;
-        if (cos < SOFT_FOCUS_COS) return -1;
+        if (cos < softFocusCos) return -1;
         return 1 - cos;
     }
 
@@ -119,5 +118,4 @@ final class InworldLayout {
         }
         return new Occl(area, depth, dominant);
     }
-
 }

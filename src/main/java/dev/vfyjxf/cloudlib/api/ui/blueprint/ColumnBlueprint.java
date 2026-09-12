@@ -35,13 +35,13 @@ public final class ColumnBlueprint implements Blueprint.Group<ColumnWidget, Widg
     private final Supplier<List<Blueprint<?>>> childrenSupplier;
     private int spacing = 0;
     private @Nullable Object key;
-    private UIStyle style = UIStyle.EMPTY;
+    private UIStyle style = UIStyle.empty;
 
     private ColumnBlueprint(Supplier<List<Blueprint<?>>> childrenSupplier) {
         this.childrenSupplier = childrenSupplier;
     }
 
-    //region dsl entry points
+    // region dsl entry points
 
     public static ColumnBlueprint Column(Runnable content) {
         return ScopedReceiver.add(new ColumnBlueprint(() -> ScopedReceiver.buildChildren(content)));
@@ -51,9 +51,9 @@ public final class ColumnBlueprint implements Blueprint.Group<ColumnWidget, Widg
         return ScopedReceiver.add(new ColumnBlueprint(() -> ScopedReceiver.buildChildren(content)).spacing(spacing));
     }
 
-    //endregion
+    // endregion
 
-    //region builder methods
+    // region builder methods
 
     public ColumnBlueprint spacing(int spacing) {
         this.spacing = spacing;
@@ -70,9 +70,9 @@ public final class ColumnBlueprint implements Blueprint.Group<ColumnWidget, Widg
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region blueprint implementation
+    // region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -92,9 +92,8 @@ public final class ColumnBlueprint implements Blueprint.Group<ColumnWidget, Widg
 
     @Override
     public void updateWidget(ColumnWidget widget, Scene scene, SceneContext context) {
-        widget.setSpacing(spacing)
-              .useStyle(style);
+        widget.setSpacing(spacing).useStyle(style);
     }
 
-    //endregion
+    // endregion
 }

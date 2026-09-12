@@ -20,13 +20,13 @@ public abstract class BasicEntityBlock<T extends BlockEntity> extends Block impl
     @Nullable
     @SuppressWarnings("rawtypes")
     private final MenuInfo menuInfo;
+
     private final DeferredHolder<BlockEntityType<?>, BlockEntityType<T>> entityType;
 
     protected BasicEntityBlock(
             DeferredHolder<BlockEntityType<?>, BlockEntityType<T>> entityType,
             @Nullable MenuInfo<?, ?> menuInfo,
-            Properties properties
-    ) {
+            Properties properties) {
         super(properties);
         this.entityType = entityType;
         this.menuInfo = menuInfo;
@@ -34,7 +34,8 @@ public abstract class BasicEntityBlock<T extends BlockEntity> extends Block impl
 
     @Override
     protected @Nullable MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
-        //spectator mode use this method to open menu,but it doesn't provide a byteBuf to write custom data,so we don't support it.
+        // spectator mode use this method to open menu,but it doesn't provide a byteBuf to write custom data,so we don't
+        // support it.
         return null;
     }
 
@@ -45,7 +46,8 @@ public abstract class BasicEntityBlock<T extends BlockEntity> extends Block impl
 
     @Override
     @SuppressWarnings("unchecked")
-    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
+    protected InteractionResult useWithoutItem(
+            BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (menuInfo != null) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity != null && blockEntity.getType() == entityType.get()) {
@@ -57,7 +59,8 @@ public abstract class BasicEntityBlock<T extends BlockEntity> extends Block impl
         return super.useWithoutItem(state, level, pos, player, hitResult);
     }
 
-    protected boolean shouldOpenMenu(BlockEntity blockEntity, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
+    protected boolean shouldOpenMenu(
+            BlockEntity blockEntity, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         return true;
     }
 }

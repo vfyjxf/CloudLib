@@ -14,24 +14,26 @@ import org.jetbrains.annotations.Nullable;
  */
 public class LabelWidget extends Widget {
 
-    //region state
+    // region state
 
     private Component text;
     private int color = 0xFFFFFF;
     private boolean shadow = true;
-    private @Nullable TextAlign align = TextAlign.LEFT;
+    private @Nullable TextAlign align = TextAlign.left;
 
-    //endregion
+    // endregion
 
-    //region types
+    // region types
 
     public enum TextAlign {
-        LEFT, CENTER, RIGHT
+        left,
+        CENTER,
+        right
     }
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     public static LabelWidget of(String text) {
         return new LabelWidget(Component.literal(text));
@@ -59,9 +61,9 @@ public class LabelWidget extends Widget {
         });
     }
 
-    //endregion
+    // endregion
 
-    //region configuration
+    // region configuration
 
     public Component text() {
         return text;
@@ -109,9 +111,9 @@ public class LabelWidget extends Widget {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
@@ -119,19 +121,20 @@ public class LabelWidget extends Widget {
         var font = context().font();
         int textWidth = font.width(text);
 
-        int x = switch (align) {
-            case LEFT -> 0;
-            case CENTER -> (width() - textWidth) / 2;
-            case RIGHT -> width() - textWidth;
-            case null -> 0;
-        };
+        int x =
+                switch (align) {
+                    case left -> 0;
+                    case CENTER -> (width() - textWidth) / 2;
+                    case right -> width() - textWidth;
+                    case null -> 0;
+                };
 
         canvas.text(text, x, 0, color, shadow);
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
@@ -141,10 +144,11 @@ public class LabelWidget extends Widget {
             content = content.substring(0, 27) + "...";
         }
         collector.add("text", content, InspectionProperty.categoryData);
-        collector.addFormatted("color", String.format("#%06X", color & 0xFFFFFF), "#FFFFFF", InspectionProperty.categoryVisual);
+        collector.addFormatted(
+                "color", String.format("#%06X", color & 0xFFFFFF), "#FFFFFF", InspectionProperty.categoryVisual);
         collector.addWithDefault("shadow", shadow, true, InspectionProperty.categoryVisual);
-        collector.addWithDefault("align", align, TextAlign.LEFT, InspectionProperty.categoryVisual);
+        collector.addWithDefault("align", align, TextAlign.left, InspectionProperty.categoryVisual);
     }
 
-    //endregion
+    // endregion
 }

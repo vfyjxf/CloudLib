@@ -8,8 +8,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 public final class CloudLibSceneAccessor {
-    private static final String SCENE_METHOD_NAME = "scene";
-    private static final String SCENE_FIELD_NAME = "scene";
+    private static final String sceneMethodName = "scene";
+    private static final String sceneFieldName = "scene";
 
     private CloudLibSceneAccessor() {
     }
@@ -47,7 +47,7 @@ public final class CloudLibSceneAccessor {
         Class<?> current = type;
         while (current != null) {
             try {
-                Method method = current.getDeclaredMethod(SCENE_METHOD_NAME);
+                Method method = current.getDeclaredMethod(sceneMethodName);
                 method.setAccessible(true);
                 return method;
             } catch (NoSuchMethodException ignored) {
@@ -61,7 +61,7 @@ public final class CloudLibSceneAccessor {
 
     private static Scene readSceneField(Object screen, Class<?> owner) {
         try {
-            Field field = owner.getDeclaredField(SCENE_FIELD_NAME);
+            Field field = owner.getDeclaredField(sceneFieldName);
             field.setAccessible(true);
             Object value = field.get(screen);
             return value instanceof Scene ? (Scene) value : null;

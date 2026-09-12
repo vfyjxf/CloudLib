@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @NotNullByDefault
 public class ProgressTrackerTest {
 
-    //region basic percentage
+    // region basic percentage
 
     @Test
     void testSinglePhasePercentage() {
@@ -92,9 +92,9 @@ public class ProgressTrackerTest {
         assertEquals(33.33f, tracker.percentage(), 0.5f);
     }
 
-    //endregion
+    // endregion
 
-    //region listener
+    // region listener
 
     @Test
     void testListenerCalledOnAdvance() {
@@ -115,8 +115,9 @@ public class ProgressTrackerTest {
         assertEquals(100.0f, percentages.getLast(), 0.01f);
         // Percentages should be monotonically non-decreasing
         for (int i = 1; i < percentages.size(); i++) {
-            assertTrue(percentages.get(i) >= percentages.get(i - 1),
-                "Percentages should be non-decreasing: " + percentages);
+            assertTrue(
+                    percentages.get(i) >= percentages.get(i - 1),
+                    "Percentages should be non-decreasing: " + percentages);
         }
     }
 
@@ -131,9 +132,9 @@ public class ProgressTrackerTest {
         assertDoesNotThrow(() -> dispatcher.dispatch(plugin -> {}, tracker.phase(1)));
     }
 
-    //endregion
+    // endregion
 
-    //region dispatchAll with tracker
+    // region dispatchAll with tracker
 
     @Test
     void testDispatchAllWithTracker() {
@@ -144,20 +145,16 @@ public class ProgressTrackerTest {
         var dispatcher = PluginDispatcher.fromGraph(graph);
         var tracker = new ProgressTracker();
 
-        dispatcher.dispatchAll(tracker,
-            plugin -> {},
-            plugin -> {},
-            plugin -> {}
-        );
+        dispatcher.dispatchAll(tracker, plugin -> {}, plugin -> {}, plugin -> {});
 
         assertEquals(100.0f, tracker.percentage(), 0.01f);
         assertTrue(tracker.isComplete());
         assertEquals(3, tracker.phaseCount());
     }
 
-    //endregion
+    // endregion
 
-    //region DispatchQueue with tracker
+    // region DispatchQueue with tracker
 
     @Test
     void testQueueExecuteWithTracker() {
@@ -193,9 +190,9 @@ public class ProgressTrackerTest {
         assertEquals(0.0f, tracker.percentage());
     }
 
-    //endregion
+    // endregion
 
-    //region percentage granularity
+    // region percentage granularity
 
     @Test
     void testPercentageWithMultiplePlugins() {
@@ -227,9 +224,9 @@ public class ProgressTrackerTest {
         assertEquals(3, tracker.phaseCount());
     }
 
-    //endregion
+    // endregion
 
-    //region error scenarios
+    // region error scenarios
 
     @Test
     void testInvalidWeightThrows() {
@@ -248,21 +245,23 @@ public class ProgressTrackerTest {
         var tracker = new ProgressTracker();
         var phase = tracker.phase(1);
 
-        assertThrows(PluginLoadingException.class, () ->
-            dispatcher.dispatch(plugin -> {
-                if (plugin.pluginId().path().equals("a")) {
-                    throw new RuntimeException("fail");
-                }
-            }, phase)
-        );
+        assertThrows(
+                PluginLoadingException.class,
+                () -> dispatcher.dispatch(
+                        plugin -> {
+                            if (plugin.pluginId().path().equals("a")) {
+                                throw new RuntimeException("fail");
+                            }
+                        },
+                        phase));
 
         // Should not be 100% because dispatch was aborted
         assertTrue(tracker.percentage() < 100.0f);
     }
 
-    //endregion
+    // endregion
 
-    //region DispatchProgress.empty
+    // region DispatchProgress.empty
 
     @Test
     void testEmptyProgressIsNoOp() {
@@ -274,9 +273,9 @@ public class ProgressTrackerTest {
         });
     }
 
-    //endregion
+    // endregion
 
-    //region timing
+    // region timing
 
     @Test
     void testPhaseTimingRecorded() {
@@ -285,16 +284,22 @@ public class ProgressTrackerTest {
         var dispatcher = PluginDispatcher.fromGraph(graph);
         var tracker = new ProgressTracker();
 
-        dispatcher.dispatch(plugin -> {
-            try { Thread.sleep(30); } catch (InterruptedException ignored) {}
-        }, tracker.phase("slow-phase", 1));
+        dispatcher.dispatch(
+                plugin -> {
+                    try {
+                        Thread.sleep(30);
+                    } catch (InterruptedException ignored) {
+                    }
+                },
+                tracker.phase("slow-phase", 1));
 
         var timings = tracker.timings();
         assertEquals(1, timings.size());
         assertEquals("slow-phase", timings.getFirst().name());
         assertTrue(timings.getFirst().complete());
-        assertTrue(timings.getFirst().elapsedMs() >= 20,
-            "Expected >= 20ms, got " + timings.getFirst().elapsedMs() + "ms");
+        assertTrue(
+                timings.getFirst().elapsedMs() >= 20,
+                "Expected >= 20ms, got " + timings.getFirst().elapsedMs() + "ms");
     }
 
     @Test
@@ -304,13 +309,23 @@ public class ProgressTrackerTest {
         var dispatcher = PluginDispatcher.fromGraph(graph);
         var tracker = new ProgressTracker();
 
-        dispatcher.dispatch(plugin -> {
-            try { Thread.sleep(20); } catch (InterruptedException ignored) {}
-        }, tracker.phase("phase-a", 50));
+        dispatcher.dispatch(
+                plugin -> {
+                    try {
+                        Thread.sleep(20);
+                    } catch (InterruptedException ignored) {
+                    }
+                },
+                tracker.phase("phase-a", 50));
 
-        dispatcher.dispatch(plugin -> {
-            try { Thread.sleep(20); } catch (InterruptedException ignored) {}
-        }, tracker.phase("phase-b", 50));
+        dispatcher.dispatch(
+                plugin -> {
+                    try {
+                        Thread.sleep(20);
+                    } catch (InterruptedException ignored) {
+                    }
+                },
+                tracker.phase("phase-b", 50));
 
         var timings = tracker.timings();
         assertEquals(2, timings.size());
@@ -352,9 +367,9 @@ public class ProgressTrackerTest {
         assertEquals(0, tracker.totalElapsedMs());
     }
 
-    //endregion
+    // endregion
 
-    //region helpers
+    // region helpers
 
     private static ModPlugin plugin(String name, PluginDependency... deps) {
         return new SimplePlugin(CloudNamespaces.ofMod(name), Set.of(deps));
@@ -366,6 +381,6 @@ public class ProgressTrackerTest {
 
     private record SimplePlugin(Namespace pluginId, Set<PluginDependency> dependencies) implements ModPlugin {}
 
-    //endregion
+    // endregion
 
 }

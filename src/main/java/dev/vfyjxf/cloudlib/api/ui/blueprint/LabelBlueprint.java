@@ -24,15 +24,15 @@ public final class LabelBlueprint implements Blueprint<LabelWidget> {
     private final Component text;
     private int color = 0xFFFFFF;
     private boolean shadow = true;
-    private LabelWidget.TextAlign align = LabelWidget.TextAlign.LEFT;
+    private LabelWidget.TextAlign align = LabelWidget.TextAlign.left;
     private @Nullable Object key;
-    private UIStyle style = UIStyle.EMPTY;
+    private UIStyle style = UIStyle.empty;
 
     private LabelBlueprint(Component text) {
         this.text = text;
     }
 
-    //region dsl entry points
+    // region dsl entry points
 
     public static LabelBlueprint Label(String text) {
         return ScopedReceiver.add(new LabelBlueprint(Component.literal(text)));
@@ -46,9 +46,9 @@ public final class LabelBlueprint implements Blueprint<LabelWidget> {
         return ScopedReceiver.add(new LabelBlueprint(Component.literal(text)).color(color));
     }
 
-    //endregion
+    // endregion
 
-    //region builder methods
+    // region builder methods
 
     public LabelBlueprint color(int color) {
         this.color = color;
@@ -75,9 +75,9 @@ public final class LabelBlueprint implements Blueprint<LabelWidget> {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region blueprint implementation
+    // region blueprint implementation
 
     @Override
     public @Nullable Object key() {
@@ -91,12 +91,8 @@ public final class LabelBlueprint implements Blueprint<LabelWidget> {
 
     @Override
     public void updateWidget(LabelWidget widget, Scene scene, SceneContext context) {
-        widget.setText(text)
-              .setColor(color)
-              .setShadow(shadow)
-              .setAlign(align)
-              .useStyle(style);
+        widget.setText(text).setColor(color).setShadow(shadow).setAlign(align).useStyle(style);
     }
 
-    //endregion
+    // endregion
 }

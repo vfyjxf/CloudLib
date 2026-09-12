@@ -9,10 +9,9 @@ import java.lang.annotation.Target;
  * Default annotation for marking a class as a plugin, used by {@link AnnotationPluginLookup}.
  * <p>
  * The annotated class must implement a {@link ModPlugin} subinterface
- * and have a public no-arg constructor. The plugin ID is provided by
+ * and have a public no-arg constructor. The plugin id is provided by
  * {@link ModPlugin#pluginId()}, not by annotation attributes.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface PluginMarker {
-}
+public @interface PluginMarker {}

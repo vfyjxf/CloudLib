@@ -1,6 +1,3 @@
 package dev.vfyjxf.cloudlib.ui;
 
-public final class Textures {
-
-
-}
+public final class Textures {}

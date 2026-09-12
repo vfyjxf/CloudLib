@@ -9,9 +9,6 @@ public record CompositeScenario<T>(Namespace id, Class<T> type, Function<Sequenc
 
     @Override
     public String toString() {
-        return "CompositeScenario{" +
-                "id=" + id +
-                ", type=" + type +
-                '}';
+        return "CompositeScenario{" + "id=" + id + ", type=" + type + '}';
     }
 }

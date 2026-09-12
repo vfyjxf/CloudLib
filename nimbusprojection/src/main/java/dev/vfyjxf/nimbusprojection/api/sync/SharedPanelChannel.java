@@ -15,5 +15,4 @@ public interface SharedPanelChannel {
 
     /** Sends a payload to every player currently watching this panel. */
     void broadcast(CustomPacketPayload payload);
-
 }

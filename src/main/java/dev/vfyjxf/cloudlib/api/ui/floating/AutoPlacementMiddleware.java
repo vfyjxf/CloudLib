@@ -23,7 +23,7 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
     private final @Nullable List<FloatingPlacement> allowedPlacements;
     private final int padding;
 
-    //region factory
+    // region factory
 
     /**
      * Creates an auto-placement middleware with default options.
@@ -55,8 +55,7 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
             @Nullable FloatingPlacement.Alignment alignment,
             boolean autoAlignment,
             @Nullable List<FloatingPlacement> allowedPlacements,
-            int padding
-    ) {
+            int padding) {
         return new AutoPlacementMiddleware(crossAxis, alignment, autoAlignment, allowedPlacements, padding);
     }
 
@@ -65,8 +64,7 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
             @Nullable FloatingPlacement.Alignment alignment,
             boolean autoAlignment,
             @Nullable List<FloatingPlacement> allowedPlacements,
-            int padding
-    ) {
+            int padding) {
         this.crossAxis = crossAxis;
         this.alignment = alignment;
         this.autoAlignment = autoAlignment;
@@ -74,7 +72,7 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
         this.padding = padding;
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String name() {
@@ -92,9 +90,7 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
         Integer currentIndex = state.getData(name(), "index");
         if (currentIndex == null) currentIndex = 0;
 
-        FloatingPlacement currentPlacement = currentIndex < candidates.size()
-                ? candidates.get(currentIndex)
-                : null;
+        FloatingPlacement currentPlacement = currentIndex < candidates.size() ? candidates.get(currentIndex) : null;
 
         if (currentPlacement == null) {
             return Result.done();
@@ -108,12 +104,11 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
         // Detect overflow at this placement
         Insets overflow = state.detectOverflow(padding);
         FloatingPlacement.Side side = placement.side();
-        int[] alignmentOverflow = FloatingPositioning.alignmentSides(overflow, placement, state.referenceRect(), state.floatingRect());
+        int[] alignmentOverflow =
+                FloatingPositioning.alignmentSides(overflow, placement, state.referenceRect(), state.floatingRect());
 
         int[] currentOverflows = {
-                FloatingPositioning.getSide(overflow, side),
-                alignmentOverflow[0],
-                alignmentOverflow[1]
+            FloatingPositioning.getSide(overflow, side), alignmentOverflow[0], alignmentOverflow[1]
         };
 
         @SuppressWarnings("unchecked")
@@ -143,7 +138,7 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
         return Result.done();
     }
 
-    //region helpers
+    // region helpers
 
     private List<FloatingPlacement> buildPlacementList() {
         FloatingPlacement[] all = allowedPlacements != null
@@ -224,12 +219,11 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region overflow entry
+    // region overflow entry
 
-    private record OverflowEntry(FloatingPlacement placement, int[] overflows) {
-    }
+    private record OverflowEntry(FloatingPlacement placement, int[] overflows) {}
 
-    //endregion
+    // endregion
 }

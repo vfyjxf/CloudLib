@@ -12,74 +12,40 @@ import java.util.function.Consumer;
 public non-sealed interface LayerExpose<E> extends ExposeCommon {
 
     static <T, E> LayerExpose<E> create(
-            String name, short id,
-            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-            FlowHandler<T, E> codec
-    ) {
-        return new StandardLayerExpose<>(
-                name,
-                id,
-                snapshot,
-                valueSupplier,
-                codec,
-                codec
-        );
+            String name, short id, Snapshot<T> snapshot, ValueSupplier<T> valueSupplier, FlowHandler<T, E> codec) {
+        return new StandardLayerExpose<>(name, id, snapshot, valueSupplier, codec, codec);
     }
 
     static <T, E> LayerExpose<E> create(
-            String name, short id,
-            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder, FlowDecoder<E> decoder
-    ) {
-        return new StandardLayerExpose<>(
-                name,
-                id,
-                snapshot,
-                valueSupplier,
-                encoder,
-                decoder
-        );
+            String name,
+            short id,
+            Snapshot<T> snapshot,
+            ValueSupplier<T> valueSupplier,
+            FlowEncoder<T> encoder,
+            FlowDecoder<E> decoder) {
+        return new StandardLayerExpose<>(name, id, snapshot, valueSupplier, encoder, decoder);
     }
 
-    //region handle factory
+    // region handle factory
 
     /**
      * Create a LayerExpose backed by a {@link Handle}. The handle's dirty flag drives change detection.
      */
-    static <T, E> LayerExpose<E> create(
-            String name, short id,
-            Handle<T> handle, FlowHandler<T, E> codec
-    ) {
-        return new StandardLayerExpose<>(
-                name,
-                id,
-                Snapshot.HandleSnapshot.of(handle),
-                handle::get,
-                codec,
-                codec
-        );
+    static <T, E> LayerExpose<E> create(String name, short id, Handle<T> handle, FlowHandler<T, E> codec) {
+        return new StandardLayerExpose<>(name, id, Snapshot.HandleSnapshot.of(handle), handle::get, codec, codec);
     }
 
     /**
      * Create a LayerExpose backed by a {@link Handle}. See {@link #create(String, short, Handle, FlowHandler)}.
      */
     static <T, E> LayerExpose<E> create(
-            String name, short id,
-            Handle<T> handle, FlowEncoder<T> encoder, FlowDecoder<E> decoder
-    ) {
-        return new StandardLayerExpose<>(
-                name,
-                id,
-                Snapshot.HandleSnapshot.of(handle),
-                handle::get,
-                encoder,
-                decoder
-        );
+            String name, short id, Handle<T> handle, FlowEncoder<T> encoder, FlowDecoder<E> decoder) {
+        return new StandardLayerExpose<>(name, id, Snapshot.HandleSnapshot.of(handle), handle::get, encoder, decoder);
     }
 
-    //endregion
+    // endregion
 
-    //region identity and debug info
+    // region identity and debug info
 
     /**
      * @return the debug name of this value
@@ -95,9 +61,9 @@ public non-sealed interface LayerExpose<E> extends ExposeCommon {
     @Override
     short id();
 
-    //endregion
+    // endregion
 
-    //region snapshot
+    // region snapshot
 
     @ApiStatus.Internal
     Snapshot<?> snapshot();
@@ -105,12 +71,12 @@ public non-sealed interface LayerExpose<E> extends ExposeCommon {
     @Override
     <T> boolean changed();
 
-    //endregion
+    // endregion
 
-    //region for client
+    // region for client
 
     void whenReceive(Consumer<E> consumer);
 
-    //endregion
+    // endregion
 
 }

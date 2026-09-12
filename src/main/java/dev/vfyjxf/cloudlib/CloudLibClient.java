@@ -29,7 +29,9 @@ public final class CloudLibClient extends CloudLib {
 
     public CloudLibClient(ModContainer container, IEventBus modBus, Dist dist) {
         super(container, modBus, dist);
-        clientPlugins = PluginLoader.loadPlugin(logger, "CloudLib Client Plugin", AnnotationPluginLookup.of(CloudLibClientPlugin.class)).toImmutable();
+        clientPlugins = PluginLoader.loadPlugin(
+                        logger, "CloudLib Client Plugin", AnnotationPluginLookup.of(CloudLibClientPlugin.class))
+                .toImmutable();
         modBus.addListener(this::gatherData);
         modBus.addListener(this::registerClientTooltipComponentFactories);
     }
@@ -56,15 +58,11 @@ public final class CloudLibClient extends CloudLib {
     }
 
     private void registerClientTooltipComponentFactories(RegisterClientTooltipComponentFactoriesEvent event) {
-//        event.register(RichTooltipComponent.class, Function.identity());
+        //        event.register(RichTooltipComponent.class, Function.identity());
     }
 
     private void gatherData(GatherDataEvent event) {
-        event.getGenerator().addProvider(
-                event.includeClient(),
-                (DataProvider.Factory<DataProvider>) CloudLibLangProvider::new
-        );
+        event.getGenerator()
+                .addProvider(event.includeClient(), (DataProvider.Factory<DataProvider>) CloudLibLangProvider::new);
     }
-
-
 }

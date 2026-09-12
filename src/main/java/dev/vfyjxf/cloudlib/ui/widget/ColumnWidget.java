@@ -13,13 +13,13 @@ import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
  */
 public class ColumnWidget extends CompositeWidget<Widget> {
 
-    //region state
+    // region state
 
     private int spacing = 0;
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     public static ColumnWidget create() {
         return new ColumnWidget();
@@ -33,9 +33,9 @@ public class ColumnWidget extends CompositeWidget<Widget> {
         useStyle(UIStyle.of(UIStyles.flexColumn()));
     }
 
-    //endregion
+    // endregion
 
-    //region configuration
+    // region configuration
 
     public int spacing() {
         return spacing;
@@ -47,27 +47,27 @@ public class ColumnWidget extends CompositeWidget<Widget> {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region children
+    // region children
 
     @Override
     public <T extends Widget> T addWidget(T widget) {
         return super.addWidget(widget);
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         super.renderInternal(canvas, mouseX, mouseY, partialTicks);
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
@@ -76,5 +76,5 @@ public class ColumnWidget extends CompositeWidget<Widget> {
         collector.add("children", children().size(), InspectionProperty.categoryData);
     }
 
-    //endregion
+    // endregion
 }

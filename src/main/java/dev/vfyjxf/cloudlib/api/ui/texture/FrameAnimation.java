@@ -11,8 +11,7 @@ import java.util.List;
  */
 public class FrameAnimation implements Playable<VisualTexture> {
 
-    private record Frame(VisualTexture texture, float duration) {
-    }
+    private record Frame(VisualTexture texture, float duration) {}
 
     private final List<Frame> frames = new ArrayList<>();
     private int currentIndex = 0;
@@ -24,8 +23,7 @@ public class FrameAnimation implements Playable<VisualTexture> {
     private boolean playing = false;
     private boolean loop = true;
 
-    public FrameAnimation() {
-    }
+    public FrameAnimation() {}
 
     public FrameAnimation addFrame(VisualTexture texture, float duration) {
         frames.add(new Frame(texture, duration));
@@ -87,9 +85,9 @@ public class FrameAnimation implements Playable<VisualTexture> {
         return Math.min(interpolatedElapsed / frame.duration, 1.0f);
     }
 
-    //endregion
+    // endregion
 
-    //region playable
+    // region playable
 
     @Override
     public VisualTexture value() {
@@ -226,5 +224,5 @@ public class FrameAnimation implements Playable<VisualTexture> {
         this.loop = loop;
     }
 
-    //endregion
+    // endregion
 }

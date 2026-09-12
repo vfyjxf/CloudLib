@@ -24,9 +24,7 @@ public class TestContainerWidget extends CompositeWidget<Widget> {
     }
 
     private TestContainerWidget() {
-        useStyle(UIStyle.of(
-                UIStyles.flexColumn()
-        ));
+        useStyle(UIStyle.of(UIStyles.flexColumn()));
     }
 
     public int spacing() {

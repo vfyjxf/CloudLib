@@ -61,5 +61,4 @@ public sealed interface EventDefinition<T> permits Events.EventDefinitionImpl {
     default void unregisterAll() {
         defaultEvent().clearListeners();
     }
-
 }

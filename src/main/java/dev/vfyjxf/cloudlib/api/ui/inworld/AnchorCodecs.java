@@ -22,28 +22,27 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class AnchorCodecs {
 
-    private static final Map<AnchorType<?>, AnchorCodec<?>> CODECS = new ConcurrentHashMap<>();
+    private static final Map<AnchorType<?>, AnchorCodec<?>> codecs = new ConcurrentHashMap<>();
 
-    private AnchorCodecs() {
-    }
+    private AnchorCodecs() {}
 
     public static <A extends InworldAnchor> void register(AnchorCodec<A> codec) {
-        CODECS.put(codec.type(), codec);
+        codecs.put(codec.type(), codec);
     }
 
     /** The codec registered for this anchor's kind, or null. */
     public static @Nullable AnchorCodec<?> of(InworldAnchor anchor) {
-        return CODECS.get(anchor.type());
+        return codecs.get(anchor.type());
     }
 
     /** The codec registered under a kind token, or null. */
     public static @Nullable AnchorCodec<?> of(AnchorType<?> type) {
-        return CODECS.get(type);
+        return codecs.get(type);
     }
 
     /** The codec registered under a kind id, or null. */
     public static @Nullable AnchorCodec<?> byId(ResourceLocation id) {
-        return CODECS.get(AnchorType.of(id));
+        return codecs.get(AnchorType.of(id));
     }
 
     /** Whether this anchor can cross the network (has a registered codec). */
@@ -51,49 +50,50 @@ public final class AnchorCodecs {
         return of(anchor) != null;
     }
 
-    //region built-in codecs
+    // region built-in codecs
 
     private static <A extends InworldAnchor> AnchorCodec<A> builtin(
-            AnchorType<A> type, StreamCodec<RegistryFriendlyByteBuf, A> codec
-    ) {
+            AnchorType<A> type, StreamCodec<RegistryFriendlyByteBuf, A> codec) {
         return new AnchorCodec<>() {
-            @Override public AnchorType<A> type() {
+            @Override
+            public AnchorType<A> type() {
                 return type;
             }
 
-            @Override public StreamCodec<? super RegistryFriendlyByteBuf, A> codec() {
+            @Override
+            public StreamCodec<? super RegistryFriendlyByteBuf, A> codec() {
                 return codec;
             }
         };
     }
 
-    private static final StreamCodec<RegistryFriendlyByteBuf, Vec3> VEC3 = StreamCodec.of(
+    private static final StreamCodec<RegistryFriendlyByteBuf, Vec3> vec3 = StreamCodec.of(
             (buf, v) -> {
                 buf.writeDouble(v.x);
                 buf.writeDouble(v.y);
                 buf.writeDouble(v.z);
             },
-            buf -> new Vec3(buf.readDouble(), buf.readDouble(), buf.readDouble())
-    );
+            buf -> new Vec3(buf.readDouble(), buf.readDouble(), buf.readDouble()));
 
     static {
-        register(builtin(AnchorType.BLOCK, StreamCodec.of(
-                (buf, a) -> {
-                    BlockPos.STREAM_CODEC.encode(buf, a.pos());
-                    VEC3.encode(buf, a.offset());
-                },
-                buf -> new InworldAnchor.Block(BlockPos.STREAM_CODEC.decode(buf), VEC3.decode(buf))
-        )));
-        register(builtin(AnchorType.POSITION,
-                VEC3.map(InworldAnchor.Position::new, InworldAnchor.Position::pos)));
-        register(builtin(AnchorType.ENTITY, StreamCodec.of(
-                (buf, a) -> {
-                    buf.writeVarInt(a.entityId());
-                    VEC3.encode(buf, a.offset());
-                },
-                buf -> new InworldAnchor.EntityTarget(buf.readVarInt(), VEC3.decode(buf))
-        )));
+        register(builtin(
+                AnchorType.block,
+                StreamCodec.of(
+                        (buf, a) -> {
+                            BlockPos.STREAM_CODEC.encode(buf, a.pos());
+                            vec3.encode(buf, a.offset());
+                        },
+                        buf -> new InworldAnchor.Block(BlockPos.STREAM_CODEC.decode(buf), vec3.decode(buf)))));
+        register(builtin(AnchorType.position, vec3.map(InworldAnchor.Position::new, InworldAnchor.Position::pos)));
+        register(builtin(
+                AnchorType.entity,
+                StreamCodec.of(
+                        (buf, a) -> {
+                            buf.writeVarInt(a.entityId());
+                            vec3.encode(buf, a.offset());
+                        },
+                        buf -> new InworldAnchor.EntityTarget(buf.readVarInt(), vec3.decode(buf)))));
     }
 
-    //endregion
+    // endregion
 }

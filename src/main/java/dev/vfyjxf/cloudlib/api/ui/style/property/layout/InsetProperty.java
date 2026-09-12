@@ -25,7 +25,7 @@ import java.util.Objects;
  * <p>
  * The inset value types supported by taffy include:
  * <ul>
- *   <li>{@link LengthPercentageAuto#AUTO} - automatic positioning</li>
+ *   <li>{@link LengthPercentageAuto#auto} - automatic positioning</li>
  *   <li>{@link LengthPercentageAuto#length(float)} - fixed pixel offset</li>
  *   <li>{@link LengthPercentageAuto#percent(float)} - percentage of parent (0.0 to 1.0)</li>
  * </ul>
@@ -36,51 +36,51 @@ import java.util.Objects;
  */
 public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto> {
 
-    //region types
+    // region types
 
     /**
      * StyleType for setting all four inset edges at once.
      */
-    public static final StyleType<InsetProperty> TYPE_ALL = StyleType.of("inset", () -> null);
+    public static final StyleType<InsetProperty> typeAll = StyleType.of("inset", () -> null);
 
     /**
      * StyleType for setting only the top inset edge.
      */
-    public static final StyleType<InsetProperty> TYPE_TOP = StyleType.of("inset-top", () -> null);
+    public static final StyleType<InsetProperty> typeTop = StyleType.of("inset-top", () -> null);
 
     /**
      * StyleType for setting only the right inset edge.
      */
-    public static final StyleType<InsetProperty> TYPE_RIGHT = StyleType.of("inset-right", () -> null);
+    public static final StyleType<InsetProperty> typeRight = StyleType.of("inset-right", () -> null);
 
     /**
      * StyleType for setting only the bottom inset edge.
      */
-    public static final StyleType<InsetProperty> TYPE_BOTTOM = StyleType.of("inset-bottom", () -> null);
+    public static final StyleType<InsetProperty> typeBottom = StyleType.of("inset-bottom", () -> null);
 
     /**
      * StyleType for setting only the left inset edge.
      */
-    public static final StyleType<InsetProperty> TYPE_LEFT = StyleType.of("inset-left", () -> null);
+    public static final StyleType<InsetProperty> typeLeft = StyleType.of("inset-left", () -> null);
 
     /**
      * StyleType for setting horizontal inset edges (left and right).
      */
-    public static final StyleType<InsetProperty> TYPE_HORIZONTAL = StyleType.of("inset-horizontal", () -> null);
+    public static final StyleType<InsetProperty> typeHorizontal = StyleType.of("inset-horizontal", () -> null);
 
     /**
      * StyleType for setting vertical inset edges (top and bottom).
      */
-    public static final StyleType<InsetProperty> TYPE_VERTICAL = StyleType.of("inset-vertical", () -> null);
+    public static final StyleType<InsetProperty> typeVertical = StyleType.of("inset-vertical", () -> null);
 
     /**
      * Legacy type alias for backward compatibility.
      */
-    public static final StyleType<InsetProperty> type = TYPE_ALL;
+    public static final StyleType<InsetProperty> type = typeAll;
 
-    //endregion
+    // endregion
 
-    //region constructors
+    // region constructors
 
     private InsetProperty(EdgeRect<LengthPercentageAuto> edges, EdgeMask mask, StyleType<?> type) {
         super(edges, mask, type);
@@ -90,14 +90,14 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
      * Creates an inset property with equal inset on all sides.
      */
     public InsetProperty(LengthPercentageAuto all) {
-        this(EdgeRect.all(all), EdgeMask.ALL, TYPE_ALL);
+        this(EdgeRect.all(all), EdgeMask.all, typeAll);
     }
 
     /**
      * Creates an inset property with vertical and horizontal values.
      */
     public InsetProperty(LengthPercentageAuto vertical, LengthPercentageAuto horizontal) {
-        this(EdgeRect.symmetric(vertical, horizontal), EdgeMask.ALL, TYPE_ALL);
+        this(EdgeRect.symmetric(vertical, horizontal), EdgeMask.all, typeAll);
     }
 
     /**
@@ -123,16 +123,14 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
                         LengthPercentageAuto.length(top),
                         LengthPercentageAuto.length(right),
                         LengthPercentageAuto.length(bottom),
-                        LengthPercentageAuto.length(left)
-                ),
-                EdgeMask.ALL,
-                TYPE_ALL
-        );
+                        LengthPercentageAuto.length(left)),
+                EdgeMask.all,
+                typeAll);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - all edges
+    // region factory - all edges
 
     /**
      * Creates an inset property with individual LengthPercentageAuto values for each side.
@@ -143,13 +141,17 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
      * @param left   the left inset
      * @return an inset property affecting all edges
      */
-    public static InsetProperty of(LengthPercentageAuto top, LengthPercentageAuto right, LengthPercentageAuto bottom, LengthPercentageAuto left) {
-        return new InsetProperty(EdgeRect.of(top, right, bottom, left), EdgeMask.ALL, TYPE_ALL);
+    public static InsetProperty of(
+            LengthPercentageAuto top,
+            LengthPercentageAuto right,
+            LengthPercentageAuto bottom,
+            LengthPercentageAuto left) {
+        return new InsetProperty(EdgeRect.of(top, right, bottom, left), EdgeMask.all, typeAll);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - single edge
+    // region factory - single edge
 
     /**
      * Creates an inset property with only the top edge set.
@@ -165,7 +167,7 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
      */
     public static InsetProperty top(LengthPercentageAuto value) {
         Objects.requireNonNull(value, "value");
-        return new InsetProperty(EdgeRect.top(value), EdgeMask.TOP, TYPE_TOP);
+        return new InsetProperty(EdgeRect.top(value), EdgeMask.top, typeTop);
     }
 
     /**
@@ -182,7 +184,7 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
      */
     public static InsetProperty right(LengthPercentageAuto value) {
         Objects.requireNonNull(value, "value");
-        return new InsetProperty(EdgeRect.right(value), EdgeMask.RIGHT, TYPE_RIGHT);
+        return new InsetProperty(EdgeRect.right(value), EdgeMask.right, typeRight);
     }
 
     /**
@@ -199,7 +201,7 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
      */
     public static InsetProperty bottom(LengthPercentageAuto value) {
         Objects.requireNonNull(value, "value");
-        return new InsetProperty(EdgeRect.bottom(value), EdgeMask.BOTTOM, TYPE_BOTTOM);
+        return new InsetProperty(EdgeRect.bottom(value), EdgeMask.bottom, typeBottom);
     }
 
     /**
@@ -216,7 +218,7 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
      */
     public static InsetProperty left(LengthPercentageAuto value) {
         Objects.requireNonNull(value, "value");
-        return new InsetProperty(EdgeRect.left(value), EdgeMask.LEFT, TYPE_LEFT);
+        return new InsetProperty(EdgeRect.left(value), EdgeMask.left, typeLeft);
     }
 
     /**
@@ -235,16 +237,16 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
         Objects.requireNonNull(edge, "edge");
         Objects.requireNonNull(value, "value");
         return switch (edge) {
-            case TOP -> top(value);
-            case RIGHT -> right(value);
-            case BOTTOM -> bottom(value);
-            case LEFT -> left(value);
+            case top -> top(value);
+            case right -> right(value);
+            case bottom -> bottom(value);
+            case left -> left(value);
         };
     }
 
-    //endregion
+    // endregion
 
-    //region factory - horizontal/vertical
+    // region factory - horizontal/vertical
 
     /**
      * Creates an inset property with only horizontal edges (left and right) set.
@@ -260,7 +262,7 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
      */
     public static InsetProperty horizontal(LengthPercentageAuto value) {
         Objects.requireNonNull(value, "value");
-        return new InsetProperty(EdgeRect.horizontal(value), EdgeMask.HORIZONTAL, TYPE_HORIZONTAL);
+        return new InsetProperty(EdgeRect.horizontal(value), EdgeMask.horizontal, typeHorizontal);
     }
 
     /**
@@ -277,12 +279,12 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
      */
     public static InsetProperty vertical(LengthPercentageAuto value) {
         Objects.requireNonNull(value, "value");
-        return new InsetProperty(EdgeRect.vertical(value), EdgeMask.VERTICAL, TYPE_VERTICAL);
+        return new InsetProperty(EdgeRect.vertical(value), EdgeMask.vertical, typeVertical);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - percentage
+    // region factory - percentage
 
     /**
      * Creates an inset with percentage values for all sides.
@@ -307,11 +309,9 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
                         LengthPercentageAuto.percent(top),
                         LengthPercentageAuto.percent(right),
                         LengthPercentageAuto.percent(bottom),
-                        LengthPercentageAuto.percent(left)
-                ),
-                EdgeMask.ALL,
-                TYPE_ALL
-        );
+                        LengthPercentageAuto.percent(left)),
+                EdgeMask.all,
+                typeAll);
     }
 
     /**
@@ -342,9 +342,9 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
         return left(LengthPercentageAuto.percent(percent));
     }
 
-    //endregion
+    // endregion
 
-    //region factory - auto
+    // region factory - auto
 
     /**
      * Creates an inset with auto on all sides.
@@ -397,9 +397,9 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
         return vertical(LengthPercentageAuto.AUTO);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - common patterns
+    // region factory - common patterns
 
     /**
      * Creates an inset with zero on all sides.
@@ -420,50 +420,46 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
      */
     public static InsetProperty of(TaffyRect<LengthPercentageAuto> rect) {
         Objects.requireNonNull(rect, "rect");
-        return new InsetProperty(
-                EdgeRect.of(rect.top, rect.right, rect.bottom, rect.left),
-                EdgeMask.ALL,
-                TYPE_ALL
-        );
+        return new InsetProperty(EdgeRect.of(rect.top, rect.right, rect.bottom, rect.left), EdgeMask.all, typeAll);
     }
 
-    //endregion
+    // endregion
 
-    //region EdgeStyleProperty implementation
+    // region EdgeStyleProperty implementation
 
     @Override
     protected StyleType<?> typeAll() {
-        return TYPE_ALL;
+        return typeAll;
     }
 
     @Override
     protected StyleType<?> typeTop() {
-        return TYPE_TOP;
+        return typeTop;
     }
 
     @Override
     protected StyleType<?> typeRight() {
-        return TYPE_RIGHT;
+        return typeRight;
     }
 
     @Override
     protected StyleType<?> typeBottom() {
-        return TYPE_BOTTOM;
+        return typeBottom;
     }
 
     @Override
     protected StyleType<?> typeLeft() {
-        return TYPE_LEFT;
+        return typeLeft;
     }
 
     @Override
     protected StyleType<?> typeHorizontal() {
-        return TYPE_HORIZONTAL;
+        return typeHorizontal;
     }
 
     @Override
     protected StyleType<?> typeVertical() {
-        return TYPE_VERTICAL;
+        return typeVertical;
     }
 
     @Override
@@ -476,33 +472,32 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
         return "inset";
     }
 
-    //endregion
+    // endregion
 
-    //region LayoutProperty implementation
+    // region LayoutProperty implementation
 
     @Override
     public void applyToStyle(TaffyStyle style) {
         applyEdges(
                 edge -> switch (edge) {
-                    case TOP -> style.inset.top;
-                    case RIGHT -> style.inset.right;
-                    case BOTTOM -> style.inset.bottom;
-                    case LEFT -> style.inset.left;
+                    case top -> style.inset.top;
+                    case right -> style.inset.right;
+                    case bottom -> style.inset.bottom;
+                    case left -> style.inset.left;
                 },
                 (edge, value) -> {
                     switch (edge) {
-                        case TOP -> style.inset.top = value;
-                        case RIGHT -> style.inset.right = value;
-                        case BOTTOM -> style.inset.bottom = value;
-                        case LEFT -> style.inset.left = value;
+                        case top -> style.inset.top = value;
+                        case right -> style.inset.right = value;
+                        case bottom -> style.inset.bottom = value;
+                        case left -> style.inset.left = value;
                     }
-                }
-        );
+                });
     }
 
-    //endregion
+    // endregion
 
-    //region utility
+    // region utility
 
     /**
      * Converts this property to a TaffyRect.
@@ -513,9 +508,8 @@ public final class InsetProperty extends EdgeStyleProperty<LengthPercentageAuto>
                 e.top() != null ? e.top() : LengthPercentageAuto.AUTO,
                 e.right() != null ? e.right() : LengthPercentageAuto.AUTO,
                 e.bottom() != null ? e.bottom() : LengthPercentageAuto.AUTO,
-                e.left() != null ? e.left() : LengthPercentageAuto.AUTO
-        );
+                e.left() != null ? e.left() : LengthPercentageAuto.AUTO);
     }
 
-    //endregion
+    // endregion
 }

@@ -34,17 +34,11 @@ public interface DraggableElement<T> extends Renderable {
         return new SimpleDraggableElement(widget);
     }
 
-    default void dragStart(InputContext input, DragContext context) {
+    default void dragStart(InputContext input, DragContext context) {}
 
-    }
+    default void onDrag(double mouseX, double mouseY, DragContext context) {}
 
-    default void onDrag(double mouseX, double mouseY, DragContext context) {
-
-    }
-
-    default void dragEnd(InputContext input, DragContext context, double deltaX, double deltaY, boolean consumed) {
-
-    }
+    default void dragEnd(InputContext input, DragContext context, double deltaX, double deltaY, boolean consumed) {}
 
     /**
      * @return a special value for consumer to check or consume this element
@@ -71,7 +65,6 @@ public interface DraggableElement<T> extends Renderable {
 
     @Override
     void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks);
-
 }
 
 class EmptyDraggableElement<T> implements DraggableElement<T> {
@@ -142,5 +135,4 @@ class SimpleDraggableElement implements DraggableElement<Widget> {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         widget.render(graphics, mouseX, mouseY, partialTicks);
     }
-
 }

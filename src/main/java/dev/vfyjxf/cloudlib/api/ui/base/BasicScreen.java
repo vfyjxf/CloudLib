@@ -26,17 +26,17 @@ public abstract class BasicScreen extends Screen {
      */
     protected BasicScreen() {
         super(Component.empty());
-        //region setup main panel
+        // region setup main panel
         mainGroup = new WidgetGroup<>();
         {
             mainGroup.setFocusNode(new FocusScopeNode());
         }
         scene = new Scene(mainGroup);
 
-        //endregion
-        //region screen overlay
+        // endregion
+        // region screen overlay
         overlayGroup = mainGroup.addWidget(new WidgetGroup<>());
-        //endregion
+        // endregion
     }
 
     protected WidgetGroup<Widget> mainGroup() {
@@ -51,9 +51,7 @@ public abstract class BasicScreen extends Screen {
     @Override
     protected void init() {
         detachOverlays();
-        mainGroup.useStyle(UIStyle.of(
-                sizeOf(width, height)
-        ));
+        mainGroup.useStyle(UIStyle.of(sizeOf(width, height)));
         scene.init();
         scene.mount(SceneContext.create(new ScreenSceneHost(this)));
         scene.setLayoutArea(width, height);
@@ -98,9 +96,7 @@ public abstract class BasicScreen extends Screen {
     public void resize(Minecraft minecraft, int width, int height) {
         this.width = width;
         this.height = height;
-        mainGroup.useStyle(UIStyle.of(
-                sizeOf(width, height)
-        ));
+        mainGroup.useStyle(UIStyle.of(sizeOf(width, height)));
         scene.setLayoutArea(width, height);
         scene.layout();
         mainGroup.applyLayout();
@@ -129,7 +125,7 @@ public abstract class BasicScreen extends Screen {
         scene.tick();
     }
 
-    //region user input proxy
+    // region user input proxy
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -177,5 +173,5 @@ public abstract class BasicScreen extends Screen {
         scene.mouseMoved(mouseX, mouseY);
     }
 
-    //endregion
+    // endregion
 }

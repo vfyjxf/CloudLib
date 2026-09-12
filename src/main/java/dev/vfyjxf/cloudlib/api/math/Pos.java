@@ -47,5 +47,4 @@ public record Pos(int x, int y) {
     public Pos scale(int x, int y) {
         return new Pos(this.x() * x, this.y() * y);
     }
-
 }

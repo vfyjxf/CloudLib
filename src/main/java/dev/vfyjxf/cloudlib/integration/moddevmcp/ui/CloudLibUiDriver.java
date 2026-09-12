@@ -22,17 +22,17 @@ import java.util.concurrent.TimeoutException;
 
 public final class CloudLibUiDriver implements UiDriver {
 
-    private static final DriverDescriptor DESCRIPTOR = new DriverDescriptor(
+    private static final DriverDescriptor descriptor = new DriverDescriptor(
             "cloudlib-screen",
             Constants.modId,
             200,
             Set.of("snapshot", "query", "action", "inspect")
     );
-    private static final long EXECUTION_TIMEOUT_SECONDS = 5L;
+    private static final long executionTimeoutSeconds = 5L;
 
     @Override
     public DriverDescriptor descriptor() {
-        return DESCRIPTOR;
+        return descriptor;
     }
 
     @Override
@@ -199,7 +199,7 @@ public final class CloudLibUiDriver implements UiDriver {
                 }
             });
             try {
-                return future.get(EXECUTION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                return future.get(executionTimeoutSeconds, TimeUnit.SECONDS);
             } catch (InterruptedException exception) {
                 Thread.currentThread().interrupt();
                 return OperationResult.rejected("interrupted while waiting for ui action execution");

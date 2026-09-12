@@ -128,7 +128,12 @@ public class DependencyGraphTest {
     @Test
     void testBeforeOrder() {
         // A declares BEFORE B → A runs before B
-        var a = plugin("a", new PluginDependency(CloudNamespaces.ofMod("b"), PluginDependency.Order.before, PluginDependency.Constraint.required));
+        var a = plugin(
+                "a",
+                new PluginDependency(
+                        CloudNamespaces.ofMod("b"),
+                        PluginDependency.Order.before,
+                        PluginDependency.Constraint.required));
         var b = plugin("b");
 
         var graph = DependencyGraph.build(List.of(a, b));
@@ -178,7 +183,7 @@ public class DependencyGraphTest {
         assertEquals(4, transE.size()); // a, b, c, d
     }
 
-    //region helpers
+    // region helpers
 
     private static ModPlugin plugin(String name, PluginDependency... deps) {
         return new SimplePlugin(CloudNamespaces.ofMod(name), Set.of(deps));
@@ -190,6 +195,6 @@ public class DependencyGraphTest {
 
     private record SimplePlugin(Namespace pluginId, Set<PluginDependency> dependencies) implements ModPlugin {}
 
-    //endregion
+    // endregion
 
 }

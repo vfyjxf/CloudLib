@@ -12,13 +12,13 @@ import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
  */
 public record BackgroundProperty(VisualTexture background) implements VisualProperty {
 
-    //region types
+    // region types
 
     public static final StyleType<VisualTexture> type = StyleType.of("background", () -> VisualTexture.empty);
 
-    //endregion
+    // endregion
 
-    //region VisualProperty implementation
+    // region VisualProperty implementation
 
     @Override
     public StyleType<?> type() {
@@ -30,11 +30,10 @@ public record BackgroundProperty(VisualTexture background) implements VisualProp
         context.setBackground(background);
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String toString() {
         return background.toString();
     }
-
 }

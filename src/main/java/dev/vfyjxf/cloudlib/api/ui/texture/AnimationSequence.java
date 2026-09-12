@@ -27,8 +27,7 @@ public class AnimationSequence<T> implements Playable<T> {
     private boolean playing = false;
     private boolean loop = false;
 
-    public AnimationSequence() {
-    }
+    public AnimationSequence() {}
 
     @SafeVarargs
     public AnimationSequence(Playable<T>... animations) {
@@ -76,7 +75,6 @@ public class AnimationSequence<T> implements Playable<T> {
         float perAnim = 1.0f / animations.size();
         int targetIndex = (int) (progress / perAnim);
         targetIndex = Math.min(targetIndex, animations.size() - 1);
-
 
         for (int i = 0; i < targetIndex; i++) {
             animations.get(i).stop();

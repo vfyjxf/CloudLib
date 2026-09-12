@@ -23,7 +23,6 @@ public interface Blueprint<T extends Widget> {
      */
     void updateWidget(T widget, Scene scene, SceneContext context);
 
-
     /**
      * Container node with children. e.g. VStack, HStack.
      */

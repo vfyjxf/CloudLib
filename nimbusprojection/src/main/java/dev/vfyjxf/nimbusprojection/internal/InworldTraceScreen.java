@@ -32,7 +32,7 @@ public final class InworldTraceScreen extends Screen implements InworldOverlaySc
         return false;
     }
 
-    //region render
+    // region render
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
@@ -41,12 +41,12 @@ public final class InworldTraceScreen extends Screen implements InworldOverlaySc
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        //trace mode keeps the world fully visible — no dimming, no blur
+        // trace mode keeps the world fully visible — no dimming, no blur
     }
 
-    //endregion
+    // endregion
 
-    //region input → trace session
+    // region input → trace session
 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
@@ -55,7 +55,7 @@ public final class InworldTraceScreen extends Screen implements InworldOverlaySc
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        //a click mid-trace commits the stroke, mirroring Witness's click-off
+        // a click mid-trace commits the stroke, mirroring Witness's click-off
         manager.endTrace(true);
         onClose();
         return true;
@@ -72,14 +72,14 @@ public final class InworldTraceScreen extends Screen implements InworldOverlaySc
         return super.keyReleased(keyCode, scanCode, modifiers);
     }
 
-    //endregion
+    // endregion
 
-    //region lifecycle
+    // region lifecycle
 
     @Override
     public void tick() {
-        //belt & suspenders for a missed keyReleased (e.g. focus loss): poll the
-        //bound key directly — the stroke commits on release either way
+        // belt & suspenders for a missed keyReleased (e.g. focus loss): poll the
+        // bound key directly — the stroke commits on release either way
         if (!manager.traceActive() || !manager.interactHeld()) {
             manager.endTrace(true);
             onClose();
@@ -93,5 +93,5 @@ public final class InworldTraceScreen extends Screen implements InworldOverlaySc
         manager.onTraceScreenRemoved();
     }
 
-    //endregion
+    // endregion
 }

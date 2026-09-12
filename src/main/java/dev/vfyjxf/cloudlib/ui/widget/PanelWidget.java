@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class PanelWidget extends CompositeWidget<Widget> {
 
-    //region state
+    // region state
 
     private @Nullable String title;
     private boolean showTitleBar = true;
@@ -22,23 +22,23 @@ public class PanelWidget extends CompositeWidget<Widget> {
     private int titleBarHeight = 16;
     private int contentPadding = 4;
 
-    //endregion
+    // endregion
 
-    //region colors
+    // region colors
 
     private int titleColor = 0xFFFFFF;
 
-    //endregion
+    // endregion
 
-    //region textures
+    // region textures
 
     private VisualTexture backgroundTexture = new ColorTexture(0xCC222222);
     private VisualTexture borderTexture = new ColorTexture(0xFF555555);
     private VisualTexture titleBarTexture = new ColorTexture(0xFF333333);
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     public static PanelWidget create() {
         return new PanelWidget();
@@ -48,12 +48,11 @@ public class PanelWidget extends CompositeWidget<Widget> {
         return new PanelWidget().setTitle(title);
     }
 
-    private PanelWidget() {
-    }
+    private PanelWidget() {}
 
-    //endregion
+    // endregion
 
-    //region configuration
+    // region configuration
 
     public @Nullable String title() {
         return title;
@@ -104,17 +103,17 @@ public class PanelWidget extends CompositeWidget<Widget> {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region children
+    // region children
 
     public <T extends Widget> T addChild(T widget) {
         return addWidget(widget);
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
@@ -154,9 +153,9 @@ public class PanelWidget extends CompositeWidget<Widget> {
         canvas.popTransform();
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
@@ -170,5 +169,5 @@ public class PanelWidget extends CompositeWidget<Widget> {
         collector.add("children", children().size(), InspectionProperty.categoryData);
     }
 
-    //endregion
+    // endregion
 }

@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 
 public sealed interface TooltipEntry {
 
-    //region factory
+    // region factory
 
     static TooltipEntry text(Component text) {
         return new TextEntry(text);
@@ -21,19 +21,16 @@ public sealed interface TooltipEntry {
         return new DynamicEntry(provider);
     }
 
-    //endregion
+    // endregion
 
-    //region types
+    // region types
 
-    record TextEntry(Component text) implements TooltipEntry {
-    }
+    record TextEntry(Component text) implements TooltipEntry {}
 
-    record ComponentEntry(TooltipComponent component) implements TooltipEntry {
-    }
+    record ComponentEntry(TooltipComponent component) implements TooltipEntry {}
 
-    record DynamicEntry(Supplier<Component> provider) implements TooltipEntry {
-    }
+    record DynamicEntry(Supplier<Component> provider) implements TooltipEntry {}
 
-    //endregion
+    // endregion
 
 }

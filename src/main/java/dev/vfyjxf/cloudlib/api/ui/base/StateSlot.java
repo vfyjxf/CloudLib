@@ -13,20 +13,18 @@ import java.util.function.Supplier;
  */
 public final class StateSlot {
 
-    private static final ThreadLocal<StateContext> CURRENT_CONTEXT = new ThreadLocal<>();
+    private static final ThreadLocal<StateContext> currentContext = new ThreadLocal<>();
 
-    private StateSlot() {
-    }
+    private StateSlot() {}
 
     /**
      * Get or create state. Must be called within StateContext. Slot is determined by call order.
      */
     public static <T> StateAccessor<T> useState(Supplier<T> initialValue) {
-        StateContext context = CURRENT_CONTEXT.get();
+        StateContext context = currentContext.get();
         if (context == null) {
             throw new IllegalStateException(
-                    "useState must be called during blueprint evaluation within a StateContext"
-            );
+                    "useState must be called during blueprint evaluation within a StateContext");
         }
         return context.getOrCreateState(initialValue);
     }
@@ -39,7 +37,7 @@ public final class StateSlot {
      * Create memoized value. Only recomputed when dependencies change.
      */
     public static <T> T useMemo(Supplier<T> compute, Object... dependencies) {
-        StateContext context = CURRENT_CONTEXT.get();
+        StateContext context = currentContext.get();
         if (context == null) {
             return compute.get();
         }
@@ -50,24 +48,24 @@ public final class StateSlot {
      * Register side effect. Runs after mount/update.
      */
     public static void useEffect(Runnable effect, Object... dependencies) {
-        StateContext context = CURRENT_CONTEXT.get();
+        StateContext context = currentContext.get();
         if (context != null) {
             context.registerEffect(effect, dependencies);
         }
     }
 
     public static @Nullable StateContext currentContext() {
-        return CURRENT_CONTEXT.get();
+        return currentContext.get();
     }
 
     public static <T> T withContext(StateContext context, Supplier<T> block) {
-        StateContext previous = CURRENT_CONTEXT.get();
-        CURRENT_CONTEXT.set(context);
+        StateContext previous = currentContext.get();
+        currentContext.set(context);
         context.resetSlotIndex();
         try {
             return block.get();
         } finally {
-            CURRENT_CONTEXT.set(previous);
+            currentContext.set(previous);
         }
     }
 
@@ -141,10 +139,9 @@ public final class StateSlot {
         /**
          * Creates a new StateContext.
          */
-        public StateContext() {
-        }
+        public StateContext() {}
 
-        //TODO:决定是否保留这个
+        // TODO:决定是否保留这个
 
         /**
          * Sets the callback for when state becomes dirty.
@@ -260,10 +257,8 @@ public final class StateSlot {
             return true;
         }
 
-        private record MemoEntry(Object value, Object[] dependencies) {
-        }
+        private record MemoEntry(Object value, Object[] dependencies) {}
 
-        private record EffectEntry(Runnable effect, Object[] dependencies, boolean shouldRun) {
-        }
+        private record EffectEntry(Runnable effect, Object[] dependencies, boolean shouldRun) {}
     }
 }

@@ -32,9 +32,7 @@ public class DragContextImpl implements DragContext {
     }
 
     @Override
-    public void addAcceptableArea(Rect rect) {
-
-    }
+    public void addAcceptableArea(Rect rect) {}
 
     @Override
     public FloatPos getStart() {
@@ -56,6 +54,4 @@ public class DragContextImpl implements DragContext {
         this.draggableElement = draggableElement;
         return this;
     }
-
-
 }

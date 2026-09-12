@@ -11,7 +11,5 @@ public interface CloudLibClientPlugin extends ModPlugin {
     Namespace builtin = CloudNamespaces.ofMod("client/builtin");
     PluginDependency afterBuiltin = new PluginDependency(builtin, Order.after, Constraint.required);
 
-    default void registerOverlay(OverlayRegister register) {
-    }
-
+    default void registerOverlay(OverlayRegister register) {}
 }

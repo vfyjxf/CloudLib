@@ -30,15 +30,14 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public record PanelChannelPayload(PanelKey key, CustomPacketPayload payload) implements ServerboundPayload {
 
-    private static final Map<CustomPacketPayload.Type<?>, StreamCodec<RegistryFriendlyByteBuf, ? extends CustomPacketPayload>> CHANNEL_CODECS =
-            new ConcurrentHashMap<>();
+    private static final Map<
+                    CustomPacketPayload.Type<?>, StreamCodec<RegistryFriendlyByteBuf, ? extends CustomPacketPayload>>
+            channelCodecs = new ConcurrentHashMap<>();
 
     /** Registers a payload type as channel-transmissible (its codec resolves the nested payload). */
     public static <T extends CustomPacketPayload> void registerChannelType(
-            CustomPacketPayload.Type<T> type,
-            StreamCodec<RegistryFriendlyByteBuf, T> codec
-    ) {
-        CHANNEL_CODECS.put(type, codec);
+            CustomPacketPayload.Type<T> type, StreamCodec<RegistryFriendlyByteBuf, T> codec) {
+        channelCodecs.put(type, codec);
     }
 
     /**
@@ -47,46 +46,44 @@ public record PanelChannelPayload(PanelKey key, CustomPacketPayload payload) imp
      * a freshly-read id wraps into a key that matches registrations.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static final StreamCodec<RegistryFriendlyByteBuf, CustomPacketPayload> PAYLOAD_CODEC =
-            StreamCodec.of(
-                    (buf, payload) -> {
-                        ResourceLocation.STREAM_CODEC.encode(buf, payload.type().id());
-                        StreamCodec codec = CHANNEL_CODECS.get(payload.type());
-                        if (codec == null) {
-                            throw new IllegalArgumentException(
-                                    "No channel codec for payload type: " + payload.type().id());
-                        }
-                        codec.encode(buf, payload);
-                    },
-                    buf -> {
-                        ResourceLocation id = ResourceLocation.STREAM_CODEC.decode(buf);
-                        CustomPacketPayload.Type<?> type = new CustomPacketPayload.Type<>(id);
-                        StreamCodec<RegistryFriendlyByteBuf, ? extends CustomPacketPayload> codec =
-                                CHANNEL_CODECS.get(type);
-                        if (codec == null) {
-                            throw new IllegalArgumentException("No channel codec for payload type: " + id);
-                        }
-                        return codec.decode(buf);
-                    });
+    private static final StreamCodec<RegistryFriendlyByteBuf, CustomPacketPayload> payloadCodec = StreamCodec.of(
+            (buf, payload) -> {
+                ResourceLocation.STREAM_CODEC.encode(buf, payload.type().id());
+                StreamCodec codec = channelCodecs.get(payload.type());
+                if (codec == null) {
+                    throw new IllegalArgumentException("No channel codec for payload type: "
+                            + payload.type().id());
+                }
+                codec.encode(buf, payload);
+            },
+            buf -> {
+                ResourceLocation id = ResourceLocation.STREAM_CODEC.decode(buf);
+                CustomPacketPayload.Type<?> type = new CustomPacketPayload.Type<>(id);
+                StreamCodec<RegistryFriendlyByteBuf, ? extends CustomPacketPayload> codec = channelCodecs.get(type);
+                if (codec == null) {
+                    throw new IllegalArgumentException("No channel codec for payload type: " + id);
+                }
+                return codec.decode(buf);
+            });
 
     /** Nested-payload codec shared with the clientbound transport. */
     public static StreamCodec<RegistryFriendlyByteBuf, CustomPacketPayload> payloadCodec() {
-        return PAYLOAD_CODEC;
+        return payloadCodec;
     }
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, PanelChannelPayload> STREAM_CODEC = StreamCodec.composite(
-            PanelKey.STREAM_CODEC.cast(),
+    public static final StreamCodec<RegistryFriendlyByteBuf, PanelChannelPayload> streamCodec = StreamCodec.composite(
+            PanelKey.streamCodec.cast(),
             PanelChannelPayload::key,
-            PAYLOAD_CODEC,
+            payloadCodec,
             PanelChannelPayload::payload,
             PanelChannelPayload::new);
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+        return type;
     }
 
-    public static final CustomPacketPayload.Type<PanelChannelPayload> TYPE =
+    public static final CustomPacketPayload.Type<PanelChannelPayload> type =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath("nimbusprojection", "panel_channel"));
 
     @Override

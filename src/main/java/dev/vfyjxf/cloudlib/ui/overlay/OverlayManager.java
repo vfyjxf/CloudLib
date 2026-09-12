@@ -43,7 +43,8 @@ public final class OverlayManager {
      *
      * @return attached runtimes — caller should keep these for later {@link #detachOverlays}
      */
-    public List<OverlayRuntime<?>> attachOverlays(@Nullable Screen screen, OverlayContext context, WidgetGroup<Widget> group) {
+    public List<OverlayRuntime<?>> attachOverlays(
+            @Nullable Screen screen, OverlayContext context, WidgetGroup<Widget> group) {
         var attached = new ArrayList<OverlayRuntime<?>>();
         for (OverlayEntry<?> entry : entries) {
             try {
@@ -53,15 +54,19 @@ public final class OverlayManager {
                     activeOverlays.add(runtime);
                 }
             } catch (Exception e) {
-                log.warn("Failed to attach overlay entry: id={}, scope={}, screen={}", entry.id(), entry.scope(), screen == null ? "null" : screen.getClass().getName(), e);
+                log.warn(
+                        "Failed to attach overlay entry: id={}, scope={}, screen={}",
+                        entry.id(),
+                        entry.scope(),
+                        screen == null ? "null" : screen.getClass().getName(),
+                        e);
             }
         }
         return List.copyOf(attached);
     }
 
     private <T extends Widget> @Nullable OverlayRuntime<T> tryAttach(
-            OverlayEntry<T> entry, OverlayContext context, WidgetGroup<Widget> group
-    ) {
+            OverlayEntry<T> entry, OverlayContext context, WidgetGroup<Widget> group) {
         if (entry.scope() != OverlayScope.screen && entry.scope() != OverlayScope.global) {
             return null;
         }
@@ -93,17 +98,13 @@ public final class OverlayManager {
             @Nullable Screen screen,
             OverlayContext context,
             WidgetGroup<Widget> group,
-            List<OverlayRuntime<?>> currentRuntimes
-    ) {
+            List<OverlayRuntime<?>> currentRuntimes) {
         detachOverlays(currentRuntimes, group);
         return attachOverlays(screen, context, group);
     }
 
     public List<OverlayRuntime<?>> refreshOverlays(
-            @Nullable Screen screen,
-            WidgetGroup<Widget> group,
-            List<OverlayRuntime<?>> currentRuntimes
-    ) {
+            @Nullable Screen screen, WidgetGroup<Widget> group, List<OverlayRuntime<?>> currentRuntimes) {
         return refreshOverlays(screen, createContext(screen), group, currentRuntimes);
     }
 
@@ -114,7 +115,8 @@ public final class OverlayManager {
     private static OverlayContext buildDefaultContext(@Nullable Screen screen) {
         Minecraft minecraft = Objects.requireNonNull(Minecraft.getInstance(), "minecraft");
         var window = minecraft.getWindow();
-        return new OverlayContext(screen, minecraft, window.getGuiScaledWidth(), window.getGuiScaledHeight(), window.getGuiScale());
+        return new OverlayContext(
+                screen, minecraft, window.getGuiScaledWidth(), window.getGuiScaledHeight(), window.getGuiScale());
     }
 
     public List<Rect2i> exclusionAreas(@Nullable Screen screen) {

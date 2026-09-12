@@ -47,5 +47,4 @@ public record AspectRatioProperty(float ratio) implements LayoutProperty {
     public String toString() {
         return String.valueOf(ratio);
     }
-
 }

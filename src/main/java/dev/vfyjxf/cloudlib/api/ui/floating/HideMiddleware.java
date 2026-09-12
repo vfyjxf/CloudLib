@@ -36,7 +36,7 @@ public final class HideMiddleware implements FloatingMiddleware {
     private final Strategy strategy;
     private final int padding;
 
-    //region factory
+    // region factory
 
     /**
      * Creates a hide middleware with the default strategy ({@link Strategy#referenceHidden}).
@@ -69,7 +69,7 @@ public final class HideMiddleware implements FloatingMiddleware {
         this.padding = padding;
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String name() {
@@ -94,9 +94,7 @@ public final class HideMiddleware implements FloatingMiddleware {
                 Rect floating = state.floatingRect();
                 // Use the floating element's actual position
                 Rect floatingActual = new Rect(
-                        (int) Math.round(state.x()), (int) Math.round(state.y()),
-                        floating.width(), floating.height()
-                );
+                        (int) Math.round(state.x()), (int) Math.round(state.y()), floating.width(), floating.height());
                 Insets floatOverflow = computeReferenceOverflow(floatingActual, boundary);
                 Insets offsets = computeSideOffsets(floatOverflow, floatingActual);
                 boolean escaped = isAnySideFullyClipped(offsets);
@@ -109,7 +107,7 @@ public final class HideMiddleware implements FloatingMiddleware {
         return Result.done();
     }
 
-    //region helpers
+    // region helpers
 
     private Insets computeReferenceOverflow(Rect rect, Rect boundary) {
         int top = (boundary.y() + padding) - rect.y();
@@ -124,13 +122,12 @@ public final class HideMiddleware implements FloatingMiddleware {
                 overflow.top() - rect.height(),
                 overflow.right() - rect.width(),
                 overflow.bottom() - rect.height(),
-                overflow.left() - rect.width()
-        );
+                overflow.left() - rect.width());
     }
 
     private static boolean isAnySideFullyClipped(Insets offsets) {
         return offsets.top() >= 0 || offsets.right() >= 0 || offsets.bottom() >= 0 || offsets.left() >= 0;
     }
 
-    //endregion
+    // endregion
 }

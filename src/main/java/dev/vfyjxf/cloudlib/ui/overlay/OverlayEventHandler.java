@@ -170,21 +170,29 @@ public final class OverlayEventHandler {
     @SubscribeEvent
     private void onMouseDragged(ScreenEvent.MouseDragged.Pre event) {
         if (globalScene != null
-            && globalScene.mouseDragged(event.getMouseX(), event.getMouseY(), event.getMouseButton(), event.getDragX(), event.getDragY())) {
+                && globalScene.mouseDragged(
+                        event.getMouseX(),
+                        event.getMouseY(),
+                        event.getMouseButton(),
+                        event.getDragX(),
+                        event.getDragY())) {
             event.setCanceled(true);
         }
     }
 
     @SubscribeEvent
     private void onMouseScrolled(ScreenEvent.MouseScrolled.Pre event) {
-        if (globalScene != null && globalScene.mouseScrolled(event.getMouseX(), event.getMouseY(), event.getScrollDeltaX(), event.getScrollDeltaY())) {
+        if (globalScene != null
+                && globalScene.mouseScrolled(
+                        event.getMouseX(), event.getMouseY(), event.getScrollDeltaX(), event.getScrollDeltaY())) {
             event.setCanceled(true);
         }
     }
 
     @SubscribeEvent
     private void onKeyPressed(ScreenEvent.KeyPressed.Pre event) {
-        if (globalScene != null && globalScene.keyPressed(event.getKeyCode(), event.getScanCode(), event.getModifiers())) {
+        if (globalScene != null
+                && globalScene.keyPressed(event.getKeyCode(), event.getScanCode(), event.getModifiers())) {
             event.setCanceled(true);
         }
     }

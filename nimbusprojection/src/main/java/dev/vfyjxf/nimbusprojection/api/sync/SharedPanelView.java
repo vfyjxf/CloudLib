@@ -17,5 +17,4 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 public interface SharedPanelView<P extends CustomPacketPayload> {
 
     PanelSpec open(SharedViewContext<P> context);
-
 }

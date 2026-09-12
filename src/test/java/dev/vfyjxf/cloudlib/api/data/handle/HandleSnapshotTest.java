@@ -26,7 +26,7 @@ class HandleSnapshotTest {
         h.set(1);
         assertTrue(snap.updateState(h.get()));
         assertFalse(h.dirty());
-        //second call: nothing pending
+        // second call: nothing pending
         assertFalse(snap.updateState(h.get()));
     }
 

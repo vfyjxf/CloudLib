@@ -90,10 +90,9 @@ import java.util.List;
  */
 public final class UIStyles {
 
-    private UIStyles() {
-    }
+    private UIStyles() {}
 
-    //region spacing properties
+    // region spacing properties
 
     /**
      * Creates a padding property with equal padding on all sides using a LengthPercentage value.
@@ -131,7 +130,8 @@ public final class UIStyles {
      * @see TaffyStyle#padding
      * @see LengthPercentage
      */
-    public static PaddingProperty padding(LengthPercentage top, LengthPercentage right, LengthPercentage bottom, LengthPercentage left) {
+    public static PaddingProperty padding(
+            LengthPercentage top, LengthPercentage right, LengthPercentage bottom, LengthPercentage left) {
         return PaddingProperty.of(top, right, bottom, left);
     }
 
@@ -368,7 +368,11 @@ public final class UIStyles {
      * @see TaffyStyle#margin
      * @see LengthPercentageAuto
      */
-    public static MarginProperty margin(LengthPercentageAuto top, LengthPercentageAuto right, LengthPercentageAuto bottom, LengthPercentageAuto left) {
+    public static MarginProperty margin(
+            LengthPercentageAuto top,
+            LengthPercentageAuto right,
+            LengthPercentageAuto bottom,
+            LengthPercentageAuto left) {
         return MarginProperty.of(top, right, bottom, left);
     }
 
@@ -417,7 +421,7 @@ public final class UIStyles {
      *
      * @return a margin property with auto margins
      * @see TaffyStyle#margin
-     * @see LengthPercentageAuto#AUTO
+     * @see LengthPercentageAuto#auto
      */
     public static MarginProperty marginAuto() {
         return MarginProperty.auto();
@@ -429,7 +433,7 @@ public final class UIStyles {
      *
      * @return a margin property with auto horizontal margins
      * @see TaffyStyle#margin
-     * @see LengthPercentageAuto#AUTO
+     * @see LengthPercentageAuto#auto
      */
     public static MarginProperty marginAutoHorizontal() {
         return MarginProperty.autoHorizontal();
@@ -441,7 +445,7 @@ public final class UIStyles {
      *
      * @return a margin property with auto vertical margins
      * @see TaffyStyle#margin
-     * @see LengthPercentageAuto#AUTO
+     * @see LengthPercentageAuto#auto
      */
     public static MarginProperty marginAutoVertical() {
         return MarginProperty.autoVertical();
@@ -604,9 +608,9 @@ public final class UIStyles {
         return MarginProperty.vertical(value);
     }
 
-    //endregion
+    // endregion
 
-    //region border properties
+    // region border properties
 
     /**
      * Creates a border property with equal border on all sides using a LengthPercentage value.
@@ -644,7 +648,8 @@ public final class UIStyles {
      * @see TaffyStyle#border
      * @see LengthPercentage
      */
-    public static BorderProperty border(LengthPercentage top, LengthPercentage right, LengthPercentage bottom, LengthPercentage left) {
+    public static BorderProperty border(
+            LengthPercentage top, LengthPercentage right, LengthPercentage bottom, LengthPercentage left) {
         return BorderProperty.of(top, right, bottom, left);
     }
 
@@ -845,9 +850,9 @@ public final class UIStyles {
         return BorderProperty.percent(vertical, horizontal);
     }
 
-    //endregion
+    // endregion
 
-    //region visual properties
+    // region visual properties
 
     /**
      * Creates a background property.
@@ -886,9 +891,9 @@ public final class UIStyles {
         return new ZIndexProperty(zIndex);
     }
 
-    //endregion
+    // endregion
 
-    //region size properties
+    // region size properties
 
     /**
      * Creates a size property with taffy dimension values.
@@ -1028,7 +1033,7 @@ public final class UIStyles {
      *
      * @return a size property
      * @see TaffyStyle#size
-     * @see TaffyDimension#AUTO
+     * @see TaffyDimension#auto
      */
     public static SizeProperty sizeAuto() {
         return SizeProperty.auto();
@@ -1252,9 +1257,9 @@ public final class UIStyles {
         return SizeConstraintProperty.maxHeightPercent(percent);
     }
 
-    //endregion
+    // endregion
 
-    //region text properties
+    // region text properties
 
     /**
      * Creates a text color property.
@@ -1266,9 +1271,9 @@ public final class UIStyles {
         return new TextColorProperty(color);
     }
 
-    //endregion
+    // endregion
 
-    //region flexbox properties
+    // region flexbox properties
 
     /**
      * Creates a flex direction property for row layout (horizontal).
@@ -1381,9 +1386,9 @@ public final class UIStyles {
         return new FlexWrapProperty(FlexWrap.WRAP_REVERSE);
     }
 
-    //endregion
+    // endregion
 
-    //region alignment properties
+    // region alignment properties
 
     /**
      * Creates an align items center property.
@@ -1423,7 +1428,7 @@ public final class UIStyles {
      *
      * @return an align items property
      * @see TaffyStyle#alignItems
-     * @see AlignItems#STRETCH
+     * @see AlignItems#stretch
      */
     public static AlignItemsProperty alignItemsStretch() {
         return new AlignItemsProperty(AlignItems.STRETCH);
@@ -1490,7 +1495,7 @@ public final class UIStyles {
      *
      * @return an align self property
      * @see TaffyStyle#alignSelf
-     * @see AlignItems#STRETCH
+     * @see AlignItems#stretch
      */
     public static AlignSelfProperty alignSelfStretch() {
         return new AlignSelfProperty(AlignItems.STRETCH);
@@ -1546,7 +1551,7 @@ public final class UIStyles {
      *
      * @return an align content property
      * @see TaffyStyle#alignContent
-     * @see AlignContent#STRETCH
+     * @see AlignContent#stretch
      */
     public static AlignContentProperty alignContentStretch() {
         return new AlignContentProperty(AlignContent.STRETCH);
@@ -1688,9 +1693,9 @@ public final class UIStyles {
         return new JustifySelfProperty(align);
     }
 
-    //endregion
+    // endregion
 
-    //region gap properties
+    // region gap properties
 
     /**
      * Creates a gap property for all gutters.
@@ -1707,8 +1712,8 @@ public final class UIStyles {
     /**
      * Creates a gap property with independent row/column values.
      * <p>
-     * Note: In taffy gap, {@code columnGap} maps to {@code Style.gap.width} and {@code rowGap}
-     * maps to {@code Style.gap.height}.
+     * Note: In taffy gap, {@code columnGap} maps to {@code Style.GAP.width} and {@code rowGap}
+     * maps to {@code Style.GAP.height}.
      *
      * @param rowGap    the row gap (height)
      * @param columnGap the column gap (width)
@@ -1793,9 +1798,9 @@ public final class UIStyles {
         return GapProperty.columnGap(gap);
     }
 
-    //endregion
+    // endregion
 
-    //region position properties
+    // region position properties
 
     /**
      * Creates a relative position type property.
@@ -1912,7 +1917,11 @@ public final class UIStyles {
      * @return an inset property
      * @see TaffyStyle#inset
      */
-    public static InsetProperty inset(LengthPercentageAuto top, LengthPercentageAuto right, LengthPercentageAuto bottom, LengthPercentageAuto left) {
+    public static InsetProperty inset(
+            LengthPercentageAuto top,
+            LengthPercentageAuto right,
+            LengthPercentageAuto bottom,
+            LengthPercentageAuto left) {
         return InsetProperty.of(top, right, bottom, left);
     }
 
@@ -2187,9 +2196,9 @@ public final class UIStyles {
         return new AspectRatioProperty(ratio);
     }
 
-    //endregion
+    // endregion
 
-    //region display properties
+    // region display properties
 
     /**
      * Creates a display property with the specified display mode.
@@ -2361,7 +2370,7 @@ public final class UIStyles {
         return new ScrollbarWidthProperty(width);
     }
 
-    //region scrollbar style
+    // region scrollbar style
 
     /**
      * Creates a scrollbar style property with track and thumb textures.
@@ -2398,11 +2407,12 @@ public final class UIStyles {
      * @return a scrollbar style property
      * @see ScrollbarStyleProperty
      */
-    public static ScrollbarStyleProperty scrollbarStyle(VisualTexture track, VisualTexture thumb, int width, int minThumbSize) {
+    public static ScrollbarStyleProperty scrollbarStyle(
+            VisualTexture track, VisualTexture thumb, int width, int minThumbSize) {
         return new ScrollbarStyleProperty(track, thumb, width, minThumbSize);
     }
 
-    //endregion
+    // endregion
 
     /**
      * Creates a text align property.
@@ -2432,7 +2442,7 @@ public final class UIStyles {
      *
      * @return a text align property
      * @see TaffyStyle#textAlign
-     * @see TextAlign#LEFT
+     * @see TextAlign#left
      */
     public static TextAlignProperty textAlignLeft() {
         return new TextAlignProperty(TextAlign.LEFT);
@@ -2443,7 +2453,7 @@ public final class UIStyles {
      *
      * @return a text align property
      * @see TaffyStyle#textAlign
-     * @see TextAlign#RIGHT
+     * @see TextAlign#right
      */
     public static TextAlignProperty textAlignRight() {
         return new TextAlignProperty(TextAlign.RIGHT);
@@ -2466,7 +2476,7 @@ public final class UIStyles {
      *
      * @return a flex basis property
      * @see TaffyStyle#flexBasis
-     * @see TaffyDimension#AUTO
+     * @see TaffyDimension#auto
      */
     public static FlexBasisProperty flexBasisAuto() {
         return new FlexBasisProperty(TaffyDimension.AUTO);
@@ -2496,9 +2506,9 @@ public final class UIStyles {
         return new FlexBasisProperty(TaffyDimension.percent(percent01));
     }
 
-    //endregion
+    // endregion
 
-    //region direction properties
+    // region direction properties
 
     /**
      * Creates a direction property with the specified direction.
@@ -2545,9 +2555,9 @@ public final class UIStyles {
         return new DirectionProperty(TaffyDirection.RTL);
     }
 
-    //endregion
+    // endregion
 
-    //region flex shorthand properties
+    // region flex shorthand properties
 
     /**
      * Creates a flex shorthand property.
@@ -2573,9 +2583,9 @@ public final class UIStyles {
         return new FlexProperty(Float.NaN);
     }
 
-    //endregion
+    // endregion
 
-    //region grid properties
+    // region grid properties
 
     /**
      * Creates a grid template rows property.
@@ -2645,7 +2655,8 @@ public final class UIStyles {
      * @see TaffyStyle#gridTemplateColumnsWithRepeat
      * @see GridTemplateComponent
      */
-    public static GridTemplateColumnsWithRepeatProperty gridTemplateColumnsWithRepeat(List<GridTemplateComponent> columns) {
+    public static GridTemplateColumnsWithRepeatProperty gridTemplateColumnsWithRepeat(
+            List<GridTemplateComponent> columns) {
         return new GridTemplateColumnsWithRepeatProperty(columns);
     }
 
@@ -2921,9 +2932,9 @@ public final class UIStyles {
         return new NamedGridLine(name, index);
     }
 
-    //endregion
+    // endregion
 
-    //region icon properties
+    // region icon properties
 
     /**
      * Creates an icon property with the specified texture.
@@ -2935,9 +2946,9 @@ public final class UIStyles {
         return new IconProperty(texture);
     }
 
-    //endregion
+    // endregion
 
-    //region shadow properties
+    // region shadow properties
 
     /**
      * Creates a shadow property with no shadow.
@@ -2988,6 +2999,6 @@ public final class UIStyles {
         return ShadowProperty.strong();
     }
 
-    //endregion
+    // endregion
 
 }

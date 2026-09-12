@@ -15,14 +15,14 @@ import java.util.Set;
 
 public final class CloudLibUiLayoutReportTool {
 
-    private static final String OPERATION_ID = "cloudlib.ui.layout_report";
+    private static final String operationId = "cloudlib.ui.layout_report";
 
     private CloudLibUiLayoutReportTool() {
     }
 
     public static OperationDefinition definition() {
         return new OperationDefinition(
-                OPERATION_ID,
+                operationId,
                 "ui",
                 "CloudLib Layout Report",
                 "Returns layout-related inspection details for CloudLib widgets.",
@@ -38,7 +38,7 @@ public final class CloudLibUiLayoutReportTool {
                         List.of()
                 ),
                 Map.of(
-                        "operationId", OPERATION_ID,
+                        "operationId", operationId,
                         "targetSide", "client",
                         "input", Map.of()
                 )

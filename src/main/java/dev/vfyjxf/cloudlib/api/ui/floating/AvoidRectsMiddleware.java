@@ -59,22 +59,21 @@ public final class AvoidRectsMiddleware implements FloatingMiddleware {
             boolean moved = false;
             for (Rect ob : obs) {
                 Rect pad = new Rect(
-                        ob.x() - padding, ob.y() - padding,
-                        ob.width() + padding * 2, ob.height() + padding * 2);
+                        ob.x() - padding, ob.y() - padding, ob.width() + padding * 2, ob.height() + padding * 2);
                 Rect cur = new Rect((int) Math.round(x), (int) Math.round(y), w, h);
                 Rect in = cur.intersection(pad);
                 if (in.width() <= 0 || in.height() <= 0) continue;
-                //a graze is acceptable — chasing pixel-perfect separation
-                //jiggles the panel more than the overlap hurts readability
+                // a graze is acceptable — chasing pixel-perfect separation
+                // jiggles the panel more than the overlap hurts readability
                 if (in.width() <= 4 && in.height() <= 4) continue;
 
-                //minimal escape distances (positive = pixels needed to clear)
+                // minimal escape distances (positive = pixels needed to clear)
                 double pushLeft = cur.right() - pad.x();
                 double pushRight = pad.right() - cur.x();
                 double pushUp = cur.bottom() - pad.y();
                 double pushDown = pad.bottom() - cur.y();
                 double min = Math.min(Math.min(pushLeft, pushRight), Math.min(pushUp, pushDown));
-                if (min > budget) continue;   //clearing it costs too much — accept the overlap
+                if (min > budget) continue; // clearing it costs too much — accept the overlap
 
                 if (min == pushLeft) x -= pushLeft;
                 else if (min == pushRight) x += pushRight;
@@ -86,7 +85,7 @@ public final class AvoidRectsMiddleware implements FloatingMiddleware {
             if (!moved) break;
         }
 
-        //keep the result inside the boundary when it fits at all
+        // keep the result inside the boundary when it fits at all
         Rect b = state.boundary();
         if (w <= b.width()) x = Math.max(b.x() + padding, Math.min(x, b.right() - padding - w));
         if (h <= b.height()) y = Math.max(b.y() + padding, Math.min(y, b.bottom() - padding - h));

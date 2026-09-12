@@ -20,7 +20,8 @@ public interface OverlayApi {
         return api;
     }
 
-    @Nullable OverlayEntry<?> find(Namespace id);
+    @Nullable
+    OverlayEntry<?> find(Namespace id);
 
     default @Nullable OverlayEntry<?> find(String id) {
         return find(Namespace.parse(id));
@@ -30,5 +31,6 @@ public interface OverlayApi {
 
     RichIterable<Rect2i> exclusionAreas(@Nullable Screen screen);
 
-    @Nullable Scene activeOverlayScene();
+    @Nullable
+    Scene activeOverlayScene();
 }

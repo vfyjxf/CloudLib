@@ -5,18 +5,14 @@ import net.minecraft.client.gui.GuiGraphics;
 /**
  * Shadow texture using multi-layer alpha falloff.
  */
-public record ShadowTexture(
-        int color, int blur,
-        int offsetX, int offsetY,
-        int layers
-) implements BatchableTexture {
+public record ShadowTexture(int color, int blur, int offsetX, int offsetY, int layers) implements BatchableTexture {
 
     public ShadowTexture {
         blur = Math.max(1, blur);
         layers = Math.max(1, layers);
     }
 
-    //region factory
+    // region factory
 
     public static ShadowTexture of(int color, int blur) {
         return new ShadowTexture(color, blur, blur / 2, blur / 2, blur);
@@ -34,9 +30,9 @@ public record ShadowTexture(
         return new ShadowTexture(color, blur, 0, 0, blur);
     }
 
-    //endregion
+    // endregion
 
-    //region modification
+    // region modification
 
     public ShadowTexture withOffset(int x, int y) {
         return new ShadowTexture(color, blur, x, y, layers);
@@ -50,9 +46,9 @@ public record ShadowTexture(
         return new ShadowTexture(color, blur, offsetX, offsetY, layers);
     }
 
-    //endregion
+    // endregion
 
-    //region batchable texture
+    // region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float width, float height, int tint) {
@@ -66,10 +62,7 @@ public record ShadowTexture(
 
             float expand = i;
             emitter.colored(
-                    x + offsetX - expand, y + offsetY - expand,
-                    width + expand * 2, height + expand * 2,
-                    layerColor
-            );
+                    x + offsetX - expand, y + offsetY - expand, width + expand * 2, height + expand * 2, layerColor);
         }
     }
 
@@ -85,12 +78,13 @@ public record ShadowTexture(
 
             int expand = i;
             graphics.fill(
-                    x + offsetX - expand, y + offsetY - expand,
-                    x + offsetX + width + expand, y + offsetY + height + expand,
-                    layerColor
-            );
+                    x + offsetX - expand,
+                    y + offsetY - expand,
+                    x + offsetX + width + expand,
+                    y + offsetY + height + expand,
+                    layerColor);
         }
     }
 
-    //endregion
+    // endregion
 }

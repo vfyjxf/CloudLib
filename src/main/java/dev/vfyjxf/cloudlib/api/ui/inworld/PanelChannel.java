@@ -25,5 +25,4 @@ public interface PanelChannel {
      * closed.
      */
     void sendToServer(CustomPacketPayload payload);
-
 }

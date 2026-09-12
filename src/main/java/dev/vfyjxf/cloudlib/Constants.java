@@ -6,5 +6,4 @@ public final class Constants {
     public static final String namespace = "cloudlib";
 
     public static final String mcId = "minecraft";
-
 }

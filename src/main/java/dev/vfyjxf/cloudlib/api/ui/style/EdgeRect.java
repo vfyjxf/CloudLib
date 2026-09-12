@@ -26,20 +26,15 @@ import java.util.function.Function;
  *
  * @param <T> the type of value stored in each edge
  */
-public record EdgeRect<T>(
-        @Nullable T top,
-        @Nullable T right,
-        @Nullable T bottom,
-        @Nullable T left
-) {
+public record EdgeRect<T>(@Nullable T top, @Nullable T right, @Nullable T bottom, @Nullable T left) {
 
-    //region constants
+    // region constants
 
     /**
      * An empty EdgeRect with all edges set to null.
      */
     @SuppressWarnings("rawtypes")
-    private static final EdgeRect EMPTY = new EdgeRect<>(null, null, null, null);
+    private static final EdgeRect empty = new EdgeRect<>(null, null, null, null);
 
     /**
      * Returns an empty EdgeRect with all edges set to null.
@@ -49,12 +44,12 @@ public record EdgeRect<T>(
      */
     @SuppressWarnings("unchecked")
     public static <T> EdgeRect<T> empty() {
-        return (EdgeRect<T>) EMPTY;
+        return (EdgeRect<T>) empty;
     }
 
-    //endregion
+    // endregion
 
-    //region factory - all edges
+    // region factory - all edges
 
     /**
      * Creates an EdgeRect with the same value on all four edges.
@@ -96,9 +91,9 @@ public record EdgeRect<T>(
         return new EdgeRect<>(top, right, bottom, left);
     }
 
-    //endregion
+    // endregion
 
-    //region factory - single edge
+    // region factory - single edge
 
     /**
      * Creates an EdgeRect with only the top edge set.
@@ -160,16 +155,16 @@ public record EdgeRect<T>(
         Objects.requireNonNull(edge, "edge");
         Objects.requireNonNull(value, "value");
         return switch (edge) {
-            case TOP -> top(value);
-            case RIGHT -> right(value);
-            case BOTTOM -> bottom(value);
-            case LEFT -> left(value);
+            case top -> top(value);
+            case right -> right(value);
+            case bottom -> bottom(value);
+            case left -> left(value);
         };
     }
 
-    //endregion
+    // endregion
 
-    //region factory - axis pairs
+    // region factory - axis pairs
 
     /**
      * Creates an EdgeRect with only horizontal edges (left and right) set.
@@ -195,9 +190,9 @@ public record EdgeRect<T>(
         return new EdgeRect<>(value, null, value, null);
     }
 
-    //endregion
+    // endregion
 
-    //region accessors
+    // region accessors
 
     /**
      * Gets the value for a specific edge.
@@ -208,10 +203,10 @@ public record EdgeRect<T>(
     public @Nullable T get(Edge edge) {
         Objects.requireNonNull(edge, "edge");
         return switch (edge) {
-            case TOP -> top;
-            case RIGHT -> right;
-            case BOTTOM -> bottom;
-            case LEFT -> left;
+            case top -> top;
+            case right -> right;
+            case bottom -> bottom;
+            case left -> left;
         };
     }
 
@@ -243,9 +238,9 @@ public record EdgeRect<T>(
         return get(edge) != null;
     }
 
-    //endregion
+    // endregion
 
-    //region transformation
+    // region transformation
 
     /**
      * Creates a new EdgeRect with a specific edge replaced.
@@ -257,10 +252,10 @@ public record EdgeRect<T>(
     public EdgeRect<T> with(Edge edge, @Nullable T value) {
         Objects.requireNonNull(edge, "edge");
         return switch (edge) {
-            case TOP -> new EdgeRect<>(value, right, bottom, left);
-            case RIGHT -> new EdgeRect<>(top, value, bottom, left);
-            case BOTTOM -> new EdgeRect<>(top, right, value, left);
-            case LEFT -> new EdgeRect<>(top, right, bottom, value);
+            case top -> new EdgeRect<>(value, right, bottom, left);
+            case right -> new EdgeRect<>(top, value, bottom, left);
+            case bottom -> new EdgeRect<>(top, right, value, left);
+            case left -> new EdgeRect<>(top, right, bottom, value);
         };
     }
 
@@ -325,8 +320,7 @@ public record EdgeRect<T>(
                 other.top != null ? other.top : this.top,
                 other.right != null ? other.right : this.right,
                 other.bottom != null ? other.bottom : this.bottom,
-                other.left != null ? other.left : this.left
-        );
+                other.left != null ? other.left : this.left);
     }
 
     /**
@@ -342,13 +336,12 @@ public record EdgeRect<T>(
                 top != null ? mapper.apply(top) : null,
                 right != null ? mapper.apply(right) : null,
                 bottom != null ? mapper.apply(bottom) : null,
-                left != null ? mapper.apply(left) : null
-        );
+                left != null ? mapper.apply(left) : null);
     }
 
-    //endregion
+    // endregion
 
-    //region formatting
+    // region formatting
 
     /**
      * Formats this EdgeRect as a CSS-like string.
@@ -415,5 +408,5 @@ public record EdgeRect<T>(
         return "EdgeRect[" + toShortString() + "]";
     }
 
-    //endregion
+    // endregion
 }

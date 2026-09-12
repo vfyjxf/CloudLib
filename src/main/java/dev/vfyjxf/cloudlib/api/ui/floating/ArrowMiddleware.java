@@ -20,7 +20,7 @@ public final class ArrowMiddleware implements FloatingMiddleware {
     private final int arrowHeight;
     private final int padding;
 
-    //region factory
+    // region factory
 
     /**
      * Creates an arrow middleware.
@@ -51,7 +51,7 @@ public final class ArrowMiddleware implements FloatingMiddleware {
         this.padding = padding;
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String name() {

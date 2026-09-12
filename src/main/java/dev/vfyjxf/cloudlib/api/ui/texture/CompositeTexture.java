@@ -20,7 +20,7 @@ public class CompositeTexture implements BatchableTexture {
         this.layers = List.copyOf(layers);
     }
 
-    //region factory
+    // region factory
 
     public static CompositeTexture of(BatchableTexture... layers) {
         return new CompositeTexture(Arrays.asList(layers));
@@ -52,9 +52,9 @@ public class CompositeTexture implements BatchableTexture {
                 .build();
     }
 
-    //endregion
+    // endregion
 
-    //region query
+    // region query
 
     public List<BatchableTexture> layers() {
         return layers;
@@ -73,9 +73,9 @@ public class CompositeTexture implements BatchableTexture {
         return (index >= 0 && index < layers.size()) ? layers.get(index) : null;
     }
 
-    //endregion
+    // endregion
 
-    //region modification
+    // region modification
 
     public CompositeTexture withLayer(BatchableTexture layer) {
         List<BatchableTexture> newLayers = new ArrayList<>(layers);
@@ -90,9 +90,9 @@ public class CompositeTexture implements BatchableTexture {
         return new CompositeTexture(newLayers);
     }
 
-    //endregion
+    // endregion
 
-    //region batchable texture
+    // region batchable texture
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float width, float height, int tint) {
@@ -116,15 +116,14 @@ public class CompositeTexture implements BatchableTexture {
         return true;
     }
 
-    //endregion
+    // endregion
 
-    //region builder
+    // region builder
 
     public static class Builder {
         private final List<BatchableTexture> layers = new ArrayList<>();
 
-        private Builder() {
-        }
+        private Builder() {}
 
         public Builder add(BatchableTexture layer) {
             layers.add(layer);
@@ -153,5 +152,5 @@ public class CompositeTexture implements BatchableTexture {
         }
     }
 
-    //endregion
+    // endregion
 }

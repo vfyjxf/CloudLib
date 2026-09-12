@@ -8,5 +8,4 @@ import org.jetbrains.annotations.ApiStatus;
 public interface OverlayRegister {
 
     <T extends Widget> void register(OverlayEntry<T> entry);
-
 }

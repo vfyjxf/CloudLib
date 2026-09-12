@@ -22,16 +22,16 @@ import java.util.function.Supplier;
 class SnapshotTest {
 
     private static class TestHolder {
-        //primitive value
+        // primitive value
         private int number = 0;
-        //immutable reference
+        // immutable reference
         private final List<String> strings = new ArrayList<>();
         private final List<String> copyOfStrings = new ArrayList<>();
-        //mutable reference
+        // mutable reference
         private NamedObject name;
-        //readonly value
+        // readonly value
         private final NamedObject readonlyName = new NamedObject("readonly");
-        //illegal value
+        // illegal value
         private final Reference<List<String>> illegal = new Reference<>(new ArrayList<>());
     }
 
@@ -46,8 +46,7 @@ class SnapshotTest {
         }
     }
 
-    private record NamedObject(String name) {
-    }
+    private record NamedObject(String name) {}
 
     private static class Reference<T> {
         public Reference(T value) {
@@ -58,25 +57,17 @@ class SnapshotTest {
     }
 
     @BeforeEach
-    void setup() {
+    void setup() {}
 
-    }
-
-//    @Test
+    //    @Test
     void serverTick(MinecraftServer server) {
         TestHolder testHolder = new TestHolder();
-        Expose<Integer> copyOf = new Expose<>(
-                Snapshot.copyOf(Integer::intValue, CheckStrategy.primitive()),
-                () -> testHolder.number
-        );
-        Expose<@NotNull List<String>> copyOfList = new Expose<>(
-                Snapshot.copyOf(ArrayList::new, CheckStrategy.equals()),
-                () -> testHolder.copyOfStrings
-        );
-        Expose<@NotNull NamedObject> mutableRef = new Expose<>(
-                Snapshot.mutableRefOf(CheckStrategy.equals()),
-                () -> testHolder.name
-        );
+        Expose<Integer> copyOf =
+                new Expose<>(Snapshot.copyOf(Integer::intValue, CheckStrategy.primitive()), () -> testHolder.number);
+        Expose<@NotNull List<String>> copyOfList =
+                new Expose<>(Snapshot.copyOf(ArrayList::new, CheckStrategy.equals()), () -> testHolder.copyOfStrings);
+        Expose<@NotNull NamedObject> mutableRef =
+                new Expose<>(Snapshot.mutableRefOf(CheckStrategy.equals()), () -> testHolder.name);
         Expose<@NotNull List<String>> immutableRef = new Expose<>(
                 Snapshot.immutableRefOf(testHolder.strings, new Predicate<>() {
                     private List<String> copy = new ArrayList<>(testHolder.strings);
@@ -84,7 +75,7 @@ class SnapshotTest {
                     @Override
                     public boolean test(List<String> strings) {
                         if (copy.size() != strings.size()) {
-                            //fast fail
+                            // fast fail
                             copy = new ArrayList<>(strings);
                             return false;
                         }
@@ -97,55 +88,47 @@ class SnapshotTest {
                         return true;
                     }
                 }),
-                () -> testHolder.strings
-        );
+                () -> testHolder.strings);
         copyOfList.changed();
         ThreadLocalRandom random = ThreadLocalRandom.current();
         AtomicBoolean copyOfFlag = new AtomicBoolean(false);
         AtomicBoolean mutableRefFlag = new AtomicBoolean(false);
         AtomicBoolean copyOfListFlag = new AtomicBoolean(false);
         AtomicBoolean immutableRefFlag = new AtomicBoolean(false);
-        NeoForge.EVENT_BUS.addListener(
-                ServerTickEvent.Pre.class,
-                event -> {
-                    int i = random.nextInt(0, 1000);
-                    //stimulate the value change
-                    var oldInt = testHolder.number;
-                    testHolder.number = random.nextInt(0, 100);
-                    copyOfFlag.set(oldInt != testHolder.number);
-                    var oldName = testHolder.name;
-                    switch (i % 5) {
-                        case 0 -> testHolder.name = new NamedObject("A");
-                        case 1 -> testHolder.name = new NamedObject("B");
-                        case 2 -> testHolder.name = new NamedObject("C");
-                        case 3 -> testHolder.name = new NamedObject("D");
-                        case 4 -> testHolder.name = new NamedObject("E");
-                    }
-                    mutableRefFlag.set(!testHolder.name.equals(oldName));
+        NeoForge.EVENT_BUS.addListener(ServerTickEvent.Pre.class, event -> {
+            int i = random.nextInt(0, 1000);
+            // stimulate the value change
+            var oldInt = testHolder.number;
+            testHolder.number = random.nextInt(0, 100);
+            copyOfFlag.set(oldInt != testHolder.number);
+            var oldName = testHolder.name;
+            switch (i % 5) {
+                case 0 -> testHolder.name = new NamedObject("A");
+                case 1 -> testHolder.name = new NamedObject("B");
+                case 2 -> testHolder.name = new NamedObject("C");
+                case 3 -> testHolder.name = new NamedObject("D");
+                case 4 -> testHolder.name = new NamedObject("E");
+            }
+            mutableRefFlag.set(!testHolder.name.equals(oldName));
 
-                    if (i % 5 == 0) {
-                        testHolder.strings.add("A");
-                        immutableRefFlag.set(true);
-                    } else {
-                        immutableRefFlag.set(false);
-                    }
-                    if (i % 2 == 0) {
-                        testHolder.copyOfStrings.add("B");
-                        copyOfListFlag.set(true);
-                    } else {
-                        copyOfListFlag.set(false);
-                    }
-                }
-        );
-        NeoForge.EVENT_BUS.addListener(
-                ServerTickEvent.Post.class,
-                event -> {
-                    Assertions.assertEquals(copyOf.changed(), copyOfFlag.get());
-                    Assertions.assertEquals(copyOfList.changed(), copyOfListFlag.get());
-                    Assertions.assertEquals(mutableRef.changed(), mutableRefFlag.get());
-                    Assertions.assertEquals(immutableRef.changed(), immutableRefFlag.get());
-                }
-        );
-
+            if (i % 5 == 0) {
+                testHolder.strings.add("A");
+                immutableRefFlag.set(true);
+            } else {
+                immutableRefFlag.set(false);
+            }
+            if (i % 2 == 0) {
+                testHolder.copyOfStrings.add("B");
+                copyOfListFlag.set(true);
+            } else {
+                copyOfListFlag.set(false);
+            }
+        });
+        NeoForge.EVENT_BUS.addListener(ServerTickEvent.Post.class, event -> {
+            Assertions.assertEquals(copyOf.changed(), copyOfFlag.get());
+            Assertions.assertEquals(copyOfList.changed(), copyOfListFlag.get());
+            Assertions.assertEquals(mutableRef.changed(), mutableRefFlag.get());
+            Assertions.assertEquals(immutableRef.changed(), immutableRefFlag.get());
+        });
     }
 }

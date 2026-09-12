@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.math.Rect;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Static DSL entry point for creating {@link FloatingMiddleware} instances.
@@ -28,7 +29,7 @@ public final class FloatingMiddlewares {
         throw new UnsupportedOperationException("Utility class");
     }
 
-    //region offset
+    // region offset
 
     /**
      * Creates an offset middleware with the given main axis distance.
@@ -63,9 +64,9 @@ public final class FloatingMiddlewares {
         return OffsetMiddleware.of(mainAxis, crossAxis, alignmentAxis);
     }
 
-    //endregion
+    // endregion
 
-    //region flip
+    // region flip
 
     /**
      * Creates a flip middleware with default settings.
@@ -98,14 +99,20 @@ public final class FloatingMiddlewares {
             FlipMiddleware.FallbackStrategy fallbackStrategy,
             FlipMiddleware.FallbackAxisSideDirection fallbackAxisSideDirection,
             boolean flipAlignment,
-            int padding
-    ) {
-        return FlipMiddleware.create(checkMainAxis, checkCrossAxis, fallbackPlacements, fallbackStrategy, fallbackAxisSideDirection, flipAlignment, padding);
+            int padding) {
+        return FlipMiddleware.create(
+                checkMainAxis,
+                checkCrossAxis,
+                fallbackPlacements,
+                fallbackStrategy,
+                fallbackAxisSideDirection,
+                flipAlignment,
+                padding);
     }
 
-    //endregion
+    // endregion
 
-    //region shift
+    // region shift
 
     /**
      * Creates a shift middleware with default settings.
@@ -138,9 +145,9 @@ public final class FloatingMiddlewares {
         return ShiftMiddleware.create(checkMainAxis, checkCrossAxis, padding);
     }
 
-    //endregion
+    // endregion
 
-    //region arrow
+    // region arrow
 
     /**
      * Creates an arrow middleware.
@@ -165,9 +172,9 @@ public final class FloatingMiddlewares {
         return ArrowMiddleware.of(arrowWidth, arrowHeight, padding);
     }
 
-    //endregion
+    // endregion
 
-    //region autoPlacement
+    // region autoPlacement
 
     /**
      * Creates an auto-placement middleware with default settings.
@@ -188,9 +195,9 @@ public final class FloatingMiddlewares {
         return AutoPlacementMiddleware.create(padding);
     }
 
-    //endregion
+    // endregion
 
-    //region size
+    // region size
 
     /**
      * Creates a size middleware with the given applier.
@@ -213,9 +220,9 @@ public final class FloatingMiddlewares {
         return SizeMiddleware.create(applier, padding);
     }
 
-    //endregion
+    // endregion
 
-    //region avoidRects
+    // region avoidRects
 
     /**
      * Creates an avoid-rects middleware that nudges the floating element out
@@ -224,7 +231,7 @@ public final class FloatingMiddlewares {
      * @param obstacles live supplier of rects the element should not cover
      * @see AvoidRectsMiddleware
      */
-    public static AvoidRectsMiddleware avoid(java.util.function.Supplier<? extends List<Rect>> obstacles) {
+    public static AvoidRectsMiddleware avoid(Supplier<? extends List<Rect>> obstacles) {
         return AvoidRectsMiddleware.create(obstacles);
     }
 
@@ -235,7 +242,7 @@ public final class FloatingMiddlewares {
      * @param padding   extra clearance kept around each obstacle
      * @see AvoidRectsMiddleware
      */
-    public static AvoidRectsMiddleware avoid(java.util.function.Supplier<? extends List<Rect>> obstacles, int padding) {
+    public static AvoidRectsMiddleware avoid(Supplier<? extends List<Rect>> obstacles, int padding) {
         return AvoidRectsMiddleware.create(obstacles, padding);
     }
 
@@ -248,13 +255,13 @@ public final class FloatingMiddlewares {
      *                  more to clear are accepted instead
      * @see AvoidRectsMiddleware
      */
-    public static AvoidRectsMiddleware avoid(java.util.function.Supplier<? extends List<Rect>> obstacles, int padding, int maxPush) {
+    public static AvoidRectsMiddleware avoid(Supplier<? extends List<Rect>> obstacles, int padding, int maxPush) {
         return AvoidRectsMiddleware.create(obstacles, padding, maxPush);
     }
 
-    //endregion
+    // endregion
 
-    //region hide
+    // region hide
 
     /**
      * Creates a hide middleware with the default strategy.
@@ -275,5 +282,5 @@ public final class FloatingMiddlewares {
         return HideMiddleware.create(strategy);
     }
 
-    //endregion
+    // endregion
 }

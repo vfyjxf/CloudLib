@@ -15,18 +15,17 @@ import net.minecraft.resources.ResourceLocation;
  */
 public record AnchorType<A extends InworldAnchor>(ResourceLocation id) {
 
-    public static final AnchorType<InworldAnchor.Block> BLOCK =
+    public static final AnchorType<InworldAnchor.Block> block =
             new AnchorType<>(ResourceLocation.fromNamespaceAndPath("cloudlib", "block"));
-    public static final AnchorType<InworldAnchor.Position> POSITION =
+    public static final AnchorType<InworldAnchor.Position> position =
             new AnchorType<>(ResourceLocation.fromNamespaceAndPath("cloudlib", "position"));
-    public static final AnchorType<InworldAnchor.EntityTarget> ENTITY =
+    public static final AnchorType<InworldAnchor.EntityTarget> entity =
             new AnchorType<>(ResourceLocation.fromNamespaceAndPath("cloudlib", "entity"));
-    public static final AnchorType<InworldAnchor.Tracked> TRACKED =
+    public static final AnchorType<InworldAnchor.Tracked> tracked =
             new AnchorType<>(ResourceLocation.fromNamespaceAndPath("cloudlib", "tracked"));
 
     /** A token for lookup only — use when the concrete anchor type is unknown. */
     public static AnchorType<?> of(ResourceLocation id) {
         return new AnchorType<>(id);
     }
-
 }

@@ -71,9 +71,6 @@ public final class MutablePos {
 
     @Override
     public String toString() {
-        return "MutablePos{" +
-                "x=" + x +
-                ", y=" + y +
-                '}';
+        return "MutablePos{" + "x=" + x + ", y=" + y + '}';
     }
 }

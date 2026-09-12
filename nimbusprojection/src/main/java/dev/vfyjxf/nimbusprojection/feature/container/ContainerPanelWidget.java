@@ -12,9 +12,9 @@ import dev.vfyjxf.cloudlib.ui.widget.ContainerGridWidget;
 import dev.vfyjxf.nimbusprojection.network.ContainerOpsPayload;
 import dev.vfyjxf.nimbusprojection.network.TransferPayload;
 import dev.vfyjxf.taffy.geometry.FloatSize;
-import org.lwjgl.glfw.GLFW;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -26,8 +26,8 @@ import java.util.function.Supplier;
  */
 public final class ContainerPanelWidget extends WidgetGroup<Widget> implements WorldDragAcceptor {
 
-    private static final int CELL = 12;
-    private static final int TOP_ITEMS = 4;
+    private static final int cell = 12;
+    private static final int topItems = 4;
 
     private final InworldPanelContext ctx;
     private final Supplier<BlockPos> pos;
@@ -35,9 +35,8 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
 
     private final Widget summary = new Widget() {
         {
-            onMount((scene, context, handle) ->
-                    scene.layoutTree().setMeasureFunc(nodeId(), (style, space) ->
-                            new FloatSize(TOP_ITEMS * CELL + 48, CELL + 6)));
+            onMount((scene, context, handle) -> scene.layoutTree()
+                    .setMeasureFunc(nodeId(), (style, space) -> new FloatSize(topItems * cell + 48, cell + 6)));
         }
 
         @Override
@@ -45,14 +44,14 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
             List<ItemStack> stacks = ContainerContents.watch(pos.get());
             int x = 2;
             if (stacks == null) {
-                canvas.text("···", x, 3, HackerTheme.TEXT_DIM);
+                canvas.text("···", x, 3, HackerTheme.textDim);
                 return;
             }
             int shown = 0;
             for (ItemStack stack : stacks) {
-                if (stack.isEmpty() || shown >= TOP_ITEMS) continue;
+                if (stack.isEmpty() || shown >= topItems) continue;
                 canvas.renderItem(stack, x, 0);
-                x += CELL;
+                x += cell;
                 shown++;
             }
             int used = 0;
@@ -60,7 +59,7 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
                 if (!stack.isEmpty()) used++;
             }
             String fill = stacks.isEmpty() ? "empty" : used + "/" + stacks.size();
-            canvas.text(fill, x + 4, 4, HackerTheme.TEXT_DIM);
+            canvas.text(fill, x + 4, 4, HackerTheme.textDim);
         }
     };
 
@@ -71,8 +70,7 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
             BlockPos p = pos.get();
             if (p == null) return;
             boolean shift = (input.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0;
-            int op = input.isLeftClick() && shift ? ContainerOpsPayload.EXTRACT_ALL
-                    : ContainerOpsPayload.EXTRACT;
+            int op = input.isLeftClick() && shift ? ContainerOpsPayload.extractAll : ContainerOpsPayload.extract;
             int count = input.isRightClick() ? 1 : -1;
             if (ctx.channel() != null) {
                 ctx.channel().sendToServer(new ContainerOpsPayload(op, p, slot, count));
@@ -98,10 +96,13 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
     public boolean acceptWorldDrag(WorldDrag drag, InworldPanelContext dropCtx, double sceneX, double sceneY) {
         BlockPos p = pos.get();
         if (p == null || ctx.channel() == null) return false;
-        ctx.channel().sendToServer(new TransferPayload(
-                drag.sourceContainer(), drag.sourceSlot(),
-                p, -1,
-                drag.carried().getCount()));
+        ctx.channel()
+                .sendToServer(new TransferPayload(
+                        drag.sourceContainer(),
+                        drag.sourceSlot(),
+                        p,
+                        -1,
+                        drag.carried().getCount()));
         return true;
     }
 }

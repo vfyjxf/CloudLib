@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.event;
 
-
 import dev.vfyjxf.cloudlib.api.event.context.BubbleContext;
 import dev.vfyjxf.cloudlib.api.event.context.CancelableContext;
 import dev.vfyjxf.cloudlib.api.event.context.CommonContext;
@@ -76,5 +75,4 @@ public interface EventHandler<T> {
     default void clearAllListeners() {
         events().clearAllListeners();
     }
-
 }

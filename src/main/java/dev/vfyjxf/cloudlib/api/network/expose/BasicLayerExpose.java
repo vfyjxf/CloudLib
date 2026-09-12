@@ -9,8 +9,7 @@ import org.jetbrains.annotations.ApiStatus;
 
 import java.util.function.Consumer;
 
-sealed abstract class BasicLayerExpose<E>
-        implements LayerExpose<E>, Transcoder
+abstract sealed class BasicLayerExpose<E> implements LayerExpose<E>, Transcoder
         permits StandardLayerExpose,
                 StandardReversedLayerExpose,
                 StandardDiffLayerExpose,
@@ -23,10 +22,12 @@ sealed abstract class BasicLayerExpose<E>
     private final FlowDecoder<E> decoder;
 
     protected <T> BasicLayerExpose(
-            String name, short id,
-            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder, FlowDecoder<E> decoder
-    ) {
+            String name,
+            short id,
+            Snapshot<T> snapshot,
+            ValueSupplier<T> valueSupplier,
+            FlowEncoder<T> encoder,
+            FlowDecoder<E> decoder) {
 
         this.name = name;
         this.id = id;
@@ -63,7 +64,9 @@ sealed abstract class BasicLayerExpose<E>
             case changed -> true;
             case illegal -> {
                 boolean readonly = snapshot instanceof Snapshot.Readonly;
-                throw new IllegalStateException("Illegally modifity a " + (readonly ? "readonly" : "immutable reference") + " snapshot(id:" + id() + " name:" + name() + ")");
+                throw new IllegalStateException(
+                        "Illegally modifity a " + (readonly ? "readonly" : "immutable reference") + " snapshot(id:"
+                                + id() + " name:" + name() + ")");
             }
         };
     }
@@ -100,19 +103,11 @@ sealed abstract class BasicLayerExpose<E>
 
     @Override
     public String toString() {
-        return "BasicLayerExpose{" +
-                "name='" + name + '\'' +
-                ", id=" + id +
-                ", layerSnapshot=" + layerSnapshot +
-                '}';
+        return "BasicLayerExpose{" + "name='" + name + '\'' + ", id=" + id + ", layerSnapshot=" + layerSnapshot + '}';
     }
 
     @ApiStatus.Internal
-    public record LayerSnapshot<T>(
-            Snapshot<T> snapshot,
-            ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder
-    ) {
+    public record LayerSnapshot<T>(Snapshot<T> snapshot, ValueSupplier<T> valueSupplier, FlowEncoder<T> encoder) {
         public T current() {
             return valueSupplier.get();
         }

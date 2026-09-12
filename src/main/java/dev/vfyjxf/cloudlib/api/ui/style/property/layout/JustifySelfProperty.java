@@ -17,7 +17,7 @@ import java.util.Objects;
  *   <li>{@link AlignItems#START} - align to start of inline axis</li>
  *   <li>{@link AlignItems#END} - align to end of inline axis</li>
  *   <li>{@link AlignItems#CENTER} - center along inline axis</li>
- *   <li>{@link AlignItems#STRETCH} - stretch to fill inline axis</li>
+ *   <li>{@link AlignItems#stretch} - stretch to fill inline axis</li>
  *   <li>{@link AlignItems#BASELINE} - align baselines</li>
  * </ul>
  *

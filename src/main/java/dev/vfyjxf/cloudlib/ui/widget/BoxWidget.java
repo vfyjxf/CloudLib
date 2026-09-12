@@ -11,35 +11,34 @@ import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
  */
 public class BoxWidget extends CompositeWidget<Widget> {
 
-    //region factory
+    // region factory
 
     public static BoxWidget create() {
         return new BoxWidget();
     }
 
-    private BoxWidget() {
-    }
+    private BoxWidget() {}
 
-    //endregion
+    // endregion
 
-    //region children
+    // region children
 
     public <T extends Widget> T addChild(T widget) {
         return addWidget(widget);
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         super.renderInternal(canvas, mouseX, mouseY, partialTicks);
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
@@ -47,5 +46,5 @@ public class BoxWidget extends CompositeWidget<Widget> {
         collector.add("children", children().size(), InspectionProperty.categoryData);
     }
 
-    //endregion
+    // endregion
 }

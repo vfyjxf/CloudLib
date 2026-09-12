@@ -8,7 +8,8 @@ import org.jetbrains.annotations.NotNull;
 public class PerformerContainer {
 
     private final MutableMap<Scenario<?>, @NotNull Performer<?>> performers = Maps.mutable.empty();
-    private final MutableMap<CompositeScenario<?>, @NotNull MergeablePerformer<?>> mergeablePerformers = Maps.mutable.empty();
+    private final MutableMap<CompositeScenario<?>, @NotNull MergeablePerformer<?>> mergeablePerformers =
+            Maps.mutable.empty();
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public <T> void add(@NotNull Scenario<T> scenario, @NotNull Performer<T> performer) {
@@ -37,26 +38,30 @@ public class PerformerContainer {
 
     @SuppressWarnings({"unchecked"})
     public <T> void add(@NotNull CompositeScenario<T> scenario, @NotNull T performer) {
-        MergeablePerformer<T> mergeableperformer = (MergeablePerformer<T>) mergeablePerformers.computeIfAbsent(scenario, k -> new SimpleMergeablePerformer<>(scenario));
+        MergeablePerformer<T> mergeableperformer = (MergeablePerformer<T>)
+                mergeablePerformers.computeIfAbsent(scenario, k -> new SimpleMergeablePerformer<>(scenario));
         mergeableperformer.put(performer);
     }
 
     @SuppressWarnings({"unchecked"})
     public <T> void add(@NotNull CompositeScenario<T> scenario, @NotNull T performer, int priority) {
-        MergeablePerformer<T> mergeableperformer = (MergeablePerformer<T>) mergeablePerformers.computeIfAbsent(scenario, k -> new SimpleMergeablePerformer<>(scenario));
+        MergeablePerformer<T> mergeableperformer = (MergeablePerformer<T>)
+                mergeablePerformers.computeIfAbsent(scenario, k -> new SimpleMergeablePerformer<>(scenario));
         mergeableperformer.put(performer, priority);
     }
 
     public <T> void addWeak(@NotNull CompositeScenario<T> scenario, @NotNull T performer, @NotNull Object reference) {
-        addWeak(scenario, performer, PerformerPriorities.DEFAULT, reference);
+        addWeak(scenario, performer, PerformerPriorities.normal, reference);
     }
 
     @SuppressWarnings({"unchecked"})
-    public <T> void addWeak(@NotNull CompositeScenario<T> scenario, @NotNull T performer, int priority, @NotNull Object reference) {
+    public <T> void addWeak(
+            @NotNull CompositeScenario<T> scenario, @NotNull T performer, int priority, @NotNull Object reference) {
         Checks.checkNotNull(scenario, "scenario");
         Checks.checkNotNull(performer, "performer");
         Checks.checkNotNull(reference, "reference");
-        MergeablePerformer<T> mergeableperformer = (MergeablePerformer<T>) mergeablePerformers.computeIfAbsent(scenario, k -> new SimpleMergeablePerformer<>(scenario));
+        MergeablePerformer<T> mergeableperformer = (MergeablePerformer<T>)
+                mergeablePerformers.computeIfAbsent(scenario, k -> new SimpleMergeablePerformer<>(scenario));
         mergeableperformer.putWeak(reference, performer, priority);
     }
 
@@ -79,7 +84,9 @@ public class PerformerContainer {
     @NotNull
     @SuppressWarnings({"unchecked"})
     public <T> T get(@NotNull CompositeScenario<T> scenario) {
-        return (T) mergeablePerformers.getIfAbsentPut(scenario, new SimpleMergeablePerformer<>(scenario)).performer();
+        return (T) mergeablePerformers
+                .getIfAbsentPut(scenario, new SimpleMergeablePerformer<>(scenario))
+                .performer();
     }
 
     private static class SimpleMergeablePerformer<T> extends MergeablePerformer<T> {

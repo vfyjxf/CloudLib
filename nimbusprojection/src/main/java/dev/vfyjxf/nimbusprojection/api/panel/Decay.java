@@ -30,5 +30,4 @@ public record Decay(int ttlTicks, int fadeTicks, boolean lingerOnHover) {
     public static Decay hard(int ttlTicks) {
         return new Decay(ttlTicks, 0, false);
     }
-
 }

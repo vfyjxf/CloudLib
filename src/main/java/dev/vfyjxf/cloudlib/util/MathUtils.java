@@ -3,14 +3,14 @@ package dev.vfyjxf.cloudlib.util;
 import org.joml.Vector3i;
 
 public class MathUtils {
-    public static final float PI = (float) Math.PI;
+    public static final float pi = (float) Math.PI;
 
     public static float toRad(float degrees) {
-        return degrees / 180F * PI;
+        return degrees / 180F * pi;
     }
 
     public static float toDeg(float rad) {
-        return rad / PI * 180F;
+        return rad / pi * 180F;
     }
 
     public static int clamp(int x, int min, int max) {
@@ -91,7 +91,7 @@ public class MathUtils {
      * Normalize given angle (in radians) to be in -pi to pi number range
      */
     public static float normalizeRadians(float angle) {
-        return normalizeAngle(angle, PI);
+        return normalizeAngle(angle, pi);
     }
 
     private static float normalizeAngle(float angle, float halfCircle) {
@@ -112,7 +112,7 @@ public class MathUtils {
      * Wrap/normalize given radian angle to 0..2PI.
      */
     public static float wrapToCircle(float rad) {
-        float circle = PI * 2;
+        float circle = pi * 2;
 
         if (rad >= 0) {
             return rad % circle;

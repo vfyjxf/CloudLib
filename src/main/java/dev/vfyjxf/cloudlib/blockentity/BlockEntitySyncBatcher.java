@@ -18,12 +18,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class BlockEntitySyncBatcher {
 
-    private static final ConcurrentHashMap<ResourceKey<Level>, BlockEntitySyncBatcher> BATCHERS = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<ResourceKey<Level>, BlockEntitySyncBatcher> batchers =
+            new ConcurrentHashMap<>();
 
     private final Set<BlockEntitySync> dirty = ConcurrentHashMap.newKeySet();
 
     public static BlockEntitySyncBatcher get(Level level) {
-        return BATCHERS.computeIfAbsent(level.dimension(), k -> new BlockEntitySyncBatcher());
+        return batchers.computeIfAbsent(level.dimension(), k -> new BlockEntitySyncBatcher());
     }
 
     void markDirty(BlockEntitySync sync) {

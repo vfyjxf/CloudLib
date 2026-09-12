@@ -18,5 +18,4 @@ public interface UnaryFlowHandler<T> extends FlowHandler<T, T>, StreamCodec<Regi
             }
         };
     }
-
 }

@@ -32,5 +32,4 @@ interface Reversed<S, R> {
     Reversed<S, R> whenReceiveFromClient(Consumer<R> consumer);
 
     boolean hasReversedData();
-
 }

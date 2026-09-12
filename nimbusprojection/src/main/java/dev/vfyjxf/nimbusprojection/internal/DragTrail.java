@@ -14,9 +14,9 @@ import java.util.List;
 public final class DragTrail {
 
     /** A drag only ever spans a handful of visible containers. */
-    public static final int CAPACITY = 8;
+    public static final int capacity = 8;
 
-    private final ArrayList<BlockPos> trail = new ArrayList<>(CAPACITY);
+    private final ArrayList<BlockPos> trail = new ArrayList<>(capacity);
     private BlockPos last;
 
     /**
@@ -31,7 +31,7 @@ public final class DragTrail {
     public boolean offer(BlockPos pos) {
         if (pos.equals(last)) return false;
         last = pos;
-        if (trail.contains(pos) || trail.size() >= CAPACITY) return false;
+        if (trail.contains(pos) || trail.size() >= capacity) return false;
         trail.add(pos);
         return true;
     }

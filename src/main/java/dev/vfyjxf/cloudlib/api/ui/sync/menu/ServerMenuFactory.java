@@ -15,15 +15,15 @@ public record ServerMenuFactory<M extends AbstractContainerMenu, A, P>(
         MenuProviderType<P> providerType,
         P provider,
         boolean resetOnClose,
-        Class<A> accessorType
-) implements MenuProvider {
+        Class<A> accessorType)
+        implements MenuProvider {
 
-    public static final Supplier<Component> EMPTY_NAME = Component::empty;
+    public static final Supplier<Component> emptyName = Component::empty;
 
     @Override
     @SuppressWarnings("ConstantConditions")
     public Component getDisplayName() {
-        if (displayName == EMPTY_NAME && provider instanceof Nameable nameable) {
+        if (displayName == emptyName && provider instanceof Nameable nameable) {
             return nameable.hasCustomName() ? nameable.getCustomName() : nameable.getDisplayName();
         }
         return displayName.get();
@@ -33,7 +33,8 @@ public record ServerMenuFactory<M extends AbstractContainerMenu, A, P>(
     public M createMenu(int containerId, Inventory inventory, Player player) {
         A accessor = providerType.findAccessor(provider, accessorType);
         if (accessor == null) {
-            throw new IllegalStateException("Cannot find accessor for " + MenuInfo.PROVIDER_TYPES.inverse().get(providerType));
+            throw new IllegalStateException("Cannot find accessor for "
+                    + MenuInfo.providerTypes.inverse().get(providerType));
         }
         return menuFactory.create(containerId, inventory, accessor);
     }

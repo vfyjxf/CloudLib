@@ -39,7 +39,7 @@ import java.util.function.Consumer;
  */
 public final class BlockEntitySync {
 
-    private static final String SYNC_KEY = "CloudLibExpose";
+    private static final String syncKey = "CloudLibExpose";
 
     private final BlockEntity owner;
     private final ExposeManagement management = new ExposeManagement();
@@ -52,17 +52,18 @@ public final class BlockEntitySync {
         return management;
     }
 
-    //region factories
+    // region factories
 
     public <T> Expose<T> expose(String name, Handle<T> handle, UnaryFlowHandler<T> codec) {
         Expose<T> expose = management.registerExpose(Expose.create(name, management.nextId(), handle, codec));
-        expose.whenReceive(handle::apply);   //client: received values flow into the handle (no echo)
-        handle.onChange(v -> markDirty());    //server: queue for the next batched flush
+        expose.whenReceive(handle::apply); // client: received values flow into the handle (no echo)
+        handle.onChange(v -> markDirty()); // server: queue for the next batched flush
         return expose;
     }
 
     public <T> Expose<T> expose(String name, Handle<T> handle, FlowEncoder<T> encoder, FlowDecoder<T> decoder) {
-        Expose<T> expose = management.registerExpose(Expose.create(name, management.nextId(), handle, encoder, decoder));
+        Expose<T> expose =
+                management.registerExpose(Expose.create(name, management.nextId(), handle, encoder, decoder));
         expose.whenReceive(handle::apply);
         handle.onChange(v -> markDirty());
         return expose;
@@ -75,16 +76,16 @@ public final class BlockEntitySync {
     }
 
     public <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> diffLayerExpose(
-            String name, DiffHandle<T, D> handle, FlowHandler<T, E> codec, UnaryFlowHandler<D> diffCodec
-    ) {
-        DiffLayerExpose<E, D> layer = management.registerExpose(DiffLayerExpose.create(name, management.nextId(), handle, codec, diffCodec));
+            String name, DiffHandle<T, D> handle, FlowHandler<T, E> codec, UnaryFlowHandler<D> diffCodec) {
+        DiffLayerExpose<E, D> layer =
+                management.registerExpose(DiffLayerExpose.create(name, management.nextId(), handle, codec, diffCodec));
         handle.onChange(v -> markDirty());
         return layer;
     }
 
-    //endregion
+    // endregion
 
-    //region reversed (client → server)
+    // region reversed (client → server)
 
     /**
      * A client → server channel for user actions (in-world buttons, drags, ...).
@@ -121,9 +122,9 @@ public final class BlockEntitySync {
         management.receiveFromClient(buf);
     }
 
-    //endregion
+    // endregion
 
-    //region auto flush
+    // region auto flush
 
     private void markDirty() {
         Level level = owner.getLevel();
@@ -145,31 +146,33 @@ public final class BlockEntitySync {
         return writeBytes(management::writeDifferenceToClient, registries);
     }
 
-    //endregion
+    // endregion
 
-    //region client receive
+    // region client receive
 
     public void receiveFromServer(RegistryFriendlyByteBuf buf) {
         management.receiveFromServer(buf);
     }
 
-    //endregion
+    // endregion
 
-    //region vanilla bootstrap (chunk load)
+    // region vanilla bootstrap (chunk load)
 
     public void writeUpdateData(CompoundTag data, HolderLookup.Provider registries) {
-        //non-clearing: bootstrap may run mid-tick and must not consume an in-flight change
-        data.putByteArray(SYNC_KEY, writeBytes(buf -> management.writeAllToClient(buf, false), registries));
+        // non-clearing: bootstrap may run mid-tick and must not consume an in-flight change
+        data.putByteArray(syncKey, writeBytes(buf -> management.writeAllToClient(buf, false), registries));
     }
 
     public boolean readUpdateData(CompoundTag data, HolderLookup.Provider registries) {
-        //tolerate both shapes: loadAdditional unwraps UPDATE_TAG, onDataPacket passes the outer tag
-        CompoundTag inner = data.contains(BasicBlockEntity.UPDATE_TAG, Tag.TAG_COMPOUND)
-                ? data.getCompound(BasicBlockEntity.UPDATE_TAG) : data;
-        if (!inner.contains(SYNC_KEY)) return false;
-        byte[] bytes = inner.getByteArray(SYNC_KEY);
+        // tolerate both shapes: loadAdditional unwraps updateTag, onDataPacket passes the outer tag
+        CompoundTag inner = data.contains(BasicBlockEntity.updateTagKey, Tag.TAG_COMPOUND)
+                ? data.getCompound(BasicBlockEntity.updateTagKey)
+                : data;
+        if (!inner.contains(syncKey)) return false;
+        byte[] bytes = inner.getByteArray(syncKey);
         if (bytes.length == 0) return false;
-        management.receiveFromServer(new RegistryFriendlyByteBuf(Unpooled.wrappedBuffer(bytes), registryAccess(registries), ConnectionType.OTHER));
+        management.receiveFromServer(new RegistryFriendlyByteBuf(
+                Unpooled.wrappedBuffer(bytes), registryAccess(registries), ConnectionType.OTHER));
         return true;
     }
 

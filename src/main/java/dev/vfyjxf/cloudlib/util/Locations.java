@@ -17,7 +17,8 @@ public final class Locations {
         return ResourceKey.createRegistryKey(location);
     }
 
-    public static <T> ResourceKey<T> createKey(ResourceKey<? extends Registry<T>> registryKey, ResourceLocation location) {
+    public static <T> ResourceKey<T> createKey(
+            ResourceKey<? extends Registry<T>> registryKey, ResourceLocation location) {
         return ResourceKey.create(registryKey, location);
     }
 
@@ -41,6 +42,5 @@ public final class Locations {
         return ResourceLocation.fromNamespaceAndPath(Constants.namespace, path);
     }
 
-    private Locations() {
-    }
+    private Locations() {}
 }

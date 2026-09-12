@@ -19,13 +19,9 @@ public abstract class BasicBlockEntity extends BlockEntity {
 
     private static final Logger log = LoggerFactory.getLogger(BasicBlockEntity.class);
 
-    protected static final String UPDATE_TAG = "UpdateTag";
+    protected static final String updateTagKey = "UpdateTag";
 
-    public BasicBlockEntity(
-            BlockEntityType<?> type,
-            BlockPos pos,
-            BlockState blockState
-    ) {
+    public BasicBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState blockState) {
         super(type, pos, blockState);
     }
 
@@ -42,7 +38,7 @@ public abstract class BasicBlockEntity extends BlockEntity {
         CompoundTag updateTag = new CompoundTag();
         CompoundTag compoundTag = new CompoundTag();
         writeUpdateData(compoundTag, registries);
-        updateTag.put(UPDATE_TAG, compoundTag);
+        updateTag.put(updateTagKey, compoundTag);
         return updateTag;
     }
 
@@ -54,15 +50,15 @@ public abstract class BasicBlockEntity extends BlockEntity {
 
     @Override
     protected final void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        //region read update tag
-        if (tag.contains(UPDATE_TAG, Tag.TAG_COMPOUND)) {
-            CompoundTag updateTag = tag.getCompound(UPDATE_TAG);
+        // region read update tag
+        if (tag.contains(updateTagKey, Tag.TAG_COMPOUND)) {
+            CompoundTag updateTag = tag.getCompound(updateTagKey);
             if (readUpdateData(updateTag, registries)) {
                 requestModelDataUpdate();
                 level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 0);
             }
         }
-        //endregion
+        // endregion
         super.loadAdditional(tag, registries);
         loadData(tag, registries);
     }
@@ -70,7 +66,8 @@ public abstract class BasicBlockEntity extends BlockEntity {
     // Optionally: Run some custom logic when the packet is received.
     // The super/default implementation forwards to #loadAdditional.
     @Override
-    public void onDataPacket(Connection connection, ClientboundBlockEntityDataPacket packet, HolderLookup.Provider registries) {
+    public void onDataPacket(
+            Connection connection, ClientboundBlockEntityDataPacket packet, HolderLookup.Provider registries) {
         CompoundTag tag = packet.getTag();
         if (!tag.isEmpty()) {
             readUpdateData(tag, registries);
@@ -79,22 +76,16 @@ public abstract class BasicBlockEntity extends BlockEntity {
         // Do whatever you need to do here.
     }
 
-    public void saveData(CompoundTag tag, HolderLookup.Provider registries) {
+    public void saveData(CompoundTag tag, HolderLookup.Provider registries) {}
 
-    }
-
-    public void loadData(CompoundTag tag, HolderLookup.Provider registries) {
-
-    }
+    public void loadData(CompoundTag tag, HolderLookup.Provider registries) {}
 
     /**
      * Call on {@link BlockEntity#getUpdateTag(HolderLookup.Provider)}
      *
      * @param data The data to write to
      */
-    protected void writeUpdateData(CompoundTag data, HolderLookup.Provider registries) {
-
-    }
+    protected void writeUpdateData(CompoundTag data, HolderLookup.Provider registries) {}
 
     /**
      * @param data The data to read from
@@ -103,5 +94,4 @@ public abstract class BasicBlockEntity extends BlockEntity {
     protected boolean readUpdateData(CompoundTag data, HolderLookup.Provider registries) {
         return false;
     }
-
 }

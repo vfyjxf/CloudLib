@@ -23,6 +23,4 @@ public record SuspendContext(
         boolean anchorAlive,
         boolean screenOpen,
         boolean paused,
-        boolean dimensionChanged
-) {
-}
+        boolean dimensionChanged) {}

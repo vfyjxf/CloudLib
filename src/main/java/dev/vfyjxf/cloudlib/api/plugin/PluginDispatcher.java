@@ -36,7 +36,7 @@ public final class PluginDispatcher<T extends ModPlugin> {
         this.executor = executor;
     }
 
-    //region factory
+    // region factory
 
     public static <T extends ModPlugin> PluginDispatcher<T> create(MutableList<T> sortedPlugins) {
         return create(sortedPlugins, ForkJoinPool.commonPool());
@@ -59,9 +59,9 @@ public final class PluginDispatcher<T extends ModPlugin> {
         return new PluginDispatcher<>(graph.sorted(), graph, executor);
     }
 
-    //endregion
+    // endregion
 
-    //region parallel dispatch
+    // region parallel dispatch
 
     /**
      * Dispatches a single event. Same-level plugins run concurrently.
@@ -113,9 +113,9 @@ public final class PluginDispatcher<T extends ModPlugin> {
         }
     }
 
-    //endregion
+    // endregion
 
-    //region async dispatch
+    // region async dispatch
 
     /**
      * Same-level futures run concurrently, levels are chained.
@@ -142,36 +142,42 @@ public final class PluginDispatcher<T extends ModPlugin> {
         CompletableFuture<Void> chain = CompletableFuture.completedFuture(null);
         for (var level : graph.levels()) {
             var plugins = level.plugins();
-            chain = chain.thenComposeAsync(ignored -> {
-                CompletableFuture<?>[] futures = new CompletableFuture[plugins.size()];
-                plugins.forEachWithIndex((plugin, index) -> futures[index] = asyncEvent.apply(plugin));
-                return CompletableFuture.allOf(futures);
-            }, executor);
+            chain = chain.thenComposeAsync(
+                    ignored -> {
+                        CompletableFuture<?>[] futures = new CompletableFuture[plugins.size()];
+                        plugins.forEachWithIndex((plugin, index) -> futures[index] = asyncEvent.apply(plugin));
+                        return CompletableFuture.allOf(futures);
+                    },
+                    executor);
         }
         return chain;
     }
 
-    //endregion
+    // endregion
 
-    //region logged dispatch
+    // region logged dispatch
 
     public void dispatchLogged(Consumer<T> event, String eventName, Logger logger) throws PluginLoadingException {
         dispatchLogged(event, eventName, logger, DispatchProgress.empty());
     }
 
-    public void dispatchLogged(Consumer<T> event, String eventName, Logger logger, DispatchProgress progress) throws PluginLoadingException {
+    public void dispatchLogged(Consumer<T> event, String eventName, Logger logger, DispatchProgress progress)
+            throws PluginLoadingException {
         Checks.checkNotNull(event, "event");
         Checks.checkNotNull(eventName, "eventName");
 
-        logger.debug("{}: dispatching to {} plugins ({} levels)",
-                eventName, plugins.size(), graph.depth());
+        logger.debug("{}: dispatching to {} plugins ({} levels)", eventName, plugins.size(), graph.depth());
 
         progress.begin(plugins.size());
         var completed = new AtomicInteger(0);
         int total = plugins.size();
 
         for (var level : graph.levels()) {
-            logger.debug("{}: level {} ({} plugins)", eventName, level.depth(), level.plugins().size());
+            logger.debug(
+                    "{}: level {} ({} plugins)",
+                    eventName,
+                    level.depth(),
+                    level.plugins().size());
             dispatchLevel(level, event, progress, completed, total);
         }
 
@@ -179,9 +185,9 @@ public final class PluginDispatcher<T extends ModPlugin> {
         logger.debug("{}: dispatch completed", eventName);
     }
 
-    //endregion
+    // endregion
 
-    //region task queue
+    // region task queue
 
     public DispatchQueue<T> createQueue() {
         return new DispatchQueue<>(this, executor);
@@ -192,9 +198,9 @@ public final class PluginDispatcher<T extends ModPlugin> {
         return new DispatchQueue<>(this, queueExecutor);
     }
 
-    //endregion
+    // endregion
 
-    //region accessors
+    // region accessors
 
     public ImmutableList<T> plugins() {
         return plugins;
@@ -204,17 +210,17 @@ public final class PluginDispatcher<T extends ModPlugin> {
         return graph;
     }
 
-    //endregion
+    // endregion
 
-    //region internal
+    // region internal
 
     private void dispatchLevel(
             DependencyGraph.LoadingLevel<T> level,
             Consumer<T> event,
             DispatchProgress progress,
             AtomicInteger completed,
-            int total
-    ) throws PluginLoadingException {
+            int total)
+            throws PluginLoadingException {
         var plugins = level.plugins();
 
         if (plugins.size() == 1) {
@@ -224,8 +230,7 @@ public final class PluginDispatcher<T extends ModPlugin> {
                 progress.advance(plugin.pluginId(), completed.incrementAndGet(), total);
             } catch (Exception e) {
                 throw new PluginLoadingException(
-                        MutableLists.of(new PluginLoadingException.Failure(plugin.pluginId(), e))
-                );
+                        MutableLists.of(new PluginLoadingException.Failure(plugin.pluginId(), e)));
             }
             return;
         }
@@ -234,16 +239,18 @@ public final class PluginDispatcher<T extends ModPlugin> {
         CompletableFuture<?>[] futures = new CompletableFuture[plugins.size()];
         for (int index = 0; index < plugins.size(); index++) {
             T plugin = plugins.get(index);
-            futures[index] = CompletableFuture.runAsync(() -> {
-                try {
-                    event.accept(plugin);
-                    progress.advance(plugin.pluginId(), completed.incrementAndGet(), total);
-                } catch (Exception e) {
-                    synchronized (failures) {
-                        failures.add(new PluginLoadingException.Failure(plugin.pluginId(), e));
-                    }
-                }
-            }, executor);
+            futures[index] = CompletableFuture.runAsync(
+                    () -> {
+                        try {
+                            event.accept(plugin);
+                            progress.advance(plugin.pluginId(), completed.incrementAndGet(), total);
+                        } catch (Exception e) {
+                            synchronized (failures) {
+                                failures.add(new PluginLoadingException.Failure(plugin.pluginId(), e));
+                            }
+                        }
+                    },
+                    executor);
         }
 
         CompletableFuture.allOf(futures).join();
@@ -253,6 +260,6 @@ public final class PluginDispatcher<T extends ModPlugin> {
         }
     }
 
-    //endregion
+    // endregion
 
 }

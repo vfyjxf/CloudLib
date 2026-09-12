@@ -18,22 +18,22 @@ import java.util.Objects;
  */
 public record GridColumnProperty(GridPlacement start, GridPlacement end) implements LayoutProperty {
 
-    //region types
+    // region types
 
     public static final StyleType<GridColumnProperty> type = StyleType.of("grid-column", () -> null);
 
-    //endregion
+    // endregion
 
-    //region constructors
+    // region constructors
 
     public GridColumnProperty {
         Objects.requireNonNull(start, "start");
         Objects.requireNonNull(end, "end");
     }
 
-    //endregion
+    // endregion
 
-    //region factory methods
+    // region factory methods
 
     /**
      * Creates a grid column property that spans a number of columns.
@@ -70,9 +70,9 @@ public record GridColumnProperty(GridPlacement start, GridPlacement end) impleme
         return new GridColumnProperty(GridPlacement.line(line), GridPlacement.span(span));
     }
 
-    //endregion
+    // endregion
 
-    //region LayoutProperty implementation
+    // region LayoutProperty implementation
 
     @Override
     public StyleType<?> type() {
@@ -84,7 +84,7 @@ public record GridColumnProperty(GridPlacement start, GridPlacement end) impleme
         style.gridColumn = new TaffyLine<>(start, end);
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String toString() {

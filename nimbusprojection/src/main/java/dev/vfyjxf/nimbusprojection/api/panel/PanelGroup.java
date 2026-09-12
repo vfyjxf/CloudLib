@@ -23,8 +23,8 @@ import java.util.List;
  *       multi-block-structure case.</li>
  * </ul>
  * Engagement is primary-first: the container affordance opens the
- * {@link GroupRole#PRIMARY} member; {@link GroupRole#SECONDARY} members
- * expand afterwards, {@link GroupRole#AMBIENT} members are always on.
+ * {@link GroupRole#primary} member; {@link GroupRole#secondary} members
+ * expand afterwards, {@link GroupRole#ambient} members are always on.
  */
 public final class PanelGroup {
 
@@ -34,8 +34,7 @@ public final class PanelGroup {
      * @param spec the member panel
      * @param role its claimed role — see {@link GroupRole}
      */
-    public record Member(PanelSpec spec, GroupRole role) {
-    }
+    public record Member(PanelSpec spec, GroupRole role) {}
 
     private final PanelKey key;
     private final InworldAnchor anchor;
@@ -74,5 +73,4 @@ public final class PanelGroup {
     public PanelGroup member(PanelSpec spec) {
         return member(spec, spec.groupRole());
     }
-
 }

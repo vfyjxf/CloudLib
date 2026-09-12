@@ -44,7 +44,8 @@ public final class AnnotationPluginLookup<T extends ModPlugin> implements Plugin
     /**
      * Creates a lookup that scans for a custom annotation.
      */
-    public static <T extends ModPlugin> AnnotationPluginLookup<T> of(Class<T> pluginClass, Class<? extends Annotation> annotation) {
+    public static <T extends ModPlugin> AnnotationPluginLookup<T> of(
+            Class<T> pluginClass, Class<? extends Annotation> annotation) {
         Checks.checkNotNull(pluginClass, "pluginClass");
         Checks.checkNotNull(annotation, "annotation");
         return new AnnotationPluginLookup<>(pluginClass, annotation);
@@ -54,24 +55,23 @@ public final class AnnotationPluginLookup<T extends ModPlugin> implements Plugin
     public Collection<T> findPlugins() {
         List<T> result = new ArrayList<>();
         for (ModFileScanData scanData : ModList.get().getAllScanData()) {
-            scanData.getAnnotatedBy(annotation, ElementType.TYPE)
-                    .forEach(annotationData -> {
-                        String className = annotationData.memberName();
-                        try {
-                            Class<?> clazz = Class.forName(className);
-                            if (pluginClass.isAssignableFrom(clazz)) {
-                                @SuppressWarnings("unchecked")
-                                T instance = (T) clazz.getConstructor().newInstance();
-                                result.add(instance);
-                            }
-                        } catch (ClassNotFoundException e) {
-                            logger.error("Plugin class not found: {}", className, e);
-                        } catch (NoSuchMethodException e) {
-                            logger.error("Plugin class {} must have a public no-arg constructor", className, e);
-                        } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
-                            logger.error("Failed to instantiate plugin: {}", className, e);
-                        }
-                    });
+            scanData.getAnnotatedBy(annotation, ElementType.TYPE).forEach(annotationData -> {
+                String className = annotationData.memberName();
+                try {
+                    Class<?> clazz = Class.forName(className);
+                    if (pluginClass.isAssignableFrom(clazz)) {
+                        @SuppressWarnings("unchecked")
+                        T instance = (T) clazz.getConstructor().newInstance();
+                        result.add(instance);
+                    }
+                } catch (ClassNotFoundException e) {
+                    logger.error("Plugin class not found: {}", className, e);
+                } catch (NoSuchMethodException e) {
+                    logger.error("Plugin class {} must have a public no-arg constructor", className, e);
+                } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+                    logger.error("Failed to instantiate plugin: {}", className, e);
+                }
+            });
         }
         return result;
     }

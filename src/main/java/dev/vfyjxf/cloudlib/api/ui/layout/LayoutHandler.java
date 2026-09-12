@@ -26,7 +26,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 @FunctionalInterface
 public interface LayoutHandler {
 
-    //region core
+    // region core
 
     /**
      * Resolves this widget's layout by writing position and/or size into the scope.
@@ -39,9 +39,9 @@ public interface LayoutHandler {
      */
     void layout(Widget widget, LayoutScope scope);
 
-    //endregion
+    // endregion
 
-    //region composition
+    // region composition
 
     /**
      * Creates a handler that runs {@code this} first, then {@code after}.
@@ -56,9 +56,9 @@ public interface LayoutHandler {
         };
     }
 
-    //endregion
+    // endregion
 
-    //region built-in handlers
+    // region built-in handlers
 
     /**
      * A handler that applies the taffy result and then offsets the position.
@@ -106,5 +106,5 @@ public interface LayoutHandler {
         return (widget, scope) -> scope.useTaffy().setSize(width, height);
     }
 
-    //endregion
+    // endregion
 }

@@ -17,7 +17,7 @@ import java.util.Objects;
  * <p>
  * The inset types supported by taffy include:
  * <ul>
- *   <li>{@link LengthPercentageAuto#AUTO} - automatic positioning</li>
+ *   <li>{@link LengthPercentageAuto#auto} - automatic positioning</li>
  *   <li>{@link LengthPercentageAuto#length(float)} - fixed pixel offset</li>
  *   <li>{@link LengthPercentageAuto#percent(float)} - percentage of parent (0.0 to 1.0)</li>
  * </ul>
@@ -32,10 +32,14 @@ import java.util.Objects;
  */
 public record PositionEdgeProperty(Edge edge, LengthPercentageAuto length) implements LayoutProperty {
 
-    public static final StyleType<LengthPercentageAuto> top = StyleType.of("inset-top", () -> LengthPercentageAuto.AUTO);
-    public static final StyleType<LengthPercentageAuto> right = StyleType.of("inset-right", () -> LengthPercentageAuto.AUTO);
-    public static final StyleType<LengthPercentageAuto> bottom = StyleType.of("inset-bottom", () -> LengthPercentageAuto.AUTO);
-    public static final StyleType<LengthPercentageAuto> left = StyleType.of("inset-left", () -> LengthPercentageAuto.AUTO);
+    public static final StyleType<LengthPercentageAuto> top =
+            StyleType.of("inset-top", () -> LengthPercentageAuto.AUTO);
+    public static final StyleType<LengthPercentageAuto> right =
+            StyleType.of("inset-right", () -> LengthPercentageAuto.AUTO);
+    public static final StyleType<LengthPercentageAuto> bottom =
+            StyleType.of("inset-bottom", () -> LengthPercentageAuto.AUTO);
+    public static final StyleType<LengthPercentageAuto> left =
+            StyleType.of("inset-left", () -> LengthPercentageAuto.AUTO);
 
     public PositionEdgeProperty(Edge edge, LengthPercentageAuto length) {
         this.edge = Objects.requireNonNull(edge, "edge");
@@ -52,28 +56,28 @@ public record PositionEdgeProperty(Edge edge, LengthPercentageAuto length) imple
      * Creates a position property for the top edge with a pixel value.
      */
     public static PositionEdgeProperty top(float value) {
-        return new PositionEdgeProperty(Edge.TOP, value);
+        return new PositionEdgeProperty(Edge.top, value);
     }
 
     /**
      * Creates a position property for the top edge.
      */
     public static PositionEdgeProperty top(LengthPercentageAuto value) {
-        return new PositionEdgeProperty(Edge.TOP, value);
+        return new PositionEdgeProperty(Edge.top, value);
     }
 
     /**
      * Creates a position property for the top edge with a percentage value.
      */
     public static PositionEdgeProperty topPercent(float percent) {
-        return new PositionEdgeProperty(Edge.TOP, LengthPercentageAuto.percent(percent));
+        return new PositionEdgeProperty(Edge.top, LengthPercentageAuto.percent(percent));
     }
 
     /**
      * Creates a position property for the top edge with auto value.
      */
     public static PositionEdgeProperty topAuto() {
-        return new PositionEdgeProperty(Edge.TOP, LengthPercentageAuto.AUTO);
+        return new PositionEdgeProperty(Edge.top, LengthPercentageAuto.AUTO);
     }
 
     // ========== Static factory methods for right edge ==========
@@ -82,28 +86,28 @@ public record PositionEdgeProperty(Edge edge, LengthPercentageAuto length) imple
      * Creates a position property for the right edge with a pixel value.
      */
     public static PositionEdgeProperty right(float value) {
-        return new PositionEdgeProperty(Edge.RIGHT, value);
+        return new PositionEdgeProperty(Edge.right, value);
     }
 
     /**
      * Creates a position property for the right edge.
      */
     public static PositionEdgeProperty right(LengthPercentageAuto value) {
-        return new PositionEdgeProperty(Edge.RIGHT, value);
+        return new PositionEdgeProperty(Edge.right, value);
     }
 
     /**
      * Creates a position property for the right edge with a percentage value.
      */
     public static PositionEdgeProperty rightPercent(float percent) {
-        return new PositionEdgeProperty(Edge.RIGHT, LengthPercentageAuto.percent(percent));
+        return new PositionEdgeProperty(Edge.right, LengthPercentageAuto.percent(percent));
     }
 
     /**
      * Creates a position property for the right edge with auto value.
      */
     public static PositionEdgeProperty rightAuto() {
-        return new PositionEdgeProperty(Edge.RIGHT, LengthPercentageAuto.AUTO);
+        return new PositionEdgeProperty(Edge.right, LengthPercentageAuto.AUTO);
     }
 
     // ========== Static factory methods for bottom edge ==========
@@ -112,28 +116,28 @@ public record PositionEdgeProperty(Edge edge, LengthPercentageAuto length) imple
      * Creates a position property for the bottom edge with a pixel value.
      */
     public static PositionEdgeProperty bottom(float value) {
-        return new PositionEdgeProperty(Edge.BOTTOM, value);
+        return new PositionEdgeProperty(Edge.bottom, value);
     }
 
     /**
      * Creates a position property for the bottom edge.
      */
     public static PositionEdgeProperty bottom(LengthPercentageAuto value) {
-        return new PositionEdgeProperty(Edge.BOTTOM, value);
+        return new PositionEdgeProperty(Edge.bottom, value);
     }
 
     /**
      * Creates a position property for the bottom edge with a percentage value.
      */
     public static PositionEdgeProperty bottomPercent(float percent) {
-        return new PositionEdgeProperty(Edge.BOTTOM, LengthPercentageAuto.percent(percent));
+        return new PositionEdgeProperty(Edge.bottom, LengthPercentageAuto.percent(percent));
     }
 
     /**
      * Creates a position property for the bottom edge with auto value.
      */
     public static PositionEdgeProperty bottomAuto() {
-        return new PositionEdgeProperty(Edge.BOTTOM, LengthPercentageAuto.AUTO);
+        return new PositionEdgeProperty(Edge.bottom, LengthPercentageAuto.AUTO);
     }
 
     // ========== Static factory methods for left edge ==========
@@ -142,28 +146,28 @@ public record PositionEdgeProperty(Edge edge, LengthPercentageAuto length) imple
      * Creates a position property for the left edge with a pixel value.
      */
     public static PositionEdgeProperty left(float value) {
-        return new PositionEdgeProperty(Edge.LEFT, value);
+        return new PositionEdgeProperty(Edge.left, value);
     }
 
     /**
      * Creates a position property for the left edge.
      */
     public static PositionEdgeProperty left(LengthPercentageAuto value) {
-        return new PositionEdgeProperty(Edge.LEFT, value);
+        return new PositionEdgeProperty(Edge.left, value);
     }
 
     /**
      * Creates a position property for the left edge with a percentage value.
      */
     public static PositionEdgeProperty leftPercent(float percent) {
-        return new PositionEdgeProperty(Edge.LEFT, LengthPercentageAuto.percent(percent));
+        return new PositionEdgeProperty(Edge.left, LengthPercentageAuto.percent(percent));
     }
 
     /**
      * Creates a position property for the left edge with auto value.
      */
     public static PositionEdgeProperty leftAuto() {
-        return new PositionEdgeProperty(Edge.LEFT, LengthPercentageAuto.AUTO);
+        return new PositionEdgeProperty(Edge.left, LengthPercentageAuto.AUTO);
     }
 
     @Override
@@ -178,10 +182,10 @@ public record PositionEdgeProperty(Edge edge, LengthPercentageAuto length) imple
     @Override
     public StyleType<?> type() {
         return switch (edge) {
-            case TOP -> top;
-            case RIGHT -> right;
-            case BOTTOM -> bottom;
-            case LEFT -> left;
+            case top -> top;
+            case right -> right;
+            case bottom -> bottom;
+            case left -> left;
         };
     }
 

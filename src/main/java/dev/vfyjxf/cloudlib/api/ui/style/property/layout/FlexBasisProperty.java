@@ -14,7 +14,7 @@ import java.util.Objects;
  * <p>
  * The dimension types supported by taffy include:
  * <ul>
- *   <li>{@link TaffyDimension#AUTO} - automatic sizing based on content</li>
+ *   <li>{@link TaffyDimension#auto} - automatic sizing based on content</li>
  *   <li>{@link TaffyDimension#length(float)} - fixed pixel length</li>
  *   <li>{@link TaffyDimension#percent(float)} - percentage of parent (0.0 to 1.0)</li>
  *   <li>{@link TaffyDimension#minContent()} - minimum content size</li>
@@ -27,13 +27,13 @@ import java.util.Objects;
  */
 public record FlexBasisProperty(TaffyDimension flexBasis) implements LayoutProperty {
 
-    //region types
+    // region types
 
     public static final StyleType<TaffyDimension> type = StyleType.of("flex-basis", () -> TaffyDimension.AUTO);
 
-    //endregion
+    // endregion
 
-    //region constructors
+    // region constructors
 
     public FlexBasisProperty(TaffyDimension flexBasis) {
         this.flexBasis = Objects.requireNonNull(flexBasis, "flexBasis");
@@ -46,9 +46,9 @@ public record FlexBasisProperty(TaffyDimension flexBasis) implements LayoutPrope
         this(TaffyDimension.length(value));
     }
 
-    //endregion
+    // endregion
 
-    //region factory methods
+    // region factory methods
 
     /**
      * Creates a flex basis property with auto value.
@@ -99,9 +99,9 @@ public record FlexBasisProperty(TaffyDimension flexBasis) implements LayoutPrope
         return new FlexBasisProperty(TaffyDimension.length(0));
     }
 
-    //endregion
+    // endregion
 
-    //region LayoutProperty implementation
+    // region LayoutProperty implementation
 
     @Override
     public StyleType<?> type() {
@@ -113,11 +113,10 @@ public record FlexBasisProperty(TaffyDimension flexBasis) implements LayoutPrope
         style.flexBasis = flexBasis;
     }
 
-    //endregion
+    // endregion
 
     @Override
     public String toString() {
         return flexBasis.toString();
     }
-
 }

@@ -15,81 +15,52 @@ import java.util.function.Consumer;
  */
 public non-sealed interface Expose<T> extends ExposeCommon {
 
-    //region factory
+    // region factory
 
     static <T> Expose<T> create(
-            String name, short id,
-            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-            UnaryFlowHandler<T> exposeCodec
-    ) {
-        return new StandardExpose<>(
-                name,
-                id,
-                snapshot,
-                valueSupplier,
-                exposeCodec,
-                exposeCodec
-        );
+            String name,
+            short id,
+            Snapshot<T> snapshot,
+            ValueSupplier<T> valueSupplier,
+            UnaryFlowHandler<T> exposeCodec) {
+        return new StandardExpose<>(name, id, snapshot, valueSupplier, exposeCodec, exposeCodec);
     }
 
     static <T> Expose<T> create(
-            String name, short id,
-            Snapshot<T> snapshot, ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder, FlowDecoder<T> decoder
-    ) {
-        return new StandardExpose<>(
-                name,
-                id,
-                snapshot,
-                valueSupplier,
-                encoder,
-                decoder
-        );
+            String name,
+            short id,
+            Snapshot<T> snapshot,
+            ValueSupplier<T> valueSupplier,
+            FlowEncoder<T> encoder,
+            FlowDecoder<T> decoder) {
+        return new StandardExpose<>(name, id, snapshot, valueSupplier, encoder, decoder);
     }
 
-    //endregion
+    // endregion
 
-    //region handle factory
+    // region handle factory
 
     /**
      * Create an Expose backed by a {@link Handle}. The handle's dirty flag drives change detection
      * (via the internal {@code HandleSnapshot} adapter), and {@code handle::get} is the value supplier.
      * This is the push-based replacement for the snapshot/polling entry points above.
      */
-    static <T> Expose<T> create(
-            String name, short id,
-            Handle<T> handle, UnaryFlowHandler<T> exposeCodec
-    ) {
+    static <T> Expose<T> create(String name, short id, Handle<T> handle, UnaryFlowHandler<T> exposeCodec) {
         return new StandardExpose<>(
-                name,
-                id,
-                Snapshot.HandleSnapshot.of(handle),
-                handle::get,
-                exposeCodec,
-                exposeCodec
-        );
+                name, id, Snapshot.HandleSnapshot.of(handle), handle::get, exposeCodec, exposeCodec);
     }
 
     /**
      * Create an Expose backed by a {@link Handle}. See {@link #create(String, short, Handle, UnaryFlowHandler)}.
      */
     static <T> Expose<T> create(
-            String name, short id,
-            Handle<T> handle, FlowEncoder<T> encoder, FlowDecoder<T> decoder
-    ) {
-        return new StandardExpose<>(
-                name,
-                id,
-                Snapshot.HandleSnapshot.of(handle),
-                handle::get,
-                encoder,
-                decoder
-        );
+            String name, short id, Handle<T> handle, FlowEncoder<T> encoder, FlowDecoder<T> decoder) {
+        return new StandardExpose<>(name, id, Snapshot.HandleSnapshot.of(handle), handle::get, encoder, decoder);
     }
 
-    //endregion
+    // endregion
 
-    //region identity and debug info
+    // region identity and debug info
 
     /**
      * @return the debug name of this value
@@ -105,16 +76,15 @@ public non-sealed interface Expose<T> extends ExposeCommon {
     @Override
     short id();
 
-    //endregion
+    // endregion
 
-    //region snapshot
+    // region snapshot
 
     /**
      * @return the snapshot of this expose
      */
     @Contract(pure = true)
     Snapshot<T> snapshot();
-
 
     /**
      * @return the previous value of this Expose
@@ -132,7 +102,9 @@ public non-sealed interface Expose<T> extends ExposeCommon {
             case changed -> true;
             case illegal -> {
                 boolean readonly = snapshot instanceof Snapshot.Readonly;
-                throw new IllegalStateException("Illegally modifity a " + (readonly ? "readonly" : "immutable reference") + " snapshot(id:" + id() + " name:" + name() + ")");
+                throw new IllegalStateException(
+                        "Illegally modifity a " + (readonly ? "readonly" : "immutable reference") + " snapshot(id:"
+                                + id() + " name:" + name() + ")");
             }
         };
     }
@@ -143,9 +115,9 @@ public non-sealed interface Expose<T> extends ExposeCommon {
     @Contract(pure = true)
     T current();
 
-    //endregion
+    // endregion
 
-    //region client usage
+    // region client usage
 
     /**
      * register a consumer to be called when the value is received from the server.
@@ -154,6 +126,5 @@ public non-sealed interface Expose<T> extends ExposeCommon {
      */
     void whenReceive(Consumer<T> consumer);
 
-
-    //endregion
+    // endregion
 }

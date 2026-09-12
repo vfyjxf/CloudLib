@@ -3,12 +3,12 @@ package dev.vfyjxf.cloudlib.api.ui.effect;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.floating.FloatingEffect;
 import dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddleware;
+import dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares;
 import dev.vfyjxf.cloudlib.api.ui.floating.FloatingPlacement;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollDirection;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollEffect;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollState;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
-import dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares;
 
 /**
  * Static DSL entry point for creating {@link Effect} instances.
@@ -18,7 +18,7 @@ import dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares;
  * import static dev.vfyjxf.cloudlib.api.ui.effect.UIEffects.*;
  *
  * widget.useEffect(autoFocus());
- * widget.useEffect(scrollable(ScrollDirection.VERTICAL));
+ * widget.useEffect(scrollable(ScrollDirection.vertical));
  * }</pre>
  */
 public final class UIEffects {
@@ -40,12 +40,10 @@ public final class UIEffects {
      * Automatically requests focus for the widget after mounting.
      */
     public static Effect autoFocus() {
-        return widget -> widget.onMount(
-                (scene, context, handle) -> scene.postRender(() -> scene.requestFocus(widget))
-        );
+        return widget -> widget.onMount((scene, context, handle) -> scene.postRender(() -> scene.requestFocus(widget)));
     }
 
-    //region scroll
+    // region scroll
 
     /**
      * Creates a scroll effect with the given scroll state.
@@ -55,7 +53,7 @@ public final class UIEffects {
      * the scroll position. Content size is auto-computed from children bounds by default.
      *
      * <pre>{@code
-     * ScrollState state = ScrollState.create(ScrollDirection.VERTICAL)
+     * ScrollState state = ScrollState.create(ScrollDirection.vertical)
      *     .scrollSpeed(12)
      *     .smooth(true)
      *     .smoothSpeed(0.3f)
@@ -110,9 +108,9 @@ public final class UIEffects {
         return ScrollEffect.horizontal();
     }
 
-    //endregion
+    // endregion
 
-    //region floating
+    // region floating
 
     /**
      * Creates a floating effect that positions the target widget relative to a reference widget.
@@ -140,7 +138,8 @@ public final class UIEffects {
      * @see FloatingEffect
      * @see FloatingMiddlewares
      */
-    public static FloatingEffect floating(Widget reference, FloatingPlacement placement, FloatingMiddleware... middleware) {
+    public static FloatingEffect floating(
+            Widget reference, FloatingPlacement placement, FloatingMiddleware... middleware) {
         return FloatingEffect.create(reference, placement, middleware);
     }
 
@@ -155,5 +154,5 @@ public final class UIEffects {
         return FloatingEffect.create(reference, FloatingPlacement.bottom, middleware);
     }
 
-    //endregion
+    // endregion
 }

@@ -26,8 +26,7 @@ public final class TicUnits {
             UnitRule.fixedBridge(ItemUnits.nugget, FluidUnits.millibucket, Ratio.of(10)),
             UnitRule.fixedBridge(ItemUnits.ingot, FluidUnits.millibucket, Ratio.of(90)),
             UnitRule.fixedBridge(ItemUnits.block, FluidUnits.millibucket, Ratio.of(810)),
-            UnitRule.fixedBridge(ItemUnits.gem, FluidUnits.millibucket, Ratio.of(100))
-    );
+            UnitRule.fixedBridge(ItemUnits.gem, FluidUnits.millibucket, Ratio.of(100)));
 
     /**
      * Unmodifiable {@link List} view of {@link #rules}, for consumers working with
@@ -43,6 +42,5 @@ public final class TicUnits {
         return UnitPack.of(rules);
     }
 
-    private TicUnits() {
-    }
+    private TicUnits() {}
 }

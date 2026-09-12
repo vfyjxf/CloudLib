@@ -13,15 +13,15 @@ import net.minecraft.network.chat.Component;
  */
 public class TextWidget extends Widget {
 
-    //region state
+    // region state
 
     private Component text;
     private int color = 0xFFFFFF;
     private boolean shadow = false;
 
-    //endregion
+    // endregion
 
-    //region factory
+    // region factory
 
     public static TextWidget of(Component text) {
         return new TextWidget(text);
@@ -49,9 +49,9 @@ public class TextWidget extends Widget {
         });
     }
 
-    //endregion
+    // endregion
 
-    //region configuration
+    // region configuration
 
     public Component text() {
         return text;
@@ -59,7 +59,7 @@ public class TextWidget extends Widget {
 
     public TextWidget setText(Component text) {
         this.text = text;
-        //re-measure: the measure func reads this.text, so the node must be dirty
+        // re-measure: the measure func reads this.text, so the node must be dirty
         if (lifecycle().mounted()) {
             scene().layoutTree().markDirty(nodeId());
         }
@@ -92,18 +92,18 @@ public class TextWidget extends Widget {
         return this;
     }
 
-    //endregion
+    // endregion
 
-    //region rendering
+    // region rendering
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         canvas.text(text, 0, 0, color, shadow);
     }
 
-    //endregion
+    // endregion
 
-    //region inspection
+    // region inspection
 
     @Override
     public void collectInspectionInfo(InspectionInfoCollector collector) {
@@ -113,9 +113,10 @@ public class TextWidget extends Widget {
             content = content.substring(0, 27) + "...";
         }
         collector.add("text", content, InspectionProperty.categoryData);
-        collector.addFormatted("color", String.format("#%06X", color & 0xFFFFFF), "#FFFFFF", InspectionProperty.categoryVisual);
+        collector.addFormatted(
+                "color", String.format("#%06X", color & 0xFFFFFF), "#FFFFFF", InspectionProperty.categoryVisual);
         collector.addWithDefault("shadow", shadow, false, InspectionProperty.categoryVisual);
     }
 
-    //endregion
+    // endregion
 }

@@ -29,7 +29,7 @@ public interface Presentation {
     /** The presentation type id a runtime driver registers against. */
     ResourceLocation type();
 
-    //region factories
+    // region factories
 
     /**
      * Panel is attached flat onto a block face, rendered in world space
@@ -66,9 +66,7 @@ public interface Presentation {
                         FloatingMiddlewares.offset(14),
                         FloatingMiddlewares.flip(),
                         FloatingMiddlewares.shift(4),
-                        FloatingMiddlewares.hide()
-                )
-        );
+                        FloatingMiddlewares.hide()));
     }
 
     /**
@@ -96,7 +94,7 @@ public interface Presentation {
 
     /** Dock that auto-picks the screen quadrant nearest the projected anchor. */
     static Dock dock() {
-        return new Dock(DockCorner.AUTO);
+        return new Dock(DockCorner.auto);
     }
 
     /**
@@ -125,7 +123,7 @@ public interface Presentation {
         return new InspectOnly(true);
     }
 
-    //endregion
+    // endregion
 
     /**
      * A panel drawn in world space onto a block face.
@@ -138,7 +136,7 @@ public interface Presentation {
     record Face(Direction face, double u, double v, double pixelsPerBlock) implements Presentation {
         @Override
         public ResourceLocation type() {
-            return Builtin.FACE;
+            return Builtin.face;
         }
     }
 
@@ -146,11 +144,10 @@ public interface Presentation {
      * A screen-space panel placed relative to the anchor's projected position
      * through the floating middleware pipeline.
      */
-    record Floating(FloatingPlacement placement,
-                    List<FloatingMiddleware> middlewares) implements Presentation {
+    record Floating(FloatingPlacement placement, List<FloatingMiddleware> middlewares) implements Presentation {
         @Override
         public ResourceLocation type() {
-            return Builtin.FLOATING;
+            return Builtin.floating;
         }
     }
 
@@ -161,19 +158,19 @@ public interface Presentation {
     record Follow(double offsetX, double offsetY) implements Presentation {
         @Override
         public ResourceLocation type() {
-            return Builtin.FOLLOW;
+            return Builtin.follow;
         }
     }
 
     /**
-     * A screen-space panel docked into a fixed screen corner. {@link DockCorner#AUTO}
+     * A screen-space panel docked into a fixed screen corner. {@link DockCorner#auto}
      * picks the corner on the same side as the anchor's projection; multiple
      * panels in one corner stack vertically in offer order.
      */
     record Dock(DockCorner corner) implements Presentation {
         @Override
         public ResourceLocation type() {
-            return Builtin.DOCK;
+            return Builtin.dock;
         }
     }
 
@@ -185,7 +182,7 @@ public interface Presentation {
     record Expand(double pixelsPerBlock) implements Presentation {
         @Override
         public ResourceLocation type() {
-            return Builtin.EXPAND;
+            return Builtin.expand;
         }
     }
 
@@ -197,30 +194,30 @@ public interface Presentation {
     record InspectOnly(boolean affordance) implements Presentation {
         @Override
         public ResourceLocation type() {
-            return Builtin.INSPECT_ONLY;
+            return Builtin.inspectOnly;
         }
     }
 
     /** Which screen corner a {@link Dock} panel pins to. */
     enum DockCorner {
-        TOP_LEFT,
-        TOP_RIGHT,
-        BOTTOM_LEFT,
-        BOTTOM_RIGHT,
+        topLeft,
+        topRight,
+        bottomLeft,
+        bottomRight,
         /** Pick the quadrant the anchor projects into (falls back when off-screen). */
-        AUTO
+        auto
     }
 
     /** Type ids of the built-in descriptors. */
     final class Builtin {
-        public static final ResourceLocation FACE = ResourceLocation.fromNamespaceAndPath("cloudlib", "face");
-        public static final ResourceLocation FLOATING = ResourceLocation.fromNamespaceAndPath("cloudlib", "floating");
-        public static final ResourceLocation FOLLOW = ResourceLocation.fromNamespaceAndPath("cloudlib", "follow");
-        public static final ResourceLocation DOCK = ResourceLocation.fromNamespaceAndPath("cloudlib", "dock");
-        public static final ResourceLocation EXPAND = ResourceLocation.fromNamespaceAndPath("cloudlib", "expand");
-        public static final ResourceLocation INSPECT_ONLY = ResourceLocation.fromNamespaceAndPath("cloudlib", "inspect_only");
+        public static final ResourceLocation face = ResourceLocation.fromNamespaceAndPath("cloudlib", "face");
+        public static final ResourceLocation floating = ResourceLocation.fromNamespaceAndPath("cloudlib", "floating");
+        public static final ResourceLocation follow = ResourceLocation.fromNamespaceAndPath("cloudlib", "follow");
+        public static final ResourceLocation dock = ResourceLocation.fromNamespaceAndPath("cloudlib", "dock");
+        public static final ResourceLocation expand = ResourceLocation.fromNamespaceAndPath("cloudlib", "expand");
+        public static final ResourceLocation inspectOnly =
+                ResourceLocation.fromNamespaceAndPath("cloudlib", "inspect_only");
 
-        private Builtin() {
-        }
+        private Builtin() {}
     }
 }

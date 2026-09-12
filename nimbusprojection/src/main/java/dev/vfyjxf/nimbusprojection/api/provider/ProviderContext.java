@@ -13,13 +13,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * The client context handed to {@link PanelProvider}s on each evaluation pass.
  */
-public record ProviderContext(
-        ClientLevel level,
-        LocalPlayer player,
-        Camera camera,
-        Projection projection,
-        long tick
-) {
+public record ProviderContext(ClientLevel level, LocalPlayer player, Camera camera, Projection projection, long tick) {
 
     /**
      * The block the crosshair currently rests on, i.e. the result of the
@@ -42,5 +36,4 @@ public record ProviderContext(
     public double distanceTo(Vec3 pos) {
         return camera.getPosition().distanceTo(pos);
     }
-
 }

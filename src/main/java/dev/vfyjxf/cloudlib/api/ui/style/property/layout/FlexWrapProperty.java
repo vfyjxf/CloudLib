@@ -55,5 +55,4 @@ public record FlexWrapProperty(FlexWrap wrap) implements LayoutProperty {
     public String toString() {
         return wrap.name().toLowerCase().replace("_", "-");
     }
-
 }

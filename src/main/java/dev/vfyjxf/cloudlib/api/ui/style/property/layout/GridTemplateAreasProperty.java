@@ -45,5 +45,4 @@ public record GridTemplateAreasProperty(List<GridTemplateArea> areas) implements
     public String toString() {
         return areas.toString();
     }
-
 }

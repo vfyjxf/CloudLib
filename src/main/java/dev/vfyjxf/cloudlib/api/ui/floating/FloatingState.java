@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public final class FloatingState {
 
-    //region coordinates
+    // region coordinates
 
     /**
      * Current x-coordinate for the floating element (scene-space).
@@ -27,9 +27,9 @@ public final class FloatingState {
      */
     private double y;
 
-    //endregion
+    // endregion
 
-    //region placement
+    // region placement
 
     /**
      * The initial (preferred) placement passed by the caller.
@@ -42,9 +42,9 @@ public final class FloatingState {
      */
     private FloatingPlacement placement;
 
-    //endregion
+    // endregion
 
-    //region rects
+    // region rects
 
     /**
      * Bounding rect of the reference element (scene-space).
@@ -61,18 +61,18 @@ public final class FloatingState {
      */
     private Rect boundary;
 
-    //endregion
+    // endregion
 
-    //region middleware data
+    // region middleware data
 
     /**
      * Per-middleware named data storage. Keyed by middleware name.
      */
     private final Map<String, Map<String, Object>> middlewareData = new HashMap<>();
 
-    //endregion
+    // endregion
 
-    //region constructor
+    // region constructor
 
     public FloatingState(
             double x,
@@ -81,8 +81,7 @@ public final class FloatingState {
             FloatingPlacement placement,
             Rect referenceRect,
             Rect floatingRect,
-            Rect boundary
-    ) {
+            Rect boundary) {
         this.x = x;
         this.y = y;
         this.initialPlacement = initialPlacement;
@@ -92,9 +91,9 @@ public final class FloatingState {
         this.boundary = boundary;
     }
 
-    //endregion
+    // endregion
 
-    //region getters
+    // region getters
 
     public double x() {
         return x;
@@ -124,9 +123,9 @@ public final class FloatingState {
         return boundary;
     }
 
-    //endregion
+    // endregion
 
-    //region setters
+    // region setters
 
     public void setX(double x) {
         this.x = x;
@@ -148,9 +147,9 @@ public final class FloatingState {
         this.floatingRect = floatingRect;
     }
 
-    //endregion
+    // endregion
 
-    //region middleware data access
+    // region middleware data access
 
     /**
      * Stores a value in the named middleware data.
@@ -184,9 +183,9 @@ public final class FloatingState {
         return middlewareData;
     }
 
-    //endregion
+    // endregion
 
-    //region overflow detection
+    // region overflow detection
 
     /**
      * Detects how much the floating element at its current position overflows
@@ -207,11 +206,11 @@ public final class FloatingState {
         double boundBottom = boundary.bottom() - padding;
 
         return new Insets(
-                (int) Math.round(boundTop - floatTop),         // top overflow (positive = overflowing)
-                (int) Math.round(floatRight - boundRight),     // right overflow
-                (int) Math.round(floatBottom - boundBottom),   // bottom overflow
-                (int) Math.round(boundLeft - floatLeft)        // left overflow
-        );
+                (int) Math.round(boundTop - floatTop), // top overflow (positive = overflowing)
+                (int) Math.round(floatRight - boundRight), // right overflow
+                (int) Math.round(floatBottom - boundBottom), // bottom overflow
+                (int) Math.round(boundLeft - floatLeft) // left overflow
+                );
     }
 
     /**
@@ -221,5 +220,5 @@ public final class FloatingState {
         return detectOverflow(0);
     }
 
-    //endregion
+    // endregion
 }

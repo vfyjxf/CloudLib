@@ -18,13 +18,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Data API Tests")
 class DataApiTest {
 
-    //region Test Keys
-    static final DataKey<String> NAME = DataKey.create(Namespace.ofMc("name"));
-    static final DataKey<Integer> COUNT = DataKey.create(Namespace.ofMc("count"), 0);
-    static final DataKey<List<String>> ITEMS = DataKey.create(Namespace.ofMc("items"), ArrayList::new);
-    static final DataKey<String> COMPUTED = DataKey.createComputed(Namespace.ofMc("computed"),
-        holder -> holder != null ? "holder-present" : "no-holder");
-    //endregion
+    // region Test Keys
+    static final DataKey<String> name = DataKey.create(Namespace.ofMc("name"));
+    static final DataKey<Integer> count = DataKey.create(Namespace.ofMc("count"), 0);
+    static final DataKey<List<String>> items = DataKey.create(Namespace.ofMc("items"), ArrayList::new);
+    static final DataKey<String> computed = DataKey.createComputed(
+            Namespace.ofMc("computed"), holder -> holder != null ? "holder-present" : "no-holder");
+    // endregion
 
     @Nested
     @DisplayName("DataKey Tests")
@@ -33,33 +33,33 @@ class DataApiTest {
         @Test
         @DisplayName("Simple key has no default value")
         void simpleKeyNoDefault() {
-            assertFalse(NAME.hasDefaultValue());
-            assertNull(NAME.defaultValue(null));
+            assertFalse(name.hasDefaultValue());
+            assertNull(name.defaultValue(null));
         }
 
         @Test
         @DisplayName("Key with constant default value")
         void keyWithConstantDefault() {
-            assertTrue(COUNT.hasDefaultValue());
-            assertEquals(0, COUNT.defaultValue(null));
+            assertTrue(count.hasDefaultValue());
+            assertEquals(0, count.defaultValue(null));
         }
 
         @Test
         @DisplayName("Key with supplier default creates new instances")
         void keyWithSupplierDefault() {
-            assertTrue(ITEMS.hasDefaultValue());
-            List<String> list1 = ITEMS.defaultValue(null);
-            List<String> list2 = ITEMS.defaultValue(null);
+            assertTrue(items.hasDefaultValue());
+            List<String> list1 = items.defaultValue(null);
+            List<String> list2 = items.defaultValue(null);
             assertNotSame(list1, list2, "Supplier should create new instances");
         }
 
         @Test
         @DisplayName("Key with context-aware default")
         void keyWithContextAwareDefault() {
-            assertEquals("no-holder", COMPUTED.defaultValue(null));
+            assertEquals("no-holder", computed.defaultValue(null));
 
             DataAttachable holder = new SimpleHolder();
-            assertEquals("holder-present", COMPUTED.defaultValue(holder));
+            assertEquals("holder-present", computed.defaultValue(holder));
         }
 
         @Test
@@ -86,50 +86,50 @@ class DataApiTest {
         @Test
         @DisplayName("set and get basic operations")
         void setAndGet() {
-            container.set(NAME, "test-name");
-            assertEquals("test-name", container.get(NAME));
+            container.set(name, "test-name");
+            assertEquals("test-name", container.get(name));
         }
 
         @Test
         @DisplayName("get returns default value when not set")
         void getReturnsDefault() {
-            assertEquals(0, container.get(COUNT));
+            assertEquals(0, container.get(count));
         }
 
         @Test
         @DisplayName("get returns null for key without default")
         void getReturnsNullForNoDefault() {
-            assertNull(container.get(NAME));
+            assertNull(container.get(name));
         }
 
         @Test
         @DisplayName("find returns Optional without using defaults")
         void findReturnsOptionalWithoutDefaults() {
-            assertTrue(container.find(COUNT).isEmpty(), "find should not use defaults");
+            assertTrue(container.find(count).isEmpty(), "find should not use defaults");
 
-            container.set(COUNT, 42);
-            assertEquals(42, container.find(COUNT).orElse(-1));
+            container.set(count, 42);
+            assertEquals(42, container.find(count).orElse(-1));
         }
 
         @Test
         @DisplayName("require throws when not present")
         void requireThrowsWhenNotPresent() {
-            assertThrows(IllegalStateException.class, () -> container.require(NAME));
+            assertThrows(IllegalStateException.class, () -> container.require(name));
         }
 
         @Test
         @DisplayName("require returns value when present")
         void requireReturnsWhenPresent() {
-            container.set(NAME, "present");
-            assertEquals("present", container.require(NAME));
+            container.set(name, "present");
+            assertEquals("present", container.require(name));
         }
 
         @Test
         @DisplayName("remove returns removed value")
         void removeReturnsValue() {
-            container.set(NAME, "to-remove");
-            assertEquals("to-remove", container.remove(NAME));
-            assertNull(container.get(NAME));
+            container.set(name, "to-remove");
+            assertEquals("to-remove", container.remove(name));
+            assertNull(container.get(name));
         }
 
         @Test
@@ -137,14 +137,14 @@ class DataApiTest {
         void computeIfAbsentOnlyComputesWhenAbsent() {
             AtomicInteger counter = new AtomicInteger(0);
 
-            String result1 = container.computeIfAbsent(NAME, () -> {
+            String result1 = container.computeIfAbsent(name, () -> {
                 counter.incrementAndGet();
                 return "computed";
             });
             assertEquals("computed", result1);
             assertEquals(1, counter.get());
 
-            String result2 = container.computeIfAbsent(NAME, () -> {
+            String result2 = container.computeIfAbsent(name, () -> {
                 counter.incrementAndGet();
                 return "should-not-run";
             });
@@ -155,27 +155,27 @@ class DataApiTest {
         @Test
         @DisplayName("update creates and transforms value")
         void updateCreatesAndTransforms() {
-            int result = container.update(COUNT, 10, v -> v + 5);
+            int result = container.update(count, 10, v -> v + 5);
             assertEquals(15, result);
 
-            result = container.update(COUNT, 0, v -> v * 2);
+            result = container.update(count, 0, v -> v * 2);
             assertEquals(30, result);
         }
 
         @Test
         @DisplayName("has checks for explicit presence")
         void hasChecksExplicitPresence() {
-            assertFalse(container.has(COUNT), "has should return false even with default");
+            assertFalse(container.has(count), "has should return false even with default");
 
-            container.set(COUNT, 0);
-            assertTrue(container.has(COUNT));
+            container.set(count, 0);
+            assertTrue(container.has(count));
         }
 
         @Test
         @DisplayName("clear removes all data")
         void clearRemovesAll() {
-            container.set(NAME, "test");
-            container.set(COUNT, 42);
+            container.set(name, "test");
+            container.set(count, 42);
 
             container.clear();
 
@@ -198,19 +198,19 @@ class DataApiTest {
         @Test
         @DisplayName("Convenience methods delegate to container")
         void convenienceMethodsDelegate() {
-            holder.set(NAME, "holder-test");
-            assertEquals("holder-test", holder.get(NAME));
-            assertTrue(holder.has(NAME));
+            holder.set(name, "holder-test");
+            assertEquals("holder-test", holder.get(name));
+            assertTrue(holder.has(name));
 
-            holder.remove(NAME);
-            assertFalse(holder.has(NAME));
+            holder.remove(name);
+            assertFalse(holder.has(name));
         }
 
         @Test
         @DisplayName("Context-aware defaults receive holder")
         void contextAwareDefaultsReceiveHolder() {
-            DataKey<String> contextKey = DataKey.createComputed(Namespace.ofMc("context"),
-                h -> h instanceof SimpleHolder ? "simple" : "other");
+            DataKey<String> contextKey = DataKey.createComputed(
+                    Namespace.ofMc("context"), h -> h instanceof SimpleHolder ? "simple" : "other");
 
             holder.data().setOwner(holder);
             assertEquals("simple", holder.get(contextKey));
@@ -219,10 +219,10 @@ class DataApiTest {
         @Test
         @DisplayName("computeIfAbsent works through holder")
         void computeIfAbsentThroughHolder() {
-            List<String> list = holder.computeIfAbsent(ITEMS, ArrayList::new);
+            List<String> list = holder.computeIfAbsent(items, ArrayList::new);
             list.add("item1");
 
-            List<String> sameList = holder.get(ITEMS);
+            List<String> sameList = holder.get(items);
             assertTrue(sameList.contains("item1"));
         }
     }
