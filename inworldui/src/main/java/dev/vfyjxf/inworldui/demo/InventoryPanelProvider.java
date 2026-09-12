@@ -40,7 +40,6 @@ public final class InventoryPanelProvider implements InworldProvider {
 
     @Override
     public void provide(InworldContext context, InworldSink sink) {
-        var player = context.player();
         InworldManager manager = InworldManager.instance();
         boolean dragging = manager != null && manager.dragActive();
 
@@ -59,7 +58,7 @@ public final class InventoryPanelProvider implements InworldProvider {
                                 FloatingMiddlewares.flip(),
                                 FloatingMiddlewares.shift(4),
                                 FloatingMiddlewares.hide()),
-                        ctx -> new ItemGridWidget(player))
+                        ctx -> new ItemGridWidget())
                 .title(Component.literal("INV//LOCAL"))
                 .hints("R:inspect+drag", "RMB:one"));
     }
