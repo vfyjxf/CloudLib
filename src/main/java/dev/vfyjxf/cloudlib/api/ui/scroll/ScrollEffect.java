@@ -7,9 +7,9 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.effect.Effect;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
+import dev.vfyjxf.cloudlib.api.ui.style.ScrollbarStyleData;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
-import dev.vfyjxf.cloudlib.api.ui.style.property.visual.ScrollbarStyleProperty;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import dev.vfyjxf.taffy.style.Overflow;
@@ -179,9 +179,11 @@ public final class ScrollEffect implements Effect {
             child.useStyle(noShrink);
         });
 
-        // On mount, apply any ScrollbarStyleProperty from the widget's style context
+        // On mount, apply the scrollbar-style value from the widget's style context
         widget.onMount((scene, context, handle) -> {
-            ScrollbarStyleProperty.ScrollbarStyleData styleData = ScrollbarStyleProperty.getFrom(widget);
+            ScrollbarStyleData styleData = widget.style()
+                    .visualContext()
+                    .getProperty(ScrollbarStyleData.propertyKey, ScrollbarStyleData.class);
             if (styleData != null) {
                 styleData.applyTo(state);
             }

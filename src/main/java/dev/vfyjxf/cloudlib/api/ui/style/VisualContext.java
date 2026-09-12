@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.ui.style;
 
-import dev.vfyjxf.cloudlib.api.ui.style.property.VisualProperty;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Context provided to {@link VisualProperty} implementations for applying visual styles.
+ * Context provided to {@link dev.vfyjxf.cloudlib.api.ui.style.key.StyleApply} implementations for applying visual styles.
  * <p>
  * This class contains visual styling information that does not affect layout,
  * such as colors, borders, text styling, and cursors.
@@ -26,7 +25,7 @@ import java.util.Map;
  *   <li><b>Text Styling</b>: color, bold, italic, underline, strikethrough</li>
  * </ul>
  *
- * @see VisualProperty
+ * @see dev.vfyjxf.cloudlib.api.ui.style.key.StyleApply
  * @see StyleContext
  */
 public class VisualContext {

@@ -64,7 +64,19 @@ public abstract sealed class CloudLib permits CloudLibClient, CloudLibServer {
 
     protected void constructMod(FMLConstructModEvent event) {}
 
-    protected void commonSetup(FMLCommonSetupEvent event) {}
+    protected void commonSetup(FMLCommonSetupEvent event) {
+        // style keys must all be registered before the first theme parses —
+        // builtin constants self-register here; plugins then add their own
+        var registry = dev.vfyjxf.cloudlib.api.ui.style.key.StyleRegistry.get();
+        dev.vfyjxf.cloudlib.api.ui.style.Styles.init();
+        for (CloudLibPlugin plugin : plugins) {
+            try {
+                plugin.registerStyleKeys(registry);
+            } catch (Exception e) {
+                logger.warn("Failed to register style keys for plugin {}", plugin.pluginId(), e);
+            }
+        }
+    }
 
     protected void loadComplete(FMLLoadCompleteEvent event) {}
 

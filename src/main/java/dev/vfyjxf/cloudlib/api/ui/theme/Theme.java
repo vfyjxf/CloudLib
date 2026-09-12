@@ -1,9 +1,10 @@
 package dev.vfyjxf.cloudlib.api.ui.theme;
 
-import dev.vfyjxf.cloudlib.internal.css.ComponentValue;
-import dev.vfyjxf.cloudlib.internal.css.Declaration;
-import dev.vfyjxf.cloudlib.internal.css.StyleRule;
-import dev.vfyjxf.cloudlib.internal.css.Stylesheet;
+import dev.vfyjxf.cloudlib.api.css.ComponentValue;
+import dev.vfyjxf.cloudlib.api.css.Declaration;
+import dev.vfyjxf.cloudlib.api.css.StyleRule;
+import dev.vfyjxf.cloudlib.api.css.Stylesheet;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
@@ -78,24 +79,24 @@ public final class Theme {
      * Source order is preserved by construction — no sorting, no hashing of the
      * rule records.
      */
-    public List<StyleRule> rulesFor(Themeable node) {
+    public List<StyleRule> rulesFor(Widget node) {
         if (byTag == null) {
             buildIndex();
         }
         List<IndexedRule> cand = new ArrayList<>(always.size());
         cand.addAll(always);
-        List<IndexedRule> tagged = byTag.get(node.themeTag().toLowerCase(java.util.Locale.ROOT));
+        List<IndexedRule> tagged = byTag.get(node.styleTag().toLowerCase(java.util.Locale.ROOT));
         if (tagged != null) {
             cand.addAll(tagged);
         }
-        for (String c : node.themeClasses()) {
+        for (String c : node.styleClasses()) {
             List<IndexedRule> clsRules = byClass.get(c);
             if (clsRules != null) {
                 cand.addAll(clsRules);
             }
         }
-        if (node.themeId() != null) {
-            List<IndexedRule> idRules = byId.get(node.themeId());
+        if (node.styleId() != null) {
+            List<IndexedRule> idRules = byId.get(node.styleId());
             if (idRules != null) {
                 cand.addAll(idRules);
             }

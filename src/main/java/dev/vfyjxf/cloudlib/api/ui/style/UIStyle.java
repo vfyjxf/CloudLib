@@ -1,140 +1,124 @@
 package dev.vfyjxf.cloudlib.api.ui.style;
 
-import dev.vfyjxf.cloudlib.api.ui.style.property.layout.StyleProperty;
+import dev.vfyjxf.cloudlib.api.ui.style.key.StyleEntry;
+import dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey;
+import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
 /**
- * A composable style definition that contains multiple {@link StyleProperty} instances.
+ * A composable style definition — an ordered set of {@link StyleValue}s keyed
+ * by {@link StyleKey}.
  * <p>
- * Style supports:
- * <ul>
- *   <li>Static creation via {@link #of(StyleProperty...)}</li>
- *   <li>Chain-style composition via {@link #with(StyleProperty...)} and {@link #merge(UIStyle)}</li>
- *   <li>Property lookup and inspection</li>
- *   <li>Application to UI elements via {@link StyleContext}</li>
- * </ul>
+ * Later writers win for the same key. Built via {@link #of(StyleEntry...)} —
+ * shorthand factories that expand to several longhands flatten transparently
+ * through {@link StyleEntry}.
  * <p>
  * Example usage:
  * <pre>{@code
- * import static dev.vfyjxf.cloudlib.api.ui.style.Styles.*;
+ * import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
  *
- * // Create styles
- * var cardStyle = Style.of(
+ * var cardStyle = UIStyle.of(
  *     padding(12),
  *     background(0xFFFFFFFF),
- *     border(1, 0xFF666666),
- *     rounded(4)
+ *     border(1),
+ *     display(TaffyDisplay.flex)
  * );
  *
- * var buttonStyle = Style.of(
- *     padding(8, 16),
- *     background(0xFF0066CC),
- *     rounded(4)
- * );
- *
- * // Compose styles
- * var hoveredButton = buttonStyle.with(
- *     background(0xFF0088FF)
- * );
- *
- * // Merge styles (later properties override earlier ones)
- * var combined = cardStyle.merge(buttonStyle);
+ * var combined = cardStyle.merge(buttonStyle);   // button's values win per key
+ * style.apply(widget.style());                   // writes into the context
  * }</pre>
  *
- * @see StyleProperty
+ * @see StyleKey
+ * @see StyleValue
  * @see UIStyles
  */
 public final class UIStyle {
 
     /**
-     * Empty style with no properties.
+     * Empty style with no values.
      */
     public static final UIStyle empty = new UIStyle(Collections.emptyList());
 
-    private final List<StyleProperty> properties;
+    private final List<StyleValue<?>> values;
 
     @Nullable
-    private Map<String, StyleProperty> propertyMap;
+    private Map<StyleKey<?>, StyleValue<?>> valueMap;
 
-    private UIStyle(List<StyleProperty> properties) {
-        this.properties = Collections.unmodifiableList(new ArrayList<>(properties));
+    private UIStyle(List<StyleValue<?>> values) {
+        this.values = Collections.unmodifiableList(new ArrayList<>(values));
     }
 
+    // region factories
+
     /**
-     * Creates a new style with the given properties.
-     *
-     * @param properties the style properties
-     * @return a new Style instance
+     * Creates a style from entries — {@link StyleValue}s and {@link
+     * dev.vfyjxf.cloudlib.api.ui.style.key.StyleValues} groups both accepted
+     * (groups flatten).
      */
-    public static UIStyle of(StyleProperty... properties) {
-        if (properties.length == 0) {
+    public static UIStyle of(StyleEntry... entries) {
+        if (entries.length == 0) {
             return empty;
         }
-        return new UIStyle(deduplicateProperties(Arrays.asList(properties)));
+        return new UIStyle(deduplicate(flatten(Arrays.asList(entries))));
     }
 
     /**
-     * Creates a new style with a single property.
-     *
-     * @param property the style property
-     * @return a new Style instance
+     * Creates a style from a list of style values.
      */
-    public static UIStyle of(StyleProperty property) {
-        return new UIStyle(Collections.singletonList(property));
-    }
-
-    /**
-     * Creates a new style from a list of properties.
-     *
-     * @param properties the style properties
-     * @return a new Style instance
-     */
-    public static UIStyle of(List<StyleProperty> properties) {
-        if (properties.isEmpty()) {
+    public static UIStyle ofValues(List<StyleValue<?>> values) {
+        if (values.isEmpty()) {
             return empty;
         }
-        return new UIStyle(properties);
+        return new UIStyle(deduplicate(values));
+    }
+
+    /**
+     * Creates a style from values already unique per key — skips the dedup pass.
+     * Contract: at most one value per {@link StyleKey}; the list is copied.
+     */
+    public static UIStyle ofDistinctValues(List<StyleValue<?>> values) {
+        if (values.isEmpty()) {
+            return empty;
+        }
+        return new UIStyle(values);
     }
 
     /**
      * Creates an empty style builder.
-     *
-     * @return a new builder
      */
     public static Builder builder() {
         return new Builder();
     }
 
+    // endregion
+
+    // region composition
+
     /**
-     * Creates a new style by adding properties to this style.
-     * <p>
-     * If a property with the same name already exists, the new property
-     * will override it in the resulting style.
-     *
-     * @param properties the properties to add
-     * @return a new Style with the combined properties
+     * Creates a new style with the entries appended — later entries win for the
+     * same key.
      */
-    public UIStyle with(StyleProperty... properties) {
-        if (properties.length == 0) {
+    public UIStyle with(StyleEntry... entries) {
+        if (entries.length == 0) {
             return this;
         }
-        List<StyleProperty> combined = new ArrayList<>(this.properties);
-        combined.addAll(Arrays.asList(properties));
-        return new UIStyle(deduplicateProperties(combined));
+        List<StyleValue<?>> combined = new ArrayList<>(this.values);
+        combined.addAll(flatten(Arrays.asList(entries)));
+        return new UIStyle(deduplicate(combined));
     }
 
     /**
-     * Merges another style into this style.
-     * <p>
-     * Properties from the other style will override properties with
-     * the same name in this style.
-     *
-     * @param other the style to merge
-     * @return a new Style with merged properties
+     * Merges another style into this style — the other style's values win for
+     * the same key.
      */
     public UIStyle merge(UIStyle other) {
         if (other.isEmpty()) {
@@ -143,16 +127,13 @@ public final class UIStyle {
         if (this.isEmpty()) {
             return other;
         }
-        List<StyleProperty> combined = new ArrayList<>(this.properties);
-        combined.addAll(other.properties);
-        return new UIStyle(deduplicateProperties(combined));
+        List<StyleValue<?>> combined = new ArrayList<>(this.values);
+        combined.addAll(other.values);
+        return new UIStyle(deduplicate(combined));
     }
 
     /**
      * Creates a new style by transforming this style.
-     *
-     * @param transformer the transformation function
-     * @return a new transformed Style
      */
     public UIStyle transform(UnaryOperator<Builder> transformer) {
         Builder builder = toBuilder();
@@ -160,158 +141,133 @@ public final class UIStyle {
     }
 
     /**
-     * Creates a new style without the specified property.
-     *
-     * @param propertyName the name of the property to remove
-     * @return a new Style without the property
+     * Creates a new style without the given key.
      */
-    public UIStyle without(String propertyName) {
-        List<StyleProperty> filtered = properties.stream()
-                .filter(p -> !p.type().id().equals(propertyName))
-                .collect(Collectors.toList());
+    public UIStyle without(StyleKey<?> key) {
+        List<StyleValue<?>> filtered = new ArrayList<>(values.size());
+        for (StyleValue<?> v : values) {
+            if (v.key() != key) {
+                filtered.add(v);
+            }
+        }
         return new UIStyle(filtered);
     }
 
-    /**
-     * Gets a property by name.
-     *
-     * @param name the property name
-     * @return the property, or null if not found
-     */
-    @Nullable
-    public StyleProperty get(String name) {
-        return getPropertyMap().get(name);
-    }
+    // endregion
+
+    // region access
 
     /**
-     * Gets a typed property by name.
-     *
-     * @param name the property name
-     * @param type the expected property type
-     * @param <T>  the property type
-     * @return the property, or null if not found or wrong type
+     * Gets the value bound to a key, or null if absent.
      */
     @SuppressWarnings("unchecked")
-    @Nullable
-    public <T extends StyleProperty> T get(String name, Class<T> type) {
-        StyleProperty property = get(name);
-        if (type.isInstance(property)) {
-            return (T) property;
-        }
-        return null;
+    public <T> @Nullable StyleValue<T> get(StyleKey<T> key) {
+        return (StyleValue<T>) getValueMap().get(key);
     }
 
     /**
-     * Checks if this style has a property with the given name.
-     *
-     * @param name the property name
-     * @return true if the property exists
+     * Checks if a value exists under the key.
      */
-    public boolean has(String name) {
-        return getPropertyMap().containsKey(name);
+    public boolean has(StyleKey<?> key) {
+        return getValueMap().containsKey(key);
     }
 
     /**
-     * Gets all properties in this style.
-     *
-     * @return an unmodifiable list of properties
+     * All style values, in order.
      */
-    public List<StyleProperty> getProperties() {
-        return properties;
+    public List<StyleValue<?>> values() {
+        return values;
     }
 
-    /**
-     * Checks if this style is empty.
-     *
-     * @return true if no properties
-     */
     public boolean isEmpty() {
-        return properties.isEmpty();
+        return values.isEmpty();
     }
 
-    /**
-     * Gets the number of properties.
-     *
-     * @return the property count
-     */
     public int size() {
-        return properties.size();
+        return values.size();
     }
 
+    // endregion
+
+    // region apply
+
     /**
-     * Applies this style to a StyleContext.
-     *
-     * @param context the context to apply to
+     * Applies every value to the context, in order.
      */
     public void apply(StyleContext context) {
-        for (StyleProperty property : properties) {
-            property.apply(context);
+        for (StyleValue<?> value : values) {
+            context.apply(value);
         }
-    }
-
-    /**
-     * Creates a new StyleContext and applies this style to it.
-     *
-     * @return a new StyleContext with this style applied
-     */
-    public StyleContext createContext() {
-        throw new UnsupportedOperationException("Not Implemented");
     }
 
     /**
      * Converts this style to a builder for modification.
-     *
-     * @return a new builder with this style's properties
      */
     public Builder toBuilder() {
         Builder builder = new Builder();
-        builder.properties.addAll(this.properties);
+        builder.values.addAll(this.values);
         return builder;
     }
 
-    private Map<String, StyleProperty> getPropertyMap() {
-        if (propertyMap == null) {
-            propertyMap = new LinkedHashMap<>();
-            for (StyleProperty property : properties) {
-                propertyMap.put(property.type().id(), property);
+    // endregion
+
+    // region internal
+
+    private Map<StyleKey<?>, StyleValue<?>> getValueMap() {
+        if (valueMap == null) {
+            valueMap = new LinkedHashMap<>();
+            for (StyleValue<?> value : values) {
+                valueMap.put(value.key(), value);
             }
         }
-        return propertyMap;
+        return valueMap;
+    }
+
+    private static List<StyleValue<?>> flatten(List<StyleEntry> entries) {
+        List<StyleValue<?>> out = new ArrayList<>(entries.size());
+        for (StyleEntry entry : entries) {
+            entry.collectInto(out::add);
+        }
+        return out;
     }
 
     /**
-     * Removes duplicate properties, keeping the last occurrence.
+     * Removes duplicate keys, keeping the last occurrence (stable order).
      */
-    private static List<StyleProperty> deduplicateProperties(List<StyleProperty> properties) {
-        Map<String, StyleProperty> map = new LinkedHashMap<>();
-        for (StyleProperty property : properties) {
-            map.put(property.type().id(), property);
+    private static List<StyleValue<?>> deduplicate(List<StyleValue<?>> values) {
+        Map<StyleKey<?>, StyleValue<?>> map = new LinkedHashMap<>();
+        for (StyleValue<?> value : values) {
+            map.put(value.key(), value);
         }
         return new ArrayList<>(map.values());
     }
+
+    // endregion
+
+    // region object
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof UIStyle style)) return false;
-        return Objects.equals(properties, style.properties);
+        return Objects.equals(values, style.values);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(properties);
+        return Objects.hash(values);
     }
 
     @Override
     public String toString() {
         if (isEmpty()) {
-            return "Style.EMPTY";
+            return "UIStyle.EMPTY";
         }
-        StringBuilder sb = new StringBuilder("Style.of(\n");
-        for (int i = 0; i < properties.size(); i++) {
-            StyleProperty property = properties.get(i);
-            sb.append("    ").append(property.type().id()).append(": ").append(property);
-            if (i < properties.size() - 1) {
+        StringBuilder sb = new StringBuilder("UIStyle.of(\n");
+        for (int i = 0; i < values.size(); i++) {
+            StyleValue<?> value = values.get(i);
+            sb.append("    ").append(value.key().id()).append(": ").append(value.value());
+            if (i < values.size() - 1) {
                 sb.append(",");
             }
             sb.append("\n");
@@ -320,79 +276,61 @@ public final class UIStyle {
         return sb.toString();
     }
 
+    // endregion
+
     /**
-     * Mutable builder for Style.
+     * Mutable builder for UIStyle.
      */
     public static final class Builder {
 
-        private final List<StyleProperty> properties = new ArrayList<>();
+        private final List<StyleValue<?>> values = new ArrayList<>();
 
         private Builder() {}
 
         /**
-         * Adds a property to the builder.
-         *
-         * @param property the property to add
-         * @return this builder
+         * Adds an entry (value or value group) to the builder.
          */
-        public Builder add(StyleProperty property) {
-            properties.add(property);
+        public Builder add(StyleEntry entry) {
+            entry.collectInto(values::add);
             return this;
         }
 
         /**
-         * Adds multiple properties to the builder.
-         *
-         * @param properties the properties to add
-         * @return this builder
+         * Adds multiple entries to the builder.
          */
-        public Builder add(StyleProperty... properties) {
-            this.properties.addAll(Arrays.asList(properties));
+        public Builder add(StyleEntry... entries) {
+            for (StyleEntry entry : entries) {
+                entry.collectInto(values::add);
+            }
             return this;
         }
 
         /**
-         * Adds all properties from another style.
-         *
-         * @param style the style to add from
-         * @return this builder
+         * Adds all values from another style.
          */
         public Builder add(UIStyle style) {
-            this.properties.addAll(style.getProperties());
+            this.values.addAll(style.values());
             return this;
         }
 
         /**
-         * Removes a property by name.
-         *
-         * @param type the property type to remove
-         * @return this builder
+         * Removes a key's value.
          */
-        public Builder remove(StyleType<?> type) {
-            properties.removeIf(p -> p.type().equals(type));
+        public Builder remove(StyleKey<?> key) {
+            values.removeIf(v -> v.key() == key);
             return this;
         }
 
-        /**
-         * Clears all properties.
-         *
-         * @return this builder
-         */
         public Builder clear() {
-            properties.clear();
+            values.clear();
             return this;
         }
 
-        /**
-         * Builds the final Style.
-         *
-         * @return the built Style
-         */
         public UIStyle build() {
-            if (properties.isEmpty()) {
+            if (values.isEmpty()) {
                 return empty;
             }
-            return new UIStyle(deduplicateProperties(properties));
+            return new UIStyle(deduplicate(values));
         }
     }
 }

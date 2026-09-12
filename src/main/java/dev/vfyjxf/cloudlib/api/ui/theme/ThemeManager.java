@@ -53,6 +53,19 @@ public final class ThemeManager {
         }
     }
 
+    /**
+     * Replaces the active stack wholesale — lowest priority first. Used by the
+     * theme loader after a resource reload to install the effective selection.
+     */
+    public static void setStack(List<ResourceLocation> ids) {
+        stack.clear();
+        for (ResourceLocation id : ids) {
+            if (themes.containsKey(id)) {
+                stack.add(id);
+            }
+        }
+    }
+
     public static void deactivate(ResourceLocation id) {
         if (stack.remove(id)) {
             notifyChanged();
@@ -80,9 +93,10 @@ public final class ThemeManager {
     /**
      * Re-resolves the theme for a whole widget subtree after a stack change.
      * Shares one cascade context — each node resolves once per pass.
+     * Honors a scene-level theme override when the root is mounted.
      */
     public static void refreshTree(Widget root) {
-        Theme theme = active();
+        Theme theme = root.lifecycle().mounted() ? root.scene().theme() : active();
         if (theme != null) {
             ThemeEngine.applyTree(theme, root, null);
         }

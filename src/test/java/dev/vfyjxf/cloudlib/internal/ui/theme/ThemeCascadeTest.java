@@ -1,91 +1,51 @@
 package dev.vfyjxf.cloudlib.internal.ui.theme;
 
+import dev.vfyjxf.cloudlib.api.css.CssParser;
+import dev.vfyjxf.cloudlib.api.css.Stylesheet;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.api.ui.style.property.layout.StyleProperty;
 import dev.vfyjxf.cloudlib.api.ui.theme.Theme;
 import dev.vfyjxf.cloudlib.api.ui.theme.ThemeEngine;
-import dev.vfyjxf.cloudlib.api.ui.theme.Themeable;
-import dev.vfyjxf.cloudlib.internal.css.CssParser;
-import dev.vfyjxf.cloudlib.internal.css.Stylesheet;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ThemeCascadeTest {
 
-    /** A bare Themeable fixture — builds trees without a scene. */
-    static final class Node implements Themeable {
-        final String tag;
-        String id;
-        final List<String> classes = new ArrayList<>();
-        final Map<String, String> attrs = new HashMap<>();
-        final Set<String> states = new HashSet<>();
-        Node parent;
-        final List<Node> children = new ArrayList<>();
-        String part;
+    /** A leaf test node — a real {@link Widget} with a fixed selector tag. */
+    static class Node extends dev.vfyjxf.cloudlib.api.ui.base.Widget {
+        private final String tag;
 
         Node(String tag) {
             this.tag = tag;
         }
 
-        Node child(Node c) {
-            c.parent = this;
-            children.add(c);
-            return c;
-        }
-
         @Override
-        public String themeTag() {
+        public String styleTag() {
             return tag;
         }
+    }
 
-        @Override
-        public List<String> themeClasses() {
-            return classes;
+    /** A composite fixture — exposes the protected {@code addWidget}. */
+    static class Panel extends dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget<dev.vfyjxf.cloudlib.api.ui.base.Widget> {
+        private final String tag;
+
+        Panel(String tag) {
+            this.tag = tag;
+        }
+
+        <W extends dev.vfyjxf.cloudlib.api.ui.base.Widget> W child(W w) {
+            addWidget(w);
+            return w;
         }
 
         @Override
-        public @Nullable String themeId() {
-            return id;
-        }
-
-        @Override
-        public @Nullable String themeAttr(String name) {
-            return attrs.get(name);
-        }
-
-        @Override
-        public Set<String> themeStates() {
-            return states;
-        }
-
-        @Override
-        public @Nullable Themeable themeParent() {
-            return parent;
-        }
-
-        @Override
-        public List<? extends Themeable> themeSiblings() {
-            return parent != null ? parent.children : List.of(this);
-        }
-
-        @Override
-        public List<? extends Themeable> themeChildren() {
-            return children;
-        }
-
-        @Override
-        public @Nullable String themePart() {
-            return part;
+        public String styleTag() {
+            return tag;
         }
     }
 
@@ -93,14 +53,32 @@ class ThemeCascadeTest {
         return new Theme(ResourceLocation.fromNamespaceAndPath("test", "t"), CssParser.parse(css));
     }
 
-    private static UIStyle styleOf(Theme theme, Themeable node) {
+    private static UIStyle styleOf(Theme theme, dev.vfyjxf.cloudlib.api.ui.base.Widget node) {
         List<String> warnings = new ArrayList<>();
-        UIStyle style = ThemeEngine.resolve(theme, node, warnings::add);
-        return style;
+        return ThemeEngine.resolve(theme, node, warnings::add);
     }
 
-    private static @Nullable StyleProperty prop(UIStyle style, String name) {
-        return style.get(name);
+    /**
+     * Resolves a (possibly shorthand / aliased) css name to its winning
+     * {@link StyleValue} — box shorthands land on their {@code -top} longhand.
+     */
+    private static @Nullable dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue<?> prop(UIStyle style, String name) {
+        String mapped =
+                switch (name) {
+                    case "padding", "margin", "inset", "border-width" -> name + "-top";
+                    case "size" -> "width";
+                    case "min-size" -> "min-width";
+                    case "max-size" -> "max-width";
+                    case "gap" -> "row-gap";
+                    case "overflow" -> "overflow-x";
+                    case "flex-flow" -> "flex-direction";
+                    case "border" -> "border-top-width";
+                    case "zIndex" -> "z-index";
+                    case "textColor" -> "color";
+                    default -> name;
+                };
+        var key = dev.vfyjxf.cloudlib.api.ui.style.Styles.byId(mapped);
+        return key == null ? null : style.get(key);
     }
 
     // ------------------------------------------------------------------ matching
@@ -118,10 +96,10 @@ class ThemeCascadeTest {
     void classAndIdMatch() {
         Theme t = theme(".primary { padding: 4px } #ok { margin: 2px }");
         Node n = new Node("button");
-        n.classes.add("primary");
+        n.addStyleClass("primary");
         assertNotNull(prop(styleOf(t, n), "padding"));
         assertNull(prop(styleOf(t, n), "margin"));
-        n.id = "ok";
+        n.styleId("ok");
         assertNotNull(prop(styleOf(t, n), "margin"));
     }
 
@@ -129,13 +107,13 @@ class ThemeCascadeTest {
     void attributeSelectors() {
         Theme t = theme("a[kind] { padding: 1px } a[kind=primary] { margin: 2px } a[kind~=x] { gap: 3px }");
         Node n = new Node("a");
-        n.attrs.put("kind", "primary x");
+        n.styleAttr("kind", "primary x");
         UIStyle s = styleOf(t, n);
         assertNotNull(prop(s, "padding")); // presence
         assertNull(prop(s, "margin")); // exact: "primary x" != "primary"
         assertNotNull(prop(s, "gap")); // includes: word "x" is in the list
         Node exact = new Node("a");
-        exact.attrs.put("kind", "primary");
+        exact.styleAttr("kind", "primary");
         assertNotNull(prop(styleOf(t, exact), "margin"));
     }
 
@@ -148,8 +126,8 @@ class ThemeCascadeTest {
                 a + b { gap: 3px }
                 x ~ y { z-index: 4 }
                 """);
-        Node panel = new Node("panel");
-        Node inner = panel.child(new Node("wrap"));
+        Panel panel = new Panel("panel");
+        Panel inner = panel.child(new Panel("wrap"));
         Node button = inner.child(new Node("button")); // panel → wrap → button
         Node direct = panel.child(new Node("button")); // panel → button
         // descendant hits both; child only the direct one
@@ -157,7 +135,7 @@ class ThemeCascadeTest {
         assertNull(prop(styleOf(t, button), "margin"));
         assertNotNull(prop(styleOf(t, direct), "margin"));
         // siblings
-        Node p = new Node("p");
+        Panel p = new Panel("p");
         Node a = p.child(new Node("a"));
         Node b = p.child(new Node("b"));
         assertNotNull(prop(styleOf(t, b), "gap"));
@@ -171,16 +149,16 @@ class ThemeCascadeTest {
         Theme t = theme("button:hovered { padding: 8px } button:disabled { margin: 1px }");
         Node n = new Node("button");
         assertTrue(styleOf(t, n).isEmpty());
-        n.states.add("hovered");
+        n.addStyleState("hovered");
         assertNotNull(prop(styleOf(t, n), "padding"));
-        n.states.add("disabled");
+        n.addStyleState("disabled");
         assertNotNull(prop(styleOf(t, n), "margin"));
     }
 
     @Test
     void nthChild() {
         Theme t = theme("slot:nth-child(2n) { padding: 5px } slot:nth-child(odd) { margin: 1px }");
-        Node p = new Node("p");
+        Panel p = new Panel("p");
         Node s1 = p.child(new Node("slot"));
         Node s2 = p.child(new Node("slot"));
         Node s3 = p.child(new Node("slot"));
@@ -203,13 +181,13 @@ class ThemeCascadeTest {
                 """);
         Node btn = new Node("button");
         assertNotNull(prop(styleOf(t, btn), "padding")); // not .disabled → matches
-        btn.classes.add("disabled");
+        btn.addStyleClass("disabled");
         assertNull(prop(styleOf(t, btn), "padding"));
-        btn.classes.add("a");
+        btn.addStyleClass("a");
         assertNotNull(prop(styleOf(t, btn), "margin")); // :is
         // :where contributes no specificity but still must match
         assertNull(prop(styleOf(t, btn), "gap")); // no #x
-        Node panel = new Node("panel");
+        Panel panel = new Panel("panel");
         panel.child(new Node("indicator"));
         assertNotNull(prop(styleOf(t, panel), "zIndex")); // :has(> indicator)
     }
@@ -225,7 +203,7 @@ class ThemeCascadeTest {
                 button { padding: 2px }
                 """);
         Node n = new Node("button");
-        n.classes.add("primary");
+        n.addStyleClass("primary");
         UIStyle s = styleOf(t, n);
         var p = prop(s, "padding");
         assertNotNull(p);
@@ -249,7 +227,7 @@ class ThemeCascadeTest {
                 button { padding: 3px !important }
                 """);
         Node n = new Node("button");
-        n.classes.add("x");
+        n.addStyleClass("x");
         var p = prop(styleOf(t, n), "padding");
         assertNotNull(p);
         assertTrue(p.toString().contains("3"));
@@ -305,7 +283,7 @@ class ThemeCascadeTest {
     @Test
     void customPropsInherit() {
         Theme t = theme(":root { --accent: #FF0000 } button { color: var(--accent) }");
-        Node panel = new Node("panel");
+        Panel panel = new Panel("panel");
         Node btn = panel.child(new Node("button"));
         // vars resolve through :root even when the node isn't :root
         assertNotNull(prop(styleOf(t, btn), "textColor"));
@@ -316,7 +294,7 @@ class ThemeCascadeTest {
     @Test
     void colorInheritsFromAncestor() {
         Theme t = theme("panel { color: #112233 } button { padding: 2px }");
-        Node panel = new Node("panel");
+        Panel panel = new Panel("panel");
         Node btn = panel.child(new Node("button"));
         assertNotNull(prop(styleOf(t, btn), "textColor"));
     }
@@ -324,7 +302,7 @@ class ThemeCascadeTest {
     @Test
     void nonInheritedPropertiesDoNotPropagate() {
         Theme t = theme("panel { padding: 9px } button { margin: 1px }");
-        Node panel = new Node("panel");
+        Panel panel = new Panel("panel");
         Node btn = panel.child(new Node("button"));
         assertNull(prop(styleOf(t, btn), "padding")); // padding doesn't inherit
     }
@@ -459,14 +437,14 @@ class ThemeCascadeTest {
         var in = ThemeCascadeTest.class.getResourceAsStream(path);
         assertNotNull(in, path + " missing from classpath");
         String css = new String(in.readAllBytes());
-        List<dev.vfyjxf.cloudlib.internal.css.CssError> errors = new ArrayList<>();
+        List<dev.vfyjxf.cloudlib.api.css.CssError> errors = new ArrayList<>();
         Stylesheet sheet = CssParser.parse(css, errors);
         assertTrue(errors.isEmpty(), () -> file + " parse errors: " + errors);
         assertFalse(sheet.rules().isEmpty());
         Theme theme = new Theme(ResourceLocation.fromNamespaceAndPath("cloudlib", file.replace(".css", "")), sheet);
         for (String tag : tags) {
             Node n = new Node(tag);
-            n.states.add("hovered");
+            n.addStyleState("hovered");
             UIStyle s = styleOf(theme, n);
             assertFalse(s.isEmpty(), () -> file + ": no properties resolved for <" + tag + ">");
         }

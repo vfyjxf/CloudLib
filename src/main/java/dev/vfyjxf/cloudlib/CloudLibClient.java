@@ -29,6 +29,7 @@ public final class CloudLibClient extends CloudLib {
 
     public CloudLibClient(ModContainer container, IEventBus modBus, Dist dist) {
         super(container, modBus, dist);
+        dev.vfyjxf.cloudlib.internal.ui.theme.ThemeConfig.register(container);
         clientPlugins = PluginLoader.loadPlugin(
                         logger, "CloudLib Client Plugin", AnnotationPluginLookup.of(CloudLibClientPlugin.class))
                 .toImmutable();

@@ -1,29 +1,33 @@
 package dev.vfyjxf.cloudlib.internal.ui.theme;
 
+import dev.vfyjxf.cloudlib.api.css.ComponentValue;
+import dev.vfyjxf.cloudlib.api.css.Declaration;
+import dev.vfyjxf.cloudlib.api.css.Specificity;
+import dev.vfyjxf.cloudlib.api.css.StyleRule;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.style.Styles;
 import dev.vfyjxf.cloudlib.api.ui.theme.Theme;
-import dev.vfyjxf.cloudlib.api.ui.theme.Themeable;
-import dev.vfyjxf.cloudlib.internal.css.ComponentValue;
-import dev.vfyjxf.cloudlib.internal.css.Declaration;
-import dev.vfyjxf.cloudlib.internal.css.Specificity;
-import dev.vfyjxf.cloudlib.internal.css.StyleRule;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * The cascade: for a {@link Themeable} node, collects every matching declaration,
+ * The cascade: for a {@link Widget} node, collects every matching declaration,
  * orders it by the CSS cascade (origin → importance → specificity → source order),
  * substitutes {@code var(--x, fallback)}, and produces the resolved property map.
  * <p>
- * Inheritance follows the web rule restricted to CloudLib's supported set:
- * {@code color}, {@code text-align}, {@code direction} and all custom properties
- * inherit unless explicitly overridden.
+ * Inheritance follows the web rule: a property inherits when its
+ * {@link dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey} is flagged
+ * {@code inherited} ({@code color}, {@code text-align}, {@code direction});
+ * all custom properties ({@code --*}) inherit unconditionally.
  * <p>
  * Performance: {@link ResolveContext} memoizes each node's resolution — ancestor
  * chains resolve once per pass, so refreshing a whole tree costs
@@ -31,12 +35,21 @@ import java.util.Set;
  */
 public final class Cascade {
 
-    /** Properties that inherit through the widget tree when unspecified. */
-    private static final List<String> inherited = List.of("color", "text-align", "direction");
-
     private Cascade() {}
 
     // region cascade
+
+    /**
+     * A winning declaration after cascade + var() substitution.
+     *
+     * @param declaration the source declaration (identity-stable across nodes —
+     *                    downstream consumers may memoize on it)
+     * @param value       the substituted component values
+     * @param hadVar      whether the declaration contained a {@code var()}
+     *                    reference — var-free declarations parse identically on
+     *                    every node, so consumers can cache by declaration
+     */
+    public record ResolvedDecl(Declaration declaration, List<ComponentValue> value, boolean hadVar) {}
 
     private record Candidate(Specificity specificity, int order, boolean important, Declaration declaration) {}
 
@@ -45,7 +58,7 @@ public final class Cascade {
      * using a fresh context. For whole-tree work prefer
      * {@code new ResolveContext(theme)} and resolve every node through it.
      */
-    public static Map<String, List<ComponentValue>> resolve(Theme theme, Themeable node) {
+    public static Map<String, ResolvedDecl> resolve(Theme theme, Widget node) {
         return new ResolveContext(theme).resolve(node);
     }
 
@@ -57,26 +70,39 @@ public final class Cascade {
 
         private final Theme theme;
         private final SelectorMatcher.MatchContext match = new SelectorMatcher.MatchContext();
-        private final Map<Themeable, Map<String, List<ComponentValue>>> resolved = new IdentityHashMap<>();
-        private final Map<dev.vfyjxf.cloudlib.internal.css.ComplexSelector, Specificity> specificity =
+        private final Map<Widget, Map<String, ResolvedDecl>> resolved = new IdentityHashMap<>();
+        private final Map<dev.vfyjxf.cloudlib.api.css.ComplexSelector, Specificity> specificity =
                 new IdentityHashMap<>();
+        /** {@code var()}-presence per shared declaration — computed once per pass. */
+        private final Map<Declaration, Boolean> declHasVar = new IdentityHashMap<>();
+        /**
+         * Parsed {@code StyleValue}s per var-free declaration — shared across the
+         * pass so a rule's value parses once for the whole tree, not per node.
+         */
+        private final Map<Declaration, List<dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue<?>>> valueCache =
+                new IdentityHashMap<>();
+
+        /** The per-pass declaration→parsed-values memo (engine use). */
+        public Map<Declaration, List<dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue<?>>> valueCache() {
+            return valueCache;
+        }
 
         public ResolveContext(Theme theme) {
             this.theme = theme;
         }
 
         /** The resolved property map for {@code node} (custom props included). */
-        public Map<String, List<ComponentValue>> resolve(Themeable node) {
-            Map<String, List<ComponentValue>> cached = resolved.get(node);
+        public Map<String, ResolvedDecl> resolve(Widget node) {
+            Map<String, ResolvedDecl> cached = resolved.get(node);
             if (cached != null) {
                 return cached;
             }
-            Map<String, List<ComponentValue>> out = compute(node);
+            Map<String, ResolvedDecl> out = compute(node);
             resolved.put(node, out);
             return out;
         }
 
-        private Map<String, List<ComponentValue>> compute(Themeable node) {
+        private Map<String, ResolvedDecl> compute(Widget node) {
             // collect matching declarations → keep winners by cascade order
             Map<String, Candidate> winners = new HashMap<>();
             List<StyleRule> candidates = theme.rulesFor(node);
@@ -86,7 +112,7 @@ public final class Cascade {
                 for (var sel : rule.selectors()) {
                     if (SelectorMatcher.matches(match, sel, node)) {
                         Specificity s = specificity.computeIfAbsent(
-                                sel, dev.vfyjxf.cloudlib.internal.css.ComplexSelector::specificity);
+                                sel, dev.vfyjxf.cloudlib.api.css.ComplexSelector::specificity);
                         if (best == null || s.compareTo(best) > 0) {
                             best = s;
                         }
@@ -108,17 +134,25 @@ public final class Cascade {
                     }
                 }
             }
-            Map<String, List<ComponentValue>> local = new HashMap<>();
-            for (Map.Entry<String, Candidate> e : winners.entrySet()) {
-                local.put(e.getKey(), e.getValue().declaration().value());
+            // emit winners in declaration order — shorthand expansion downstream
+            // relies on it (padding:2px declared before padding-left:4px means
+            // left wins; the reverse declaration order reverses the result)
+            List<Candidate> ordered = new ArrayList<>(winners.values());
+            ordered.sort(Comparator.comparingInt(Candidate::order));
+            Map<String, ResolvedDecl> local = new LinkedHashMap<>(ordered.size());
+            for (Candidate cand : ordered) {
+                Declaration decl = cand.declaration();
+                boolean hasVar = declHasVar.computeIfAbsent(decl, d -> containsVar(d.value()));
+                local.put(decl.property(), new ResolvedDecl(decl, decl.value(), hasVar));
             }
             // inheritance: pull from the parent's resolved map (already memoized)
-            Themeable parent = node.themeParent();
+            Widget parent = node.parent();
             if (parent != null) {
-                Map<String, List<ComponentValue>> parentResolved = resolve(parent);
-                for (Map.Entry<String, List<ComponentValue>> e : parentResolved.entrySet()) {
+                Map<String, ResolvedDecl> parentResolved = resolve(parent);
+                for (Map.Entry<String, ResolvedDecl> e : parentResolved.entrySet()) {
+                    var key = Styles.byId(e.getKey());
                     boolean inheritable =
-                            inherited.contains(e.getKey()) || e.getKey().startsWith("--");
+                            (key != null && key.inherited()) || e.getKey().startsWith("--");
                     if (inheritable && !local.containsKey(e.getKey())) {
                         local.put(e.getKey(), e.getValue());
                     }
@@ -126,11 +160,20 @@ public final class Cascade {
             }
             // var() substitution — runs against this node's own resolved map;
             // per-node varCache: expanding --pad under this node's bindings is
-            // deterministic, so repeated uses expand once
+            // deterministic, so repeated uses expand once. var-free declarations
+            // pass through untouched — their values are node-independent, so the
+            // engine downstream can memoize parse results on declaration identity.
             Map<String, List<ComponentValue>> varCache = new HashMap<>();
-            Map<String, List<ComponentValue>> out = new HashMap<>();
-            for (Map.Entry<String, List<ComponentValue>> e : local.entrySet()) {
-                out.put(e.getKey(), substitute(e.getValue(), local, theme, varCache));
+            Map<String, ResolvedDecl> out = new LinkedHashMap<>();
+            for (Map.Entry<String, ResolvedDecl> e : local.entrySet()) {
+                ResolvedDecl decl = e.getValue();
+                if (!decl.hadVar()) {
+                    out.put(e.getKey(), decl);
+                    continue;
+                }
+                out.put(
+                        e.getKey(),
+                        new ResolvedDecl(decl.declaration(), substitute(decl.value(), local, theme, varCache), true));
             }
             return out;
         }
@@ -146,7 +189,7 @@ public final class Cascade {
      */
     private static List<ComponentValue> substitute(
             List<ComponentValue> values,
-            Map<String, List<ComponentValue>> resolved,
+            Map<String, ResolvedDecl> resolved,
             Theme theme,
             Map<String, List<ComponentValue>> varCache) {
         if (!containsVar(values)) {
@@ -179,7 +222,7 @@ public final class Cascade {
      */
     private static @Nullable List<ComponentValue> substituteList(
             List<ComponentValue> values,
-            Map<String, List<ComponentValue>> resolved,
+            Map<String, ResolvedDecl> resolved,
             Theme theme,
             Map<String, List<ComponentValue>> varCache,
             Set<String> inFlight) {
@@ -216,7 +259,7 @@ public final class Cascade {
 
     private static @Nullable List<ComponentValue> expandVar(
             ComponentValue.Function var,
-            Map<String, List<ComponentValue>> resolved,
+            Map<String, ResolvedDecl> resolved,
             Theme theme,
             Map<String, List<ComponentValue>> varCache,
             Set<String> inFlight) {
@@ -235,7 +278,8 @@ public final class Cascade {
             if (expanded != null) {
                 return expanded;
             }
-            List<ComponentValue> found = resolved.get(varName);
+            ResolvedDecl foundDecl = resolved.get(varName);
+            List<ComponentValue> found = foundDecl != null ? foundDecl.value() : null;
             if (found == null) {
                 found = theme.rootVars().get(varName);
             }

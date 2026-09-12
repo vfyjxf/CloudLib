@@ -25,11 +25,12 @@ import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.layout.LayoutHandler;
 import dev.vfyjxf.cloudlib.api.ui.layout.LayoutScope;
 import dev.vfyjxf.cloudlib.api.ui.style.StyleContext;
+import dev.vfyjxf.cloudlib.api.ui.style.Styles;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.VisualContext;
-import dev.vfyjxf.cloudlib.api.ui.style.property.layout.StyleProperty;
-import dev.vfyjxf.cloudlib.api.ui.style.property.visual.ZIndexProperty;
-import dev.vfyjxf.cloudlib.api.ui.theme.Themeable;
+import dev.vfyjxf.cloudlib.api.ui.style.key.StyleEntry;
+import dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey;
+import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 import dev.vfyjxf.cloudlib.util.Checks;
 import dev.vfyjxf.taffy.tree.Layout;
@@ -66,7 +67,7 @@ import java.util.Set;
  */
 @SuppressWarnings("unchecked")
 @CanIgnoreReturnValue
-public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttachable, Backstage, Themeable {
+public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttachable, Backstage {
 
     @FunctionalInterface
     public interface HoverTooltipProvider {
@@ -217,17 +218,21 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
      * Optional part name for {@code ::part(name)} matching inside compound widgets.
      */
     @Nullable
-    String themePart;
+    String stylePart;
+    /**
+     * Component-provided defaults — applied first, below theme.
+     */
+    UIStyle defaultStyle = UIStyle.empty;
     /**
      * The resolved theme style currently applied to this widget, if any.
      */
     @Nullable
     UIStyle themeStyle;
     /**
-     * Style properties applied through {@link #useStyle} — replayed after theme
-     * re-resolution so code styles keep precedence (the inline-style rule).
+     * Style values applied through {@link #useStyle}/{@link #set} — the
+     * code segment, applied last so it always wins.
      */
-    final List<StyleProperty> codeStyles = new ArrayList<>();
+    final List<StyleValue<?>> codeStyles = new ArrayList<>();
 
     // endregion
 
@@ -242,7 +247,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
     // region z-index management
     {
         // Register listener for zIndex changes
-        style.addChangeListener(ZIndexProperty.type, (oldValue, newValue) -> {
+        style.addChangeListener(Styles.zIndex, (oldValue, newValue) -> {
             if (!Objects.equals(oldValue, newValue)) {
                 if (parent instanceof CompositeWidget<?> composite) {
                     composite.markChildrenOrderDirty();
@@ -788,7 +793,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
     public Widget setActive(boolean active) {
         if (this.active != active) {
             this.active = active;
-            refreshTheme();
+            markStyleDirty();
         }
         return this;
     }
@@ -826,7 +831,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
     public Widget setInteractive(boolean interactive) {
         if (this.interactive != interactive) {
             this.interactive = interactive;
-            refreshTheme();
+            markStyleDirty();
         }
         return this;
     }
@@ -989,7 +994,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
     }
 
     public final Widget useStyle(UIStyle style) {
-        codeStyles.addAll(style.getProperties());
+        codeStyles.addAll(style.values());
         style.apply(this.style);
         if (scene != null) {
             scene.tree.markDirty(nodeId);
@@ -997,14 +1002,38 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         return this;
     }
 
-    public final Widget useStyle(StyleProperty... properties) {
-        for (StyleProperty property : properties) {
-            codeStyles.add(property);
-            property.apply(this.style);
+    public final Widget useStyle(StyleEntry... entries) {
+        for (StyleEntry entry : entries) {
+            entry.collectInto(v -> {
+                codeStyles.add(v);
+                style.apply(v);
+            });
         }
         if (scene != null) {
             scene.tree.markDirty(nodeId);
         }
+        return this;
+    }
+
+    /**
+     * Sets a single style value — the typed low-level writer.
+     */
+    public final <T> Widget set(StyleKey<T> key, T value) {
+        codeStyles.add(key.of(value));
+        style.set(key, value);
+        if (scene != null) {
+            scene.tree.markDirty(nodeId);
+        }
+        return this;
+    }
+
+    /**
+     * Component-provided defaults — applied below theme, so the theme can
+     * override them. Use for baseline looks, not user intent.
+     */
+    public final Widget defaultStyle(UIStyle style) {
+        this.defaultStyle = style;
+        reapplyStyles();
         return this;
     }
 
@@ -1015,7 +1044,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
      */
     public Widget styleId(@Nullable String id) {
         this.styleId = id;
-        refreshTheme();
+        markStyleDirty();
         return this;
     }
 
@@ -1025,7 +1054,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
     public Widget addStyleClass(String name) {
         if (!styleClasses.contains(name)) {
             styleClasses.add(name);
-            refreshTheme();
+            markStyleDirty();
         }
         return this;
     }
@@ -1035,7 +1064,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
      */
     public Widget removeStyleClass(String name) {
         if (styleClasses.remove(name)) {
-            refreshTheme();
+            markStyleDirty();
         }
         return this;
     }
@@ -1049,16 +1078,16 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         } else {
             styleAttrs.put(name, value);
         }
-        refreshTheme();
+        markStyleDirty();
         return this;
     }
 
     /**
      * Tags this widget as a named part of its parent ({@code ::part(name)}).
      */
-    public Widget themePart(@Nullable String name) {
-        this.themePart = name;
-        refreshTheme();
+    public Widget stylePart(@Nullable String name) {
+        this.stylePart = name;
+        markStyleDirty();
         return this;
     }
 
@@ -1067,7 +1096,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
      */
     public Widget addStyleState(String name) {
         if (styleStates.add(name)) {
-            refreshTheme();
+            markStyleDirty();
         }
         return this;
     }
@@ -1077,21 +1106,31 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
      */
     public Widget removeStyleState(String name) {
         if (styleStates.remove(name)) {
-            refreshTheme();
+            markStyleDirty();
         }
         return this;
     }
 
     /**
-     * Re-resolves the active theme against this widget's current selector surface
-     * and reapplies it. Code-applied styles (via {@link #useStyle}) are replayed
-     * afterwards so they keep precedence — the inline-style rule.
+     * Marks this widget's theme segment dirty — the scene re-resolves it during
+     * the next style flush instead of every mutation paying a full re-resolve.
      * <p>
-     * Called automatically when states that selectors can observe change
-     * (hover, focus, active…); call manually after changing custom state sets.
+     * Called automatically when the selector-visible surface changes
+     * (hover, focus, state set, class list); unmounted widgets are no-ops —
+     * they resolve fresh at mount.
+     */
+    public void markStyleDirty() {
+        if (scene != null) {
+            scene.markStyleDirty(this);
+        }
+    }
+
+    /**
+     * Re-resolves the active theme against this widget's current selector
+     * surface and reapplies it — the immediate (non-batched) path.
      */
     public void refreshTheme() {
-        var theme = dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.active();
+        var theme = scene != null ? scene.theme() : dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.active();
         if (theme == null) {
             return;
         }
@@ -1099,19 +1138,32 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
     }
 
     /**
-     * Applies a theme-resolved style and replays code styles on top of it.
-     * Shared by {@link #refreshTheme} and whole-tree refreshes
-     * ({@code ThemeEngine.applyTree}) which share one cascade context.
+     * Sets the resolved theme segment and re-applies the three ordered
+     * segments: {@code defaultStyle → themeStyle → codeStyles}.
+     * <p>
+     * Shared by {@link #refreshTheme}, the scene's dirty flush, and whole-tree
+     * refreshes ({@code ThemeEngine.applyTree}).
      */
     public void applyThemeStyle(UIStyle resolved) {
         if (Objects.equals(resolved, themeStyle)) {
             return;
         }
         themeStyle = resolved;
+        reapplyStyles();
+        listeners(WidgetEvent.onThemeUpdate).onThemeUpdate();
+    }
+
+    /**
+     * Rebuilds the style context from the three segments in order.
+     */
+    private void reapplyStyles() {
         style.reset();
-        resolved.apply(style);
-        for (StyleProperty property : codeStyles) {
-            property.apply(style);
+        defaultStyle.apply(style);
+        if (themeStyle != null) {
+            themeStyle.apply(style);
+        }
+        for (StyleValue<?> value : codeStyles) {
+            style.apply(value);
         }
         if (scene != null) {
             scene.tree.markDirty(nodeId);
@@ -1120,25 +1172,48 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
 
     // endregion
 
-    // region themeable selectors
+    // region selector surface
 
-    @Override
-    public @Nullable String themeId() {
+    /**
+     * The element tag matched by type selectors — the kebab-cased class name
+     * with a trailing {@code Widget} stripped ({@code ButtonWidget → button}).
+     */
+    public String styleTag() {
+        String name = getClass().getSimpleName();
+        if (name.endsWith("Widget")) {
+            name = name.substring(0, name.length() - "Widget".length());
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (Character.isUpperCase(c) && i > 0) {
+                sb.append('-');
+            }
+            sb.append(Character.toLowerCase(c));
+        }
+        return sb.toString();
+    }
+
+    /** The {@code #id} selector target, or null. */
+    public @Nullable String styleId() {
         return styleId;
     }
 
-    @Override
-    public List<String> themeClasses() {
+    /** The {@code .class} selector targets. */
+    public List<String> styleClasses() {
         return styleClasses;
     }
 
-    @Override
-    public @Nullable String themeAttr(String name) {
-        return styleAttrs.get(name);
+    /** The {@code [name]} / {@code [name=value]} selector targets. */
+    public Map<String, String> styleAttrs() {
+        return styleAttrs;
     }
 
-    @Override
-    public Set<String> themeStates() {
+    /**
+     * The {@code :state} pseudo-class targets — the custom state set plus the
+     * built-in state mapping (hovered/active/focused/…).
+     */
+    public Set<String> styleStates() {
         Set<String> states = new HashSet<>(styleStates);
         if (hovered) {
             states.add("hovered");
@@ -1153,34 +1228,9 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         return states;
     }
 
-    @Override
-    public @Nullable Themeable themeParent() {
-        return parent;
-    }
-
-    @Override
-    public List<? extends Themeable> themeSiblings() {
-        if (parent == null) {
-            return List.of(this);
-        }
-        List<Themeable> siblings = new ArrayList<>();
-        parent.children().forEach(siblings::add);
-        return siblings;
-    }
-
-    @Override
-    public List<? extends Themeable> themeChildren() {
-        if (!(this instanceof CompositeWidget<?> composite)) {
-            return List.of();
-        }
-        List<Themeable> children = new ArrayList<>();
-        composite.children().forEach(children::add);
-        return children;
-    }
-
-    @Override
-    public @Nullable String themePart() {
-        return themePart;
+    /** The {@code ::part(name)} target, or null. */
+    public @Nullable String stylePart() {
+        return stylePart;
     }
 
     // endregion

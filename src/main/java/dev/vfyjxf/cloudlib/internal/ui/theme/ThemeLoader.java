@@ -1,18 +1,19 @@
 package dev.vfyjxf.cloudlib.internal.ui.theme;
 
+import dev.vfyjxf.cloudlib.api.css.AtRule;
+import dev.vfyjxf.cloudlib.api.css.ComponentValue;
+import dev.vfyjxf.cloudlib.api.css.CssError;
+import dev.vfyjxf.cloudlib.api.css.CssParser;
+import dev.vfyjxf.cloudlib.api.css.Rule;
+import dev.vfyjxf.cloudlib.api.css.Stylesheet;
 import dev.vfyjxf.cloudlib.api.ui.theme.Theme;
 import dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager;
-import dev.vfyjxf.cloudlib.internal.css.AtRule;
-import dev.vfyjxf.cloudlib.internal.css.ComponentValue;
-import dev.vfyjxf.cloudlib.internal.css.CssError;
-import dev.vfyjxf.cloudlib.internal.css.CssParser;
-import dev.vfyjxf.cloudlib.internal.css.Rule;
-import dev.vfyjxf.cloudlib.internal.css.Stylesheet;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,13 @@ import java.util.Map;
  * Resource packs can override or extend any theme by id; the import chain is
  * flattened into each theme's rule list with source order preserved.
  */
-public final class ThemeLoader extends SimplePreparableReloadListener<Map<ResourceLocation, String>> {
+public final class ThemeLoader extends SimplePreparableReloadListener<ThemeLoader.Prepared> {
+
+    /** What a pack contributes: theme sources plus its manifest text. */
+    record Prepared(Map<ResourceLocation, String> sources, List<ThemeManifest> manifests) {}
+
+    /** Parsed {@code ui/themes/themes.json} — recommended defaults for the pack. */
+    record ThemeManifest(List<ResourceLocation> defaultStack) {}
 
     public static final ThemeLoader instance = new ThemeLoader();
 
@@ -47,16 +54,15 @@ public final class ThemeLoader extends SimplePreparableReloadListener<Map<Resour
 
     // region stage 1: read
     @Override
-    protected Map<ResourceLocation, String> prepare(ResourceManager manager, ProfilerFiller profiler) {
+    protected Prepared prepare(ResourceManager manager, ProfilerFiller profiler) {
         Map<ResourceLocation, String> sources = new HashMap<>();
+        List<ThemeManifest> manifests = new ArrayList<>();
         for (Map.Entry<ResourceLocation, Resource> entry : manager.listResources(
-                        directory, path -> path.getPath().endsWith(".css"))
+                        directory,
+                        path -> path.getPath().endsWith(".css")
+                                || path.getPath().endsWith("themes.json"))
                 .entrySet()) {
             ResourceLocation file = entry.getKey();
-            // assets/<ns>/ui/themes/<path>.css → <ns>:<path without .css>
-            String path = file.getPath();
-            String relative = path.substring(directory.length() + 1, path.length() - ".css".length());
-            ResourceLocation themeId = ResourceLocation.fromNamespaceAndPath(file.getNamespace(), relative);
             try (var reader = new InputStreamReader(entry.getValue().open(), StandardCharsets.UTF_8)) {
                 StringBuilder sb = new StringBuilder();
                 char[] buf = new char[4096];
@@ -64,19 +70,56 @@ public final class ThemeLoader extends SimplePreparableReloadListener<Map<Resour
                 while ((n = reader.read(buf)) >= 0) {
                     sb.append(buf, 0, n);
                 }
-                sources.put(themeId, sb.toString());
+                String text = sb.toString();
+                if (file.getPath().endsWith("themes.json")) {
+                    ThemeManifest manifest = parseManifest(file, text);
+                    if (manifest != null) {
+                        manifests.add(manifest);
+                    }
+                } else {
+                    // assets/<ns>/ui/themes/<path>.css → <ns>:<path without .css>
+                    String path = file.getPath();
+                    String relative = path.substring(directory.length() + 1, path.length() - ".css".length());
+                    sources.put(ResourceLocation.fromNamespaceAndPath(file.getNamespace(), relative), text);
+                }
             } catch (IOException e) {
                 logger.warn("Failed to read theme {}", file, e);
             }
         }
-        return sources;
+        return new Prepared(sources, manifests);
+    }
+
+    /**
+     * {@code {"default": ["ns:path", ...]}} — the pack's recommended activation
+     * stack, lowest priority first.
+     */
+    private static @Nullable ThemeManifest parseManifest(ResourceLocation file, String text) {
+        try {
+            var json = com.google.gson.JsonParser.parseString(text).getAsJsonObject();
+            List<ResourceLocation> stack = new ArrayList<>();
+            if (json.has("default")) {
+                for (var el : json.getAsJsonArray("default")) {
+                    ResourceLocation id = ResourceLocation.tryParse(el.getAsString());
+                    if (id != null) {
+                        stack.add(id);
+                    } else {
+                        logger.warn("{}: unparseable theme id '{}'", file, el.getAsString());
+                    }
+                }
+            }
+            return new ThemeManifest(stack);
+        } catch (RuntimeException e) {
+            logger.warn("Failed to parse theme manifest {}: {}", file, e.getMessage());
+            return null;
+        }
     }
 
     // endregion
 
     // region stage 2: parse & register
     @Override
-    protected void apply(Map<ResourceLocation, String> sources, ResourceManager manager, ProfilerFiller profiler) {
+    protected void apply(Prepared prepared, ResourceManager manager, ProfilerFiller profiler) {
+        Map<ResourceLocation, String> sources = prepared.sources();
         Map<ResourceLocation, Theme> resolved = new HashMap<>();
         for (ResourceLocation id : sources.keySet()) {
             Theme theme = resolveTheme(id, sources, new ArrayDeque<>(), resolved);
@@ -87,15 +130,39 @@ public final class ThemeLoader extends SimplePreparableReloadListener<Map<Resour
         for (Theme theme : resolved.values()) {
             ThemeManager.register(theme);
         }
-        // the bundled standard theme is the default look — packs override by id
-        ResourceLocation standard = ResourceLocation.fromNamespaceAndPath("cloudlib", "standard");
-        if (resolved.containsKey(standard) && ThemeManager.active() == null) {
-            ThemeManager.activate(standard);
+
+        // activation: user config > manifest defaults > standard fallback
+        List<ResourceLocation> wanted = new ArrayList<>();
+        for (String id : ThemeConfig.uiThemes()) {
+            ResourceLocation loc = ResourceLocation.tryParse(id);
+            if (loc != null) {
+                wanted.add(loc);
+            } else {
+                logger.warn("ui_themes entry '{}' is not a resource location", id);
+            }
         }
+        if (wanted.isEmpty()) {
+            for (ThemeManifest manifest : prepared.manifests()) {
+                for (ResourceLocation id : manifest.defaultStack()) {
+                    if (resolved.containsKey(id) && !wanted.contains(id)) {
+                        wanted.add(id);
+                    }
+                }
+            }
+        }
+        if (wanted.isEmpty()) {
+            ResourceLocation standard = ResourceLocation.fromNamespaceAndPath("cloudlib", "standard");
+            if (resolved.containsKey(standard)) {
+                wanted.add(standard);
+            }
+        }
+        wanted.retainAll(resolved.keySet());
+        ThemeManager.setStack(wanted);
+
         if (!resolved.isEmpty()) {
             ThemeManager.notifyChanged();
         }
-        logger.info("Loaded {} theme(s): {}", resolved.size(), resolved.keySet());
+        logger.info("Loaded {} theme(s): {}, active: {}", resolved.size(), resolved.keySet(), wanted);
     }
 
     /**

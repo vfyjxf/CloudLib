@@ -6,11 +6,11 @@ import org.jetbrains.annotations.Nullable;
  * Listener for style property changes.
  * <p>
  * This interface allows widgets to react to specific property changes during style application.
- * Listeners are registered via {@link StyleContext#addChangeListener(StyleType, StyleChangeListener)}.
+ * Listeners are registered via {@link StyleContext#addChangeListener(dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey, StyleChangeListener)}.
  * <p>
  * Example usage:
  * <pre>{@code
- * styleContext.addChangeListener(ZIndexProperty.type, (oldValue, newValue) -> {
+ * styleContext.addChangeListener(Styles.zIndex, (oldValue, newValue) -> {
  *     if (!Objects.equals(oldValue, newValue)) {
  *         // handle change
  *     }

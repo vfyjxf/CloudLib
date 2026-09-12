@@ -412,10 +412,81 @@ public final class Scene {
 
     // region activity
 
+    // region style flush
+
+    /**
+     * Widgets whose selector-visible surface changed since the last flush.
+     */
+    private final java.util.Set<Widget> styleDirty = new java.util.LinkedHashSet<>();
+
+    /**
+     * Per-scene theme override — when set, this scene resolves against it
+     * instead of the global stack (the global stack is the recommended
+     * default, not an obligation).
+     */
+    @org.jetbrains.annotations.Nullable
+    private dev.vfyjxf.cloudlib.api.ui.theme.Theme themeOverride;
+
+    /**
+     * Pins this scene to a theme (null → follow the global stack).
+     */
+    public void setTheme(@org.jetbrains.annotations.Nullable net.minecraft.resources.ResourceLocation themeId) {
+        this.themeOverride = themeId == null ? null : dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.get(themeId);
+        refreshTheme();
+    }
+
+    /**
+     * The theme this scene resolves against — the override, else the top of
+     * the global stack, else null.
+     */
+    public @org.jetbrains.annotations.Nullable dev.vfyjxf.cloudlib.api.ui.theme.Theme theme() {
+        return themeOverride != null ? themeOverride : dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.active();
+    }
+
+    /** Re-resolves the whole tree against {@link #theme()}. */
+    public void refreshTheme() {
+        var theme = theme();
+        if (theme != null && root.lifecycle.mounted()) {
+            dev.vfyjxf.cloudlib.api.ui.theme.ThemeEngine.applyTree(theme, root, null);
+        }
+    }
+
+    /**
+     * Queues a widget for theme re-resolution at the next {@link #tick()} —
+     * the batched path behind {@link Widget#markStyleDirty()}.
+     */
+    public void markStyleDirty(Widget widget) {
+        styleDirty.add(widget);
+    }
+
+    /**
+     * Re-resolves every dirty widget's theme segment. Whole-tree refreshes
+     * ({@code ThemeManager.refreshTree}) bypass this queue and use a shared
+     * cascade context instead.
+     */
+    public void flushStyleDirty() {
+        if (styleDirty.isEmpty()) {
+            return;
+        }
+        var theme = theme();
+        if (theme == null) {
+            styleDirty.clear();
+            return;
+        }
+        var ctx = new dev.vfyjxf.cloudlib.internal.ui.theme.Cascade.ResolveContext(theme);
+        for (Widget widget : styleDirty) {
+            widget.applyThemeStyle(dev.vfyjxf.cloudlib.api.ui.theme.ThemeEngine.resolveShared(theme, widget, ctx));
+        }
+        styleDirty.clear();
+    }
+
+    // endregion
+
     public void tick() {
         if (!root.lifecycle.mounted()) {
             throw new IllegalStateException("Widget is not mounted!");
         }
+        flushStyleDirty();
         runTickTasks();
         // Non-recursive tick: collect and tick all tickable widgets in the tree
         // so that a child can be tickable without requiring its parent to also be tickable.
@@ -523,10 +594,8 @@ public final class Scene {
             return TraversalControl.proceed;
         });
         liveScenes.add(this);
-        // late theme attach: resolve the active theme once the tree is mounted
-        if (dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.active() != null) {
-            dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.refreshTree(root);
-        }
+        // late theme attach: resolve the effective theme once the tree is mounted
+        refreshTheme();
     }
 
     public void reuse(Widget widget) {
@@ -1127,7 +1196,7 @@ public final class Scene {
                     Widget widget = currentPath.get(i);
                     if (!isMountedInThisScene(widget)) continue;
                     widget.hovered = true;
-                    widget.refreshTheme();
+                    widget.markStyleDirty();
                     widget.listeners(InputEvents.onMouseEnter).onEnter(mouseX, mouseY, widget.interruptible());
                 }
             } else {
@@ -1136,14 +1205,14 @@ public final class Scene {
                     Widget widget = lastHoveredPath.get(i);
                     if (!isMountedInThisScene(widget)) continue;
                     widget.hovered = false;
-                    widget.refreshTheme();
+                    widget.markStyleDirty();
                     widget.listeners(InputEvents.onMouseLeave).onLeave(mouseX, mouseY, widget.interruptible());
                 }
                 for (int i = forkIndex + 1; i < currentPath.size(); i++) {
                     Widget widget = currentPath.get(i);
                     if (!isMountedInThisScene(widget)) continue;
                     widget.hovered = true;
-                    widget.refreshTheme();
+                    widget.markStyleDirty();
                     widget.listeners(InputEvents.onMouseEnter).onEnter(mouseX, mouseY, widget.interruptible());
                 }
             }
@@ -1153,7 +1222,7 @@ public final class Scene {
                 Widget widget = lastHoveredPath.get(i);
                 if (!isMountedInThisScene(widget)) continue;
                 widget.hovered = false;
-                widget.refreshTheme();
+                widget.markStyleDirty();
                 widget.listeners(InputEvents.onMouseLeave).onLeave(mouseX, mouseY, widget.interruptible());
             }
             lastHoveredPath = null;
@@ -1424,7 +1493,7 @@ public final class Scene {
                 FocusNode fn = oldPath.get(i).focusNode;
                 if (fn != null) {
                     fn.hasFocus = false;
-                    if (fn.owner != null) fn.owner.refreshTheme();
+                    if (fn.owner != null) fn.owner.markStyleDirty();
                 }
             }
 
@@ -1439,20 +1508,20 @@ public final class Scene {
                 FocusNode fn = newPath.get(i).focusNode;
                 if (fn != null) {
                     fn.hasFocus = true;
-                    if (fn.owner != null) fn.owner.refreshTheme();
+                    if (fn.owner != null) fn.owner.markStyleDirty();
                 }
             }
         } else {
             if (oldFocus != null) {
                 oldFocus.hasPrimaryFocus = false;
                 oldFocus.hasFocus = false;
-                if (oldFocus.owner != null) oldFocus.owner.refreshTheme();
+                if (oldFocus.owner != null) oldFocus.owner.markStyleDirty();
             }
             for (int i = 0; i < newPath.size(); i++) {
                 FocusNode fn = newPath.get(i).focusNode;
                 if (fn != null) {
                     fn.hasFocus = true;
-                    if (fn.owner != null) fn.owner.refreshTheme();
+                    if (fn.owner != null) fn.owner.markStyleDirty();
                 }
             }
         }
@@ -1460,7 +1529,7 @@ public final class Scene {
         primaryFocus = node;
         node.hasPrimaryFocus = true;
         node.hasFocus = true;
-        if (node.owner != null) node.owner.refreshTheme();
+        if (node.owner != null) node.owner.markStyleDirty();
 
         updateScopeFocusedChild(node);
 
@@ -1482,7 +1551,7 @@ public final class Scene {
                 FocusNode fn = oldPath.get(i).focusNode;
                 if (fn != null) {
                     fn.hasFocus = false;
-                    if (fn.owner != null) fn.owner.refreshTheme();
+                    if (fn.owner != null) fn.owner.markStyleDirty();
                 }
             }
             oldFocus.hasPrimaryFocus = false;
@@ -1494,7 +1563,7 @@ public final class Scene {
         } else {
             oldFocus.hasPrimaryFocus = false;
             oldFocus.hasFocus = false;
-            if (oldFocus.owner != null) oldFocus.owner.refreshTheme();
+            if (oldFocus.owner != null) oldFocus.owner.markStyleDirty();
         }
     }
 

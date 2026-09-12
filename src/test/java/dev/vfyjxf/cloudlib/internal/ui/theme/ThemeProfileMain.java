@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.internal.ui.theme;
 
+import dev.vfyjxf.cloudlib.api.css.CssParser;
 import dev.vfyjxf.cloudlib.api.ui.theme.Theme;
-import dev.vfyjxf.cloudlib.internal.css.CssParser;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
@@ -46,7 +46,7 @@ public final class ThemeProfileMain {
         for (int iter = 0; iter < iterations; iter++) {
             Cascade.ResolveContext ctx = new Cascade.ResolveContext(theme);
             for (var n : nodes) {
-                ctx.resolve(n);
+                dev.vfyjxf.cloudlib.api.ui.theme.ThemeEngine.resolveShared(theme, n, ctx);
             }
         }
         long ms = (System.nanoTime() - start) / 1_000_000;
@@ -56,8 +56,10 @@ public final class ThemeProfileMain {
 
     private static void collect(ThemePerfTest.Probe n, List<ThemePerfTest.Probe> out) {
         out.add(n);
-        for (var c : n.children) {
-            collect(c, out);
+        for (var c : n.children()) {
+            if (c instanceof ThemePerfTest.Probe p) {
+                collect(p, out);
+            }
         }
     }
 }
