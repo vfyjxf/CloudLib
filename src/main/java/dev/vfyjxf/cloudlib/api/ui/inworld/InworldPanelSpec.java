@@ -33,6 +33,16 @@ public final class InworldPanelSpec {
     boolean openAnimation = false;
     double maxDistance = 32;
     /**
+     * Engagement gating: an interactive panel with {@code onDemand} stays
+     * <em>dormant</em> — it tracks its anchor and shows the scan frame plus
+     * a key chip while targeted, but presents no chrome — until the interact
+     * key expands it. Defaults true so the world isn't wallpapered with
+     * panels; set false for ambient displays that should always show.
+     * Non-interactive panels ignore this — they are pure displays and are
+     * always presented.
+     */
+    boolean onDemand = true;
+    /**
      * Zoning group: displaced non-interactive panels (entity tags) that cannot
      * keep their anchor position are gathered into a side rail; panels sharing
      * a group key stay adjacent inside it. {@code null} derives the group from
@@ -153,6 +163,14 @@ public final class InworldPanelSpec {
         return action;
     }
 
+    /**
+     * Whether this panel must be engaged (interact key on its targeted
+     * anchor) before it presents. Always false for non-interactive panels.
+     */
+    public boolean requiresEngage() {
+        return interactive && onDemand;
+    }
+
     //region mutation
 
     public InworldPanelSpec title(@Nullable Component title) {
@@ -182,6 +200,15 @@ public final class InworldPanelSpec {
 
     public InworldPanelSpec maxDistance(double maxDistance) {
         this.maxDistance = maxDistance;
+        return this;
+    }
+
+    /**
+     * Whether the panel waits for the interact key before presenting
+     * (default) or shows itself on sight. See {@link #onDemand}.
+     */
+    public InworldPanelSpec onDemand(boolean onDemand) {
+        this.onDemand = onDemand;
         return this;
     }
 

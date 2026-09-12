@@ -39,6 +39,8 @@ import net.neoforged.neoforge.capabilities.Capabilities;
  */
 public final class InventoryPanelProvider implements InworldProvider {
 
+    private static final String KEY = "player/inv";
+
     /** The container the panel is anchored to — follows the crosshair while no drag is live. */
     private BlockPos anchorPos;
 
@@ -46,10 +48,11 @@ public final class InventoryPanelProvider implements InworldProvider {
     public void provide(InworldContext context, InworldSink sink) {
         InworldManager manager = InworldManager.instance();
         boolean dragging = manager != null && manager.dragActive();
+        boolean engaged = manager != null && manager.engaged(KEY);
 
         BlockPos target = lookingAtContainer(context);
-        if (!dragging) {
-            anchorPos = target; //follow the crosshair when idle; stick while dragging
+        if (!dragging && !engaged) {
+            anchorPos = target; //follow the crosshair while idle; stick while dragging or engaged
         }
         if (anchorPos == null) return;
 
@@ -58,7 +61,7 @@ public final class InventoryPanelProvider implements InworldProvider {
                 : Component.literal("CONTAINER");
 
         sink.offer(InworldPanelSpec
-                .of("player/inv",
+                .of(KEY,
                         InworldAnchor.of(anchorPos, new Vec3(0.5, 0.55, 0.5)),
                         InworldPlacement.floating(
                                 FloatingPlacement.rightStart,

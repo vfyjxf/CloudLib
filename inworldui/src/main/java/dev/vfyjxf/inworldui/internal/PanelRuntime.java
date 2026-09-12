@@ -70,6 +70,12 @@ final class PanelRuntime implements InworldPanel {
     /** a live trace session froze this panel's position — resolvers keep it presented but never retarget */
     boolean pinned;
 
+    /** the interact key expanded this on-demand panel — presents until it
+     *  loses all targeting for the grace window */
+    boolean engaged;
+    /** tick the engaged panel last had no target; -1 while still held */
+    long engageIdleSince = -1;
+
     /** gameTime+partialTick when the panel was created; -1 = no open animation */
     float bornAt = -1;
     /** current open-animation scale driven by the manager (1 = fully open) */

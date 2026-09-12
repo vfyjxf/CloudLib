@@ -238,6 +238,8 @@ public final class InworldManager implements InworldUiApi {
     private final List<PanelRuntime> floatingQueue = new ArrayList<>();
     private static final int PARK_BASE = -1_000_000;
     private static final int PARK_STEP = 4096;
+    /** ticks an engaged panel survives without any targeting (~3s) */
+    private static final int ENGAGE_GRACE_TICKS = 60;
 
     private record ProviderRegistration(InworldProvider provider, int interval, long nextRun) {
     }
@@ -479,6 +481,29 @@ public final class InworldManager implements InworldUiApi {
 
         renderScreenSpace(graphics, vx, vy, pt);
         renderDragOverlay(graphics);
+        renderEngageChip(graphics);
+    }
+
+    /**
+     * The "press to open" affordance over a dormant target's anchor — the
+     * only thing a gated panel shows before it is engaged: a small key chip
+     * floating just above the anchor's screen position.
+     */
+    private void renderEngageChip(GuiGraphics graphics) {
+        PanelRuntime target = focused != null && isDormant(focused) ? focused
+                : (pointed != null && isDormant(pointed) ? pointed : null);
+        if (target == null || target.anchorScreen == null) return;
+        String key = "[" + InworldKeyMappings.interact.getTranslatedKeyMessage().getString() + "]";
+        var font = mc.font;
+        int tw = font.width(key) + 6;
+        int x = (int) Math.round(target.anchorScreen.x - tw * 0.5);
+        int y = (int) Math.round(target.anchorScreen.y) - 24;
+        graphics.fill(x, y, x + tw, y + 10, HackerTheme.BG_FOCUSED);
+        graphics.fill(x, y, x + tw, y + 1, HackerTheme.ACCENT_DIM);
+        graphics.fill(x, y + 9, x + tw, y + 10, HackerTheme.ACCENT_DIM);
+        graphics.fill(x, y, x + 1, y + 10, HackerTheme.ACCENT_DIM);
+        graphics.fill(x + tw - 1, y, x + tw, y + 10, HackerTheme.ACCENT_DIM);
+        graphics.drawString(font, key, x + 3, y + 1, HackerTheme.ACCENT);
     }
 
     private void onMouseButton(InputEvent.MouseButton.Pre event) {
@@ -821,6 +846,22 @@ public final class InworldManager implements InworldUiApi {
             if (runtime.distance > runtime.spec.maxDistance()) continue;
 
             runtime.anchorScreen = proj.worldToScreen(anchor);
+
+            //engagement lifecycle: an engaged panel stays open while it is
+            //pointed at, soft-focused, hosting a session, or inspect is flat —
+            //after losing all of those it folds away after a short grace
+            if (runtime.engaged) tickEngagement(runtime);
+
+            //engagement gate: an on-demand panel stays dormant — it tracks
+            //the anchor so the scan frame/key chip and the targeting math
+            //still work, but presents no chrome until the interact key
+            //expands it. Watch-Dogs-style: the world isn't wallpapered with
+            //ui until the player asks for it.
+            if (isDormant(runtime)) {
+                runtime.indicator = false;
+                runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+                continue;
+            }
 
             //off-screen collapse: shrink to an edge indicator instead of
             //presenting the full panel where the target can't be seen.
@@ -1801,11 +1842,14 @@ public final class InworldManager implements InworldUiApi {
             if (pointed != null) pointedInPanel = true;
         }
 
-        //3. crosshair on an anchor block (focus only — clicks fall through to the game)
+        //3. crosshair on an anchor block (focus only — clicks fall through to
+        //the game). Dormant panels count: aiming at a dormant anchor is what
+        //lights up its engage affordance.
         if (pointed == null && mc.hitResult instanceof BlockHitResult blockHit
                 && blockHit.getType() == HitResult.Type.BLOCK) {
             for (PanelRuntime runtime : panels.values()) {
-                if (runtime.presented && blockHit.getBlockPos().equals(runtime.anchor().blockPos())) {
+                if (runtime.anchorWorld != null
+                        && blockHit.getBlockPos().equals(runtime.anchor().blockPos())) {
                     pointed = runtime;
                     break;
                 }
@@ -1855,9 +1899,13 @@ public final class InworldManager implements InworldUiApi {
         PanelRuntime best = null;
         double bestScore = Double.MAX_VALUE;
         for (PanelRuntime r : panels.values()) {
-            if (!r.presented || !r.widget.visible() || !r.spec.interactive()) continue;
-            //an action or a traceable content both make the panel "activatable"
-            if (r.anchorWorld == null || (r.spec.action() == null && r.traceable() == null)) continue;
+            boolean dormant = isDormant(r);
+            if (!dormant && (!r.presented || !r.widget.visible() || !r.spec.interactive())) continue;
+            //an action or a traceable content both make the panel
+            //"activatable"; a dormant panel needs neither — expanding it IS
+            //the action
+            if (r.anchorWorld == null
+                    || (!dormant && r.spec.action() == null && r.traceable() == null)) continue;
             if (r.distance > Math.min(r.spec.maxDistance(), InworldLayout.SOFT_FOCUS_RANGE)) continue;
             double score = InworldLayout.softFocusScore(eye, look, r.anchorWorld);
             if (score < 0) continue;
@@ -1871,13 +1919,80 @@ public final class InworldManager implements InworldUiApi {
     }
 
     /**
-     * The interact hotkey. Traceable panels enter a trace session instead of
-     * firing immediately — a quick tap still lands on the primary action (see
-     * {@link #endTrace}).
+     * Dormant = gated by on-demand presentation and not yet engaged. A
+     * dormant panel still tracks its anchor (scan frame, key chip, soft
+     * focus) but presents no chrome.
+     */
+    private static boolean isDormant(PanelRuntime r) {
+        return r.spec.requiresEngage() && !r.engaged;
+    }
+
+    /**
+     * Per-frame lifecycle of an engaged panel: it holds while the player is
+     * still engaged with it — pointing at it, soft-focused on its anchor,
+     * hosting a trace/drag, or the inspect projection is up — and releases
+     * after {@link #ENGAGE_GRACE_TICKS} ticks with none of those.
+     */
+    private void tickEngagement(PanelRuntime runtime) {
+        boolean held = inspecting
+                || tracing == runtime
+                || dragPanel == runtime
+                || pointed == runtime
+                || focused == runtime;
+        if (held) {
+            runtime.engageIdleSince = -1;
+            return;
+        }
+        if (runtime.engageIdleSince < 0) runtime.engageIdleSince = tick;
+        if (tick - runtime.engageIdleSince > ENGAGE_GRACE_TICKS) {
+            runtime.engaged = false;
+        }
+    }
+
+    /**
+     * Expands a dormant panel: only one panel is engaged at a time (the
+     * previous one releases), and the open animation replays so the panel
+     * visibly pops out of the anchor.
+     */
+    private void engage(PanelRuntime runtime) {
+        for (PanelRuntime r : panels.values()) {
+            if (r != runtime) r.engaged = false;
+        }
+        runtime.engaged = true;
+        runtime.engageIdleSince = -1;
+        if (mc.level != null) {
+            runtime.bornAt = mc.level.getGameTime() + framePartialTick;
+        }
+        focused = runtime;
+        scene.requestFocus(runtime.widget);
+    }
+
+    /**
+     * Whether the panel with the given key is currently engaged — providers
+     * use it to keep offering a spec whose anchor is no longer under the
+     * crosshair (the panel stays alive while it is being used).
+     */
+    public boolean engaged(Object key) {
+        PanelRuntime r = panels.get(key);
+        return r != null && r.engaged;
+    }
+
+    /**
+     * The interact hotkey. A dormant target engages (expands) on the first
+     * press; an expanded traceable panel enters a trace session instead of
+     * firing immediately — a quick tap still lands on the primary action
+     * (see {@link #endTrace}).
      */
     private void triggerInteract() {
         PanelRuntime target = focused;
-        if (target == null || !target.presented || !target.spec.interactive()) return;
+        if (target == null || !target.spec.interactive()) return;
+        //first press on a dormant target engages it — the interact key IS
+        //the expand key; a second press fires the primary action / trace
+        if (isDormant(target)) {
+            engage(target);
+            return;
+        }
+        if (!target.presented) return;
         if (target.traceable() != null) {
             beginTrace(target);
             return;
@@ -2325,7 +2440,10 @@ public final class InworldManager implements InworldUiApi {
         Set<BlockPos> framed = new HashSet<>();
         Set<Integer> framedEnts = new HashSet<>();
         for (PanelRuntime runtime : panels.values()) {
-            if (!runtime.presented || !runtime.widget.visible()) continue;
+            if (!runtime.widget.visible()) continue;
+            //dormant panels present nothing — but a targeted one's anchor is
+            //exactly what the scan frame marks
+            if (!runtime.presented && !isDormant(runtime)) continue;
             if (!runtime.focused() && runtime != pointed) continue;
             BlockPos pos = runtime.spec.anchor().blockPos();
             if (pos != null) {
