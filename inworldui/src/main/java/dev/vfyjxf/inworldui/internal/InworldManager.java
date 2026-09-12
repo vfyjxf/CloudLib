@@ -498,6 +498,21 @@ public final class InworldManager implements InworldUiApi {
         int tw = font.width(key) + 6;
         int x = (int) Math.round(target.anchorScreen.x - tw * 0.5);
         int y = (int) Math.round(target.anchorScreen.y) - 24;
+        //the anchor may project onto committed chrome (e.g. a dock column) —
+        //hop the chip above whatever covers it so the affordance stays
+        //readable instead of stamping over another panel
+        for (int pass = 0; pass < 3; pass++) {
+            boolean moved = false;
+            for (Rect2i r : frameOccupied) {
+                if (x + tw <= r.getX() || x >= r.getX() + r.getWidth()
+                        || y + 10 <= r.getY() || y >= r.getY() + r.getHeight()) continue;
+                y = r.getY() - 12;
+                moved = true;
+            }
+            if (!moved) break;
+        }
+        x = Math.max(2, Math.min(x, mc.getWindow().getGuiScaledWidth() - tw - 2));
+        y = Math.max(2, y);
         graphics.fill(x, y, x + tw, y + 10, HackerTheme.BG_FOCUSED);
         graphics.fill(x, y, x + tw, y + 1, HackerTheme.ACCENT_DIM);
         graphics.fill(x, y + 9, x + tw, y + 10, HackerTheme.ACCENT_DIM);
@@ -905,7 +920,9 @@ public final class InworldManager implements InworldUiApi {
         }
 
         layoutDocks(docked);
-        docked.clear();
+        //dockQueue is cleared after the floating pass — degraded floats
+        //append to it and a second solve packs them into the same corners
+        int dockCount = docked.size();
 
         //screen rects the foreground chrome occupies: every docked panel
         //(interactive or not — a dock slot is chrome), interactive flat
@@ -931,7 +948,9 @@ public final class InworldManager implements InworldUiApi {
         }
 
         for (PanelRuntime r : floatingDeferred) {
-            resolveFloating(r, (InworldPlacement.Floating) r.spec.placement(), obstacles);
+            int before = docked.size();
+            resolveFloating(r, (InworldPlacement.Floating) r.spec.placement(), obstacles, docked);
+            if (docked.size() != before) continue;   //degraded into the dock queue
             //each resolved floating panel becomes an obstacle for the next —
             //two panels sharing an anchor side can't stack on each other
             if (r.presented && r.widget.visible()) {
@@ -944,6 +963,22 @@ public final class InworldManager implements InworldUiApi {
         }
         floatingDeferred.clear();
 
+        if (docked.size() > dockCount) {
+            //late dock arrivals: the solve is deterministic and order-stable,
+            //so a second pass leaves earlier panels exactly where they were
+            //and packs the newcomers into the remaining corner budget
+            layoutDocks(docked);
+            for (int i = dockCount; i < docked.size(); i++) {
+                PanelRuntime r = docked.get(i);
+                if (!r.presented) continue;
+                Rect2i rect = new Rect2i(r.targetX, r.targetY,
+                        r.widget.width(), r.widget.height());
+                occupied.add(rect);
+                obstacles.add(new Rect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()));
+            }
+        }
+        docked.clear();
+
         for (PanelRuntime r : expandDeferred) {
             resolveExpand(r, (InworldPlacement.Expand) r.spec.placement(), occupied);
             //a shown hologram reserves its own screen rect for the next one
@@ -955,6 +990,7 @@ public final class InworldManager implements InworldUiApi {
         expandDeferred.clear();
 
         resolveConflicts(occupied);
+        frameOccupied = occupied;
         smoothFlatPositions();
 
         //open-animation drive (world panels scale their quad instead)
@@ -992,11 +1028,13 @@ public final class InworldManager implements InworldUiApi {
     }
 
     private void resolveFloating(PanelRuntime runtime, InworldPlacement.Floating placement,
-                                 List<Rect> obstacles) {
+                                 List<Rect> obstacles, List<PanelRuntime> docked) {
         FloatPos anchorPx = runtime.anchorScreen;
         if (anchorPx == null) {
-            //anchor off-screen → park far away
-            runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+            //anchor behind the camera — parked it would be invisible, so it
+            //degrades into a dock column where it stays discoverable for the
+            //rest of its engagement window
+            dockDegrade(runtime, docked);
             return;
         }
         //a pinned panel (live trace) freezes in place — retargeting it now
@@ -1006,6 +1044,18 @@ public final class InworldManager implements InworldUiApi {
             runtime.flat = true;
             runtime.smoothMove = false;
             return;
+        }
+        //measure against the remembered full size while folded — a folded
+        //dock strip must not squeak back out as a float just because its
+        //collapsed bounds happen to fit somewhere
+        int fw = runtime.widget.width();
+        int fh = runtime.widget.height();
+        if (runtime.widget.folded) {
+            fh = Math.max(fh, runtime.unfoldedHeight);
+            fw = Math.max(fw, runtime.unfoldedWidth);
+        } else {
+            runtime.unfoldedHeight = fh;
+            runtime.unfoldedWidth = fw;
         }
         //the spec's middleware chain runs first, then an internal avoid pass
         //keeps the panel clear of already-committed chrome (docks, face
@@ -1017,7 +1067,7 @@ public final class InworldManager implements InworldUiApi {
         }
         var result = FloatingPositioning.compute(
                 new Rect((int) anchorPx.x - 1, (int) anchorPx.y - 1, 2, 2),
-                new Rect(0, 0, runtime.widget.width(), runtime.widget.height()),
+                new Rect(0, 0, fw, fh),
                 new Rect(0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight()),
                 placement.placement(), chain
         );
@@ -1026,7 +1076,15 @@ public final class InworldManager implements InworldUiApi {
             //slight anchor occlusion beats losing the content; only when the
             //panel is genuinely taller/wider than the viewport does it degrade
             //to a folded chrome strip. Never parks outright.
-            clampOntoScreen(runtime, anchorPx);
+            clampOntoScreen(runtime, anchorPx, obstacles, docked);
+            return;
+        }
+        if (blockedByChrome((int) result.x(), (int) result.y(), fw, fh, obstacles)) {
+            //the push-budget ran out — typically a sandwich between chrome the
+            //local escape can't clear. Rather than accept the overlap the
+            //panel joins the dock columns: they own the real degrade ladder
+            //(fold → hide → +N chip) instead of stacking onto other panels
+            dockDegrade(runtime, docked);
             return;
         }
         runtime.widget.setFolded(false);
@@ -1040,6 +1098,35 @@ public final class InworldManager implements InworldUiApi {
             runtime.targetX = (int) result.x();
             runtime.targetY = (int) result.y();
         }
+    }
+
+    /**
+     * Hand a floating panel to the dock queue — the solver's shared column
+     * budget folds, then hides + counts it into the corner chip, which is a
+     * strictly better degrade than overlapping committed chrome.
+     */
+    private void dockDegrade(PanelRuntime runtime, List<PanelRuntime> docked) {
+        runtime.presented = true;
+        runtime.flat = true;
+        runtime.docked = true;
+        runtime.smoothMove = true;
+        runtime.dockCorner = InworldPlacement.DockCorner.AUTO;
+        docked.add(runtime);
+    }
+
+    /**
+     * True when the rect covers any committed chrome past a graze — a thin
+     * edge clip is fine (tolerance beats jitter), a real area overlap means
+     * the placement failed and the panel should degrade instead.
+     */
+    private static boolean blockedByChrome(int x, int y, int w, int h, List<Rect> obstacles) {
+        Rect self = new Rect(x, y, w, h);
+        for (Rect ob : obstacles) {
+            Rect in = self.intersection(ob);
+            if (in.width() > 6 && in.height() > 6
+                    && in.width() * in.height() > (double) w * h * 0.10) return true;
+        }
+        return false;
     }
 
     private static boolean floatingHidden(FloatingPositioning.PositionResult result) {
@@ -1057,7 +1144,8 @@ public final class InworldManager implements InworldUiApi {
      * does it fold to a chrome strip. Either way the panel stays discoverable
      * and resolves back the moment the middleware chain fits again.
      */
-    private void clampOntoScreen(PanelRuntime runtime, FloatPos anchorPx) {
+    private void clampOntoScreen(PanelRuntime runtime, FloatPos anchorPx,
+                                 List<Rect> obstacles, List<PanelRuntime> docked) {
         int W = mc.getWindow().getGuiScaledWidth();
         int H = mc.getWindow().getGuiScaledHeight();
         int fw = runtime.widget.width();
@@ -1066,8 +1154,10 @@ public final class InworldManager implements InworldUiApi {
         int fh = runtime.widget.height();
         if (runtime.widget.folded) {
             fh = Math.max(fh, runtime.unfoldedHeight);
+            fw = Math.max(fw, runtime.unfoldedWidth);
         } else {
             runtime.unfoldedHeight = fh;
+            runtime.unfoldedWidth = fw;
         }
         boolean oversized = fw > W - 4 || fh > H - 4;
         runtime.widget.setFolded(oversized);
@@ -1075,13 +1165,19 @@ public final class InworldManager implements InworldUiApi {
             fw = runtime.widget.width();
             fh = foldHeight(runtime);
         }
-        runtime.presented = true;
-        runtime.flat = true;
-        runtime.smoothMove = true;
         //hug the anchor horizontally, prefer sitting above it; every axis is
         //clamped so the panel can never leak off-screen
         int tx = (int) Math.max(2, Math.min(W - fw - 2, anchorPx.x - fw * 0.5));
         int ty = (int) Math.max(2, Math.min(H - fh - 2, anchorPx.y - fh - 10));
+        if (blockedByChrome(tx, ty, fw, fh, obstacles)) {
+            //clamping back inside the viewport landed on committed chrome —
+            //the dock degrade is strictly better than covering another panel
+            dockDegrade(runtime, docked);
+            return;
+        }
+        runtime.presented = true;
+        runtime.flat = true;
+        runtime.smoothMove = true;
         if (!runtime.posInit
                 || InworldLayout.retarget(runtime.targetX, runtime.targetY, tx, ty, 2)) {
             runtime.targetX = tx;
@@ -1137,15 +1233,18 @@ public final class InworldManager implements InworldUiApi {
         for (PanelRuntime runtime : docked) {
             FloatPos a = runtime.anchorScreen;
             //a folded panel's bounds collapsed to the chrome strip — budget
-            //against the remembered full height so the fold decision is stable
+            //against the remembered full size so the fold decision is stable
             int h = runtime.widget.height();
+            int w = runtime.widget.width();
             if (runtime.widget.folded) {
                 h = Math.max(h, runtime.unfoldedHeight);
+                w = Math.max(w, runtime.unfoldedWidth);
             } else {
                 runtime.unfoldedHeight = h;
+                runtime.unfoldedWidth = w;
             }
             items.add(new DockLayout.Item(
-                    runtime.dockCorner, runtime.widget.width(), h,
+                    runtime.dockCorner, w, h,
                     foldHeight(runtime),
                     a != null ? a.x : Double.NaN, a != null ? a.y : Double.NaN,
                     runtime.lastAutoCorner));
@@ -1183,6 +1282,8 @@ public final class InworldManager implements InworldUiApi {
     private final int[] dockOverflow = new int[InworldPlacement.DockCorner.values().length];
     /** per-corner final stack extent from the layout pass — where the overflow chip hangs */
     private final int[] dockCursorEnd = new int[InworldPlacement.DockCorner.values().length];
+    /** last frame's committed chrome rects — the engage chip steers above them */
+    private List<Rect2i> frameOccupied = List.of();
 
     /**
      * Screen zoning for non-interactive flat panels (entity tags, passive

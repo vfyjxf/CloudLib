@@ -66,6 +66,9 @@ final class PanelRuntime implements InworldPanel {
      *  chrome strip, so solvers must budget against the remembered full height
      *  or the fold decision would flap frame to frame */
     int unfoldedHeight;
+    /** same as {@link #unfoldedHeight} for width — a folded panel can also
+     *  shrink horizontally when its content was wider than the chrome */
+    int unfoldedWidth;
 
     /** a live trace session froze this panel's position — resolvers keep it presented but never retarget */
     boolean pinned;
