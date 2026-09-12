@@ -19,7 +19,7 @@ public interface CloudLibClientPlugin extends ModPlugin {
      * Registers in-world UI providers. Called once during client load-complete,
      * and only when an in-world UI implementation is installed
      * ({@link dev.vfyjxf.cloudlib.api.ui.inworld.InworldUi#available()}); the
-     * reference implementation lives in the separate {@code inworldui} mod.
+     * reference implementation lives in the separate {@code nimbusprojection} mod.
      */
     default void registerInworld(InworldUiApi inworld) {
     }

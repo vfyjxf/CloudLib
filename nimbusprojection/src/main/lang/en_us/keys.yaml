@@ -1,0 +1,11 @@
+# Key mapping category and binding names.
+# Nested mappings flatten to dotted translation keys (nimbusprojection.keys.inspect).
+nimbusprojection:
+  keys:
+    general:
+      value: Nimbus Projection
+      $field: generalCategory
+    inspect: Inspect In-world UI
+    focus_next: Focus Next Panel
+    focus_previous: Focus Previous Panel
+    interact: Interact / Engage

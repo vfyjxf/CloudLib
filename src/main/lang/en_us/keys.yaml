@@ -13,6 +13,3 @@ cloudlib:
       value: General
       $field: generalCategory
     rebuild_ui: Rebuild UI
-    inworld_inspect: Inspect In-world UI
-    inworld_focus_next: Focus Next Panel
-    inworld_focus_previous: Focus Previous Panel

@@ -1,0 +1,6 @@
+# Shared widget texts. Nested mappings flatten to dotted translation keys.
+cloudlib:
+  ui:
+    empty: Empty
+    syncing: Syncing…
+    no_container: No container

@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
  * Static entry point for the in-world UI layer.
  * <p>
  * The API ships with CloudLib; the runtime implementation is provided by a
- * separate mod (the reference implementation is {@code inworldui}) which
+ * separate mod (the reference implementation is {@code nimbusprojection}) which
  * installs itself via {@link #install(InworldUiApi)} during client init.
  * Code offering panels should either run after installation or guard with
  * {@link #available()}.

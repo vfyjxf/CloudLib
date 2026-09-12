@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "nimbusprojection:block/tracker_block"
+    }
+  }
+}

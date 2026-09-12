@@ -1,0 +1,9 @@
+# Demo content names.
+# Nested mappings flatten to dotted translation keys (block.nimbusprojection.tracker_block).
+block:
+  nimbusprojection:
+    tracker_block: Tracker Block
+    waypoint_block: Waypoint Block
+itemGroup:
+  nimbusprojection:
+    tab: Nimbus Projection
