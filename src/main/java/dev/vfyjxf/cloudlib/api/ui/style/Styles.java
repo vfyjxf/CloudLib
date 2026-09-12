@@ -576,6 +576,22 @@ public final class Styles {
                     (ctx, v) -> {},
                     Object::toString));
 
+    /**
+     * Theme accent color — the "interactive" ink (focused borders, chips,
+     * affordances). Inherited so a themed panel tints every descendant;
+     * stored as a visual custom property, read via {@code style().get(accent)}.
+     */
+    public static final StyleKey<Integer> accent =
+            colorKey("accent", true, dev.vfyjxf.cloudlib.internal.ui.style.StyleApplies.customProp("accent"));
+
+    /**
+     * Secondary/dimmed text ink — hints, counters, "···" markers. Inherited
+     * like {@link #accent}; falls back to the widget's own default when the
+     * theme doesn't set it.
+     */
+    public static final StyleKey<Integer> textDim =
+            colorKey("text-dim", true, dev.vfyjxf.cloudlib.internal.ui.style.StyleApplies.customProp("text-dim"));
+
     /** The scene compositing layer the widget renders into. */
     public static final StyleKey<SceneLayer> sceneLayer = key(
             "scene-layer",

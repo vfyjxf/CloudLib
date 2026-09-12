@@ -39,7 +39,9 @@
 
 /* ---------- generic chrome ---------- */
 
-panel, .hud {
+panel, .hud, inworld-panel {
+    accent: var(--accent);
+    text-dim: var(--text-dim);
     background: var(--panel);
     border-texture: border-texture(var(--panel-line), 1);
     color: var(--text);
@@ -47,7 +49,7 @@ panel, .hud {
     box-shadow: 0px 0px 6px var(--glow);
 }
 
-panel:focused { border-texture: border-texture(var(--accent), 1); }
+panel:focused, inworld-panel:focused { border-texture: border-texture(var(--accent), 1); }
 
 label, text { color: var(--text); }
 .dim, label.caption { color: var(--text-dim); }

@@ -35,6 +35,11 @@ public interface VisualTexture {
      */
     VisualTexture empty = (graphics, x, y, width, height) -> {};
 
+    /** Whether this texture is the shared {@link #empty} sentinel — draws nothing. */
+    default boolean isEmpty() {
+        return this == empty;
+    }
+
     // region factory
 
     /**

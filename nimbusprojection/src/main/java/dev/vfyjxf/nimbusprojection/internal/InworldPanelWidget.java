@@ -7,6 +7,11 @@ import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree.TraversalControl;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.api.ui.style.StyleContext;
+import dev.vfyjxf.cloudlib.api.ui.style.Styles;
+import dev.vfyjxf.cloudlib.api.ui.style.VisualContext;
+import dev.vfyjxf.cloudlib.api.ui.texture.BorderTexture;
+import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.nimbusprojection.api.Nimbus;
 import dev.vfyjxf.nimbusprojection.api.panel.PanelKeySink;
@@ -222,6 +227,23 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         return padTop + padBottom;
     }
 
+    /**
+     * Theme-resolved chrome ink: the theme's {@code background} /
+     * {@code border-texture} / {@code color} / {@code accent} / {@code text-dim}
+     * win when present; unthemed panels keep the hacker palette.
+     */
+    private static int dimOf(StyleContext style, int fallback) {
+        Integer themed = style.get(Styles.textDim);
+        return themed != null ? themed : fallback;
+    }
+
+    private int borderOf(VisualContext vc) {
+        VisualTexture bt = vc.getProperty("border-texture", VisualTexture.class);
+        if (bt instanceof BorderTexture border) return border.colorTop();
+        if (vc.borderColor() != 0) return vc.borderColor();
+        return focused ? HackerTheme.borderFocused : HackerTheme.border;
+    }
+
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         int w = width();
@@ -229,17 +251,31 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         // would paint a translucent box over whatever stacks below this slot
         int h = folded ? foldHeightPx() : height();
 
-        canvas.fill(0, 0, w, h, focused ? HackerTheme.bgFocused : HackerTheme.bg);
+        StyleContext style = style();
+        VisualContext vc = style.visualContext();
+        Integer themedAccent = style.get(Styles.accent);
+        int accent = themedAccent != null ? themedAccent : HackerTheme.accent;
+        // dim = the accent at ~40% alpha; unthemed keeps the tuned hacker value
+        int accentDim = themedAccent != null ? (themedAccent & 0x00FFFFFF) | 0x66000000 : HackerTheme.accentDim;
+        int textC = vc.textColor() != null ? vc.textColor() : HackerTheme.text;
+        int dimC = dimOf(style, HackerTheme.textDim);
+
+        VisualTexture bg = vc.background();
+        if (!bg.isEmpty()) {
+            canvas.texture(bg, 0, 0, w, h);
+        } else {
+            canvas.fill(0, 0, w, h, focused ? HackerTheme.bgFocused : HackerTheme.bg);
+        }
         // idle panels carry no frame — the leader line is the only chrome; the
         // outline appears only when the panel is focused/pointed
         if (focused || pointed) {
-            canvas.strokeRect(0, 0, w, h, HackerTheme.borderFocused);
+            canvas.strokeRect(0, 0, w, h, borderOf(vc));
         }
 
         if (title != null) {
             // header: accent chip + text + hairline rule
-            canvas.fill(3, 5, 3, 3, HackerTheme.accent);
-            canvas.text(title, 9, 3, HackerTheme.text);
+            canvas.fill(3, 5, 3, 3, accent);
+            canvas.text(title, 9, 3, textC);
             canvas.fill(0, HackerTheme.titleHeight + 1, w, 1, HackerTheme.titleRule);
         }
 
@@ -255,10 +291,10 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
                 int keyW = font.width(key) + 4;
                 int labelW = label.isEmpty() ? 0 : font.width(label) + 3;
                 hx -= keyW + labelW;
-                canvas.strokeRect(hx, hy - 1, keyW, 9, HackerTheme.accentDim);
-                canvas.text(key, hx + 2, hy, HackerTheme.hintKey);
+                canvas.strokeRect(hx, hy - 1, keyW, 9, accentDim);
+                canvas.text(key, hx + 2, hy, accent);
                 if (labelW > 0) {
-                    canvas.text(label, hx + keyW + 3, hy, HackerTheme.textDim);
+                    canvas.text(label, hx + keyW + 3, hy, dimC);
                 }
                 hx -= 4;
             }
@@ -268,9 +304,9 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         if (overflow != null) {
             var font = Minecraft.getInstance().font;
             int tw = font.width(overflow) + 5;
-            canvas.fill(w - tw - 2, -4, tw, 9, HackerTheme.bgFocused);
-            canvas.strokeRect(w - tw - 2, -4, tw, 9, HackerTheme.accent);
-            canvas.text(overflow, w - tw + 1, -3, HackerTheme.accent);
+            canvas.fill(w - tw - 2, -4, tw, 9, focused ? HackerTheme.bgFocused : HackerTheme.bg);
+            canvas.strokeRect(w - tw - 2, -4, tw, 9, accent);
+            canvas.text(overflow, w - tw + 1, -3, accent);
         }
 
         drawPresence(canvas, w);

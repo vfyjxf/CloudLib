@@ -8,6 +8,7 @@ import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
+import dev.vfyjxf.cloudlib.api.ui.style.Styles;
 import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
 import dev.vfyjxf.nimbusprojection.NimbusConfig;
@@ -58,15 +59,17 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
 
         @Override
         protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+            Integer themedDim = style().get(Styles.textDim);
+            int dim = themedDim != null ? themedDim : HackerTheme.textDim;
             BlockPos p = pos.get();
             int x = 2;
             if (p == null) {
-                canvas.text("···", x, 3, HackerTheme.textDim);
+                canvas.text("···", x, 3, dim);
                 return;
             }
             List<ItemStack> stacks = itemStacks(p);
             if (stacks == null) {
-                canvas.text("···", x, 3, HackerTheme.textDim);
+                canvas.text("···", x, 3, dim);
                 return;
             }
             int shown = 0;
@@ -81,7 +84,7 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
                 shown++;
             }
             String fill = stacks.isEmpty() ? "empty" : used + "/" + stacks.size();
-            canvas.text(fill, x + 4, 4, HackerTheme.textDim);
+            canvas.text(fill, x + 4, 4, dim);
         }
     };
 
