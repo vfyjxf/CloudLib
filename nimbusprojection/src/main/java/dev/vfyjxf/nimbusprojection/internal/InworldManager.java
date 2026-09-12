@@ -3368,7 +3368,7 @@ public final class InworldManager implements NimbusClient {
         }
         boolean hasExpand = false;
         for (PanelRuntime runtime : panels.values()) {
-            if (runtime.spec.presentation() instanceof Presentation.Expand
+            if (runtime.effective instanceof Presentation.Expand
                     && runtime.presented
                     && !runtime.flat
                     && runtime.widget.visible()
@@ -3585,7 +3585,10 @@ public final class InworldManager implements NimbusClient {
 
     private void emitExpandConnectors(BufferBuilder buffer, Matrix4f mat) {
         for (PanelRuntime runtime : panels.values()) {
-            if (!(runtime.spec.presentation() instanceof Presentation.Expand)) continue;
+            // effective, not spec: an engaged face/follow panel's hologram IS
+            // an expand quad — gating on the declared presentation would skip
+            // exactly the panels that need the connector
+            if (!(runtime.effective instanceof Presentation.Expand)) continue;
             // inspect flattens expand panels to docks — no world quad, no connector
             if (!runtime.presented
                     || runtime.flat
@@ -3596,12 +3599,19 @@ public final class InworldManager implements NimbusClient {
             Vec3 pb = runtime.faceOrigin
                     .add(runtime.faceU.scale(runtime.widget.width() * 0.5))
                     .add(runtime.faceV.scale(runtime.widget.height()));
+            int lc = runtime.focused() || runtime == pointed ? HackerTheme.lineFocused : HackerTheme.line;
+            // a small axis cross at the anchor — the line visibly originates
+            // AT the block instead of floating near it
+            double n = 0.07;
+            line(buffer, mat, new double[] {a.x - n, a.y, a.z}, new double[] {a.x + n, a.y, a.z}, lc);
+            line(buffer, mat, new double[] {a.x, a.y - n, a.z}, new double[] {a.x, a.y + n, a.z}, lc);
+            line(buffer, mat, new double[] {a.x, a.y, a.z - n}, new double[] {a.x, a.y, a.z + n}, lc);
             line(
                     buffer,
                     mat,
                     new double[] {a.x, a.y, a.z},
                     new double[] {pb.x, pb.y, pb.z},
-                    runtime.focused() || runtime == pointed ? HackerTheme.lineFocused : HackerTheme.line);
+                    lc);
         }
     }
 
@@ -3813,18 +3823,19 @@ public final class InworldManager implements NimbusClient {
                 drawLine(graphics, (float) ex, (float) ey + 1, (float) from.x, (float) from.y + 1, edge);
                 drawLine(graphics, (float) ex, (float) ey, (float) from.x, (float) from.y, color);
             }
-            // filled diamond marking the source the line leads back to — drawn
-            // even when the anchor projects inside the panel (the panel sits
-            // right on its block): the marker is the standing "tracked" cue.
-            // Solid fill + contrasting core so it stays legible at a glance.
+            // WD2-style node at the anchor end: a hollow diamond ring + center
+            // dot — crisp at gui scale where the old stacked fills read as a
+            // blurry blob over the scan frame
             int fx = (int) from.x, fy = (int) from.y;
-            for (int i = -4; i <= 4; i++) {
-                int half = 4 - Math.abs(i);
-                graphics.fill(fx - half, fy + i, fx + half + 1, fy + i + 1, edge);
+            for (int i = -3; i <= 3; i++) {
+                int half = 3 - Math.abs(i);
+                graphics.fill(fx - half, fy + i, fx - half + 1, fy + i + 1, edge);
+                graphics.fill(fx + half, fy + i, fx + half + 1, fy + i + 1, edge);
             }
-            for (int i = -2; i <= 2; i++) {
-                int half = 2 - Math.abs(i);
-                graphics.fill(fx - half, fy + i, fx + half + 1, fy + i + 1, color);
+            for (int i = -1; i <= 1; i++) {
+                int half = 1 - Math.abs(i);
+                graphics.fill(fx - half, fy + i, fx - half + 1, fy + i + 1, color);
+                graphics.fill(fx + half, fy + i, fx + half + 1, fy + i + 1, color);
             }
         }
     }
