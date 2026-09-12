@@ -17,28 +17,33 @@ import java.util.concurrent.ConcurrentHashMap;
  * Built-in codecs cover block positions, fixed positions and entity
  * targets; lazily-resolved {@code Tracked} anchors are client-only and
  * have no codec. A custom {@code InworldAnchor} becomes shareable by
- * registering its own codec — no runtime involvement needed.
+ * reporting its {@link AnchorType} and registering a codec for it — no
+ * runtime involvement needed.
  */
 public final class AnchorCodecs {
 
-    private static final Map<Class<? extends InworldAnchor>, AnchorCodec<?>> BY_TYPE = new ConcurrentHashMap<>();
-    private static final Map<ResourceLocation, AnchorCodec<?>> BY_ID = new ConcurrentHashMap<>();
+    private static final Map<AnchorType<?>, AnchorCodec<?>> CODECS = new ConcurrentHashMap<>();
 
     private AnchorCodecs() {
     }
 
     public static <A extends InworldAnchor> void register(AnchorCodec<A> codec) {
-        BY_TYPE.put(codec.anchorType(), codec);
-        BY_ID.put(codec.id(), codec);
+        CODECS.put(codec.type(), codec);
     }
 
-    /** The codec registered for this anchor's implementation, or null. */
+    /** The codec registered for this anchor's kind, or null. */
     public static @Nullable AnchorCodec<?> of(InworldAnchor anchor) {
-        return BY_TYPE.get(anchor.getClass());
+        return CODECS.get(anchor.type());
     }
 
+    /** The codec registered under a kind token, or null. */
+    public static @Nullable AnchorCodec<?> of(AnchorType<?> type) {
+        return CODECS.get(type);
+    }
+
+    /** The codec registered under a kind id, or null. */
     public static @Nullable AnchorCodec<?> byId(ResourceLocation id) {
-        return BY_ID.get(id);
+        return CODECS.get(AnchorType.of(id));
     }
 
     /** Whether this anchor can cross the network (has a registered codec). */
@@ -49,15 +54,10 @@ public final class AnchorCodecs {
     //region built-in codecs
 
     private static <A extends InworldAnchor> AnchorCodec<A> builtin(
-            String path, Class<A> type, StreamCodec<RegistryFriendlyByteBuf, A> codec
+            AnchorType<A> type, StreamCodec<RegistryFriendlyByteBuf, A> codec
     ) {
-        ResourceLocation id = ResourceLocation.fromNamespaceAndPath("cloudlib", path);
         return new AnchorCodec<>() {
-            @Override public ResourceLocation id() {
-                return id;
-            }
-
-            @Override public Class<A> anchorType() {
+            @Override public AnchorType<A> type() {
                 return type;
             }
 
@@ -77,16 +77,16 @@ public final class AnchorCodecs {
     );
 
     static {
-        register(builtin("block", InworldAnchor.Block.class, StreamCodec.of(
+        register(builtin(AnchorType.BLOCK, StreamCodec.of(
                 (buf, a) -> {
                     BlockPos.STREAM_CODEC.encode(buf, a.pos());
                     VEC3.encode(buf, a.offset());
                 },
                 buf -> new InworldAnchor.Block(BlockPos.STREAM_CODEC.decode(buf), VEC3.decode(buf))
         )));
-        register(builtin("position", InworldAnchor.Position.class,
+        register(builtin(AnchorType.POSITION,
                 VEC3.map(InworldAnchor.Position::new, InworldAnchor.Position::pos)));
-        register(builtin("entity", InworldAnchor.EntityTarget.class, StreamCodec.of(
+        register(builtin(AnchorType.ENTITY, StreamCodec.of(
                 (buf, a) -> {
                     buf.writeVarInt(a.entityId());
                     VEC3.encode(buf, a.offset());

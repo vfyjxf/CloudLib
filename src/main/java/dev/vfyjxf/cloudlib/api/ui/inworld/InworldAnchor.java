@@ -49,6 +49,13 @@ public interface InworldAnchor {
     //endregion
 
     /**
+     * The anchor kind's identity token — see {@link AnchorType}. Custom
+     * anchors become network-shareable by reporting their own token and
+     * registering an {@link AnchorCodec} for it.
+     */
+    AnchorType<?> type();
+
+    /**
      * Resolves the anchor to an absolute world position.
      *
      * @return the world position, or {@code null} when the anchor is currently
@@ -83,6 +90,11 @@ public interface InworldAnchor {
     record Block(BlockPos pos, Vec3 offset) implements InworldAnchor {
 
         @Override
+        public AnchorType<?> type() {
+            return AnchorType.BLOCK;
+        }
+
+        @Override
         public @Nullable Vec3 position(ClientLevel level) {
             if (!level.getChunkSource().hasChunk(pos.getX() >> 4, pos.getZ() >> 4)) return null;
             return Vec3.atLowerCornerOf(pos).add(offset);
@@ -97,6 +109,11 @@ public interface InworldAnchor {
     /** A fixed world position. */
     record Position(Vec3 pos) implements InworldAnchor {
         @Override
+        public AnchorType<?> type() {
+            return AnchorType.POSITION;
+        }
+
+        @Override
         public Vec3 position(ClientLevel level) {
             return pos;
         }
@@ -105,6 +122,11 @@ public interface InworldAnchor {
     /** A lazily resolved world position (e.g. tracking a moving target). */
     record Tracked(Supplier<@Nullable Vec3> pos) implements InworldAnchor {
         @Override
+        public AnchorType<?> type() {
+            return AnchorType.TRACKED;
+        }
+
+        @Override
         public @Nullable Vec3 position(ClientLevel level) {
             return pos.get();
         }
@@ -112,6 +134,11 @@ public interface InworldAnchor {
 
     /** An entity-bound anchor resolved through {@link ClientLevel#getEntity(int)}. */
     record EntityTarget(int entityId, Vec3 offset) implements InworldAnchor {
+        @Override
+        public AnchorType<?> type() {
+            return AnchorType.ENTITY;
+        }
+
         @Override
         public @Nullable Vec3 position(ClientLevel level) {
             Entity entity = level.getEntity(entityId);
