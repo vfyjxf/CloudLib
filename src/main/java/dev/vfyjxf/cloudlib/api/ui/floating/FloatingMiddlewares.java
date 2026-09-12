@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.floating;
 
+import dev.vfyjxf.cloudlib.api.math.Rect;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -210,6 +211,45 @@ public final class FloatingMiddlewares {
      */
     public static SizeMiddleware size(SizeMiddleware.SizeApplier applier, int padding) {
         return SizeMiddleware.create(applier, padding);
+    }
+
+    //endregion
+
+    //region avoidRects
+
+    /**
+     * Creates an avoid-rects middleware that nudges the floating element out
+     * of dynamically supplied obstacle rects.
+     *
+     * @param obstacles live supplier of rects the element should not cover
+     * @see AvoidRectsMiddleware
+     */
+    public static AvoidRectsMiddleware avoid(java.util.function.Supplier<? extends List<Rect>> obstacles) {
+        return AvoidRectsMiddleware.create(obstacles);
+    }
+
+    /**
+     * Creates an avoid-rects middleware with the given padding.
+     *
+     * @param obstacles live supplier of obstacle rects
+     * @param padding   extra clearance kept around each obstacle
+     * @see AvoidRectsMiddleware
+     */
+    public static AvoidRectsMiddleware avoid(java.util.function.Supplier<? extends List<Rect>> obstacles, int padding) {
+        return AvoidRectsMiddleware.create(obstacles, padding);
+    }
+
+    /**
+     * Creates an avoid-rects middleware with full options.
+     *
+     * @param obstacles live supplier of obstacle rects
+     * @param padding   extra clearance kept around each obstacle
+     * @param maxPush   total displacement budget; overlaps that would cost
+     *                  more to clear are accepted instead
+     * @see AvoidRectsMiddleware
+     */
+    public static AvoidRectsMiddleware avoid(java.util.function.Supplier<? extends List<Rect>> obstacles, int padding, int maxPush) {
+        return AvoidRectsMiddleware.create(obstacles, padding, maxPush);
     }
 
     //endregion

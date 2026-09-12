@@ -21,6 +21,8 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.cloudlib.api.ui.floating.AvoidRectsMiddleware;
+import dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddleware;
 import dev.vfyjxf.cloudlib.api.ui.floating.FloatingPositioning;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldAnchor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldContext;
@@ -189,6 +191,7 @@ public final class InworldManager implements InworldUiApi {
     /** Reused per-frame collection of presented dock panels awaiting corner layout. */
     private final List<PanelRuntime> dockQueue = new ArrayList<>();
     private final List<PanelRuntime> expandQueue = new ArrayList<>();
+    private final List<PanelRuntime> floatingQueue = new ArrayList<>();
     private static final int PARK_BASE = -1_000_000;
     private static final int PARK_STEP = 4096;
 
@@ -557,6 +560,7 @@ public final class InworldManager implements InworldUiApi {
         stripCursor = 0;
         List<PanelRuntime> docked = dockQueue;
         List<PanelRuntime> expandDeferred = expandQueue;
+        List<PanelRuntime> floatingDeferred = floatingQueue;
 
         for (PanelRuntime runtime : panels.values()) {
             runtime.pointedUv = null;
@@ -594,10 +598,9 @@ public final class InworldManager implements InworldUiApi {
             } else {
                 switch (placement) {
                     case InworldPlacement.Face face -> resolveFace(runtime, face);
-                    case InworldPlacement.Floating floating -> {
-                        resolveFloating(runtime, floating);
-                        runtime.flat = true;
-                    }
+                    //floating resolves after dock layout so the panels can
+                    //steer clear of committed chrome instead of covering it
+                    case InworldPlacement.Floating floating -> floatingDeferred.add(runtime);
                     case InworldPlacement.Follow follow -> {
                         resolveFollow(runtime, follow);
                         runtime.flat = true;
@@ -613,22 +616,43 @@ public final class InworldManager implements InworldUiApi {
         layoutDocks(docked);
         docked.clear();
 
-        //screen rects the foreground chrome occupies: interactive flat panels
-        //and every docked panel (interactive or not — a dock slot is chrome),
-        //plus the projected rects of world-space panels resolved so far
+        //screen rects the foreground chrome occupies: every docked panel
+        //(interactive or not — a dock slot is chrome), interactive flat
+        //panels resolved so far, and projected world-space panels
         List<Rect2i> occupied = new ArrayList<>();
+        List<Rect> obstacles = new ArrayList<>();
         for (PanelRuntime r : panels.values()) {
             if (!r.presented || !r.widget.visible()) continue;
             if (r.flat && (r.spec.interactive() || r.docked)) {
-                occupied.add(new Rect2i(
+                Rect2i rect = new Rect2i(
                         r.smoothMove ? r.targetX : r.widget.screenX,
                         r.smoothMove ? r.targetY : r.widget.screenY,
-                        r.widget.width(), r.widget.height()));
+                        r.widget.width(), r.widget.height());
+                occupied.add(rect);
+                obstacles.add(new Rect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()));
             } else if (!r.flat && worldSpace(r.spec.placement())) {
                 Rect2i b = projectedWorldRect(r);
-                if (b != null) occupied.add(b);
+                if (b != null) {
+                    occupied.add(b);
+                    obstacles.add(new Rect(b.getX(), b.getY(), b.getWidth(), b.getHeight()));
+                }
             }
         }
+
+        for (PanelRuntime r : floatingDeferred) {
+            resolveFloating(r, (InworldPlacement.Floating) r.spec.placement(), obstacles);
+            //each resolved floating panel becomes an obstacle for the next —
+            //two panels sharing an anchor side can't stack on each other
+            if (r.presented && r.widget.visible()) {
+                r.flat = true;
+                Rect2i rect = new Rect2i(r.targetX, r.targetY,
+                        r.widget.width(), r.widget.height());
+                occupied.add(rect);
+                obstacles.add(new Rect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()));
+            }
+        }
+        floatingDeferred.clear();
+
         for (PanelRuntime r : expandDeferred) {
             resolveExpand(r, (InworldPlacement.Expand) r.spec.placement(), occupied);
             //a shown hologram reserves its own screen rect for the next one
@@ -676,18 +700,24 @@ public final class InworldManager implements InworldUiApi {
         return new InworldPlacement.Dock(InworldPlacement.DockCorner.AUTO);
     }
 
-    private void resolveFloating(PanelRuntime runtime, InworldPlacement.Floating placement) {
+    private void resolveFloating(PanelRuntime runtime, InworldPlacement.Floating placement,
+                                 List<Rect> obstacles) {
         FloatPos anchorPx = runtime.anchorScreen;
         if (anchorPx == null) {
             //anchor off-screen → park far away
             runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
             return;
         }
+        //the spec's middleware chain runs first, then an internal avoid pass
+        //keeps the panel clear of already-committed chrome (docks, face
+        //projections, earlier floating panels)
+        List<FloatingMiddleware> chain = new ArrayList<>(placement.middlewares());
+        chain.add(AvoidRectsMiddleware.create(() -> obstacles, 4));
         var result = FloatingPositioning.compute(
                 new Rect((int) anchorPx.x - 1, (int) anchorPx.y - 1, 2, 2),
                 new Rect(0, 0, runtime.widget.width(), runtime.widget.height()),
                 new Rect(0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight()),
-                placement.placement(), placement.middlewares()
+                placement.placement(), chain
         );
         if (floatingHidden(result)) {
             runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
@@ -1263,52 +1293,79 @@ public final class InworldManager implements InworldUiApi {
         }
 
         Vec3 vDown = new Vec3(0, -1, 0).scale(s);
+        double hideAt = runtime.expandHidden ? 0.15 : 0.35;
         Vec3 best = null;
-        double bestScore = Double.MAX_VALUE;
         double bestFrac = 1;
-        double[] dys = {1.7, 1.1, 0.5, 2.3, -0.2};
-        for (int ring = 0; ring < 4; ring++) {
-            double rad = 1.0 + ring * 0.55 + pw * 0.5;
-            for (double dy : dys) {
-                for (int i = 0; i < 10; i++) {
-                    double ang = i * (Math.PI * 2 / 10);
-                    Vec3 spot = anchor.add(Math.cos(ang) * rad, dy, Math.sin(ang) * rad);
-                    double score = expandSpotScore(level, spot, pw, ph, anchor);
-                    for (Vec3 o : occupiedWorld) {
-                        if (spot.distanceToSqr(o) < (pw * 0.5 + 0.6) * (pw * 0.5 + 0.6)) {
-                            score += 64; //another hologram already there
-                        }
-                    }
-                    //screen-space cost: covering docked/flat panels is the worst outcome
-                    double frac = expandScreenOverlap(proj, eye, spot, vDown, s,
-                            runtime.widget.width(), runtime.widget.height(), reserved);
-                    score += frac * 600;
-                    if (frac >= 0.999) score += 300; //unprojectable / fully covered
-                    if (score < bestScore) {
-                        bestScore = score;
-                        best = spot;
-                        bestFrac = frac;
-                    }
+
+        //fast path: a spot that is still clear stays — the ring scan's scores
+        //are noisy (screen coverage flips as the view moves) and near-tied
+        //spots flipping every frame is what makes the hologram wander
+        if (runtime.expandPos != null && !runtime.expandHidden) {
+            boolean contested = false;
+            for (Vec3 o : occupiedWorld) {
+                if (runtime.expandPos.distanceToSqr(o) < (pw * 0.5 + 0.6) * (pw * 0.5 + 0.6)) {
+                    contested = true;
+                    break;
+                }
+            }
+            if (!contested) {
+                double curFrac = expandScreenOverlap(proj, eye, runtime.expandPos, vDown, s,
+                        runtime.widget.width(), runtime.widget.height(), reserved);
+                double cur = expandSpotScore(level, runtime.expandPos, pw, ph, anchor)
+                        + curFrac * 600 + (curFrac >= 0.999 ? 300 : 0);
+                if (curFrac <= 0.30 && cur < 320) {
+                    best = runtime.expandPos;
+                    bestFrac = curFrac;
                 }
             }
         }
 
-        //stickiness: keep the previously chosen spot unless a clearly better
-        //one exists — otherwise the panel would jitter between near-tied spots
-        if (runtime.expandPos != null) {
-            double cur = expandSpotScore(level, runtime.expandPos, pw, ph, anchor);
-            double curFrac = expandScreenOverlap(proj, eye, runtime.expandPos, vDown, s,
-                    runtime.widget.width(), runtime.widget.height(), reserved);
-            cur += curFrac * 600 + (curFrac >= 0.999 ? 300 : 0);
-            if (cur <= bestScore * 1.35 + 1.0) {
-                best = runtime.expandPos;
-                bestFrac = curFrac;
+        if (best == null) {
+            double bestScore = Double.MAX_VALUE;
+            double[] dys = {1.7, 1.1, 0.5, 2.3, -0.2};
+            for (int ring = 0; ring < 4; ring++) {
+                double rad = 1.0 + ring * 0.55 + pw * 0.5;
+                for (double dy : dys) {
+                    for (int i = 0; i < 10; i++) {
+                        double ang = i * (Math.PI * 2 / 10);
+                        Vec3 spot = anchor.add(Math.cos(ang) * rad, dy, Math.sin(ang) * rad);
+                        double score = expandSpotScore(level, spot, pw, ph, anchor);
+                        for (Vec3 o : occupiedWorld) {
+                            if (spot.distanceToSqr(o) < (pw * 0.5 + 0.6) * (pw * 0.5 + 0.6)) {
+                                score += 64; //another hologram already there
+                            }
+                        }
+                        //screen-space cost: covering docked/flat panels is the worst outcome
+                        double frac = expandScreenOverlap(proj, eye, spot, vDown, s,
+                                runtime.widget.width(), runtime.widget.height(), reserved);
+                        score += frac * 600;
+                        if (frac >= 0.999) score += 300; //unprojectable / fully covered
+                        if (score < bestScore) {
+                            bestScore = score;
+                            best = spot;
+                            bestFrac = frac;
+                        }
+                    }
+                }
+            }
+
+            //hysteresis: the current spot only loses when the alternative is
+            //clearly better — an absolute margin, not a relative one, so the
+            //600-weighted coverage term can't flip the choice on a coin toss
+            if (runtime.expandPos != null) {
+                double curFrac = expandScreenOverlap(proj, eye, runtime.expandPos, vDown, s,
+                        runtime.widget.width(), runtime.widget.height(), reserved);
+                double cur = expandSpotScore(level, runtime.expandPos, pw, ph, anchor)
+                        + curFrac * 600 + (curFrac >= 0.999 ? 300 : 0);
+                if (cur <= bestScore + 48) {
+                    best = runtime.expandPos;
+                    bestFrac = curFrac;
+                }
             }
         }
 
         //can't show it cleanly → don't show it; hysteresis keeps the
         //show/hide edge from flickering
-        double hideAt = runtime.expandHidden ? 0.15 : 0.35;
         if (best == null || bestFrac > hideAt) {
             runtime.expandHidden = true;
             runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
@@ -1317,7 +1374,16 @@ public final class InworldManager implements InworldUiApi {
         runtime.expandHidden = false;
         runtime.presented = true;
         runtime.flat = false;
-        runtime.expandPos = best;
+
+        //glide toward the chosen spot instead of teleporting — a relocating
+        //hologram reads as motion, a teleporting one reads as a bug
+        if (runtime.expandPos == null) {
+            runtime.expandPos = best;
+        } else {
+            runtime.expandPos = runtime.expandPos.add(best.subtract(runtime.expandPos).scale(0.25));
+            if (runtime.expandPos.distanceToSqr(best) < 0.0025) runtime.expandPos = best;
+        }
+        best = runtime.expandPos;
 
         //yaw-billboard toward the player's eye: u×v faces away from the viewer
         //(GUI winding, same convention as face panels)
