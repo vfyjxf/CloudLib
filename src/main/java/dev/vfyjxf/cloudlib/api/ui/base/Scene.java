@@ -500,6 +500,18 @@ public final class Scene {
         }
     }
 
+    /**
+     * Live scenes — every mounted scene registers here so global refresh
+     * passes (theme reload) can re-resolve every active widget tree.
+     */
+    private static final java.util.Set<Scene> liveScenes =
+            java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
+
+    /** All currently-mounted scenes, for theme refresh iteration. */
+    public static java.util.Set<Scene> liveScenes() {
+        return java.util.Collections.unmodifiableSet(liveScenes);
+    }
+
     public void mount(SceneContext context) {
         this.context = context;
         setLayoutArea(context.width(), context.height());
@@ -510,6 +522,11 @@ public final class Scene {
             widget.mount(this, this.context, handleOf(widget));
             return TraversalControl.proceed;
         });
+        liveScenes.add(this);
+        // late theme attach: resolve the active theme once the tree is mounted
+        if (dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.active() != null) {
+            dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.refreshTree(root);
+        }
     }
 
     public void reuse(Widget widget) {
@@ -566,6 +583,7 @@ public final class Scene {
     }
 
     public void destroy() {
+        liveScenes.remove(this);
         if (!root.lifecycle.unmounted()) {
             WidgetTree.walkBottomUp(root, true, -1, ((widget, depth) -> {
                 widget.unmount();
@@ -1109,6 +1127,7 @@ public final class Scene {
                     Widget widget = currentPath.get(i);
                     if (!isMountedInThisScene(widget)) continue;
                     widget.hovered = true;
+                    widget.refreshTheme();
                     widget.listeners(InputEvents.onMouseEnter).onEnter(mouseX, mouseY, widget.interruptible());
                 }
             } else {
@@ -1117,12 +1136,14 @@ public final class Scene {
                     Widget widget = lastHoveredPath.get(i);
                     if (!isMountedInThisScene(widget)) continue;
                     widget.hovered = false;
+                    widget.refreshTheme();
                     widget.listeners(InputEvents.onMouseLeave).onLeave(mouseX, mouseY, widget.interruptible());
                 }
                 for (int i = forkIndex + 1; i < currentPath.size(); i++) {
                     Widget widget = currentPath.get(i);
                     if (!isMountedInThisScene(widget)) continue;
                     widget.hovered = true;
+                    widget.refreshTheme();
                     widget.listeners(InputEvents.onMouseEnter).onEnter(mouseX, mouseY, widget.interruptible());
                 }
             }
@@ -1132,6 +1153,7 @@ public final class Scene {
                 Widget widget = lastHoveredPath.get(i);
                 if (!isMountedInThisScene(widget)) continue;
                 widget.hovered = false;
+                widget.refreshTheme();
                 widget.listeners(InputEvents.onMouseLeave).onLeave(mouseX, mouseY, widget.interruptible());
             }
             lastHoveredPath = null;
@@ -1400,7 +1422,10 @@ public final class Scene {
 
             for (int i = oldPath.size() - 1; i > forkIndex; i--) {
                 FocusNode fn = oldPath.get(i).focusNode;
-                if (fn != null) fn.hasFocus = false;
+                if (fn != null) {
+                    fn.hasFocus = false;
+                    if (fn.owner != null) fn.owner.refreshTheme();
+                }
             }
 
             oldFocus.hasPrimaryFocus = false;
@@ -1412,22 +1437,30 @@ public final class Scene {
 
             for (int i = forkIndex + 1; i < newPath.size(); i++) {
                 FocusNode fn = newPath.get(i).focusNode;
-                if (fn != null) fn.hasFocus = true;
+                if (fn != null) {
+                    fn.hasFocus = true;
+                    if (fn.owner != null) fn.owner.refreshTheme();
+                }
             }
         } else {
             if (oldFocus != null) {
                 oldFocus.hasPrimaryFocus = false;
                 oldFocus.hasFocus = false;
+                if (oldFocus.owner != null) oldFocus.owner.refreshTheme();
             }
             for (int i = 0; i < newPath.size(); i++) {
                 FocusNode fn = newPath.get(i).focusNode;
-                if (fn != null) fn.hasFocus = true;
+                if (fn != null) {
+                    fn.hasFocus = true;
+                    if (fn.owner != null) fn.owner.refreshTheme();
+                }
             }
         }
 
         primaryFocus = node;
         node.hasPrimaryFocus = true;
         node.hasFocus = true;
+        if (node.owner != null) node.owner.refreshTheme();
 
         updateScopeFocusedChild(node);
 
@@ -1447,7 +1480,10 @@ public final class Scene {
             WidgetPath oldPath = oldWidget.path();
             for (int i = 0; i < oldPath.size(); i++) {
                 FocusNode fn = oldPath.get(i).focusNode;
-                if (fn != null) fn.hasFocus = false;
+                if (fn != null) {
+                    fn.hasFocus = false;
+                    if (fn.owner != null) fn.owner.refreshTheme();
+                }
             }
             oldFocus.hasPrimaryFocus = false;
 
@@ -1458,6 +1494,7 @@ public final class Scene {
         } else {
             oldFocus.hasPrimaryFocus = false;
             oldFocus.hasFocus = false;
+            if (oldFocus.owner != null) oldFocus.owner.refreshTheme();
         }
     }
 

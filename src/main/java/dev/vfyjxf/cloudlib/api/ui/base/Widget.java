@@ -29,6 +29,7 @@ import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.VisualContext;
 import dev.vfyjxf.cloudlib.api.ui.style.property.layout.StyleProperty;
 import dev.vfyjxf.cloudlib.api.ui.style.property.visual.ZIndexProperty;
+import dev.vfyjxf.cloudlib.api.ui.theme.Themeable;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 import dev.vfyjxf.cloudlib.util.Checks;
 import dev.vfyjxf.taffy.tree.Layout;
@@ -40,7 +41,13 @@ import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * The basic unit of the UI system.
@@ -59,7 +66,7 @@ import java.util.Objects;
  */
 @SuppressWarnings("unchecked")
 @CanIgnoreReturnValue
-public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttachable, Backstage {
+public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttachable, Backstage, Themeable {
 
     @FunctionalInterface
     public interface HoverTooltipProvider {
@@ -185,6 +192,43 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
 
     // region hover
     boolean hovered = false;
+    // endregion
+
+    // region theming
+
+    /**
+     * Stylesheet-facing identity: the {@code #id} selector target.
+     */
+    @Nullable
+    String styleId;
+    /**
+     * Stylesheet-facing classes: {@code .name} selector targets.
+     */
+    final List<String> styleClasses = new ArrayList<>();
+    /**
+     * Stylesheet-facing attributes: {@code [name=value]} selector targets.
+     */
+    final Map<String, String> styleAttrs = new HashMap<>();
+    /**
+     * Extra pseudo-state names beyond the built-in state mapping.
+     */
+    final Set<String> styleStates = new HashSet<>();
+    /**
+     * Optional part name for {@code ::part(name)} matching inside compound widgets.
+     */
+    @Nullable
+    String themePart;
+    /**
+     * The resolved theme style currently applied to this widget, if any.
+     */
+    @Nullable
+    UIStyle themeStyle;
+    /**
+     * Style properties applied through {@link #useStyle} — replayed after theme
+     * re-resolution so code styles keep precedence (the inline-style rule).
+     */
+    final List<StyleProperty> codeStyles = new ArrayList<>();
+
     // endregion
 
     // region event
@@ -742,7 +786,10 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
      * @return this widget for chaining
      */
     public Widget setActive(boolean active) {
-        this.active = active;
+        if (this.active != active) {
+            this.active = active;
+            refreshTheme();
+        }
         return this;
     }
 
@@ -777,7 +824,10 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
     }
 
     public Widget setInteractive(boolean interactive) {
-        this.interactive = interactive;
+        if (this.interactive != interactive) {
+            this.interactive = interactive;
+            refreshTheme();
+        }
         return this;
     }
 
@@ -939,6 +989,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
     }
 
     public final Widget useStyle(UIStyle style) {
+        codeStyles.addAll(style.getProperties());
         style.apply(this.style);
         if (scene != null) {
             scene.tree.markDirty(nodeId);
@@ -948,6 +999,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
 
     public final Widget useStyle(StyleProperty... properties) {
         for (StyleProperty property : properties) {
+            codeStyles.add(property);
             property.apply(this.style);
         }
         if (scene != null) {
@@ -955,6 +1007,175 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         }
         return this;
     }
+
+    // region theme
+
+    /**
+     * Sets the stylesheet-facing {@code #id} of this widget.
+     */
+    public Widget styleId(@Nullable String id) {
+        this.styleId = id;
+        refreshTheme();
+        return this;
+    }
+
+    /**
+     * Adds a stylesheet-facing class ({@code .name} selector target).
+     */
+    public Widget addStyleClass(String name) {
+        if (!styleClasses.contains(name)) {
+            styleClasses.add(name);
+            refreshTheme();
+        }
+        return this;
+    }
+
+    /**
+     * Removes a stylesheet-facing class.
+     */
+    public Widget removeStyleClass(String name) {
+        if (styleClasses.remove(name)) {
+            refreshTheme();
+        }
+        return this;
+    }
+
+    /**
+     * Sets a stylesheet-facing attribute ({@code [name=value]} selector target).
+     */
+    public Widget styleAttr(String name, @Nullable String value) {
+        if (value == null) {
+            styleAttrs.remove(name);
+        } else {
+            styleAttrs.put(name, value);
+        }
+        refreshTheme();
+        return this;
+    }
+
+    /**
+     * Tags this widget as a named part of its parent ({@code ::part(name)}).
+     */
+    public Widget themePart(@Nullable String name) {
+        this.themePart = name;
+        refreshTheme();
+        return this;
+    }
+
+    /**
+     * Adds a custom pseudo-state ({@code :name} selector target).
+     */
+    public Widget addStyleState(String name) {
+        if (styleStates.add(name)) {
+            refreshTheme();
+        }
+        return this;
+    }
+
+    /**
+     * Removes a custom pseudo-state.
+     */
+    public Widget removeStyleState(String name) {
+        if (styleStates.remove(name)) {
+            refreshTheme();
+        }
+        return this;
+    }
+
+    /**
+     * Re-resolves the active theme against this widget's current selector surface
+     * and reapplies it. Code-applied styles (via {@link #useStyle}) are replayed
+     * afterwards so they keep precedence — the inline-style rule.
+     * <p>
+     * Called automatically when states that selectors can observe change
+     * (hover, focus, active…); call manually after changing custom state sets.
+     */
+    public void refreshTheme() {
+        var theme = dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.active();
+        if (theme == null) {
+            return;
+        }
+        UIStyle resolved = dev.vfyjxf.cloudlib.api.ui.theme.ThemeEngine.resolve(theme, this);
+        if (Objects.equals(resolved, themeStyle)) {
+            return;
+        }
+        themeStyle = resolved;
+        style.reset();
+        resolved.apply(style);
+        for (StyleProperty property : codeStyles) {
+            property.apply(style);
+        }
+        if (scene != null) {
+            scene.tree.markDirty(nodeId);
+        }
+    }
+
+    // endregion
+
+    // region themeable selectors
+
+    @Override
+    public @Nullable String themeId() {
+        return styleId;
+    }
+
+    @Override
+    public List<String> themeClasses() {
+        return styleClasses;
+    }
+
+    @Override
+    public @Nullable String themeAttr(String name) {
+        return styleAttrs.get(name);
+    }
+
+    @Override
+    public Set<String> themeStates() {
+        Set<String> states = new HashSet<>(styleStates);
+        if (hovered) {
+            states.add("hovered");
+            states.add("hover");
+        }
+        if (active) states.add("enabled");
+        else states.add("disabled");
+        states.add(active ? "active" : "inactive");
+        if (interactive) states.add("interactive");
+        else states.add("non-interactive");
+        if (focusNode != null && focusNode.hasFocus()) states.add("focused");
+        return states;
+    }
+
+    @Override
+    public @Nullable Themeable themeParent() {
+        return parent;
+    }
+
+    @Override
+    public List<? extends Themeable> themeSiblings() {
+        if (parent == null) {
+            return List.of(this);
+        }
+        List<Themeable> siblings = new ArrayList<>();
+        parent.children().forEach(siblings::add);
+        return siblings;
+    }
+
+    @Override
+    public List<? extends Themeable> themeChildren() {
+        if (!(this instanceof CompositeWidget<?> composite)) {
+            return List.of();
+        }
+        List<Themeable> children = new ArrayList<>();
+        composite.children().forEach(children::add);
+        return children;
+    }
+
+    @Override
+    public @Nullable String themePart() {
+        return themePart;
+    }
+
+    // endregion
 
     // region effect
 

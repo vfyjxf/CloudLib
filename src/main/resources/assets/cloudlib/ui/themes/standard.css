@@ -1,0 +1,87 @@
+/*
+ * cloudlib:standard — the stock OreUI-style pixel theme.
+ * Assets ported from CalculatorCirrus (directed-graph-calculator branch).
+ */
+
+:root {
+    /* palette */
+    --accent:        #5BC0EB;
+    --accent-dim:    #5BC0EB66;
+    --text:          #F4F4F4FF;
+    --text-dim:      #9AA7B4FF;
+    --text-on-accent:#10141AFF;
+    --danger:        #E05252FF;
+    --ok:            #6BCB77FF;
+
+    /* reusable texture values */
+    --panel:         nine-slice("cloudlib:gui/panel/dark", 3);
+    --panel-flat:    nine-slice("cloudlib:gui/panel/flat", 3);
+    --panel-inset:   nine-slice("cloudlib:gui/panel/inset", 3);
+    --frame-dark:    nine-slice("cloudlib:gui/frame/dark", 3);
+    --frame-light:   nine-slice("cloudlib:gui/frame/light", 3);
+    --slot:          nine-slice("cloudlib:gui/slot/base", 2);
+    --slot-dark:     nine-slice("cloudlib:gui/slot/dark", 2);
+    --btn:           nine-slice("cloudlib:gui/button/base", 2);
+    --btn-hover:     nine-slice("cloudlib:gui/button/hover", 2);
+    --btn-down:      nine-slice("cloudlib:gui/button/pressed", 2);
+
+    /* metrics */
+    --pad:           4px;
+    --gap:           4px;
+    --cell:          18px;
+}
+
+/* ---------- generic chrome ---------- */
+
+panel {
+    background: var(--panel);
+    color: var(--text);
+    padding: var(--pad) calc(var(--pad) + 2px);
+}
+
+panel:focused {
+    background: var(--frame-light);
+}
+
+button {
+    background: var(--btn);
+    color: var(--text);
+    padding: 3px 8px;
+    text-align: center;
+}
+button:hover    { background: var(--btn-hover); }
+button:pressed,
+button:active   { background: var(--btn-down); }
+button:disabled { color: var(--text-dim); }
+
+item-slot, .slot {
+    background: var(--slot);
+    width: var(--cell);
+    height: var(--cell);
+}
+item-slot:hover { background: var(--slot-dark); }
+
+/* ---------- composite chrome ---------- */
+
+scrollbar        { background: nine-slice("cloudlib:gui/scroll/track", 1); }
+scrollbar::part(thumb) { background: sprite("cloudlib:gui/scroll/bar"); }
+
+tab              { background: nine-slice("cloudlib:gui/tab/unselect", 3); color: var(--text-dim); }
+tab:hover        { background: nine-slice("cloudlib:gui/tab/hover", 3); }
+tab:selected     { background: nine-slice("cloudlib:gui/tab/select", 3); color: var(--text); }
+
+switch           { background: sprite("cloudlib:gui/switch/slide_off"); }
+switch:hover     { background: sprite("cloudlib:gui/switch/slide_off_hover"); }
+switch:checked   { background: sprite("cloudlib:gui/switch/slide_on"); }
+switch:checked:hover { background: sprite("cloudlib:gui/switch/slide_on_hover"); }
+
+pager            { background: nine-slice("cloudlib:gui/pager/button", 2); }
+pager::part(arrow) { icon: sprite("cloudlib:gui/pager/arrow"); }
+
+/* ---------- type-variant examples (classes) ---------- */
+
+button.primary        { color: var(--text-on-accent); }
+button.primary        { background: var(--btn-hover); }
+button.danger         { color: var(--danger); }
+panel.inset           { background: var(--panel-inset); }
+panel.flat            { background: var(--panel-flat); }

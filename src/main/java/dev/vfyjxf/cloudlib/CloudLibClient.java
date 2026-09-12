@@ -34,6 +34,7 @@ public final class CloudLibClient extends CloudLib {
                 .toImmutable();
         modBus.addListener(this::gatherData);
         modBus.addListener(this::registerClientTooltipComponentFactories);
+        modBus.addListener(this::registerClientReloadListeners);
     }
 
     @Override
@@ -59,6 +60,17 @@ public final class CloudLibClient extends CloudLib {
 
     private void registerClientTooltipComponentFactories(RegisterClientTooltipComponentFactoriesEvent event) {
         //        event.register(RichTooltipComponent.class, Function.identity());
+    }
+
+    private void registerClientReloadListeners(
+            net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent event) {
+        event.registerReloadListener(dev.vfyjxf.cloudlib.internal.ui.theme.ThemeLoader.instance);
+        // theme stack changes (pack reload, activate/deactivate) re-resolve all live scenes
+        dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.onChange(() -> {
+            for (var scene : dev.vfyjxf.cloudlib.api.ui.base.Scene.liveScenes()) {
+                dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.refreshTree(scene.root());
+            }
+        });
     }
 
     private void gatherData(GatherDataEvent event) {

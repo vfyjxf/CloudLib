@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 public class SpriteTexture implements SizedTexture, BatchableTexture {
 
     private final Supplier<TextureAtlasSprite> spriteSupplier;
-    private final int width, height;
+    private int width, height; // <0 = intrinsic, resolved from the sprite on first access
 
     public SpriteTexture(Supplier<TextureAtlasSprite> spriteSupplier, int width, int height) {
         this.spriteSupplier = spriteSupplier;
@@ -61,6 +61,20 @@ public class SpriteTexture implements SizedTexture, BatchableTexture {
                 height);
     }
 
+    /**
+     * Creates a GUI sprite texture with intrinsic sizing — the sprite's atlas
+     * dimensions are read lazily on first access.
+     */
+    public static SpriteTexture fromGuiSprite(ResourceLocation spriteLocation) {
+        return new SpriteTexture(
+                () -> {
+                    var minecraft = Minecraft.getInstance();
+                    return minecraft.getGuiSprites().getSprite(spriteLocation);
+                },
+                -1,
+                -1);
+    }
+
     // endregion
 
     // region query
@@ -71,11 +85,17 @@ public class SpriteTexture implements SizedTexture, BatchableTexture {
 
     @Override
     public int width() {
+        if (width < 0) {
+            width = sprite().contents().width();
+        }
         return width;
     }
 
     @Override
     public int height() {
+        if (height < 0) {
+            height = sprite().contents().height();
+        }
         return height;
     }
 
