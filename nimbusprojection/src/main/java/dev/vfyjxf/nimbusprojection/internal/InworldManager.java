@@ -1420,12 +1420,13 @@ public final class InworldManager implements NimbusClient {
                 continue;
             }
 
-            // dock-on-idle: the resting form is a flat screen card — the
-            // declared world presentation only appears once V pins the panel
-            // in (engaged). Skipped under inspect: the flat projection owns
-            // placement while the screen is up.
-            if (runtime.spec.dockOnIdle() && !runtime.engaged && !inspecting) {
-                placement = Presentation.dock();
+            // floating-on-idle: the resting form is a screen card tracking
+            // the anchor's projection (Jade-style), not a corner dock — the
+            // declared world presentation only appears once V pins the
+            // panel in (engaged). Skipped under inspect: the flat projection
+            // owns placement while the screen is up.
+            if (runtime.spec.floatingOnIdle() && !runtime.engaged && !inspecting) {
+                placement = Presentation.floating();
             }
 
             // engage-expansion: a dormant Face/Follow panel's engaged form is
@@ -2716,11 +2717,11 @@ public final class InworldManager implements NimbusClient {
      * after the configured grace ticks with none of those.
      */
     private void tickEngagement(PanelRuntime runtime) {
-        // a dockOnIdle panel's engaged form IS the pin — it stays world-anchored
+        // a floatingOnIdle panel's engaged form IS the pin — it stays world-anchored
         // until a V tap toggles it off, not just while the player keeps looking
         boolean held =
                 inspecting || tracing == runtime || dragPanel == runtime || pointed == runtime || focused == runtime
-                        || (runtime.spec.dockOnIdle() && runtime.engaged);
+                        || (runtime.spec.floatingOnIdle() && runtime.engaged);
         if (held) {
             runtime.engageIdleSince = -1;
             return;

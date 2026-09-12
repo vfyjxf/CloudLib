@@ -66,7 +66,7 @@ public final class ContainerPanelProvider implements PanelProvider {
                     // hologram — the hint exists because there's an
                     // interactive form, not because the card needs a key
                     .onDemand(false)
-                    .dockOnIdle(true);
+                    .floatingOnIdle(true);
             sink.offer(items ? spec.hints("V:expand", "X:store") : spec.hints("V:expand"));
         }
     }
