@@ -14,6 +14,8 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.function.Supplier;
 
@@ -33,6 +35,7 @@ import java.util.function.Supplier;
  */
 public final class ContainerGridWidget extends Widget implements WorldDraggable {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ContainerGridWidget.class);
     private static final int CELL = 18;
     private static final int COLS = 9;
     private static final int MAX_ROWS = 6;
@@ -41,6 +44,7 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
 
     private final Supplier<BlockPos> pos;
     private BlockPos lastPos;
+    private boolean loggedOnce;
 
     public ContainerGridWidget(Supplier<BlockPos> pos) {
         this.pos = pos;
@@ -98,12 +102,24 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
         }
         IItemHandler handler = handler();
         if (handler == null) {
+            if (!loggedOnce) {
+                loggedOnce = true;
+                LOGGER.info("container grid first render: pos={} handler=null", pos.get());
+            }
             canvas.text("no container", 4, 4, 0x5536C4D8);
             return;
         }
         int slots = Math.min(handler.getSlots(), COLS * MAX_ROWS);
         int rows = rows();
         boolean any = false;
+        if (!loggedOnce) {
+            loggedOnce = true;
+            int nonEmpty = 0;
+            for (int i = 0; i < handler.getSlots(); i++)
+                if (!handler.getStackInSlot(i).isEmpty()) nonEmpty++;
+            LOGGER.info("container grid first render: pos={} slots={} nonEmpty={} bounds={}x{}",
+                    pos.get(), handler.getSlots(), nonEmpty, width(), height());
+        }
         for (int i = 0; i < slots; i++) {
             int col = i % COLS;
             int row = i / COLS;

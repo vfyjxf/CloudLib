@@ -31,6 +31,8 @@ neoForge {
         client {
             client()
             gameDirectory = project.file('runs/client')
+            programArgument '--quickPlaySingleplayer'
+            programArgument 'New World'
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 

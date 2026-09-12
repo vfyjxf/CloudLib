@@ -62,6 +62,10 @@ final class PanelRuntime implements InworldPanel {
 
     /** this frame the dock column ran out of room and the panel shows chrome only */
     boolean folded;
+    /** last measured height while unfolded — folding collapses the layout to a
+     *  chrome strip, so solvers must budget against the remembered full height
+     *  or the fold decision would flap frame to frame */
+    int unfoldedHeight;
 
     /** a live trace session froze this panel's position — resolvers keep it presented but never retarget */
     boolean pinned;

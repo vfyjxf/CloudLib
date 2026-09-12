@@ -974,10 +974,11 @@ public final class InworldManager implements InworldUiApi {
                 placement.placement(), chain
         );
         if (floatingHidden(result)) {
-            //viewport escape: degrade to a folded chrome strip clamped on
-            //screen next to the anchor — the panel stays visible instead of
-            //vanishing outright; it unfolds the moment it fits again
-            foldOntoScreen(runtime, anchorPx);
+            //viewport escape: clamp the full panel back inside the screen —
+            //slight anchor occlusion beats losing the content; only when the
+            //panel is genuinely taller/wider than the viewport does it degrade
+            //to a folded chrome strip. Never parks outright.
+            clampOntoScreen(runtime, anchorPx);
             return;
         }
         runtime.widget.setFolded(false);
@@ -1001,20 +1002,36 @@ public final class InworldManager implements InworldUiApi {
     }
 
     /**
-     * Degrade a floating panel that can't fit on screen: fold it to its chrome
-     * strip and clamp it just inside the viewport near the anchor, so the
-     * panel stays discoverable instead of being parked off-screen. Resolves
-     * back to full size as soon as placement succeeds again.
+     * Degrade a floating panel whose placement escaped the viewport, in two
+     * steps: first clamp the <em>full</em> panel just inside the screen near
+     * the anchor — covering a bit of the anchor is far better than losing the
+     * content — and only when the panel is genuinely larger than the viewport
+     * does it fold to a chrome strip. Either way the panel stays discoverable
+     * and resolves back the moment the middleware chain fits again.
      */
-    private void foldOntoScreen(PanelRuntime runtime, FloatPos anchorPx) {
+    private void clampOntoScreen(PanelRuntime runtime, FloatPos anchorPx) {
         int W = mc.getWindow().getGuiScaledWidth();
         int H = mc.getWindow().getGuiScaledHeight();
-        runtime.widget.setFolded(true);
+        int fw = runtime.widget.width();
+        //folded panels collapsed — compare the remembered full height or the
+        //oversized check would flap fold→unfold→fold every other frame
+        int fh = runtime.widget.height();
+        if (runtime.widget.folded) {
+            fh = Math.max(fh, runtime.unfoldedHeight);
+        } else {
+            runtime.unfoldedHeight = fh;
+        }
+        boolean oversized = fw > W - 4 || fh > H - 4;
+        runtime.widget.setFolded(oversized);
+        if (oversized) {
+            fw = runtime.widget.width();
+            fh = foldHeight(runtime);
+        }
         runtime.presented = true;
         runtime.flat = true;
         runtime.smoothMove = true;
-        int fw = runtime.widget.width();
-        int fh = foldHeight(runtime);
+        //hug the anchor horizontally, prefer sitting above it; every axis is
+        //clamped so the panel can never leak off-screen
         int tx = (int) Math.max(2, Math.min(W - fw - 2, anchorPx.x - fw * 0.5));
         int ty = (int) Math.max(2, Math.min(H - fh - 2, anchorPx.y - fh - 10));
         if (!runtime.posInit
@@ -1071,8 +1088,16 @@ public final class InworldManager implements InworldUiApi {
         List<DockLayout.Item> items = new ArrayList<>(docked.size());
         for (PanelRuntime runtime : docked) {
             FloatPos a = runtime.anchorScreen;
+            //a folded panel's bounds collapsed to the chrome strip — budget
+            //against the remembered full height so the fold decision is stable
+            int h = runtime.widget.height();
+            if (runtime.widget.folded) {
+                h = Math.max(h, runtime.unfoldedHeight);
+            } else {
+                runtime.unfoldedHeight = h;
+            }
             items.add(new DockLayout.Item(
-                    runtime.dockCorner, runtime.widget.width(), runtime.widget.height(),
+                    runtime.dockCorner, runtime.widget.width(), h,
                     foldHeight(runtime),
                     a != null ? a.x : Double.NaN, a != null ? a.y : Double.NaN,
                     runtime.lastAutoCorner));

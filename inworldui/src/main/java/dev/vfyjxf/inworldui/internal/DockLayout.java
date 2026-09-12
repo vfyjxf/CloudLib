@@ -113,6 +113,9 @@ final class DockLayout {
                 case TOP_LEFT, BOTTOM_LEFT -> MARGIN_X;
                 default -> W - MARGIN_X - item.w;
             };
+            //a panel wider than the screen still pins its left edge inside
+            //the viewport rather than leaking off the side
+            item.x = Math.max(2, Math.min(item.x, W - item.w - 2));
             item.y = top ? MARGIN_Y + slot : H - MARGIN_Y - h - slot;
             cursors[corner.ordinal()] = slot + h + GAP;
             sideUsed[side] += h + GAP;

@@ -17,6 +17,9 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 
+import dev.vfyjxf.taffy.style.TaffyDisplay;
+
+import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.display;
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.minWidth;
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.padding;
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.positionAbsolute;
@@ -185,6 +188,10 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         if (this.folded == folded) return;
         this.folded = folded;
         content.setVisible(!folded);
+        //display:none collapses the content out of layout as well — an
+        //invisible-but-laid-out subtree would leave a full-height ghost that
+        //swallows clicks meant for the panel stacked below this dock slot
+        content.useStyle(display(folded ? TaffyDisplay.NONE : TaffyDisplay.FLEX));
         if (lifecycle().mounted()) {
             scene().layoutTree().markDirty(nodeId());
         }
@@ -194,10 +201,24 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
 
     //region render
 
+    /**
+     * Visible chrome height while folded — the layout bounds stay full-height
+     * (folding must not remeasure or the dock solver would flap between
+     * folded/unfolded every frame), so the strip is drawn explicitly and the
+     * remaining bounds stay visually transparent.
+     */
+    private int foldHeightPx() {
+        int padTop = title != null ? HackerTheme.TITLE_HEIGHT + 2 : HackerTheme.PADDING;
+        int padBottom = hints.isEmpty() ? HackerTheme.PADDING : HackerTheme.HINT_HEIGHT + 2;
+        return padTop + padBottom;
+    }
+
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         int w = width();
-        int h = height();
+        //folded: draw only the chrome strip — filling the full-height bounds
+        //would paint a translucent box over whatever stacks below this slot
+        int h = folded ? foldHeightPx() : height();
 
         canvas.fill(0, 0, w, h, focused ? HackerTheme.BG_FOCUSED : HackerTheme.BG);
         //idle panels carry no frame — the leader line is the only chrome; the
@@ -269,7 +290,7 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
      */
     private void drawBrackets(SceneCanvas canvas) {
         int w = width();
-        int h = height();
+        int h = folded ? foldHeightPx() : height();
         int b = HackerTheme.BRACKET;
         int color = focused ? HackerTheme.ACCENT : HackerTheme.ACCENT_DIM;
         //top-left
