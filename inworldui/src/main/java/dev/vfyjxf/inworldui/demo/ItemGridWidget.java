@@ -1,6 +1,6 @@
 package dev.vfyjxf.inworldui.demo;
 
-import dev.vfyjxf.cloudlib.api.math.Pos;
+import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
@@ -42,9 +42,9 @@ public final class ItemGridWidget extends Widget implements WorldDraggable {
 
     /** Vanilla slot index under scene coords, or -1 off-grid. */
     private int slotAt(double sceneX, double sceneY) {
-        Pos p = absolutePos();
-        int cx = (int) (sceneX - p.x()) / CELL;
-        int cy = (int) (sceneY - p.y()) / CELL;
+        FloatPos local = sceneToLocal(sceneX, sceneY);
+        int cx = (int) local.x() / CELL;
+        int cy = (int) local.y() / CELL;
         if (cx < 0 || cx >= COLS || cy < 0 || cy >= ROWS) return -1;
         return cy == ROWS - 1 ? cx : 9 + cy * COLS + cx;
     }
@@ -62,8 +62,12 @@ public final class ItemGridWidget extends Widget implements WorldDraggable {
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         Inventory inv = player.getInventory();
-        int localX = mouseX - absolutePos().x();
-        int localY = mouseY - absolutePos().y();
+        //mouseX/Y arrive parent-local — round-trip through scene space so the
+        //hover test matches slotAt regardless of nesting/transforms
+        FloatPos local = parent() != null
+                ? sceneToLocal(parent().localToScene(mouseX, mouseY).x, parent().localToScene(mouseX, mouseY).y)
+                : new FloatPos(-1, -1);
+        int localX = (int) local.x(), localY = (int) local.y();
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
                 int x = col * CELL;

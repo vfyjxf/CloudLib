@@ -1,5 +1,6 @@
 package dev.vfyjxf.inworldui.demo;
 
+import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
@@ -83,6 +84,14 @@ public final class TracePuzzleWidget extends Widget implements InworldTraceable 
     }
 
     //region InworldTraceable
+
+    @Override
+    public @org.jetbrains.annotations.Nullable FloatPos traceCursorStart() {
+        //Witness convention: activating the panel snaps the cursor onto the
+        //start circle — the stroke always begins at the node, not wherever
+        //the crosshair happened to be
+        return new FloatPos(nx(START), ny(START));
+    }
 
     @Override
     public boolean traceBegin(InworldPanelContext context, float x, float y) {

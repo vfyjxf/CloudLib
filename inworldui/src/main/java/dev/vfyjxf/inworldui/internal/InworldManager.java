@@ -508,10 +508,12 @@ public final class InworldManager implements InworldUiApi {
         } else if (action == GLFW.GLFW_RELEASE) {
             if (dragSession != null) {
                 //releasing a drag commits (targets/throw) or cancels (back onto
-                //the scene) — the vanilla press was already consumed
+                //a panel). "Over a panel" must mean a real panel — hitTest can
+                //return the window-filling root over empty space, which would
+                //cancel every release.
                 double[] v = virtualPointer();
-                boolean overScene = scene.hitTest(v[0], v[1]) != null;
-                commitWorldDrag(overScene);
+                boolean overPanel = panelOf(scene.hitTest(v[0], v[1])) != null;
+                commitWorldDrag(overPanel);
                 event.setCanceled(true);
                 pressedConsumed = false;
                 return;
@@ -568,6 +570,13 @@ public final class InworldManager implements InworldUiApi {
         HitResult hit;
         if (dragInspectHosted) {
             if (projection == null) return;
+            //cursor over a panel must not "see through" the UI to a container
+            //behind it — the panel surface owns that pixel while dragging
+            if (panelOf(scene.hitTest(dragCursorX, dragCursorY)) != null) {
+                dragTarget = null;
+                dragTrail.leave();
+                return;
+            }
             Vec3 eye = mc.player.getEyePosition();
             Vec3 dir = projection.rayDirection(dragCursorX, dragCursorY);
             double reach = mc.player.blockInteractionRange();
@@ -636,6 +645,7 @@ public final class InworldManager implements InworldUiApi {
     private void cancelWorldDrag() {
         dragSession = null;
         dragPanel = null;
+        dragInspectHosted = false;
         dragTarget = null;
         dragTrail.clear();
     }
@@ -1807,7 +1817,29 @@ public final class InworldManager implements InworldUiApi {
 
         FloatPos start = initialTracePoint(runtime);
         InworldPanelContext ctx = new InworldPanelContext(mc.level, mc.player, runtime);
+
+        //freeze the mapping inputs first: the camera frame and the panel's
+        //basis (or flat rect). The cursor snap below needs the frozen basis,
+        //and from here until commit a still mouse maps to a still cursor.
+        traceProj = projection;
+        if (runtime.flat) {
+            tracePanelX = runtime.widget.screenX;
+            tracePanelY = runtime.widget.screenY;
+            traceO = traceU = traceV = traceN = null;
+        } else {
+            traceO = runtime.faceOrigin;
+            traceU = runtime.faceU;
+            traceV = runtime.faceV;
+            traceN = runtime.faceNormal;
+        }
+
+        //Witness start-node semantics: the widget may declare a canonical
+        //start point — the cursor (and the session) begins there
+        FloatPos snap = traceable.traceCursorStart();
+        if (snap != null) start = snap;
+
         if (!traceable.traceBegin(ctx, (float) start.x, (float) start.y)) {
+            traceProj = null;
             fireAction(runtime);
             return;
         }
@@ -1821,21 +1853,6 @@ public final class InworldManager implements InworldUiApi {
         focused = runtime;
         manualFocusTick = tick;
 
-        //freeze the mapping inputs: the camera frame and the panel's basis (or
-        //flat rect). From here until commit, a still mouse maps to a still
-        //cursor — nothing mid-trace may rotate the camera or retarget the panel.
-        traceProj = projection;
-        if (runtime.flat) {
-            tracePanelX = runtime.widget.screenX;
-            tracePanelY = runtime.widget.screenY;
-            traceO = traceU = traceV = traceN = null;
-        } else {
-            traceO = runtime.faceOrigin;
-            traceU = runtime.faceU;
-            traceV = runtime.faceV;
-            traceN = runtime.faceNormal;
-        }
-
         if (inspecting) {
             traceInspectHosted = true; //the inspect screen already captures input
         } else {
@@ -1844,6 +1861,33 @@ public final class InworldManager implements InworldUiApi {
             traceScreen = new InworldTraceScreen(this);
             mc.setScreen(traceScreen);
         }
+
+        //physical cursor follows the logical snap — otherwise the next real
+        //mouse event would map back to where the press landed and the stroke
+        //would visibly jump off the start node
+        if (snap != null) warpCursorTo(runtime, snap);
+    }
+
+    /**
+     * Moves the OS cursor onto the screen point that maps to {@code contentPt}
+     * under the frozen trace basis. GLFW delivers the position as a normal
+     * mouse-move event, so the trace mapping stays self-consistent.
+     */
+    private void warpCursorTo(PanelRuntime runtime, FloatPos contentPt) {
+        FloatPos off = contentOffset(runtime);
+        double u = off.x + contentPt.x;
+        double v = off.y + contentPt.y;
+        FloatPos screen;
+        if (runtime.flat) {
+            screen = new FloatPos(tracePanelX + u, tracePanelY + v);
+        } else {
+            if (traceProj == null || traceU == null) return;
+            Vec3 world = traceO.add(traceU.scale(u)).add(traceV.scale(v));
+            screen = traceProj.worldToScreen(world);
+            if (screen == null) return;
+        }
+        double sf = mc.getWindow().getScreenWidth() / (double) mc.getWindow().getGuiScaledWidth();
+        GLFW.glfwSetCursorPos(mc.getWindow().getWindow(), screen.x * sf, screen.y * sf);
     }
 
     /** First cursor position: the aimed-at panel point when pointing, else content center. */
@@ -2370,12 +2414,16 @@ public final class InworldManager implements InworldUiApi {
                 g.drawString(mc.font, label, (int) s.x() - w / 2, (int) s.y() - 4, 0xFF6CF2FF, false);
             }
         }
-        //carried count trails the active pointer — crosshair in world mode,
-        //cursor when the drag is inspect-hosted
-        String label = dragSession.carried().getCount() + "×";
+        //carried stack + count trail the active pointer — crosshair in world
+        //mode, cursor when the drag is inspect-hosted
         int cx = dragInspectHosted ? (int) dragCursorX : mc.getWindow().getGuiScaledWidth() / 2;
         int cy = dragInspectHosted ? (int) dragCursorY : mc.getWindow().getGuiScaledHeight() / 2;
-        g.drawString(mc.font, label, cx + 6, cy + 6, 0xFF6CF2FF, false);
+        g.renderItem(dragSession.carried(), cx + 5, cy - 8);
+        g.renderItemDecorations(mc.font, dragSession.carried(), cx + 5, cy - 8);
+        if (dragSession.wholeStack() && dragSession.carried().getCount() > 1) {
+            g.drawString(mc.font, "×" + dragSession.carried().getCount(),
+                    cx + 5 + 17, cy - 3, 0xFF6CF2FF, false);
+        }
     }
 
     //endregion
@@ -2577,13 +2625,19 @@ public final class InworldManager implements InworldUiApi {
                 drawLine(graphics, (float) ex, (float) ey + 1, (float) from.x, (float) from.y + 1, edge);
                 drawLine(graphics, (float) ex, (float) ey, (float) from.x, (float) from.y, color);
             }
-            //hollow diamond marking the source the line leads back to — drawn
+            //filled diamond marking the source the line leads back to — drawn
             //even when the anchor projects inside the panel (the panel sits
-            //right on its block): the marker is the standing "tracked" cue
-            drawLine(graphics, (float) from.x, (float) from.y - 3.5f, (float) from.x + 3.5f, (float) from.y, color);
-            drawLine(graphics, (float) from.x + 3.5f, (float) from.y, (float) from.x, (float) from.y + 3.5f, color);
-            drawLine(graphics, (float) from.x, (float) from.y + 3.5f, (float) from.x - 3.5f, (float) from.y, color);
-            drawLine(graphics, (float) from.x - 3.5f, (float) from.y, (float) from.x, (float) from.y - 3.5f, color);
+            //right on its block): the marker is the standing "tracked" cue.
+            //Solid fill + contrasting core so it stays legible at a glance.
+            int fx = (int) from.x, fy = (int) from.y;
+            for (int i = -4; i <= 4; i++) {
+                int half = 4 - Math.abs(i);
+                graphics.fill(fx - half, fy + i, fx + half + 1, fy + i + 1, edge);
+            }
+            for (int i = -2; i <= 2; i++) {
+                int half = 2 - Math.abs(i);
+                graphics.fill(fx - half, fy + i, fx + half + 1, fy + i + 1, color);
+            }
         }
     }
 
@@ -2755,7 +2809,7 @@ public final class InworldManager implements InworldUiApi {
 
     boolean inspectMouseReleased(double x, double y, int button) {
         if (dragInspectHosted && dragSession != null) {
-            commitWorldDrag(scene.hitTest(x, y) != null);
+            commitWorldDrag(panelOf(scene.hitTest(x, y)) != null);
             dragInspectHosted = false;
             return true;
         }

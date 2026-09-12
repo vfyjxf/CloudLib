@@ -1,5 +1,8 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld;
 
+import dev.vfyjxf.cloudlib.api.math.FloatPos;
+import org.jetbrains.annotations.Nullable;
+
 /**
  * Opt-in "trace mode" for a panel's content widget — the Witness-style
  * drag interaction: while the interact key is held on a focused traceable
@@ -21,9 +24,23 @@ package dev.vfyjxf.cloudlib.api.ui.inworld;
 public interface InworldTraceable {
 
     /**
+     * Optional cursor snap point in content-local pixels — returned
+     * <em>before</em> {@link #traceBegin} so the session can begin at a
+     * canonical location. Witness panels activate by jumping the cursor onto
+     * the start node; return that node's center here and the runtime warps
+     * the physical cursor so the traced stroke genuinely starts there.
+     * <p>
+     * {@code null} (default) = the trace begins wherever the press landed.
+     */
+    default @Nullable FloatPos traceCursorStart() {
+        return null;
+    }
+
+    /**
      * A trace session is starting at {@code (x, y)} in content-local pixels —
      * the crosshair ray's unprojection when the press was aimed at the panel,
-     * else the content center.
+     * else the content center. When {@link #traceCursorStart} is non-null the
+     * argument is already the snapped point.
      *
      * @return false to refuse the session; the press then falls back to the
      * panel's primary action
