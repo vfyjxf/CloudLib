@@ -165,4 +165,37 @@ class InworldLayoutTest {
         assertEquals(1.0, oc.coverage(40, 12), 1e-6);
     }
 
+    //---- retarget deadband & smoothing ----
+
+    @Test
+    void subEpsilonMovesKeepOldTarget() {
+        assertFalse(InworldLayout.retarget(100, 60, 101.5, 60, 2));
+        assertFalse(InworldLayout.retarget(100, 60, 100, 61.9, 2));
+    }
+
+    @Test
+    void overEpsilonMovesRetarget() {
+        assertTrue(InworldLayout.retarget(100, 60, 103, 60, 2));
+        assertTrue(InworldLayout.retarget(100, 60, 100, 57.5, 2));
+    }
+
+    @Test
+    void approachConvergesButNeverOvershoots() {
+        float p = 0;
+        for (int i = 0; i < 60; i++) p = InworldLayout.approach(p, 100, 1f / 20, 14);
+        assertEquals(100, p, 0.5f);
+        //and a single step is monotonic, not oscillating
+        float a = InworldLayout.approach(0, 100, 1f / 20, 14);
+        assertTrue(a > 0 && a < 100);
+    }
+
+    @Test
+    void approachIsFrameRateIndependent() {
+        //two half-steps land where one full step lands (roughly — exponential)
+        float one = InworldLayout.approach(0, 100, 0.1f, 14);
+        float half = InworldLayout.approach(0, 100, 0.05f, 14);
+        half = InworldLayout.approach(half, 100, 0.05f, 14);
+        assertEquals(one, half, 0.01f);
+    }
+
 }

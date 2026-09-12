@@ -170,9 +170,17 @@ public final class InworldManager implements InworldUiApi {
     private long traceStartTick;
     /** the session is hosted by the inspect screen — no extra screen was opened */
     private boolean traceInspectHosted;
-    /** look-assist: ease the camera onto the anchor for the first ticks of a session */
-    private float traceYaw, tracePitch;
-    private int traceLookTicks;
+    /**
+     * Frozen projection frame captured at traceBegin — every cursor pixel maps
+     * through this snapshot so a still mouse maps to a still cursor no matter
+     * what the live camera does (the camera can't move while the capture
+     * screen is open anyway; the snapshot just makes that guarantee explicit).
+     */
+    private @Nullable Projection traceProj;
+    /** frozen panel basis for world-space panels (o/u/v/n) */
+    private Vec3 traceO, traceU, traceV, traceN;
+    /** frozen screen rect for flat panels */
+    private float tracePanelX, tracePanelY;
     //endregion
     /** Set when the inspect screen was closed by ESC while the key is still held — don't reopen until released. */
     private boolean inspectDismissed;
@@ -342,8 +350,6 @@ public final class InworldManager implements InworldUiApi {
         while (InworldKeyMappings.focusNext.consumeClick()) focusNext();
         while (InworldKeyMappings.focusPrevious.consumeClick()) focusPrevious();
         while (InworldKeyMappings.interact.consumeClick()) triggerInteract();
-        //inspect-hosted traces have no trace screen to drive the look-assist
-        if (tracing != null && traceInspectHosted) tickTraceLook();
 
         //providers — each provider's last emission is cached; reconcile runs
         //when at least one provider was re-evaluated (or on the first tick so
@@ -473,6 +479,7 @@ public final class InworldManager implements InworldUiApi {
         pointed = null;
         tracing = null;
         traceScreen = null;
+        traceProj = null;
         inspecting = false;
         inspectScreen = null;
     }
@@ -708,11 +715,22 @@ public final class InworldManager implements InworldUiApi {
             runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
             return;
         }
+        //a pinned panel (live trace) freezes in place — retargeting it now
+        //would slide the surface out from under the stroke
+        if (runtime.pinned) {
+            runtime.presented = true;
+            runtime.flat = true;
+            runtime.smoothMove = false;
+            return;
+        }
         //the spec's middleware chain runs first, then an internal avoid pass
         //keeps the panel clear of already-committed chrome (docks, face
-        //projections, earlier floating panels)
+        //projections, earlier floating panels). The avoid is skipped while the
+        //panel carries focus — never slide out from under the cursor.
         List<FloatingMiddleware> chain = new ArrayList<>(placement.middlewares());
-        chain.add(AvoidRectsMiddleware.create(() -> obstacles, 4));
+        if (!runtime.focused() && runtime != pointed) {
+            chain.add(AvoidRectsMiddleware.create(() -> obstacles, 4));
+        }
         var result = FloatingPositioning.compute(
                 new Rect((int) anchorPx.x - 1, (int) anchorPx.y - 1, 2, 2),
                 new Rect(0, 0, runtime.widget.width(), runtime.widget.height()),
@@ -725,8 +743,14 @@ public final class InworldManager implements InworldUiApi {
         }
         runtime.presented = true;
         runtime.smoothMove = true;
-        runtime.targetX = (int) result.x();
-        runtime.targetY = (int) result.y();
+        //retarget deadband — sub-2px target churn from anchor/projection noise
+        //keeps the panel gliding forever; small deltas just keep the old target
+        if (!runtime.posInit
+                || InworldLayout.retarget(runtime.targetX, runtime.targetY,
+                result.x(), result.y(), 2)) {
+            runtime.targetX = (int) result.x();
+            runtime.targetY = (int) result.y();
+        }
     }
 
     private static boolean floatingHidden(FloatingPositioning.PositionResult result) {
@@ -746,6 +770,9 @@ public final class InworldManager implements InworldUiApi {
         //follow panels track their anchor tightly — no position smoothing,
         //the interpolated anchor already moves smoothly
         runtime.smoothMove = false;
+        //a pinned panel freezes where it is — the anchor keeps moving but the
+        //surface under a live trace must not
+        if (runtime.pinned) return;
         runtime.widget.setScreenPos(
                 (int) (anchorPx.x - runtime.widget.width() * 0.5 + follow.offsetX()),
                 (int) (anchorPx.y - runtime.widget.height() * 0.5 + follow.offsetY())
@@ -766,15 +793,8 @@ public final class InworldManager implements InworldUiApi {
     }
 
     /**
-     * Packs docked panels into their screen corners: AUTO picks the quadrant
-     * the anchor projects into with a deadband around the center lines so a
-     * wandering anchor doesn't keep flapping the panel between corners, panels
-     * stack from the corner inward in offer order.
-     * <p>
-     * Each screen side is one shared vertical budget (top and bottom columns
-     * grow toward each other): when a panel no longer fits it is first
-     * <em>folded</em> to its chrome strip; when even folded strips overflow the
-     * panel is hidden for the frame and counted into the corner's "+N" chip.
+     * Packs docked panels into their screen corners via {@link DockLayout} —
+     * the solver is pure; this method only maps runtime state in and out.
      */
     private void layoutDocks(List<PanelRuntime> docked) {
         Arrays.fill(dockTopExtent, 0);
@@ -783,55 +803,34 @@ public final class InworldManager implements InworldUiApi {
         if (docked.isEmpty()) return;
         int W = mc.getWindow().getGuiScaledWidth();
         int H = mc.getWindow().getGuiScaledHeight();
-        int marginX = 8, marginY = 8, gap = 6;
-        int budget = H - marginY * 2;
-        int[] sideUsed = new int[2];
 
+        List<DockLayout.Item> items = new ArrayList<>(docked.size());
         for (PanelRuntime runtime : docked) {
-            InworldPlacement.DockCorner corner = runtime.dockCorner;
-            if (corner == InworldPlacement.DockCorner.AUTO) {
-                corner = autoCorner(runtime.anchorScreen, W, H, runtime.lastAutoCorner);
-            }
-            runtime.lastAutoCorner = corner;
-            int side = isLeft(corner) ? 0 : 1;
-            boolean top = isTop(corner);
-            int w = runtime.widget.width();
-            int h = runtime.widget.height();
-
-            runtime.folded = false;
-            if (sideUsed[side] + h + gap > budget) {
-                int fh = foldHeight(runtime);
-                if (sideUsed[side] + fh + gap <= budget) {
-                    runtime.folded = true;
-                    h = fh;
-                } else {
-                    //column full even folded — hide this frame, count into "+N"
-                    runtime.presented = false;
-                    runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
-                    dockOverflow[corner.ordinal()]++;
-                    continue;
-                }
-            }
-            runtime.widget.setFolded(runtime.folded);
-
-            int slot = dockCursors[corner.ordinal()];
-            int x = switch (corner) {
-                case TOP_LEFT, BOTTOM_LEFT -> marginX;
-                default -> W - marginX - w;
-            };
-            int y = top ? marginY + slot : H - marginY - h - slot;
-            dockCursors[corner.ordinal()] = slot + h + gap;
-            sideUsed[side] += h + gap;
-            if (corner == InworldPlacement.DockCorner.TOP_LEFT) {
-                dockTopExtent[0] = Math.max(dockTopExtent[0], y + h);
-            } else if (corner == InworldPlacement.DockCorner.TOP_RIGHT) {
-                dockTopExtent[1] = Math.max(dockTopExtent[1], y + h);
-            }
-            runtime.targetX = x;
-            runtime.targetY = y;
+            FloatPos a = runtime.anchorScreen;
+            items.add(new DockLayout.Item(
+                    runtime.dockCorner, runtime.widget.width(), runtime.widget.height(),
+                    foldHeight(runtime),
+                    a != null ? a.x : Double.NaN, a != null ? a.y : Double.NaN,
+                    runtime.lastAutoCorner));
         }
-        System.arraycopy(dockCursors, 0, dockCursorEnd, 0, dockCursorEnd.length);
-        Arrays.fill(dockCursors, 0);
+        DockLayout.Result result = DockLayout.solve(items, W, H);
+        for (int i = 0; i < docked.size(); i++) {
+            PanelRuntime runtime = docked.get(i);
+            DockLayout.Item item = items.get(i);
+            runtime.lastAutoCorner = item.resolved;
+            runtime.folded = item.folded;
+            if (item.hidden) {
+                runtime.presented = false;
+                runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+                continue;
+            }
+            runtime.widget.setFolded(item.folded);
+            runtime.targetX = item.x;
+            runtime.targetY = item.y;
+        }
+        System.arraycopy(result.overflow, 0, dockOverflow, 0, dockOverflow.length);
+        System.arraycopy(result.topExtent, 0, dockTopExtent, 0, dockTopExtent.length);
+        System.arraycopy(result.cursorEnd, 0, dockCursorEnd, 0, dockCursorEnd.length);
     }
 
     /** Height of a folded panel: title/hint chrome only, content hidden. */
@@ -841,36 +840,6 @@ public final class InworldManager implements InworldUiApi {
         return padTop + padBottom;
     }
 
-    /**
-     * AUTO-corner pick with hysteresis: the anchor has to push a deadband past
-     * the screen's center lines before the panel switches sides, so crossing
-     * the center doesn't slam the panel to the opposite corner.
-     */
-    private static InworldPlacement.DockCorner autoCorner(
-            @Nullable FloatPos anchor, int W, int H, @Nullable InworldPlacement.DockCorner prev) {
-        int db = 72;
-        boolean left, top;
-        if (anchor == null || prev == null) {
-            left = anchor == null || anchor.x < W * 0.5f;
-            top = anchor == null || anchor.y < H * 0.5f;
-        } else {
-            left = anchor.x < W * 0.5f + (isLeft(prev) ? db : -db);
-            top = anchor.y < H * 0.5f + (isTop(prev) ? db : -db);
-        }
-        return top
-                ? (left ? InworldPlacement.DockCorner.TOP_LEFT : InworldPlacement.DockCorner.TOP_RIGHT)
-                : (left ? InworldPlacement.DockCorner.BOTTOM_LEFT : InworldPlacement.DockCorner.BOTTOM_RIGHT);
-    }
-
-    private static boolean isLeft(InworldPlacement.DockCorner c) {
-        return c == InworldPlacement.DockCorner.TOP_LEFT || c == InworldPlacement.DockCorner.BOTTOM_LEFT;
-    }
-
-    private static boolean isTop(InworldPlacement.DockCorner c) {
-        return c == InworldPlacement.DockCorner.TOP_LEFT || c == InworldPlacement.DockCorner.TOP_RIGHT;
-    }
-
-    private final int[] dockCursors = new int[InworldPlacement.DockCorner.values().length];
     /** bottom edge (px) of the TOP_LEFT/TOP_RIGHT dock stacks — tag rails start below them */
     private final int[] dockTopExtent = new int[2];
     /** per-corner count of panels that didn't fit even folded — drawn as "+N" chips */
@@ -896,7 +865,6 @@ public final class InworldManager implements InworldUiApi {
     private void resolveConflicts(List<Rect2i> occupied) {
         int W = mc.getWindow().getGuiScaledWidth();
         int H = mc.getWindow().getGuiScaledHeight();
-        int margin = 8;
 
         List<PanelRuntime> tags = new ArrayList<>();
         for (PanelRuntime r : panels.values()) {
@@ -945,52 +913,20 @@ public final class InworldManager implements InworldUiApi {
                     tag.smoothMove ? tag.targetX : tag.widget.screenX));
             int iy = (int) Math.max(2, Math.min(H - h - 2,
                     tag.smoothMove ? tag.targetY : tag.widget.screenY));
-            int wx = ix, wy = iy;
 
-            var oc = InworldLayout.occlusion(ix, iy, w, h, occupied);
-            if (!oc.acceptable(w, h)) {
-                Rect2i blocker = oc.blocker();
-                int tol = 10; //px of graze an escape position may keep
-                int bx = 0, by = 0, bestCost = Integer.MAX_VALUE, bestDir = -1;
-                int[][] candidates = {
-                        {ix, blocker.getY() - h + tol},
-                        {ix, blocker.getY() + blocker.getHeight() - tol},
-                        {blocker.getX() - w + tol, iy},
-                        {blocker.getX() + blocker.getWidth() - tol, iy}};
-                for (int i = 0; i < candidates.length; i++) {
-                    int[] c = candidates[i];
-                    int cx = Math.max(2, Math.min(W - w - 2, c[0]));
-                    int cy = Math.max(2, Math.min(H - h - 2, c[1]));
-                    var co = InworldLayout.occlusion(cx, cy, w, h, occupied);
-                    //an escape must land readable — or at least halve the cover
-                    if (!co.acceptable(w, h) && co.area() >= oc.area() * 0.55) continue;
-                    int cost = Math.abs(cx - ix) + Math.abs(cy - iy)
-                            - (i == tag.lastSlideDir ? 14 : 0);
-                    if (cost < bestCost) {
-                        bestCost = cost;
-                        bx = cx;
-                        by = cy;
-                        bestDir = i;
-                    }
-                }
-                if (bestDir >= 0 && bestCost <= 48) {
-                    wx = bx;
-                    wy = by;
-                    tag.lastSlideDir = bestDir;
-                } else if (oc.buried(w, h)) {
-                    tag.lastSlideDir = -1;
-                    railQueue.add(tag);
-                    continue;
-                } else {
-                    //not worth the trip — stay behind the chrome
-                    tag.lastSlideDir = -1;
-                }
+            TagFlow.Result res = TagFlow.resolve(ix, iy, w, h, occupied,
+                    tag.lastSlideDir, W, H);
+            tag.lastSlideDir = res.slideDir();
+            int wx = res.x(), wy = res.y();
+            if (res.outcome() == TagFlow.Outcome.RAIL) {
+                railQueue.add(tag);
+                continue;
             }
 
             //commit: a displaced (or still-gliding-home) tag uses the
             //posX/targetX smoothing so escapes and returns animate; a tag at
             //home snaps tight to its anchor with no lag
-            boolean displaced = wx != ix || wy != iy;
+            boolean displaced = res.outcome() == TagFlow.Outcome.SLIDED;
             boolean settling = tag.posInit
                     && (Math.abs(tag.posX - ix) > 1.5f || Math.abs(tag.posY - iy) > 1.5f);
             if (displaced || settling) {
@@ -1006,27 +942,20 @@ public final class InworldManager implements InworldUiApi {
 
         //rails: packed columns on the left/right edge, below that side's
         //top dock stack
-        int[] railY = {dockTopExtent[0] > 0 ? dockTopExtent[0] + 6 : margin + 16,
-                dockTopExtent[1] > 0 ? dockTopExtent[1] + 6 : margin + 16};
+        TagFlow.Rails rails = new TagFlow.Rails(W, H, dockTopExtent[0], dockTopExtent[1], occupied);
         for (PanelRuntime tag : railQueue) {
             int w = tag.widget.width();
             int h = tag.widget.height();
-            int side = tag.anchorScreen != null && tag.anchorScreen.x < W * 0.5f ? 0 : 1;
-            int x = side == 0 ? margin : W - margin - w;
-            int y = railY[side];
-            while (firstOverlap(x, y, w, h, occupied) != null && y + h <= H - margin) {
-                y += 4;
-            }
-            if (y + h > H - margin) {
+            int side = rails.side(tag.anchorScreen != null ? tag.anchorScreen.x : Double.NaN);
+            int[] slot = rails.claim(side, w, h);
+            if (slot == null) {
                 //rail full — hide the tag this frame
                 tag.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
                 tag.smoothMove = false;
                 continue;
             }
             tag.smoothMove = true; //glide into the rail slot
-            placeTag(tag, x, y);
-            occupied.add(new Rect2i(x, y, w, h));
-            railY[side] = y + h + 4;
+            placeTag(tag, slot[0], slot[1]);
         }
     }
 
@@ -1050,16 +979,6 @@ public final class InworldManager implements InworldUiApi {
             tag.widget.setScreenPos(x, y);
             tag.posInit = false;
         }
-    }
-
-    private static @Nullable Rect2i firstOverlap(int x, int y, int w, int h, List<Rect2i> rects) {
-        for (Rect2i o : rects) {
-            if (x < o.getX() + o.getWidth() && x + w > o.getX()
-                    && y < o.getY() + o.getHeight() && y + h > o.getY()) {
-                return o;
-            }
-        }
-        return null;
     }
 
     /** Anchor is off the camera view — behind the camera or beyond the viewport edge. */
@@ -1197,8 +1116,8 @@ public final class InworldManager implements InworldUiApi {
             if (n == 0) continue;
             String s = "+" + n;
             int tw = font.width(s) + 5;
-            int x = isLeft(corners[c]) ? marginX : W - marginX - tw;
-            int y = isTop(corners[c])
+            int x = DockLayout.isLeft(corners[c]) ? marginX : W - marginX - tw;
+            int y = DockLayout.isTop(corners[c])
                     ? marginY + dockCursorEnd[c]
                     : H - marginY - 9 - dockCursorEnd[c];
             graphics.fill(x, y, x + tw, y + 9, HackerTheme.BG_FOCUSED);
@@ -1241,6 +1160,7 @@ public final class InworldManager implements InworldUiApi {
         float dt = mc.getTimer().getRealtimeDeltaTicks() / 20f;
         float k = 1f - (float) Math.exp(-dt * 14);
         for (PanelRuntime runtime : panels.values()) {
+            if (runtime.pinned) continue; //a live trace froze this panel
             if (runtime.presented && runtime.flat && runtime.smoothMove) {
                 if (!runtime.posInit) {
                     runtime.posX = runtime.targetX;
@@ -1284,6 +1204,17 @@ public final class InworldManager implements InworldUiApi {
         ClientLevel level = mc.level;
         Vec3 eye = mc.player.getEyePosition(framePartialTick);
 
+        //a live trace froze this hologram: keep last frame's spot and basis
+        //untouched so the frozen ray-plane mapping in TraceMap stays exact
+        if (runtime.pinned && runtime.expandPos != null && runtime.faceU != null) {
+            runtime.presented = true;
+            runtime.flat = false;
+            int px = mc.getWindow().getGuiScaledWidth() + 16 + stripCursor;
+            stripCursor += runtime.widget.width() + 16;
+            runtime.widget.setScreenPos(px, 8);
+            return;
+        }
+
         //other world-space panels already occupy these spots
         List<Vec3> occupiedWorld = new ArrayList<>();
         for (PanelRuntime other : panels.values()) {
@@ -1293,7 +1224,6 @@ public final class InworldManager implements InworldUiApi {
         }
 
         Vec3 vDown = new Vec3(0, -1, 0).scale(s);
-        double hideAt = runtime.expandHidden ? 0.15 : 0.35;
         Vec3 best = null;
         double bestFrac = 1;
 
@@ -1313,7 +1243,7 @@ public final class InworldManager implements InworldUiApi {
                         runtime.widget.width(), runtime.widget.height(), reserved);
                 double cur = expandSpotScore(level, runtime.expandPos, pw, ph, anchor)
                         + curFrac * 600 + (curFrac >= 0.999 ? 300 : 0);
-                if (curFrac <= 0.30 && cur < 320) {
+                if (ExpandPlacer.keepSpot(false, curFrac, cur)) {
                     best = runtime.expandPos;
                     bestFrac = curFrac;
                 }
@@ -1357,7 +1287,7 @@ public final class InworldManager implements InworldUiApi {
                         runtime.widget.width(), runtime.widget.height(), reserved);
                 double cur = expandSpotScore(level, runtime.expandPos, pw, ph, anchor)
                         + curFrac * 600 + (curFrac >= 0.999 ? 300 : 0);
-                if (cur <= bestScore + 48) {
+                if (ExpandPlacer.preferCurrent(cur, bestScore)) {
                     best = runtime.expandPos;
                     bestFrac = curFrac;
                 }
@@ -1366,7 +1296,7 @@ public final class InworldManager implements InworldUiApi {
 
         //can't show it cleanly → don't show it; hysteresis keeps the
         //show/hide edge from flickering
-        if (best == null || bestFrac > hideAt) {
+        if (best == null || ExpandPlacer.shouldHide(bestFrac, runtime.expandHidden)) {
             runtime.expandHidden = true;
             runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
             return;
@@ -1693,6 +1623,7 @@ public final class InworldManager implements InworldUiApi {
         }
 
         tracing = runtime;
+        runtime.pinned = true;
         traceX = (float) start.x;
         traceY = (float) start.y;
         traceMoved = 0;
@@ -1700,14 +1631,19 @@ public final class InworldManager implements InworldUiApi {
         focused = runtime;
         manualFocusTick = tick;
 
-        //look-assist: ease the view onto the anchor — Witness re-centres the
-        //player on the panel; rotating the camera is our equivalent, and it
-        //keeps grazing-angle face panels usable during the trace
-        if (runtime.anchorWorld != null) {
-            Vec3 d = runtime.anchorWorld.subtract(mc.player.getEyePosition());
-            traceYaw = (float) Math.toDegrees(Math.atan2(-d.x, d.z));
-            tracePitch = (float) -Math.toDegrees(Math.atan2(d.y, Math.hypot(d.x, d.z)));
-            traceLookTicks = 10;
+        //freeze the mapping inputs: the camera frame and the panel's basis (or
+        //flat rect). From here until commit, a still mouse maps to a still
+        //cursor — nothing mid-trace may rotate the camera or retarget the panel.
+        traceProj = projection;
+        if (runtime.flat) {
+            tracePanelX = runtime.widget.screenX;
+            tracePanelY = runtime.widget.screenY;
+            traceO = traceU = traceV = traceN = null;
+        } else {
+            traceO = runtime.faceOrigin;
+            traceU = runtime.faceU;
+            traceV = runtime.faceV;
+            traceN = runtime.faceNormal;
         }
 
         if (inspecting) {
@@ -1740,16 +1676,19 @@ public final class InworldManager implements InworldUiApi {
                 (float) (scene.y - runtime.widget.screenY));
     }
 
-    /** Screen-space cursor → panel pixel space (ray-unprojected for world panels). */
+    /**
+     * Screen-space cursor → panel pixel space against the frozen trace state —
+     * never the live basis, so panel animation/camera drift can't move the
+     * cursor under a still mouse.
+     */
     private @Nullable FloatPos tracePanelPoint(PanelRuntime runtime, double sx, double sy) {
         if (runtime.flat) {
-            return new FloatPos((float) (sx - runtime.widget.screenX),
-                    (float) (sy - runtime.widget.screenY));
+            return TraceMap.flatUv(sx, sy, tracePanelX, tracePanelY);
         }
-        Projection proj = projection;
-        if (proj == null || runtime.faceU == null) return null;
-        return Projection.rayPlaneUV(proj.cameraPos(), proj.rayDirection(sx, sy),
-                runtime.faceOrigin, runtime.faceU, runtime.faceV, runtime.faceNormal);
+        Projection proj = traceProj;
+        if (proj == null || traceU == null) return null;
+        return TraceMap.worldUv(proj.cameraPos(), proj.rayDirection(sx, sy),
+                traceO, traceU, traceV, traceN);
     }
 
     void traceMouseMoved(double sx, double sy) {
@@ -1768,8 +1707,9 @@ public final class InworldManager implements InworldUiApi {
         if (px == null) return; //ray left the plane — keep the last cursor
         FloatPos off = contentOffset(runtime);
         Widget content = runtime.widget.content();
-        float cx = (float) Mth.clamp(px.x - off.x, -4, content.width() + 4);
-        float cy = (float) Mth.clamp(px.y - off.y, -4, content.height() + 4);
+        FloatPos cl = TraceMap.clampContent(px, off.x, off.y,
+                content.width(), content.height());
+        float cx = (float) cl.x, cy = (float) cl.y;
         traceMoved += Math.abs(cx - traceX) + Math.abs(cy - traceY);
         traceX = cx;
         traceY = cy;
@@ -1786,8 +1726,10 @@ public final class InworldManager implements InworldUiApi {
         PanelRuntime runtime = tracing;
         if (runtime == null) return;
         tracing = null;
+        runtime.pinned = false;
         traceInspectHosted = false;
         traceScreen = null;
+        traceProj = null;
         InworldTraceable traceable = runtime.traceable();
         if (traceable != null && mc.level != null && mc.player != null) {
             boolean tap = commit && traceMoved < 4f && tick - traceStartTick < 6;
@@ -1816,13 +1758,6 @@ public final class InworldManager implements InworldUiApi {
             case MOUSE -> GLFW.glfwGetMouseButton(window, bound.getValue()) == GLFW.GLFW_PRESS;
             case SCANCODE -> key.isDown();
         };
-    }
-
-    /** Look-assist step — called by the trace screen each tick. */
-    void tickTraceLook() {
-        if (traceLookTicks-- <= 0 || mc.player == null) return;
-        mc.player.setYRot(Mth.rotLerp(0.35f, mc.player.getYRot(), traceYaw));
-        mc.player.setXRot(Mth.lerp(0.35f, mc.player.getXRot(), tracePitch));
     }
 
     void onTraceScreenRemoved() {
@@ -2055,25 +1990,24 @@ public final class InworldManager implements InworldUiApi {
     }
 
     /**
-     * Draws the hacker-style scan frame around every block that currently
-     * hosts a presented panel: dim box edges, brighter corner ticks and a
-     * bright segment sweeping the top loop. Dedupes shared anchor blocks.
+     * Draws the hacker-style scan frame around the anchors of <em>selected</em>
+     * panels only (focused or pointed). An idle anchor gets no box at all —
+     * the leader line's end marker is the standing indication that something
+     * tracks it; the voxel outline is reserved for "this is the UI you are
+     * about to interact with".
      */
     private void renderScanFrames() {
         if (worldToView == null || mc.level == null) return;
         Set<BlockPos> framed = new HashSet<>();
-        Set<BlockPos> hot = new HashSet<>();
         Set<Integer> framedEnts = new HashSet<>();
-        Set<Integer> hotEnts = new HashSet<>();
         for (PanelRuntime runtime : panels.values()) {
             if (!runtime.presented || !runtime.widget.visible()) continue;
+            if (!runtime.focused() && runtime != pointed) continue;
             BlockPos pos = runtime.spec.anchor().blockPos();
             if (pos != null) {
                 framed.add(pos);
-                if (runtime.focused() || runtime == pointed) hot.add(pos);
             } else if (runtime.spec.anchor() instanceof InworldAnchor.EntityTarget et) {
                 framedEnts.add(et.entityId());
-                if (runtime.focused() || runtime == pointed) hotEnts.add(et.entityId());
             }
         }
         boolean hasExpand = false;
@@ -2103,7 +2037,7 @@ public final class InworldManager implements InworldUiApi {
             BlockState state = mc.level.getBlockState(pos);
             VoxelShape shape = state.getShape(mc.level, pos, CollisionContext.empty());
             if (shape.isEmpty()) shape = Shapes.block();
-            int c = hot.contains(pos) ? HackerTheme.SCAN_SHAPE_HOT : HackerTheme.SCAN_SHAPE;
+            int c = HackerTheme.SCAN_SHAPE_HOT;
             emitShape(pose, lines, shape, pos.getX(), pos.getY(), pos.getZ(),
                     red(c), green(c), blue(c), alpha(c));
         }
@@ -2115,7 +2049,7 @@ public final class InworldManager implements InworldUiApi {
             double hw = dims.width() * 0.5;
             AABB box = new AABB(p.x - hw, p.y, p.z - hw,
                     p.x + hw, p.y + dims.height(), p.z + hw).inflate(0.03);
-            int c = hotEnts.contains(id) ? HackerTheme.SCAN_SHAPE_HOT : HackerTheme.SCAN_SHAPE;
+            int c = HackerTheme.SCAN_SHAPE_HOT;
             LevelRenderer.renderLineBox(pose, lines, box,
                     red(c), green(c), blue(c), alpha(c));
         }
@@ -2127,7 +2061,7 @@ public final class InworldManager implements InworldUiApi {
         var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
         Matrix4f mat = worldToView;
         for (BlockPos pos : framed) {
-            emitScanFrame(buffer, mat, pos, t, hot.contains(pos));
+            emitScanFrame(buffer, mat, pos, t, true);
         }
         emitExpandConnectors(buffer, mat);
         var mesh = buffer.build();
@@ -2321,9 +2255,7 @@ public final class InworldManager implements InworldUiApi {
             } else if (ey > py && ey < py + h) {
                 ex = from.x < cx ? px : px + w;
             }
-            if (from.x >= px && from.x <= px + w && from.y >= py && from.y <= py + h) {
-                continue; //origin inside the panel — no line
-            }
+            boolean inside = from.x >= px && from.x <= px + w && from.y >= py && from.y <= py + h;
 
             //adaptive ink: sample the world behind the line's midpoint — a
             //dark core + light halo over bright terrain, bright core + dark
@@ -2335,10 +2267,14 @@ public final class InworldManager implements InworldUiApi {
                     ? (brightBg ? HackerTheme.LINE_FOCUSED_DARK : HackerTheme.LINE_FOCUSED)
                     : (brightBg ? HackerTheme.LINE_DARK : HackerTheme.LINE);
             int edge = brightBg ? HackerTheme.LINE_EDGE_LIGHT : HackerTheme.LINE_EDGE;
-            drawLine(graphics, (float) ex + 1, (float) ey, (float) from.x + 1, (float) from.y, edge);
-            drawLine(graphics, (float) ex, (float) ey + 1, (float) from.x, (float) from.y + 1, edge);
-            drawLine(graphics, (float) ex, (float) ey, (float) from.x, (float) from.y, color);
-            //hollow diamond marking the source the line leads back to
+            if (!inside) {
+                drawLine(graphics, (float) ex + 1, (float) ey, (float) from.x + 1, (float) from.y, edge);
+                drawLine(graphics, (float) ex, (float) ey + 1, (float) from.x, (float) from.y + 1, edge);
+                drawLine(graphics, (float) ex, (float) ey, (float) from.x, (float) from.y, color);
+            }
+            //hollow diamond marking the source the line leads back to — drawn
+            //even when the anchor projects inside the panel (the panel sits
+            //right on its block): the marker is the standing "tracked" cue
             drawLine(graphics, (float) from.x, (float) from.y - 3.5f, (float) from.x + 3.5f, (float) from.y, color);
             drawLine(graphics, (float) from.x + 3.5f, (float) from.y, (float) from.x, (float) from.y + 3.5f, color);
             drawLine(graphics, (float) from.x, (float) from.y + 3.5f, (float) from.x - 3.5f, (float) from.y, color);

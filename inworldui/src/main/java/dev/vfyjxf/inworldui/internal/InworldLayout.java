@@ -87,6 +87,21 @@ final class InworldLayout {
         }
     }
 
+    /**
+     * Retarget deadband: a resolved position only replaces the running target
+     * when it moved more than {@code eps} px. Kills the per-frame target churn
+     * that makes panels glide forever chasing projection noise.
+     */
+    static boolean retarget(double oldX, double oldY, double newX, double newY, double eps) {
+        return Math.abs(newX - oldX) > eps || Math.abs(newY - oldY) > eps;
+    }
+
+    /** Frame-rate independent exponential approach. */
+    static float approach(float cur, float target, float dtSeconds, float rate) {
+        float k = 1f - (float) Math.exp(-dtSeconds * rate);
+        return cur + (target - cur) * k;
+    }
+
     static Occl occlusion(int x, int y, int w, int h, List<Rect2i> rects) {
         double area = 0, depth = 0, dominantArea = 0;
         Rect2i dominant = null;

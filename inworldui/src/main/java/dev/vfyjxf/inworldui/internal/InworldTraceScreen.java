@@ -85,7 +85,6 @@ public final class InworldTraceScreen extends Screen implements InworldOverlaySc
             onClose();
             return;
         }
-        manager.tickTraceLook();
         super.tick();
     }
 

@@ -63,6 +63,9 @@ final class PanelRuntime implements InworldPanel {
     /** this frame the dock column ran out of room and the panel shows chrome only */
     boolean folded;
 
+    /** a live trace session froze this panel's position — resolvers keep it presented but never retarget */
+    boolean pinned;
+
     /** gameTime+partialTick when the panel was created; -1 = no open animation */
     float bornAt = -1;
     /** current open-animation scale driven by the manager (1 = fully open) */
