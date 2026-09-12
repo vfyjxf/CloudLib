@@ -240,6 +240,12 @@ public final class InworldManager implements InworldUiApi {
     private final List<PanelRuntime> floatingQueue = new ArrayList<>();
     private static final int PARK_BASE = -1_000_000;
     private static final int PARK_STEP = 4096;
+    /** ticks within which a V press counts as a tap rather than a hold */
+    private static final int INTERACT_TAP_TICKS = 8;
+    /** V pressed on an engaged panel — resolves to close-or-pointer on release. */
+    private @Nullable PanelRuntime interactArm;
+    private long interactArmTick;
+    private boolean interactArmUsed;
     /** ticks an engaged panel survives without any targeting (~3s) */
     private static final int ENGAGE_GRACE_TICKS = 60;
     /** ~10° sweep cone for drag target acquisition — the ray only has to
@@ -402,6 +408,7 @@ public final class InworldManager implements InworldUiApi {
         while (NimbusKeyMappings.interact.consumeClick()) {
             if (!keysViaScreen && dragSession == null) triggerInteract();
         }
+        tickInteractArm();
 
         tickWorldDrag();
         tickSceneDrag();
@@ -497,8 +504,19 @@ public final class InworldManager implements InworldUiApi {
     private void renderEngageChip(GuiGraphics graphics) {
         PanelRuntime target = focused != null && isDormant(focused) ? focused
                 : (pointed != null && isDormant(pointed) ? pointed : null);
+        boolean closing = false;
+        if (target == null) {
+            //an engaged, closable panel under the crosshair gets the same
+            //affordance mirrored: [V]× toggles it shut
+            PanelRuntime cand = focused != null ? focused : pointed;
+            if (cand != null && cand.engaged && cand.spec.requiresEngage()) {
+                target = cand;
+                closing = true;
+            }
+        }
         if (target == null || target.anchorScreen == null) return;
-        String key = "[" + NimbusKeyMappings.interact.getTranslatedKeyMessage().getString() + "]";
+        String key = "[" + NimbusKeyMappings.interact.getTranslatedKeyMessage().getString()
+                + (closing ? "]×" : "]");
         var font = mc.font;
         int tw = font.width(key) + 6;
         int x = (int) Math.round(target.anchorScreen.x - tw * 0.5);
@@ -535,6 +553,7 @@ public final class InworldManager implements InworldUiApi {
             //(mine/attack/use); panels stay clickable only while V is held
             //or a gesture is already in flight
             if (!panelPointerLive()) return;
+            interactArmUsed = true; //a mouse press during an armed V hold means it was pointer intent, not a tap-to-close
             double[] v = virtualPointer();
             Widget hit = scene.hitTest(v[0], v[1]);
             LOGGER.info("click press: ptr=({},{}) pointed={} uv={} hit={}",
@@ -2064,11 +2083,11 @@ public final class InworldManager implements InworldUiApi {
         for (PanelRuntime r : panels.values()) {
             boolean dormant = isDormant(r);
             if (!dormant && (!r.presented || !r.widget.visible() || !r.spec.interactive())) continue;
-            //an action or a traceable content both make the panel
-            //"activatable"; a dormant panel needs neither — expanding it IS
-            //the action
+            //"activatable" means the interact key has something to do with it:
+            //dormant → expand, engaged → close, otherwise it needs an action
+            //or a traceable content to fire
             if (r.anchorWorld == null
-                    || (!dormant && r.spec.action() == null && r.traceable() == null)) continue;
+                    || (!dormant && !r.engaged && r.spec.action() == null && r.traceable() == null)) continue;
             if (r.distance > Math.min(r.spec.maxDistance(), InworldLayout.SOFT_FOCUS_RANGE)) continue;
             double score = InworldLayout.softFocusScore(eye, look, r.anchorWorld);
             if (score < 0) continue;
@@ -2141,16 +2160,17 @@ public final class InworldManager implements InworldUiApi {
     }
 
     /**
-     * The interact hotkey. A dormant target engages (expands) on the first
-     * press; an expanded traceable panel enters a trace session instead of
-     * firing immediately — a quick tap still lands on the primary action
-     * (see {@link #endTrace}).
+     * The interact hotkey — a toggle on the focus-selected target. A dormant
+     * panel engages (expands) on press; an already-engaged panel arms a
+     * pending tap that resolves on release — quick tap closes it, a hold
+     * becomes pointer intent instead (see {@link #tickInteractArm}). A
+     * traceable panel still starts its trace on press; a tap there also
+     * closes ({@link #endTrace}). Panels that were not opened by V
+     * (non-{@code onDemand}) keep firing their primary action on press.
      */
     private void triggerInteract() {
         PanelRuntime target = focused;
         if (target == null || !target.spec.interactive()) return;
-        //first press on a dormant target engages it — the interact key IS
-        //the expand key; a second press fires the primary action / trace
         if (isDormant(target)) {
             engage(target);
             return;
@@ -2160,7 +2180,38 @@ public final class InworldManager implements InworldUiApi {
             beginTrace(target);
             return;
         }
+        if (target.engaged) {
+            interactArm = target;
+            interactArmTick = tick;
+            interactArmUsed = false;
+            return;
+        }
         fireAction(target);
+    }
+
+    /** Closes a V-opened panel — it drops back to dormant on the next resolve. */
+    private void disengage(PanelRuntime runtime) {
+        runtime.engaged = false;
+        runtime.engageIdleSince = -1;
+    }
+
+    /**
+     * Tap-vs-hold resolution for the interact key on an engaged panel: a
+     * release within {@link #INTERACT_TAP_TICKS} ticks that didn't touch a
+     * widget toggles the panel shut; a hold outlives the window and the press
+     * stays pointer intent (or the mouse was used — also not a tap).
+     */
+    private void tickInteractArm() {
+        PanelRuntime armed = interactArm;
+        if (armed == null) return;
+        if (interactHeld()) {
+            if (tick - interactArmTick > INTERACT_TAP_TICKS) interactArm = null;
+            return;
+        }
+        interactArm = null;
+        if (tick - interactArmTick <= INTERACT_TAP_TICKS && !interactArmUsed && armed.engaged) {
+            disengage(armed);
+        }
     }
 
     private void fireAction(PanelRuntime target) {
@@ -2337,7 +2388,13 @@ public final class InworldManager implements InworldUiApi {
             boolean tap = commit && traceMoved < 4f && tick - traceStartTick < 6;
             if (tap) {
                 traceable.traceCancel();
-                fireAction(runtime);
+                //a V-opened panel toggles shut on a tap; an always-on panel
+                //has nothing to close, so the tap still fires its action
+                if (runtime.spec.requiresEngage()) {
+                    disengage(runtime);
+                } else {
+                    fireAction(runtime);
+                }
             } else if (commit) {
                 traceable.traceCommit(new InworldPanelContext(mc.level, mc.player, runtime));
             } else {
@@ -2350,8 +2407,8 @@ public final class InworldManager implements InworldUiApi {
         return tracing != null;
     }
 
-    /** Raw poll of the interact binding — works while the capture screen owns input. */
-    boolean traceHeld() {
+    /** Raw poll of the interact binding — works while a capture screen owns input. */
+    boolean interactHeld() {
         KeyMapping key = NimbusKeyMappings.interact;
         InputConstants.Key bound = key.key;
         long window = mc.getWindow().getWindow();

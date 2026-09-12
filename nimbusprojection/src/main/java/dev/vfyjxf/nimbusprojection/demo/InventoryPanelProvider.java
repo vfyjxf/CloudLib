@@ -45,10 +45,13 @@ public final class InventoryPanelProvider implements InworldProvider {
 
     private static final String KEY = "player/inv";
     private static final double REACH = 6.0;
-    /** ~15° soft-aim cone: the crosshair only has to rest near the container. */
-    private static final double CONE_COS_ENTER = Math.cos(Math.toRadians(15));
-    /** ~20° hold cone: the current anchor survives a bit past the enter cone. */
-    private static final double CONE_COS_HOLD = Math.cos(Math.toRadians(20));
+    /** ~26° soft-aim cone: the crosshair only has to rest near the container —
+     *  spans most of the manager's 30° soft-focus cone so the dormant panel
+     *  exists wherever V could reach it. */
+    private static final double CONE_COS_ENTER = Math.cos(Math.toRadians(26));
+    /** ~34° hold cone: the current anchor survives a bit past the enter cone
+     *  and past the soft-focus cone, so targeting doesn't flap at the edge. */
+    private static final double CONE_COS_HOLD = Math.cos(Math.toRadians(34));
 
     /** The container the panel is anchored to — follows the crosshair while no drag is live. */
     private BlockPos anchorPos;
@@ -86,7 +89,7 @@ public final class InventoryPanelProvider implements InworldProvider {
                             return col;
                         })
                 .title(title)
-                .hints("R:inspect+drag", "RMB:one"));
+                .hints("V:open/close", "R:inspect+drag", "RMB:one"));
     }
 
     /**

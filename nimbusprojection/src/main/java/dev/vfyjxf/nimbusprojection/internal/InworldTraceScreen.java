@@ -80,7 +80,7 @@ public final class InworldTraceScreen extends Screen implements InworldOverlaySc
     public void tick() {
         //belt & suspenders for a missed keyReleased (e.g. focus loss): poll the
         //bound key directly — the stroke commits on release either way
-        if (!manager.traceActive() || !manager.traceHeld()) {
+        if (!manager.traceActive() || !manager.interactHeld()) {
             manager.endTrace(true);
             onClose();
             return;

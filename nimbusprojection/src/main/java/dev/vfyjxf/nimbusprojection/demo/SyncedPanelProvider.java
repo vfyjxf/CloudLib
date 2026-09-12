@@ -64,7 +64,7 @@ public final class SyncedPanelProvider implements InworldProvider {
                             InworldPlacement.face(Direction.UP, 0.5, 0.5, 96),
                             SyncedPanelProvider::faceContent)
                     .title(Component.literal("SYNCED://" + shortPos(p)))
-                    .hints("V:+1", "LMB:press", "R:inspect")
+                    .hints("V:open/close", "LMB:press", "R:inspect")
                     .action(ctx -> {
                         SyncedTestBlockEntity be = ctx.blockEntity(SyncedTestBlockEntity.class);
                         if (be != null) be.sendAction(SyncedTestBlockEntity.ACTION_INCREMENT);

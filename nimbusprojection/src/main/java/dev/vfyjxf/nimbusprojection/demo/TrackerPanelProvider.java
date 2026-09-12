@@ -68,7 +68,7 @@ public final class TrackerPanelProvider implements InworldProvider {
                             InworldPlacement.dock(),
                             TrackerPanelProvider::mainContent)
                     .title(Component.literal("TRACKER//" + shortPos(p)))
-                    .hints("V:scan", "LMB:press", "R:inspect")
+                    .hints("V:open/close", "LMB:press", "R:inspect")
                     .action(TrackerPanelProvider::toggleExpand));
 
             //compact face controller tracks the player horizontally
