@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -52,7 +53,6 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -464,13 +464,59 @@ public final class InworldManager implements InworldUiApi {
 
         resolvePanels();
 
+        //the stage fires inside renderSectionLayer(translucent) while the
+        //translucent rendertype is still set up — under Fabulous! that's the
+        //translucent target, otherwise the main target. Capture it now: the
+        //sprite endBatch below rebinds the MAIN target via output shards, not
+        //the FBO this stage was actually entered with.
+        int prevFbo = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
+
+        //item sprites go straight into the scene target BEFORE the OIT pass —
+        //they ride vanilla rendertype output shards that fight a foreign bound
+        //framebuffer, so they can never draw inside the accumulation pass
+        renderWorldDragSprites();
+        //rebind the real stage target in case endBatch's output shards left
+        //main bound instead (Fabulous!)
+        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, prevFbo);
+
         //in-world render pass: face panels only in world presentation; the
-        //scan frame is useful in both (inspect's leader lines end on it)
-        if (!inspecting) {
-            renderFacePanels(event, cameraPos);
+        //scan frame is useful in both (inspect's leader lines end on it).
+        //All of it routes through the weighted-blended OIT pass when the scene
+        //depth texture can be borrowed — otherwise the draws fall through to
+        //the same direct path they always used.
+        int sceneDepth = OitTarget.querySceneDepth(prevFbo);
+        boolean oitOk = sceneDepth != 0
+                && NimbusShaders.oitReady()
+                && oit.ensureSize(mc.getWindow().getWidth(), mc.getWindow().getHeight());
+        oitActive = oitOk;
+        oitDraws = 0;
+        try {
+            if (oitOk) {
+                oit.beginAccum(prevFbo, sceneDepth);
+            }
+            try {
+                if (!inspecting) {
+                    renderFacePanels(event, cameraPos);
+                }
+                renderScanFrames();
+                renderWorldDragFrames();
+            } finally {
+                //restores prevFbo, the viewport and ambient blend/depth state
+                //even when a draw throws mid-pass
+                if (oitOk) {
+                    oit.endAccum();
+                }
+                oitActive = false;
+            }
+            if (oitOk && oitDraws > 0) {
+                oit.resolve(prevFbo);
+                //the pass drew with depth writes off — stamp the panel quads'
+                //depth so later translucent draws can't punch through them
+                stampPanelDepth();
+            }
+        } finally {
+            oitActive = false;
         }
-        renderScanFrames();
-        renderWorldDrag();
     }
 
     private void onGuiRender(RenderGuiEvent.Post event) {
@@ -798,6 +844,7 @@ public final class InworldManager implements InworldUiApi {
         cancelWorldDrag();
         flying.clear();
         landFlash.clear();
+        oit.close();
         ContainerContents.clear();
     }
 
@@ -2491,6 +2538,17 @@ public final class InworldManager implements InworldUiApi {
             MultiBufferSource.immediate(new com.mojang.blaze3d.vertex.ByteBufferBuilder(1 << 18));
 
     /**
+     * Weighted-blended OIT accumulation target — the world-space UI (panel
+     * quads, scan frames, drag trail) draws into it per level stage and gets
+     * composited back over the scene. See {@link OitTarget}.
+     */
+    private final OitTarget oit = new OitTarget();
+    /** true while the OIT accumulation pass owns GL state — draw sites switch shaders and skip their own blend/depth setup. */
+    private boolean oitActive;
+    /** drawWithShader calls emitted into the current accumulation pass — zero means resolve can be skipped. */
+    private int oitDraws;
+
+    /**
      * Renders face panels in world space during the level stage. Each panel's
      * widget tree is first drawn into an offscreen {@link RenderTarget} with a
      * plain GUI ortho setup, then the texture is blitted onto a single world
@@ -2505,10 +2563,6 @@ public final class InworldManager implements InworldUiApi {
         modelView.pushMatrix();
         modelView.identity();
         RenderSystem.applyModelViewMatrix();
-        //the textured quad may wind clockwise from the viewing side
-        RenderSystem.disableCull();
-        RenderSystem.enablePolygonOffset();
-        RenderSystem.polygonOffset(-1f, -4f);
         for (PanelRuntime runtime : panels.values()) {
             if (!worldSpace(runtime.spec.placement())) continue;
             //inspect mode flattens expand panels to docks — nothing world-space to draw
@@ -2519,8 +2573,6 @@ public final class InworldManager implements InworldUiApi {
             renderPanelToTarget(runtime, target, pt);
             drawFaceQuad(runtime, target);
         }
-        RenderSystem.polygonOffset(0, 0);
-        RenderSystem.disablePolygonOffset();
         RenderSystem.enableCull();
         modelView.popMatrix();
         RenderSystem.applyModelViewMatrix();
@@ -2593,13 +2645,45 @@ public final class InworldManager implements InworldUiApi {
         }
     }
 
-    /** Blits the panel texture onto the face's world-space quad (texture v is flipped). */
+    /**
+     * Blits the panel texture onto the face's world-space quad (texture v is
+     * flipped). During the OIT pass the accumulation shader replaces
+     * position_tex and the pass owns blend/depth state — each draw only
+     * re-arms the per-attachment blend funcs (rendertype clear-states inside
+     * {@link #renderPanelToTarget} clobber them between panels).
+     */
     private void drawFaceQuad(PanelRuntime runtime, RenderTarget target) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        BufferBuilder buffer = Tesselator.getInstance()
+                .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        emitFaceQuad(buffer, runtime);
+        if (oitActive) {
+            oit.beginDraw();
+            RenderSystem.setShader(NimbusShaders::oitAccumTex);
+        } else {
+            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            RenderSystem.enableBlend();
+            RenderSystem.enableDepthTest();
+        }
         RenderSystem.setShaderTexture(0, target.getColorTextureId());
-        RenderSystem.enableBlend();
-        RenderSystem.enableDepthTest();
+        //the textured quad may wind clockwise from the viewing side; the
+        //polygon-offset decal bias makes it win against its own block face.
+        //Re-asserted per quad — rendertype clear-states inside the panel FBO
+        //fill (text uses POLYGON_OFFSET_LAYERING) silently drop it.
+        RenderSystem.disableCull();
+        RenderSystem.enablePolygonOffset();
+        RenderSystem.polygonOffset(-1f, -4f);
+        BufferUploader.drawWithShader(buffer.buildOrThrow());
+        RenderSystem.polygonOffset(0f, 0f);
+        RenderSystem.disablePolygonOffset();
+        if (oitActive) oitDraws++;
+    }
 
+    /**
+     * Emits the four face-quad vertices (positions baked through worldToView)
+     * into {@code buffer}. Shared by the accumulation draw and the post-resolve
+     * depth stamp so both rasterize identical geometry.
+     */
+    private void emitFaceQuad(BufferBuilder buffer, PanelRuntime runtime) {
         Matrix4f mat = worldToView != null ? worldToView : new Matrix4f();
         Vec3 o = runtime.faceOrigin;
         Vec3 u = runtime.faceU;
@@ -2619,13 +2703,70 @@ public final class InworldManager implements InworldUiApi {
             p11 = c.add(p11.subtract(c).scale(sc));
         }
 
-        BufferBuilder buffer = Tesselator.getInstance()
-                .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         buffer.addVertex(mat, (float) o.x, (float) o.y, (float) o.z).setUv(0, 1);
         buffer.addVertex(mat, (float) p01.x, (float) p01.y, (float) p01.z).setUv(0, 0);
         buffer.addVertex(mat, (float) p11.x, (float) p11.y, (float) p11.z).setUv(1, 0);
         buffer.addVertex(mat, (float) p10.x, (float) p10.y, (float) p10.z).setUv(1, 1);
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
+    }
+
+    /**
+     * Re-writes the panel quads' depth into the scene depth buffer after the
+     * OIT resolve. The accumulation pass ran with {@code depthMask(false)} —
+     * without this stamp, later translucent draws (particles, weather) would
+     * punch through the panels. The accum shader's alpha discard keeps
+     * transparent texels from stamping depth.
+     */
+    private void stampPanelDepth() {
+        if (inspecting) return; //no face quads were accumulated — nothing to stamp
+        var modelView = RenderSystem.getModelViewStack();
+        modelView.pushMatrix();
+        modelView.identity();
+        RenderSystem.applyModelViewMatrix();
+        RenderSystem.colorMask(false, false, false, false);
+        RenderSystem.depthMask(true);
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthFunc(GL11.GL_LEQUAL);
+        RenderSystem.disableCull();
+        RenderSystem.enablePolygonOffset();
+        RenderSystem.polygonOffset(-1f, -4f);
+        RenderSystem.setShader(NimbusShaders::oitAccumTex);
+        for (PanelRuntime runtime : panels.values()) {
+            if (!worldSpace(runtime.spec.placement())) continue;
+            if (!runtime.presented || runtime.flat || !runtime.widget.visible()
+                    || runtime.faceU == null) continue;
+            RenderTarget target = runtime.faceTarget;
+            if (target == null) continue;
+            RenderSystem.setShaderTexture(0, target.getColorTextureId());
+            BufferBuilder buffer = Tesselator.getInstance()
+                    .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+            emitFaceQuad(buffer, runtime);
+            BufferUploader.drawWithShader(buffer.buildOrThrow());
+        }
+        RenderSystem.polygonOffset(0f, 0f);
+        RenderSystem.disablePolygonOffset();
+        RenderSystem.enableCull();
+        RenderSystem.colorMask(true, true, true, true);
+        modelView.popMatrix();
+        RenderSystem.applyModelViewMatrix();
+    }
+
+    /**
+     * Draws a POSITION_COLOR mesh through the OIT accumulation shader while the
+     * pass is active, or through vanilla position_color on the direct path.
+     */
+    private void drawColorMesh(MeshData mesh) {
+        if (oitActive) {
+            oit.beginDraw();
+            RenderSystem.setShader(NimbusShaders::oitAccumColor);
+        } else {
+            RenderSystem.enableBlend();
+            //must not x-ray through the level — the canvas batch disables
+            //depth testing and would leak it here
+            RenderSystem.enableDepthTest();
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        }
+        BufferUploader.drawWithShader(mesh);
+        if (oitActive) oitDraws++;
     }
 
     //region scan frame
@@ -2687,19 +2828,24 @@ public final class InworldManager implements InworldUiApi {
         modelView.identity();
         RenderSystem.applyModelViewMatrix();
 
-        //vanilla-style outline pass — the block's real voxel shape and entity
-        //hitboxes drawn with RenderType.lines(), same as the crosshair hit
-        //outline and the F3+B debug boxes
+        //everything rides one raw DEBUG_LINES POSITION_COLOR mesh — the old
+        //RenderType.lines() pass bounced through rendertype output shards that
+        //escape to other framebuffers under Fabulous! and would fight the OIT
+        //accumulation target. Normals are simply dropped by the format.
         PoseStack pose = new PoseStack();
         pose.last().pose().set(worldToView);
         pose.last().normal().set(new Matrix3f(worldToView));
-        VertexConsumer lines = panelBuffers.getBuffer(RenderType.lines());
+        var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+        Matrix4f mat = worldToView;
+
+        //vanilla-style outlines — the block's real voxel shape and entity
+        //hitboxes, same as the crosshair hit outline and the F3+B debug boxes
         for (BlockPos pos : framed) {
             BlockState state = mc.level.getBlockState(pos);
             VoxelShape shape = state.getShape(mc.level, pos, CollisionContext.empty());
             if (shape.isEmpty()) shape = Shapes.block();
             int c = HackerTheme.SCAN_SHAPE_HOT;
-            emitShape(pose, lines, shape, pos.getX(), pos.getY(), pos.getZ(),
+            emitShape(pose, buffer, shape, pos.getX(), pos.getY(), pos.getZ(),
                     red(c), green(c), blue(c), alpha(c));
         }
         for (int id : framedEnts) {
@@ -2711,28 +2857,19 @@ public final class InworldManager implements InworldUiApi {
             AABB box = new AABB(p.x - hw, p.y, p.z - hw,
                     p.x + hw, p.y + dims.height(), p.z + hw).inflate(0.03);
             int c = HackerTheme.SCAN_SHAPE_HOT;
-            LevelRenderer.renderLineBox(pose, lines, box,
+            LevelRenderer.renderLineBox(pose, buffer, box,
                     red(c), green(c), blue(c), alpha(c));
         }
-        panelBuffers.endBatch(RenderType.lines());
 
-        //hacker accents — corner ticks, the top-loop sweep and expand
-        //connectors stay on the cheap DEBUG_LINES pass
+        //hacker accents — corner ticks, the top-loop sweep and expand connectors
         double t = (mc.level.getGameTime() + framePartialTick) * 0.9;
-        var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-        Matrix4f mat = worldToView;
         for (BlockPos pos : framed) {
             emitScanFrame(buffer, mat, pos, t, true);
         }
         emitExpandConnectors(buffer, mat);
         var mesh = buffer.build();
         if (mesh != null) {
-            RenderSystem.enableBlend();
-            //corner ticks and the top sweep must not x-ray through the level —
-            //the canvas batch disables depth testing and would leak it here
-            RenderSystem.enableDepthTest();
-            RenderSystem.setShader(GameRenderer::getPositionColorShader);
-            BufferUploader.drawWithShader(mesh);
+            drawColorMesh(mesh);
         }
 
         modelView.popMatrix();
@@ -2742,54 +2879,70 @@ public final class InworldManager implements InworldUiApi {
     //region world-drag rendering
 
     /**
-     * In-world pass for the drag session: hot scan frames on every trailed
-     * container, the carried stack billboarded at the ray hit point, in-flight
-     * commit sprites and the fading landing flash.
+     * In-world line pass for the drag session: hot scan frames on every trailed
+     * container plus the live target, and the fading landing-flash outlines —
+     * all in one DEBUG_LINES mesh routed through {@link #drawColorMesh} so it
+     * lands in the OIT accumulation pass when active.
      */
-    private void renderWorldDrag() {
+    private void renderWorldDragFrames() {
         if (worldToView == null || mc.level == null) return;
         boolean hasDrag = dragSession != null && dragSession.carried() != null;
-        if (!hasDrag && flying.isEmpty() && landFlash.isEmpty()) return;
+        if (!hasDrag && landFlash.isEmpty()) return;
 
         var modelView = RenderSystem.getModelViewStack();
         modelView.pushMatrix();
         modelView.identity();
         RenderSystem.applyModelViewMatrix();
 
-        //frames — trail containers get the same hacker scan frame as selected
-        //anchors; the live target (not yet swept long enough to trail) too
-        if (hasDrag || !landFlash.isEmpty()) {
-            var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-            double t = (mc.level.getGameTime() + framePartialTick) * 0.9;
-            if (hasDrag) {
-                for (BlockPos pos : dragTrail.targets()) {
-                    emitScanFrame(buffer, worldToView, pos, t, true);
-                }
-                if (dragTarget != null && !dragTrail.targets().contains(dragTarget)) {
-                    emitScanFrame(buffer, worldToView, dragTarget, t, true);
-                }
+        var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+        //trail containers get the same hacker scan frame as selected anchors;
+        //the live target (not yet swept long enough to trail) too
+        double t = (mc.level.getGameTime() + framePartialTick) * 0.9;
+        if (hasDrag) {
+            for (BlockPos pos : dragTrail.targets()) {
+                emitScanFrame(buffer, worldToView, pos, t, true);
             }
-            var mesh = buffer.build();
-            if (mesh != null) {
-                RenderSystem.enableBlend();
-                RenderSystem.enableDepthTest();
-                RenderSystem.setShader(GameRenderer::getPositionColorShader);
-                BufferUploader.drawWithShader(mesh);
-            }
-            //landing flashes fade a plain box outline
-            if (!landFlash.isEmpty()) {
-                PoseStack pose = new PoseStack();
-                pose.last().pose().set(worldToView);
-                pose.last().normal().set(new Matrix3f(worldToView));
-                VertexConsumer lines = panelBuffers.getBuffer(RenderType.lines());
-                for (var e : landFlash.entrySet()) {
-                    float f = 1.0f - e.getValue() / (float) FlyingStack.FLASH_TICKS;
-                    AABB box = new AABB(e.getKey()).inflate(0.01);
-                    LevelRenderer.renderLineBox(pose, lines, box, 0.36f, 0.95f, 1.0f, 0.85f * f);
-                }
-                panelBuffers.endBatch(RenderType.lines());
+            if (dragTarget != null && !dragTrail.targets().contains(dragTarget)) {
+                emitScanFrame(buffer, worldToView, dragTarget, t, true);
             }
         }
+        //landing flashes fade a plain box outline — folded into the same mesh
+        //(was RenderType.lines(), which can't run inside the OIT pass)
+        if (!landFlash.isEmpty()) {
+            PoseStack pose = new PoseStack();
+            pose.last().pose().set(worldToView);
+            pose.last().normal().set(new Matrix3f(worldToView));
+            for (var e : landFlash.entrySet()) {
+                float f = 1.0f - e.getValue() / (float) FlyingStack.FLASH_TICKS;
+                AABB box = new AABB(e.getKey()).inflate(0.01);
+                LevelRenderer.renderLineBox(pose, buffer, box, 0.36f, 0.95f, 1.0f, 0.85f * f);
+            }
+        }
+        var mesh = buffer.build();
+        if (mesh != null) {
+            drawColorMesh(mesh);
+        }
+
+        modelView.popMatrix();
+        RenderSystem.applyModelViewMatrix();
+    }
+
+    /**
+     * In-world item pass for the drag session: the carried stack billboarded
+     * at the ray hit point and in-flight commit sprites. These stay on the
+     * shared level buffer source (entity shading, lighting) and draw into the
+     * scene target BEFORE the OIT pass begins — their rendertype output shards
+     * would fight the accumulation framebuffer.
+     */
+    private void renderWorldDragSprites() {
+        if (worldToView == null || mc.level == null) return;
+        boolean hasDrag = dragSession != null && dragSession.carried() != null;
+        if (!hasDrag && flying.isEmpty()) return;
+
+        var modelView = RenderSystem.getModelViewStack();
+        modelView.pushMatrix();
+        modelView.identity();
+        RenderSystem.applyModelViewMatrix();
 
         //item sprites — carried stack and in-flight shares, billboarded to the camera
         PoseStack pose = new PoseStack();
