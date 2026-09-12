@@ -303,6 +303,10 @@ public final class SceneCanvas {
         // Canvas quads are 2D painter-order UI. They must not write depth, otherwise
         // later layered item renders can be hidden while their decoration text remains visible.
         // In world-space mode the depth buffer belongs to the level — keep it.
+        // Save and restore the test state: a canvas flushed mid world-render
+        // (e.g. an FBO panel) must not leak disabled depth testing into the
+        // passes that follow — they would x-ray straight through the level.
+        boolean prevDepthTest = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
         if (!preserveDepth) {
             RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
             RenderSystem.disableDepthTest();
@@ -362,6 +366,9 @@ public final class SceneCanvas {
 
         graphics.pose().popPose();
         restoreScissor();
+
+        if (prevDepthTest) RenderSystem.enableDepthTest();
+        else RenderSystem.disableDepthTest();
 
         batchState.clear();
     }

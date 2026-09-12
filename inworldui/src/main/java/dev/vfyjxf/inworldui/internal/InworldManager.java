@@ -2497,6 +2497,7 @@ public final class InworldManager implements InworldUiApi {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, target.getColorTextureId());
         RenderSystem.enableBlend();
+        RenderSystem.enableDepthTest();
 
         Matrix4f mat = worldToView != null ? worldToView : new Matrix4f();
         Vec3 o = runtime.faceOrigin;
@@ -2626,6 +2627,9 @@ public final class InworldManager implements InworldUiApi {
         var mesh = buffer.build();
         if (mesh != null) {
             RenderSystem.enableBlend();
+            //corner ticks and the top sweep must not x-ray through the level —
+            //the canvas batch disables depth testing and would leak it here
+            RenderSystem.enableDepthTest();
             RenderSystem.setShader(GameRenderer::getPositionColorShader);
             BufferUploader.drawWithShader(mesh);
         }
@@ -2667,6 +2671,7 @@ public final class InworldManager implements InworldUiApi {
             var mesh = buffer.build();
             if (mesh != null) {
                 RenderSystem.enableBlend();
+                RenderSystem.enableDepthTest();
                 RenderSystem.setShader(GameRenderer::getPositionColorShader);
                 BufferUploader.drawWithShader(mesh);
             }
