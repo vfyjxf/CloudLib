@@ -7,6 +7,7 @@ import dev.vfyjxf.cloudlib.api.plugin.PluginDependency.Order;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.nimbusprojection.Constants;
 import dev.vfyjxf.nimbusprojection.api.NimbusClient;
+import dev.vfyjxf.nimbusprojection.api.section.SectionWidgetRegister;
 
 /**
  * Client-side Nimbus extension point — discovered via
@@ -40,4 +41,11 @@ public interface NimbusClientPlugin extends ModPlugin {
      * channel.
      */
     default void registerSharedViews(NimbusClient client) {}
+
+    /**
+     * Bind section kinds to their widget factories — the render half of
+     * the section SPI (the data half registers through
+     * {@code NimbusPlugin.registerContainerSections}).
+     */
+    default void registerSectionWidgets(SectionWidgetRegister register) {}
 }

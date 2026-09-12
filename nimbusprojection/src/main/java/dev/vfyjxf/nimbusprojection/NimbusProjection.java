@@ -8,6 +8,8 @@ import dev.vfyjxf.nimbusprojection.api.plugin.NimbusClientPlugin;
 import dev.vfyjxf.nimbusprojection.api.plugin.NimbusPlugin;
 import dev.vfyjxf.nimbusprojection.internal.InworldManager;
 import dev.vfyjxf.nimbusprojection.internal.NimbusServerImpl;
+import dev.vfyjxf.nimbusprojection.internal.section.SectionProviders;
+import dev.vfyjxf.nimbusprojection.internal.section.SectionWidgets;
 import dev.vfyjxf.nimbusprojection.network.NimbusPayloads;
 import dev.vfyjxf.nimbusprojection.network.PresenceTracker;
 import net.minecraft.server.level.ServerPlayer;
@@ -64,7 +66,10 @@ public final class NimbusProjection {
             InworldManager manager = dist == Dist.CLIENT ? InworldManager.init() : null;
             Nimbus.install(manager, server);
         }));
-        modBus.addListener((FMLLoadCompleteEvent e) -> dispatchClientPlugins());
+        modBus.addListener((FMLLoadCompleteEvent e) -> {
+            dispatchPlugins();
+            dispatchClientPlugins();
+        });
         // shared-panel registry + presence bookkeeping — joiners catch up on
         // live shared panels and presence reports, leavers get cleared
         NeoForge.EVENT_BUS.addListener((ServerStartedEvent e) -> server.attach(e.getServer()));
@@ -85,6 +90,17 @@ public final class NimbusProjection {
         }
     }
 
+    /** Runs the common plugin hooks — section kinds must register before any payload flows. */
+    private void dispatchPlugins() {
+        for (NimbusPlugin plugin : plugins) {
+            try {
+                plugin.registerContainerSections(SectionProviders.register);
+            } catch (Exception e) {
+                logger.warn("Failed to dispatch plugin {}", plugin.pluginId(), e);
+            }
+        }
+    }
+
     /** Runs the client plugin hooks once the runtime is installed. */
     private void dispatchClientPlugins() {
         NimbusClient client = Nimbus.client();
@@ -94,6 +110,7 @@ public final class NimbusProjection {
                 plugin.registerProviders(client);
                 plugin.registerPresentations(client);
                 plugin.registerSharedViews(client);
+                plugin.registerSectionWidgets(SectionWidgets.register);
             } catch (Exception e) {
                 logger.warn("Failed to dispatch client plugin {}", plugin.pluginId(), e);
             }

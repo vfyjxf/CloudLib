@@ -1,6 +1,7 @@
 package dev.vfyjxf.nimbusprojection.network;
 
 import dev.vfyjxf.cloudlib.api.network.payload.ClientPayloadInfo;
+import dev.vfyjxf.cloudlib.api.network.payload.ClientboundPayload;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerPayloadInfo;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
 import dev.vfyjxf.nimbusprojection.Constants;
@@ -51,6 +52,8 @@ public final class NimbusPayloads {
                         TransferPayload.streamCodec,
                         ResourceLocation.fromNamespaceAndPath(Constants.namespace, "transfer"))
                 .registerPlay(registrar);
+        SectionQueryPayload.info.registerPlay(registrar);
+        SectionSnapshotPayload.info.registerPlay(registrar);
         // payloads that travel nested inside a PanelChannel transport
         PanelChannelPayload.registerChannelType(WorldDragPayload.info.type(), WorldDragPayload.streamCodec);
         PanelChannelPayload.registerChannelType(ContainerOpsPayload.type, ContainerOpsPayload.streamCodec);
@@ -60,6 +63,11 @@ public final class NimbusPayloads {
     public static <T extends ServerboundPayload> ServerPayloadInfo<T> createServerInfo(
             StreamCodec<? super RegistryFriendlyByteBuf, T> codec, String path) {
         return ServerPayloadInfo.create(codec, ResourceLocation.fromNamespaceAndPath(Constants.namespace, path));
+    }
+
+    public static <T extends ClientboundPayload> ClientPayloadInfo<T> createClientInfo(
+            StreamCodec<? super RegistryFriendlyByteBuf, T> codec, String path) {
+        return ClientPayloadInfo.create(codec, ResourceLocation.fromNamespaceAndPath(Constants.namespace, path));
     }
 
     private NimbusPayloads() {}

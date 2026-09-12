@@ -50,15 +50,28 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
     private static final int slotBgHot = 0x5536C4D8;
 
     private final Supplier<BlockPos> pos;
+    /**
+     * External stacks source — when set, the widget reads this instead of
+     * querying {@link ContainerContents} itself (the caller owns the sync
+     * pipeline, e.g. a section cache). Null return = still syncing.
+     */
+    private final @Nullable Supplier<List<ItemStack>> stacksSource;
+
     private BlockPos lastPos;
     private int lastSlotCount;
 
     public ContainerGridWidget(Supplier<BlockPos> pos) {
-        this(pos, null);
+        this(pos, null, null);
     }
 
     public ContainerGridWidget(Supplier<BlockPos> pos, @Nullable SlotAction action) {
+        this(pos, null, action);
+    }
+
+    public ContainerGridWidget(
+            Supplier<BlockPos> pos, @Nullable Supplier<List<ItemStack>> stacks, @Nullable SlotAction action) {
         this.pos = pos;
+        this.stacksSource = stacks;
         onMount((scene, context, handle) -> scene.layoutTree()
                 .setMeasureFunc(nodeId(), (style, space) -> new FloatSize(cols * cell, rows() * cell + 2)));
         if (action != null) {
@@ -71,13 +84,18 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
         }
     }
 
-    /** Latest server snapshot for the anchor (also keeps the pos subscribed). */
+    /** Latest stacks for the anchor — external source or the legacy {@link ContainerContents} poll. */
     private @Nullable List<ItemStack> stacks() {
+        if (stacksSource != null) return stacksSource.get();
         BlockPos p = pos.get();
         return p != null ? ContainerContents.watch(p) : null;
     }
 
     private int slotCount() {
+        if (stacksSource != null) {
+            List<ItemStack> stacks = stacksSource.get();
+            return stacks != null ? stacks.size() : cols * 3;
+        }
         BlockPos p = pos.get();
         return p != null ? ContainerContents.slotsOf(p, cols * 3) : cols * 3;
     }
@@ -102,7 +120,9 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
         if (slot < 0) return null;
         BlockPos p = pos.get();
         if (p == null) return null;
-        ItemStack stack = ContainerContents.stackAt(p, slot);
+        List<ItemStack> stacks = stacks();
+        if (stacks == null || slot >= stacks.size()) return null;
+        ItemStack stack = stacks.get(slot);
         if (stack.isEmpty()) return null;
         ItemStack carried = button == 0 ? stack.copy() : stack.copyWithCount(1);
         return new WorldDrag(carried, slot, button, p);

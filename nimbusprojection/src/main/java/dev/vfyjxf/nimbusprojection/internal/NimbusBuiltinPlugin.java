@@ -5,11 +5,16 @@ import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.nimbusprojection.api.NimbusClient;
 import dev.vfyjxf.nimbusprojection.api.plugin.NimbusClientPlugin;
 import dev.vfyjxf.nimbusprojection.api.provider.ProviderOptions;
+import dev.vfyjxf.nimbusprojection.api.section.SectionWidgetRegister;
 import dev.vfyjxf.nimbusprojection.feature.container.ContainerPanelProvider;
+import dev.vfyjxf.nimbusprojection.feature.container.section.EnergySectionWidget;
+import dev.vfyjxf.nimbusprojection.feature.container.section.FluidSectionWidget;
+import dev.vfyjxf.nimbusprojection.feature.container.section.ItemSectionWidget;
+import dev.vfyjxf.nimbusprojection.feature.container.section.SectionTypes;
 
 /**
- * Nimbus's own registrations as a first-class plugin — the built-in
- * features dogfood the same extension point third parties use.
+ * Nimbus's own client registrations as a first-class plugin — the
+ * built-in features dogfood the same extension point third parties use.
  */
 @PluginMarker
 public final class NimbusBuiltinPlugin implements NimbusClientPlugin {
@@ -22,5 +27,12 @@ public final class NimbusBuiltinPlugin implements NimbusClientPlugin {
     @Override
     public void registerProviders(NimbusClient client) {
         client.registerProvider(new ContainerPanelProvider(), 3, ProviderOptions.shared());
+    }
+
+    @Override
+    public void registerSectionWidgets(SectionWidgetRegister register) {
+        register.register(SectionTypes.item, ItemSectionWidget.factory);
+        register.register(SectionTypes.fluid, FluidSectionWidget.factory);
+        register.register(SectionTypes.energy, EnergySectionWidget.factory);
     }
 }

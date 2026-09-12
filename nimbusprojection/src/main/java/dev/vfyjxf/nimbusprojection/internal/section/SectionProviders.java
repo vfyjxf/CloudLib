@@ -1,0 +1,85 @@
+package dev.vfyjxf.nimbusprojection.internal.section;
+
+import dev.vfyjxf.nimbusprojection.api.section.SectionData;
+import dev.vfyjxf.nimbusprojection.api.section.SectionInstance;
+import dev.vfyjxf.nimbusprojection.api.section.SectionProvider;
+import dev.vfyjxf.nimbusprojection.api.section.SectionRegister;
+import dev.vfyjxf.nimbusprojection.api.section.SectionType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+/**
+ * The common-side section registry — providers in registration order,
+ * codecs keyed by type. {@link #collectAll} runs every provider and
+ * assigns each result its server-addressable id; it is called on the
+ * server for snapshots and on the client for panel structure.
+ */
+public final class SectionProviders {
+
+    private static final List<SectionProvider<?>> providers = new CopyOnWriteArrayList<>();
+    private static final Map<SectionType<?>, StreamCodec<RegistryFriendlyByteBuf, ? extends SectionData>> codecs =
+            new ConcurrentHashMap<>();
+    private static final Map<ResourceLocation, SectionType<?>> byId = new ConcurrentHashMap<>();
+
+    /** The {@link SectionRegister} handed to plugins — folds codec + provider into one call. */
+    public static final SectionRegister register = new SectionRegister() {
+        @Override
+        public <D extends SectionData> void register(
+                SectionType<D> type, StreamCodec<RegistryFriendlyByteBuf, D> codec, SectionProvider<D> provider) {
+            codecs.put(type, codec);
+            byId.put(type.id(), type);
+            providers.add(provider);
+        }
+    };
+
+    private SectionProviders() {}
+
+    /** {@code "type/index"} — the id ops payloads address and widgets subscribe to. */
+    public static String idOf(SectionType<?> type, int index) {
+        return type.id() + "/" + index;
+    }
+
+    /** Every section at {@code pos}, across all providers, in registration order. */
+    public static List<SectionInstance<?>> collectAll(Level level, BlockPos pos) {
+        List<SectionInstance<?>> out = new ArrayList<>();
+        for (SectionProvider<?> provider : providers) {
+            collectInto(provider, level, pos, out);
+        }
+        return out;
+    }
+
+    /** The type a section id belongs to — null for an unknown kind or a malformed id. */
+    public static @Nullable SectionType<?> typeOf(String sectionId) {
+        int slash = sectionId.lastIndexOf('/');
+        if (slash < 0) return null;
+        ResourceLocation id = ResourceLocation.tryParse(sectionId.substring(0, slash));
+        return id != null ? byId.get(id) : null;
+    }
+
+    /** Wire codec lookup by type id — the decode side of a snapshot entry. */
+    public static @Nullable StreamCodec<RegistryFriendlyByteBuf, ? extends SectionData> codecOf(
+            ResourceLocation typeId) {
+        SectionType<?> type = byId.get(typeId);
+        return type != null ? codecs.get(type) : null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <D extends SectionData> void collectInto(
+            SectionProvider<?> provider, Level level, BlockPos pos, List<SectionInstance<?>> out) {
+        SectionProvider<D> typed = (SectionProvider<D>) provider;
+        List<D> found = typed.collect(level, pos);
+        for (int i = 0; i < found.size(); i++) {
+            out.add(new SectionInstance<>(idOf(typed.type(), i), typed.type(), found.get(i)));
+        }
+    }
+}

@@ -1,6 +1,8 @@
 package dev.vfyjxf.nimbusprojection.network;
 
 import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
+import dev.vfyjxf.nimbusprojection.feature.container.section.SectionTypes;
+import dev.vfyjxf.nimbusprojection.internal.section.SectionProviders;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -34,7 +36,8 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  *   <li>{@link #insertAll} — dump the player's main inventory into the handler</li>
  * </ul>
  */
-public record ContainerOpsPayload(int op, BlockPos container, int slot, int count) implements ServerboundPayload {
+public record ContainerOpsPayload(String section, int op, BlockPos container, int slot, int count)
+        implements ServerboundPayload {
 
     public static final int extract = 0;
     public static final int insert = 1;
@@ -56,6 +59,7 @@ public record ContainerOpsPayload(int op, BlockPos container, int slot, int coun
     }
 
     private void encode(RegistryFriendlyByteBuf buf) {
+        buf.writeUtf(section);
         buf.writeByte(op);
         buf.writeBlockPos(container);
         buf.writeVarInt(slot);
@@ -63,7 +67,8 @@ public record ContainerOpsPayload(int op, BlockPos container, int slot, int coun
     }
 
     private static ContainerOpsPayload decode(RegistryFriendlyByteBuf buf) {
-        return new ContainerOpsPayload(buf.readByte(), buf.readBlockPos(), buf.readVarInt(), buf.readVarInt());
+        return new ContainerOpsPayload(
+                buf.readUtf(), buf.readByte(), buf.readBlockPos(), buf.readVarInt(), buf.readVarInt());
     }
 
     @Override
@@ -71,6 +76,9 @@ public record ContainerOpsPayload(int op, BlockPos container, int slot, int coun
         Level level = player.level();
         Vec3 eye = player.getEyePosition();
         if (!container.closerToCenterThan(eye, reach)) return;
+        // ops address a section, not the client's layout: the builtin item
+        // ops only ever target the unsided handler's first section
+        if (!SectionProviders.idOf(SectionTypes.item, 0).equals(section)) return;
         IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, container, null);
         if (handler == null) return;
 
