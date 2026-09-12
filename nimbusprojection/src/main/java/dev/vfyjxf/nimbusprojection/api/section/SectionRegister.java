@@ -15,4 +15,8 @@ public interface SectionRegister {
 
     <D extends SectionData> void register(
             SectionType<D> type, StreamCodec<RegistryFriendlyByteBuf, D> codec, SectionProvider<D> provider);
+
+    /** Registers an entity-targeted provider — same type/codec wiring, {@link Entity} source. */
+    <D extends SectionData> void registerEntity(
+            SectionType<D> type, StreamCodec<RegistryFriendlyByteBuf, D> codec, EntitySectionProvider<D> provider);
 }

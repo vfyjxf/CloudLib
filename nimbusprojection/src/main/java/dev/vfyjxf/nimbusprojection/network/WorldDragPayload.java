@@ -3,6 +3,7 @@ package dev.vfyjxf.nimbusprojection.network;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerPayloadInfo;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
 import dev.vfyjxf.cloudlib.api.ui.inworld.SplitPlan;
+import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -38,7 +39,7 @@ import java.util.List;
  * non-null = the item-handler block at that position ({@link #slot} is an
  * {@code IItemHandler} slot) — e.g. dragging out of the container panel.
  */
-public record WorldDragPayload(int slot, int mode, List<BlockPos> targets, Vec3 look, @Nullable BlockPos source)
+public record WorldDragPayload(int slot, int mode, List<BlockPos> targets, Vec3 look, @Nullable SectionTarget source)
         implements ServerboundPayload {
 
     /** Split the whole source stack evenly across {@link #targets}. */
@@ -75,7 +76,7 @@ public record WorldDragPayload(int slot, int mode, List<BlockPos> targets, Vec3 
         for (BlockPos pos : targets) buf.writeBlockPos(pos);
         buf.writeVec3(look);
         buf.writeBoolean(source != null);
-        if (source != null) buf.writeBlockPos(source);
+        if (source != null) SectionTarget.streamCodec.encode(buf, source);
     }
 
     private static WorldDragPayload decode(RegistryFriendlyByteBuf buf) {
@@ -85,7 +86,7 @@ public record WorldDragPayload(int slot, int mode, List<BlockPos> targets, Vec3 
         List<BlockPos> targets = new ArrayList<>(n);
         for (int i = 0; i < n; i++) targets.add(buf.readBlockPos());
         Vec3 look = buf.readVec3();
-        BlockPos source = buf.readBoolean() ? buf.readBlockPos() : null;
+        SectionTarget source = buf.readBoolean() ? SectionTarget.streamCodec.decode(buf) : null;
         return new WorldDragPayload(slot, mode, targets, look, source);
     }
 
@@ -131,8 +132,9 @@ public record WorldDragPayload(int slot, int mode, List<BlockPos> targets, Vec3 
                 }
             };
         }
-        if (!source.closerToCenterThan(eye, reach)) return null;
-        IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, source, null);
+        Vec3 center = source.center(level);
+        if (center == null || !center.closerThan(eye, reach)) return null;
+        IItemHandler handler = source.itemHandler(level);
         if (handler == null || slot < 0 || slot >= handler.getSlots()) return null;
         return new ItemSource() {
             @Override
@@ -175,7 +177,7 @@ public record WorldDragPayload(int slot, int mode, List<BlockPos> targets, Vec3 
             if (handler == null) continue;
             // never feed a slot back into itself — dragging out of a container
             // and dropping it on the same container would be a no-op anyway
-            if (source != null && valid.get(i).equals(source)) continue;
+            if (source != null && valid.get(i).equals(source.pos())) continue;
             ItemStack remainder = ItemHandlerHelper.insertItem(handler, stack.copyWithCount(share), false);
             removed += share - remainder.getCount();
         }

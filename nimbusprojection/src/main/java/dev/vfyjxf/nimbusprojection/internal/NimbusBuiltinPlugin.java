@@ -11,6 +11,7 @@ import dev.vfyjxf.nimbusprojection.feature.container.section.EnergySectionWidget
 import dev.vfyjxf.nimbusprojection.feature.container.section.FluidSectionWidget;
 import dev.vfyjxf.nimbusprojection.feature.container.section.ItemSectionWidget;
 import dev.vfyjxf.nimbusprojection.feature.container.section.SectionTypes;
+import dev.vfyjxf.nimbusprojection.feature.entity.EntityPanelProvider;
 
 /**
  * Nimbus's own client registrations as a first-class plugin — the
@@ -27,6 +28,7 @@ public final class NimbusBuiltinPlugin implements NimbusClientPlugin {
     @Override
     public void registerProviders(NimbusClient client) {
         client.registerProvider(new ContainerPanelProvider(), 3, ProviderOptions.shared());
+        client.registerProvider(new EntityPanelProvider(), 3, ProviderOptions.shared());
     }
 
     @Override

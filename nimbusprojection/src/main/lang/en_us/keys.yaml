@@ -10,3 +10,5 @@ nimbusprojection:
     focus_previous: Focus Previous Panel
     interact: Interact / Engage
     inventory: Inventory Satellite
+    pin: Pin / Unpin Panel
+    detail: Reveal Details

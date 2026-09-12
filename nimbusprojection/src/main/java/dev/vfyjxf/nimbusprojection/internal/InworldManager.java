@@ -61,6 +61,7 @@ import dev.vfyjxf.nimbusprojection.api.provider.PanelProvider;
 import dev.vfyjxf.nimbusprojection.api.provider.PanelSink;
 import dev.vfyjxf.nimbusprojection.api.provider.ProviderContext;
 import dev.vfyjxf.nimbusprojection.api.provider.ProviderOptions;
+import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
 import dev.vfyjxf.nimbusprojection.api.sync.PresenceInfo;
 import dev.vfyjxf.nimbusprojection.api.sync.PresenceKind;
 import dev.vfyjxf.nimbusprojection.api.sync.SharedPanelView;
@@ -88,6 +89,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
@@ -461,8 +463,11 @@ public final class InworldManager implements NimbusClient {
         for (PanelRuntime r : panels.values()) {
             if (!r.shared) continue;
             PresenceKind kind = null;
-            if (dragSession != null && dragPanel == r) kind = PresenceKind.dragging;
-            else if (tracing == r) kind = PresenceKind.tracing;
+            if (dragSession != null && dragPanel == r) {
+                // dragging on a player-anchored panel would expose the carried
+                // stack — remote viewers see the engagement, not the payload
+                kind = playerAnchored(r) ? PresenceKind.engaged : PresenceKind.dragging;
+            } else if (tracing == r) kind = PresenceKind.tracing;
             else if (r.engaged) kind = PresenceKind.engaged;
             else if (focused == r) kind = PresenceKind.watching;
             if (kind != null) report.add(new PresenceReportPayload.Entry(r.spec.key(), kind));
@@ -471,6 +476,12 @@ public final class InworldManager implements NimbusClient {
             lastPresenceReport = report;
             PacketDistributor.sendToServer(new PresenceReportPayload(report));
         }
+    }
+
+    /** True when the panel's anchor is an entity that resolves to a player. */
+    private boolean playerAnchored(PanelRuntime runtime) {
+        if (!(runtime.spec.anchor() instanceof InworldAnchor.EntityTarget target)) return false;
+        return mc.level != null && mc.level.getEntity(target.entityId()) instanceof Player;
     }
 
     /**
@@ -531,6 +542,24 @@ public final class InworldManager implements NimbusClient {
     }
 
     @Override
+    public void pin(PanelKey key) {
+        PanelRuntime runtime = panels.get(key);
+        if (runtime != null) runtime.userPinned = true;
+    }
+
+    @Override
+    public void unpin(PanelKey key) {
+        PanelRuntime runtime = panels.get(key);
+        if (runtime != null) runtime.userPinned = false;
+    }
+
+    @Override
+    public boolean pinned(PanelKey key) {
+        PanelRuntime runtime = panels.get(key);
+        return runtime != null && runtime.userPinned;
+    }
+
+    @Override
     public List<Rect2i> exclusionAreas() {
         List<Rect2i> areas = new ArrayList<>();
         for (PanelRuntime runtime : panels.values()) {
@@ -586,6 +615,9 @@ public final class InworldManager implements NimbusClient {
         }
         while (NimbusKeyMappings.inventory.consumeClick()) {
             if (!keysViaScreen) InventoryFeature.toggle();
+        }
+        while (NimbusKeyMappings.pin.consumeClick()) {
+            if (!keysViaScreen && focused != null) togglePin(focused.key());
         }
         tickInteractArm();
 
@@ -1033,19 +1065,20 @@ public final class InworldManager implements NimbusClient {
                 ? (drag.wholeStack() ? WorldDragPayload.throwStack : WorldDragPayload.throwOne)
                 : (drag.wholeStack() ? WorldDragPayload.insertEven : WorldDragPayload.insertOne);
         Vec3 look = mc.player.getLookAngle();
-        PacketDistributor.sendToServer(
-                new WorldDragPayload(drag.sourceSlot(), mode, targets, look, drag.sourceContainer()));
+        PacketDistributor.sendToServer(new WorldDragPayload(
+                drag.sourceSlot(), mode, targets, look, SectionTarget.of(drag.sourceContainer(), drag.sourceEntity())));
 
         // the commit just mutated the source (and every target) server-side —
         // drop the throttle so their next watch() re-queries immediately
         // instead of showing a stale slot until the repoll
-        if (drag.sourceContainer() != null) {
-            ContainerContents.invalidate(drag.sourceContainer());
-            SectionContents.invalidate(drag.sourceContainer());
+        SectionTarget sourceTarget = SectionTarget.of(drag.sourceContainer(), drag.sourceEntity());
+        if (sourceTarget != null) {
+            if (sourceTarget.pos() != null) ContainerContents.invalidate(sourceTarget.pos());
+            SectionContents.invalidate(sourceTarget);
         }
         for (BlockPos t : targets) {
             ContainerContents.invalidate(t);
-            SectionContents.invalidate(t);
+            SectionContents.invalidate(SectionTarget.of(t));
         }
 
         // cosmetic fly-outs: one sprite per non-zero share, release point →
@@ -1119,7 +1152,7 @@ public final class InworldManager implements NimbusClient {
         if (mc.level == null) return;
         for (PanelRuntime r : panels.values()) {
             Decay decay = r.spec.decay();
-            if (decay == null) continue;
+            if (decay == null || r.userPinned) continue;
             if (decay.lingerOnHover() && (focused == r || pointed == r || r.engaged || tracing == r)) {
                 r.bornTick = tick;
                 continue;
@@ -1141,7 +1174,9 @@ public final class InworldManager implements NimbusClient {
         var it = panels.values().iterator();
         while (it.hasNext()) {
             PanelRuntime runtime = it.next();
-            if (!wanted.containsKey(runtime.key())) {
+            // a pinned panel outlives its offer — the pin is the explicit
+            // intent to keep it; it still closes on suspend-close/unpin
+            if (!wanted.containsKey(runtime.key()) && !runtime.userPinned) {
                 it.remove();
                 root.remove(runtime.widget);
                 if (runtime.faceTarget != null) {
@@ -1304,14 +1339,27 @@ public final class InworldManager implements NimbusClient {
                             screenOpen,
                             paused,
                             dimensionChanged));
-            if (verdict == SuspendVerdict.close) {
+            // a pinned panel doesn't close on a dead anchor — it keeps the
+            // card up ("signal lost") until unpinned; a dimension change or
+            // an explicit policy still closes it outright
+            if (verdict == SuspendVerdict.close && !(runtime.userPinned && !dimensionChanged)) {
                 suspendCloses.add(runtime.key());
                 continue;
             }
             if (verdict == SuspendVerdict.suspend) continue;
 
             Vec3 anchor = runtime.anchorWorld;
-            if (anchor == null || !runtime.widget.visible()) continue;
+            if (anchor == null || !runtime.widget.visible()) {
+                if (runtime.userPinned) {
+                    // dead anchor: dock at the stale hint position so the
+                    // "signal lost" card stays discoverable
+                    runtime.anchorScreen = new FloatPos(
+                            Math.clamp(runtime.widget.screenX, 0, mc.getWindow().getGuiScaledWidth()),
+                            Math.clamp(runtime.widget.screenY, 0, mc.getWindow().getGuiScaledHeight()));
+                    resolveDock(runtime, inspectPlacement(runtime.spec.presentation()), docked);
+                }
+                continue;
+            }
 
             // secondary group members stay hidden until their group wakes up
             if (runtime.groupRole == GroupRole.secondary
@@ -1321,7 +1369,7 @@ public final class InworldManager implements NimbusClient {
             }
 
             runtime.distance = proj.distance(anchor);
-            if (runtime.distance > runtime.spec.maxDistance()) continue;
+            if (runtime.distance > runtime.spec.maxDistance() && !runtime.userPinned) continue;
 
             runtime.anchorScreen = proj.worldToScreen(anchor);
 
@@ -1335,7 +1383,7 @@ public final class InworldManager implements NimbusClient {
             // still work, but presents no chrome until the interact key
             // expands it. Watch-Dogs-style: the world isn't wallpapered with
             // ui until the player asks for it.
-            if (isDormant(runtime)) {
+            if (isDormant(runtime) && !runtime.userPinned) {
                 runtime.indicator = false;
                 runtime.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
                 continue;
@@ -1345,7 +1393,10 @@ public final class InworldManager implements NimbusClient {
             // presenting the full panel where the target can't be seen.
             // skipped while inspecting — the flat projection is meant to show
             // every panel regardless of facing
-            if (runtime.spec.hint().collapsesOffscreen() && !inspecting && anchorOffscreen(runtime.anchorScreen)) {
+            if (runtime.spec.hint().collapsesOffscreen()
+                    && !inspecting
+                    && !runtime.userPinned
+                    && anchorOffscreen(runtime.anchorScreen)) {
                 runtime.indicator = true;
                 runtime.indicatorDir = offscreenDirection(anchor);
                 runtime.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
@@ -1354,13 +1405,16 @@ public final class InworldManager implements NimbusClient {
             runtime.indicator = false;
 
             Presentation placement = runtime.spec.presentation();
-            // engage-expansion: a dormant Face panel's engaged form is the
-            // world hologram — the face affordance becomes the expand anchor
-            if (runtime.engaged && placement instanceof Presentation.Face) {
+            // engage-expansion: a dormant Face/Follow panel's engaged form is
+            // the world hologram — the glance affordance becomes the expand
+            // anchor. A pinned panel keeps its dock instead — the pin wins.
+            if (runtime.engaged
+                    && !runtime.userPinned
+                    && (placement instanceof Presentation.Face || placement instanceof Presentation.Follow)) {
                 placement = Presentation.expand();
             }
-            if (inspecting) {
-                // flat projection: every panel docks to a screen corner
+            if (runtime.userPinned || inspecting) {
+                // pinned and flattened panels both dock to a screen corner
                 resolveDock(runtime, inspectPlacement(placement), docked);
             } else {
                 switch (placement) {
@@ -3632,6 +3686,9 @@ public final class InworldManager implements NimbusClient {
         for (PanelRuntime runtime : panels.values()) {
             if (!runtime.presented || !runtime.flat || !runtime.widget.visible()) continue;
             if (!runtime.spec.leaderLine()) continue;
+            // a dead anchor has no world origin — the leader would point at a
+            // fabricated screen hint, not the thing the panel tracks
+            if (runtime.anchorWorld == null) continue;
             if (runtime.widget.screenX < -900_000) continue; // parked/hidden — no line
             FloatPos from = leaderOrigin(runtime);
             if (from == null) continue;

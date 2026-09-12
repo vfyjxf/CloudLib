@@ -4,11 +4,11 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
 import dev.vfyjxf.nimbusprojection.api.section.SectionData;
 import dev.vfyjxf.nimbusprojection.api.section.SectionInstance;
+import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
 import dev.vfyjxf.nimbusprojection.api.section.SectionType;
 import dev.vfyjxf.nimbusprojection.api.section.SectionView;
 import dev.vfyjxf.nimbusprojection.api.section.SectionWidgetFactory;
 import dev.vfyjxf.nimbusprojection.api.section.SectionWidgetRegister;
-import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -35,17 +35,17 @@ public final class SectionWidgets {
     private SectionWidgets() {}
 
     /** Widget for one instance — null when no factory is bound to its type. */
-    public static @Nullable Widget create(InworldPanelContext ctx, BlockPos pos, SectionInstance<?> instance) {
-        return createTyped(ctx, pos, instance);
+    public static @Nullable Widget create(InworldPanelContext ctx, SectionTarget target, SectionInstance<?> instance) {
+        return createTyped(ctx, target, instance);
     }
 
     @SuppressWarnings("unchecked")
     private static <D extends SectionData> @Nullable Widget createTyped(
-            InworldPanelContext ctx, BlockPos pos, SectionInstance<D> instance) {
+            InworldPanelContext ctx, SectionTarget target, SectionInstance<D> instance) {
         SectionWidgetFactory<D> factory = (SectionWidgetFactory<D>) factories.get(instance.type());
         if (factory == null) return null;
-        SectionView<D> view = new SectionView<>(ctx, pos, instance.id(), instance.type(), instance.data(), () ->
-                (D) SectionContents.latest(pos, instance.id()));
+        SectionView<D> view = new SectionView<>(ctx, target, instance.id(), instance.type(), instance.data(), () ->
+                (D) SectionContents.latest(target, instance.id()));
         return factory.create(view);
     }
 }

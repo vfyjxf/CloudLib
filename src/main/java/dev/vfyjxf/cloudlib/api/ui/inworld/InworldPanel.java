@@ -40,6 +40,15 @@ public interface InworldPanel {
         return false;
     }
 
+    /**
+     * Whether the panel is user-pinned — docked to a screen edge, immune to
+     * focus loss, range and decay, showing "signal lost" while its anchor
+     * is dead rather than closing.
+     */
+    default boolean pinned() {
+        return false;
+    }
+
     boolean visible();
 
     void setVisible(boolean visible);

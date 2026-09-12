@@ -87,6 +87,11 @@ final class PanelRuntime implements InworldPanel {
     /** a live trace session froze this panel's position — resolvers keep it presented but never retarget */
     boolean pinned;
 
+    /** the pin key docked this panel — survives focus loss, range and a dead
+     *  anchor ("signal lost"), closes only on unpin, suspend-close from a
+     *  dimension change, or the provider's own decay semantics */
+    boolean userPinned;
+
     /** the interact key expanded this on-demand panel — presents until it
      *  loses all targeting for the grace window */
     boolean engaged;
@@ -185,6 +190,11 @@ final class PanelRuntime implements InworldPanel {
     @Override
     public boolean engaged() {
         return engaged;
+    }
+
+    @Override
+    public boolean pinned() {
+        return userPinned;
     }
 
     @Override

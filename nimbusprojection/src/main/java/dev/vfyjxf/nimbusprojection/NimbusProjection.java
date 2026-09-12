@@ -6,6 +6,7 @@ import dev.vfyjxf.nimbusprojection.api.Nimbus;
 import dev.vfyjxf.nimbusprojection.api.NimbusClient;
 import dev.vfyjxf.nimbusprojection.api.plugin.NimbusClientPlugin;
 import dev.vfyjxf.nimbusprojection.api.plugin.NimbusPlugin;
+import dev.vfyjxf.nimbusprojection.feature.entity.EntityPanelProvider;
 import dev.vfyjxf.nimbusprojection.internal.InworldManager;
 import dev.vfyjxf.nimbusprojection.internal.NimbusServerImpl;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionProviders;
@@ -20,7 +21,9 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.event.RenderNameTagEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
@@ -87,6 +90,14 @@ public final class NimbusProjection {
         });
         if (dist == Dist.CLIENT) {
             modBus.addListener(this::registerKeys);
+            // the entity panel IS the nameplate — suppress the vanilla one
+            // while a presented panel covers the entity
+            NeoForge.EVENT_BUS.addListener((RenderNameTagEvent e) -> {
+                NimbusClient client = Nimbus.client();
+                if (client == null) return;
+                var panel = client.panel(EntityPanelProvider.keyOf(e.getEntity()));
+                if (panel != null && panel.visible()) e.setCanRender(TriState.FALSE);
+            });
         }
     }
 
@@ -123,5 +134,7 @@ public final class NimbusProjection {
         event.register(NimbusKeyMappings.focusPrevious);
         event.register(NimbusKeyMappings.interact);
         event.register(NimbusKeyMappings.inventory);
+        event.register(NimbusKeyMappings.pin);
+        event.register(NimbusKeyMappings.detail);
     }
 }

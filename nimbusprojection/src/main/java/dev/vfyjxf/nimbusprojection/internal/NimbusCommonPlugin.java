@@ -11,6 +11,7 @@ import dev.vfyjxf.nimbusprojection.feature.container.section.FluidSectionProvide
 import dev.vfyjxf.nimbusprojection.feature.container.section.ItemSectionData;
 import dev.vfyjxf.nimbusprojection.feature.container.section.ItemSectionProvider;
 import dev.vfyjxf.nimbusprojection.feature.container.section.SectionTypes;
+import dev.vfyjxf.nimbusprojection.feature.entity.EntityItemSectionProvider;
 
 /**
  * Nimbus's common-side registrations — the section kinds' data half
@@ -30,5 +31,8 @@ public final class NimbusCommonPlugin implements NimbusPlugin {
         register.register(SectionTypes.item, ItemSectionData.streamCodec, new ItemSectionProvider());
         register.register(SectionTypes.fluid, FluidSectionData.streamCodec, new FluidSectionProvider());
         register.register(SectionTypes.energy, EnergySectionData.streamCodec, new EnergySectionProvider());
+        // entity inventories ride the same item data shape — a chest boat's
+        // sections serialize identically to a chest's
+        register.registerEntity(SectionTypes.item, ItemSectionData.streamCodec, new EntityItemSectionProvider());
     }
 }

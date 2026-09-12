@@ -9,6 +9,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDraggable;
 import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
 import dev.vfyjxf.nimbusprojection.network.TransferPayload;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.core.BlockPos;
@@ -70,7 +71,7 @@ public final class InventoryPanelWidget extends Widget implements WorldDraggable
             BlockPos target = linked.get();
             if (slot < 0 || target == null) return EventDispatch.pass;
             int count = input.isRightClick() ? 1 : -1;
-            sendTransfer(null, slot, target, -1, count);
+            sendTransfer(null, slot, SectionTarget.of(target), -1, count);
             return EventDispatch.consumed;
         });
     }
@@ -94,7 +95,8 @@ public final class InventoryPanelWidget extends Widget implements WorldDraggable
         };
     }
 
-    private void sendTransfer(@Nullable BlockPos src, int srcSlot, @Nullable BlockPos dst, int dstSlot, int count) {
+    private void sendTransfer(
+            @Nullable SectionTarget src, int srcSlot, @Nullable SectionTarget dst, int dstSlot, int count) {
         Inventory inv = player.getInventory();
         if (srcSlot < 0 || srcSlot >= inv.getContainerSize()) return;
         PacketDistributor.sendToServer(new TransferPayload(src, srcSlot, dst, dstSlot, count));
@@ -116,7 +118,7 @@ public final class InventoryPanelWidget extends Widget implements WorldDraggable
         int slot = slotAt(sceneX, sceneY);
         // dropping on the frame (not a slot) still counts: auto-insert main inventory
         sendTransfer(
-                drag.sourceContainer(),
+                SectionTarget.of(drag.sourceContainer(), drag.sourceEntity()),
                 drag.sourceSlot(),
                 null,
                 slot,

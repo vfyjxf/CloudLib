@@ -4,6 +4,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 /**
  * A drag operation that leaves an in-world panel and enters the world: the
  * player is holding {@link #carried} (a client-side preview copy — the real
@@ -17,18 +19,33 @@ import org.jetbrains.annotations.Nullable;
  * re-order the trail (e.g. only the last target); {@link #button} follows
  * vanilla pickup semantics: left = whole stack, right = single items.
  * <p>
- * {@link #sourceContainer} identifies where the real stack lives:
- * {@code null} = the player's own inventory ({@link #sourceSlot} is a vanilla
- * inventory index); non-null = the item-handler block at that position
- * ({@link #sourceSlot} is an {@code IItemHandler} slot index). The server
+ * The source identifies where the real stack lives: {@code sourceContainer} =
+ * the item-handler block at that position, {@code sourceEntity} = an entity's
+ * item handler, both {@code null} = the player's own inventory
+ * ({@link #sourceSlot} is then a vanilla inventory index). The server
  * re-reads and re-validates the source on commit — the preview never moves
  * items by itself.
  */
-public record WorldDrag(ItemStack carried, int sourceSlot, int button, @Nullable BlockPos sourceContainer) {
+public record WorldDrag(
+        ItemStack carried,
+        int sourceSlot,
+        int button,
+        @Nullable BlockPos sourceContainer,
+        @Nullable UUID sourceEntity) {
 
     /** Player-inventory source — the common case. */
     public WorldDrag(ItemStack carried, int sourceSlot, int button) {
-        this(carried, sourceSlot, button, null);
+        this(carried, sourceSlot, button, null, null);
+    }
+
+    /** Container-block source. */
+    public WorldDrag(ItemStack carried, int sourceSlot, int button, @Nullable BlockPos sourceContainer) {
+        this(carried, sourceSlot, button, sourceContainer, null);
+    }
+
+    /** Entity-inventory source — the stack lives in an entity's item handler. */
+    public static WorldDrag fromEntity(ItemStack carried, int sourceSlot, int button, UUID entity) {
+        return new WorldDrag(carried, sourceSlot, button, null, entity);
     }
 
     /** Vanilla semantics: left button drags the whole stack, right drags singles. */

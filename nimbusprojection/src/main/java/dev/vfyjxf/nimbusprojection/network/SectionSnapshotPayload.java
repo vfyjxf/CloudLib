@@ -4,9 +4,9 @@ import dev.vfyjxf.cloudlib.api.network.payload.ClientPayloadInfo;
 import dev.vfyjxf.cloudlib.api.network.payload.ClientboundPayload;
 import dev.vfyjxf.nimbusprojection.api.section.SectionData;
 import dev.vfyjxf.nimbusprojection.api.section.SectionInstance;
+import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionContents;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionProviders;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -25,18 +25,18 @@ import java.util.List;
  * resolves through the section registry — an unregistered type fails to
  * encode loudly rather than dropping bytes.
  */
-public record SectionSnapshotPayload(BlockPos pos, List<Entry> entries) implements ClientboundPayload {
+public record SectionSnapshotPayload(SectionTarget target, List<Entry> entries) implements ClientboundPayload {
 
     /** One section on the wire — {@code "type/index"} plus its decoded data. */
     public record Entry(String id, SectionData data) {}
 
     /** Packs resolved instances into wire entries. */
-    public static SectionSnapshotPayload of(BlockPos pos, List<SectionInstance<?>> sections) {
+    public static SectionSnapshotPayload of(SectionTarget target, List<SectionInstance<?>> sections) {
         List<Entry> entries = new ArrayList<>(sections.size());
         for (SectionInstance<?> section : sections) {
             entries.add(new Entry(section.id(), section.data()));
         }
-        return new SectionSnapshotPayload(pos, entries);
+        return new SectionSnapshotPayload(target, entries);
     }
 
     private static final StreamCodec<RegistryFriendlyByteBuf, Entry> entryCodec = StreamCodec.of(
@@ -71,8 +71,8 @@ public record SectionSnapshotPayload(BlockPos pos, List<Entry> entries) implemen
 
     public static final ClientPayloadInfo<SectionSnapshotPayload> info = NimbusPayloads.createClientInfo(
             StreamCodec.composite(
-                    BlockPos.STREAM_CODEC,
-                    SectionSnapshotPayload::pos,
+                    SectionTarget.streamCodec,
+                    SectionSnapshotPayload::target,
                     entryCodec.apply(ByteBufCodecs.list(64)),
                     SectionSnapshotPayload::entries,
                     SectionSnapshotPayload::new),
@@ -85,6 +85,6 @@ public record SectionSnapshotPayload(BlockPos pos, List<Entry> entries) implemen
 
     @Override
     public void handle(IPayloadContext context, Player player) {
-        SectionContents.receive(pos, entries);
+        SectionContents.receive(target, entries);
     }
 }

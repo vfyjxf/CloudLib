@@ -9,6 +9,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
 import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
 import dev.vfyjxf.nimbusprojection.api.section.SectionInstance;
+import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
 import dev.vfyjxf.nimbusprojection.feature.container.section.ItemSectionData;
 import dev.vfyjxf.nimbusprojection.feature.container.section.SectionTypes;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionContents;
@@ -82,8 +83,9 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
         this.sections = ColumnWidget.create(2);
         BlockPos p = pos.get();
         if (p != null) {
+            SectionTarget target = SectionTarget.of(p);
             for (SectionInstance<?> instance : SectionProviders.collectAll(ctx.level(), p)) {
-                Widget widget = SectionWidgets.create(ctx, p, instance);
+                Widget widget = SectionWidgets.create(ctx, target, instance);
                 if (widget != null) sections.addWidget(widget);
             }
         }
@@ -93,7 +95,8 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
 
     /** Item slots from the section mirror — null while the first snapshot is in flight. */
     private @Nullable List<ItemStack> itemStacks(BlockPos p) {
-        return SectionContents.latest(p, SectionProviders.idOf(SectionTypes.item, 0)) instanceof ItemSectionData data
+        return SectionContents.latest(SectionTarget.of(p), SectionProviders.idOf(SectionTypes.item, 0))
+                        instanceof ItemSectionData data
                 ? data.stacks()
                 : null;
     }
@@ -101,7 +104,7 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         BlockPos p = pos.get();
-        if (p != null) SectionContents.watch(p);
+        if (p != null) SectionContents.watch(SectionTarget.of(p));
         boolean engaged = ctx.panel().engaged();
         summary.setVisible(!engaged);
         sections.setVisible(engaged);
@@ -118,9 +121,9 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
         if (p == null || ctx.channel() == null) return false;
         ctx.channel()
                 .sendToServer(new TransferPayload(
-                        drag.sourceContainer(),
+                        SectionTarget.of(drag.sourceContainer(), drag.sourceEntity()),
                         drag.sourceSlot(),
-                        p,
+                        SectionTarget.of(p),
                         -1,
                         drag.carried().getCount()));
         return true;

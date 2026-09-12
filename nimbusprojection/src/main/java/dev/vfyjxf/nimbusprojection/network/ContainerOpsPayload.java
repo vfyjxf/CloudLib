@@ -1,9 +1,9 @@
 package dev.vfyjxf.nimbusprojection.network;
 
 import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
+import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
 import dev.vfyjxf.nimbusprojection.feature.container.section.SectionTypes;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionProviders;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -12,7 +12,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.wrapper.PlayerMainInvWrapper;
@@ -36,7 +35,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  *   <li>{@link #insertAll} — dump the player's main inventory into the handler</li>
  * </ul>
  */
-public record ContainerOpsPayload(String section, int op, BlockPos container, int slot, int count)
+public record ContainerOpsPayload(String section, int op, SectionTarget target, int slot, int count)
         implements ServerboundPayload {
 
     public static final int extract = 0;
@@ -61,25 +60,30 @@ public record ContainerOpsPayload(String section, int op, BlockPos container, in
     private void encode(RegistryFriendlyByteBuf buf) {
         buf.writeUtf(section);
         buf.writeByte(op);
-        buf.writeBlockPos(container);
+        SectionTarget.streamCodec.encode(buf, target);
         buf.writeVarInt(slot);
         buf.writeVarInt(count);
     }
 
     private static ContainerOpsPayload decode(RegistryFriendlyByteBuf buf) {
         return new ContainerOpsPayload(
-                buf.readUtf(), buf.readByte(), buf.readBlockPos(), buf.readVarInt(), buf.readVarInt());
+                buf.readUtf(),
+                buf.readByte(),
+                SectionTarget.streamCodec.decode(buf),
+                buf.readVarInt(),
+                buf.readVarInt());
     }
 
     @Override
     public void handle(IPayloadContext context, ServerPlayer player) {
         Level level = player.level();
         Vec3 eye = player.getEyePosition();
-        if (!container.closerToCenterThan(eye, reach)) return;
+        Vec3 center = target.center(level);
+        if (center == null || !center.closerThan(eye, reach)) return;
         // ops address a section, not the client's layout: the builtin item
         // ops only ever target the unsided handler's first section
         if (!SectionProviders.idOf(SectionTypes.item, 0).equals(section)) return;
-        IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, container, null);
+        IItemHandler handler = target.itemHandler(level);
         if (handler == null) return;
 
         switch (op) {

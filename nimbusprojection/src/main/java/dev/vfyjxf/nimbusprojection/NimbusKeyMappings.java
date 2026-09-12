@@ -65,5 +65,29 @@ public final class NimbusKeyMappings {
             GLFW.GLFW_KEY_I,
             NimbusLang.Keys.generalCategory.key());
 
+    /**
+     * Pin/unpin the focused panel — a pinned panel docks to the screen edge
+     * and survives focus loss, out-of-range and anchor-offscreen.
+     */
+    public static final KeyMapping pin = new KeyMapping(
+            NimbusLang.Keys.pin.key(),
+            KeyConflictContext.IN_GAME,
+            KeyModifier.NONE,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_P,
+            NimbusLang.Keys.generalCategory.key());
+
+    /**
+     * Hold to escalate the focused panel's detail tier (effects → equipment →
+     * debug). Release snaps back to the config-driven base tier.
+     */
+    public static final KeyMapping detail = new KeyMapping(
+            NimbusLang.Keys.detail.key(),
+            KeyConflictContext.IN_GAME,
+            KeyModifier.NONE,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_LEFT_SHIFT,
+            NimbusLang.Keys.generalCategory.key());
+
     private NimbusKeyMappings() {}
 }

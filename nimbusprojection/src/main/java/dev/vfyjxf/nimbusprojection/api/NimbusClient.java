@@ -152,6 +152,27 @@ public interface NimbusClient {
 
     // endregion
 
+    // region pinning
+
+    /**
+     * Pins a panel to the screen edge: it docks, survives focus loss,
+     * out-of-range and anchor-offscreen, and reports "signal lost" while
+     * its anchor is dead instead of closing. Pin state is a local runtime
+     * flag — provider re-offers neither set nor clear it.
+     */
+    void pin(PanelKey key);
+
+    void unpin(PanelKey key);
+
+    boolean pinned(PanelKey key);
+
+    default void togglePin(PanelKey key) {
+        if (pinned(key)) unpin(key);
+        else pin(key);
+    }
+
+    // endregion
+
     // region presence
 
     /**

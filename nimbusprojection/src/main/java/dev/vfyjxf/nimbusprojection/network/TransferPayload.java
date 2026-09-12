@@ -1,7 +1,7 @@
 package dev.vfyjxf.nimbusprojection.network;
 
 import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
-import net.minecraft.core.BlockPos;
+import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -12,7 +12,6 @@ import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.wrapper.InvWrapper;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -20,10 +19,10 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Slot-to-slot transfer between any two item sources — the commit half of
- * panel-to-panel drops and quick-slot moves. A {@code null} side means "the
- * player's own inventory" (vanilla combined index: 0-35 main+hotbar,
- * 36-39 armor, 40 offhand); a non-null side is the {@code IItemHandler}
- * block at that position.
+ * panel-to-panel drops and quick-slot moves. A {@code null} side means
+ * "the player's own inventory" (vanilla combined index: 0-35 main+hotbar,
+ * 36-39 armor, 40 offhand); a non-null side is a {@link SectionTarget} —
+ * the {@code IItemHandler} of a block or an entity.
  * <p>
  * The server is authoritative for everything: both ends re-resolve their
  * capability, reach is re-checked, the source's own {@code extractItem}
@@ -32,7 +31,7 @@ import org.jetbrains.annotations.Nullable;
  * {@code destSlot} -1 = first fitting slot in the destination.
  */
 public record TransferPayload(
-        @Nullable BlockPos source, int sourceSlot, @Nullable BlockPos dest, int destSlot, int count)
+        @Nullable SectionTarget source, int sourceSlot, @Nullable SectionTarget dest, int destSlot, int count)
         implements ServerboundPayload {
 
     private static final double reach = 12.0;
@@ -50,18 +49,18 @@ public record TransferPayload(
 
     private void encode(RegistryFriendlyByteBuf buf) {
         buf.writeBoolean(source != null);
-        if (source != null) buf.writeBlockPos(source);
+        if (source != null) SectionTarget.streamCodec.encode(buf, source);
         buf.writeVarInt(sourceSlot);
         buf.writeBoolean(dest != null);
-        if (dest != null) buf.writeBlockPos(dest);
+        if (dest != null) SectionTarget.streamCodec.encode(buf, dest);
         buf.writeVarInt(destSlot);
         buf.writeVarInt(count);
     }
 
     private static TransferPayload decode(RegistryFriendlyByteBuf buf) {
-        BlockPos source = buf.readBoolean() ? buf.readBlockPos() : null;
+        SectionTarget source = buf.readBoolean() ? SectionTarget.streamCodec.decode(buf) : null;
         int sourceSlot = buf.readVarInt();
-        BlockPos dest = buf.readBoolean() ? buf.readBlockPos() : null;
+        SectionTarget dest = buf.readBoolean() ? SectionTarget.streamCodec.decode(buf) : null;
         int destSlot = buf.readVarInt();
         return new TransferPayload(source, sourceSlot, dest, destSlot, buf.readVarInt());
     }
@@ -103,7 +102,7 @@ public record TransferPayload(
     }
 
     /** Player-inventory auto-insert stays in main+hotbar (0-35) — never fills equipment slots. */
-    private static ItemStack insertAnywhere(IItemHandler dst, ItemStack stack, @Nullable BlockPos dest) {
+    private static ItemStack insertAnywhere(IItemHandler dst, ItemStack stack, @Nullable SectionTarget dest) {
         int limit = dest == null ? Math.min(dst.getSlots(), 36) : dst.getSlots();
         ItemStack remaining = stack;
         for (int s = 0; s < limit && !remaining.isEmpty(); s++) {
@@ -126,14 +125,16 @@ public record TransferPayload(
         };
     }
 
-    private @Nullable IItemHandler side(@Nullable BlockPos pos, int slot, Level level, Vec3 eye, ServerPlayer player) {
-        if (pos == null) {
+    private @Nullable IItemHandler side(
+            @Nullable SectionTarget target, int slot, Level level, Vec3 eye, ServerPlayer player) {
+        if (target == null) {
             // player inventory as an IItemHandler — slot bounds validated by caller
             return slot >= 0 && slot < player.getInventory().getContainerSize()
                     ? new InvWrapper(player.getInventory())
                     : null;
         }
-        if (!pos.closerToCenterThan(eye, reach)) return null;
-        return level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null);
+        Vec3 center = target.center(level);
+        if (center == null || !center.closerThan(eye, reach)) return null;
+        return target.itemHandler(level);
     }
 }

@@ -16,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
@@ -56,22 +57,33 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
      * pipeline, e.g. a section cache). Null return = still syncing.
      */
     private final @Nullable Supplier<List<ItemStack>> stacksSource;
+    /** Entity drag source — when set and {@code pos} is null, drags carry {@code sourceEntity}. */
+    private final @Nullable Supplier<UUID> entitySource;
 
     private BlockPos lastPos;
     private int lastSlotCount;
 
     public ContainerGridWidget(Supplier<BlockPos> pos) {
-        this(pos, null, null);
+        this(pos, null, null, null);
     }
 
     public ContainerGridWidget(Supplier<BlockPos> pos, @Nullable SlotAction action) {
-        this(pos, null, action);
+        this(pos, null, null, action);
     }
 
     public ContainerGridWidget(
             Supplier<BlockPos> pos, @Nullable Supplier<List<ItemStack>> stacks, @Nullable SlotAction action) {
+        this(pos, stacks, null, action);
+    }
+
+    public ContainerGridWidget(
+            Supplier<BlockPos> pos,
+            @Nullable Supplier<List<ItemStack>> stacks,
+            @Nullable Supplier<UUID> entity,
+            @Nullable SlotAction action) {
         this.pos = pos;
         this.stacksSource = stacks;
+        this.entitySource = entity;
         onMount((scene, context, handle) -> scene.layoutTree()
                 .setMeasureFunc(nodeId(), (style, space) -> new FloatSize(cols * cell, rows() * cell + 2)));
         if (action != null) {
@@ -119,13 +131,16 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
         int slot = slotAt(sceneX, sceneY);
         if (slot < 0) return null;
         BlockPos p = pos.get();
-        if (p == null) return null;
+        UUID entity = entitySource != null ? entitySource.get() : null;
+        if (p == null && entity == null) return null;
         List<ItemStack> stacks = stacks();
         if (stacks == null || slot >= stacks.size()) return null;
         ItemStack stack = stacks.get(slot);
         if (stack.isEmpty()) return null;
         ItemStack carried = button == 0 ? stack.copy() : stack.copyWithCount(1);
-        return new WorldDrag(carried, slot, button, p);
+        return p != null
+                ? new WorldDrag(carried, slot, button, p)
+                : WorldDrag.fromEntity(carried, slot, button, entity);
     }
 
     @Override
