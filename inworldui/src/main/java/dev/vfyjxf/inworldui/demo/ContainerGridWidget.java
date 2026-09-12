@@ -6,32 +6,29 @@ import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDraggable;
+import dev.vfyjxf.inworldui.internal.ContainerContents;
 import dev.vfyjxf.taffy.geometry.FloatSize;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * A flat grid bound to a container block's {@link IItemHandler} — the "world
- * is UI" counterpart of {@link ItemGridWidget}: it renders whatever the block
- * at the supplier's position currently holds (chest, barrel, hopper, any
- * item-handler capability) and supports dragging stacks <em>out</em> of it —
- * the resulting {@link WorldDrag} carries {@code sourceContainer = pos}, so
- * the server extracts from the container rather than the player inventory.
+ * A flat grid bound to a container block's contents — the "world is UI"
+ * counterpart of {@link ItemGridWidget}.
  * <p>
- * Layout mirrors vanilla: nine columns, as many rows as the handler has
- * slots (capped at {@link #MAX_ROWS} for absurd handlers). Both the position
- * and the handler resolve lazily — the host panel outlives any single anchor
- * (the provider re-anchors as the crosshair moves between containers) and a
- * captured capability would go stale the moment the block changes.
+ * Vanilla inventories are server-only: the client-side block entity exposes
+ * the capability shape but its slots are always empty, so this widget reads
+ * {@link ContainerContents} — a client-side mirror filled by
+ * {@code ContainerQueryPayload}/{@code ContainerContentsPayload}. While a
+ * snapshot is missing it shows a "syncing" hint; an all-empty snapshot shows
+ * "empty". Drags out of the grid carry {@code sourceContainer = pos}; the
+ * server re-reads the real handler at commit time, so a slightly stale
+ * snapshot can only ever cost a ghost preview, never items.
  */
 public final class ContainerGridWidget extends Widget implements WorldDraggable {
 
@@ -44,6 +41,7 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
 
     private final Supplier<BlockPos> pos;
     private BlockPos lastPos;
+    private int lastSlotCount;
     private boolean loggedOnce;
 
     public ContainerGridWidget(Supplier<BlockPos> pos) {
@@ -53,19 +51,19 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
                         new FloatSize(COLS * CELL, rows() * CELL + 2)));
     }
 
-    /** The live item handler at the current position, or null when gone. */
-    private @Nullable IItemHandler handler() {
+    /** Latest server snapshot for the anchor (also keeps the pos subscribed). */
+    private @Nullable List<ItemStack> stacks() {
         BlockPos p = pos.get();
-        Level level = Minecraft.getInstance().level;
-        return p != null && level != null
-                ? level.getCapability(Capabilities.ItemHandler.BLOCK, p, null)
-                : null;
+        return p != null ? ContainerContents.watch(p) : null;
+    }
+
+    private int slotCount() {
+        BlockPos p = pos.get();
+        return p != null ? ContainerContents.slotsOf(p, COLS * 3) : COLS * 3;
     }
 
     private int rows() {
-        IItemHandler handler = handler();
-        int slots = handler != null ? handler.getSlots() : COLS;
-        return Math.max(1, Math.min(MAX_ROWS, (slots + COLS - 1) / COLS));
+        return Math.max(1, Math.min(MAX_ROWS, (slotCount() + COLS - 1) / COLS));
     }
 
     /** Handler slot index under scene coords, or -1 off-grid/out of range. */
@@ -75,18 +73,16 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
         int cy = (int) Math.floor(local.y() / CELL);
         if (cx < 0 || cx >= COLS || cy < 0 || cy >= rows()) return -1;
         int slot = cy * COLS + cx;
-        IItemHandler handler = handler();
-        return handler != null && slot < handler.getSlots() ? slot : -1;
+        return slot < slotCount() ? slot : -1;
     }
 
     @Override
     public @Nullable WorldDrag beginWorldDrag(InworldPanelContext ctx, double sceneX, double sceneY, int button) {
         int slot = slotAt(sceneX, sceneY);
         if (slot < 0) return null;
-        IItemHandler handler = handler();
         BlockPos p = pos.get();
-        if (handler == null || p == null) return null;
-        ItemStack stack = handler.getStackInSlot(slot);
+        if (p == null) return null;
+        ItemStack stack = ContainerContents.stackAt(p, slot);
         if (stack.isEmpty()) return null;
         ItemStack carried = button == 0 ? stack.copy() : stack.copyWithCount(1);
         return new WorldDrag(carried, slot, button, p);
@@ -95,37 +91,39 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         //the panel outlives its anchor — re-measure when the container moves
+        //or the first snapshot lands with a different slot count
         BlockPos p = pos.get();
-        if (!java.util.Objects.equals(p, lastPos)) {
+        int sc = slotCount();
+        if (!java.util.Objects.equals(p, lastPos) || sc != lastSlotCount) {
             lastPos = p;
+            lastSlotCount = sc;
             if (lifecycle().mounted()) scene().layoutTree().markDirty(nodeId());
         }
-        IItemHandler handler = handler();
-        if (handler == null) {
-            if (!loggedOnce) {
-                loggedOnce = true;
-                LOGGER.info("container grid first render: pos={} handler=null", pos.get());
-            }
+        List<ItemStack> stacks = stacks();
+        if (p == null) {
             canvas.text("no container", 4, 4, 0x5536C4D8);
             return;
         }
-        int slots = Math.min(handler.getSlots(), COLS * MAX_ROWS);
-        int rows = rows();
-        boolean any = false;
+        if (stacks == null) {
+            canvas.text("syncing", 4, 4, 0x5536C4D8);
+            return;
+        }
         if (!loggedOnce) {
             loggedOnce = true;
             int nonEmpty = 0;
-            for (int i = 0; i < handler.getSlots(); i++)
-                if (!handler.getStackInSlot(i).isEmpty()) nonEmpty++;
+            for (ItemStack s : stacks) if (!s.isEmpty()) nonEmpty++;
             LOGGER.info("container grid first render: pos={} slots={} nonEmpty={} bounds={}x{}",
-                    pos.get(), handler.getSlots(), nonEmpty, width(), height());
+                    p, stacks.size(), nonEmpty, width(), height());
         }
+        int rows = rows();
+        boolean any = false;
+        int slots = Math.min(stacks.size(), COLS * MAX_ROWS);
         for (int i = 0; i < slots; i++) {
             int col = i % COLS;
             int row = i / COLS;
             int x = col * CELL;
             int y = row * CELL;
-            ItemStack stack = handler.getStackInSlot(i);
+            ItemStack stack = stacks.get(i);
             boolean hover = mouseX >= x && mouseX < x + CELL && mouseY >= y && mouseY < y + CELL;
             canvas.fill(x, y, CELL - 1, CELL - 1, hover ? SLOT_BG_HOT : SLOT_BG);
             if (!stack.isEmpty()) {

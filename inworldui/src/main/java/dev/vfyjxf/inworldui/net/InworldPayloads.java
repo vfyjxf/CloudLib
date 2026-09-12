@@ -18,6 +18,8 @@ public final class InworldPayloads {
     public static void register(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(Constants.modId);
         WorldDragPayload.info.registerPlay(registrar);
+        ContainerQueryPayload.info.registerPlay(registrar);
+        ContainerContentsPayload.info.registerPlay(registrar);
     }
 
     public static <T extends ServerboundPayload> ServerPayloadInfo<T> createServerInfo(

@@ -743,6 +743,7 @@ public final class InworldManager implements InworldUiApi {
         cancelWorldDrag();
         flying.clear();
         landFlash.clear();
+        ContainerContents.clear();
     }
 
     //endregion
