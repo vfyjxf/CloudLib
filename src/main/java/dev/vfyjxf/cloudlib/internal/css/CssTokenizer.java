@@ -106,8 +106,7 @@ final class CssTokenizer {
         return new CssTokenizer(input, errors).run();
     }
 
-    // ------------------------------------------------------------------ input preprocessing
-
+    // region input preprocessing
     /** CSS Syntax L3 §3.3: CRLF/CR/FF → LF, NUL → U+FFFD. */
     private static String preprocess(String raw) {
         StringBuilder out = new StringBuilder(raw.length());
@@ -129,8 +128,9 @@ final class CssTokenizer {
         return out.toString();
     }
 
-    // ------------------------------------------------------------------ cursor helpers
+    // endregion
 
+    // region cursor helpers
     private char at(int i) {
         return i < input.length() ? input.charAt(i) : '\0';
     }
@@ -187,8 +187,9 @@ final class CssTokenizer {
         tokens.add(Token.delimiter(c, tokenStart, pos, tokenLine, tokenColumn));
     }
 
-    // ------------------------------------------------------------------ character classes
+    // endregion
 
+    // region character classes
     private static boolean isWhitespace(char c) {
         return c == ' ' || c == '\n' || c == '\t';
     }
@@ -252,8 +253,9 @@ final class CssTokenizer {
         return at(pos + 1) == '+' && (isHexDigit(at(pos + 2)) || at(pos + 2) == '?');
     }
 
-    // ------------------------------------------------------------------ main loop
+    // endregion
 
+    // region main loop
     private List<Token> run() {
         while (true) {
             consumeComments();
@@ -411,8 +413,9 @@ final class CssTokenizer {
         }
     }
 
-    // ------------------------------------------------------------------ token consumers
+    // endregion
 
+    // region token consumers
     /** Spec "consume an ident-like token". */
     private void consumeIdentLike() {
         String name = consumeName();
@@ -776,4 +779,5 @@ final class CssTokenizer {
                 tokenLine,
                 tokenColumn));
     }
+    // endregion
 }

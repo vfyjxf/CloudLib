@@ -1095,7 +1095,15 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         if (theme == null) {
             return;
         }
-        UIStyle resolved = dev.vfyjxf.cloudlib.api.ui.theme.ThemeEngine.resolve(theme, this);
+        applyThemeStyle(dev.vfyjxf.cloudlib.api.ui.theme.ThemeEngine.resolve(theme, this));
+    }
+
+    /**
+     * Applies a theme-resolved style and replays code styles on top of it.
+     * Shared by {@link #refreshTheme} and whole-tree refreshes
+     * ({@code ThemeEngine.applyTree}) which share one cascade context.
+     */
+    public void applyThemeStyle(UIStyle resolved) {
         if (Objects.equals(resolved, themeStyle)) {
             return;
         }

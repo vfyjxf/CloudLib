@@ -23,8 +23,7 @@ public final class ThemeValues {
 
     private ThemeValues() {}
 
-    // ------------------------------------------------------------------ lengths
-
+    // region lengths
     /** {@code <length>} — only {@code px} (and unitless zero) are valid for taffy. */
     public static @Nullable Float lengthPx(ComponentValue v) {
         if (v instanceof ComponentValue.NumericValue n) {
@@ -155,8 +154,9 @@ public final class ThemeValues {
         return null;
     }
 
-    // ------------------------------------------------------------------ colors
+    // endregion
 
+    // region colors
     /** {@code <color>} — #hex, rgb()/rgba(), color(), or a CSS named color. */
     public static @Nullable Integer color(ComponentValue v) {
         if (v instanceof ComponentValue.HashValue h) {
@@ -400,4 +400,5 @@ public final class ThemeValues {
             Map.entry("whitesmoke", 0xFFF5F5F5),
             Map.entry("yellowgreen", 0xFF9ACD32),
             Map.entry("rebeccapurple", 0xFF663399));
+    // endregion
 }

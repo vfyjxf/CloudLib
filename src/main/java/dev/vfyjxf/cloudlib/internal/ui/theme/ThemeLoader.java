@@ -45,8 +45,7 @@ public final class ThemeLoader extends SimplePreparableReloadListener<Map<Resour
 
     private ThemeLoader() {}
 
-    // ------------------------------------------------------------------ stage 1: read
-
+    // region stage 1: read
     @Override
     protected Map<ResourceLocation, String> prepare(ResourceManager manager, ProfilerFiller profiler) {
         Map<ResourceLocation, String> sources = new HashMap<>();
@@ -73,8 +72,9 @@ public final class ThemeLoader extends SimplePreparableReloadListener<Map<Resour
         return sources;
     }
 
-    // ------------------------------------------------------------------ stage 2: parse & register
+    // endregion
 
+    // region stage 2: parse & register
     @Override
     protected void apply(Map<ResourceLocation, String> sources, ResourceManager manager, ProfilerFiller profiler) {
         Map<ResourceLocation, Theme> resolved = new HashMap<>();
@@ -170,4 +170,5 @@ public final class ThemeLoader extends SimplePreparableReloadListener<Map<Resour
         }
         return null;
     }
+    // endregion
 }

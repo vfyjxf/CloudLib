@@ -10,8 +10,12 @@ import dev.vfyjxf.cloudlib.internal.css.PseudoClass;
 import dev.vfyjxf.cloudlib.internal.css.RelativeSelector;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Matches {@link ComplexSelector}s against the {@link Themeable} tree.
@@ -24,19 +28,55 @@ import java.util.Locale;
  * nth-last-child nth-of-type nth-last-of-type odd/even forms, root, not, is, where,
  * has} plus widget-defined custom states. Pseudo-elements resolve via
  * {@link Themeable#themePart()} ({@code ::part(name)}) or widget-defined part tags.
+ * <p>
+ * Matching against a node repeatedly calls back into {@code themeSiblings()},
+ * {@code themeStates()} and {@code themeChildren()} — those allocate. A
+ * {@link MatchContext} memoizes them per node so a full cascade pass costs one
+ * snapshot per node instead of one per rule.
  */
 public final class SelectorMatcher {
 
     private SelectorMatcher() {}
 
-    public static boolean matches(ComplexSelector selector, Themeable node) {
-        List<CompoundSelector> compounds = selector.compounds();
-        List<Combinator> combinators = selector.combinators();
-        return matchAt(selector, compounds.size() - 1, node);
+    // region match context
+
+    /**
+     * Per-resolution memo: siblings/children/states of every node touched while
+     * matching this pass. Share one context across a whole cascade resolution.
+     */
+    public static final class MatchContext {
+
+        private final Map<Themeable, List<Themeable>> siblings = new IdentityHashMap<>();
+        private final Map<Themeable, List<Themeable>> children = new IdentityHashMap<>();
+        private final Map<Themeable, Set<String>> states = new IdentityHashMap<>();
+
+        List<Themeable> siblingsOf(Themeable node) {
+            return siblings.computeIfAbsent(node, n -> new ArrayList<>(n.themeSiblings()));
+        }
+
+        List<Themeable> childrenOf(Themeable node) {
+            return children.computeIfAbsent(node, n -> new ArrayList<>(n.themeChildren()));
+        }
+
+        Set<String> statesOf(Themeable node) {
+            return states.computeIfAbsent(node, Themeable::themeStates);
+        }
     }
 
-    private static boolean matchAt(ComplexSelector sel, int index, Themeable node) {
-        if (!matchCompound(sel.compounds().get(index), node)) {
+    // endregion
+
+    // region matching
+
+    public static boolean matches(ComplexSelector selector, Themeable node) {
+        return matches(new MatchContext(), selector, node);
+    }
+
+    public static boolean matches(MatchContext ctx, ComplexSelector selector, Themeable node) {
+        return matchAt(ctx, selector, selector.compounds().size() - 1, node);
+    }
+
+    private static boolean matchAt(MatchContext ctx, ComplexSelector sel, int index, Themeable node) {
+        if (!matchCompound(ctx, sel.compounds().get(index), node)) {
             return false;
         }
         if (index == 0) {
@@ -47,7 +87,7 @@ public final class SelectorMatcher {
             case descendant -> {
                 Themeable p = node.themeParent();
                 while (p != null) {
-                    if (matchAt(sel, index - 1, p)) {
+                    if (matchAt(ctx, sel, index - 1, p)) {
                         yield true;
                     }
                     p = p.themeParent();
@@ -56,19 +96,19 @@ public final class SelectorMatcher {
             }
             case child -> {
                 Themeable p = node.themeParent();
-                yield p != null && matchAt(sel, index - 1, p);
+                yield p != null && matchAt(ctx, sel, index - 1, p);
             }
             case nextSibling -> {
-                Themeable prev = previousSibling(node);
-                yield prev != null && matchAt(sel, index - 1, prev);
+                Themeable prev = previousSibling(ctx, node);
+                yield prev != null && matchAt(ctx, sel, index - 1, prev);
             }
             case subsequentSibling -> {
-                Themeable sib = previousSibling(node);
+                Themeable sib = previousSibling(ctx, node);
                 while (sib != null) {
-                    if (matchAt(sel, index - 1, sib)) {
+                    if (matchAt(ctx, sel, index - 1, sib)) {
                         yield true;
                     }
-                    sib = previousSibling(sib);
+                    sib = previousSibling(ctx, sib);
                 }
                 yield false;
             }
@@ -76,7 +116,7 @@ public final class SelectorMatcher {
                 // || is not meaningful in the widget tree; treat as descendant
                 Themeable p = node.themeParent();
                 while (p != null) {
-                    if (matchAt(sel, index - 1, p)) {
+                    if (matchAt(ctx, sel, index - 1, p)) {
                         yield true;
                     }
                     p = p.themeParent();
@@ -86,8 +126,8 @@ public final class SelectorMatcher {
         };
     }
 
-    private static @Nullable Themeable previousSibling(Themeable node) {
-        List<? extends Themeable> siblings = node.themeSiblings();
+    private static @Nullable Themeable previousSibling(MatchContext ctx, Themeable node) {
+        List<Themeable> siblings = ctx.siblingsOf(node);
         for (int i = 0; i < siblings.size(); i++) {
             if (siblings.get(i) == node) {
                 return i > 0 ? siblings.get(i - 1) : null;
@@ -96,8 +136,14 @@ public final class SelectorMatcher {
         return null;
     }
 
-    private static int siblingIndex(Themeable node) {
-        List<? extends Themeable> siblings = node.themeSiblings();
+    private static @Nullable Themeable nextSibling(MatchContext ctx, Themeable node) {
+        List<Themeable> siblings = ctx.siblingsOf(node);
+        int i = siblingIndex(ctx, node);
+        return i + 1 < siblings.size() ? siblings.get(i + 1) : null;
+    }
+
+    private static int siblingIndex(MatchContext ctx, Themeable node) {
+        List<Themeable> siblings = ctx.siblingsOf(node);
         for (int i = 0; i < siblings.size(); i++) {
             if (siblings.get(i) == node) {
                 return i;
@@ -106,9 +152,11 @@ public final class SelectorMatcher {
         return 0;
     }
 
-    // ------------------------------------------------------------------ compound
+    // endregion
 
-    private static boolean matchCompound(CompoundSelector sel, Themeable node) {
+    // region compound
+
+    private static boolean matchCompound(MatchContext ctx, CompoundSelector sel, Themeable node) {
         // type / universal — namespace prefixes are accepted but ignored
         if (sel.tag() != null && !sel.tag().equalsIgnoreCase(node.themeTag())) {
             return false;
@@ -127,7 +175,7 @@ public final class SelectorMatcher {
             }
         }
         for (PseudoClass pseudo : sel.pseudos()) {
-            if (!matchPseudo(pseudo, node)) {
+            if (!matchPseudo(ctx, pseudo, node)) {
                 return false;
             }
         }
@@ -156,9 +204,11 @@ public final class SelectorMatcher {
         };
     }
 
-    // ------------------------------------------------------------------ pseudos
+    // endregion
 
-    private static boolean matchPseudo(PseudoClass pseudo, Themeable node) {
+    // region pseudos
+
+    private static boolean matchPseudo(MatchContext ctx, PseudoClass pseudo, Themeable node) {
         String name = pseudo.name();
         if (pseudo.element()) {
             // pseudo-elements address named parts of the node itself
@@ -170,64 +220,65 @@ public final class SelectorMatcher {
                 case "before", "after", "first-line", "first-letter" -> false;
                 default ->
                     pseudo.args() instanceof PseudoArgs.SelectorList sels
-                            && sels.selectors().stream().anyMatch(r -> matchesRelative(r, node));
+                            && sels.selectors().stream().anyMatch(r -> matchesRelative(ctx, r, node));
             };
         }
         return switch (name) {
             case "root" -> node.themeParent() == null;
-            case "empty" -> node.themeStates().contains("empty");
-            case "first-child" -> siblingIndex(node) == 0;
-            case "last-child" -> siblingIndex(node) == node.themeSiblings().size() - 1;
-            case "only-child" -> node.themeSiblings().size() == 1;
+            case "empty" -> ctx.statesOf(node).contains("empty");
+            case "first-child" -> siblingIndex(ctx, node) == 0;
+            case "last-child" -> siblingIndex(ctx, node) == ctx.siblingsOf(node).size() - 1;
+            case "only-child" -> ctx.siblingsOf(node).size() == 1;
             case "nth-child", "nth-last-child" ->
-                pseudo.args() instanceof PseudoArgs.AnPlusB ab && matchesNth(ab, node, name.equals("nth-last-child"));
+                pseudo.args() instanceof PseudoArgs.AnPlusB ab
+                        && matchesNth(ctx, ab, node, name.equals("nth-last-child"));
             case "nth-of-type", "nth-last-of-type" ->
                 pseudo.args() instanceof PseudoArgs.AnPlusB ab
-                        && matchesNthOfType(ab, node, name.equals("nth-last-of-type"));
+                        && matchesNthOfType(ctx, ab, node, name.equals("nth-last-of-type"));
             case "nth-col", "nth-last-col" -> false; // no column concept in widget trees
             case "not" ->
                 pseudo.args() instanceof PseudoArgs.SelectorList sels
-                        && sels.selectors().stream().noneMatch(r -> matchesRelative(r, node));
+                        && sels.selectors().stream().noneMatch(r -> matchesRelative(ctx, r, node));
             case "is", "where" ->
                 pseudo.args() instanceof PseudoArgs.SelectorList sels
-                        && sels.selectors().stream().anyMatch(r -> matchesRelative(r, node));
+                        && sels.selectors().stream().anyMatch(r -> matchesRelative(ctx, r, node));
             case "has" ->
                 pseudo.args() instanceof PseudoArgs.SelectorList sels
-                        && sels.selectors().stream().anyMatch(r -> matchesHas(r, node));
-            default -> node.themeStates().contains(name);
+                        && sels.selectors().stream().anyMatch(r -> matchesHas(ctx, r, node));
+            default -> ctx.statesOf(node).contains(name);
         };
     }
 
     /** A selector-list arg ({@code :not/:is/:where}) — combinators ignored (compound semantics). */
-    private static boolean matchesRelative(RelativeSelector rel, Themeable node) {
+    private static boolean matchesRelative(MatchContext ctx, RelativeSelector rel, Themeable node) {
         if (rel.combinator() != null) {
-            return matchesHas(rel, node);
+            return matchesHas(ctx, rel, node);
         }
-        return matches(rel.selector(), node);
+        return matches(ctx, rel.selector(), node);
     }
 
     /** {@code :has()} — the relative selector must match in the space its combinator names. */
-    private static boolean matchesHas(RelativeSelector rel, Themeable node) {
+    private static boolean matchesHas(MatchContext ctx, RelativeSelector rel, Themeable node) {
         Combinator comb = rel.combinator();
         if (comb == null || comb == Combinator.descendant || comb == Combinator.column) {
-            for (Themeable child : childrenOf(node)) {
-                if (matches(rel.selector(), child) || hasDeep(rel, child)) {
+            for (Themeable child : ctx.childrenOf(node)) {
+                if (matches(ctx, rel.selector(), child) || hasDeep(ctx, rel, child)) {
                     return true;
                 }
             }
             return false;
         }
         return switch (comb) {
-            case child -> childrenOf(node).stream().anyMatch(c -> matches(rel.selector(), c));
+            case child -> ctx.childrenOf(node).stream().anyMatch(c -> matches(ctx, rel.selector(), c));
             case nextSibling -> {
-                Themeable next = nextSiblingOf(node);
-                yield next != null && matches(rel.selector(), next);
+                Themeable next = nextSibling(ctx, node);
+                yield next != null && matches(ctx, rel.selector(), next);
             }
             case subsequentSibling -> {
-                List<? extends Themeable> sibs = node.themeSiblings();
-                int from = siblingIndex(node) + 1;
+                List<Themeable> sibs = ctx.siblingsOf(node);
+                int from = siblingIndex(ctx, node) + 1;
                 for (int i = from; i < sibs.size(); i++) {
-                    if (matches(rel.selector(), sibs.get(i))) {
+                    if (matches(ctx, rel.selector(), sibs.get(i))) {
                         yield true;
                     }
                 }
@@ -237,33 +288,27 @@ public final class SelectorMatcher {
         };
     }
 
-    private static boolean hasDeep(RelativeSelector rel, Themeable node) {
-        for (Themeable child : childrenOf(node)) {
-            if (matches(rel.selector(), child) || hasDeep(rel, child)) {
+    private static boolean hasDeep(MatchContext ctx, RelativeSelector rel, Themeable node) {
+        for (Themeable child : ctx.childrenOf(node)) {
+            if (matches(ctx, rel.selector(), child) || hasDeep(ctx, rel, child)) {
                 return true;
             }
         }
         return false;
     }
 
-    private static @Nullable Themeable nextSiblingOf(Themeable node) {
-        List<? extends Themeable> siblings = node.themeSiblings();
-        int i = siblingIndex(node);
-        return i + 1 < siblings.size() ? siblings.get(i + 1) : null;
-    }
+    // endregion
 
-    private static List<? extends Themeable> childrenOf(Themeable node) {
-        return node.themeChildren();
-    }
+    // region positional
 
-    private static boolean matchesNth(PseudoArgs.AnPlusB ab, Themeable node, boolean fromEnd) {
-        List<? extends Themeable> sibs = node.themeSiblings();
-        int index = fromEnd ? sibs.size() - siblingIndex(node) : siblingIndex(node) + 1;
+    private static boolean matchesNth(MatchContext ctx, PseudoArgs.AnPlusB ab, Themeable node, boolean fromEnd) {
+        List<Themeable> sibs = ctx.siblingsOf(node);
+        int index = fromEnd ? sibs.size() - siblingIndex(ctx, node) : siblingIndex(ctx, node) + 1;
         return anPlusB(ab.a(), ab.b(), index);
     }
 
-    private static boolean matchesNthOfType(PseudoArgs.AnPlusB ab, Themeable node, boolean fromEnd) {
-        List<? extends Themeable> sibs = node.themeSiblings();
+    private static boolean matchesNthOfType(MatchContext ctx, PseudoArgs.AnPlusB ab, Themeable node, boolean fromEnd) {
+        List<Themeable> sibs = ctx.siblingsOf(node);
         int count = 0;
         int index = 0;
         String tag = node.themeTag();
@@ -287,4 +332,6 @@ public final class SelectorMatcher {
         int diff = index - b;
         return diff % a == 0 && diff / a >= 0;
     }
+
+    // endregion
 }

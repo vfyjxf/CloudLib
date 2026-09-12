@@ -53,8 +53,7 @@ public final class CssParser {
     /** Single-colon pseudo-elements per spec — these count as elements even with `:`. */
     private static final Set<String> legacyPseudoElements = Set.of("before", "after", "first-line", "first-letter");
 
-    // ------------------------------------------------------------------ at-rule block kinds
-
+    // region at-rule block kinds
     /** At-rules whose {@code {…}} holds a nested rule list. */
     private static final Set<String> ruleBlocks =
             Set.of("media", "supports", "layer", "scope", "container", "document", "starting-style");
@@ -94,8 +93,9 @@ public final class CssParser {
             this.errors = errors;
         }
 
-        // ---------------------------------------------------------- cursor
+        // endregion
 
+        // region cursor
         /** Token slices (raw pseudo args) carry no eof token — synthesize one past the end. */
         private Token eofToken() {
             if (tokens.isEmpty()) return Token.bare(TokenKind.eof, 0, 0, 1, 1);
@@ -128,8 +128,9 @@ public final class CssParser {
             errors.add(new CssError(token.line(), token.column(), message));
         }
 
-        // ---------------------------------------------------------- stylesheet & rules
+        // endregion
 
+        // region stylesheet & rules
         /** Spec "consume a list of rules" — stops at {@code }/EOF. */
         Stylesheet stylesheet() {
             List<Rule> rules = rulesUntil(TokenKind.eof, true);
@@ -244,8 +245,9 @@ public final class CssParser {
             return new StyleRule(selectors, declarations);
         }
 
-        // ---------------------------------------------------------- declarations
+        // endregion
 
+        // region declarations
         /** Spec "consume a list of declarations" — stops before {@code }/EOF (not consumed). */
         private List<Declaration> declarationList() {
             List<Declaration> out = new ArrayList<>();
@@ -348,8 +350,9 @@ public final class CssParser {
             while (at(TokenKind.whitespace)) take();
         }
 
-        // ---------------------------------------------------------- component values
+        // endregion
 
+        // region component values
         /** Component values until {@code close} (not consumed) or EOF. */
         List<ComponentValue> componentValuesUntil(TokenKind close) {
             List<ComponentValue> out = new ArrayList<>();
@@ -451,8 +454,9 @@ public final class CssParser {
         }
     }
 
-    // ------------------------------------------------------------------ selectors
+    // endregion
 
+    // region selectors
     /**
      * Parses a selector list from a token slice — Selectors Level 3 grammar with the
      * Level 4 extras the AST already models ({@code :has} relative selectors,
@@ -501,8 +505,9 @@ public final class CssParser {
             errors.add(new CssError(t.line(), t.column(), message));
         }
 
-        // ---------------------------------------------------------- list & complex
+        // endregion
 
+        // region list & complex
         List<ComplexSelector> selectorList() {
             List<ComplexSelector> out = new ArrayList<>();
             while (true) {
@@ -588,8 +593,9 @@ public final class CssParser {
             return new ComplexSelector(compounds, combinators);
         }
 
-        // ---------------------------------------------------------- compound
+        // endregion
 
+        // region compound
         private @Nullable CompoundSelector compoundSelector() {
             String tag = null;
             String namespace = null;
@@ -715,8 +721,9 @@ public final class CssParser {
             return t.kind() == TokenKind.delim && t.delim() == c;
         }
 
-        // ---------------------------------------------------------- attribute selector
+        // endregion
 
+        // region attribute selector
         private @Nullable AttributeSelector attributeSelector() {
             take(); // [
             skipWs();
@@ -821,8 +828,9 @@ public final class CssParser {
             if (at(TokenKind.rightSquare)) take();
         }
 
-        // ---------------------------------------------------------- functional pseudos
+        // endregion
 
+        // region functional pseudos
         /** Consumes the argument token run of an already-taken {@code function} token. */
         private List<Token> argTokens() {
             List<Token> out = new ArrayList<>();
@@ -935,8 +943,9 @@ public final class CssParser {
             return out;
         }
 
-        // ---------------------------------------------------------- An+B
+        // endregion
 
+        // region An+B
         /**
          * Parses the An+B microsyntax plus an optional {@code of <selector-list>}
          * (Selectors L4 {@code :nth-child}).
@@ -1027,4 +1036,5 @@ public final class CssParser {
             return null;
         }
     }
+    // endregion
 }

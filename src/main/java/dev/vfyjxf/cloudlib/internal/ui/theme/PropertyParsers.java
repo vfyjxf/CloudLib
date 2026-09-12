@@ -80,6 +80,8 @@ import java.util.function.Consumer;
  */
 public final class PropertyParsers {
 
+    // region table
+
     /** Warn sink — the loader funnels these into the theme parse log. */
     public record Context(String themeId, String selector, Consumer<String> warn) {}
 
@@ -132,11 +134,11 @@ public final class PropertyParsers {
 
     private static void reg(String name, Parser parser) {
         table.put(name, parser);
-        // camelCase alias when the canonical name is kebab
     }
 
-    // ------------------------------------------------------------------ helpers
+    // endregion
 
+    // region helpers
     private static @Nullable ComponentValue single(List<ComponentValue> values) {
         return values.size() == 1 ? values.get(0) : null;
     }
@@ -270,8 +272,9 @@ public final class PropertyParsers {
             "default",
             TaffyDirection.DEFAULT);
 
-    // ------------------------------------------------------------------ edge boxes
+    // endregion
 
+    // region edge boxes
     /** padding/margin/border/inset and their physical sides + logical halves. */
     private static void registerEdges() {
         edgeFamily("padding", (rect, mask, type) -> paddingProp(rect, mask, type));
@@ -392,8 +395,9 @@ public final class PropertyParsers {
         return out;
     }
 
-    // ------------------------------------------------------------------ box model
+    // endregion
 
+    // region box model
     private static void registerBoxModel() {
         reg("display", (ctx, v) -> {
             TaffyDisplay d = enumValue(single(v), TaffyDisplay.class, display);
@@ -509,8 +513,9 @@ public final class PropertyParsers {
         return null;
     }
 
-    // ------------------------------------------------------------------ flex
+    // endregion
 
+    // region flex
     private static void registerFlex() {
         reg("flex", (ctx, v) -> {
             // flex: <grow> [<shrink> [<basis>]] | none | auto | initial
@@ -607,8 +612,9 @@ public final class PropertyParsers {
         return null;
     }
 
-    // ------------------------------------------------------------------ grid
+    // endregion
 
+    // region grid
     private static void registerGrid() {
         // grid template/track values are a large grammar of their own — the theme
         // layer accepts them but the detailed track parser lands with grid support
@@ -630,8 +636,9 @@ public final class PropertyParsers {
         });
     }
 
-    // ------------------------------------------------------------------ visual
+    // endregion
 
+    // region visual
     private static void registerVisual() {
         reg("background", (ctx, v) -> {
             VisualTexture tex = texture(single(v));
@@ -716,8 +723,9 @@ public final class PropertyParsers {
         return new ShadowProperty(ox, oy, blur, color != null ? color : 0x80000000);
     }
 
-    // ------------------------------------------------------------------ textures
+    // endregion
 
+    // region textures
     /**
      * Texture function values — the theme extension vocabulary:
      * {@code nine-slice(loc,border[,w,h])}, {@code sprite(loc,w,h)}, {@code tiled(loc,w,h)},
@@ -825,8 +833,9 @@ public final class PropertyParsers {
         return BorderTexture.of(c, thickness.intValue());
     }
 
-    // ------------------------------------------------------------------ visual border/opacity
+    // endregion
 
+    // region visual border/opacity
     /** Visual border: width+color merged onto {@code VisualContext.border}. */
     private static StyleProperty borderVisual(@Nullable Float width, @Nullable Integer color) {
         return new VisualProperty() {
@@ -863,4 +872,5 @@ public final class PropertyParsers {
         static final dev.vfyjxf.cloudlib.api.ui.style.StyleType<Object> type =
                 dev.vfyjxf.cloudlib.api.ui.style.StyleType.visual("theme-visual", () -> null);
     }
+    // endregion
 }

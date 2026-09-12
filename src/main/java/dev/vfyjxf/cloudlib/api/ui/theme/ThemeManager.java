@@ -79,11 +79,12 @@ public final class ThemeManager {
 
     /**
      * Re-resolves the theme for a whole widget subtree after a stack change.
+     * Shares one cascade context — each node resolves once per pass.
      */
     public static void refreshTree(Widget root) {
-        root.refreshTheme();
-        if (root instanceof dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget<?> composite) {
-            composite.children().forEach(ThemeManager::refreshTree);
+        Theme theme = active();
+        if (theme != null) {
+            ThemeEngine.applyTree(theme, root, null);
         }
     }
 
