@@ -473,9 +473,9 @@ public final class InworldManager implements InworldUiApi {
         GuiGraphics graphics = event.getGuiGraphics();
         float pt = event.getPartialTick().getGameTimeDeltaPartialTick(true);
 
-        //virtual pointer: pointed face uv > screen center
-        double vx = mc.getWindow().getGuiScaledWidth() * 0.5;
-        double vy = mc.getWindow().getGuiScaledHeight() * 0.5;
+        //virtual pointer: a pointed face's uv, otherwise parked off-screen —
+        //the panel tree must not hover under a bare crosshair
+        double vx = -10_000, vy = -10_000;
         updatePointing();
         if (pointed != null && pointedUv != null) {
             vx = pointed.inputSceneX() + pointedUv.x;
@@ -529,6 +529,10 @@ public final class InworldManager implements InworldUiApi {
         int action = event.getAction();
         int button = event.getButton();
         if (action == GLFW.GLFW_PRESS) {
+            //no interaction key held — the press belongs to the world
+            //(mine/attack/use); panels stay clickable only while V is held
+            //or a gesture is already in flight
+            if (!panelPointerLive()) return;
             double[] v = virtualPointer();
             Widget hit = scene.hitTest(v[0], v[1]);
             LOGGER.info("click press: ptr=({},{}) pointed={} uv={} hit={}",
@@ -1939,6 +1943,19 @@ public final class InworldManager implements InworldUiApi {
     //region pointing & focus
 
     /**
+     * Whether the world-mode pointer is allowed into panel surfaces this
+     * frame. Plain crosshair movement must never hover or press a panel —
+     * the world stays directly interactive until the player takes hold of
+     * the UI by holding the interact key (inspect supplies its own cursor
+     * path). A gesture already in flight keeps its pointer until release.
+     */
+    private boolean panelPointerLive() {
+        return InworldKeyMappings.interact.isDown()
+                || heldSceneButton >= 0
+                || dragSession != null;
+    }
+
+    /**
      * Recomputes which panel the player is currently pointing at in world mode:
      * face panels via a real 3D raycast, screen-space panels via the scene hit
      * test at the crosshair, or the panel whose anchor block is looked at.
@@ -1953,33 +1970,37 @@ public final class InworldManager implements InworldUiApi {
 
         Vec3 origin = proj.cameraPos();
         Vec3 dir = proj.crosshairDirection();
+        boolean pointerLive = panelPointerLive();
 
-        //1. crosshair ray against world-space panels (face + expand)
-        double bestT = Double.MAX_VALUE;
-        for (PanelRuntime runtime : panels.values()) {
-            if (!worldSpace(runtime.spec.placement())) continue;
-            if (!runtime.presented || runtime.flat || !runtime.widget.visible()
-                    || runtime.faceU == null) continue;
-            FloatPos uv = Projection.rayPlane(origin, dir, runtime.faceOrigin,
-                    runtime.faceU, runtime.faceV, runtime.faceNormal,
-                    runtime.widget.width(), runtime.widget.height());
-            if (uv == null) continue;
-            double dist = distanceAlongRay(origin, dir, runtime);
-            if (dist < bestT) {
-                bestT = dist;
-                pointed = runtime;
-                pointedUv = uv;
+        //1. crosshair ray against world-space panels (face + expand) — gated
+        //behind the interact key so looking at a panel does not hover it
+        if (pointerLive) {
+            double bestT = Double.MAX_VALUE;
+            for (PanelRuntime runtime : panels.values()) {
+                if (!worldSpace(runtime.spec.placement())) continue;
+                if (!runtime.presented || runtime.flat || !runtime.widget.visible()
+                        || runtime.faceU == null) continue;
+                FloatPos uv = Projection.rayPlane(origin, dir, runtime.faceOrigin,
+                        runtime.faceU, runtime.faceV, runtime.faceNormal,
+                        runtime.widget.width(), runtime.widget.height());
+                if (uv == null) continue;
+                double dist = distanceAlongRay(origin, dir, runtime);
+                if (dist < bestT) {
+                    bestT = dist;
+                    pointed = runtime;
+                    pointedUv = uv;
+                }
             }
-        }
-        if (pointed != null) pointedInPanel = true;
-
-        //2. crosshair over a flat panel
-        if (pointed == null) {
-            double cx = mc.getWindow().getGuiScaledWidth() * 0.5;
-            double cy = mc.getWindow().getGuiScaledHeight() * 0.5;
-            Widget hit = scene.hitTest(cx, cy);
-            pointed = panelOf(hit);
             if (pointed != null) pointedInPanel = true;
+
+            //2. crosshair over a flat panel
+            if (pointed == null) {
+                double cx = mc.getWindow().getGuiScaledWidth() * 0.5;
+                double cy = mc.getWindow().getGuiScaledHeight() * 0.5;
+                Widget hit = scene.hitTest(cx, cy);
+                pointed = panelOf(hit);
+                if (pointed != null) pointedInPanel = true;
+            }
         }
 
         //3. crosshair on an anchor block (focus only — clicks fall through to
@@ -2365,10 +2386,8 @@ public final class InworldManager implements InworldUiApi {
         if (pointed != null && pointedUv != null) {
             return new double[]{pointed.inputSceneX() + pointedUv.x, pointed.inputSceneY() + pointedUv.y};
         }
-        return new double[]{
-                mc.getWindow().getGuiScaledWidth() * 0.5,
-                mc.getWindow().getGuiScaledHeight() * 0.5
-        };
+        //parked off-screen — nothing under the bare crosshair counts as hovered
+        return new double[]{-10_000, -10_000};
     }
 
     private @Nullable PanelRuntime panelOf(@Nullable Widget widget) {
