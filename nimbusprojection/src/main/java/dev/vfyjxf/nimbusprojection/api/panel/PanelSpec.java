@@ -51,6 +51,14 @@ public final class PanelSpec {
      */
     boolean onDemand = true;
     /**
+     * Idle placement: when set, the panel's resting form is a flat screen
+     * card docked to a screen corner — the declared world presentation only
+     * appears once the player <em>pins</em> it in with the interact key
+     * (engage). Several can sit docked or world-pinned at once. Default
+     * false — the spec's presentation is also the resting form.
+     */
+    boolean dockOnIdle = false;
+    /**
      * Layout participation: zoning, folding, off-screen collapse and
      * occlusion policy — read by every presentation driver.
      */
@@ -216,6 +224,14 @@ public final class PanelSpec {
         return interactive && onDemand;
     }
 
+    /**
+     * Whether the unengaged form docks to the screen edge instead of taking
+     * the declared presentation — the world form is the engaged one.
+     */
+    public boolean dockOnIdle() {
+        return dockOnIdle;
+    }
+
     // region mutation
 
     public PanelSpec title(@Nullable Component title) {
@@ -245,6 +261,11 @@ public final class PanelSpec {
 
     public PanelSpec maxDistance(double maxDistance) {
         this.maxDistance = maxDistance;
+        return this;
+    }
+
+    public PanelSpec dockOnIdle(boolean dockOnIdle) {
+        this.dockOnIdle = dockOnIdle;
         return this;
     }
 

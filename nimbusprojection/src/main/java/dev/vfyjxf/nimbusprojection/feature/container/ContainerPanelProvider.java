@@ -61,10 +61,12 @@ public final class ContainerPanelProvider implements PanelProvider {
                             Presentation.face(faceToward(eye, pos)),
                             ctx -> new ContainerPanelWidget(ctx, () -> pos))
                     .title(state.getBlock().getName())
-                    // base info (summary strip) shows on sight; V only opens
-                    // the expanded section menu — the hint exists because the
-                    // panel has an interactive form, not because it needs a key to appear
-                    .onDemand(false);
+                    // base info (summary strip) shows on sight as a screen
+                    // card; V pins the panel to the world as the section
+                    // hologram — the hint exists because there's an
+                    // interactive form, not because the card needs a key
+                    .onDemand(false)
+                    .dockOnIdle(true);
             sink.offer(items ? spec.hints("V:expand", "X:store") : spec.hints("V:expand"));
         }
     }

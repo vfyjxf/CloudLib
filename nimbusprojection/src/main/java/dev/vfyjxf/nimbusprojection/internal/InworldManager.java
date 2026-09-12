@@ -1420,6 +1420,14 @@ public final class InworldManager implements NimbusClient {
                 continue;
             }
 
+            // dock-on-idle: the resting form is a flat screen card — the
+            // declared world presentation only appears once V pins the panel
+            // in (engaged). Skipped under inspect: the flat projection owns
+            // placement while the screen is up.
+            if (runtime.spec.dockOnIdle() && !runtime.engaged && !inspecting) {
+                placement = Presentation.dock();
+            }
+
             // engage-expansion: a dormant Face/Follow panel's engaged form is
             // the world hologram — the glance affordance becomes the expand
             // anchor. A pinned panel keeps its dock instead — the pin wins.
@@ -2710,8 +2718,11 @@ public final class InworldManager implements NimbusClient {
      * after the configured grace ticks with none of those.
      */
     private void tickEngagement(PanelRuntime runtime) {
+        // a dockOnIdle panel's engaged form IS the pin — it stays world-anchored
+        // until a V tap toggles it off, not just while the player keeps looking
         boolean held =
-                inspecting || tracing == runtime || dragPanel == runtime || pointed == runtime || focused == runtime;
+                inspecting || tracing == runtime || dragPanel == runtime || pointed == runtime || focused == runtime
+                        || (runtime.spec.dockOnIdle() && runtime.engaged);
         if (held) {
             runtime.engageIdleSince = -1;
             return;
@@ -2723,14 +2734,11 @@ public final class InworldManager implements NimbusClient {
     }
 
     /**
-     * Expands a dormant panel: only one panel is engaged at a time (the
-     * previous one releases), and the open animation replays so the panel
-     * visibly pops out of the anchor.
+     * Expands a panel into its engaged form. Engagements are no longer
+     * exclusive — the player can keep several panels pinned to the world at
+     * once, and each releases on its own grace/tap-off.
      */
     private void engage(PanelRuntime runtime) {
-        for (PanelRuntime r : panels.values()) {
-            if (r != runtime) r.engaged = false;
-        }
         runtime.engaged = true;
         runtime.engageIdleSince = -1;
         if (mc.level != null) {

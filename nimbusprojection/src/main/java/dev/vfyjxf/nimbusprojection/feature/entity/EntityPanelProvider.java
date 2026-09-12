@@ -54,6 +54,7 @@ public final class EntityPanelProvider implements PanelProvider {
                             ctx -> new EntityPanelWidget(ctx, entity.getId()))
                     .title(entity.getName())
                     .onDemand(false)
+                    .dockOnIdle(true)
                     .hints("V:expand"));
         }
     }
