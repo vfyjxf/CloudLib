@@ -1,6 +1,8 @@
 package dev.vfyjxf.cloudlib.ui.widget;
 
+import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
+import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.data.lang.CloudLang;
@@ -31,6 +33,16 @@ import java.util.function.Supplier;
  */
 public final class ContainerGridWidget extends Widget implements WorldDraggable {
 
+    /**
+     * Quick-action hook for a slot click — wired by the owning feature
+     * (e.g. the container panel sends a server-validated op). The widget
+     * stays dumb: it reports slot + button, the server decides what happens.
+     */
+    @FunctionalInterface
+    public interface SlotAction {
+        void onSlot(int slot, int button, InputContext input);
+    }
+
     private static final int CELL = 18;
     private static final int COLS = 9;
     private static final int MAX_ROWS = 6;
@@ -42,10 +54,22 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
     private int lastSlotCount;
 
     public ContainerGridWidget(Supplier<BlockPos> pos) {
+        this(pos, null);
+    }
+
+    public ContainerGridWidget(Supplier<BlockPos> pos, @Nullable SlotAction action) {
         this.pos = pos;
         onMount((scene, context, handle) ->
                 scene.layoutTree().setMeasureFunc(nodeId(), (style, space) ->
                         new FloatSize(COLS * CELL, rows() * CELL + 2)));
+        if (action != null) {
+            onMouseClicked((input, context) -> {
+                int slot = slotAt(input.mouseX(), input.mouseY());
+                if (slot < 0) return EventDispatch.pass;
+                action.onSlot(slot, input.key().getValue(), input);
+                return EventDispatch.consumed;
+            });
+        }
     }
 
     /** Latest server snapshot for the anchor (also keeps the pos subscribed). */

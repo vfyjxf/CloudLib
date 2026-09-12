@@ -5,7 +5,9 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldAnchor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.PanelKey;
 import dev.vfyjxf.cloudlib.api.ui.inworld.Presentation;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,6 +37,7 @@ import java.util.function.Predicate;
  */
 public record SharedPanelSpec(
         PanelKey key,
+        ResourceKey<Level> dimension,
         InworldAnchor anchor,
         ResourceLocation view,
         @Nullable CustomPacketPayload payload,
@@ -47,8 +50,8 @@ public record SharedPanelSpec(
 
     private static final Predicate<ServerPlayer> ANY = p -> true;
 
-    public SharedPanelSpec(PanelKey key, InworldAnchor anchor, ResourceLocation view) {
-        this(key, anchor, view, null, Presentation.floating(), 32, null, ANY, ANY);
+    public SharedPanelSpec(PanelKey key, ResourceKey<Level> dimension, InworldAnchor anchor, ResourceLocation view) {
+        this(key, dimension, anchor, view, null, Presentation.floating(), 32, null, ANY, ANY);
     }
 
     /** Attaches the client → server receive handler. */
@@ -87,7 +90,7 @@ public record SharedPanelSpec(
             Predicate<ServerPlayer> canInteract
     ) {
         return new SharedPanelSpec(
-                key, anchor, view, payload, presentation, maxDistance,
+                key, dimension, anchor, view, payload, presentation, maxDistance,
                 channel, visibleTo, canInteract);
     }
 

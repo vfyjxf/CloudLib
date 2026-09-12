@@ -31,6 +31,15 @@ public interface InworldPanel {
 
     boolean hovered();
 
+    /**
+     * Whether the panel is currently engaged — the interact-key expansion
+     * state. Content widgets may adapt their density to it (summary strip
+     * while idle, full surface while engaged).
+     */
+    default boolean engaged() {
+        return false;
+    }
+
     boolean visible();
 
     void setVisible(boolean visible);

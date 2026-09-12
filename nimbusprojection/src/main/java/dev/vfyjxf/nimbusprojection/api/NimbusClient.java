@@ -104,12 +104,18 @@ public interface NimbusClient {
      * Registers the client-side materializer for a server-declared shared
      * panel view. When the server shares a
      * {@link dev.vfyjxf.nimbusprojection.api.sync.SharedPanelSpec} naming
-     * {@code view}, every watching client decodes the payload with
-     * {@code codec} and asks {@code factory} for the {@link PanelSpec} to
-     * present.
+     * {@code view}, every watching client decodes the payload and asks
+     * {@code factory} for the {@link PanelSpec} to present (keyed by the
+     * shared key via {@code SharedViewContext.key()}).
+     * <p>
+     * {@code type} + {@code codec} are also registered as a channel type —
+     * the spec's initial payload and later {@code SharedPanel.update}
+     * payloads share that wire identity, so registering a view is all the
+     * wiring a payload type needs.
      */
     <P extends CustomPacketPayload> void registerView(
             ResourceLocation view,
+            CustomPacketPayload.Type<P> type,
             StreamCodec<? super RegistryFriendlyByteBuf, P> codec,
             SharedPanelView<P> factory
     );

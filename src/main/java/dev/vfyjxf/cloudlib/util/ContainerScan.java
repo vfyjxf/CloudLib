@@ -10,6 +10,9 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Soft-aim container targeting: finds item-handling blocks inside a cone
  * around a ray instead of demanding the ray hit them exactly. Used both for
@@ -63,6 +66,39 @@ public final class ContainerScan {
             }
         }
         return best;
+    }
+
+    /**
+     * Every item-handling block inside the cone and reach — the multi-panel
+     * counterpart of {@link #nearest}: each position gets its own offer.
+     */
+    public static List<BlockPos> all(Level level, Entity entity,
+                                     Vec3 eye, Vec3 dir,
+                                     double reach, double coneCos) {
+        BlockPos base = BlockPos.containing(eye);
+        int R = (int) Math.ceil(reach) + 1;
+        double maxDistSq = (reach + 1.5) * (reach + 1.5);
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        List<BlockPos> found = new ArrayList<>();
+        for (int dx = -R; dx <= R; dx++) {
+            for (int dy = -R; dy <= R; dy++) {
+                for (int dz = -R; dz <= R; dz++) {
+                    if (dx * dx + dy * dy + dz * dz > maxDistSq) continue;
+                    double tx = base.getX() + dx + 0.5 - eye.x;
+                    double ty = base.getY() + dy + 0.5 - eye.y;
+                    double tz = base.getZ() + dz + 0.5 - eye.z;
+                    double dist = Math.sqrt(tx * tx + ty * ty + tz * tz);
+                    if (dist < 1.2 || dist > reach + 0.7) continue;
+                    double cos = (tx * dir.x + ty * dir.y + tz * dir.z) / dist;
+                    if (cos < coneCos) continue;
+                    cursor.set(base.getX() + dx, base.getY() + dy, base.getZ() + dz);
+                    if (level.getCapability(Capabilities.ItemHandler.BLOCK, cursor, null) == null) continue;
+                    if (!lineOfSight(level, entity, eye, tx, ty, tz, cursor)) continue;
+                    found.add(cursor.immutable());
+                }
+            }
+        }
+        return found;
     }
 
     /**
