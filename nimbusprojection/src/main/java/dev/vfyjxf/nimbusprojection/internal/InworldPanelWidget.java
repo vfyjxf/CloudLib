@@ -8,14 +8,20 @@ import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree.TraversalControl;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.nimbusprojection.api.Nimbus;
+import dev.vfyjxf.nimbusprojection.api.panel.PanelKeySink;
 import dev.vfyjxf.nimbusprojection.api.panel.PanelSpec;
+import dev.vfyjxf.nimbusprojection.api.sync.PresenceInfo;
+import dev.vfyjxf.nimbusprojection.api.sync.PresenceKind;
 import dev.vfyjxf.taffy.style.TaffyDisplay;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.display;
@@ -69,11 +75,16 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
                         HackerTheme.padding,
                         spec.hints().isEmpty() ? HackerTheme.padding : HackerTheme.hintHeight + 2,
                         HackerTheme.padding));
-        // tab / shift+tab cycles focus through the panel's focusable content
+        // tab / shift+tab cycles focus through the panel's focusable content;
+        // unconsumed keys fall through to the content's PanelKeySink — the
+        // chrome owns scene focus, so content sees keys only via this handoff
         onKeyPressed((input, context) -> {
             if (input.isKey(GLFW.GLFW_KEY_TAB)) {
                 focusCycle(!input.isShiftDown());
                 return EventDispatch.consumed;
+            }
+            if (content instanceof PanelKeySink sink) {
+                return sink.keyPressed(input);
             }
             return EventDispatch.pass;
         });
@@ -261,6 +272,72 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
             canvas.strokeRect(w - tw - 2, -4, tw, 9, HackerTheme.accent);
             canvas.text(overflow, w - tw + 1, -3, HackerTheme.accent);
         }
+
+        drawPresence(canvas, w);
+    }
+
+    /** Pips cap before collapsing into a "+N" suffix on the last pip. */
+    private static final int maxPips = 5;
+
+    private static final int draggingColor = 0xFFD84315;
+    private static final int tracingColor = 0xFFAB47BC;
+
+    /**
+     * Remote-presence ghosts: a pip per remote player interacting with this
+     * panel's key, right-aligned in the title strip, most active first.
+     * While the panel is focused, name chips stack upward off the top-right
+     * corner so the watcher can see <em>who</em> is engaged, not just that
+     * someone is.
+     */
+    private void drawPresence(SceneCanvas canvas, int w) {
+        var client = Nimbus.client();
+        if (client == null) return;
+        List<PresenceInfo> infos = new ArrayList<>(client.presence(runtime.spec.key()));
+        if (infos.isEmpty()) return;
+        infos.sort(Comparator.comparingInt(i -> -kindRank(i.kind())));
+
+        var font = Minecraft.getInstance().font;
+        var conn = Minecraft.getInstance().getConnection();
+        int x = w - HackerTheme.padding - 4;
+        int chipY = -13;
+        for (int i = 0; i < infos.size(); i++) {
+            PresenceInfo info = infos.get(i);
+            if (i >= maxPips) {
+                canvas.text("+" + (infos.size() - maxPips), x - 6, 4, HackerTheme.textDim);
+                break;
+            }
+            int color = kindColor(info.kind());
+            canvas.fill(x, 4, 4, 4, color);
+            x -= 6;
+            if (focused && conn != null && i < 3) {
+                PlayerInfo who = conn.getPlayerInfo(info.playerId());
+                String name = who != null ? who.getProfile().getName() : "?";
+                int tw = font.width(name) + 10;
+                canvas.fill(w - tw, chipY, tw, 9, HackerTheme.bgFocused);
+                canvas.strokeRect(w - tw, chipY, tw, 9, color);
+                canvas.fill(w - tw + 2, chipY + 2, 4, 4, color);
+                canvas.text(name, w - tw + 9, chipY + 1, HackerTheme.text);
+                chipY -= 10;
+            }
+        }
+    }
+
+    private static int kindRank(PresenceKind kind) {
+        return switch (kind) {
+            case dragging -> 3;
+            case tracing -> 2;
+            case engaged -> 1;
+            case watching -> 0;
+        };
+    }
+
+    private static int kindColor(PresenceKind kind) {
+        return switch (kind) {
+            case dragging -> draggingColor;
+            case tracing -> tracingColor;
+            case engaged -> HackerTheme.accent;
+            case watching -> HackerTheme.textDim;
+        };
     }
 
     @Override

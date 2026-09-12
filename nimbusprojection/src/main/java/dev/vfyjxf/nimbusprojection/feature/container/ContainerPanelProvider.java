@@ -12,6 +12,9 @@ import dev.vfyjxf.nimbusprojection.api.provider.ProviderContext;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionProviders;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.AbstractChestBlock;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
 
@@ -46,14 +49,19 @@ public final class ContainerPanelProvider implements PanelProvider {
                 coneCosEnter,
                 pos -> SectionProviders.hasAny(context.level(), pos));
         for (BlockPos pos : found) {
+            // double chest: both halves report the same combined handler —
+            // only the LEFT half gets a panel, or one chest shows two strips
+            var state = context.level().getBlockState(pos);
+            if (state.getBlock() instanceof AbstractChestBlock<?> && state.getValue(ChestBlock.TYPE) == ChestType.RIGHT)
+                continue;
             boolean items = context.level().getCapability(Capabilities.ItemHandler.BLOCK, pos, null) != null;
-            sink.offer(PanelSpec.of(
+            PanelSpec spec = PanelSpec.of(
                             keyOf(pos, items),
                             InworldAnchor.of(pos, new Vec3(0.5, 0.55, 0.5)),
                             Presentation.face(faceToward(eye, pos)),
                             ctx -> new ContainerPanelWidget(ctx, () -> pos))
-                    .title(context.level().getBlockState(pos).getBlock().getName())
-                    .hints("V:expand"));
+                    .title(state.getBlock().getName());
+            sink.offer(items ? spec.hints("V:expand", "X:store") : spec.hints("V:expand"));
         }
     }
 

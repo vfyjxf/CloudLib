@@ -1,5 +1,7 @@
 package dev.vfyjxf.nimbusprojection.feature.container;
 
+import dev.vfyjxf.cloudlib.api.event.EventDispatch;
+import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
@@ -9,6 +11,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
 import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
 import dev.vfyjxf.nimbusprojection.NimbusConfig;
+import dev.vfyjxf.nimbusprojection.api.panel.PanelKeySink;
 import dev.vfyjxf.nimbusprojection.api.section.SectionInstance;
 import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
 import dev.vfyjxf.nimbusprojection.feature.container.section.ItemSectionData;
@@ -16,11 +19,13 @@ import dev.vfyjxf.nimbusprojection.feature.container.section.SectionTypes;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionContents;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionProviders;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionWidgets;
+import dev.vfyjxf.nimbusprojection.network.ContainerOpsPayload;
 import dev.vfyjxf.nimbusprojection.network.TransferPayload;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -35,7 +40,7 @@ import java.util.function.Supplier;
  * for its whole lifetime, so snapshots flow regardless of which layer is
  * currently visible.
  */
-public final class ContainerPanelWidget extends WidgetGroup<Widget> implements WorldDragAcceptor {
+public final class ContainerPanelWidget extends WidgetGroup<Widget> implements WorldDragAcceptor, PanelKeySink {
 
     private static final int cell = 12;
 
@@ -130,5 +135,23 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
                         -1,
                         drag.carried().getCount()));
         return true;
+    }
+
+    /**
+     * Quick-store while the panel is engaged: {@code X} pushes the held
+     * stack into the block, {@code Shift+X} dumps the whole main inventory.
+     * ({@code Q} stays vanilla drop — overriding it would fire both paths.)
+     * No-op when the target has no item section — signs and hives ignore it.
+     */
+    @Override
+    public EventDispatch keyPressed(InputContext input) {
+        BlockPos p = pos.get();
+        if (!input.isKey(GLFW.GLFW_KEY_X) || p == null || ctx.channel() == null) return EventDispatch.pass;
+        if (itemStacks(p) == null) return EventDispatch.pass;
+        int op = input.isShiftDown() ? ContainerOpsPayload.insertAll : ContainerOpsPayload.insert;
+        ctx.channel()
+                .sendToServer(new ContainerOpsPayload(
+                        SectionProviders.idOf(SectionTypes.item, 0), op, SectionTarget.of(p), -1, -1));
+        return EventDispatch.consumed;
     }
 }

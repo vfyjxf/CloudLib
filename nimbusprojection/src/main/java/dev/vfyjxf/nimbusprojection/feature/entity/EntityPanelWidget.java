@@ -1,5 +1,7 @@
 package dev.vfyjxf.nimbusprojection.feature.entity;
 
+import dev.vfyjxf.cloudlib.api.event.EventDispatch;
+import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
@@ -10,11 +12,14 @@ import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
 import dev.vfyjxf.nimbusprojection.NimbusConfig;
 import dev.vfyjxf.nimbusprojection.NimbusKeyMappings;
+import dev.vfyjxf.nimbusprojection.api.panel.PanelKeySink;
 import dev.vfyjxf.nimbusprojection.api.section.SectionInstance;
 import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
+import dev.vfyjxf.nimbusprojection.feature.container.section.SectionTypes;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionContents;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionProviders;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionWidgets;
+import dev.vfyjxf.nimbusprojection.network.ContainerOpsPayload;
 import dev.vfyjxf.nimbusprojection.network.TransferPayload;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.client.Minecraft;
@@ -30,7 +35,9 @@ import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * The tiered entity panel: a glanceable tier-0 card (name + health) that
@@ -43,7 +50,7 @@ import org.jetbrains.annotations.Nullable;
  * A dead/unloaded anchor renders a "signal lost" card instead of closing —
  * a pinned panel keeps showing that state until unpinned.
  */
-public final class EntityPanelWidget extends WidgetGroup<Widget> implements WorldDragAcceptor {
+public final class EntityPanelWidget extends WidgetGroup<Widget> implements WorldDragAcceptor, PanelKeySink {
 
     private static final int rowHeight = 9;
     private static final int panelWidth = 76;
@@ -120,6 +127,23 @@ public final class EntityPanelWidget extends WidgetGroup<Widget> implements Worl
                         -1,
                         drag.carried().getCount()));
         return true;
+    }
+
+    /**
+     * Same quick-store gesture as block containers: {@code X} pushes the
+     * held stack into the entity's item handler, {@code Shift+X} dumps the
+     * main inventory — chest boats and pack animals take it.
+     */
+    @Override
+    public EventDispatch keyPressed(InputContext input) {
+        Entity entity = entity();
+        if (!input.isKey(GLFW.GLFW_KEY_X) || entity == null || ctx.channel() == null) return EventDispatch.pass;
+        SectionTarget target = SectionTarget.of(entity);
+        if (entity.getCapability(Capabilities.ItemHandler.ENTITY) == null) return EventDispatch.pass;
+        int op = input.isShiftDown() ? ContainerOpsPayload.insertAll : ContainerOpsPayload.insert;
+        ctx.channel()
+                .sendToServer(new ContainerOpsPayload(SectionProviders.idOf(SectionTypes.item, 0), op, target, -1, -1));
+        return EventDispatch.consumed;
     }
 
     /**
