@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public interface InworldPanel {
 
-    /** The identity key from the {@link InworldPanelSpec}. */
+    /** The identity key from the panel's spec. */
     Object key();
 
     InworldAnchor anchor();

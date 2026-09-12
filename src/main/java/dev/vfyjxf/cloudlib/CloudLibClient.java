@@ -1,7 +1,6 @@
 package dev.vfyjxf.cloudlib;
 
 import dev.vfyjxf.cloudlib.api.plugin.AnnotationPluginLookup;
-import dev.vfyjxf.cloudlib.api.ui.inworld.InworldUi;
 import dev.vfyjxf.cloudlib.api.plugin.CloudLibClientPlugin;
 import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
 import dev.vfyjxf.cloudlib.data.lang.CloudLibLangProvider;
@@ -44,13 +43,6 @@ public final class CloudLibClient extends CloudLib {
                 plugin.registerOverlay(register);
             } catch (Exception e) {
                 logger.warn("Failed to register overlays for plugin {}", plugin.pluginId(), e);
-            }
-            if (InworldUi.available()) {
-                try {
-                    plugin.registerInworld(InworldUi.instance());
-                } catch (Exception e) {
-                    logger.warn("Failed to register inworld ui for plugin {}", plugin.pluginId(), e);
-                }
             }
         }
 

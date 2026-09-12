@@ -89,8 +89,7 @@ public sealed interface InworldPlacement {
     /**
      * World-space expanded panel: floats at a free spot near the anchor,
      * billboarded toward the player — a holographic "big screen" the block's
-     * compact face controller opens on demand. Combine with
-     * {@link InworldPanelSpec#openAnimation(boolean)} for a pop-in effect.
+     * compact face controller opens on demand.
      */
     static Expand expand() {
         return new Expand(72);

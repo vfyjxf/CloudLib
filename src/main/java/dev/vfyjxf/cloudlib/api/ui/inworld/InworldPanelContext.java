@@ -21,8 +21,13 @@ import org.jetbrains.annotations.Nullable;
 public record InworldPanelContext(
         ClientLevel level,
         LocalPlayer player,
-        InworldPanel panel
+        InworldPanel panel,
+        @Nullable PanelChannel channel
 ) {
+
+    public InworldPanelContext(ClientLevel level, LocalPlayer player, InworldPanel panel) {
+        this(level, player, panel, null);
+    }
 
     /** The block entity at the panel's anchor, if block-bound. */
     public @Nullable BlockEntity blockEntity() {

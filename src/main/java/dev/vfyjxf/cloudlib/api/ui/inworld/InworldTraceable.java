@@ -17,9 +17,8 @@ import org.jetbrains.annotations.Nullable;
  * only guarantees the coordinate stream.
  * <p>
  * A quick tap of the interact key (under ~6 ticks with &lt;4px of motion)
- * does not commit; it falls back to the spec's primary
- * {@link InworldPanelSpec#action}, so point-to-click and drag-to-trace can
- * share one key.
+ * does not commit; it falls back to the panel's primary action, so
+ * point-to-click and drag-to-trace can share one key.
  */
 public interface InworldTraceable {
 

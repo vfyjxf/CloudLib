@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Supplier;
 
 /**
- * A world-space point a {@link InworldPanel} is anchored to.
+ * A world-space point an in-world UI surface is anchored to.
  * <p>
  * The anchor is resolved every frame against the client level, so anchors
  * backed by entities or dynamic suppliers track their target automatically.
