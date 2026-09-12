@@ -1,5 +1,6 @@
 package dev.vfyjxf.nimbusprojection;
 
+import dev.vfyjxf.nimbusprojection.api.presentation.InspectScope;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
@@ -35,6 +36,9 @@ public final class NimbusConfig {
     // interaction
     private static ModConfigSpec.IntValue interactTapTicks;
     private static ModConfigSpec.IntValue engageGraceTicks;
+
+    // inspect layer (hold-R flat projection)
+    private static ModConfigSpec.EnumValue<InspectScope> inspectScope;
 
     private static ModConfigSpec spec;
 
@@ -76,6 +80,12 @@ public final class NimbusConfig {
         {
             interactTapTicks = builder.defineInRange("interact_tap_ticks", 8, 2, 20);
             engageGraceTicks = builder.defineInRange("engage_grace_ticks", 60, 20, 400);
+        }
+        builder.pop();
+
+        builder.push("inspect");
+        {
+            inspectScope = builder.defineEnum("scope", InspectScope.focusAndPinned);
         }
         builder.pop();
 
@@ -136,5 +146,9 @@ public final class NimbusConfig {
 
     public static int engageGraceTicks() {
         return engageGraceTicks.get();
+    }
+
+    public static InspectScope inspectScope() {
+        return inspectScope.get();
     }
 }

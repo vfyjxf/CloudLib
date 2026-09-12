@@ -16,6 +16,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
+import dev.vfyjxf.cloudlib.api.math.Size;
 import dev.vfyjxf.cloudlib.api.ui.base.Scene;
 import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
@@ -55,6 +56,8 @@ import dev.vfyjxf.nimbusprojection.api.policy.FocusPolicy;
 import dev.vfyjxf.nimbusprojection.api.policy.SuspendContext;
 import dev.vfyjxf.nimbusprojection.api.policy.SuspendPolicy;
 import dev.vfyjxf.nimbusprojection.api.policy.SuspendVerdict;
+import dev.vfyjxf.nimbusprojection.api.presentation.FlattenContext;
+import dev.vfyjxf.nimbusprojection.api.presentation.FlattenedGeometry;
 import dev.vfyjxf.nimbusprojection.api.presentation.PanelGeometry;
 import dev.vfyjxf.nimbusprojection.api.presentation.PresentationDriver;
 import dev.vfyjxf.nimbusprojection.api.presentation.SolveContext;
@@ -1311,7 +1314,10 @@ public final class InworldManager implements NimbusClient {
 
         boolean dimensionChanged = lastLevel != level;
         lastLevel = level;
-        boolean screenOpen = mc.screen != null || inspecting;
+        // the inspect screen IS the projection surface — it doesn't count as
+        // "a screen open" for suspension; every other screen (esc'd, real
+        // menus) still suspends world panels
+        boolean screenOpen = mc.screen != null && mc.screen != inspectScreen;
         boolean paused = mc.isPaused();
         List<PanelKey> suspendCloses = suspendCloseQueue;
         suspendCloses.clear();
@@ -1404,6 +1410,16 @@ public final class InworldManager implements NimbusClient {
             runtime.indicator = false;
 
             Presentation placement = runtime.spec.presentation();
+
+            // InspectOnly panels have no world form at all — outside inspect
+            // they stay parked (presented=false), the dormant-style anchor
+            // tracking keeps the scan-frame affordance working when the flag
+            // asks for it
+            if (!inspecting && placement instanceof Presentation.InspectOnly) {
+                runtime.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
+                continue;
+            }
+
             // engage-expansion: a dormant Face/Follow panel's engaged form is
             // the world hologram — the glance affordance becomes the expand
             // anchor. A pinned panel keeps its dock instead — the pin wins.
@@ -1412,7 +1428,13 @@ public final class InworldManager implements NimbusClient {
                     && (placement instanceof Presentation.Face || placement instanceof Presentation.Follow)) {
                 placement = Presentation.expand();
             }
-            if (runtime.userPinned || inspecting) {
+            if (runtime.userPinned || (inspecting && inspectScopeContains(runtime))) {
+                // a custom driver's inspect policy decides its flat form;
+                // builtins always dock
+                if (inspecting && !runtime.userPinned
+                        && inspectByDriver(runtime, placement, proj)) {
+                    continue;
+                }
                 // pinned and flattened panels both dock to a screen corner
                 resolveDock(runtime, inspectPlacement(placement), docked);
             } else {
@@ -1540,6 +1562,58 @@ public final class InworldManager implements NimbusClient {
     private static Presentation.Dock inspectPlacement(Presentation original) {
         if (original instanceof Presentation.Dock dock) return dock;
         return new Presentation.Dock(Presentation.DockCorner.auto);
+    }
+
+    /**
+     * Whether the panel joins the inspect flat projection under the
+     * configured {@code inspect.scope}. {@link Presentation.InspectOnly}
+     * panels always join — the flat layer is their only form.
+     */
+    private boolean inspectScopeContains(PanelRuntime r) {
+        if (r.spec.presentation() instanceof Presentation.InspectOnly) return true;
+        return switch (NimbusConfig.inspectScope()) {
+            case all -> true;
+            case focused -> r == focused || sameGroup(r, focused);
+            case focusAndPinned -> r.userPinned || r == focused || sameGroup(r, focused);
+        };
+    }
+
+    private static boolean sameGroup(PanelRuntime r, @Nullable PanelRuntime other) {
+        return other != null && r.groupKey != null && r.groupKey.equals(other.groupKey);
+    }
+
+    /**
+     * Lets a custom presentation's driver decide its inspect form:
+     * {@code hidden} parks the panel, {@code custom} places the driver
+     * {@linkplain PresentationDriver#flatten flattened} rect directly.
+     * Returns true when the driver took over (no dock slot wanted).
+     */
+    @SuppressWarnings("unchecked")
+    private boolean inspectByDriver(PanelRuntime runtime, Presentation placement, Projection proj) {
+        PresentationDriver<Presentation> driver =
+                (PresentationDriver<Presentation>) presentationDrivers.get(placement.type());
+        if (driver == null) return false;
+        return switch (driver.inspectPolicy()) {
+            case hidden -> {
+                runtime.widget.setScreenPos(parkBase, 0);
+                yield true;
+            }
+            case custom -> {
+                FlattenedGeometry flat = driver.flatten(new FlattenContext<>(
+                        placement,
+                        runtime,
+                        proj,
+                        runtime.anchorScreen != null ? runtime.anchorScreen : new FloatPos(0, 0),
+                        new Size(runtime.widget.width(), runtime.widget.height())));
+                runtime.presented = true;
+                runtime.flat = true;
+                runtime.smoothMove = true;
+                runtime.targetX = (int) flat.pos().x();
+                runtime.targetY = (int) flat.pos().y();
+                yield true;
+            }
+            case flatten -> false;
+        };
     }
 
     private void resolveFloating(
@@ -3267,8 +3341,12 @@ public final class InworldManager implements NimbusClient {
             runtime.focusHeat = Mth.clamp(runtime.focusHeat + (hot ? 0.3f : -0.12f), 0f, 1f);
             if (!runtime.widget.visible()) continue;
             // dormant panels present nothing — but a targeted one's anchor is
-            // exactly what the scan frame marks
-            if (!runtime.presented && !isDormant(runtime)) continue;
+            // exactly what the scan frame marks. inspectOnly panels with the
+            // affordance flag get the same marker (that's the flag's purpose)
+            if (!runtime.presented
+                    && !isDormant(runtime)
+                    && !(runtime.spec.presentation() instanceof Presentation.InspectOnly io && io.affordance()))
+                continue;
             if (runtime.focusHeat <= 0.03f) continue;
             BlockPos pos = runtime.spec.anchor().blockPos();
             if (pos != null) {

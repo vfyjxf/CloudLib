@@ -6,6 +6,9 @@ import dev.vfyjxf.nimbusprojection.api.NimbusClient;
 import dev.vfyjxf.nimbusprojection.api.plugin.NimbusClientPlugin;
 import dev.vfyjxf.nimbusprojection.api.provider.ProviderOptions;
 import dev.vfyjxf.nimbusprojection.api.section.SectionWidgetRegister;
+import dev.vfyjxf.nimbusprojection.feature.board.BoardFeature;
+import dev.vfyjxf.nimbusprojection.feature.board.BoardPayload;
+import dev.vfyjxf.nimbusprojection.feature.board.BoardView;
 import dev.vfyjxf.nimbusprojection.feature.container.ContainerPanelProvider;
 import dev.vfyjxf.nimbusprojection.feature.container.section.EnergySectionWidget;
 import dev.vfyjxf.nimbusprojection.feature.container.section.FluidSectionWidget;
@@ -32,6 +35,11 @@ public final class NimbusBuiltinPlugin implements NimbusClientPlugin {
     public void registerProviders(NimbusClient client) {
         client.registerProvider(new ContainerPanelProvider(), 3, ProviderOptions.shared());
         client.registerProvider(new EntityPanelProvider(), 3, ProviderOptions.shared());
+    }
+
+    @Override
+    public void registerSharedViews(NimbusClient client) {
+        client.registerView(BoardFeature.view, BoardPayload.type, BoardPayload.streamCodec, new BoardView());
     }
 
     @Override

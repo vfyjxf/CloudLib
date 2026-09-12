@@ -5,6 +5,7 @@ import dev.vfyjxf.cloudlib.api.network.payload.ClientboundPayload;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerPayloadInfo;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
 import dev.vfyjxf.nimbusprojection.Constants;
+import dev.vfyjxf.nimbusprojection.feature.board.BoardOpPayload;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
@@ -58,6 +59,7 @@ public final class NimbusPayloads {
         PanelChannelPayload.registerChannelType(WorldDragPayload.info.type(), WorldDragPayload.streamCodec);
         PanelChannelPayload.registerChannelType(ContainerOpsPayload.type, ContainerOpsPayload.streamCodec);
         PanelChannelPayload.registerChannelType(TransferPayload.type, TransferPayload.streamCodec);
+        PanelChannelPayload.registerChannelType(BoardOpPayload.type, BoardOpPayload.streamCodec);
     }
 
     public static <T extends ServerboundPayload> ServerPayloadInfo<T> createServerInfo(

@@ -2,10 +2,12 @@ package dev.vfyjxf.nimbusprojection;
 
 import dev.vfyjxf.cloudlib.api.plugin.AnnotationPluginLookup;
 import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
+import dev.vfyjxf.cloudlib.api.ui.inworld.PanelKey;
 import dev.vfyjxf.nimbusprojection.api.Nimbus;
 import dev.vfyjxf.nimbusprojection.api.NimbusClient;
 import dev.vfyjxf.nimbusprojection.api.plugin.NimbusClientPlugin;
 import dev.vfyjxf.nimbusprojection.api.plugin.NimbusPlugin;
+import dev.vfyjxf.nimbusprojection.feature.board.BoardFeature;
 import dev.vfyjxf.nimbusprojection.feature.entity.EntityPanelProvider;
 import dev.vfyjxf.nimbusprojection.internal.InworldManager;
 import dev.vfyjxf.nimbusprojection.internal.NimbusServerImpl;
@@ -13,6 +15,8 @@ import dev.vfyjxf.nimbusprojection.internal.section.SectionProviders;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionWidgets;
 import dev.vfyjxf.nimbusprojection.network.NimbusPayloads;
 import dev.vfyjxf.nimbusprojection.network.PresenceTracker;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -24,6 +28,7 @@ import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RenderNameTagEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.util.TriState;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
@@ -77,7 +82,23 @@ public final class NimbusProjection {
         // shared-panel registry + presence bookkeeping — joiners catch up on
         // live shared panels and presence reports, leavers get cleared
         NeoForge.EVENT_BUS.addListener((ServerStartedEvent e) -> server.attach(e.getServer()));
-        NeoForge.EVENT_BUS.addListener((ServerStoppingEvent e) -> server.detach());
+        NeoForge.EVENT_BUS.addListener((ServerStoppingEvent e) -> {
+            BoardFeature.reset();
+            server.detach();
+        });
+        // shared-view demo: /nimbus board toggles a shared counter panel over
+        // the looked-at block — every watcher sees the same server-owned count
+        NeoForge.EVENT_BUS.addListener((RegisterCommandsEvent e) -> e.getDispatcher()
+                .register(Commands.literal("nimbus")
+                        .then(Commands.literal("board").executes(ctx -> {
+                            PanelKey key = BoardFeature.toggle(ctx.getSource().getPlayerOrException());
+                            ctx.getSource()
+                                    .sendSuccess(
+                                            () -> Component.literal(
+                                                    key == null ? "no block in reach" : "board toggled " + key.path()),
+                                            false);
+                            return key == null ? 0 : 1;
+                        }))));
         NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedInEvent e) -> {
             if (e.getEntity() instanceof ServerPlayer player && player.getServer() != null) {
                 PresenceTracker.syncTo(player.getServer(), player);
