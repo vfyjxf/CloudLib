@@ -2551,18 +2551,15 @@ public final class InworldManager implements NimbusClient {
 
         Vec3 origin = proj.cameraPos();
         Vec3 dir = proj.crosshairDirection();
-        boolean pointerLive = panelPointerLive();
 
-        // 1. crosshair ray against world-space panels (face + expand). An
-        // engaged panel's surface is already live — looking at it counts as
-        // pointing so the engagement doesn't starve; dormant/unengaged chrome
-        // stays gated behind the interact key so looking never hovers it.
+        // 1. crosshair ray against world-space panels (face + expand).
+        // Pointing is free — a panel under the crosshair IS pointed, no
+        // interact-key hold needed; V only routes clicks into the surface.
         {
             double bestT = Double.MAX_VALUE;
             for (PanelRuntime runtime : panels.values()) {
                 if (!worldSpace(runtime.spec.presentation())) continue;
                 if (!runtime.presented || runtime.flat || !runtime.widget.visible() || runtime.faceU == null) continue;
-                if (!pointerLive && !runtime.engaged) continue;
                 FloatPos uv = Projection.rayPlane(
                         origin,
                         dir,
@@ -2582,13 +2579,14 @@ public final class InworldManager implements NimbusClient {
             }
             if (pointed != null) pointedInPanel = true;
 
-            // 2. crosshair over a flat panel — same live-surface rule
+            // 2. crosshair over a flat panel — same free-pointing rule: the
+            // card is its own hit region, hovering it selects it for V-pin
             if (pointed == null) {
                 double cx = mc.getWindow().getGuiScaledWidth() * 0.5;
                 double cy = mc.getWindow().getGuiScaledHeight() * 0.5;
                 Widget hit = scene.hitTest(cx, cy);
                 PanelRuntime hitPanel = panelOf(hit);
-                if (hitPanel != null && (pointerLive || hitPanel.engaged)) {
+                if (hitPanel != null) {
                     pointed = hitPanel;
                     pointedInPanel = true;
                 }
