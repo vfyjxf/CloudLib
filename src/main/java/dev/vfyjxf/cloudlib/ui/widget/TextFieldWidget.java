@@ -84,7 +84,8 @@ public class TextFieldWidget extends Widget {
         onMouseClick((input, clickCount, context) -> {
             if (!editable) return EventDispatch.pass;
             var font = context().font();
-            int clickX = (int) input.mouseX() - 4;
+            //input coords are scene-space — convert to local for the caret hit test
+            int clickX = (int) sceneToLocal(input.mouseX(), input.mouseY()).x() - 4;
             int pos = 0;
             int width = 0;
             for (int i = 0; i < text.length(); i++) {

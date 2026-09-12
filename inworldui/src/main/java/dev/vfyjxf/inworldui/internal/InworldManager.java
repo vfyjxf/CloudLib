@@ -194,6 +194,9 @@ public final class InworldManager implements InworldUiApi {
     /** Set when the inspect screen was closed by ESC while the key is still held — don't reopen until released. */
     private boolean inspectDismissed;
     private boolean pressedConsumed;
+    /** mouse button currently held on the scene (world mode), -1 = none — feeds mouseDragged while held */
+    private int heldSceneButton = -1;
+    private double heldPtrX, heldPtrY;
 
     //region world-drag state (world-as-UI item transfer)
     /**
@@ -379,14 +382,22 @@ public final class InworldManager implements InworldUiApi {
             inspectScreen = null;
         }
 
-        //focus cycling
-        while (InworldKeyMappings.focusNext.consumeClick()) focusNext();
-        while (InworldKeyMappings.focusPrevious.consumeClick()) focusPrevious();
+        //focus cycling — while a screen (inspect/trace) owns input, keypresses
+        //are routed through inspectKeyPressed; still drain the click counters
+        //here so they don't fire a second time when the screen closes
+        boolean keysViaScreen = inspecting || mc.screen != null;
+        while (InworldKeyMappings.focusNext.consumeClick()) {
+            if (!keysViaScreen) focusNext();
+        }
+        while (InworldKeyMappings.focusPrevious.consumeClick()) {
+            if (!keysViaScreen) focusPrevious();
+        }
         while (InworldKeyMappings.interact.consumeClick()) {
-            if (dragSession == null) triggerInteract();
+            if (!keysViaScreen && dragSession == null) triggerInteract();
         }
 
         tickWorldDrag();
+        tickSceneDrag();
 
         //providers — each provider's last emission is cached; reconcile runs
         //when at least one provider was re-evaluated (or on the first tick so
@@ -504,7 +515,12 @@ public final class InworldManager implements InworldUiApi {
             //dead chrome — otherwise LMB would mine the block under the panel
             boolean consumed = scene.mouseClicked(v[0], v[1], button) || pointedInPanel;
             pressedConsumed = consumed;
-            if (consumed) event.setCanceled(true);
+            if (consumed) {
+                heldSceneButton = button; //held on the scene — world-mode drags feed mouseDragged per frame
+                heldPtrX = v[0];
+                heldPtrY = v[1];
+                event.setCanceled(true);
+            }
         } else if (action == GLFW.GLFW_RELEASE) {
             if (dragSession != null) {
                 //releasing a drag commits (targets/throw) or cancels (back onto
@@ -524,7 +540,26 @@ public final class InworldManager implements InworldUiApi {
             boolean consumed = scene.mouseReleased(v[0], v[1], button) || pointedInPanel;
             if (consumed || pressedConsumed) event.setCanceled(true);
             pressedConsumed = false;
+            if (heldSceneButton == button) heldSceneButton = -1;
         }
+    }
+
+    /**
+     * While a button is held on the scene in world mode, forward a synthetic
+     * mouseDragged each tick — the virtual pointer is the crosshair, so for
+     * world-space panels looking around scrubs the drag (e.g. sliders on a
+     * face panel); flat panels get a stationary pointer, matching inspect.
+     */
+    private void tickSceneDrag() {
+        if (heldSceneButton < 0) return;
+        if (inspecting || mc.screen != null || mc.level == null) {
+            heldSceneButton = -1;
+            return;
+        }
+        double[] v = virtualPointer();
+        scene.mouseDragged(v[0], v[1], heldSceneButton, v[0] - heldPtrX, v[1] - heldPtrY);
+        heldPtrX = v[0];
+        heldPtrY = v[1];
     }
 
     //region world-drag (world-as-UI item transfer)
@@ -1813,6 +1848,7 @@ public final class InworldManager implements InworldUiApi {
     private void beginTrace(PanelRuntime runtime) {
         InworldTraceable traceable = runtime.traceable();
         if (traceable == null || mc.level == null || mc.player == null) return;
+        if (tracing != null) return; //already in a session — a re-entrant begin would wipe the stroke
         if (mc.screen != null && !inspecting) return; //a foreign screen owns input
 
         FloatPos start = initialTracePoint(runtime);

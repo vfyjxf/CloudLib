@@ -1,5 +1,6 @@
 package dev.vfyjxf.inworldui.demo;
 
+import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
@@ -73,6 +74,14 @@ public final class GlyphPadWidget extends Widget implements InworldTraceable {
     }
 
     //region InworldTraceable
+
+    @Override
+    public FloatPos traceCursorStart() {
+        //freehand pad still gets a canonical start: the pad center — every
+        //stroke begins from the middle of the drawing area, deterministic
+        //and centered, instead of wherever the activation aim happened to land
+        return new FloatPos(W * 0.5, PAD_H * 0.5);
+    }
 
     @Override
     public boolean traceBegin(InworldPanelContext context, float x, float y) {

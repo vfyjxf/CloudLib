@@ -85,15 +85,18 @@ public class SliderWidget extends Widget {
     //region input
 
     private void updateValueFromMouse(double mouseX, double mouseY) {
+        //input coordinates are scene-space — convert through the transform
+        //chain so the slider works inside nested/translated containers too
+        var local = sceneToLocal(mouseX, mouseY);
         double ratio;
         if (orientation == Orientation.HORIZONTAL) {
             int trackStart = thumbSize / 2;
             int trackEnd = width() - thumbSize / 2;
-            ratio = (mouseX - trackStart) / (trackEnd - trackStart);
+            ratio = (local.x() - trackStart) / (trackEnd - trackStart);
         } else {
             int trackStart = thumbSize / 2;
             int trackEnd = height() - thumbSize / 2;
-            ratio = 1.0 - (mouseY - trackStart) / (trackEnd - trackStart);
+            ratio = 1.0 - (local.y() - trackStart) / (trackEnd - trackStart);
         }
 
         ratio = Math.clamp(ratio, 0.0, 1.0);
