@@ -34,10 +34,13 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPlacement;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldProvider;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldUiApi;
 import dev.vfyjxf.cloudlib.api.ui.inworld.Projection;
+import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
+import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDraggable;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 import dev.vfyjxf.inworldui.InworldKeyMappings;
-import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.inworldui.net.SplitPlan;
+import dev.vfyjxf.inworldui.net.WorldDragPayload;
 import dev.vfyjxf.cloudlib.util.ScreenUtil;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -48,10 +51,13 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -68,9 +74,12 @@ import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -185,6 +194,30 @@ public final class InworldManager implements InworldUiApi {
     /** Set when the inspect screen was closed by ESC while the key is still held — don't reopen until released. */
     private boolean inspectDismissed;
     private boolean pressedConsumed;
+
+    //region world-drag state (world-as-UI item transfer)
+    /**
+     * Active drag session, non-null while the player holds an item pulled out
+     * of a {@link dev.vfyjxf.cloudlib.api.ui.inworld.WorldDraggable} panel.
+     * The carried stack is a preview copy — the real stack stays in its slot
+     * until the server commits the {@link WorldDragPayload}.
+     */
+    private @Nullable WorldDrag dragSession;
+    private @Nullable PanelRuntime dragPanel;
+    /** session was started inside the inspect screen — targets come from the cursor ray, not the crosshair */
+    private boolean dragInspectHosted;
+    /** last cursor position while inspect-hosting a drag (scene coords) */
+    private double dragCursorX, dragCursorY;
+    private final DragTrail dragTrail = new DragTrail();
+    /** container under the crosshair right now (may not be in the trail yet) */
+    private @Nullable BlockPos dragTarget;
+    /** world-space point the carried stack hovers at (ray hit or air position) */
+    private @Nullable Vec3 dragHold;
+    /** cosmetic item flights spawned at commit — from release point to targets */
+    private final List<FlyingStack> flying = new ArrayList<>();
+    /** target pos → flash age for the landing highlight */
+    private final Map<BlockPos, Integer> landFlash = new LinkedHashMap<>();
+    //endregion
 
     private @Nullable Projection projection;
     private @Nullable Matrix4f worldToView;
@@ -349,7 +382,11 @@ public final class InworldManager implements InworldUiApi {
         //focus cycling
         while (InworldKeyMappings.focusNext.consumeClick()) focusNext();
         while (InworldKeyMappings.focusPrevious.consumeClick()) focusPrevious();
-        while (InworldKeyMappings.interact.consumeClick()) triggerInteract();
+        while (InworldKeyMappings.interact.consumeClick()) {
+            if (dragSession == null) triggerInteract();
+        }
+
+        tickWorldDrag();
 
         //providers — each provider's last emission is cached; reconcile runs
         //when at least one provider was re-evaluated (or on the first tick so
@@ -408,6 +445,7 @@ public final class InworldManager implements InworldUiApi {
             renderFacePanels(event, cameraPos);
         }
         renderScanFrames();
+        renderWorldDrag();
     }
 
     private void onGuiRender(RenderGuiEvent.Post event) {
@@ -429,6 +467,7 @@ public final class InworldManager implements InworldUiApi {
         }
 
         renderScreenSpace(graphics, vx, vy, pt);
+        renderDragOverlay(graphics);
     }
 
     private void onMouseButton(InputEvent.MouseButton.Pre event) {
@@ -440,12 +479,43 @@ public final class InworldManager implements InworldUiApi {
             Widget hit = scene.hitTest(v[0], v[1]);
             LOGGER.info("click press: ptr=({},{}) pointed={} uv={} hit={}",
                     (int) v[0], (int) v[1], pointed, pointedUv, hit);
+            //world-as-UI: a press on a draggable widget leaves the panel and
+            //becomes a world-targeted drag — checked before normal clicking so
+            //the button stays held for the whole gesture. A live session
+            //already owns the gesture; extra presses are swallowed.
+            WorldDraggable src = dragSession == null ? WorldDraggable.find(hit) : null;
+            if (src != null) {
+                PanelRuntime srcPanel = panelOf((Widget) src);
+                if (srcPanel != null) {
+                    WorldDrag drag = src.beginWorldDrag(
+                            new InworldPanelContext(mc.level, mc.player, srcPanel), v[0], v[1], button);
+                    if (drag != null) {
+                        dragSession = drag;
+                        dragPanel = srcPanel;
+                        dragTrail.clear();
+                        dragTarget = null;
+                        pressedConsumed = true;
+                        event.setCanceled(true);
+                        return;
+                    }
+                }
+            }
             //clicks landing anywhere on a pointed panel are swallowed even on
             //dead chrome — otherwise LMB would mine the block under the panel
             boolean consumed = scene.mouseClicked(v[0], v[1], button) || pointedInPanel;
             pressedConsumed = consumed;
             if (consumed) event.setCanceled(true);
         } else if (action == GLFW.GLFW_RELEASE) {
+            if (dragSession != null) {
+                //releasing a drag commits (targets/throw) or cancels (back onto
+                //the scene) — the vanilla press was already consumed
+                double[] v = virtualPointer();
+                boolean overScene = scene.hitTest(v[0], v[1]) != null;
+                commitWorldDrag(overScene);
+                event.setCanceled(true);
+                pressedConsumed = false;
+                return;
+            }
             double[] v = virtualPointer();
             LOGGER.info("click release: ptr=({},{}) hit={}",
                     (int) v[0], (int) v[1], scene.hitTest(v[0], v[1]));
@@ -454,6 +524,123 @@ public final class InworldManager implements InworldUiApi {
             pressedConsumed = false;
         }
     }
+
+    //region world-drag (world-as-UI item transfer)
+
+    /** A world-drag session is in flight — providers can key off this to keep the source panel alive. */
+    public boolean dragActive() {
+        return dragSession != null;
+    }
+
+    /** A block position counts as a drop target when it exposes an item-handler capability. */
+    private boolean isDragTarget(BlockPos pos) {
+        return mc.level != null
+                && mc.level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null) != null;
+    }
+
+    /**
+     * Per-tick drag housekeeping: age flights/flashes, acquire the container
+     * under the crosshair into the trail and park the carried stack at the
+     * ray hit point. The vanilla {@code hitResult} is reused — it is the same
+     * reach ray vanilla uses for block interaction, so "what you point at" is
+     * exactly what the drag sees.
+     */
+    private void tickWorldDrag() {
+        flying.removeIf(fs -> {
+            if (fs.tick()) return false;
+            landFlash.put(BlockPos.containing(fs.to), 0);
+            return true;
+        });
+        landFlash.values().removeIf(age -> age + 1 > FlyingStack.FLASH_TICKS);
+        landFlash.replaceAll((p, age) -> age + 1);
+
+        if (dragSession == null) return;
+        if (mc.player == null || mc.level == null
+                || dragPanel == null || !panels.containsValue(dragPanel)
+                || (dragInspectHosted ? !inspecting : (inspecting || mc.screen != null))) {
+            cancelWorldDrag();
+            return;
+        }
+
+        //target acquisition: world mode reuses the vanilla crosshair pick;
+        //inspect mode casts the cursor's ray through the live projection
+        //(mc.hitResult is useless there — it always follows screen center)
+        HitResult hit;
+        if (dragInspectHosted) {
+            if (projection == null) return;
+            Vec3 eye = mc.player.getEyePosition();
+            Vec3 dir = projection.rayDirection(dragCursorX, dragCursorY);
+            double reach = mc.player.blockInteractionRange();
+            hit = mc.level.clip(new ClipContext(eye, eye.add(dir.scale(reach)),
+                    ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player));
+        } else {
+            hit = mc.hitResult;
+        }
+        if (hit instanceof BlockHitResult bhr && bhr.getType() != HitResult.Type.MISS) {
+            BlockPos pos = bhr.getBlockPos();
+            if (isDragTarget(pos)) {
+                dragTarget = pos;
+                dragTrail.offer(pos);
+            } else {
+                dragTarget = null;
+                dragTrail.leave();
+            }
+            dragHold = bhr.getLocation();
+        } else {
+            dragTarget = null;
+            dragTrail.leave();
+            dragHold = mc.player.getEyePosition()
+                    .add(mc.player.getLookAngle().scale(2.4));
+        }
+    }
+
+    /**
+     * Release handling for a live drag. {@code overScene} means the pointer
+     * came back up onto a panel — that cancels silently; otherwise the
+     * gathered trail (or a bare throw) is committed to the server.
+     */
+    private void commitWorldDrag(boolean overScene) {
+        WorldDrag drag = dragSession;
+        PanelRuntime panel = dragPanel;
+        List<BlockPos> trail = dragTrail.targets();
+        Vec3 hold = dragHold;
+        dragSession = null;
+        dragPanel = null;
+        dragTarget = null;
+        dragTrail.clear();
+        if (drag == null || overScene) return;
+
+        List<BlockPos> targets = panel != null
+                ? drag.commitTargets(trail, new InworldPanelContext(mc.level, mc.player, panel))
+                : trail;
+        int mode = targets.isEmpty()
+                ? (drag.wholeStack() ? WorldDragPayload.THROW_STACK : WorldDragPayload.THROW_ONE)
+                : (drag.wholeStack() ? WorldDragPayload.INSERT_EVEN : WorldDragPayload.INSERT_ONE);
+        Vec3 look = mc.player.getLookAngle();
+        PacketDistributor.sendToServer(new WorldDragPayload(drag.sourceSlot(), mode, targets, look));
+
+        //cosmetic fly-outs: one sprite per non-zero share, release point →
+        //target top-center. Throw mode needs none — the real ItemEntity spawns.
+        if (!targets.isEmpty() && hold != null) {
+            int[] shares = drag.wholeStack()
+                    ? SplitPlan.evenly(drag.carried().getCount(), targets.size())
+                    : SplitPlan.oneEach(drag.carried().getCount(), targets.size());
+            for (int i = 0; i < targets.size(); i++) {
+                if (shares[i] <= 0) continue;
+                Vec3 to = Vec3.atCenterOf(targets.get(i)).add(0, 0.55, 0);
+                flying.add(new FlyingStack(drag.carried().copyWithCount(shares[i]), hold, to));
+            }
+        }
+    }
+
+    private void cancelWorldDrag() {
+        dragSession = null;
+        dragPanel = null;
+        dragTarget = null;
+        dragTrail.clear();
+    }
+
+    //endregion
 
     private void onMouseScroll(InputEvent.MouseScrollingEvent event) {
         if (inspecting || mc.level == null || mc.screen != null) return;
@@ -482,6 +669,9 @@ public final class InworldManager implements InworldUiApi {
         traceProj = null;
         inspecting = false;
         inspectScreen = null;
+        cancelWorldDrag();
+        flying.clear();
+        landFlash.clear();
     }
 
     //endregion
@@ -2075,6 +2265,121 @@ public final class InworldManager implements InworldUiApi {
         RenderSystem.applyModelViewMatrix();
     }
 
+    //region world-drag rendering
+
+    /**
+     * In-world pass for the drag session: hot scan frames on every trailed
+     * container, the carried stack billboarded at the ray hit point, in-flight
+     * commit sprites and the fading landing flash.
+     */
+    private void renderWorldDrag() {
+        if (worldToView == null || mc.level == null) return;
+        boolean hasDrag = dragSession != null && dragSession.carried() != null;
+        if (!hasDrag && flying.isEmpty() && landFlash.isEmpty()) return;
+
+        var modelView = RenderSystem.getModelViewStack();
+        modelView.pushMatrix();
+        modelView.identity();
+        RenderSystem.applyModelViewMatrix();
+
+        //frames — trail containers get the same hacker scan frame as selected
+        //anchors; the live target (not yet swept long enough to trail) too
+        if (hasDrag || !landFlash.isEmpty()) {
+            var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+            double t = (mc.level.getGameTime() + framePartialTick) * 0.9;
+            if (hasDrag) {
+                for (BlockPos pos : dragTrail.targets()) {
+                    emitScanFrame(buffer, worldToView, pos, t, true);
+                }
+                if (dragTarget != null && !dragTrail.targets().contains(dragTarget)) {
+                    emitScanFrame(buffer, worldToView, dragTarget, t, true);
+                }
+            }
+            var mesh = buffer.build();
+            if (mesh != null) {
+                RenderSystem.enableBlend();
+                RenderSystem.setShader(GameRenderer::getPositionColorShader);
+                BufferUploader.drawWithShader(mesh);
+            }
+            //landing flashes fade a plain box outline
+            if (!landFlash.isEmpty()) {
+                PoseStack pose = new PoseStack();
+                pose.last().pose().set(worldToView);
+                pose.last().normal().set(new Matrix3f(worldToView));
+                VertexConsumer lines = panelBuffers.getBuffer(RenderType.lines());
+                for (var e : landFlash.entrySet()) {
+                    float f = 1.0f - e.getValue() / (float) FlyingStack.FLASH_TICKS;
+                    AABB box = new AABB(e.getKey()).inflate(0.01);
+                    LevelRenderer.renderLineBox(pose, lines, box, 0.36f, 0.95f, 1.0f, 0.85f * f);
+                }
+                panelBuffers.endBatch(RenderType.lines());
+            }
+        }
+
+        //item sprites — carried stack and in-flight shares, billboarded to the camera
+        PoseStack pose = new PoseStack();
+        pose.last().pose().set(worldToView);
+        pose.last().normal().set(new Matrix3f(worldToView));
+        MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
+        Quaternionf camRot = mc.gameRenderer.getMainCamera().rotation();
+        if (hasDrag && dragHold != null) {
+            renderDragItem(dragSession.carried(), dragHold, 0.35f, pose, buffers, camRot);
+        }
+        for (FlyingStack fs : flying) {
+            renderDragItem(fs.stack, fs.pos(), fs.scale(), pose, buffers, camRot);
+        }
+        buffers.endBatch();
+
+        modelView.popMatrix();
+        RenderSystem.applyModelViewMatrix();
+    }
+
+    private void renderDragItem(ItemStack stack, Vec3 pos, float scale,
+                                PoseStack pose, MultiBufferSource.BufferSource buffers,
+                                Quaternionf camRot) {
+        pose.pushPose();
+        pose.translate(pos.x, pos.y, pos.z);
+        pose.mulPose(camRot);
+        pose.scale(scale, scale, scale);
+        int light = LevelRenderer.getLightColor(mc.level, BlockPos.containing(pos));
+        mc.getItemRenderer().renderStatic(stack, ItemDisplayContext.GROUND,
+                light, OverlayTexture.NO_OVERLAY, pose, buffers, mc.level, 0);
+        pose.popPose();
+    }
+
+    /**
+     * Screen-space drag preview: a {@code +n} chip at every trailed container
+     * showing the share it will receive, plus the carried count under the
+     * crosshair so the operation is legible without opening any GUI.
+     */
+    private void renderDragOverlay(GuiGraphics g) {
+        if (dragSession == null || projection == null) return;
+        List<BlockPos> targets = dragTrail.targets();
+        if (targets.isEmpty() && dragTarget != null) targets = List.of(dragTarget);
+        if (!targets.isEmpty()) {
+            int[] shares = dragSession.wholeStack()
+                    ? SplitPlan.evenly(dragSession.carried().getCount(), targets.size())
+                    : SplitPlan.oneEach(dragSession.carried().getCount(), targets.size());
+            for (int i = 0; i < targets.size(); i++) {
+                if (shares[i] <= 0) continue;
+                FloatPos s = projection.worldToScreen(Vec3.atCenterOf(targets.get(i)).add(0, 0.75, 0));
+                if (s == null) continue;
+                String label = "+" + shares[i];
+                int w = mc.font.width(label);
+                g.fill((int) s.x() - w / 2 - 2, (int) s.y() - 5, (int) s.x() + w / 2 + 2, (int) s.y() + 4, 0x99081018);
+                g.drawString(mc.font, label, (int) s.x() - w / 2, (int) s.y() - 4, 0xFF6CF2FF, false);
+            }
+        }
+        //carried count trails the active pointer — crosshair in world mode,
+        //cursor when the drag is inspect-hosted
+        String label = dragSession.carried().getCount() + "×";
+        int cx = dragInspectHosted ? (int) dragCursorX : mc.getWindow().getGuiScaledWidth() / 2;
+        int cy = dragInspectHosted ? (int) dragCursorY : mc.getWindow().getGuiScaledHeight() / 2;
+        g.drawString(mc.font, label, cx + 6, cy + 6, 0xFF6CF2FF, false);
+    }
+
+    //endregion
+
     private void emitExpandConnectors(BufferBuilder buffer, Matrix4f mat) {
         for (PanelRuntime runtime : panels.values()) {
             if (!(runtime.spec.placement() instanceof InworldPlacement.Expand)) continue;
@@ -2370,14 +2675,19 @@ public final class InworldManager implements InworldUiApi {
     /** The render entry the inspect screen delegates to. */
     void renderInspect(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         //in inspect presentation the real cursor points; hover → focus (WD2 style)
-        pointed = panelOf(scene.hitTest(mouseX, mouseY));
-        if (pointed != null) focus(pointed);
+        //— a live drag keeps the source panel focused instead of chasing the cursor
+        if (!(dragInspectHosted && dragSession != null)) {
+            pointed = panelOf(scene.hitTest(mouseX, mouseY));
+            if (pointed != null) focus(pointed);
+        }
         renderScreenSpace(graphics, mouseX, mouseY, partialTick);
+        renderDragOverlay(graphics);
     }
 
     void onInspectScreenRemoved() {
         inspecting = false;
         inspectScreen = null;
+        if (dragInspectHosted) cancelWorldDrag();
         //closed by ESC/another screen while the key is still held — stay out until released
         if (inspectHeld()) inspectDismissed = true;
     }
@@ -2400,6 +2710,11 @@ public final class InworldManager implements InworldUiApi {
             traceMouseMoved(x, y);
             return;
         }
+        if (dragInspectHosted && dragSession != null) {
+            dragCursorX = x;
+            dragCursorY = y;
+            return; //a live drag owns the cursor — the world is the target surface
+        }
         scene.mouseMoved(x, y);
     }
 
@@ -2408,18 +2723,51 @@ public final class InworldManager implements InworldUiApi {
             endTrace(true); //click mid-trace commits, same as releasing V
             return true;
         }
-        boolean consumed = scene.mouseClicked(x, y, button);
+        if (dragInspectHosted && dragSession != null) {
+            return true; //a live drag owns the cursor — extra presses do nothing
+        }
+        //world-as-UI: a press on a draggable widget starts a world-targeted
+        //drag — the cursor ray picks containers through the frozen camera
         Widget hit = scene.hitTest(x, y);
+        WorldDraggable src = WorldDraggable.find(hit);
+        if (src != null) {
+            PanelRuntime srcPanel = panelOf((Widget) src);
+            if (srcPanel != null) {
+                WorldDrag drag = src.beginWorldDrag(
+                        new InworldPanelContext(mc.level, mc.player, srcPanel), x, y, button);
+                if (drag != null) {
+                    dragSession = drag;
+                    dragPanel = srcPanel;
+                    dragInspectHosted = true;
+                    dragCursorX = x;
+                    dragCursorY = y;
+                    dragTrail.clear();
+                    dragTarget = null;
+                    return true;
+                }
+            }
+        }
+        boolean consumed = scene.mouseClicked(x, y, button);
         PanelRuntime panel = panelOf(hit);
         if (panel != null) focus(panel);
         return consumed;
     }
 
     boolean inspectMouseReleased(double x, double y, int button) {
+        if (dragInspectHosted && dragSession != null) {
+            commitWorldDrag(scene.hitTest(x, y) != null);
+            dragInspectHosted = false;
+            return true;
+        }
         return scene.mouseReleased(x, y, button);
     }
 
     boolean inspectMouseDragged(double x, double y, int button, double dx, double dy) {
+        if (dragInspectHosted && dragSession != null) {
+            dragCursorX = x;
+            dragCursorY = y;
+            return true;
+        }
         return scene.mouseDragged(x, y, button, dx, dy);
     }
 
