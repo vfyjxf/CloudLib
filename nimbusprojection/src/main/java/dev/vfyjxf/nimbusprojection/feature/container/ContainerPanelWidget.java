@@ -23,6 +23,7 @@ import dev.vfyjxf.nimbusprojection.internal.section.SectionWidgets;
 import dev.vfyjxf.nimbusprojection.network.ContainerOpsPayload;
 import dev.vfyjxf.nimbusprojection.network.TransferPayload;
 import dev.vfyjxf.taffy.geometry.FloatSize;
+import dev.vfyjxf.taffy.style.TaffyDisplay;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -49,13 +50,41 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
     private final Supplier<BlockPos> pos;
     private final ColumnWidget sections;
 
-    private final Widget summary = new Widget() {
-        {
-            onMount((scene, context, handle) -> scene.layoutTree()
+    private final Widget summary;
+
+    // built lazily in the ctor — the measure lambda captures `pos`, which a
+    // field initializer can't touch before the ctor assigns it
+    private Widget buildSummary() {
+        return new Widget() {
+            {
+                onMount((scene, context, handle) -> scene.layoutTree()
                     .setMeasureFunc(
                             nodeId(),
-                            (style, space) -> new FloatSize(NimbusConfig.containerTopItems() * cell + 48, cell + 6)));
+                            (style, space) -> {
+                                // measure to content, not capacity — an empty
+                                // chest's strip is "0/27", not 9 ghost slots
+                                var font = net.minecraft.client.Minecraft.getInstance().font;
+                                int w = 4;
+                                BlockPos p = pos.get();
+                                List<ItemStack> stacks = p == null ? null : itemStacks(p);
+                                if (stacks == null || stacks.isEmpty()) {
+                                    w += font.width(stacks == null ? "···" : "0/0");
+                                } else {
+                                    int shown = 0;
+                                    int used = 0;
+                                    for (ItemStack s : stacks) {
+                                        if (s.isEmpty()) continue;
+                                        used++;
+                                        if (shown < NimbusConfig.containerTopItems()) shown++;
+                                    }
+                                    w += shown * cell;
+                                    w += 4 + font.width(used + "/" + stacks.size());
+                                }
+                                return new FloatSize(w, cell + 6);
+                            }));
         }
+
+        private int lastSignature = -1;
 
         @Override
         protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
@@ -72,6 +101,12 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
                 canvas.text("···", x, 3, dim);
                 return;
             }
+            // measure is data-driven — relayout when the fill signature changes
+            int signature = stacks.size() * 31 + stacks.stream().mapToInt(s -> s.isEmpty() ? 0 : 1).sum();
+            if (signature != lastSignature && lifecycle().mounted()) {
+                lastSignature = signature;
+                scene().layoutTree().markDirty(nodeId());
+            }
             int shown = 0;
             int used = 0;
             int limit = NimbusConfig.containerTopItems();
@@ -86,11 +121,13 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
             String fill = stacks.isEmpty() ? "empty" : used + "/" + stacks.size();
             canvas.text(fill, x + 4, 4, dim);
         }
-    };
+        };
+    }
 
     public ContainerPanelWidget(InworldPanelContext ctx, Supplier<BlockPos> pos) {
         this.ctx = ctx;
         this.pos = pos;
+        this.summary = buildSummary();
         this.sections = ColumnWidget.create(2);
         BlockPos p = pos.get();
         if (p != null) {
@@ -117,8 +154,12 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
         BlockPos p = pos.get();
         if (p != null) SectionContents.watch(SectionTarget.of(p));
         boolean engaged = ctx.panel().engaged();
+        // display:none, not just invisible — hidden children must leave the
+        // layout entirely or the idle card measures itself as the full grid
         summary.setVisible(!engaged);
+        summary.set(Styles.display, engaged ? TaffyDisplay.NONE : TaffyDisplay.FLEX);
         sections.setVisible(engaged);
+        sections.set(Styles.display, engaged ? TaffyDisplay.FLEX : TaffyDisplay.NONE);
         super.renderInternal(canvas, mouseX, mouseY, partialTicks);
     }
 

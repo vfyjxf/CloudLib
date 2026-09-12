@@ -1664,8 +1664,15 @@ public final class InworldManager implements NimbusClient {
         if (!runtime.focused() && runtime != pointed) {
             chain.add(AvoidRectsMiddleware.create(() -> obstacles, 4));
         }
+        // the float keeps clear of the anchor's *shape* — for block anchors
+        // that's the block's projected screen bounds, so the card lands
+        // beside the chest instead of covering its face
+        Rect anchorRect = blockScreenRect(runtime);
+        if (anchorRect == null) {
+            anchorRect = new Rect((int) anchorPx.x - 1, (int) anchorPx.y - 1, 2, 2);
+        }
         var result = FloatingPositioning.compute(
-                new Rect((int) anchorPx.x - 1, (int) anchorPx.y - 1, 2, 2),
+                anchorRect,
                 new Rect(0, 0, fw, fh),
                 new Rect(
                         0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight()),
@@ -3870,6 +3877,31 @@ public final class InworldManager implements NimbusClient {
         }
         Vec3 sky = level.getSkyColor(eye, framePartialTick);
         return (float) (0.299 * sky.x + 0.587 * sky.y + 0.114 * sky.z);
+    }
+
+    /** The block anchor's projected screen bounds — null for entity anchors or
+     * when nothing projects. Used as the float's anchor rectangle so cards sit
+     * beside the block rather than on top of it. */
+    private @Nullable Rect blockScreenRect(PanelRuntime runtime) {
+        BlockPos pos = runtime.spec.anchor().blockPos();
+        Projection proj = projection;
+        if (pos == null || proj == null) return null;
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+        boolean any = false;
+        for (int i = 0; i < 8; i++) {
+            FloatPos s = proj.worldToScreen(new Vec3(
+                    pos.getX() + (i & 1),
+                    pos.getY() + ((i >> 1) & 1),
+                    pos.getZ() + ((i >> 2) & 1)));
+            if (s == null) continue;
+            any = true;
+            minX = Math.min(minX, (int) s.x);
+            minY = Math.min(minY, (int) s.y);
+            maxX = Math.max(maxX, (int) s.x);
+            maxY = Math.max(maxY, (int) s.y);
+        }
+        return any ? new Rect(minX, minY, maxX - minX, maxY - minY) : null;
     }
 
     /**

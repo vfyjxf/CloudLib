@@ -3,6 +3,7 @@ package dev.vfyjxf.nimbusprojection.feature.entity;
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.style.Styles;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
@@ -22,6 +23,7 @@ import dev.vfyjxf.nimbusprojection.internal.section.SectionWidgets;
 import dev.vfyjxf.nimbusprojection.network.ContainerOpsPayload;
 import dev.vfyjxf.nimbusprojection.network.TransferPayload;
 import dev.vfyjxf.taffy.geometry.FloatSize;
+import dev.vfyjxf.taffy.style.TaffyDisplay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -110,7 +112,9 @@ public final class EntityPanelWidget extends WidgetGroup<Widget> implements Worl
         if (entity != null) SectionContents.watch(SectionTarget.of(entity));
         info.entity = entity;
         info.tier = entity != null ? tier() : 0;
-        sections.setVisible(ctx.panel().engaged() && entity != null);
+        boolean showSections = ctx.panel().engaged() && entity != null;
+        sections.setVisible(showSections);
+        sections.set(Styles.display, showSections ? TaffyDisplay.FLEX : TaffyDisplay.NONE);
         super.renderInternal(canvas, mouseX, mouseY, partialTicks);
     }
 
