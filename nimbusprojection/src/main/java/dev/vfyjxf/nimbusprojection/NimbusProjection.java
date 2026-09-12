@@ -64,6 +64,7 @@ public final class NimbusProjection {
                 : null;
 
         NimbusServerImpl server = new NimbusServerImpl();
+        NimbusConfig.register(container);
         modBus.addListener((RegisterPayloadHandlersEvent e) -> NimbusPayloads.register(e));
         modBus.addListener((FMLCommonSetupEvent e) -> e.enqueueWork(() -> {
             InworldManager manager = dist == Dist.CLIENT ? InworldManager.init() : null;

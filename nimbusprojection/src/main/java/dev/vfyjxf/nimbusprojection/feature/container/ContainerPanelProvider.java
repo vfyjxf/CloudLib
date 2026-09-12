@@ -4,10 +4,12 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldAnchor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.PanelKey;
 import dev.vfyjxf.cloudlib.api.ui.inworld.Presentation;
 import dev.vfyjxf.cloudlib.util.ContainerScan;
+import dev.vfyjxf.nimbusprojection.NimbusConfig;
 import dev.vfyjxf.nimbusprojection.api.panel.PanelSpec;
 import dev.vfyjxf.nimbusprojection.api.provider.PanelProvider;
 import dev.vfyjxf.nimbusprojection.api.provider.PanelSink;
 import dev.vfyjxf.nimbusprojection.api.provider.ProviderContext;
+import dev.vfyjxf.nimbusprojection.internal.section.SectionProviders;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
@@ -27,25 +29,26 @@ import java.util.List;
  */
 public final class ContainerPanelProvider implements PanelProvider {
 
-    private static final double reach = 6.0;
     /** ~31° cone covers the whole 30° soft-focus cone — a panel exists
      *  wherever the interact key could reach it. */
     private static final double coneCosEnter = Math.cos(Math.toRadians(31));
 
     @Override
     public void provide(ProviderContext context, PanelSink sink) {
+        if (!NimbusConfig.containersEnabled()) return;
         Vec3 eye = context.player().getEyePosition();
         List<BlockPos> found = ContainerScan.all(
                 context.level(),
                 context.player(),
                 eye,
                 context.player().getLookAngle().normalize(),
-                reach,
-                coneCosEnter);
+                NimbusConfig.containerReach(),
+                coneCosEnter,
+                pos -> SectionProviders.hasAny(context.level(), pos));
         for (BlockPos pos : found) {
-            if (context.level().getCapability(Capabilities.ItemHandler.BLOCK, pos, null) == null) continue;
+            boolean items = context.level().getCapability(Capabilities.ItemHandler.BLOCK, pos, null) != null;
             sink.offer(PanelSpec.of(
-                            keyOf(pos),
+                            keyOf(pos, items),
                             InworldAnchor.of(pos, new Vec3(0.5, 0.55, 0.5)),
                             Presentation.face(faceToward(eye, pos)),
                             ctx -> new ContainerPanelWidget(ctx, () -> pos))
@@ -54,9 +57,17 @@ public final class ContainerPanelProvider implements PanelProvider {
         }
     }
 
-    /** Position-stable shared-domain key — same chest, same identity across clients. */
-    public static PanelKey keyOf(BlockPos pos) {
-        return PanelKey.of("nimbusprojection", "container/" + pos.getX() + "," + pos.getY() + "," + pos.getZ());
+    /**
+     * Position-stable shared-domain key — same chest, same identity across
+     * clients. Item-handling blocks key under {@code container/} (the
+     * inventory satellite claims those); section-only blocks like signs or
+     * hives key under {@code block/} — they share presence the same way but
+     * never summon an inventory companion.
+     */
+    public static PanelKey keyOf(BlockPos pos, boolean items) {
+        return PanelKey.of(
+                "nimbusprojection",
+                (items ? "container/" : "block/") + pos.getX() + "," + pos.getY() + "," + pos.getZ());
     }
 
     /** The block face most directly facing the viewer — re-picked each offer. */

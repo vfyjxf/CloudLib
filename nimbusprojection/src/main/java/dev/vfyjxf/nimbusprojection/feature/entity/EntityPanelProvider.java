@@ -3,6 +3,7 @@ package dev.vfyjxf.nimbusprojection.feature.entity;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldAnchor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.PanelKey;
 import dev.vfyjxf.cloudlib.api.ui.inworld.Presentation;
+import dev.vfyjxf.nimbusprojection.NimbusConfig;
 import dev.vfyjxf.nimbusprojection.api.panel.PanelSpec;
 import dev.vfyjxf.nimbusprojection.api.provider.PanelProvider;
 import dev.vfyjxf.nimbusprojection.api.provider.PanelSink;
@@ -27,14 +28,16 @@ import net.minecraft.world.phys.Vec3;
  */
 public final class EntityPanelProvider implements PanelProvider {
 
-    private static final double reach = 6.0;
     /** Same ~31° cone as the container scan — wherever the interact key can reach. */
     private static final double coneCosEnter = Math.cos(Math.toRadians(31));
+
     /** The panel anchors just above the nameplate space. */
     private static final double headroom = 0.35;
 
     @Override
     public void provide(ProviderContext context, PanelSink sink) {
+        if (!NimbusConfig.entitiesEnabled()) return;
+        double reach = NimbusConfig.entityReach();
         Vec3 eye = context.player().getEyePosition();
         Vec3 look = context.player().getLookAngle().normalize();
         AABB box = AABB.ofSize(eye, reach * 2, reach * 2, reach * 2);

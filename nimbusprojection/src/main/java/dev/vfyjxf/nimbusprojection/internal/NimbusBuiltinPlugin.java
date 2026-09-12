@@ -12,6 +12,9 @@ import dev.vfyjxf.nimbusprojection.feature.container.section.FluidSectionWidget;
 import dev.vfyjxf.nimbusprojection.feature.container.section.ItemSectionWidget;
 import dev.vfyjxf.nimbusprojection.feature.container.section.SectionTypes;
 import dev.vfyjxf.nimbusprojection.feature.entity.EntityPanelProvider;
+import dev.vfyjxf.nimbusprojection.feature.machine.section.HiveSectionWidget;
+import dev.vfyjxf.nimbusprojection.feature.machine.section.ProgressSectionWidget;
+import dev.vfyjxf.nimbusprojection.feature.machine.section.TextSectionWidget;
 
 /**
  * Nimbus's own client registrations as a first-class plugin — the
@@ -36,5 +39,8 @@ public final class NimbusBuiltinPlugin implements NimbusClientPlugin {
         register.register(SectionTypes.item, ItemSectionWidget.factory);
         register.register(SectionTypes.fluid, FluidSectionWidget.factory);
         register.register(SectionTypes.energy, EnergySectionWidget.factory);
+        register.register(SectionTypes.progress, ProgressSectionWidget.factory);
+        register.register(SectionTypes.text, TextSectionWidget.factory);
+        register.register(SectionTypes.hive, HiveSectionWidget.factory);
     }
 }

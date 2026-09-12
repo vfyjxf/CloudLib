@@ -3,6 +3,7 @@ package dev.vfyjxf.nimbusprojection.feature.inventory;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldAnchor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.PanelKey;
 import dev.vfyjxf.cloudlib.api.ui.inworld.Presentation;
+import dev.vfyjxf.nimbusprojection.NimbusConfig;
 import dev.vfyjxf.nimbusprojection.api.Nimbus;
 import dev.vfyjxf.nimbusprojection.api.NimbusClient;
 import dev.vfyjxf.nimbusprojection.api.panel.PanelSpec;
@@ -75,7 +76,7 @@ public final class InventoryFeature {
 
         if (engaged != null) {
             linked = engaged;
-            if (!open && !dismissed) {
+            if (!open && !dismissed && NimbusConfig.autoSummonInventory()) {
                 open(client, engaged);
                 autoSummoned = true;
             }

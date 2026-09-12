@@ -88,6 +88,14 @@ public final class SectionProviders {
         return entity != null ? collectAll(level, entity) : List.of();
     }
 
+    /** True if any provider would contribute a block section — the panel-offer predicate. */
+    public static boolean hasAny(Level level, BlockPos pos) {
+        for (SectionProvider<?> provider : providers) {
+            if (!provider.collect(level, pos).isEmpty()) return true;
+        }
+        return false;
+    }
+
     /** The type a section id belongs to — null for an unknown kind or a malformed id. */
     public static @Nullable SectionType<?> typeOf(String sectionId) {
         int slash = sectionId.lastIndexOf('/');

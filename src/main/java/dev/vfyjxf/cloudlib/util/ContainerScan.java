@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Soft-aim container targeting: finds item-handling blocks inside a cone
@@ -71,6 +72,29 @@ public final class ContainerScan {
      * counterpart of {@link #nearest}: each position gets its own offer.
      */
     public static List<BlockPos> all(Level level, Entity entity, Vec3 eye, Vec3 dir, double reach, double coneCos) {
+        return all(
+                level,
+                entity,
+                eye,
+                dir,
+                reach,
+                coneCos,
+                pos -> level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null) != null);
+    }
+
+    /**
+     * Every position inside the cone and reach matching {@code eligible} —
+     * same spatial and line-of-sight rules as {@link #all}, arbitrary
+     * eligibility (e.g. "any block section provider contributes").
+     */
+    public static List<BlockPos> all(
+            Level level,
+            Entity entity,
+            Vec3 eye,
+            Vec3 dir,
+            double reach,
+            double coneCos,
+            Predicate<BlockPos> eligible) {
         BlockPos base = BlockPos.containing(eye);
         int R = (int) Math.ceil(reach) + 1;
         double maxDistSq = (reach + 1.5) * (reach + 1.5);
@@ -88,7 +112,7 @@ public final class ContainerScan {
                     double cos = (tx * dir.x + ty * dir.y + tz * dir.z) / dist;
                     if (cos < coneCos) continue;
                     cursor.set(base.getX() + dx, base.getY() + dy, base.getZ() + dz);
-                    if (level.getCapability(Capabilities.ItemHandler.BLOCK, cursor, null) == null) continue;
+                    if (!eligible.test(cursor)) continue;
                     if (!lineOfSight(level, entity, eye, tx, ty, tz, cursor)) continue;
                     found.add(cursor.immutable());
                 }

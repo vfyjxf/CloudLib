@@ -42,6 +42,7 @@ import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.ui.sync.ContainerContents;
 import dev.vfyjxf.cloudlib.util.ContainerScan;
 import dev.vfyjxf.cloudlib.util.ScreenUtil;
+import dev.vfyjxf.nimbusprojection.NimbusConfig;
 import dev.vfyjxf.nimbusprojection.NimbusKeyMappings;
 import dev.vfyjxf.nimbusprojection.NimbusProjection;
 import dev.vfyjxf.nimbusprojection.api.NimbusClient;
@@ -282,15 +283,11 @@ public final class InworldManager implements NimbusClient {
     private final List<PanelRuntime> floatingQueue = new ArrayList<>();
     private static final int parkBase = -1_000_000;
     private static final int parkStep = 4096;
-    /** ticks within which a V press counts as a tap rather than a hold */
-    private static final int interactTapTicks = 8;
     /** V pressed on an engaged panel — resolves to close-or-pointer on release. */
     private @Nullable PanelRuntime interactArm;
 
     private long interactArmTick;
     private boolean interactArmUsed;
-    /** ticks an engaged panel survives without any targeting (~3s) */
-    private static final int engageGraceTicks = 60;
     /** ~10° sweep cone for drag target acquisition — the ray only has to
      *  pass near a container for the trail to collect it */
     private static final double dragSweepCos = Math.cos(Math.toRadians(10));
@@ -2625,7 +2622,7 @@ public final class InworldManager implements NimbusClient {
      * Per-frame lifecycle of an engaged panel: it holds while the player is
      * still engaged with it — pointing at it, soft-focused on its anchor,
      * hosting a trace/drag, or the inspect projection is up — and releases
-     * after {@link #engageGraceTicks} ticks with none of those.
+     * after the configured grace ticks with none of those.
      */
     private void tickEngagement(PanelRuntime runtime) {
         boolean held =
@@ -2635,7 +2632,7 @@ public final class InworldManager implements NimbusClient {
             return;
         }
         if (runtime.engageIdleSince < 0) runtime.engageIdleSince = tick;
-        if (tick - runtime.engageIdleSince > engageGraceTicks) {
+        if (tick - runtime.engageIdleSince > NimbusConfig.engageGraceTicks()) {
             runtime.engaged = false;
         }
     }
@@ -2712,19 +2709,20 @@ public final class InworldManager implements NimbusClient {
 
     /**
      * Tap-vs-hold resolution for the interact key on an engaged panel: a
-     * release within {@link #interactTapTicks} ticks that didn't touch a
-     * widget toggles the panel shut; a hold outlives the window and the press
-     * stays pointer intent (or the mouse was used — also not a tap).
+     * release within the configured tap window that didn't touch a widget
+     * toggles the panel shut; a hold outlives the window and the press stays
+     * pointer intent (or the mouse was used — also not a tap).
      */
     private void tickInteractArm() {
         PanelRuntime armed = interactArm;
         if (armed == null) return;
+        int tapTicks = NimbusConfig.interactTapTicks();
         if (interactHeld()) {
-            if (tick - interactArmTick > interactTapTicks) interactArm = null;
+            if (tick - interactArmTick > tapTicks) interactArm = null;
             return;
         }
         interactArm = null;
-        if (tick - interactArmTick <= interactTapTicks && !interactArmUsed && armed.engaged) {
+        if (tick - interactArmTick <= tapTicks && !interactArmUsed && armed.engaged) {
             disengage(armed);
         }
     }

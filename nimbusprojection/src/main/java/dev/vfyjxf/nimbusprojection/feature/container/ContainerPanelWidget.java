@@ -8,6 +8,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
 import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
+import dev.vfyjxf.nimbusprojection.NimbusConfig;
 import dev.vfyjxf.nimbusprojection.api.section.SectionInstance;
 import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
 import dev.vfyjxf.nimbusprojection.feature.container.section.ItemSectionData;
@@ -37,7 +38,6 @@ import java.util.function.Supplier;
 public final class ContainerPanelWidget extends WidgetGroup<Widget> implements WorldDragAcceptor {
 
     private static final int cell = 12;
-    private static final int topItems = 4;
 
     private final InworldPanelContext ctx;
     private final Supplier<BlockPos> pos;
@@ -46,7 +46,9 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
     private final Widget summary = new Widget() {
         {
             onMount((scene, context, handle) -> scene.layoutTree()
-                    .setMeasureFunc(nodeId(), (style, space) -> new FloatSize(topItems * cell + 48, cell + 6)));
+                    .setMeasureFunc(
+                            nodeId(),
+                            (style, space) -> new FloatSize(NimbusConfig.containerTopItems() * cell + 48, cell + 6)));
         }
 
         @Override
@@ -64,10 +66,11 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
             }
             int shown = 0;
             int used = 0;
+            int limit = NimbusConfig.containerTopItems();
             for (ItemStack stack : stacks) {
                 if (stack.isEmpty()) continue;
                 used++;
-                if (shown >= topItems) continue;
+                if (shown >= limit) continue;
                 canvas.renderItem(stack, x, 0);
                 x += cell;
                 shown++;

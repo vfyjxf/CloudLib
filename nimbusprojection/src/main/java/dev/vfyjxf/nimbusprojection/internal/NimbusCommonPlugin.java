@@ -12,6 +12,12 @@ import dev.vfyjxf.nimbusprojection.feature.container.section.ItemSectionData;
 import dev.vfyjxf.nimbusprojection.feature.container.section.ItemSectionProvider;
 import dev.vfyjxf.nimbusprojection.feature.container.section.SectionTypes;
 import dev.vfyjxf.nimbusprojection.feature.entity.EntityItemSectionProvider;
+import dev.vfyjxf.nimbusprojection.feature.machine.section.HiveSectionData;
+import dev.vfyjxf.nimbusprojection.feature.machine.section.HiveSectionProvider;
+import dev.vfyjxf.nimbusprojection.feature.machine.section.ProgressSectionData;
+import dev.vfyjxf.nimbusprojection.feature.machine.section.ProgressSectionProvider;
+import dev.vfyjxf.nimbusprojection.feature.machine.section.TextSectionData;
+import dev.vfyjxf.nimbusprojection.feature.machine.section.TextSectionProvider;
 
 /**
  * Nimbus's common-side registrations — the section kinds' data half
@@ -34,5 +40,9 @@ public final class NimbusCommonPlugin implements NimbusPlugin {
         // entity inventories ride the same item data shape — a chest boat's
         // sections serialize identically to a chest's
         register.registerEntity(SectionTypes.item, ItemSectionData.streamCodec, new EntityItemSectionProvider());
+        // machine data faces — non-capability BE state the menu would sync
+        register.register(SectionTypes.progress, ProgressSectionData.streamCodec, new ProgressSectionProvider());
+        register.register(SectionTypes.text, TextSectionData.streamCodec, new TextSectionProvider());
+        register.register(SectionTypes.hive, HiveSectionData.streamCodec, new HiveSectionProvider());
     }
 }

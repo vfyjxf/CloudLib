@@ -8,6 +8,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
 import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
+import dev.vfyjxf.nimbusprojection.NimbusConfig;
 import dev.vfyjxf.nimbusprojection.NimbusKeyMappings;
 import dev.vfyjxf.nimbusprojection.api.section.SectionInstance;
 import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
@@ -44,10 +45,6 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class EntityPanelWidget extends WidgetGroup<Widget> implements WorldDragAcceptor {
 
-    /** Detail tier escalates one step per this many ticks while the key is held. */
-    private static final int tierStepTicks = 10;
-
-    private static final int maxEffects = 3;
     private static final int rowHeight = 9;
     private static final int panelWidth = 76;
 
@@ -91,7 +88,7 @@ public final class EntityPanelWidget extends WidgetGroup<Widget> implements Worl
         if (held) {
             if (heldTier < 3 && now >= tierAdvanceAt) {
                 heldTier++;
-                tierAdvanceAt = now + tierStepTicks;
+                tierAdvanceAt = now + NimbusConfig.detailStepTicks();
             }
             return Math.max(base, heldTier);
         }
@@ -149,7 +146,7 @@ public final class EntityPanelWidget extends WidgetGroup<Widget> implements Worl
 
         private int flagsRows() {
             if (!(entity instanceof LivingEntity living)) return 0;
-            int rows = Math.min(living.getActiveEffects().size(), maxEffects);
+            int rows = Math.min(living.getActiveEffects().size(), NimbusConfig.maxEffectsShown());
             if (entity instanceof TamableAnimal || entity instanceof AgeableMob || entity instanceof AbstractHorse) {
                 rows++;
             }
@@ -193,8 +190,9 @@ public final class EntityPanelWidget extends WidgetGroup<Widget> implements Worl
 
         private int renderEffectsAndFlags(SceneCanvas canvas, LivingEntity living, int y) {
             int shown = 0;
+            int limit = NimbusConfig.maxEffectsShown();
             for (MobEffectInstance effect : living.getActiveEffects()) {
-                if (shown >= maxEffects) break;
+                if (shown >= limit) break;
                 canvas.text(
                         effect.getEffect().value().getDisplayName().getString() + " " + effect.getDuration() / 20 + "s",
                         2,
