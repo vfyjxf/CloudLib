@@ -58,6 +58,8 @@ public final class Cascade {
         private final Theme theme;
         private final SelectorMatcher.MatchContext match = new SelectorMatcher.MatchContext();
         private final Map<Themeable, Map<String, List<ComponentValue>>> resolved = new IdentityHashMap<>();
+        private final Map<dev.vfyjxf.cloudlib.internal.css.ComplexSelector, Specificity> specificity =
+                new IdentityHashMap<>();
 
         public ResolveContext(Theme theme) {
             this.theme = theme;
@@ -83,7 +85,8 @@ public final class Cascade {
                 Specificity best = null;
                 for (var sel : rule.selectors()) {
                     if (SelectorMatcher.matches(match, sel, node)) {
-                        Specificity s = sel.specificity();
+                        Specificity s = specificity.computeIfAbsent(
+                                sel, dev.vfyjxf.cloudlib.internal.css.ComplexSelector::specificity);
                         if (best == null || s.compareTo(best) > 0) {
                             best = s;
                         }
@@ -121,10 +124,13 @@ public final class Cascade {
                     }
                 }
             }
-            // var() substitution — runs against this node's own resolved map
+            // var() substitution — runs against this node's own resolved map;
+            // per-node varCache: expanding --pad under this node's bindings is
+            // deterministic, so repeated uses expand once
+            Map<String, List<ComponentValue>> varCache = new HashMap<>();
             Map<String, List<ComponentValue>> out = new HashMap<>();
             for (Map.Entry<String, List<ComponentValue>> e : local.entrySet()) {
-                out.put(e.getKey(), substitute(e.getValue(), local, theme));
+                out.put(e.getKey(), substitute(e.getValue(), local, theme, varCache));
             }
             return out;
         }
@@ -139,9 +145,28 @@ public final class Cascade {
      * Unresolvable vars drop the declaration (empty result) unless a fallback exists.
      */
     private static List<ComponentValue> substitute(
-            List<ComponentValue> values, Map<String, List<ComponentValue>> resolved, Theme theme) {
-        List<ComponentValue> out = substituteList(values, resolved, theme, new HashSet<>());
+            List<ComponentValue> values,
+            Map<String, List<ComponentValue>> resolved,
+            Theme theme,
+            Map<String, List<ComponentValue>> varCache) {
+        if (!containsVar(values)) {
+            return values; // fast path — no var() anywhere, skip the copy
+        }
+        List<ComponentValue> out = substituteList(values, resolved, theme, varCache, new HashSet<>());
         return out == null ? List.of() : out;
+    }
+
+    private static boolean containsVar(List<ComponentValue> values) {
+        for (ComponentValue v : values) {
+            if (v instanceof ComponentValue.Function fn) {
+                if (fn.name().equalsIgnoreCase("var") || containsVar(fn.args())) {
+                    return true;
+                }
+            } else if (v instanceof ComponentValue.Block block && containsVar(block.values())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -156,19 +181,20 @@ public final class Cascade {
             List<ComponentValue> values,
             Map<String, List<ComponentValue>> resolved,
             Theme theme,
+            Map<String, List<ComponentValue>> varCache,
             Set<String> inFlight) {
         List<ComponentValue> out = new ArrayList<>(values.size());
         for (ComponentValue v : values) {
             if (v instanceof ComponentValue.Function fn) {
                 if (fn.name().equalsIgnoreCase("var")) {
-                    List<ComponentValue> expanded = expandVar(fn, resolved, theme, inFlight);
+                    List<ComponentValue> expanded = expandVar(fn, resolved, theme, varCache, inFlight);
                     if (expanded == null) {
                         return null; // unresolved var → invalid at computed-value time
                     }
                     out.addAll(expanded);
                     continue;
                 }
-                List<ComponentValue> inner = substituteList(fn.args(), resolved, theme, inFlight);
+                List<ComponentValue> inner = substituteList(fn.args(), resolved, theme, varCache, inFlight);
                 if (inner == null) {
                     return null;
                 }
@@ -176,7 +202,7 @@ public final class Cascade {
                 continue;
             }
             if (v instanceof ComponentValue.Block block) {
-                List<ComponentValue> inner = substituteList(block.values(), resolved, theme, inFlight);
+                List<ComponentValue> inner = substituteList(block.values(), resolved, theme, varCache, inFlight);
                 if (inner == null) {
                     return null;
                 }
@@ -192,6 +218,7 @@ public final class Cascade {
             ComponentValue.Function var,
             Map<String, List<ComponentValue>> resolved,
             Theme theme,
+            Map<String, List<ComponentValue>> varCache,
             Set<String> inFlight) {
         List<ComponentValue> args = var.args();
         if (args.isEmpty()
@@ -204,40 +231,55 @@ public final class Cascade {
             return null; // cyclic reference — per spec resolves to the empty value
         }
         try {
+            List<ComponentValue> expanded = varCache.get(varName);
+            if (expanded != null) {
+                return expanded;
+            }
             List<ComponentValue> found = resolved.get(varName);
             if (found == null) {
                 found = theme.rootVars().get(varName);
             }
             if (found != null) {
                 // the var's own value may reference further vars — expand recursively
-                List<ComponentValue> expanded = substituteList(found, resolved, theme, inFlight);
+                expanded = substituteList(found, resolved, theme, varCache, inFlight);
                 if (expanded == null) {
                     return null;
                 }
-                return expanded.stream()
-                        .filter(c -> c != ComponentValue.Whitespace.instance)
-                        .toList();
-            }
-            // fallback = everything after the first comma
-            int comma = -1;
-            for (int i = 0; i < args.size(); i++) {
-                if (args.get(i) instanceof ComponentValue.Delim d && d.value() == ',') {
-                    comma = i;
-                    break;
+                // cache only resolved bindings — fallbacks differ per call site
+                List<ComponentValue> trimmed = stripWhitespace(expanded);
+                varCache.put(varName, trimmed);
+                return trimmed;
+            } else {
+                // fallback = everything after the first comma
+                int comma = -1;
+                for (int i = 0; i < args.size(); i++) {
+                    if (args.get(i) instanceof ComponentValue.Delim d && d.value() == ',') {
+                        comma = i;
+                        break;
+                    }
                 }
+                if (comma < 0) {
+                    return null;
+                }
+                expanded = substituteList(args.subList(comma + 1, args.size()), resolved, theme, varCache, inFlight);
+                if (expanded == null) {
+                    return null;
+                }
+                return stripWhitespace(expanded);
             }
-            if (comma < 0) {
-                return null;
-            }
-            List<ComponentValue> fb = args.subList(comma + 1, args.size());
-            return substituteList(fb, resolved, theme, inFlight) != null
-                    ? fb.stream()
-                            .filter(c -> c != ComponentValue.Whitespace.instance)
-                            .toList()
-                    : null;
         } finally {
             inFlight.remove(varName);
         }
+    }
+
+    private static List<ComponentValue> stripWhitespace(List<ComponentValue> values) {
+        List<ComponentValue> out = new ArrayList<>(values.size());
+        for (ComponentValue c : values) {
+            if (c != ComponentValue.Whitespace.instance) {
+                out.add(c);
+            }
+        }
+        return out;
     }
 
     // endregion

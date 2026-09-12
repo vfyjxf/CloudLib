@@ -10,7 +10,6 @@ import dev.vfyjxf.cloudlib.internal.css.PseudoClass;
 import dev.vfyjxf.cloudlib.internal.css.RelativeSelector;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -49,17 +48,33 @@ public final class SelectorMatcher {
         private final Map<Themeable, List<Themeable>> siblings = new IdentityHashMap<>();
         private final Map<Themeable, List<Themeable>> children = new IdentityHashMap<>();
         private final Map<Themeable, Set<String>> states = new IdentityHashMap<>();
+        private final Map<Themeable, Integer> siblingIndex = new IdentityHashMap<>();
 
+        @SuppressWarnings("unchecked")
         List<Themeable> siblingsOf(Themeable node) {
-            return siblings.computeIfAbsent(node, n -> new ArrayList<>(n.themeSiblings()));
+            return siblings.computeIfAbsent(node, n -> (List<Themeable>) n.themeSiblings());
         }
 
+        @SuppressWarnings("unchecked")
         List<Themeable> childrenOf(Themeable node) {
-            return children.computeIfAbsent(node, n -> new ArrayList<>(n.themeChildren()));
+            return children.computeIfAbsent(node, n -> (List<Themeable>) n.themeChildren());
         }
 
         Set<String> statesOf(Themeable node) {
             return states.computeIfAbsent(node, Themeable::themeStates);
+        }
+
+        /** {@code node's} index among its siblings — memoized, linear scan once. */
+        int indexOf(Themeable node) {
+            return siblingIndex.computeIfAbsent(node, n -> {
+                List<Themeable> sibs = siblingsOf(n);
+                for (int i = 0; i < sibs.size(); i++) {
+                    if (sibs.get(i) == n) {
+                        return i;
+                    }
+                }
+                return 0;
+            });
         }
     }
 
@@ -138,18 +153,8 @@ public final class SelectorMatcher {
 
     private static @Nullable Themeable nextSibling(MatchContext ctx, Themeable node) {
         List<Themeable> siblings = ctx.siblingsOf(node);
-        int i = siblingIndex(ctx, node);
+        int i = ctx.indexOf(node);
         return i + 1 < siblings.size() ? siblings.get(i + 1) : null;
-    }
-
-    private static int siblingIndex(MatchContext ctx, Themeable node) {
-        List<Themeable> siblings = ctx.siblingsOf(node);
-        for (int i = 0; i < siblings.size(); i++) {
-            if (siblings.get(i) == node) {
-                return i;
-            }
-        }
-        return 0;
     }
 
     // endregion
@@ -226,8 +231,8 @@ public final class SelectorMatcher {
         return switch (name) {
             case "root" -> node.themeParent() == null;
             case "empty" -> ctx.statesOf(node).contains("empty");
-            case "first-child" -> siblingIndex(ctx, node) == 0;
-            case "last-child" -> siblingIndex(ctx, node) == ctx.siblingsOf(node).size() - 1;
+            case "first-child" -> ctx.indexOf(node) == 0;
+            case "last-child" -> ctx.indexOf(node) == ctx.siblingsOf(node).size() - 1;
             case "only-child" -> ctx.siblingsOf(node).size() == 1;
             case "nth-child", "nth-last-child" ->
                 pseudo.args() instanceof PseudoArgs.AnPlusB ab
@@ -276,7 +281,7 @@ public final class SelectorMatcher {
             }
             case subsequentSibling -> {
                 List<Themeable> sibs = ctx.siblingsOf(node);
-                int from = siblingIndex(ctx, node) + 1;
+                int from = ctx.indexOf(node) + 1;
                 for (int i = from; i < sibs.size(); i++) {
                     if (matches(ctx, rel.selector(), sibs.get(i))) {
                         yield true;
@@ -303,7 +308,7 @@ public final class SelectorMatcher {
 
     private static boolean matchesNth(MatchContext ctx, PseudoArgs.AnPlusB ab, Themeable node, boolean fromEnd) {
         List<Themeable> sibs = ctx.siblingsOf(node);
-        int index = fromEnd ? sibs.size() - siblingIndex(ctx, node) : siblingIndex(ctx, node) + 1;
+        int index = fromEnd ? sibs.size() - ctx.indexOf(node) : ctx.indexOf(node) + 1;
         return anPlusB(ab.a(), ab.b(), index);
     }
 

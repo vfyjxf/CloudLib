@@ -72,84 +72,89 @@ public final class Theme {
     }
 
     /**
-     * Rules that could match {@code node}: its tag bucket + every class bucket +
-     * its id bucket + the always bucket, deduplicated in source order.
+     * Rules that could match {@code node}: a single pass over the indexed rule
+     * list — a rule is a candidate when the node supplies ANY of the keys its
+     * selectors require (tag/class/id), or when it contains a universal selector.
+     * Source order is preserved by construction — no sorting, no hashing of the
+     * rule records.
      */
     public List<StyleRule> rulesFor(Themeable node) {
         if (byTag == null) {
             buildIndex();
         }
-        List<StyleRule> out = new ArrayList<>(always);
-        List<StyleRule> tagged = byTag.get(node.themeTag().toLowerCase(java.util.Locale.ROOT));
+        List<IndexedRule> cand = new ArrayList<>(always.size());
+        cand.addAll(always);
+        List<IndexedRule> tagged = byTag.get(node.themeTag().toLowerCase(java.util.Locale.ROOT));
         if (tagged != null) {
-            out.addAll(tagged);
+            cand.addAll(tagged);
         }
-        for (String cls : node.themeClasses()) {
-            List<StyleRule> clsRules = byClass.get(cls);
+        for (String c : node.themeClasses()) {
+            List<IndexedRule> clsRules = byClass.get(c);
             if (clsRules != null) {
-                out.addAll(clsRules);
+                cand.addAll(clsRules);
             }
         }
         if (node.themeId() != null) {
-            List<StyleRule> idRules = byId.get(node.themeId());
+            List<IndexedRule> idRules = byId.get(node.themeId());
             if (idRules != null) {
-                out.addAll(idRules);
+                cand.addAll(idRules);
             }
         }
-        // a rule may land in several buckets — dedupe while keeping source order
-        out.sort(java.util.Comparator.comparingInt(order::get));
-        List<StyleRule> dedup = new ArrayList<>(out.size());
+        // merge buckets back into global source order — int sort, no record hashing
+        cand.sort(java.util.Comparator.comparingInt(IndexedRule::order));
+        List<StyleRule> out = new ArrayList<>(cand.size());
         StyleRule last = null;
-        for (StyleRule r : out) {
-            if (r != last) {
-                dedup.add(r);
+        for (IndexedRule ir : cand) {
+            if (ir.rule() != last) {
+                out.add(ir.rule());
             }
-            last = r;
+            last = ir.rule();
         }
-        return dedup;
+        return out;
     }
 
     // endregion
 
     // region rule index
 
-    private volatile @Nullable Map<String, List<StyleRule>> byTag;
-    private volatile @Nullable Map<String, List<StyleRule>> byClass;
-    private volatile @Nullable Map<String, List<StyleRule>> byId;
-    private volatile @Nullable List<StyleRule> always;
-    private volatile @Nullable Map<StyleRule, Integer> order;
+    /** A rule plus its source position — ordering never hashes the rule record. */
+    private record IndexedRule(StyleRule rule, int order) {}
+
+    private volatile @Nullable Map<String, List<IndexedRule>> byTag;
+    private volatile @Nullable Map<String, List<IndexedRule>> byClass;
+    private volatile @Nullable Map<String, List<IndexedRule>> byId;
+    private volatile @Nullable List<IndexedRule> always;
     private volatile @Nullable Map<String, List<ComponentValue>> rootVars;
 
     /**
-     * Buckets rules by the rightmost compound's most selective simple selector:
-     * {@code #id} &gt; {@code .class} &gt; tag &gt; always. A rule lands in
-     * {@code always} when ANY of its selectors has no keyable rightmost compound.
+     * Buckets rules by the rightmost compound's most selective key:
+     * {@code #id} &gt; {@code .class} &gt; tag &gt; always. Each bucket keeps
+     * global source order via the embedded {@code order} index.
      */
     private synchronized void buildIndex() {
         if (byTag != null) {
             return;
         }
-        Map<String, List<StyleRule>> tag = new LinkedHashMap<>();
-        Map<String, List<StyleRule>> cls = new LinkedHashMap<>();
-        Map<String, List<StyleRule>> ids = new LinkedHashMap<>();
-        List<StyleRule> all = new ArrayList<>();
-        Map<StyleRule, Integer> ord = new LinkedHashMap<>();
+        Map<String, List<IndexedRule>> tag = new LinkedHashMap<>();
+        Map<String, List<IndexedRule>> cls = new LinkedHashMap<>();
+        Map<String, List<IndexedRule>> ids = new LinkedHashMap<>();
+        List<IndexedRule> all = new ArrayList<>();
         int i = 0;
         for (StyleRule rule : styleRules()) {
-            ord.put(rule, i++);
+            IndexedRule ir = new IndexedRule(rule, i++);
             for (var sel : rule.selectors()) {
                 var last = sel.last();
                 if (last.id() != null) {
-                    ids.computeIfAbsent(last.id(), k -> new ArrayList<>()).add(rule);
+                    ids.computeIfAbsent(last.id(), k -> new ArrayList<>()).add(ir);
                 } else if (!last.classes().isEmpty()) {
                     for (String c : last.classes()) {
-                        cls.computeIfAbsent(c, k -> new ArrayList<>()).add(rule);
+                        cls.computeIfAbsent(c, k -> new ArrayList<>()).add(ir);
                     }
                 } else if (last.tag() != null) {
                     tag.computeIfAbsent(last.tag().toLowerCase(java.util.Locale.ROOT), k -> new ArrayList<>())
-                            .add(rule);
+                            .add(ir);
                 } else {
-                    all.add(rule);
+                    all.add(ir);
                 }
             }
         }
@@ -157,7 +162,6 @@ public final class Theme {
         byClass = cls;
         byId = ids;
         always = all;
-        order = ord;
     }
 
     // endregion

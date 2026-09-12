@@ -201,6 +201,45 @@ class ThemePerfTest {
         assertTrue(elapsedMs < 10_000, "resolve took " + elapsedMs + "ms for 1000 nodes");
     }
 
+    /**
+     * Profiling workload — only runs with {@code -Dcloudlib.theme.profile=1}.
+     * Loops the cascade over a realistic tree long enough for CPU sampling.
+     */
+    @Test
+    void profilingWorkload() {
+        org.junit.jupiter.api.Assumptions.assumeTrue(
+                Boolean.getBoolean("cloudlib.theme.profile"),
+                "profiling workload — enable with -Dcloudlib.theme.profile=1");
+        StringBuilder css = new StringBuilder(":root { --c: #FFF; --pad: 4px }\n");
+        for (int i = 0; i < 50; i++) {
+            css.append("tag")
+                    .append(i)
+                    .append(" { color: var(--c); padding: var(--pad); margin: ")
+                    .append(i % 4 + 1)
+                    .append("px }\n");
+        }
+        css.append("button:hovered { margin: 2px }")
+                .append("panel .slot { gap: 3px }")
+                .append("panel > button { z-index: 1 }")
+                .append("*:nth-child(2n) { flex-grow: 1 }");
+        Theme t = theme(css.toString());
+        // realistic tree: 40 containers × 25 children = 1040 nodes
+        Probe root = new Probe("panel");
+        for (int i = 0; i < 40; i++) {
+            Probe p = root.child(new Probe("panel"));
+            for (int k = 0; k < 25; k++) {
+                p.child(new Probe(k % 3 == 0 ? "button" : "tag" + (k % 50)));
+            }
+        }
+        List<Probe> nodes = collect(root);
+        for (int iter = 0; iter < 500; iter++) {
+            Cascade.ResolveContext ctx = new Cascade.ResolveContext(t);
+            for (Probe n : nodes) {
+                ctx.resolve(n);
+            }
+        }
+    }
+
     // ------------------------------------------------------------------ engine-level
 
     @Test
