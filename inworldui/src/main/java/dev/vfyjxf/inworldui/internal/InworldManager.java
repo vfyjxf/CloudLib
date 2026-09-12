@@ -240,6 +240,9 @@ public final class InworldManager implements InworldUiApi {
     private static final int PARK_STEP = 4096;
     /** ticks an engaged panel survives without any targeting (~3s) */
     private static final int ENGAGE_GRACE_TICKS = 60;
+    /** ~10° sweep cone for drag target acquisition — the ray only has to
+     *  pass near a container for the trail to collect it */
+    private static final double DRAG_SWEEP_COS = Math.cos(Math.toRadians(10));
 
     private record ProviderRegistration(InworldProvider provider, int interval, long nextRun) {
     }
@@ -641,8 +644,13 @@ public final class InworldManager implements InworldUiApi {
 
         //target acquisition: world mode reuses the vanilla crosshair pick;
         //inspect mode casts the cursor's ray through the live projection
-        //(mc.hitResult is useless there — it always follows screen center)
+        //(mc.hitResult is useless there — it always follows screen center).
+        //Either way a near-miss still collects the container — the sweep only
+        //has to pass within a small cone of it, not dead-center it.
+        Vec3 eye = mc.player.getEyePosition();
+        Vec3 dir;
         HitResult hit;
+        double reach = mc.player.blockInteractionRange();
         if (dragInspectHosted) {
             if (projection == null) return;
             //cursor over a panel must not "see through" the UI to a container
@@ -652,29 +660,30 @@ public final class InworldManager implements InworldUiApi {
                 dragTrail.leave();
                 return;
             }
-            Vec3 eye = mc.player.getEyePosition();
-            Vec3 dir = projection.rayDirection(dragCursorX, dragCursorY);
-            double reach = mc.player.blockInteractionRange();
+            dir = projection.rayDirection(dragCursorX, dragCursorY);
             hit = mc.level.clip(new ClipContext(eye, eye.add(dir.scale(reach)),
                     ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player));
         } else {
+            dir = mc.player.getLookAngle();
             hit = mc.hitResult;
         }
+        BlockPos pos = null;
         if (hit instanceof BlockHitResult bhr && bhr.getType() != HitResult.Type.MISS) {
-            BlockPos pos = bhr.getBlockPos();
-            if (isDragTarget(pos)) {
-                dragTarget = pos;
-                dragTrail.offer(pos);
-            } else {
-                dragTarget = null;
-                dragTrail.leave();
-            }
+            BlockPos hitPos = bhr.getBlockPos();
+            if (isDragTarget(hitPos)) pos = hitPos;
             dragHold = bhr.getLocation();
+        } else {
+            dragHold = eye.add(dir.scale(2.4));
+        }
+        if (pos == null) {
+            pos = ContainerScan.nearest(mc.level, mc.player, eye, dir, reach, DRAG_SWEEP_COS);
+        }
+        if (pos != null) {
+            dragTarget = pos;
+            dragTrail.offer(pos);
         } else {
             dragTarget = null;
             dragTrail.leave();
-            dragHold = mc.player.getEyePosition()
-                    .add(mc.player.getLookAngle().scale(2.4));
         }
     }
 

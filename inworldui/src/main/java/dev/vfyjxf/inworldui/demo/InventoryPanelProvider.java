@@ -10,6 +10,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldProvider;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldSink;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
 import dev.vfyjxf.cloudlib.ui.widget.DividerWidget;
+import dev.vfyjxf.inworldui.internal.ContainerScan;
 import dev.vfyjxf.inworldui.internal.InworldManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -17,6 +18,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The "world is UI" demo: a combined inventory panel that materializes next
@@ -40,6 +42,11 @@ import net.neoforged.neoforge.capabilities.Capabilities;
 public final class InventoryPanelProvider implements InworldProvider {
 
     private static final String KEY = "player/inv";
+    private static final double REACH = 6.0;
+    /** ~15° soft-aim cone: the crosshair only has to rest near the container. */
+    private static final double CONE_COS_ENTER = Math.cos(Math.toRadians(15));
+    /** ~20° hold cone: the current anchor survives a bit past the enter cone. */
+    private static final double CONE_COS_HOLD = Math.cos(Math.toRadians(20));
 
     /** The container the panel is anchored to — follows the crosshair while no drag is live. */
     private BlockPos anchorPos;
@@ -80,10 +87,29 @@ public final class InventoryPanelProvider implements InworldProvider {
                 .hints("R:inspect+drag", "RMB:one"));
     }
 
-    private BlockPos lookingAtContainer(InworldContext context) {
-        HitResult hit = context.player().pick(6.0, 0, false);
-        if (!(hit instanceof BlockHitResult bhr) || bhr.getType() == HitResult.Type.MISS) return null;
-        BlockPos pos = bhr.getBlockPos();
-        return context.level().getCapability(Capabilities.ItemHandler.BLOCK, pos, null) != null ? pos : null;
+    /**
+     * Soft-aim container targeting: an exact block hit wins outright;
+     * otherwise the nearest item-handling block inside a ~15° cone around
+     * the look vector counts, so a chest merely <em>near</em> the crosshair
+     * still engages — Watch-Dogs-style point-at-thing tolerance instead of
+     * demanding pixel-perfect aim.
+     */
+    private @Nullable BlockPos lookingAtContainer(InworldContext context) {
+        var player = context.player();
+        var level = context.level();
+        HitResult hit = player.pick(REACH, 0, false);
+        if (hit instanceof BlockHitResult bhr && bhr.getType() == HitResult.Type.BLOCK) {
+            BlockPos pos = bhr.getBlockPos();
+            if (level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null) != null) return pos;
+        }
+        Vec3 eye = player.getEyePosition();
+        Vec3 look = player.getLookAngle().normalize();
+        //cone-edge flicker guard: the current anchor holds inside a slightly
+        //wider cone, so hovering at the boundary doesn't alternate target/null
+        if (anchorPos != null
+                && ContainerScan.holds(level, player, eye, look, anchorPos, REACH, CONE_COS_HOLD)) {
+            return anchorPos;
+        }
+        return ContainerScan.nearest(level, player, eye, look, REACH, CONE_COS_ENTER);
     }
 }
