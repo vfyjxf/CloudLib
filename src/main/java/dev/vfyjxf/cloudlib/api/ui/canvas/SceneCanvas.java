@@ -1307,6 +1307,22 @@ public final class SceneCanvas {
         return this;
     }
 
+    /**
+     * The item's flat atlas sprite — for render targets the 3D item path
+     * can't reach: {@code entityTranslucent} rendertypes rebind the level's
+     * translucent/entity FBO under {@code useShaderTransparency}, so
+     * {@link #renderItem} would escape an offscreen pass entirely. The
+     * sprite blit uses the gui rendertype and stays in whatever buffer the
+     * caller bound.
+     */
+    public SceneCanvas renderItemIcon(ItemStack stack, int x, int y) {
+        if (stack.isEmpty()) return this;
+        var model = Minecraft.getInstance().getItemRenderer().getItemModelShaper().getItemModel(stack);
+        TextureAtlasSprite sprite = model.getParticleIcon(net.neoforged.neoforge.client.model.data.ModelData.EMPTY);
+        layeredGraphics().blit(x, y, 0, 16, 16, sprite);
+        return this;
+    }
+
     public SceneCanvas renderItemDecorations(ItemStack stack, int x, int y, @Nullable String text) {
         layeredGraphics().renderItemDecorations(font(), stack, x, y, text);
         return this;

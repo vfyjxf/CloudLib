@@ -1,32 +1,33 @@
+
 /*
- * nimbusprojection:holo — cyan hologram chrome.
+ * nimbusprojection:holo — amber hologram chrome.
  *
- * Projected-interface styling: panels are thin cyan-on-deep-teal glass with a
- * faint self-glow box shadow, text is bright phosphor cyan with no shadow
- * (holograms bloom, they don't shadow). Best paired with floating/face
- * presentations where the panel itself reads as a projection.
+ * Projected-interface styling in amber phosphor — the enchantment-table glyph
+ * color — instead of sci-fi cyan: thin amber-on-sepia glass with a faint
+ * self-glow box shadow. Holograms bloom, they don't shadow. Best paired with
+ * floating/face presentations where the panel reads as a projection.
  */
 
 :root {
-    /* palette — cyan phosphor on deep teal */
-    --accent:         #22D3EEFF;
-    --accent-dim:     #22D3EE59;
-    --text:           #D9F8FFFF;
-    --text-dim:       #7FC9DBFF;
-    --text-on-accent: #04252EFF;
-    --ok:             #4ADE80FF;
-    --warn:           #FDE047FF;
-    --danger:         #FB7185FF;
+    /* palette — amber phosphor on deep sepia */
+    --accent:         #FFB84DFF;
+    --accent-dim:     #FFB84D59;
+    --text:           #FFE9C4FF;
+    --text-dim:       #D9A86BFF;
+    --text-on-accent: #241500FF;
+    --ok:             #A8E06EFF;
+    --warn:           #FFD94DFF;
+    --danger:         #FF7A4DFF;
 
     /* chrome — transparent glass + glow line */
-    --panel:          color(#06232D99);
-    --panel-raised:   color(#0A3040B3);
-    --panel-line:     #22D3EE80;
-    --inset:          color(#03162080);
-    --btn:            color(#0B3546B3);
-    --btn-hover:      color(#0F4A61CC);
-    --btn-down:       color(#155E7BCC);
-    --glow:           #22D3EE4D;
+    --panel:          color(#24160899);
+    --panel-raised:   color(#33200AB3);
+    --panel-line:     #FFB84D80;
+    --inset:          color(#160D0480);
+    --btn:            color(#3B2A10B3);
+    --btn-hover:      color(#4F3816CC);
+    --btn-down:       color(#694A1ECC);
+    --glow:           #FFB84D4D;
 
     /* metrics */
     --pad:  4px;
@@ -74,12 +75,12 @@ item-slot, .slot {
 }
 item-slot:hover { border-texture: border-texture(var(--accent), 1); }
 
-divider { background: color(#22D3EE33); }
+divider { background: color(#FFB84D33); }
 
 /* ---------- composite chrome ---------- */
 
 scrollbar            { background: color(#03162099); }
-scrollbar::part(thumb) { background: color(#22D3EE80); }
+scrollbar::part(thumb) { background: color(#FFB84D80); }
 
 chip { background: var(--inset); color: var(--text-dim); padding: 1px 4px; }
 

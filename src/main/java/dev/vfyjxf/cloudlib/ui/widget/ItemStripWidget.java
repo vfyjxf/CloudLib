@@ -36,7 +36,7 @@ public class ItemStripWidget extends Widget {
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         int count = Math.min(items.size(), max);
         for (int i = 0; i < count; i++) {
-            canvas.renderItem(items.get(i), i * cell, 1);
+            canvas.renderItemIcon(items.get(i), i * cell, 1);
             canvas.renderItemDecorations(items.get(i), i * cell, 1);
         }
     }

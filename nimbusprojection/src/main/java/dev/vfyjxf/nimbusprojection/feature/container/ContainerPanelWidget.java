@@ -79,7 +79,7 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
                 if (stack.isEmpty()) continue;
                 used++;
                 if (shown >= limit) continue;
-                canvas.renderItem(stack, x, 0);
+                canvas.renderItemIcon(stack, x, 0);
                 x += cell;
                 shown++;
             }

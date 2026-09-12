@@ -176,7 +176,7 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
             canvas.fill(x, y, cell - 1, cell - 1, hover ? slotBgHot : slotBg);
             if (!stack.isEmpty()) {
                 any = true;
-                canvas.renderItem(stack, x, y);
+                canvas.renderItemIcon(stack, x, y);
                 canvas.renderItemDecorations(stack, x, y);
             }
         }

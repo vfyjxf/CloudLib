@@ -1,31 +1,32 @@
+
 /*
- * nimbusprojection:light — bone-paper in-world panels.
+ * nimbusprojection:light — parchment in-world panels.
  *
- * Warm off-white chrome in the vein of Jade's light color scheme: parchment
- * fills read cleanly against dark cave walls and night scenes, and the ink
- * text keeps full contrast without a shadow pass. Borders sit one step darker
- * than the fill so panels don't dissolve into bright terrain.
+ * Warm parchment chrome like a villager UI or a written page: bone paper fills
+ * read cleanly against dark caves and night, and the ink text keeps full
+ * contrast without a shadow pass. Copper accents echo lightning rods and the
+ * game's own warm highlight.
  */
 
 :root {
-    /* palette */
-    --accent:         #2F5DD0FF;
-    --accent-dim:     #2F5DD04D;
-    --text:           #241F18FF;
-    --text-dim:       #6B6355FF;
-    --text-on-accent: #F6F3ECFF;
-    --ok:             #2E8B47FF;
-    --warn:           #A3740EFF;
-    --danger:         #C43D3DFF;
+    /* palette — parchment + copper */
+    --accent:         #C9701EFF;
+    --accent-dim:     #C9701E4D;
+    --text:           #3A2E1EFF;
+    --text-dim:       #7A6B52FF;
+    --text-on-accent: #F8F2E4FF;
+    --ok:             #5E8F3CFF;
+    --warn:           #B87408FF;
+    --danger:         #B4442FFF;
 
     /* chrome — warm paper, soft separation shadow */
-    --panel:          linear-gradient(#F4EFE4F2, #ECE5D5F2);
-    --panel-raised:   linear-gradient(#FBF7EDF2, #F2ECDCF2);
-    --panel-line:     #9C9179;
-    --inset:          color(#CFC5ADCC);
-    --btn:            linear-gradient(#E7E0CFF2, #DED5BFF2);
-    --btn-hover:      linear-gradient(#FFF9E9F2, #F0E8D2F2);
-    --btn-down:       linear-gradient(#D5CBB1F2, #C9BE9FF2);
+    --panel:          linear-gradient(#F2EAD8F2, #EAE0C8F2);
+    --panel-raised:   linear-gradient(#FAF3E2F2, #F0E6CFF2);
+    --panel-line:     #9C8B6B;
+    --inset:          color(#CFC0A0CC);
+    --btn:            linear-gradient(#E4D9BEF2, #DACDA8F2);
+    --btn-hover:      linear-gradient(#FCF4DCf2, #EEE2C0F2);
+    --btn-down:       linear-gradient(#D2C49CF2, #C6B78DF2);
 
     /* metrics */
     --pad:  4px;

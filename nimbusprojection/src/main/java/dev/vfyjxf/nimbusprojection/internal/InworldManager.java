@@ -2293,9 +2293,11 @@ public final class InworldManager implements NimbusClient {
 
         if (best == null) {
             double bestScore = Double.MAX_VALUE;
-            double[] dys = {1.7, 1.1, 0.5, 2.3, -0.2};
+            // hug the anchor: the hologram reads as the block's UI, drifting
+            // several blocks away severs that read — start just clear of it
+            double[] dys = {0.9, 0.55, 0.25, 1.35, -0.15};
             for (int ring = 0; ring < 4; ring++) {
-                double rad = 1.0 + ring * 0.55 + pw * 0.5;
+                double rad = 0.65 + ring * 0.5 + pw * 0.5;
                 for (double dy : dys) {
                     for (int i = 0; i < 10; i++) {
                         double ang = i * (Math.PI * 2 / 10);

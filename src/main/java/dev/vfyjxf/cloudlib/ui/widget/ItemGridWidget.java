@@ -86,7 +86,7 @@ public final class ItemGridWidget extends Widget implements WorldDraggable {
                 canvas.fill(x, y, cell - 1, cell - 1, hover ? 0x5536C4D8 : slotBg);
                 if (!stack.isEmpty()) {
                     any = true;
-                    canvas.renderItem(stack, x, y);
+                    canvas.renderItemIcon(stack, x, y);
                     canvas.renderItemDecorations(stack, x, y);
                 }
             }

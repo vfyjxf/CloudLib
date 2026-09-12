@@ -252,7 +252,7 @@ public final class EntityPanelWidget extends WidgetGroup<Widget> implements Worl
             for (EquipmentSlot slot : EquipmentSlot.values()) {
                 ItemStack stack = living.getItemBySlot(slot);
                 if (stack.isEmpty()) continue;
-                canvas.renderItem(stack, x, y);
+                canvas.renderItemIcon(stack, x, y);
                 x += 14;
             }
             return y + (x > 2 ? 16 : 0);
@@ -277,7 +277,7 @@ public final class EntityPanelWidget extends WidgetGroup<Widget> implements Worl
         /** Item frames show the framed item; other non-living get type + count info. */
         private void renderNonLiving(SceneCanvas canvas, int y) {
             if (entity instanceof ItemFrame frame && !frame.getItem().isEmpty()) {
-                canvas.renderItem(frame.getItem(), 2, y);
+                canvas.renderItemIcon(frame.getItem(), 2, y);
                 canvas.text(
                         canvas.font()
                                 .plainSubstrByWidth(

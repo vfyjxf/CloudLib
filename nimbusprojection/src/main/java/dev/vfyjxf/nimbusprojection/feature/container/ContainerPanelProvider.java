@@ -60,7 +60,11 @@ public final class ContainerPanelProvider implements PanelProvider {
                             InworldAnchor.of(pos, new Vec3(0.5, 0.55, 0.5)),
                             Presentation.face(faceToward(eye, pos)),
                             ctx -> new ContainerPanelWidget(ctx, () -> pos))
-                    .title(state.getBlock().getName());
+                    .title(state.getBlock().getName())
+                    // base info (summary strip) shows on sight; V only opens
+                    // the expanded section menu — the hint exists because the
+                    // panel has an interactive form, not because it needs a key to appear
+                    .onDemand(false);
             sink.offer(items ? spec.hints("V:expand", "X:store") : spec.hints("V:expand"));
         }
     }

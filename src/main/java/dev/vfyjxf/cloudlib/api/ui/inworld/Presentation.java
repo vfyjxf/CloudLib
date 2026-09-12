@@ -103,7 +103,7 @@ public interface Presentation {
      * compact face controller opens on demand.
      */
     static Expand expand() {
-        return new Expand(72);
+        return new Expand(56);
     }
 
     static Expand expand(double pixelsPerBlock) {
