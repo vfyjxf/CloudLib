@@ -98,7 +98,22 @@ final class DockLayout {
 
             item.folded = false;
             if (sideUsed[side] + h + GAP > budget) {
-                if (sideUsed[side] + item.foldH + GAP <= budget) {
+                //the home column is full — an empty column on the other side
+                //beats a folded strip: cross over at full size first, fold at
+                //home next, fold across after that, overflow only when even a
+                //folded strip fits nowhere
+                int other = side ^ 1;
+                if (sideUsed[other] + h + GAP <= budget) {
+                    corner = flipSide(corner);
+                    item.resolved = corner;
+                    side = other;
+                } else if (sideUsed[side] + item.foldH + GAP <= budget) {
+                    item.folded = true;
+                    h = item.foldH;
+                } else if (sideUsed[other] + item.foldH + GAP <= budget) {
+                    corner = flipSide(corner);
+                    item.resolved = corner;
+                    side = other;
                     item.folded = true;
                     h = item.foldH;
                 } else {
@@ -150,6 +165,17 @@ final class DockLayout {
         return top
                 ? (left ? InworldPlacement.DockCorner.TOP_LEFT : InworldPlacement.DockCorner.TOP_RIGHT)
                 : (left ? InworldPlacement.DockCorner.BOTTOM_LEFT : InworldPlacement.DockCorner.BOTTOM_RIGHT);
+    }
+
+    /** Mirror to the same top/bottom slot on the opposite screen side. */
+    static InworldPlacement.DockCorner flipSide(InworldPlacement.DockCorner c) {
+        return switch (c) {
+            case TOP_LEFT -> InworldPlacement.DockCorner.TOP_RIGHT;
+            case TOP_RIGHT -> InworldPlacement.DockCorner.TOP_LEFT;
+            case BOTTOM_LEFT -> InworldPlacement.DockCorner.BOTTOM_RIGHT;
+            case BOTTOM_RIGHT -> InworldPlacement.DockCorner.BOTTOM_LEFT;
+            case AUTO -> InworldPlacement.DockCorner.AUTO; //unreachable — resolved before packing
+        };
     }
 
     static boolean isLeft(InworldPlacement.DockCorner c) {

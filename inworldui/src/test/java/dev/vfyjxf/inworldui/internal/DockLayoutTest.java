@@ -70,39 +70,74 @@ class DockLayoutTest {
         assertEquals(8 + 30 + 6 + 20, r.topExtent[0]); //left top extent only counts top stacks
     }
 
-    //---- shared side budget: fold → hide ----
+    //---- shared side budget: cross → fold → hide ----
+
+    @Test
+    void fullPanelCrossesToEmptySideBeforeFolding() {
+        //left column packed, right empty — the newcomer keeps its full size
+        //and lands mirrored on the opposite side instead of folding in place
+        var blocker = item(DockCorner.TOP_LEFT, 100, 210); //spends 216 of 224
+        var crosser = item(DockCorner.BOTTOM_LEFT, 80, 100);
+        var r = DockLayout.solve(List.of(blocker, crosser), W, H);
+        assertFalse(crosser.folded);
+        assertFalse(crosser.hidden);
+        //keeps its bottom slot, flips the side
+        assertEquals(DockCorner.BOTTOM_RIGHT, crosser.resolved);
+        assertEquals(W - 8 - 80, crosser.x);
+        assertEquals(H - 8 - 100, crosser.y);
+    }
+
+    @Test
+    void foldedStripCrossesWhenOnlyOppositeSideHasRoom() {
+        //home side can't even take a chrome strip while the opposite side has
+        //exactly one strip's worth left → fold AND cross
+        var leftBlocker = item(DockCorner.TOP_LEFT, 60, 218);   //left purse spent (224)
+        var rightBlocker = item(DockCorner.TOP_RIGHT, 60, 195); //right: 201 used, one strip left
+        var strip = item(DockCorner.BOTTOM_LEFT, 80, 30);
+        var r = DockLayout.solve(List.of(leftBlocker, rightBlocker, strip), W, H);
+        assertTrue(strip.folded);
+        assertFalse(strip.hidden);
+        assertEquals(DockCorner.BOTTOM_RIGHT, strip.resolved);
+        assertEquals(0, r.overflow[DockCorner.BOTTOM_LEFT.ordinal()]);
+        assertEquals(0, r.overflow[DockCorner.BOTTOM_RIGHT.ordinal()]);
+    }
 
     @Test
     void sideBudgetIsSharedBetweenCorners() {
-        //two columns on the left grow toward each other from one purse of H-16
+        //two columns on the left grow toward each other from one purse of
+        //H-16; the right side is already spent so overflow has nowhere to go
         var items = List.of(
+                item(DockCorner.TOP_RIGHT, 60, 218), //right side spent
                 item(DockCorner.TOP_LEFT, 100, 100),
                 item(DockCorner.BOTTOM_LEFT, 80, 120));
         var r = DockLayout.solve(items, W, H);
-        //100 + 6 + 120 > 224 → second folds to its foldH
-        assertFalse(items.get(0).folded);
-        assertTrue(items.get(1).folded);
-        assertFalse(items.get(1).hidden);
+        //100 + 6 + 120 > 224, right is full → second folds to its foldH
+        assertFalse(items.get(1).folded);
+        assertTrue(items.get(2).folded);
+        assertFalse(items.get(2).hidden);
+        assertEquals(DockCorner.BOTTOM_LEFT, items.get(2).resolved);
     }
 
     @Test
     void overBudgetFoldsToChromeStrip() {
-        //150+6+70 = 226 > 224 budget → second panel folds to its 17px strip
+        //150+6+70 = 226 > 224 budget and no room across → second folds
         var items = List.of(
+                item(DockCorner.TOP_RIGHT, 60, 218),
                 item(DockCorner.TOP_LEFT, 100, 150),
                 item(DockCorner.TOP_LEFT, 100, 70));
         DockLayout.solve(items, W, H);
-        assertTrue(items.get(1).folded);
-        assertFalse(items.get(1).hidden);
+        assertTrue(items.get(2).folded);
+        assertFalse(items.get(2).hidden);
         //folded panel occupies only its foldH in the stack
-        assertEquals(8 + 150 + 6, items.get(1).y);
+        assertEquals(8 + 150 + 6, items.get(2).y);
     }
 
     @Test
     void evenFoldedOverflowHidesAndCounts() {
-        //8×70px on one side: 2 fit unfolded (152px used), 3 fold (198→221),
-        //the rest hide — 221 + 17 + 6 > 224
+        //8×70px on the left with the right side spent: 2 fit unfolded
+        //(152px used), 3 fold (175→221), the rest hide — 221 + 17 + 6 > 224
         List<DockLayout.Item> items = new ArrayList<>();
+        items.add(item(DockCorner.TOP_RIGHT, 60, 218));
         for (int i = 0; i < 8; i++) {
             items.add(new DockLayout.Item(DockCorner.TOP_LEFT, 60, 70, 17,
                     Double.NaN, Double.NaN, null));
@@ -115,8 +150,9 @@ class DockLayoutTest {
 
     @Test
     void overflowIsPerCorner() {
-        //10×100px on the right: 2 fit unfolded, the rest hide
+        //left side spent; 10×100px on the right: 2 fit unfolded, the rest hide
         List<DockLayout.Item> items = new ArrayList<>();
+        items.add(item(DockCorner.TOP_LEFT, 60, 218));
         for (int i = 0; i < 10; i++) items.add(item(DockCorner.TOP_RIGHT, 60, 100));
         var r = DockLayout.solve(items, W, H);
         assertEquals(0, r.overflow[DockCorner.TOP_LEFT.ordinal()]);

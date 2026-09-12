@@ -1124,6 +1124,19 @@ public final class InworldManager implements InworldUiApi {
     }
 
     /**
+     * Full content size: a folded widget's bounds are collapsed to the chrome
+     * strip, so geometry that must describe the <em>real</em> panel (world
+     * quads, fold budgets) measures the remembered unfolded size instead.
+     */
+    private static int fullW(PanelRuntime r) {
+        return r.widget.folded ? Math.max(r.widget.width(), r.unfoldedWidth) : r.widget.width();
+    }
+
+    private static int fullH(PanelRuntime r) {
+        return r.widget.folded ? Math.max(r.widget.height(), r.unfoldedHeight) : r.widget.height();
+    }
+
+    /**
      * True when the rect covers any committed chrome past a graze — a thin
      * edge clip is fine (tolerance beats jitter), a real area overlap means
      * the placement failed and the panel should degrade instead.
@@ -1201,6 +1214,7 @@ public final class InworldManager implements InworldUiApi {
             return;
         }
         runtime.presented = true;
+        runtime.widget.setFolded(false);
         //follow panels track their anchor tightly — no position smoothing,
         //the interpolated anchor already moves smoothly
         runtime.smoothMove = false;
@@ -1208,8 +1222,8 @@ public final class InworldManager implements InworldUiApi {
         //surface under a live trace must not
         if (runtime.pinned) return;
         runtime.widget.setScreenPos(
-                (int) (anchorPx.x - runtime.widget.width() * 0.5 + follow.offsetX()),
-                (int) (anchorPx.y - runtime.widget.height() * 0.5 + follow.offsetY())
+                (int) (anchorPx.x - fullW(runtime) * 0.5 + follow.offsetX()),
+                (int) (anchorPx.y - fullH(runtime) * 0.5 + follow.offsetY())
         );
     }
 
@@ -1642,11 +1656,17 @@ public final class InworldManager implements InworldUiApi {
             return;
         }
 
+        //holograms never fold — a dock-strip fold from an earlier frame must
+        //not shrink the world quad or linger on the projected surface
+        int pwPx = fullW(runtime);
+        int phPx = fullH(runtime);
+        runtime.widget.setFolded(false);
+
         double ppb = expand.pixelsPerBlock();
         runtime.facePpb = ppb;
         double s = 1.0 / ppb;
-        double pw = runtime.widget.width() * s;
-        double ph = runtime.widget.height() * s;
+        double pw = pwPx * s;
+        double ph = phPx * s;
 
         ClientLevel level = mc.level;
         Vec3 eye = mc.player.getEyePosition(framePartialTick);
@@ -1687,7 +1707,7 @@ public final class InworldManager implements InworldUiApi {
             }
             if (!contested) {
                 double curFrac = expandScreenOverlap(proj, eye, runtime.expandPos, vDown, s,
-                        runtime.widget.width(), runtime.widget.height(), reserved);
+                        pwPx, phPx, reserved);
                 double cur = expandSpotScore(level, runtime.expandPos, pw, ph, anchor)
                         + curFrac * 600 + (curFrac >= 0.999 ? 300 : 0);
                 if (ExpandPlacer.keepSpot(false, curFrac, cur)) {
@@ -1714,7 +1734,7 @@ public final class InworldManager implements InworldUiApi {
                         }
                         //screen-space cost: covering docked/flat panels is the worst outcome
                         double frac = expandScreenOverlap(proj, eye, spot, vDown, s,
-                                runtime.widget.width(), runtime.widget.height(), reserved);
+                                pwPx, phPx, reserved);
                         score += frac * 600;
                         if (frac >= 0.999) score += 300; //unprojectable / fully covered
                         if (score < bestScore) {
@@ -1731,7 +1751,7 @@ public final class InworldManager implements InworldUiApi {
             //600-weighted coverage term can't flip the choice on a coin toss
             if (runtime.expandPos != null) {
                 double curFrac = expandScreenOverlap(proj, eye, runtime.expandPos, vDown, s,
-                        runtime.widget.width(), runtime.widget.height(), reserved);
+                        pwPx, phPx, reserved);
                 double cur = expandSpotScore(level, runtime.expandPos, pw, ph, anchor)
                         + curFrac * 600 + (curFrac >= 0.999 ? 300 : 0);
                 if (ExpandPlacer.preferCurrent(cur, bestScore)) {
@@ -1772,11 +1792,11 @@ public final class InworldManager implements InworldUiApi {
         runtime.faceV = vDown;
         runtime.faceNormal = dH;
         runtime.faceOrigin = best
-                .subtract(runtime.faceU.scale(runtime.widget.width() * 0.5))
-                .subtract(runtime.faceV.scale(runtime.widget.height() * 0.5));
+                .subtract(runtime.faceU.scale(pwPx * 0.5))
+                .subtract(runtime.faceV.scale(phPx * 0.5));
 
         int stripX = mc.getWindow().getGuiScaledWidth() + 16 + stripCursor;
-        stripCursor += runtime.widget.width() + 16;
+        stripCursor += pwPx + 16;
         runtime.widget.setScreenPos(stripX, 8);
     }
 
@@ -1853,6 +1873,9 @@ public final class InworldManager implements InworldUiApi {
         }
         runtime.flat = false;
         runtime.presented = true;
+        //face panels never fold — a dock-strip fold from an earlier frame
+        //(inspect projection, corner budget) must not linger into world space
+        runtime.widget.setFolded(false);
 
         double s = 1.0 / face.pixelsPerBlock();
         runtime.facePpb = face.pixelsPerBlock();
@@ -1875,13 +1898,13 @@ public final class InworldManager implements InworldUiApi {
         runtime.faceV = vAxis.scale(s);
         runtime.faceNormal = n;
         runtime.faceOrigin = facePoint
-                .subtract(runtime.faceU.scale(runtime.widget.width() * 0.5))
-                .subtract(runtime.faceV.scale(runtime.widget.height() * 0.5));
+                .subtract(runtime.faceU.scale(fullW(runtime) * 0.5))
+                .subtract(runtime.faceV.scale(fullH(runtime) * 0.5));
 
         //park inside the off-screen input strip: reachable by synthesized
         //pointer coords (slotX + u, slotY + v) but never rendered on screen
         int stripX = mc.getWindow().getGuiScaledWidth() + 16 + stripCursor;
-        stripCursor += runtime.widget.width() + 16;
+        stripCursor += fullW(runtime) + 16;
         runtime.widget.setScreenPos(stripX, 8);
     }
 
