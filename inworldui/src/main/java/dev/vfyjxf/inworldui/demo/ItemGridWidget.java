@@ -54,8 +54,8 @@ public final class ItemGridWidget extends Widget implements WorldDraggable {
     /** Vanilla slot index under scene coords, or -1 off-grid. */
     private int slotAt(double sceneX, double sceneY) {
         var local = sceneToLocal(sceneX, sceneY);
-        int cx = (int) local.x() / CELL;
-        int cy = (int) local.y() / CELL;
+        int cx = (int) Math.floor(local.x() / CELL);
+        int cy = (int) Math.floor(local.y() / CELL);
         if (cx < 0 || cx >= COLS || cy < 0 || cy >= ROWS) return -1;
         return cy == ROWS - 1 ? cx : 9 + cy * COLS + cx;
     }

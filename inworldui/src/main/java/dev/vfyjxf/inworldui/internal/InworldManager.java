@@ -661,7 +661,8 @@ public final class InworldManager implements InworldUiApi {
                 ? (drag.wholeStack() ? WorldDragPayload.THROW_STACK : WorldDragPayload.THROW_ONE)
                 : (drag.wholeStack() ? WorldDragPayload.INSERT_EVEN : WorldDragPayload.INSERT_ONE);
         Vec3 look = mc.player.getLookAngle();
-        PacketDistributor.sendToServer(new WorldDragPayload(drag.sourceSlot(), mode, targets, look));
+        PacketDistributor.sendToServer(new WorldDragPayload(
+                drag.sourceSlot(), mode, targets, look, drag.sourceContainer()));
 
         //cosmetic fly-outs: one sprite per non-zero share, release point →
         //target top-center. Throw mode needs none — the real ItemEntity spawns.
@@ -973,9 +974,13 @@ public final class InworldManager implements InworldUiApi {
                 placement.placement(), chain
         );
         if (floatingHidden(result)) {
-            runtime.widget.setScreenPos(PARK_BASE - parkCursor++ * PARK_STEP, 0);
+            //viewport escape: degrade to a folded chrome strip clamped on
+            //screen next to the anchor — the panel stays visible instead of
+            //vanishing outright; it unfolds the moment it fits again
+            foldOntoScreen(runtime, anchorPx);
             return;
         }
+        runtime.widget.setFolded(false);
         runtime.presented = true;
         runtime.smoothMove = true;
         //retarget deadband — sub-2px target churn from anchor/projection noise
@@ -993,6 +998,30 @@ public final class InworldManager implements InworldUiApi {
         if (hide == null) return false;
         return Boolean.TRUE.equals(hide.get("referenceHidden"))
                 || Boolean.TRUE.equals(hide.get("escaped"));
+    }
+
+    /**
+     * Degrade a floating panel that can't fit on screen: fold it to its chrome
+     * strip and clamp it just inside the viewport near the anchor, so the
+     * panel stays discoverable instead of being parked off-screen. Resolves
+     * back to full size as soon as placement succeeds again.
+     */
+    private void foldOntoScreen(PanelRuntime runtime, FloatPos anchorPx) {
+        int W = mc.getWindow().getGuiScaledWidth();
+        int H = mc.getWindow().getGuiScaledHeight();
+        runtime.widget.setFolded(true);
+        runtime.presented = true;
+        runtime.flat = true;
+        runtime.smoothMove = true;
+        int fw = runtime.widget.width();
+        int fh = foldHeight(runtime);
+        int tx = (int) Math.max(2, Math.min(W - fw - 2, anchorPx.x - fw * 0.5));
+        int ty = (int) Math.max(2, Math.min(H - fh - 2, anchorPx.y - fh - 10));
+        if (!runtime.posInit
+                || InworldLayout.retarget(runtime.targetX, runtime.targetY, tx, ty, 2)) {
+            runtime.targetX = tx;
+            runtime.targetY = ty;
+        }
     }
 
     private void resolveFollow(PanelRuntime runtime, InworldPlacement.Follow follow) {

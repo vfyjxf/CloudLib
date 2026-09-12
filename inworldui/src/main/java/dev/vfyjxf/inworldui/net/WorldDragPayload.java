@@ -4,17 +4,19 @@ import dev.vfyjxf.cloudlib.api.network.payload.ServerPayloadInfo;
 import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,17 +26,23 @@ import java.util.List;
  * in-world inventory panel and released them over world positions.
  * <p>
  * The server is authoritative for everything: it re-reads the real stack in
- * {@link #slot}, re-validates reach and target capabilities, computes the
+ * the source, re-validates reach and target capabilities, computes the
  * shares itself via {@link SplitPlan} and shrinks the source by what was
- * actually inserted (partial insertions leave the remainder in the slot).
+ * actually inserted (partial insertions leave the remainder behind).
  * The client only ever sends slot + mode + positions — never an ItemStack —
  * so a forged packet can at worst ask for a legal-looking transfer.
+ * <p>
+ * {@link #source} selects where the stack comes from: {@code null} = the
+ * player's own inventory ({@link #slot} is a vanilla inventory index);
+ * non-null = the item-handler block at that position ({@link #slot} is an
+ * {@code IItemHandler} slot) — e.g. dragging out of the container panel.
  */
 public record WorldDragPayload(
         int slot,
         int mode,
         List<BlockPos> targets,
-        Vec3 look
+        Vec3 look,
+        @Nullable BlockPos source
 ) implements ServerboundPayload {
 
     /** Split the whole source stack evenly across {@link #targets}. */
@@ -46,7 +54,7 @@ public record WorldDragPayload(
     /** Released over air — toss a single item. */
     public static final int THROW_ONE = 3;
 
-    /** Max distance from the player to a commit target — generous reach bound. */
+    /** Max distance from the player to a commit target or source — generous reach bound. */
     private static final double REACH = 12.0;
     private static final int MAX_TARGETS = DragTrailCap.CAPACITY;
 
@@ -66,6 +74,8 @@ public record WorldDragPayload(
         buf.writeVarInt(targets.size());
         for (BlockPos pos : targets) buf.writeBlockPos(pos);
         buf.writeVec3(look);
+        buf.writeBoolean(source != null);
+        if (source != null) buf.writeBlockPos(source);
     }
 
     private static WorldDragPayload decode(RegistryFriendlyByteBuf buf) {
@@ -74,27 +84,59 @@ public record WorldDragPayload(
         int n = Math.min(buf.readVarInt(), MAX_TARGETS * 4);
         List<BlockPos> targets = new ArrayList<>(n);
         for (int i = 0; i < n; i++) targets.add(buf.readBlockPos());
-        return new WorldDragPayload(slot, mode, targets, buf.readVec3());
+        Vec3 look = buf.readVec3();
+        BlockPos source = buf.readBoolean() ? buf.readBlockPos() : null;
+        return new WorldDragPayload(slot, mode, targets, look, source);
     }
 
     @Override
     public void handle(IPayloadContext context, ServerPlayer player) {
-        var inv = player.getInventory();
-        if (slot < 0 || slot >= inv.getContainerSize()) return;
-        ItemStack source = inv.getItem(slot);
-        if (source.isEmpty()) return;
+        Level level = player.level();
+        Vec3 eye = player.getEyePosition();
+
+        //resolve the source: player's inventory or a container's item handler
+        ItemSource src = resolveSource(player, level, eye);
+        if (src == null) return;
+        ItemStack stack = src.read();
+        if (stack.isEmpty()) return;
 
         switch (mode) {
-            case INSERT_EVEN, INSERT_ONE -> insert(player, source);
-            case THROW_STACK -> toss(player, inv, source.getCount());
-            case THROW_ONE -> toss(player, inv, 1);
+            case INSERT_EVEN, INSERT_ONE -> insert(player, level, eye, src, stack);
+            case THROW_STACK -> toss(player, src, stack.getCount());
+            case THROW_ONE -> toss(player, src, 1);
             default -> InworldPayloads.log.warn("Bad world-drag mode {} from {}", mode, player.getName().getString());
         }
     }
 
-    private void insert(ServerPlayer player, ItemStack source) {
-        var level = player.level();
-        Vec3 eye = player.getEyePosition();
+    /**
+     * Binds the payload's source to a live read/remove pair — the player's
+     * inventory when {@link #source} is null, otherwise the item handler at
+     * that block position. Null when the source isn't reachable/usable.
+     */
+    private @Nullable ItemSource resolveSource(ServerPlayer player, Level level, Vec3 eye) {
+        if (source == null) {
+            Inventory inv = player.getInventory();
+            if (slot < 0 || slot >= inv.getContainerSize()) return null;
+            return new ItemSource() {
+                @Override public ItemStack read() { return inv.getItem(slot); }
+                @Override public ItemStack remove(int n) { return inv.removeItem(slot, n); }
+            };
+        }
+        if (!source.closerToCenterThan(eye, REACH)) return null;
+        IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, source, null);
+        if (handler == null || slot < 0 || slot >= handler.getSlots()) return null;
+        return new ItemSource() {
+            @Override public ItemStack read() { return handler.getStackInSlot(slot); }
+            @Override public ItemStack remove(int n) { return handler.extractItem(slot, n, false); }
+        };
+    }
+
+    private interface ItemSource {
+        ItemStack read();
+        ItemStack remove(int n);
+    }
+
+    private void insert(ServerPlayer player, Level level, Vec3 eye, ItemSource src, ItemStack stack) {
         List<BlockPos> valid = new ArrayList<>(targets.size());
         for (BlockPos pos : targets) {
             if (!pos.closerToCenterThan(eye, REACH)) continue;
@@ -105,8 +147,8 @@ public record WorldDragPayload(
         if (valid.isEmpty()) return;
 
         int[] shares = mode == INSERT_ONE
-                ? SplitPlan.oneEach(source.getCount(), valid.size())
-                : SplitPlan.evenly(source.getCount(), valid.size());
+                ? SplitPlan.oneEach(stack.getCount(), valid.size())
+                : SplitPlan.evenly(stack.getCount(), valid.size());
 
         int removed = 0;
         for (int i = 0; i < valid.size(); i++) {
@@ -114,14 +156,17 @@ public record WorldDragPayload(
             if (share <= 0) continue;
             IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, valid.get(i), null);
             if (handler == null) continue;
-            ItemStack remainder = ItemHandlerHelper.insertItem(handler, source.copyWithCount(share), false);
+            //never feed a slot back into itself — dragging out of a container
+            //and dropping it on the same container would be a no-op anyway
+            if (source != null && valid.get(i).equals(source)) continue;
+            ItemStack remainder = ItemHandlerHelper.insertItem(handler, stack.copyWithCount(share), false);
             removed += share - remainder.getCount();
         }
-        source.shrink(removed);
+        if (removed > 0) src.remove(removed);
     }
 
-    private void toss(ServerPlayer player, net.minecraft.world.entity.player.Inventory inv, int count) {
-        ItemStack thrown = inv.removeItem(slot, count);
+    private void toss(ServerPlayer player, ItemSource src, int count) {
+        ItemStack thrown = src.remove(count);
         if (thrown.isEmpty()) return;
         Vec3 eye = player.getEyePosition();
         ItemEntity entity = new ItemEntity(player.level(), eye.x, eye.y - 0.25, eye.z, thrown);

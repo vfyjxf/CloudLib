@@ -8,6 +8,8 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelSpec;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPlacement;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldProvider;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldSink;
+import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
+import dev.vfyjxf.cloudlib.ui.widget.DividerWidget;
 import dev.vfyjxf.inworldui.internal.InworldManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -17,9 +19,10 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
 
 /**
- * The "world is UI" demo: a player-inventory panel that materializes next to
- * whatever item container the crosshair rests on (chest, barrel, hopper, the
- * demo blocks — anything exposing an item-handler capability).
+ * The "world is UI" demo: a combined inventory panel that materializes next
+ * to whatever item container the crosshair rests on — the container's own
+ * contents on top, the player's inventory below, like a vanilla chest screen
+ * floated into the world.
  * <p>
  * The panel anchors to the <em>container</em>, not the player — anchoring at
  * the player position would project right at the camera and the floating
@@ -27,11 +30,12 @@ import net.neoforged.neoforge.capabilities.Capabilities;
  * crosshair between drags, so the panel doesn't re-anchor mid-gesture and the
  * leader line stays readable while sweeping between containers.
  * <p>
- * Interaction: hold R for the cursor (inspect), press a slot and keep the
- * button held — the stack leaves the UI and the world becomes the drop
- * surface. Sweep across containers to gather a trail; release commits the
- * split (LMB = even spread, RMB = one each); release over air throws; release
- * back onto the panel cancels.
+ * Both grids are drag sources: press a slot and keep the button held — the
+ * stack leaves the UI and the world becomes the drop surface. Sweep across
+ * containers to gather a trail; release commits the split (LMB = even spread,
+ * RMB = one each); release over air throws; release back onto the panel
+ * cancels. Dragging out of the container section extracts from the container
+ * server-side; the player section reads the player's own inventory.
  */
 public final class InventoryPanelProvider implements InworldProvider {
 
@@ -49,6 +53,10 @@ public final class InventoryPanelProvider implements InworldProvider {
         }
         if (anchorPos == null) return;
 
+        Component title = anchorPos != null
+                ? context.level().getBlockState(anchorPos).getBlock().getName()
+                : Component.literal("CONTAINER");
+
         sink.offer(InworldPanelSpec
                 .of("player/inv",
                         InworldAnchor.of(anchorPos, new Vec3(0.5, 0.55, 0.5)),
@@ -58,8 +66,14 @@ public final class InventoryPanelProvider implements InworldProvider {
                                 FloatingMiddlewares.flip(),
                                 FloatingMiddlewares.shift(4),
                                 FloatingMiddlewares.hide()),
-                        ctx -> new ItemGridWidget())
-                .title(Component.literal("INV//LOCAL"))
+                        ctx -> {
+                            var col = ColumnWidget.create(3);
+                            col.addWidget(new ContainerGridWidget(() -> anchorPos));
+                            col.addWidget(DividerWidget.horizontal());
+                            col.addWidget(new ItemGridWidget());
+                            return col;
+                        })
+                .title(title)
                 .hints("R:inspect+drag", "RMB:one"));
     }
 
