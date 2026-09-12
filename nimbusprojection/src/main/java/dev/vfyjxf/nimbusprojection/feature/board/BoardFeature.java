@@ -103,6 +103,6 @@ public final class BoardFeature {
     }
 
     private static PanelKey key(BlockPos pos) {
-        return PanelKey.of("nimbusprojection", "board/" + pos.getX() + "," + pos.getY() + "," + pos.getZ());
+        return PanelKey.of("nimbusprojection", "board/" + pos.getX() + "_" + pos.getY() + "_" + pos.getZ());
     }
 }

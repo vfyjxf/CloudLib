@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * The container feature's provider: every {@code IItemHandler} block inside
  * the soft-focus cone gets an always-on Face strip keyed
- * {@code container/<x>,<y>,<z>} — a compact summary (top items + fill ratio)
+ * {@code container/<x>_<y>_<z>} — a compact summary (top items + fill ratio)
  * that expands into the world hologram on the interact key.
  * <p>
  * Keys are position-stable and {@code sharedDomain} — two players looking at
@@ -75,7 +75,7 @@ public final class ContainerPanelProvider implements PanelProvider {
     public static PanelKey keyOf(BlockPos pos, boolean items) {
         return PanelKey.of(
                 "nimbusprojection",
-                (items ? "container/" : "block/") + pos.getX() + "," + pos.getY() + "," + pos.getZ());
+                (items ? "container/" : "block/") + pos.getX() + "_" + pos.getY() + "_" + pos.getZ());
     }
 
     /** The block face most directly facing the viewer — re-picked each offer. */

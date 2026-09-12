@@ -1428,6 +1428,7 @@ public final class InworldManager implements NimbusClient {
                     && (placement instanceof Presentation.Face || placement instanceof Presentation.Follow)) {
                 placement = Presentation.expand();
             }
+            runtime.effective = placement;
             if (runtime.userPinned || (inspecting && inspectScopeContains(runtime))) {
                 // a custom driver's inspect policy decides its flat form;
                 // builtins always dock
@@ -1489,7 +1490,7 @@ public final class InworldManager implements NimbusClient {
 
         for (PanelRuntime r : floatingDeferred) {
             int before = docked.size();
-            resolveFloating(r, (Presentation.Floating) r.spec.presentation(), obstacles, docked);
+            resolveFloating(r, (Presentation.Floating) r.effective, obstacles, docked);
             if (docked.size() != before) continue; // degraded into the dock queue
             // each resolved floating panel becomes an obstacle for the next —
             // two panels sharing an anchor side can't stack on each other
@@ -1518,7 +1519,7 @@ public final class InworldManager implements NimbusClient {
         docked.clear();
 
         for (PanelRuntime r : expandDeferred) {
-            resolveExpand(r, (Presentation.Expand) r.spec.presentation(), occupied);
+            resolveExpand(r, (Presentation.Expand) r.effective, occupied);
             // a shown hologram reserves its own screen rect for the next one
             if (r.presented && !r.flat) {
                 Rect2i b = projectedWorldRect(r);

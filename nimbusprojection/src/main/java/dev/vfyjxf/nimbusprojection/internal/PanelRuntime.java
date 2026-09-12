@@ -45,6 +45,11 @@ final class PanelRuntime implements InworldPanel {
     boolean presented;
     /** whether the panel is currently presented flat in screen space */
     boolean flat;
+    /** the presentation actually resolved this frame — may differ from
+     *  {@code spec.presentation()} after engage-expansion upgrades it
+     *  (face/follow → expand); deferred solver passes must read this, not
+     *  the spec */
+    Presentation effective;
     /** resolved dock corner this frame (auto resolved to a concrete corner) */
     Presentation.DockCorner dockCorner = Presentation.DockCorner.auto;
     /** dock layout already placed this panel this frame — the conflict pass must leave it alone */
