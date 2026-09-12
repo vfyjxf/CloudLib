@@ -39,7 +39,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDraggable;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
-import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
 import dev.vfyjxf.cloudlib.ui.sync.ContainerContents;
 import dev.vfyjxf.cloudlib.util.ContainerScan;
 import dev.vfyjxf.cloudlib.util.ScreenUtil;
@@ -838,16 +838,16 @@ public final class InworldManager implements NimbusClient {
         y = Math.max(2, y);
         if (closing) {
             // solid chip: the open panel is under the crosshair — V closes it
-            graphics.fill(x, y, x + tw, y + 10, scaleAlpha(HackerTheme.accent, heat * 0.92f));
-            graphics.drawString(font, key, x + 3, y + 1, scaleAlpha(HackerTheme.lineDark, heat));
+            graphics.fill(x, y, x + tw, y + 10, scaleAlpha(NimbusPalette.accent, heat * 0.92f));
+            graphics.drawString(font, key, x + 3, y + 1, scaleAlpha(NimbusPalette.lineDark, heat));
         } else {
             // hollow chip: dormant target — V opens it
-            graphics.fill(x, y, x + tw, y + 10, scaleAlpha(HackerTheme.bgFocused, heat));
-            graphics.fill(x, y, x + tw, y + 1, scaleAlpha(HackerTheme.accentDim, heat));
-            graphics.fill(x, y + 9, x + tw, y + 10, scaleAlpha(HackerTheme.accentDim, heat));
-            graphics.fill(x, y, x + 1, y + 10, scaleAlpha(HackerTheme.accentDim, heat));
-            graphics.fill(x + tw - 1, y, x + tw, y + 10, scaleAlpha(HackerTheme.accentDim, heat));
-            graphics.drawString(font, key, x + 3, y + 1, scaleAlpha(HackerTheme.accent, heat));
+            graphics.fill(x, y, x + tw, y + 10, scaleAlpha(NimbusPalette.bgFocused, heat));
+            graphics.fill(x, y, x + tw, y + 1, scaleAlpha(NimbusPalette.accentDim, heat));
+            graphics.fill(x, y + 9, x + tw, y + 10, scaleAlpha(NimbusPalette.accentDim, heat));
+            graphics.fill(x, y, x + 1, y + 10, scaleAlpha(NimbusPalette.accentDim, heat));
+            graphics.fill(x + tw - 1, y, x + tw, y + 10, scaleAlpha(NimbusPalette.accentDim, heat));
+            graphics.drawString(font, key, x + 3, y + 1, scaleAlpha(NimbusPalette.accent, heat));
         }
     }
 
@@ -1881,8 +1881,8 @@ public final class InworldManager implements NimbusClient {
 
     /** Height of a folded panel: title/hint chrome only, content hidden. */
     private static int foldHeight(PanelRuntime r) {
-        int padTop = r.spec.title() != null ? HackerTheme.titleHeight + 2 : HackerTheme.padding;
-        int padBottom = r.spec.hints().isEmpty() ? HackerTheme.padding : HackerTheme.hintHeight + 2;
+        int padTop = r.spec.title() != null ? NimbusPalette.titleHeight + 2 : NimbusPalette.padding;
+        int padBottom = r.spec.hints().isEmpty() ? NimbusPalette.padding : NimbusPalette.hintHeight + 2;
         return padTop + padBottom;
     }
 
@@ -2124,7 +2124,7 @@ public final class InworldManager implements NimbusClient {
             PanelRuntime r = m.runtime;
             FloatPos d = m.dir;
             float px = (float) m.px, py = (float) m.py;
-            int color = r.focused() ? HackerTheme.borderFocused : HackerTheme.accentDim;
+            int color = r.focused() ? NimbusPalette.borderFocused : NimbusPalette.accentDim;
             drawLine(graphics, px, py - 5, px + 5, py, color);
             drawLine(graphics, px + 5, py, px, py + 5, color);
             drawLine(graphics, px, py + 5, px - 5, py, color);
@@ -2136,7 +2136,7 @@ public final class InworldManager implements NimbusClient {
                     (float) (py + d.y * 6),
                     (float) (px + d.x * 10),
                     (float) (py + d.y * 10),
-                    HackerTheme.accent);
+                    NimbusPalette.accent);
             // distance sits on the inward side so it stays readable on any edge
             String dist = (int) r.distance + "m";
             double ix = px - d.x * 17, iy = py - d.y * 16;
@@ -2145,7 +2145,7 @@ public final class InworldManager implements NimbusClient {
                     dist,
                     (int) (ix - font.width(dist) * 0.5),
                     (int) (iy - font.lineHeight * 0.5),
-                    HackerTheme.textDim);
+                    NimbusPalette.textDim);
         }
     }
 
@@ -2166,13 +2166,13 @@ public final class InworldManager implements NimbusClient {
             int tw = font.width(s) + 5;
             int x = DockLayout.isLeft(corners[c]) ? marginX : W - marginX - tw;
             int y = DockLayout.isTop(corners[c]) ? marginY + dockCursorEnd[c] : H - marginY - 9 - dockCursorEnd[c];
-            graphics.fill(x, y, x + tw, y + 9, HackerTheme.bgFocused);
+            graphics.fill(x, y, x + tw, y + 9, NimbusPalette.bgFocused);
             // 1px accent frame
-            graphics.fill(x, y, x + tw, y + 1, HackerTheme.accentDim);
-            graphics.fill(x, y + 8, x + tw, y + 9, HackerTheme.accentDim);
-            graphics.fill(x, y, x + 1, y + 9, HackerTheme.accentDim);
-            graphics.fill(x + tw - 1, y, x + tw, y + 9, HackerTheme.accentDim);
-            graphics.drawString(font, s, x + 3, y + 1, HackerTheme.accent);
+            graphics.fill(x, y, x + tw, y + 1, NimbusPalette.accentDim);
+            graphics.fill(x, y + 8, x + tw, y + 9, NimbusPalette.accentDim);
+            graphics.fill(x, y, x + 1, y + 9, NimbusPalette.accentDim);
+            graphics.fill(x + tw - 1, y, x + tw, y + 9, NimbusPalette.accentDim);
+            graphics.drawString(font, s, x + 3, y + 1, NimbusPalette.accent);
         }
     }
 
@@ -3409,7 +3409,7 @@ public final class InworldManager implements NimbusClient {
             BlockState state = mc.level.getBlockState(pos);
             VoxelShape shape = state.getShape(mc.level, pos, CollisionContext.empty());
             if (shape.isEmpty()) shape = Shapes.block();
-            int c = HackerTheme.scanShapeHot;
+            int c = NimbusPalette.scanShapeHot;
             emitShape(
                     pose,
                     buffer,
@@ -3430,7 +3430,7 @@ public final class InworldManager implements NimbusClient {
             var dims = entity.getDimensions(entity.getPose());
             double hw = dims.width() * 0.5;
             AABB box = new AABB(p.x - hw, p.y, p.z - hw, p.x + hw, p.y + dims.height(), p.z + hw).inflate(0.03);
-            int c = HackerTheme.scanShapeHot;
+            int c = NimbusPalette.scanShapeHot;
             LevelRenderer.renderLineBox(pose, buffer, box, red(c), green(c), blue(c), alpha(c) * heat);
         }
 
@@ -3606,7 +3606,7 @@ public final class InworldManager implements NimbusClient {
             Vec3 pb = runtime.faceOrigin
                     .add(runtime.faceU.scale(runtime.widget.width() * 0.5))
                     .add(runtime.faceV.scale(runtime.widget.height()));
-            int lc = runtime.focused() || runtime == pointed ? HackerTheme.lineFocused : HackerTheme.line;
+            int lc = runtime.focused() || runtime == pointed ? NimbusPalette.lineFocused : NimbusPalette.line;
             // a small axis cross at the anchor — the line visibly originates
             // AT the block instead of floating near it
             double n = 0.07;
@@ -3682,7 +3682,7 @@ public final class InworldManager implements NimbusClient {
             {x0, y1, z0}, {x1, y1, z0}, {x0, y1, z1}, {x1, y1, z1}
         };
 
-        int tick = bright ? HackerTheme.scanTickHot : HackerTheme.scanTick;
+        int tick = bright ? NimbusPalette.scanTickHot : NimbusPalette.scanTick;
         // corner ticks: short brighter stubs from each corner along its edges
         double tl = 0.14;
         for (int i = 0; i < 8; i++) {
@@ -3702,7 +3702,7 @@ public final class InworldManager implements NimbusClient {
         double f1 = Math.max(0, f - len);
         double[] p0 = {a[0] + (b[0] - a[0]) * f1, a[1] + (b[1] - a[1]) * f1, a[2] + (b[2] - a[2]) * f1};
         double[] p1 = {a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f};
-        line(buffer, mat, p0, p1, HackerTheme.scanSweep, alphaScale);
+        line(buffer, mat, p0, p1, NimbusPalette.scanSweep, alphaScale);
     }
 
     private static void line(BufferBuilder buffer, Matrix4f mat, double[] a, double[] b, int color) {
@@ -3822,9 +3822,9 @@ public final class InworldManager implements NimbusClient {
             runtime.lineLum += (sampleLineLuminance(ex, ey, from.x, from.y) - runtime.lineLum) * 0.25f;
             boolean brightBg = runtime.lineLum > 0.5f;
             int color = runtime.focused()
-                    ? (brightBg ? HackerTheme.lineFocusedDark : HackerTheme.lineFocused)
-                    : (brightBg ? HackerTheme.lineDark : HackerTheme.line);
-            int edge = brightBg ? HackerTheme.lineEdgeLight : HackerTheme.lineEdge;
+                    ? (brightBg ? NimbusPalette.lineFocusedDark : NimbusPalette.lineFocused)
+                    : (brightBg ? NimbusPalette.lineDark : NimbusPalette.line);
+            int edge = brightBg ? NimbusPalette.lineEdgeLight : NimbusPalette.lineEdge;
             if (!inside) {
                 drawLine(graphics, (float) ex + 1, (float) ey, (float) from.x + 1, (float) from.y, edge);
                 drawLine(graphics, (float) ex, (float) ey + 1, (float) from.x, (float) from.y + 1, edge);

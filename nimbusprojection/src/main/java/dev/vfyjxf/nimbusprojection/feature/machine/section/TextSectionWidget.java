@@ -2,7 +2,7 @@ package dev.vfyjxf.nimbusprojection.feature.machine.section;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
 import dev.vfyjxf.nimbusprojection.NimbusConfig;
 import dev.vfyjxf.nimbusprojection.api.section.SectionView;
 import dev.vfyjxf.nimbusprojection.api.section.SectionWidgetFactory;
@@ -51,20 +51,20 @@ public final class TextSectionWidget extends Widget {
         boolean wrote = false;
         for (Component line : data.front()) {
             if (line.getString().isBlank()) continue;
-            canvas.text(line, 2, y, HackerTheme.text);
+            canvas.text(line, 2, y, NimbusPalette.text);
             y += rowHeight;
             wrote = true;
         }
         int back = countNonBlank(data.back());
         if (back > 0) {
-            canvas.text(wrote ? "— back —" : "back:", 2, y, HackerTheme.textDim);
+            canvas.text(wrote ? "— back —" : "back:", 2, y, NimbusPalette.textDim);
             y += rowHeight;
             for (Component line : data.back()) {
                 if (line.getString().isBlank()) continue;
-                canvas.text(line, 2, y, HackerTheme.text);
+                canvas.text(line, 2, y, NimbusPalette.text);
                 y += rowHeight;
             }
         }
-        if (y == 2) canvas.text("(blank)", 2, y, HackerTheme.textDim);
+        if (y == 2) canvas.text("(blank)", 2, y, NimbusPalette.textDim);
     }
 }

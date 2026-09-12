@@ -12,7 +12,7 @@ import dev.vfyjxf.cloudlib.api.ui.style.Styles;
 import dev.vfyjxf.cloudlib.api.ui.style.VisualContext;
 import dev.vfyjxf.cloudlib.api.ui.texture.BorderTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
 import dev.vfyjxf.nimbusprojection.api.Nimbus;
 import dev.vfyjxf.nimbusprojection.api.panel.PanelKeySink;
 import dev.vfyjxf.nimbusprojection.api.panel.PanelSpec;
@@ -76,10 +76,10 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         useStyle(
                 positionAbsolute(),
                 padding(
-                        spec.title() != null ? HackerTheme.titleHeight + 2 : HackerTheme.padding,
-                        HackerTheme.padding,
-                        spec.hints().isEmpty() ? HackerTheme.padding : HackerTheme.hintHeight + 2,
-                        HackerTheme.padding));
+                        spec.title() != null ? NimbusPalette.titleHeight + 2 : NimbusPalette.padding,
+                        NimbusPalette.padding,
+                        spec.hints().isEmpty() ? NimbusPalette.padding : NimbusPalette.hintHeight + 2,
+                        NimbusPalette.padding));
         // tab / shift+tab cycles focus through the panel's focusable content;
         // unconsumed keys fall through to the content's PanelKeySink — the
         // chrome owns scene focus, so content sees keys only via this handoff
@@ -106,10 +106,10 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         var font = Minecraft.getInstance().font;
         int need = 0;
         if (title != null) {
-            need = Math.max(need, font.width(title) + 12 + HackerTheme.padding);
+            need = Math.max(need, font.width(title) + 12 + NimbusPalette.padding);
         }
         if (!hints.isEmpty()) {
-            int row = HackerTheme.padding * 2;
+            int row = NimbusPalette.padding * 2;
             for (String hint : hints) {
                 int sep = hint.indexOf(':');
                 String key = sep > 0 ? hint.substring(0, sep) : hint;
@@ -222,8 +222,8 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
      * remaining bounds stay visually transparent.
      */
     private int foldHeightPx() {
-        int padTop = title != null ? HackerTheme.titleHeight + 2 : HackerTheme.padding;
-        int padBottom = hints.isEmpty() ? HackerTheme.padding : HackerTheme.hintHeight + 2;
+        int padTop = title != null ? NimbusPalette.titleHeight + 2 : NimbusPalette.padding;
+        int padBottom = hints.isEmpty() ? NimbusPalette.padding : NimbusPalette.hintHeight + 2;
         return padTop + padBottom;
     }
 
@@ -241,7 +241,7 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         VisualTexture bt = vc.getProperty("border-texture", VisualTexture.class);
         if (bt instanceof BorderTexture border) return border.colorTop();
         if (vc.borderColor() != 0) return vc.borderColor();
-        return focused ? HackerTheme.borderFocused : HackerTheme.border;
+        return focused ? NimbusPalette.borderFocused : NimbusPalette.border;
     }
 
     @Override
@@ -254,17 +254,17 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         StyleContext style = style();
         VisualContext vc = style.visualContext();
         Integer themedAccent = style.get(Styles.accent);
-        int accent = themedAccent != null ? themedAccent : HackerTheme.accent;
+        int accent = themedAccent != null ? themedAccent : NimbusPalette.accent;
         // dim = the accent at ~40% alpha; unthemed keeps the tuned hacker value
-        int accentDim = themedAccent != null ? (themedAccent & 0x00FFFFFF) | 0x66000000 : HackerTheme.accentDim;
-        int textC = vc.textColor() != null ? vc.textColor() : HackerTheme.text;
-        int dimC = dimOf(style, HackerTheme.textDim);
+        int accentDim = themedAccent != null ? (themedAccent & 0x00FFFFFF) | 0x66000000 : NimbusPalette.accentDim;
+        int textC = vc.textColor() != null ? vc.textColor() : NimbusPalette.text;
+        int dimC = dimOf(style, NimbusPalette.textDim);
 
         VisualTexture bg = vc.background();
         if (!bg.isEmpty()) {
             canvas.texture(bg, 0, 0, w, h);
         } else {
-            canvas.fill(0, 0, w, h, focused ? HackerTheme.bgFocused : HackerTheme.bg);
+            canvas.fill(0, 0, w, h, focused ? NimbusPalette.bgFocused : NimbusPalette.bg);
         }
         // idle panels carry no frame — the leader line is the only chrome; the
         // outline appears only when the panel is focused/pointed
@@ -276,27 +276,29 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
             // header: accent chip + text + hairline rule
             canvas.fill(3, 5, 3, 3, accent);
             canvas.text(title, 9, 3, textC);
-            canvas.fill(0, HackerTheme.titleHeight + 1, w, 1, HackerTheme.titleRule);
+            canvas.fill(0, NimbusPalette.titleHeight + 1, w, 1, NimbusPalette.titleRule);
         }
 
-        if (!hints.isEmpty()) {
+        // hint strip only while the panel is actually selected — chrome that
+        // every visible panel shouts is noise; on-focus keeps it a contextual
+        // prompt. Plain text, no chip boxes.
+        if (!hints.isEmpty() && (focused || pointed)) {
             var font = Minecraft.getInstance().font;
-            int hx = w - HackerTheme.padding;
-            int hy = h - HackerTheme.hintHeight + 1;
+            int hx = w - NimbusPalette.padding;
+            int hy = h - NimbusPalette.hintHeight + 1;
             for (int i = hints.size() - 1; i >= 0; i--) {
                 String hint = hints.get(i);
                 int sep = hint.indexOf(':');
                 String key = sep > 0 ? hint.substring(0, sep) : hint;
                 String label = sep > 0 ? hint.substring(sep + 1) : "";
-                int keyW = font.width(key) + 4;
-                int labelW = label.isEmpty() ? 0 : font.width(label) + 3;
-                hx -= keyW + labelW;
-                canvas.strokeRect(hx, hy - 1, keyW, 9, accentDim);
-                canvas.text(key, hx + 2, hy, accent);
+                int keyW = font.width(key);
+                int labelW = label.isEmpty() ? 0 : font.width(label);
+                hx -= keyW + labelW + (labelW > 0 ? 3 : 0);
+                canvas.text(key, hx, hy, accent);
                 if (labelW > 0) {
                     canvas.text(label, hx + keyW + 3, hy, dimC);
                 }
-                hx -= 4;
+                hx -= 6;
             }
         }
 
@@ -304,7 +306,7 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         if (overflow != null) {
             var font = Minecraft.getInstance().font;
             int tw = font.width(overflow) + 5;
-            canvas.fill(w - tw - 2, -4, tw, 9, focused ? HackerTheme.bgFocused : HackerTheme.bg);
+            canvas.fill(w - tw - 2, -4, tw, 9, focused ? NimbusPalette.bgFocused : NimbusPalette.bg);
             canvas.strokeRect(w - tw - 2, -4, tw, 9, accent);
             canvas.text(overflow, w - tw + 1, -3, accent);
         }
@@ -334,12 +336,12 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
 
         var font = Minecraft.getInstance().font;
         var conn = Minecraft.getInstance().getConnection();
-        int x = w - HackerTheme.padding - 4;
+        int x = w - NimbusPalette.padding - 4;
         int chipY = -13;
         for (int i = 0; i < infos.size(); i++) {
             PresenceInfo info = infos.get(i);
             if (i >= maxPips) {
-                canvas.text("+" + (infos.size() - maxPips), x - 6, 4, HackerTheme.textDim);
+                canvas.text("+" + (infos.size() - maxPips), x - 6, 4, NimbusPalette.textDim);
                 break;
             }
             int color = kindColor(info.kind());
@@ -349,10 +351,10 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
                 PlayerInfo who = conn.getPlayerInfo(info.playerId());
                 String name = who != null ? who.getProfile().getName() : "?";
                 int tw = font.width(name) + 10;
-                canvas.fill(w - tw, chipY, tw, 9, HackerTheme.bgFocused);
+                canvas.fill(w - tw, chipY, tw, 9, NimbusPalette.bgFocused);
                 canvas.strokeRect(w - tw, chipY, tw, 9, color);
                 canvas.fill(w - tw + 2, chipY + 2, 4, 4, color);
-                canvas.text(name, w - tw + 9, chipY + 1, HackerTheme.text);
+                canvas.text(name, w - tw + 9, chipY + 1, NimbusPalette.text);
                 chipY -= 10;
             }
         }
@@ -371,8 +373,8 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         return switch (kind) {
             case dragging -> draggingColor;
             case tracing -> tracingColor;
-            case engaged -> HackerTheme.accent;
-            case watching -> HackerTheme.textDim;
+            case engaged -> NimbusPalette.accent;
+            case watching -> NimbusPalette.textDim;
         };
     }
 
@@ -402,8 +404,8 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
     private void drawBrackets(SceneCanvas canvas) {
         int w = width();
         int h = folded ? foldHeightPx() : height();
-        int b = HackerTheme.bracket;
-        int color = focused ? HackerTheme.accent : HackerTheme.accentDim;
+        int b = NimbusPalette.bracket;
+        int color = focused ? NimbusPalette.accent : NimbusPalette.accentDim;
         // top-left
         canvas.fill(-2, -2, b, 1, color);
         canvas.fill(-2, -2, 1, b, color);

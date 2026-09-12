@@ -83,7 +83,7 @@ public final class ItemGridWidget extends Widget implements WorldDraggable {
                 int slot = row == rows - 1 ? col : 9 + row * cols + col;
                 ItemStack stack = inv.getItem(slot);
                 boolean hover = localX >= x && localX < x + cell && localY >= y && localY < y + cell;
-                canvas.fill(x, y, cell - 1, cell - 1, hover ? 0x5536C4D8 : slotBg);
+                canvas.fill(x, y, cell - 1, cell - 1, hover ? 0x66F2C04D : slotBg);
                 if (!stack.isEmpty()) {
                     any = true;
                     canvas.renderItemIcon(stack, x, y);
@@ -94,7 +94,7 @@ public final class ItemGridWidget extends Widget implements WorldDraggable {
         // all-empty grid would look like a render failure — say so explicitly
         if (!any) {
             String label = CloudLang.Ui.empty.string();
-            canvas.text(label, cols * cell / 2 - canvas.font().width(label) / 2, rows * cell / 2 - 4, 0x5536C4D8);
+            canvas.text(label, cols * cell / 2 - canvas.font().width(label) / 2, rows * cell / 2 - 4, 0x66F2C04D);
         }
     }
 }

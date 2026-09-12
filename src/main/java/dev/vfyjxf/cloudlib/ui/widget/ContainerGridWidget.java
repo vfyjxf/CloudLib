@@ -47,8 +47,8 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
     private static final int cell = 18;
     private static final int cols = 9;
     private static final int maxRows = 6;
-    private static final int slotBg = 0x33121F2B;
-    private static final int slotBgHot = 0x5536C4D8;
+    private static final int slotBg = 0x33221B10;
+    private static final int slotBgHot = 0x66F2C04D;
 
     private final Supplier<BlockPos> pos;
     /**
@@ -155,12 +155,13 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
             if (lifecycle().mounted()) scene().layoutTree().markDirty(nodeId());
         }
         List<ItemStack> stacks = stacks();
-        if (p == null) {
-            canvas.text(CloudLang.Ui.noContainer.string(), 4, 4, 0x5536C4D8);
-            return;
-        }
         if (stacks == null) {
-            canvas.text(CloudLang.Ui.syncing.string(), 4, 4, 0x5536C4D8);
+            // external source pending = syncing; a widget with no source at
+            // all (no pos, no supplier) is the actual "no container" case
+            String label = p == null && stacksSource == null
+                    ? CloudLang.Ui.noContainer.string()
+                    : CloudLang.Ui.syncing.string();
+            canvas.text(label, 4, 4, 0x66F2C04D);
             return;
         }
         int rows = rows();
@@ -182,7 +183,7 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
         }
         if (!any) {
             String label = CloudLang.Ui.empty.string();
-            canvas.text(label, cols * cell / 2 - canvas.font().width(label) / 2, rows * cell / 2 - 4, 0x5536C4D8);
+            canvas.text(label, cols * cell / 2 - canvas.font().width(label) / 2, rows * cell / 2 - 4, 0x66F2C04D);
         }
     }
 }

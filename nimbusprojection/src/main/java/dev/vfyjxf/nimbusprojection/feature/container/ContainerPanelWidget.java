@@ -9,7 +9,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
 import dev.vfyjxf.cloudlib.api.ui.style.Styles;
-import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
 import dev.vfyjxf.nimbusprojection.NimbusConfig;
 import dev.vfyjxf.nimbusprojection.api.panel.PanelKeySink;
@@ -60,7 +60,7 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
         @Override
         protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
             Integer themedDim = style().get(Styles.textDim);
-            int dim = themedDim != null ? themedDim : HackerTheme.textDim;
+            int dim = themedDim != null ? themedDim : NimbusPalette.textDim;
             BlockPos p = pos.get();
             int x = 2;
             if (p == null) {

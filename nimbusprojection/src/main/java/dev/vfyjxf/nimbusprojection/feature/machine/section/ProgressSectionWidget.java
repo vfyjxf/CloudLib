@@ -3,7 +3,7 @@ package dev.vfyjxf.nimbusprojection.feature.machine.section;
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
 import dev.vfyjxf.nimbusprojection.NimbusConfig;
 import dev.vfyjxf.nimbusprojection.api.section.SectionData;
 import dev.vfyjxf.nimbusprojection.api.section.SectionView;
@@ -34,8 +34,8 @@ public final class ProgressSectionWidget extends Widget {
     private static final int width = 9 * 18;
     private static final int barHeight = 8;
     private static final int height = barHeight * 2 + 4;
-    private static final int barBg = 0x33121F2B;
-    private static final int barBorder = 0x5536C4D8;
+    private static final int barBg = 0x33221B10;
+    private static final int barBorder = 0x66F2C04D;
     private static final int progressFill = 0xCC4CAF50;
     private static final int fuelFill = 0xCCD84315;
 
@@ -91,7 +91,7 @@ public final class ProgressSectionWidget extends Widget {
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         ProgressSectionData live = view.live();
         if (live == null) {
-            canvas.text("···", 4, 4, HackerTheme.textDim);
+            canvas.text("···", 4, 4, NimbusPalette.textDim);
             return;
         }
         bar(canvas, 0, live.progress(), live.total(), progressFill, live.progress() + "/" + live.total() + "t");

@@ -2,7 +2,7 @@ package dev.vfyjxf.nimbusprojection.feature.container.section;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
 import dev.vfyjxf.nimbusprojection.api.section.SectionView;
 import dev.vfyjxf.nimbusprojection.api.section.SectionWidgetFactory;
 import dev.vfyjxf.taffy.geometry.FloatSize;
@@ -16,9 +16,9 @@ public final class EnergySectionWidget extends Widget {
     public static final SectionWidgetFactory<EnergySectionData> factory = EnergySectionWidget::new;
 
     private static final int height = 11;
-    private static final int barBg = 0x33121F2B;
-    private static final int barBorder = 0x5536C4D8;
-    private static final int fill = 0xCC36C4D8;
+    private static final int barBg = 0x33221B10;
+    private static final int barBorder = 0x66F2C04D;
+    private static final int fill = 0xCCF2C04D;
 
     private final SectionView<EnergySectionData> view;
 
@@ -32,7 +32,7 @@ public final class EnergySectionWidget extends Widget {
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         EnergySectionData live = view.live();
         if (live == null) {
-            canvas.text("···", 4, 3, HackerTheme.textDim);
+            canvas.text("···", 4, 3, NimbusPalette.textDim);
             return;
         }
         int width = 9 * 18;

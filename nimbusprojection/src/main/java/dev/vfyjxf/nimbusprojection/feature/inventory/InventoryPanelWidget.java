@@ -8,7 +8,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDraggable;
-import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
 import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
 import dev.vfyjxf.nimbusprojection.network.TransferPayload;
 import dev.vfyjxf.taffy.geometry.FloatSize;
@@ -46,8 +46,8 @@ public final class InventoryPanelWidget extends Widget implements WorldDraggable
     private static final int cell = 18;
     private static final int cols = 9;
     private static final int rows = 3;
-    private static final int slotBg = 0x33121F2B;
-    private static final int slotBgHot = 0x5536C4D8;
+    private static final int slotBg = 0x33221B10;
+    private static final int slotBgHot = 0x66F2C04D;
 
     private final Player player;
     private final Section section;
@@ -147,7 +147,7 @@ public final class InventoryPanelWidget extends Widget implements WorldDraggable
             drawSlot(canvas, inv.getItem(36 + i), i * cell, ey, mouseX, mouseY);
         }
         drawSlot(canvas, inv.getItem(40), 8 * cell, ey, mouseX, mouseY);
-        canvas.text("inv", 4 * cell + 8, ey + 5, HackerTheme.textDim);
+        canvas.text("inv", 4 * cell + 8, ey + 5, NimbusPalette.textDim);
     }
 
     private void drawSlot(SceneCanvas canvas, ItemStack stack, int x, int y, int mouseX, int mouseY) {

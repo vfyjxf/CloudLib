@@ -2,7 +2,7 @@ package dev.vfyjxf.nimbusprojection.feature.container.section;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
+import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
 import dev.vfyjxf.nimbusprojection.api.section.SectionView;
 import dev.vfyjxf.nimbusprojection.api.section.SectionWidgetFactory;
 import dev.vfyjxf.taffy.geometry.FloatSize;
@@ -20,8 +20,8 @@ public final class FluidSectionWidget extends Widget {
     public static final SectionWidgetFactory<FluidSectionData> factory = FluidSectionWidget::new;
 
     private static final int rowHeight = 13;
-    private static final int barBg = 0x33121F2B;
-    private static final int barBorder = 0x5536C4D8;
+    private static final int barBg = 0x33221B10;
+    private static final int barBorder = 0x66F2C04D;
 
     private final SectionView<FluidSectionData> view;
 
@@ -40,7 +40,7 @@ public final class FluidSectionWidget extends Widget {
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         FluidSectionData live = view.live();
         if (live == null) {
-            canvas.text("···", 4, 4, HackerTheme.textDim);
+            canvas.text("···", 4, 4, NimbusPalette.textDim);
             return;
         }
         List<FluidSectionData.Tank> tanks = live.tanks();
@@ -58,7 +58,7 @@ public final class FluidSectionWidget extends Widget {
                         + tank.fluid().getAmount() + "/" + tank.capacity() + " mB";
                 canvas.text(label, 4, y + 2, 0xFFFFFFFF);
             } else {
-                canvas.text("empty  0/" + tank.capacity() + " mB", 4, y + 2, HackerTheme.textDim);
+                canvas.text("empty  0/" + tank.capacity() + " mB", 4, y + 2, NimbusPalette.textDim);
             }
         }
     }
