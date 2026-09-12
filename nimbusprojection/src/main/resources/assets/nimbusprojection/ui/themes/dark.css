@@ -1,0 +1,101 @@
+/*
+ * nimbusprojection:dark — the default in-world look.
+ *
+ * A Jade-style dark translucent theme: near-black panels at ~88% opacity stay
+ * readable against bright sky and lit caves without a texture atlas, and the
+ * slight vertical gradient keeps flat fills from looking dead. Text renders
+ * without drop shadow — at in-world scale shadows smear into noise.
+ */
+
+:root {
+    /* palette */
+    --accent:         #5BC0EBFF;
+    --accent-dim:     #5BC0EB59;
+    --text:           #EDEFF2FF;
+    --text-dim:       #9AA4B0FF;
+    --text-on-accent: #0C1218FF;
+    --ok:             #6BCB77FF;
+    --warn:           #FFC857FF;
+    --danger:         #E05252FF;
+
+    /* chrome — flat fills, no atlas */
+    --panel:          linear-gradient(#101114E6, #0B0C0EE6);
+    --panel-raised:   linear-gradient(#1A1D22E6, #14161AE6);
+    --panel-line:     #343A42;
+    --inset:          color(#07080A99);
+    --btn:            linear-gradient(#21252BE6, #1B1E23E6);
+    --btn-hover:      linear-gradient(#2B323AE6, #23272EE6);
+    --btn-down:       linear-gradient(#3A4A58E6, #2A3540E6);
+
+    /* metrics */
+    --pad:  4px;
+    --gap:  4px;
+    --cell: 18px;
+
+    /* in-world text: never shadowed */
+    text-shadow: none;
+}
+
+/* ---------- generic chrome ---------- */
+
+panel, .hud {
+    background: var(--panel);
+    border-texture: border-texture(var(--panel-line), 1);
+    color: var(--text);
+    padding: var(--pad) calc(var(--pad) + 2px);
+    box-shadow: 0px 1px 4px #00000080;
+}
+
+panel:focused { border-texture: border-texture(var(--accent-dim), 1); }
+
+label, text, .dim { color: var(--text); }
+.dim, label.caption { color: var(--text-dim); }
+
+button {
+    background: var(--btn);
+    border-texture: border-texture(#3E454F, 1);
+    color: var(--text);
+    padding: 3px 8px;
+    text-align: center;
+}
+button:hover             { background: var(--btn-hover); border-texture: border-texture(var(--accent-dim), 1); }
+button:pressed,
+button:active            { background: var(--btn-down); }
+button:disabled          { color: var(--text-dim); }
+
+item-slot, .slot {
+    background: var(--inset);
+    border-texture: border-texture(#2A2F37, 1);
+    width: var(--cell);
+    height: var(--cell);
+}
+item-slot:hover { border-texture: border-texture(var(--accent-dim), 1); }
+
+divider { background: color(#FFFFFF14); }
+
+/* ---------- composite chrome ---------- */
+
+scrollbar            { background: color(#00000059); }
+scrollbar::part(thumb) { background: color(#5BC0EB80); }
+
+chip { background: var(--inset); color: var(--text-dim); padding: 1px 4px; }
+
+progress-bar            { background: var(--inset); }
+progress-bar::part(fill) { background: var(--accent); }
+
+/* ---------- entity / block tooltips ---------- */
+
+entity-tag, tooltip {
+    background: color(#0B0C0ED9);
+    border-texture: border-texture(#2E333A, 1);
+    color: var(--text);
+    padding: 3px 6px;
+}
+
+/* ---------- semantic variants ---------- */
+
+button.primary { background: var(--accent-dim); border-texture: border-texture(var(--accent), 1); }
+button.danger  { color: var(--danger); }
+.ok      { color: var(--ok); }
+.warn    { color: var(--warn); }
+.danger  { color: var(--danger); }

@@ -323,6 +323,8 @@ public final class InworldManager implements NimbusClient {
         // root measures 0×0 (absolute children are out of flow) and nothing
         // would ever be clickable
         root.useStyle(UIStyles.sizePercent(1f));
+        // in-world panels wear the nimbus dark theme unless a caller re-pins
+        scene.setTheme(ResourceLocation.fromNamespaceAndPath("nimbusprojection", "dark"));
         scene.init();
         scene.mount(SceneContext.create(new InworldSceneHost()));
     }
@@ -1203,7 +1205,7 @@ public final class InworldManager implements NimbusClient {
         runtime.bornTick = tick;
         Widget content = spec.content().apply(ctx);
         runtime.widget = new InworldPanelWidget(runtime, spec, content);
-        runtime.widget.useStyle(UIStyles.zIndexOf(spec.interactive() ? 0 : -1));
+        runtime.widget.useStyle(UIStyles.zIndex(spec.interactive() ? 0 : -1));
         if (spec.openAnimation() && mc.level != null) {
             runtime.bornAt = mc.level.getGameTime() + mc.getTimer().getGameTimeDeltaPartialTick(true);
             runtime.openScale = 0.25f;
@@ -1218,7 +1220,7 @@ public final class InworldManager implements NimbusClient {
         runtime.widget.setHints(runtime.spec.hints());
         runtime.widget.setInteractive(runtime.spec.interactive());
         // non-interactive panels (entity tags) render behind the chrome
-        runtime.widget.useStyle(UIStyles.zIndexOf(runtime.spec.interactive() ? 0 : -1));
+        runtime.widget.useStyle(UIStyles.zIndex(runtime.spec.interactive() ? 0 : -1));
     }
 
     // endregion

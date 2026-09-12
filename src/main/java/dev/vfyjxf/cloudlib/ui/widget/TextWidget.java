@@ -83,12 +83,19 @@ public class TextWidget extends Widget {
         return this;
     }
 
+    /**
+     * Whether the text renders with a drop shadow — a themed
+     * {@code text-shadow} value wins over the widget default ({@code false}).
+     */
     public boolean shadow() {
-        return shadow;
+        Boolean v = style().get(dev.vfyjxf.cloudlib.api.ui.style.Styles.textShadow);
+        return v != null ? v : shadow;
     }
 
+    /** Code-level shadow override — writes the {@code text-shadow} style key. */
     public TextWidget setShadow(boolean shadow) {
         this.shadow = shadow;
+        set(dev.vfyjxf.cloudlib.api.ui.style.Styles.textShadow, shadow);
         return this;
     }
 
@@ -98,7 +105,7 @@ public class TextWidget extends Widget {
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        canvas.text(text, 0, 0, color, shadow);
+        canvas.text(text, 0, 0, color, shadow());
     }
 
     // endregion

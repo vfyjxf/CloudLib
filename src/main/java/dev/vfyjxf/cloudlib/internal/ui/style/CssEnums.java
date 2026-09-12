@@ -196,7 +196,7 @@ public final class CssEnums {
         if (single(values) instanceof ComponentValue.Ident id) {
             return switch (id.value().toLowerCase(Locale.ROOT)) {
                 case "true", "yes", "on" -> true;
-                case "false", "no", "off" -> false;
+                case "false", "no", "off", "none" -> false;
                 default -> null;
             };
         }

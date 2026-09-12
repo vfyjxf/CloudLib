@@ -1,0 +1,101 @@
+/*
+ * nimbusprojection:light — bone-paper in-world panels.
+ *
+ * Warm off-white chrome in the vein of Jade's light color scheme: parchment
+ * fills read cleanly against dark cave walls and night scenes, and the ink
+ * text keeps full contrast without a shadow pass. Borders sit one step darker
+ * than the fill so panels don't dissolve into bright terrain.
+ */
+
+:root {
+    /* palette */
+    --accent:         #2F5DD0FF;
+    --accent-dim:     #2F5DD04D;
+    --text:           #241F18FF;
+    --text-dim:       #6B6355FF;
+    --text-on-accent: #F6F3ECFF;
+    --ok:             #2E8B47FF;
+    --warn:           #A3740EFF;
+    --danger:         #C43D3DFF;
+
+    /* chrome — warm paper, soft separation shadow */
+    --panel:          linear-gradient(#F4EFE4F2, #ECE5D5F2);
+    --panel-raised:   linear-gradient(#FBF7EDF2, #F2ECDCF2);
+    --panel-line:     #9C9179;
+    --inset:          color(#CFC5ADCC);
+    --btn:            linear-gradient(#E7E0CFF2, #DED5BFF2);
+    --btn-hover:      linear-gradient(#FFF9E9F2, #F0E8D2F2);
+    --btn-down:       linear-gradient(#D5CBB1F2, #C9BE9FF2);
+
+    /* metrics */
+    --pad:  4px;
+    --gap:  4px;
+    --cell: 18px;
+
+    /* in-world text: never shadowed */
+    text-shadow: none;
+}
+
+/* ---------- generic chrome ---------- */
+
+panel, .hud {
+    background: var(--panel);
+    border-texture: border-texture(var(--panel-line), 1);
+    color: var(--text);
+    padding: var(--pad) calc(var(--pad) + 2px);
+    box-shadow: 1px 2px 4px #3C342B40;
+}
+
+panel:focused { border-texture: border-texture(var(--accent), 1); }
+
+label, text { color: var(--text); }
+.dim, label.caption { color: var(--text-dim); }
+
+button {
+    background: var(--btn);
+    border-texture: border-texture(#8C8272, 1);
+    color: var(--text);
+    padding: 3px 8px;
+    text-align: center;
+}
+button:hover             { background: var(--btn-hover); border-texture: border-texture(var(--accent-dim), 1); }
+button:pressed,
+button:active            { background: var(--btn-down); }
+button:disabled          { color: var(--text-dim); }
+
+item-slot, .slot {
+    background: var(--inset);
+    border-texture: border-texture(#8C8272, 1);
+    width: var(--cell);
+    height: var(--cell);
+}
+item-slot:hover { border-texture: border-texture(var(--accent-dim), 1); }
+
+divider { background: color(#241F1824); }
+
+/* ---------- composite chrome ---------- */
+
+scrollbar            { background: color(#241F1826); }
+scrollbar::part(thumb) { background: color(#2F5DD099); }
+
+chip { background: var(--inset); color: var(--text-dim); padding: 1px 4px; }
+
+progress-bar            { background: var(--inset); }
+progress-bar::part(fill) { background: var(--accent); }
+
+/* ---------- entity / block tooltips ---------- */
+
+entity-tag, tooltip {
+    background: color(#F4EFE4E6);
+    border-texture: border-texture(#9C9179, 1);
+    color: var(--text);
+    padding: 3px 6px;
+}
+
+/* ---------- semantic variants ---------- */
+
+button.primary { background: var(--accent-dim); border-texture: border-texture(var(--accent), 1); }
+button.danger  { color: var(--danger); }
+.ok      { color: var(--ok); }
+.warn    { color: var(--warn); }
+.danger  { color: var(--danger); }

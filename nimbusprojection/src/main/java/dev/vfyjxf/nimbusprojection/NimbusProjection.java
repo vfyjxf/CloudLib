@@ -115,8 +115,8 @@ public final class NimbusProjection {
 
     /** Runs the client plugin hooks once the runtime is installed. */
     private void dispatchClientPlugins() {
+        if (clientPlugins == null || !Nimbus.available()) return;
         NimbusClient client = Nimbus.client();
-        if (client == null || clientPlugins == null) return;
         for (NimbusClientPlugin plugin : clientPlugins) {
             try {
                 plugin.registerProviders(client);

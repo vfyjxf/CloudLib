@@ -93,12 +93,19 @@ public class LabelWidget extends Widget {
         return this;
     }
 
+    /**
+     * Whether the label renders its text with a drop shadow — a themed
+     * {@code text-shadow} value wins over the widget default ({@code true}).
+     */
     public boolean shadow() {
-        return shadow;
+        Boolean v = style().get(dev.vfyjxf.cloudlib.api.ui.style.Styles.textShadow);
+        return v != null ? v : shadow;
     }
 
+    /** Code-level shadow override — writes the {@code text-shadow} style key. */
     public LabelWidget setShadow(boolean shadow) {
         this.shadow = shadow;
+        set(dev.vfyjxf.cloudlib.api.ui.style.Styles.textShadow, shadow);
         return this;
     }
 
@@ -129,7 +136,7 @@ public class LabelWidget extends Widget {
                     case null -> 0;
                 };
 
-        canvas.text(text, x, 0, color, shadow);
+        canvas.text(text, x, 0, color, shadow());
     }
 
     // endregion

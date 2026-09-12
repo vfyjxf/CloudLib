@@ -560,6 +560,22 @@ public final class Styles {
     public static final StyleKey<Float> borderThickness = floatKey(
             "border-thickness", StyleScope.visual, dev.vfyjxf.cloudlib.internal.ui.style.StyleApplies.borderWidth);
 
+    /**
+     * Whether text drawn by the widget renders with a drop shadow — inherited so
+     * a themed panel silences shadows on every label inside it. The value lives
+     * in the context map; widgets read it via {@code style().get(textShadow)}.
+     */
+    public static final StyleKey<Boolean> textShadow = StyleRegistry.get()
+            .register(new StyleKey<>(
+                    "text-shadow",
+                    Boolean.class,
+                    StyleScope.visual,
+                    true,
+                    null,
+                    dev.vfyjxf.cloudlib.internal.ui.style.CssEnums.boolParser("text-shadow"),
+                    (ctx, v) -> {},
+                    Object::toString));
+
     /** The scene compositing layer the widget renders into. */
     public static final StyleKey<SceneLayer> sceneLayer = key(
             "scene-layer",

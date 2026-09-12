@@ -1,0 +1,102 @@
+/*
+ * nimbusprojection:holo — cyan hologram chrome.
+ *
+ * Projected-interface styling: panels are thin cyan-on-deep-teal glass with a
+ * faint self-glow box shadow, text is bright phosphor cyan with no shadow
+ * (holograms bloom, they don't shadow). Best paired with floating/face
+ * presentations where the panel itself reads as a projection.
+ */
+
+:root {
+    /* palette — cyan phosphor on deep teal */
+    --accent:         #22D3EEFF;
+    --accent-dim:     #22D3EE59;
+    --text:           #D9F8FFFF;
+    --text-dim:       #7FC9DBFF;
+    --text-on-accent: #04252EFF;
+    --ok:             #4ADE80FF;
+    --warn:           #FDE047FF;
+    --danger:         #FB7185FF;
+
+    /* chrome — transparent glass + glow line */
+    --panel:          color(#06232D99);
+    --panel-raised:   color(#0A3040B3);
+    --panel-line:     #22D3EE80;
+    --inset:          color(#03162080);
+    --btn:            color(#0B3546B3);
+    --btn-hover:      color(#0F4A61CC);
+    --btn-down:       color(#155E7BCC);
+    --glow:           #22D3EE4D;
+
+    /* metrics */
+    --pad:  4px;
+    --gap:  4px;
+    --cell: 18px;
+
+    /* hologram text blooms — it never shadows */
+    text-shadow: none;
+}
+
+/* ---------- generic chrome ---------- */
+
+panel, .hud {
+    background: var(--panel);
+    border-texture: border-texture(var(--panel-line), 1);
+    color: var(--text);
+    padding: var(--pad) calc(var(--pad) + 2px);
+    box-shadow: 0px 0px 6px var(--glow);
+}
+
+panel:focused { border-texture: border-texture(var(--accent), 1); }
+
+label, text { color: var(--text); }
+.dim, label.caption { color: var(--text-dim); }
+
+button {
+    background: var(--btn);
+    border-texture: border-texture(var(--accent-dim), 1);
+    color: var(--text);
+    padding: 3px 8px;
+    text-align: center;
+}
+button:hover             { background: var(--btn-hover); border-texture: border-texture(var(--accent), 1); }
+button:pressed,
+button:active            { background: var(--btn-down); }
+button:disabled          { color: var(--text-dim); }
+
+item-slot, .slot {
+    background: var(--inset);
+    border-texture: border-texture(var(--accent-dim), 1);
+    width: var(--cell);
+    height: var(--cell);
+}
+item-slot:hover { border-texture: border-texture(var(--accent), 1); }
+
+divider { background: color(#22D3EE33); }
+
+/* ---------- composite chrome ---------- */
+
+scrollbar            { background: color(#03162099); }
+scrollbar::part(thumb) { background: color(#22D3EE80); }
+
+chip { background: var(--inset); color: var(--text-dim); padding: 1px 4px; }
+
+progress-bar            { background: var(--inset); }
+progress-bar::part(fill) { background: var(--accent); }
+
+/* ---------- entity / block tooltips ---------- */
+
+entity-tag, tooltip {
+    background: color(#06232DB3);
+    border-texture: border-texture(var(--panel-line), 1);
+    color: var(--text);
+    padding: 3px 6px;
+}
+
+/* ---------- semantic variants ---------- */
+
+button.primary { background: var(--accent-dim); border-texture: border-texture(var(--accent), 1); }
+button.danger  { color: var(--danger); }
+.ok      { color: var(--ok); }
+.warn    { color: var(--warn); }
+.danger  { color: var(--danger); }
