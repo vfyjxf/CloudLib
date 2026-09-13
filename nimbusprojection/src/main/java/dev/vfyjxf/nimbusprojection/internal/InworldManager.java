@@ -2310,8 +2310,11 @@ public final class InworldManager implements NimbusClient {
         if (best == null) {
             double bestScore = Double.MAX_VALUE;
             // hug the anchor: the hologram reads as the block's UI, drifting
-            // several blocks away severs that read — start just clear of it
-            double[] dys = {0.9, 0.55, 0.25, 1.35, -0.15};
+            // several blocks away severs that read — start just clear of it.
+            // Every candidate keeps its bottom edge above the anchor's top
+            // face: dy < ph/2 + .5 would sink the quad into the block/ground.
+            double baseDy = ph * 0.5 + 0.6;
+            double[] dys = {baseDy, baseDy + 0.45, baseDy + 0.9, baseDy + 0.25, baseDy + 1.4};
             for (int ring = 0; ring < 4; ring++) {
                 double rad = 0.65 + ring * 0.5 + pw * 0.5;
                 for (double dy : dys) {

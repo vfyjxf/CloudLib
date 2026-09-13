@@ -10,8 +10,8 @@
 
 :root {
     /* palette — warm walnut + gold */
-    --accent:         #F2C04DFF;
-    --accent-dim:     #F2C04D59;
+    --accent:         #D1904BFF;
+    --accent-dim:     #D1904B59;
     --text:           #EDE4D3FF;
     --text-dim:       #B0A48CFF;
     --text-on-accent: #241B0EFF;
@@ -79,7 +79,7 @@ divider { background: color(#FFFFFF14); }
 /* ---------- composite chrome ---------- */
 
 scrollbar            { background: color(#00000059); }
-scrollbar::part(thumb) { background: color(#F2C04D80); }
+scrollbar::part(thumb) { background: color(#D1904B80); }
 
 chip { background: var(--inset); color: var(--text-dim); padding: 1px 4px; }
 

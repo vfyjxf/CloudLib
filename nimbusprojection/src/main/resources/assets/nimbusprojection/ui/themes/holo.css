@@ -10,8 +10,8 @@
 
 :root {
     /* palette — amber phosphor on deep sepia */
-    --accent:         #FFB84DFF;
-    --accent-dim:     #FFB84D59;
+    --accent:         #E8A95CFF;
+    --accent-dim:     #E8A95C59;
     --text:           #FFE9C4FF;
     --text-dim:       #D9A86BFF;
     --text-on-accent: #241500FF;
@@ -22,7 +22,7 @@
     /* chrome — transparent glass + glow line */
     --panel:          color(#24160899);
     --panel-raised:   color(#33200AB3);
-    --panel-line:     #FFB84D80;
+    --panel-line:     #E8A95C80;
     --inset:          color(#160D0480);
     --btn:            color(#3B2A10B3);
     --btn-hover:      color(#4F3816CC);
@@ -80,7 +80,7 @@ divider { background: color(#FFB84D33); }
 /* ---------- composite chrome ---------- */
 
 scrollbar            { background: color(#03162099); }
-scrollbar::part(thumb) { background: color(#FFB84D80); }
+scrollbar::part(thumb) { background: color(#E8A95C80); }
 
 chip { background: var(--inset); color: var(--text-dim); padding: 1px 4px; }
 

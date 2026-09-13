@@ -28,8 +28,9 @@ import net.minecraft.world.phys.Vec3;
  */
 public final class EntityPanelProvider implements PanelProvider {
 
-    /** Same ~31° cone as the container scan — wherever the interact key can reach. */
-    private static final double coneCosEnter = Math.cos(Math.toRadians(31));
+    /** Nameplates are resident, not look-gated: ~70° cone ≈ the visible
+     * frustum — anything on screen in reach gets its card. */
+    private static final double coneCosEnter = Math.cos(Math.toRadians(70));
 
     /** The panel anchors just above the nameplate space. */
     private static final double headroom = 0.35;
