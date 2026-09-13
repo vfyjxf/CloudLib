@@ -21,7 +21,6 @@ import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager;
 import dev.vfyjxf.cloudlib.api.ui.floating.AvoidRectsMiddleware;
 import dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddleware;
 import dev.vfyjxf.cloudlib.api.ui.floating.FloatingPositioning;
@@ -38,6 +37,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDraggable;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
+import dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 import dev.vfyjxf.cloudlib.ui.sync.ContainerContents;
 import dev.vfyjxf.cloudlib.util.ContainerScan;
@@ -1296,6 +1296,27 @@ public final class InworldManager implements NimbusClient {
         Projection proj = projection;
         ClientLevel level = mc.level;
         if (proj == null || level == null) return;
+        resolvePanels0(proj, level);
+    }
+
+    /** ~25° off the crosshair — machine/container cards want "near", not "hit". */
+    private static final double triggerConeCos = Math.cos(Math.toRadians(25));
+
+    private boolean triggered(PanelRuntime runtime, Vec3 eye, Vec3 look) {
+        return switch (runtime.spec.trigger()) {
+            case VISIBLE -> runtime.anchorScreen != null;
+            case POINTED ->
+                mc.hitResult instanceof BlockHitResult hit
+                        && hit.getBlockPos().equals(runtime.spec.anchor().blockPos());
+            case CONE -> {
+                Vec3 to = runtime.anchorWorld.subtract(eye);
+                double d = to.length();
+                yield d > 0.05 && to.scale(1 / d).dot(look) >= triggerConeCos;
+            }
+        };
+    }
+
+    private void resolvePanels0(Projection proj, ClientLevel level) {
 
         parkCursor = 0;
         stripCursor = 0;
@@ -1312,6 +1333,8 @@ public final class InworldManager implements NimbusClient {
 
         boolean dimensionChanged = lastLevel != level;
         lastLevel = level;
+        Vec3 triggerEye = mc.player != null ? mc.player.getEyePosition(framePartialTick) : Vec3.ZERO;
+        Vec3 triggerLook = mc.player != null ? mc.player.getLookAngle() : Vec3.ZERO;
         // the inspect screen IS the projection surface — it doesn't count as
         // "a screen open" for suspension; every other screen (esc'd, real
         // menus) still suspends world panels
@@ -1375,6 +1398,19 @@ public final class InworldManager implements NimbusClient {
             if (runtime.distance > runtime.spec.maxDistance() && !runtime.userPinned) continue;
 
             runtime.anchorScreen = proj.worldToScreen(anchor);
+
+            // present trigger: the resting form only appears when the spec's
+            // trigger passes — cone for machines, on-screen for entities,
+            // exact ray hit for signs. Engaged/pinned panels and the inspect
+            // layer always bypass: pinning is an explicit "keep this up".
+            if (!runtime.engaged
+                    && !runtime.userPinned
+                    && !inspecting
+                    && !triggered(runtime, triggerEye, triggerLook)) {
+                runtime.indicator = false;
+                runtime.widget.setScreenPos(parkBase - parkCursor++ * parkStep, 0);
+                continue;
+            }
 
             // engagement lifecycle: an engaged panel stays open while it is
             // pointed at, soft-focused, hosting a session, or inspect is flat —
@@ -3191,7 +3227,7 @@ public final class InworldManager implements NimbusClient {
             GuiGraphics graphics = new GuiGraphics(mc, new PoseStack(), panelBuffers);
             SceneCanvas canvas = SceneCanvas.create(graphics);
             FloatPos uv = runtime == pointed ? pointedUv : null;
-            runtime.widget.setFrameState(runtime.focused(), uv != null);
+            runtime.widget.setFrameState(runtime.focused(), uv != null, !runtime.flat);
             runtime.widget.render(canvas, uv != null ? (int) uv.x : -1, uv != null ? (int) uv.y : -1, pt);
             canvas.flushBatch();
             // private buffer source — never endBatch() the shared level source mid-pass
@@ -3223,6 +3259,15 @@ public final class InworldManager implements NimbusClient {
         } else {
             RenderSystem.setShader(GameRenderer::getPositionTexShader);
             RenderSystem.enableBlend();
+            // the panel FBO stores premultiplied texels (every fill/blit went
+            // through src-over blending), so compositing must use the premult
+            // func — SRC_ALPHA would square the alpha and wash out every
+            // semi-transparent region (slots, borders, dim ink)
+            RenderSystem.blendFuncSeparate(
+                    GlStateManager.SourceFactor.ONE,
+                    GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                    GlStateManager.SourceFactor.ONE,
+                    GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
             RenderSystem.enableDepthTest();
         }
         RenderSystem.setShaderTexture(0, target.getColorTextureId());
@@ -3714,7 +3759,7 @@ public final class InworldManager implements NimbusClient {
 
         SceneCanvas canvas = SceneCanvas.create(graphics);
         for (PanelRuntime runtime : panels.values()) {
-            runtime.widget.setFrameState(runtime.focused(), runtime == pointed);
+            runtime.widget.setFrameState(runtime.focused(), runtime == pointed, !runtime.flat);
         }
 
         renderLeaderLines(graphics);

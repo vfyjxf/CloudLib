@@ -44,7 +44,7 @@ import java.util.function.Supplier;
  */
 public final class ContainerPanelWidget extends WidgetGroup<Widget> implements WorldDragAcceptor, PanelKeySink {
 
-    private static final int cell = 12;
+    private static final int cell = 16;
 
     private final InworldPanelContext ctx;
     private final Supplier<BlockPos> pos;
@@ -126,11 +126,12 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
         this.ctx = ctx;
         this.pos = pos;
         this.summary = buildSummary();
-        this.sections = ColumnWidget.create(2);
+        this.sections = ColumnWidget.create(4);
         BlockPos p = pos.get();
         if (p != null) {
             SectionTarget target = SectionTarget.of(p);
             for (SectionInstance<?> instance : SectionProviders.collectAll(ctx.level(), p)) {
+                if (instance.type() == SectionTypes.item) hasItems = true;
                 Widget widget = SectionWidgets.create(ctx, target, instance);
                 if (widget != null) sections.addWidget(widget);
             }
@@ -138,6 +139,10 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
         addWidget(summary);
         addWidget(sections);
     }
+
+    /** Section-only blocks (signs, hives) have no item summary — the
+     *  sections ARE the card, resting or engaged. */
+    private boolean hasItems;
 
     /** Item slots from the section mirror — null while the first snapshot is in flight. */
     private @Nullable List<ItemStack> itemStacks(BlockPos p) {
@@ -153,11 +158,15 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
         if (p != null) SectionContents.watch(SectionTarget.of(p));
         boolean engaged = ctx.panel().engaged();
         // display:none, not just invisible — hidden children must leave the
-        // layout entirely or the idle card measures itself as the full grid
-        summary.setVisible(!engaged);
-        summary.set(Styles.display, engaged ? TaffyDisplay.NONE : TaffyDisplay.FLEX);
-        sections.setVisible(engaged);
-        sections.set(Styles.display, engaged ? TaffyDisplay.FLEX : TaffyDisplay.NONE);
+        // layout entirely or the idle card measures itself as the full grid.
+        // Section-only blocks skip the summary: pointing at a sign shows its
+        // text lines directly, not an empty "no items" strip.
+        boolean showSummary = !engaged && hasItems;
+        summary.setVisible(showSummary);
+        summary.set(Styles.display, showSummary ? TaffyDisplay.FLEX : TaffyDisplay.NONE);
+        boolean showSections = engaged || !hasItems;
+        sections.setVisible(showSections);
+        sections.set(Styles.display, showSections ? TaffyDisplay.FLEX : TaffyDisplay.NONE);
         super.renderInternal(canvas, mouseX, mouseY, partialTicks);
     }
 

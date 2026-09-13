@@ -32,7 +32,7 @@ public final class EnergySectionWidget extends Widget {
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         EnergySectionData live = view.live();
         if (live == null) {
-            canvas.text("···", 4, 3, NimbusPalette.textDim);
+            canvas.text("···", 4, 3, NimbusPalette.dim(this));
             return;
         }
         int width = 9 * 18;

@@ -1320,12 +1320,34 @@ public final class SceneCanvas {
         var model =
                 Minecraft.getInstance().getItemRenderer().getItemModelShaper().getItemModel(stack);
         TextureAtlasSprite sprite = model.getParticleIcon(net.neoforged.neoforge.client.model.data.ModelData.EMPTY);
-        layeredGraphics().blit(x, y, 0, 16, 16, sprite);
+        // the canvas's own textured batch — unlike the forwarded GuiGraphics
+        // blit this is proven to rasterize inside offscreen panel targets
+        sprite(sprite, x, y, 16, 16);
         return this;
     }
 
+    /**
+     * Item decorations (count text + durability bar) drawn through the canvas's
+     * own batch — same reasoning as {@link #renderItemIcon}: the forwarded
+     * GuiGraphics path does not rasterize inside offscreen panel targets.
+     */
     public SceneCanvas renderItemDecorations(ItemStack stack, int x, int y, @Nullable String text) {
-        layeredGraphics().renderItemDecorations(font(), stack, x, y, text);
+        if (stack.isEmpty()) return this;
+        if (stack.isBarVisible()) {
+            int w = stack.getBarWidth();
+            int c = stack.getBarColor();
+            fill(x + 2, y + 13, 13, 2, 0xFF000000);
+            fill(x + 2, y + 13, w, 1, 0xFF000000 | c);
+        }
+        String label = text;
+        if (label == null && stack.getCount() != 1) label = String.valueOf(stack.getCount());
+        if (label != null) {
+            int tx = x + 17 - font().width(label);
+            int ty = y + 9;
+            // vanilla count is bright white with a dark outline
+            text(label, tx + 1, ty + 1, 0xFF3C3C3C);
+            text(label, tx, ty, 0xFFFFFFFF);
+        }
         return this;
     }
 

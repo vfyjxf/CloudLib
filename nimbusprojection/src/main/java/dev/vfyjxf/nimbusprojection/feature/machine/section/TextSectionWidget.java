@@ -51,20 +51,20 @@ public final class TextSectionWidget extends Widget {
         boolean wrote = false;
         for (Component line : data.front()) {
             if (line.getString().isBlank()) continue;
-            canvas.text(line, 2, y, NimbusPalette.text);
+            canvas.text(line, 2, y, NimbusPalette.ink(this));
             y += rowHeight;
             wrote = true;
         }
         int back = countNonBlank(data.back());
         if (back > 0) {
-            canvas.text(wrote ? "— back —" : "back:", 2, y, NimbusPalette.textDim);
+            canvas.text(wrote ? "— back —" : "back:", 2, y, NimbusPalette.dim(this));
             y += rowHeight;
             for (Component line : data.back()) {
                 if (line.getString().isBlank()) continue;
-                canvas.text(line, 2, y, NimbusPalette.text);
+                canvas.text(line, 2, y, NimbusPalette.ink(this));
                 y += rowHeight;
             }
         }
-        if (y == 2) canvas.text("(blank)", 2, y, NimbusPalette.textDim);
+        if (y == 2) canvas.text("(blank)", 2, y, NimbusPalette.dim(this));
     }
 }

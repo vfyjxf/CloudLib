@@ -379,6 +379,9 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         }
         listeners(WidgetEvent.onMount).onMount(scene, context, handle);
         lifecycle = Lifecycle.mounted;
+        // late-mounting widgets never saw a whole-tree theme pass — resolve
+        // the scene theme now or they render with empty visual context
+        refreshTheme();
     }
 
     void unmount() {
@@ -1166,6 +1169,10 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
             style.apply(value);
         }
         if (scene != null) {
+            // reset() swaps in a fresh TaffyStyle — the tree still holds the
+            // old object, so every layout write since reset would be lost.
+            // Hand the live style back before flagging the relayout.
+            scene.tree.setStyle(nodeId, style.layoutStyle());
             scene.tree.markDirty(nodeId);
         }
     }

@@ -59,6 +59,14 @@ public final class PanelSpec {
      */
     boolean floatingOnIdle = false;
     /**
+     * When the resting form may present: {@link PresentTrigger#CONE} (look
+     * cone) is the default for machines/containers, {@link PresentTrigger#VISIBLE}
+     * for resident nameplates, {@link PresentTrigger#POINTED} for fine targets
+     * like signs that only appear under the crosshair. Engaged/pinned panels
+     * and the inspect layer always bypass it.
+     */
+    PresentTrigger trigger = PresentTrigger.CONE;
+    /**
      * Layout participation: zoning, folding, off-screen collapse and
      * occlusion policy — read by every presentation driver.
      */
@@ -232,6 +240,11 @@ public final class PanelSpec {
         return floatingOnIdle;
     }
 
+    /** See {@link #trigger}. */
+    public PresentTrigger trigger() {
+        return trigger;
+    }
+
     // region mutation
 
     public PanelSpec title(@Nullable Component title) {
@@ -266,6 +279,12 @@ public final class PanelSpec {
 
     public PanelSpec floatingOnIdle(boolean floatingOnIdle) {
         this.floatingOnIdle = floatingOnIdle;
+        return this;
+    }
+
+    /** See {@link #trigger}. */
+    public PanelSpec trigger(PresentTrigger trigger) {
+        this.trigger = trigger;
         return this;
     }
 

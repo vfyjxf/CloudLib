@@ -23,8 +23,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class NimbusThemesTest {
 
-    private static final String[] FILES = {"dark.css", "light.css", "holo.css"};
-    private static final String[] TAGS = {
+    private static final String[] files = {"dark.css", "light.css", "holo.css"};
+    private static final String[] tags = {
         "panel", "label", "button", "item-slot", "divider", "chip", "progress-bar", "scrollbar", "entity-tag"
     };
 
@@ -43,9 +43,9 @@ class NimbusThemesTest {
 
     @Test
     void allThemesParseCleanAndResolve() {
-        for (String file : FILES) {
+        for (String file : files) {
             Theme theme = load(file);
-            for (String tag : TAGS) {
+            for (String tag : tags) {
                 UIStyle s = ThemeEngine.resolve(theme, new Node(tag));
                 assertFalse(s.isEmpty(), () -> file + ": no properties resolved for <" + tag + ">");
             }
@@ -60,17 +60,18 @@ class NimbusThemesTest {
         w.useStyle(s);
         var ctx = w.style();
         var vc = ctx.visualContext();
-        System.out.println("light inworld-panel -> text=" +
-                (vc.textColor() == null ? "null" : String.format("0x%08X", vc.textColor())) +
-                " bg=" + vc.background() +
-                " border=" + vc.getProperty("border-texture", dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture.class) +
-                " accent=" + (ctx.get(Styles.accent) == null ? "null" : String.format("0x%08X", ctx.get(Styles.accent))));
+        System.out.println("light inworld-panel -> text="
+                + (vc.textColor() == null ? "null" : String.format("0x%08X", vc.textColor()))
+                + " bg="
+                + vc.background() + " border="
+                + vc.getProperty("border-texture", dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture.class) + " accent="
+                + (ctx.get(Styles.accent) == null ? "null" : String.format("0x%08X", ctx.get(Styles.accent))));
         assertNotNull(vc.textColor(), "inworld-panel must resolve color");
     }
 
     @Test
     void inWorldTextIsNeverShadowed() {
-        for (String file : FILES) {
+        for (String file : files) {
             Theme theme = load(file);
             Node label = new Node("label");
             UIStyle s = ThemeEngine.resolve(theme, label);

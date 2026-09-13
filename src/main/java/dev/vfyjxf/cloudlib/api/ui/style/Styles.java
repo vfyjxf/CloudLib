@@ -592,6 +592,18 @@ public final class Styles {
     public static final StyleKey<Integer> textDim =
             colorKey("text-dim", true, dev.vfyjxf.cloudlib.internal.ui.style.StyleApplies.customProp("text-dim"));
 
+    /**
+     * Slot-cell fill — the inset color behind item icons in grids. Inherited
+     * so a themed panel re-tints every descendant grid; read via
+     * {@code style().get(slot)}.
+     */
+    public static final StyleKey<Integer> slot =
+            colorKey("slot", true, dev.vfyjxf.cloudlib.internal.ui.style.StyleApplies.customProp("slot"));
+
+    /** Hover/active slot fill — the focused variant of {@link #slot}. */
+    public static final StyleKey<Integer> slotHot =
+            colorKey("slot-hot", true, dev.vfyjxf.cloudlib.internal.ui.style.StyleApplies.customProp("slot-hot"));
+
     /** The scene compositing layer the widget renders into. */
     public static final StyleKey<SceneLayer> sceneLayer = key(
             "scene-layer",

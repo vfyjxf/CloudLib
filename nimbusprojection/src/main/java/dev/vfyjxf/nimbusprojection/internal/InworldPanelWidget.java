@@ -53,6 +53,7 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
     // per-frame chrome state, driven by the manager
     boolean focused;
     boolean pointed;
+    boolean world;
     int screenX;
     int screenY;
     /** open-animation scale (1 = fully open); driven by the manager each frame */
@@ -187,9 +188,20 @@ public final class InworldPanelWidget extends WidgetGroup<Widget> {
         applyChromeMinWidth();
     }
 
-    void setFrameState(boolean focused, boolean pointed) {
+    void setFrameState(boolean focused, boolean pointed, boolean world) {
         this.focused = focused;
         this.pointed = pointed;
+        if (world != this.world) {
+            this.world = world;
+            if (world) addStyleClass("world"); else removeStyleClass("world");
+            // the class flips inherited keys (color/accent/text-dim) — the
+            // whole subtree must re-resolve, not just the chrome
+            dev.vfyjxf.cloudlib.api.ui.base.WidgetTree.walkPreOrder(
+                    this, true, -1, (w, d) -> {
+                        w.markStyleDirty();
+                        return dev.vfyjxf.cloudlib.api.ui.base.WidgetTree.TraversalControl.proceed;
+                    });
+        }
     }
 
     /**

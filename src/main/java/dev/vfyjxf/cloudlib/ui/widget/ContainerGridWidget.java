@@ -6,6 +6,7 @@ import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
+import dev.vfyjxf.cloudlib.api.ui.style.Styles;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDraggable;
 import dev.vfyjxf.cloudlib.data.lang.CloudLang;
@@ -47,8 +48,9 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
     private static final int cell = 18;
     private static final int cols = 9;
     private static final int maxRows = 6;
-    private static final int slotBg = 0x33221B10;
-    private static final int slotBgHot = 0x66F2C04D;
+    /** Fallback slot tints — themes override via the {@code slot} / {@code slot-hot} props. */
+    private static final int slotBg = 0x40221B10;
+    private static final int slotBgHot = 0x80D1904B;
 
     private final Supplier<BlockPos> pos;
     /**
@@ -161,7 +163,8 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
             String label = p == null && stacksSource == null
                     ? CloudLang.Ui.noContainer.string()
                     : CloudLang.Ui.syncing.string();
-            canvas.text(label, 4, 4, 0x66F2C04D);
+            Integer dim = style().get(Styles.textDim);
+            canvas.text(label, 4, 4, dim != null ? dim : 0x80C07030);
             return;
         }
         int rows = rows();
@@ -174,7 +177,8 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
             int y = row * cell;
             ItemStack stack = stacks.get(i);
             boolean hover = mouseX >= x && mouseX < x + cell && mouseY >= y && mouseY < y + cell;
-            canvas.fill(x, y, cell - 1, cell - 1, hover ? slotBgHot : slotBg);
+            Integer themed = style().get(hover ? Styles.slotHot : Styles.slot);
+            canvas.fill(x, y, cell - 1, cell - 1, themed != null ? themed : (hover ? slotBgHot : slotBg));
             if (!stack.isEmpty()) {
                 any = true;
                 canvas.renderItemIcon(stack, x, y);
@@ -183,7 +187,8 @@ public final class ContainerGridWidget extends Widget implements WorldDraggable 
         }
         if (!any) {
             String label = CloudLang.Ui.empty.string();
-            canvas.text(label, cols * cell / 2 - canvas.font().width(label) / 2, rows * cell / 2 - 4, 0x66F2C04D);
+            Integer dim = style().get(Styles.textDim);
+            canvas.text(label, cols * cell / 2 - canvas.font().width(label) / 2, rows * cell / 2 - 4, dim != null ? dim : 0x80C07030);
         }
     }
 }

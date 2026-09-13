@@ -343,8 +343,9 @@ public final class CssValues {
                 }
                 case 6 -> 0xFF000000 | Integer.parseInt(hex, 16);
                 case 8 -> {
+                    // CSS #RRGGBBAA → Minecraft ARGB (alpha to the top byte)
                     long v = Long.parseLong(hex, 16);
-                    yield (int) v;
+                    yield (int) ((v & 0xFF) << 24 | (v >>> 8));
                 }
                 default -> null;
             };

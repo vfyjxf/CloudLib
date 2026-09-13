@@ -147,7 +147,7 @@ public final class InventoryPanelWidget extends Widget implements WorldDraggable
             drawSlot(canvas, inv.getItem(36 + i), i * cell, ey, mouseX, mouseY);
         }
         drawSlot(canvas, inv.getItem(40), 8 * cell, ey, mouseX, mouseY);
-        canvas.text("inv", 4 * cell + 8, ey + 5, NimbusPalette.textDim);
+        canvas.text("inv", 4 * cell + 8, ey + 5, NimbusPalette.dim(this));
     }
 
     private void drawSlot(SceneCanvas canvas, ItemStack stack, int x, int y, int mouseX, int mouseY) {

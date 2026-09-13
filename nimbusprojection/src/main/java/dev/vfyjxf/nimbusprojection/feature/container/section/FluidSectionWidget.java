@@ -40,7 +40,7 @@ public final class FluidSectionWidget extends Widget {
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         FluidSectionData live = view.live();
         if (live == null) {
-            canvas.text("···", 4, 4, NimbusPalette.textDim);
+            canvas.text("···", 4, 4, NimbusPalette.dim(this));
             return;
         }
         List<FluidSectionData.Tank> tanks = live.tanks();
@@ -58,7 +58,7 @@ public final class FluidSectionWidget extends Widget {
                         + tank.fluid().getAmount() + "/" + tank.capacity() + " mB";
                 canvas.text(label, 4, y + 2, 0xFFFFFFFF);
             } else {
-                canvas.text("empty  0/" + tank.capacity() + " mB", 4, y + 2, NimbusPalette.textDim);
+                canvas.text("empty  0/" + tank.capacity() + " mB", 4, y + 2, NimbusPalette.dim(this));
             }
         }
     }

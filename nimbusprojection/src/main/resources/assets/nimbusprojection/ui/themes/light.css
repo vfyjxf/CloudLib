@@ -65,6 +65,11 @@ button:pressed,
 button:active            { background: var(--btn-down); }
 button:disabled          { color: var(--text-dim); }
 
+container-grid, item-grid {
+    slot: #241F1826;
+    slot-hot: #C0703059;
+}
+
 item-slot, .slot {
     background: var(--inset);
     border-texture: border-texture(#8A867D, 1);

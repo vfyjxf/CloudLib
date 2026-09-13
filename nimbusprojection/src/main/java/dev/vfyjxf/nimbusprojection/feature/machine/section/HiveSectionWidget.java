@@ -35,7 +35,7 @@ public final class HiveSectionWidget extends Widget {
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         HiveSectionData live = view.live();
         if (live == null) {
-            canvas.text("···", 4, 4, NimbusPalette.textDim);
+            canvas.text("···", 4, 4, NimbusPalette.dim(this));
             return;
         }
         bar(canvas, 0, live.occupied(), live.max(), beeFill, live.occupied() + "/" + live.max() + " bees");

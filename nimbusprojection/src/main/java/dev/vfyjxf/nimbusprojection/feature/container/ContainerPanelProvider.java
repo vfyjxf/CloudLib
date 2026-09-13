@@ -6,6 +6,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.Presentation;
 import dev.vfyjxf.cloudlib.util.ContainerScan;
 import dev.vfyjxf.nimbusprojection.NimbusConfig;
 import dev.vfyjxf.nimbusprojection.api.panel.PanelSpec;
+import dev.vfyjxf.nimbusprojection.api.panel.PresentTrigger;
 import dev.vfyjxf.nimbusprojection.api.provider.PanelProvider;
 import dev.vfyjxf.nimbusprojection.api.provider.PanelSink;
 import dev.vfyjxf.nimbusprojection.api.provider.ProviderContext;
@@ -66,7 +67,13 @@ public final class ContainerPanelProvider implements PanelProvider {
                     // hologram — the hint exists because there's an
                     // interactive form, not because the card needs a key
                     .onDemand(false)
-                    .floatingOnIdle(true);
+                    .floatingOnIdle(true)
+                    // machines present inside the look cone — near the
+                    // crosshair, not merely on screen. Section-only blocks
+                    // (signs, hives — no item handler) only appear when the
+                    // ray actually hits them: pointing is the whole gesture,
+                    // no key needed.
+                    .trigger(items ? PresentTrigger.CONE : PresentTrigger.POINTED);
             sink.offer(items ? spec.hints("V:expand", "X:store") : spec.hints("V:expand"));
         }
     }

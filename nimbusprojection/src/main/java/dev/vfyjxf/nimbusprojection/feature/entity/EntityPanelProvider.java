@@ -5,6 +5,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.PanelKey;
 import dev.vfyjxf.cloudlib.api.ui.inworld.Presentation;
 import dev.vfyjxf.nimbusprojection.NimbusConfig;
 import dev.vfyjxf.nimbusprojection.api.panel.PanelSpec;
+import dev.vfyjxf.nimbusprojection.api.panel.PresentTrigger;
 import dev.vfyjxf.nimbusprojection.api.provider.PanelProvider;
 import dev.vfyjxf.nimbusprojection.api.provider.PanelSink;
 import dev.vfyjxf.nimbusprojection.api.provider.ProviderContext;
@@ -28,10 +29,6 @@ import net.minecraft.world.phys.Vec3;
  */
 public final class EntityPanelProvider implements PanelProvider {
 
-    /** Nameplates are resident, not look-gated: ~70° cone ≈ the visible
-     * frustum — anything on screen in reach gets its card. */
-    private static final double coneCosEnter = Math.cos(Math.toRadians(70));
-
     /** The panel anchors just above the nameplate space. */
     private static final double headroom = 0.35;
 
@@ -40,20 +37,20 @@ public final class EntityPanelProvider implements PanelProvider {
         if (!NimbusConfig.entitiesEnabled()) return;
         double reach = NimbusConfig.entityReach();
         Vec3 eye = context.player().getEyePosition();
-        Vec3 look = context.player().getLookAngle().normalize();
         AABB box = AABB.ofSize(eye, reach * 2, reach * 2, reach * 2);
         for (Entity entity : context.level().getEntities(context.player(), box, EntityPanelProvider::eligible)) {
             Vec3 center = entity.getBoundingBox().getCenter();
-            Vec3 to = center.subtract(eye);
-            double dist = to.length();
+            double dist = center.subtract(eye).length();
             if (dist < 0.5 || dist > reach) continue;
-            if (to.normalize().dot(look) < coneCosEnter) continue;
             sink.offer(PanelSpec.of(
                             keyOf(entity),
                             InworldAnchor.ofEntity(entity.getId(), new Vec3(0, entity.getBbHeight() + headroom, 0)),
                             Presentation.follow(8, -14),
                             ctx -> new EntityPanelWidget(ctx, entity.getId()))
                     .title(entity.getName())
+                    // nameplates are resident — anything projected on screen
+                    // within reach shows its card, no aiming required
+                    .trigger(PresentTrigger.VISIBLE)
                     .onDemand(false)
                     .floatingOnIdle(true)
                     .hints("V:expand"));

@@ -91,7 +91,7 @@ public final class ProgressSectionWidget extends Widget {
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         ProgressSectionData live = view.live();
         if (live == null) {
-            canvas.text("···", 4, 4, NimbusPalette.textDim);
+            canvas.text("···", 4, 4, NimbusPalette.dim(this));
             return;
         }
         bar(canvas, 0, live.progress(), live.total(), progressFill, live.progress() + "/" + live.total() + "t");

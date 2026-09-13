@@ -184,12 +184,12 @@ public final class EntityPanelWidget extends WidgetGroup<Widget> implements Worl
         @Override
         protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
             if (entity == null) {
-                canvas.text("signal lost", 2, 4, NimbusPalette.textDim);
+                canvas.text("signal lost", 2, 4, NimbusPalette.dim(this));
                 return;
             }
             var font = Minecraft.getInstance().font;
             canvas.text(
-                    font.plainSubstrByWidth(entity.getName().getString(), panelWidth - 4), 2, 2, NimbusPalette.text);
+                    font.plainSubstrByWidth(entity.getName().getString(), panelWidth - 4), 2, 2, NimbusPalette.ink(this));
             int y = rowHeight + 2;
             if (entity instanceof LivingEntity living) {
                 renderVitals(canvas, living, y);
@@ -209,11 +209,11 @@ public final class EntityPanelWidget extends WidgetGroup<Widget> implements Worl
             int bar = Math.round((panelWidth - 8) * Math.min(health / max, 1f));
             canvas.fill(2, y, panelWidth - 8, 4, 0x55302620);
             canvas.fill(2, y, bar, 4, health / max > 0.3f ? 0xFF4CAF50 : 0xFFD84315);
-            canvas.text(String.format("%.1f/%d", health, (int) max), 4, y + 6, NimbusPalette.textDim);
+            canvas.text(String.format("%.1f/%d", health, (int) max), 4, y + 6, NimbusPalette.dim(this));
             int armor = living.getArmorValue();
             if (armor > 0) {
                 String label = "⛨" + armor;
-                canvas.text(label, panelWidth - canvas.font().width(label) - 2, y + 6, NimbusPalette.textDim);
+                canvas.text(label, panelWidth - canvas.font().width(label) - 2, y + 6, NimbusPalette.dim(this));
             }
         }
 
@@ -226,13 +226,13 @@ public final class EntityPanelWidget extends WidgetGroup<Widget> implements Worl
                         effect.getEffect().value().getDisplayName().getString() + " " + effect.getDuration() / 20 + "s",
                         2,
                         y,
-                        NimbusPalette.textDim);
+                        NimbusPalette.dim(this));
                 y += rowHeight;
                 shown++;
             }
             String flags = flags(living);
             if (!flags.isEmpty()) {
-                canvas.text(flags, 2, y, NimbusPalette.textDim);
+                canvas.text(flags, 2, y, NimbusPalette.dim(this));
                 y += rowHeight;
             }
             return y;
@@ -276,7 +276,7 @@ public final class EntityPanelWidget extends WidgetGroup<Widget> implements Worl
                                 .getKey(villager.getVillagerData().getProfession())
                                 .getPath());
             }
-            canvas.text(canvas.font().plainSubstrByWidth(line.toString(), panelWidth - 4), 2, y, NimbusPalette.textDim);
+            canvas.text(canvas.font().plainSubstrByWidth(line.toString(), panelWidth - 4), 2, y, NimbusPalette.dim(this));
         }
 
         /** Item frames show the framed item; other non-living get type + count info. */
@@ -289,7 +289,7 @@ public final class EntityPanelWidget extends WidgetGroup<Widget> implements Worl
                                         frame.getItem().getHoverName().getString(), panelWidth - 22),
                         20,
                         y + 4,
-                        NimbusPalette.textDim);
+                        NimbusPalette.dim(this));
             }
         }
     }

@@ -11,6 +11,28 @@ public final class NimbusPalette {
 
     private NimbusPalette() {}
 
+    // region theme-aware reads
+
+    /** Content ink: the theme's {@code color} (inherited) wins, else {@link #text}. */
+    public static int ink(dev.vfyjxf.cloudlib.api.ui.base.Widget w) {
+        Integer c = w.style().visualContext().textColor();
+        return c != null ? c : text;
+    }
+
+    /** Secondary ink: the theme's {@code text-dim} (inherited) wins, else {@link #textDim}. */
+    public static int dim(dev.vfyjxf.cloudlib.api.ui.base.Widget w) {
+        Integer c = w.style().get(dev.vfyjxf.cloudlib.api.ui.style.Styles.textDim);
+        return c != null ? c : textDim;
+    }
+
+    /** Interactive accent: the theme's {@code accent} (inherited) wins, else {@link #accent}. */
+    public static int accent(dev.vfyjxf.cloudlib.api.ui.base.Widget w) {
+        Integer c = w.style().get(dev.vfyjxf.cloudlib.api.ui.style.Styles.accent);
+        return c != null ? c : accent;
+    }
+
+    // endregion
+
     // region colors
 
     /** Panel background — deep warm charcoal, translucent. */
