@@ -2316,7 +2316,9 @@ public final class InworldManager implements NimbusClient {
             double baseDy = ph * 0.5 + 0.6;
             double[] dys = {baseDy, baseDy + 0.45, baseDy + 0.9, baseDy + 0.25, baseDy + 1.4};
             for (int ring = 0; ring < 4; ring++) {
-                double rad = 0.65 + ring * 0.5 + pw * 0.5;
+                // hug the anchor horizontally — height already clears the
+                // block top, so the ring only needs visual separation
+                double rad = 0.35 + ring * 0.35;
                 for (double dy : dys) {
                     for (int i = 0; i < 10; i++) {
                         double ang = i * (Math.PI * 2 / 10);

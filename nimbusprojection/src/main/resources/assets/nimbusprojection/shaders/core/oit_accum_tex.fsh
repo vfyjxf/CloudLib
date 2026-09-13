@@ -24,6 +24,9 @@ void main() {
     vec4 c = texture(Sampler0, uv) * ColorModulator;
     if (c.a <= 0.004) discard;
     float w = weight(c);
-    accum = vec4(c.rgb * c.a, c.a) * w;
+    // the panel FBO was filled by normal src-over blending, so its texels are
+    // already premultiplied (rgb = color * alpha). Accumulating rgb*a again
+    // would square the alpha and wash the whole panel out.
+    accum = vec4(c.rgb, c.a) * w;
     reveal = vec4(c.a);
 }
