@@ -11,7 +11,6 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
@@ -39,7 +38,6 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDraggable;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
-import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
 import dev.vfyjxf.cloudlib.ui.sync.ContainerContents;
 import dev.vfyjxf.cloudlib.util.ContainerScan;
 import dev.vfyjxf.cloudlib.util.ScreenUtil;
@@ -97,14 +95,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
@@ -1441,8 +1435,7 @@ public final class InworldManager implements NimbusClient {
             if (runtime.userPinned || (inspecting && inspectScopeContains(runtime))) {
                 // a custom driver's inspect policy decides its flat form;
                 // builtins always dock
-                if (inspecting && !runtime.userPinned
-                        && inspectByDriver(runtime, placement, proj)) {
+                if (inspecting && !runtime.userPinned && inspectByDriver(runtime, placement, proj)) {
                     continue;
                 }
                 // pinned and flattened panels both dock to a screen corner
@@ -2731,9 +2724,12 @@ public final class InworldManager implements NimbusClient {
     private void tickEngagement(PanelRuntime runtime) {
         // a floatingOnIdle panel's engaged form IS the pin — it stays world-anchored
         // until a V tap toggles it off, not just while the player keeps looking
-        boolean held =
-                inspecting || tracing == runtime || dragPanel == runtime || pointed == runtime || focused == runtime
-                        || (runtime.spec.floatingOnIdle() && runtime.engaged);
+        boolean held = inspecting
+                || tracing == runtime
+                || dragPanel == runtime
+                || pointed == runtime
+                || focused == runtime
+                || (runtime.spec.floatingOnIdle() && runtime.engaged);
         if (held) {
             runtime.engageIdleSince = -1;
             return;
@@ -3414,26 +3410,9 @@ public final class InworldManager implements NimbusClient {
         var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
         Matrix4f mat = worldToView;
 
-        // vanilla-style outlines — the block's real voxel shape and entity
-        // hitboxes, same as the crosshair hit outline and the F3+B debug boxes
-        for (BlockPos pos : framed) {
-            float heat = frameHeat.getOrDefault(pos, 1f);
-            BlockState state = mc.level.getBlockState(pos);
-            VoxelShape shape = state.getShape(mc.level, pos, CollisionContext.empty());
-            if (shape.isEmpty()) shape = Shapes.block();
-            int c = NimbusPalette.scanShapeHot;
-            emitShape(
-                    pose,
-                    buffer,
-                    shape,
-                    pos.getX(),
-                    pos.getY(),
-                    pos.getZ(),
-                    red(c),
-                    green(c),
-                    blue(c),
-                    alpha(c) * heat);
-        }
+        // entity hitbox outlines only — block anchors get the corner ticks +
+        // sweep (emitScanFrame) instead: a full voxel wireframe flattens the
+        // block into a 2D-looking plane at a glance, which reads as noise
         for (int id : framedEnts) {
             float heat = frameEntHeat.getOrDefault(id, 1f);
             Entity entity = mc.level.getEntity(id);
@@ -3625,43 +3604,8 @@ public final class InworldManager implements NimbusClient {
             line(buffer, mat, new double[] {a.x - n, a.y, a.z}, new double[] {a.x + n, a.y, a.z}, lc);
             line(buffer, mat, new double[] {a.x, a.y - n, a.z}, new double[] {a.x, a.y + n, a.z}, lc);
             line(buffer, mat, new double[] {a.x, a.y, a.z - n}, new double[] {a.x, a.y, a.z + n}, lc);
-            line(
-                    buffer,
-                    mat,
-                    new double[] {a.x, a.y, a.z},
-                    new double[] {pb.x, pb.y, pb.z},
-                    lc);
+            line(buffer, mat, new double[] {a.x, a.y, a.z}, new double[] {pb.x, pb.y, pb.z}, lc);
         }
-    }
-
-    /** Replica of vanilla's private {@code LevelRenderer.renderShape} — true voxel edges, not AABB slices. */
-    private static void emitShape(
-            PoseStack pose,
-            VertexConsumer out,
-            VoxelShape shape,
-            double x,
-            double y,
-            double z,
-            float r,
-            float g,
-            float b,
-            float a) {
-        PoseStack.Pose p = pose.last();
-        shape.forAllEdges((x0, y0, z0, x1, y1, z1) -> {
-            float nx = (float) (x1 - x0), ny = (float) (y1 - y0), nz = (float) (z1 - z0);
-            float nl = Mth.sqrt(nx * nx + ny * ny + nz * nz);
-            if (nl > 1e-6f) {
-                nx /= nl;
-                ny /= nl;
-                nz /= nl;
-            }
-            out.addVertex(p, (float) (x0 + x), (float) (y0 + y), (float) (z0 + z))
-                    .setColor(r, g, b, a)
-                    .setNormal(p, nx, ny, nz);
-            out.addVertex(p, (float) (x1 + x), (float) (y1 + y), (float) (z1 + z))
-                    .setColor(r, g, b, a)
-                    .setNormal(p, nx, ny, nz);
-        });
     }
 
     private static float red(int c) {
@@ -3895,10 +3839,8 @@ public final class InworldManager implements NimbusClient {
         int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
         boolean any = false;
         for (int i = 0; i < 8; i++) {
-            FloatPos s = proj.worldToScreen(new Vec3(
-                    pos.getX() + (i & 1),
-                    pos.getY() + ((i >> 1) & 1),
-                    pos.getZ() + ((i >> 2) & 1)));
+            FloatPos s = proj.worldToScreen(
+                    new Vec3(pos.getX() + (i & 1), pos.getY() + ((i >> 1) & 1), pos.getZ() + ((i >> 2) & 1)));
             if (s == null) continue;
             any = true;
             minX = Math.min(minX, (int) s.x);

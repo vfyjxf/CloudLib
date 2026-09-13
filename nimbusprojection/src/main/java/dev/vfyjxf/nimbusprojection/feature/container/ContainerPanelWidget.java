@@ -9,7 +9,6 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
 import dev.vfyjxf.cloudlib.api.ui.style.Styles;
-import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
 import dev.vfyjxf.nimbusprojection.NimbusConfig;
 import dev.vfyjxf.nimbusprojection.api.panel.PanelKeySink;
@@ -17,6 +16,7 @@ import dev.vfyjxf.nimbusprojection.api.section.SectionInstance;
 import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
 import dev.vfyjxf.nimbusprojection.feature.container.section.ItemSectionData;
 import dev.vfyjxf.nimbusprojection.feature.container.section.SectionTypes;
+import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionContents;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionProviders;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionWidgets;
@@ -57,70 +57,68 @@ public final class ContainerPanelWidget extends WidgetGroup<Widget> implements W
     private Widget buildSummary() {
         return new Widget() {
             {
-                onMount((scene, context, handle) -> scene.layoutTree()
-                    .setMeasureFunc(
-                            nodeId(),
-                            (style, space) -> {
-                                // measure to content, not capacity — an empty
-                                // chest's strip is "0/27", not 9 ghost slots
-                                var font = net.minecraft.client.Minecraft.getInstance().font;
-                                int w = 4;
-                                BlockPos p = pos.get();
-                                List<ItemStack> stacks = p == null ? null : itemStacks(p);
-                                if (stacks == null || stacks.isEmpty()) {
-                                    w += font.width(stacks == null ? "···" : "0/0");
-                                } else {
-                                    int shown = 0;
-                                    int used = 0;
-                                    for (ItemStack s : stacks) {
-                                        if (s.isEmpty()) continue;
-                                        used++;
-                                        if (shown < NimbusConfig.containerTopItems()) shown++;
-                                    }
-                                    w += shown * cell;
-                                    w += 4 + font.width(used + "/" + stacks.size());
-                                }
-                                return new FloatSize(w, cell + 6);
-                            }));
-        }
+                onMount((scene, context, handle) -> scene.layoutTree().setMeasureFunc(nodeId(), (style, space) -> {
+                    // measure to content, not capacity — an empty
+                    // chest's strip is "0/27", not 9 ghost slots
+                    var font = net.minecraft.client.Minecraft.getInstance().font;
+                    int w = 4;
+                    BlockPos p = pos.get();
+                    List<ItemStack> stacks = p == null ? null : itemStacks(p);
+                    if (stacks == null || stacks.isEmpty()) {
+                        w += font.width(stacks == null ? "···" : "0/0");
+                    } else {
+                        int shown = 0;
+                        int used = 0;
+                        for (ItemStack s : stacks) {
+                            if (s.isEmpty()) continue;
+                            used++;
+                            if (shown < NimbusConfig.containerTopItems()) shown++;
+                        }
+                        w += shown * cell;
+                        w += 4 + font.width(used + "/" + stacks.size());
+                    }
+                    return new FloatSize(w, cell + 6);
+                }));
+            }
 
-        private int lastSignature = -1;
+            private int lastSignature = -1;
 
-        @Override
-        protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-            Integer themedDim = style().get(Styles.textDim);
-            int dim = themedDim != null ? themedDim : NimbusPalette.textDim;
-            BlockPos p = pos.get();
-            int x = 2;
-            if (p == null) {
-                canvas.text("···", x, 3, dim);
-                return;
+            @Override
+            protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+                Integer themedDim = style().get(Styles.textDim);
+                int dim = themedDim != null ? themedDim : NimbusPalette.textDim;
+                BlockPos p = pos.get();
+                int x = 2;
+                if (p == null) {
+                    canvas.text("···", x, 3, dim);
+                    return;
+                }
+                List<ItemStack> stacks = itemStacks(p);
+                if (stacks == null) {
+                    canvas.text("···", x, 3, dim);
+                    return;
+                }
+                // measure is data-driven — relayout when the fill signature changes
+                int signature = stacks.size() * 31
+                        + stacks.stream().mapToInt(s -> s.isEmpty() ? 0 : 1).sum();
+                if (signature != lastSignature && lifecycle().mounted()) {
+                    lastSignature = signature;
+                    scene().layoutTree().markDirty(nodeId());
+                }
+                int shown = 0;
+                int used = 0;
+                int limit = NimbusConfig.containerTopItems();
+                for (ItemStack stack : stacks) {
+                    if (stack.isEmpty()) continue;
+                    used++;
+                    if (shown >= limit) continue;
+                    canvas.renderItemIcon(stack, x, 0);
+                    x += cell;
+                    shown++;
+                }
+                String fill = stacks.isEmpty() ? "empty" : used + "/" + stacks.size();
+                canvas.text(fill, x + 4, 4, dim);
             }
-            List<ItemStack> stacks = itemStacks(p);
-            if (stacks == null) {
-                canvas.text("···", x, 3, dim);
-                return;
-            }
-            // measure is data-driven — relayout when the fill signature changes
-            int signature = stacks.size() * 31 + stacks.stream().mapToInt(s -> s.isEmpty() ? 0 : 1).sum();
-            if (signature != lastSignature && lifecycle().mounted()) {
-                lastSignature = signature;
-                scene().layoutTree().markDirty(nodeId());
-            }
-            int shown = 0;
-            int used = 0;
-            int limit = NimbusConfig.containerTopItems();
-            for (ItemStack stack : stacks) {
-                if (stack.isEmpty()) continue;
-                used++;
-                if (shown >= limit) continue;
-                canvas.renderItemIcon(stack, x, 0);
-                x += cell;
-                shown++;
-            }
-            String fill = stacks.isEmpty() ? "empty" : used + "/" + stacks.size();
-            canvas.text(fill, x + 4, 4, dim);
-        }
         };
     }
 

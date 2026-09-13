@@ -3,13 +3,12 @@ package dev.vfyjxf.nimbusprojection.feature.entity;
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import dev.vfyjxf.cloudlib.api.ui.style.Styles;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.inworld.InworldPanelContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDrag;
 import dev.vfyjxf.cloudlib.api.ui.inworld.WorldDragAcceptor;
-import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
+import dev.vfyjxf.cloudlib.api.ui.style.Styles;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
 import dev.vfyjxf.nimbusprojection.NimbusConfig;
 import dev.vfyjxf.nimbusprojection.NimbusKeyMappings;
@@ -17,6 +16,7 @@ import dev.vfyjxf.nimbusprojection.api.panel.PanelKeySink;
 import dev.vfyjxf.nimbusprojection.api.section.SectionInstance;
 import dev.vfyjxf.nimbusprojection.api.section.SectionTarget;
 import dev.vfyjxf.nimbusprojection.feature.container.section.SectionTypes;
+import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionContents;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionProviders;
 import dev.vfyjxf.nimbusprojection.internal.section.SectionWidgets;
@@ -188,7 +188,8 @@ public final class EntityPanelWidget extends WidgetGroup<Widget> implements Worl
                 return;
             }
             var font = Minecraft.getInstance().font;
-            canvas.text(font.plainSubstrByWidth(entity.getName().getString(), panelWidth - 4), 2, 2, NimbusPalette.text);
+            canvas.text(
+                    font.plainSubstrByWidth(entity.getName().getString(), panelWidth - 4), 2, 2, NimbusPalette.text);
             int y = rowHeight + 2;
             if (entity instanceof LivingEntity living) {
                 renderVitals(canvas, living, y);

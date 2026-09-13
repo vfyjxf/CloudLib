@@ -60,7 +60,9 @@ class NimbusThemesTest {
             UIStyle s = ThemeEngine.resolve(theme, label);
             assertEquals(
                     Boolean.FALSE,
-                    s.get(Styles.textShadow) == null ? null : s.get(Styles.textShadow).value(),
+                    s.get(Styles.textShadow) == null
+                            ? null
+                            : s.get(Styles.textShadow).value(),
                     () -> file + " must set text-shadow: none at :root");
             // and the widget read path agrees
             label.useStyle(s);
@@ -96,7 +98,6 @@ class NimbusThemesTest {
         Stylesheet sheet = CssParser.parse(css, errors);
         assertTrue(errors.isEmpty(), () -> file + " parse errors: " + errors);
         assertFalse(sheet.rules().isEmpty());
-        return new Theme(
-                ResourceLocation.fromNamespaceAndPath("nimbusprojection", file.replace(".css", "")), sheet);
+        return new Theme(ResourceLocation.fromNamespaceAndPath("nimbusprojection", file.replace(".css", "")), sheet);
     }
 }

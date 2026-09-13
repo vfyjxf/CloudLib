@@ -2,9 +2,9 @@ package dev.vfyjxf.nimbusprojection.feature.container.section;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
 import dev.vfyjxf.nimbusprojection.api.section.SectionView;
 import dev.vfyjxf.nimbusprojection.api.section.SectionWidgetFactory;
+import dev.vfyjxf.nimbusprojection.internal.NimbusPalette;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 
 /**

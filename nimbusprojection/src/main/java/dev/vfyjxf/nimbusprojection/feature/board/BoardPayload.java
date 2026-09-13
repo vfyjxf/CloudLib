@@ -17,7 +17,11 @@ public record BoardPayload(int count, String lastBy) implements CustomPacketPayl
             new Type<>(ResourceLocation.fromNamespaceAndPath("nimbusprojection", "board_state"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, BoardPayload> streamCodec = StreamCodec.composite(
-            ByteBufCodecs.VAR_INT, BoardPayload::count, ByteBufCodecs.STRING_UTF8, BoardPayload::lastBy, BoardPayload::new);
+            ByteBufCodecs.VAR_INT,
+            BoardPayload::count,
+            ByteBufCodecs.STRING_UTF8,
+            BoardPayload::lastBy,
+            BoardPayload::new);
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
