@@ -1,32 +1,31 @@
 
 /*
- * nimbusprojection:light — parchment in-world panels.
+ * nimbusprojection:light — the default in-world look.
  *
- * Warm parchment chrome like a villager UI or a written page: bone paper fills
- * read cleanly against dark caves and night, and the ink text keeps full
- * contrast without a shadow pass. Copper accents echo lightning rods and the
- * game's own warm highlight.
+ * Gray-white chrome like polished diorite / bone paper: neutral light fills
+ * stay readable over caves and grass alike, ink text keeps full contrast
+ * without a shadow pass. Copper-orange accents mark selection and actions.
  */
 
 :root {
     /* palette — parchment + copper */
-    --accent:         #C9701EFF;
-    --accent-dim:     #C9701E4D;
-    --text:           #3A2E1EFF;
-    --text-dim:       #7A6B52FF;
-    --text-on-accent: #F8F2E4FF;
-    --ok:             #5E8F3CFF;
-    --warn:           #B87408FF;
-    --danger:         #B4442FFF;
+    --accent:         #C07030FF;
+    --accent-dim:     #C070304D;
+    --text:           #2E2A25FF;
+    --text-dim:       #6E675CFF;
+    --text-on-accent: #F4F0EAFF;
+    --ok:             #5C8A3CFF;
+    --warn:           #B07010FF;
+    --danger:         #B0442FFF;
 
     /* chrome — warm paper, soft separation shadow */
-    --panel:          linear-gradient(#F2EAD8F2, #EAE0C8F2);
-    --panel-raised:   linear-gradient(#FAF3E2F2, #F0E6CFF2);
-    --panel-line:     #9C8B6B;
-    --inset:          color(#CFC0A0CC);
-    --btn:            linear-gradient(#E4D9BEF2, #DACDA8F2);
-    --btn-hover:      linear-gradient(#FCF4DCf2, #EEE2C0F2);
-    --btn-down:       linear-gradient(#D2C49CF2, #C6B78DF2);
+    --panel:          linear-gradient(#EFEDE7F5, #E5E2DAF5);
+    --panel-raised:   linear-gradient(#F6F4EFF5, #EDEAE2F5);
+    --panel-line:     #8E897F;
+    --inset:          color(#C9C5BCCC);
+    --btn:            linear-gradient(#DCD8D0F5, #D1CDC2F5);
+    --btn-hover:      linear-gradient(#F7F5EFF5, #E9E6DCF5);
+    --btn-down:       linear-gradient(#C4BFB4F5, #B8B3A7F5);
 
     /* metrics */
     --pad:  4px;
@@ -46,7 +45,7 @@ panel, .hud, inworld-panel {
     border-texture: border-texture(var(--panel-line), 1);
     color: var(--text);
     padding: var(--pad) calc(var(--pad) + 2px);
-    box-shadow: 1px 2px 4px #3C342B40;
+    box-shadow: 1px 2px 4px #3A352E40;
 }
 
 panel:focused, inworld-panel:focused { border-texture: border-texture(var(--accent), 1); }
@@ -56,7 +55,7 @@ label, text { color: var(--text); }
 
 button {
     background: var(--btn);
-    border-texture: border-texture(#8C8272, 1);
+    border-texture: border-texture(#8A867D, 1);
     color: var(--text);
     padding: 3px 8px;
     text-align: center;
@@ -68,7 +67,7 @@ button:disabled          { color: var(--text-dim); }
 
 item-slot, .slot {
     background: var(--inset);
-    border-texture: border-texture(#8C8272, 1);
+    border-texture: border-texture(#8A867D, 1);
     width: var(--cell);
     height: var(--cell);
 }
@@ -79,7 +78,7 @@ divider { background: color(#241F1824); }
 /* ---------- composite chrome ---------- */
 
 scrollbar            { background: color(#241F1826); }
-scrollbar::part(thumb) { background: color(#2F5DD099); }
+scrollbar::part(thumb) { background: color(#C0703099); }
 
 chip { background: var(--inset); color: var(--text-dim); padding: 1px 4px; }
 
@@ -89,8 +88,8 @@ progress-bar::part(fill) { background: var(--accent); }
 /* ---------- entity / block tooltips ---------- */
 
 entity-tag, tooltip {
-    background: color(#F4EFE4E6);
-    border-texture: border-texture(#9C9179, 1);
+    background: color(#EFEDE7E6);
+    border-texture: border-texture(#8E897F, 1);
     color: var(--text);
     padding: 3px 6px;
 }

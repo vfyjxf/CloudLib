@@ -21,6 +21,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.SceneContext;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager;
 import dev.vfyjxf.cloudlib.api.ui.floating.AvoidRectsMiddleware;
 import dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddleware;
 import dev.vfyjxf.cloudlib.api.ui.floating.FloatingPositioning;
@@ -320,8 +321,11 @@ public final class InworldManager implements NimbusClient {
         // root measures 0×0 (absolute children are out of flow) and nothing
         // would ever be clickable
         root.useStyle(UIStyles.sizePercent(1f));
-        // in-world panels wear the nimbus dark theme unless a caller re-pins
-        scene.setTheme(ResourceLocation.fromNamespaceAndPath("nimbusprojection", "dark"));
+        // in-world panels wear the nimbus gray-white theme unless re-pinned
+        scene.setTheme(ResourceLocation.fromNamespaceAndPath("nimbusprojection", "light"));
+        // themes register on resource load — re-resolve the tree when the
+        // registry settles so the pin actually lands
+        ThemeManager.onChange(scene::refreshTheme);
         scene.init();
         scene.mount(SceneContext.create(new InworldSceneHost()));
     }

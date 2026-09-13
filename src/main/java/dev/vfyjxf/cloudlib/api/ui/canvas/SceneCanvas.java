@@ -1317,7 +1317,8 @@ public final class SceneCanvas {
      */
     public SceneCanvas renderItemIcon(ItemStack stack, int x, int y) {
         if (stack.isEmpty()) return this;
-        var model = Minecraft.getInstance().getItemRenderer().getItemModelShaper().getItemModel(stack);
+        var model =
+                Minecraft.getInstance().getItemRenderer().getItemModelShaper().getItemModel(stack);
         TextureAtlasSprite sprite = model.getParticleIcon(net.neoforged.neoforge.client.model.data.ModelData.EMPTY);
         layeredGraphics().blit(x, y, 0, 16, 16, sprite);
         return this;

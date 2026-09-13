@@ -1,32 +1,31 @@
 
 /*
- * nimbusprojection:dark — the default in-world look.
+ * nimbusprojection:dark — MC Dungeons carved-umber chrome.
  *
- * Minecraft-native warm dark: leather-and-wood tones instead of cool blue —
- * deep walnut panels at ~92% opacity stay readable over grass, sky and cave
- * alike, and the gold accent matches the game's own selection color. Text
- * renders without drop shadow — at in-world scale shadows smear into noise.
+ * Deep umber panels at ~94% opacity with ivory parchment text — the
+ * dungeons-style dark wood look. The campfire-orange accent is the
+ * selection/affordance color (XP-number warmth without the neon yellow).
  */
 
 :root {
     /* palette — warm walnut + gold */
-    --accent:         #D1904BFF;
-    --accent-dim:     #D1904B59;
-    --text:           #EDE4D3FF;
-    --text-dim:       #B0A48CFF;
-    --text-on-accent: #241B0EFF;
-    --ok:             #8FBC5AFF;
-    --warn:           #F2A13DFF;
-    --danger:         #D95B43FF;
+    --accent:         #DF8C46FF;
+    --accent-dim:     #DF8C4659;
+    --text:           #EAE1CDFF;
+    --text-dim:       #A3967EFF;
+    --text-on-accent: #241500FF;
+    --ok:             #7FA656FF;
+    --warn:           #E8A33DFF;
+    --danger:         #C9503CFF;
 
     /* chrome — flat fills, no atlas */
-    --panel:          linear-gradient(#241E16F0, #1D1812F0);
-    --panel-raised:   linear-gradient(#2E261BF0, #262017F0);
-    --panel-line:     #5D4F3C;
-    --inset:          color(#15100999);
-    --btn:            linear-gradient(#3A3226F0, #302820F0);
-    --btn-hover:      linear-gradient(#4A3F30F0, #3E3428F0);
-    --btn-down:       linear-gradient(#5C4D35F0, #4A3E2DF0);
+    --panel:          linear-gradient(#221A12F2, #1A130DF2);
+    --panel-raised:   linear-gradient(#2B2118F2, #231B13F2);
+    --panel-line:     #55452F;
+    --inset:          color(#120C0899);
+    --btn:            linear-gradient(#372A1DF2, #2D2319F2);
+    --btn-hover:      linear-gradient(#4A3A26F2, #3D3020F2);
+    --btn-down:       linear-gradient(#594731F2, #483723F2);
 
     /* metrics */
     --pad:  4px;
@@ -56,7 +55,7 @@ label, text, .dim { color: var(--text); }
 
 button {
     background: var(--btn);
-    border-texture: border-texture(#4A3F30, 1);
+    border-texture: border-texture(#4A3A26, 1);
     color: var(--text);
     padding: 3px 8px;
     text-align: center;
@@ -68,18 +67,18 @@ button:disabled          { color: var(--text-dim); }
 
 item-slot, .slot {
     background: var(--inset);
-    border-texture: border-texture(#463B2C, 1);
+    border-texture: border-texture(#4A3A28, 1);
     width: var(--cell);
     height: var(--cell);
 }
 item-slot:hover { border-texture: border-texture(var(--accent-dim), 1); }
 
-divider { background: color(#FFFFFF14); }
+divider { background: color(#FFFFFF12); }
 
 /* ---------- composite chrome ---------- */
 
 scrollbar            { background: color(#00000059); }
-scrollbar::part(thumb) { background: color(#D1904B80); }
+scrollbar::part(thumb) { background: color(#DF8C4680); }
 
 chip { background: var(--inset); color: var(--text-dim); padding: 1px 4px; }
 
@@ -89,8 +88,8 @@ progress-bar::part(fill) { background: var(--accent); }
 /* ---------- entity / block tooltips ---------- */
 
 entity-tag, tooltip {
-    background: color(#1D1812D9);
-    border-texture: border-texture(#463B2C, 1);
+    background: color(#1A130DD9);
+    border-texture: border-texture(#4A3A28, 1);
     color: var(--text);
     padding: 3px 6px;
 }

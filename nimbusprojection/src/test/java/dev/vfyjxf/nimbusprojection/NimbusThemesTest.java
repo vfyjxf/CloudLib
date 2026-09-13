@@ -53,6 +53,22 @@ class NimbusThemesTest {
     }
 
     @Test
+    void inworldPanelColorsResolve() {
+        Theme theme = load("light.css");
+        Node w = new Node("inworld-panel");
+        UIStyle s = ThemeEngine.resolve(theme, w);
+        w.useStyle(s);
+        var ctx = w.style();
+        var vc = ctx.visualContext();
+        System.out.println("light inworld-panel -> text=" +
+                (vc.textColor() == null ? "null" : String.format("0x%08X", vc.textColor())) +
+                " bg=" + vc.background() +
+                " border=" + vc.getProperty("border-texture", dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture.class) +
+                " accent=" + (ctx.get(Styles.accent) == null ? "null" : String.format("0x%08X", ctx.get(Styles.accent))));
+        assertNotNull(vc.textColor(), "inworld-panel must resolve color");
+    }
+
+    @Test
     void inWorldTextIsNeverShadowed() {
         for (String file : FILES) {
             Theme theme = load(file);

@@ -23,19 +23,19 @@ public final class NimbusPalette {
     public static final int border = 0xB37A6B52;
 
     /** Border of the focused panel — MC selection gold. */
-    public static final int borderFocused = 0xFFD1904B;
+    public static final int borderFocused = 0xFFDF8C46;
 
     /** Primary accent — gold, used for brackets, nodes and hint keys. */
-    public static final int accent = 0xFFD1904B;
+    public static final int accent = 0xFFDF8C46;
 
     /** Softer accent for focused panel fill details. */
-    public static final int accentDim = 0x66D1904B;
+    public static final int accentDim = 0x66DF8C46;
 
     /** Leader line between a panel and its world anchor — warm bone. */
     public static final int line = 0xB0EDE4D3;
 
     /** Leader line of the focused panel — gold. */
-    public static final int lineFocused = 0xFFD1904B;
+    public static final int lineFocused = 0xFFDF8C46;
 
     /** Leader line core over bright backgrounds — dark walnut so it still reads. */
     public static final int lineDark = 0xD81F150D;
@@ -50,17 +50,17 @@ public final class NimbusPalette {
     public static final int lineNode = 0xFFFFFFFF;
 
     /** dim box edges of the block scan frame */
-    public static final int scanEdge = 0x59D1904B;
+    public static final int scanEdge = 0x59DF8C46;
     /** corner ticks of the scan frame */
-    public static final int scanTick = 0xCCD1904B;
+    public static final int scanTick = 0xCCDF8C46;
     /** edges when the block's panel is focused/pointed */
-    public static final int scanEdgeHot = 0x8CD1904B;
+    public static final int scanEdgeHot = 0x8CDF8C46;
 
-    public static final int scanTickHot = 0xFFD1904B;
+    public static final int scanTickHot = 0xFFDF8C46;
     /** voxel-shape outline of a framed block — the vanilla hit-outline style thick lines */
-    public static final int scanShape = 0x99D1904B;
+    public static final int scanShape = 0x99DF8C46;
 
-    public static final int scanShapeHot = 0xFFD1904B;
+    public static final int scanShapeHot = 0xFFDF8C46;
     /** the bright segment sweeping the frame's top loop */
     public static final int scanSweep = 0xFFF0C08F;
     /** dark underlay drawn under leader lines so they stay readable on bright terrain */
@@ -73,13 +73,13 @@ public final class NimbusPalette {
     public static final int textDim = 0xFFB0A48C;
 
     /** Hint chip key text. */
-    public static final int hintKey = 0xFFD1904B;
+    public static final int hintKey = 0xFFDF8C46;
 
     /** Title strip divider. */
-    public static final int titleRule = 0x66D1904B;
+    public static final int titleRule = 0x66DF8C46;
 
     /** The crosshair dot drawn while a panel is pointed at in world mode. */
-    public static final int crosshair = 0xFFD1904B;
+    public static final int crosshair = 0xFFDF8C46;
 
     // endregion
 

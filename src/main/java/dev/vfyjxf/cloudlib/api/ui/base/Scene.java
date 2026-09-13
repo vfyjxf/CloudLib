@@ -425,13 +425,15 @@ public final class Scene {
      * default, not an obligation).
      */
     @org.jetbrains.annotations.Nullable
-    private dev.vfyjxf.cloudlib.api.ui.theme.Theme themeOverride;
+    private net.minecraft.resources.ResourceLocation themeOverride;
 
     /**
-     * Pins this scene to a theme (null → follow the global stack).
+     * Pins this scene to a theme (null → follow the global stack). The id is
+     * resolved lazily — themes register on resource load, which may postdate
+     * scene construction.
      */
     public void setTheme(@org.jetbrains.annotations.Nullable net.minecraft.resources.ResourceLocation themeId) {
-        this.themeOverride = themeId == null ? null : dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.get(themeId);
+        this.themeOverride = themeId;
         refreshTheme();
     }
 
@@ -440,7 +442,11 @@ public final class Scene {
      * the global stack, else null.
      */
     public @org.jetbrains.annotations.Nullable dev.vfyjxf.cloudlib.api.ui.theme.Theme theme() {
-        return themeOverride != null ? themeOverride : dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.active();
+        if (themeOverride != null) {
+            var t = dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.get(themeOverride);
+            if (t != null) return t;
+        }
+        return dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.active();
     }
 
     /** Re-resolves the whole tree against {@link #theme()}. */
