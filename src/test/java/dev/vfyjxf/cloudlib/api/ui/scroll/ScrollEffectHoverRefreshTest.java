@@ -61,6 +61,7 @@ class ScrollEffectHoverRefreshTest {
             case TooltipEntry.TextEntry text -> text.text().getString();
             case TooltipEntry.DynamicEntry dynamic -> dynamic.provider().get().getString();
             case TooltipEntry.ComponentEntry ignored -> "";
+            case TooltipEntry.RichTextEntry rich -> rich.text().isTextual() ? rich.text().toComponent().getString() : "";
         };
     }
 

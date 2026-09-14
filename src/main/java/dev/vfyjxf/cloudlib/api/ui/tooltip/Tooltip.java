@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.tooltip;
 
 import com.mojang.datafixers.util.Either;
 import dev.vfyjxf.cloudlib.Constants;
+import dev.vfyjxf.cloudlib.api.text.RichText;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import net.minecraft.network.chat.Component;
@@ -128,6 +129,11 @@ public final class Tooltip {
     }
 
     @Contract("_ -> this")
+    public Tooltip add(RichText text) {
+        return add(new TooltipEntry.RichTextEntry(text), body);
+    }
+
+    @Contract("_ -> this")
     public Tooltip add(TooltipEntry entry) {
         return add(entry, body);
     }
@@ -149,6 +155,11 @@ public final class Tooltip {
     @Contract("_, _ -> this")
     public Tooltip add(Supplier<Component> provider, Namespace marker) {
         return add(new TooltipEntry.DynamicEntry(provider), marker);
+    }
+
+    @Contract("_, _ -> this")
+    public Tooltip add(RichText text, Namespace marker) {
+        return add(new TooltipEntry.RichTextEntry(text), marker);
     }
 
     @Contract("_, _ -> this")
@@ -179,6 +190,11 @@ public final class Tooltip {
     @Contract("_, _ -> this")
     public Tooltip insert(Supplier<Component> provider, TooltipLocator locator) {
         return insert(new TooltipEntry.DynamicEntry(provider), body, locator);
+    }
+
+    @Contract("_, _ -> this")
+    public Tooltip insert(RichText text, TooltipLocator locator) {
+        return insert(new TooltipEntry.RichTextEntry(text), body, locator);
     }
 
     @Contract("_, _ -> this")
@@ -353,6 +369,9 @@ public final class Tooltip {
                 case TooltipEntry.TextEntry(var text) -> Either.left(text);
                 case TooltipEntry.DynamicEntry(var provider) -> Either.left(provider.get());
                 case TooltipEntry.ComponentEntry(var component) -> Either.right(component);
+                case TooltipEntry.RichTextEntry(var text) -> text.isTextual()
+                        ? Either.left(text.toComponent())
+                        : Either.right(new RichTextTooltipComponent(text));
             });
         }
         return result;

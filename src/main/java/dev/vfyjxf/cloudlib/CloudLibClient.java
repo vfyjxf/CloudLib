@@ -3,7 +3,9 @@ package dev.vfyjxf.cloudlib;
 import dev.vfyjxf.cloudlib.api.plugin.AnnotationPluginLookup;
 import dev.vfyjxf.cloudlib.api.plugin.CloudLibClientPlugin;
 import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
+import dev.vfyjxf.cloudlib.api.ui.tooltip.RichTextTooltipComponent;
 import dev.vfyjxf.cloudlib.data.lang.CloudLibLangProvider;
+import dev.vfyjxf.cloudlib.text.ClientRichTextTooltipComponent;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayApiImpl;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayEventHandler;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayRegisterImpl;
@@ -56,7 +58,7 @@ public final class CloudLibClient extends CloudLib {
     }
 
     private void registerClientTooltipComponentFactories(RegisterClientTooltipComponentFactoriesEvent event) {
-//        event.register(RichTooltipComponent.class, Function.identity());
+        event.register(RichTextTooltipComponent.class, ClientRichTextTooltipComponent::new);
     }
 
     private void gatherData(GatherDataEvent event) {
