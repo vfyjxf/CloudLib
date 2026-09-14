@@ -64,6 +64,8 @@ public class TextFieldWidget extends Widget {
 
     private TextFieldWidget() {
         setFocusable(true);
+        // tick() drives the cursor blink.
+        setTickable(true);
 
         onMount((scene, context, handle) -> {
             scene.layoutTree().setMeasureFunc(nodeId(), (style, availableSpace) -> {
