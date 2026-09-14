@@ -206,22 +206,38 @@ public class DefaultRichTextRenderer implements RichTextRenderer {
             GuiGraphics graphics, LivingEntity entity, EntityNode node,
             int x, int y, int w, int h, RenderOptions options
     ) {
+        // Bottom-align the entity inside its fragment so it "stands" on the
+        // text line instead of floating centered.
+        float renderHeight = entity.getBbHeight() * node.scale();
+        float cx = x + w / 2f;
+        float cy = y + h - renderHeight / 2f;
+        Quaternionf pose = new Quaternionf().rotateZ((float) Math.PI);
+        Quaternionf camera;
         if (node.followMouse()) {
-            InventoryScreen.renderEntityInInventoryFollowsMouse(
-                    graphics, x, y, x + w, y + h, node.scale(), 0.0625f,
-                    options.mouseX(), options.mouseY(), entity
-            );
-        } else {
-            Quaternionf pose = new Quaternionf().rotateZ((float) Math.PI);
-            Quaternionf camera = new Quaternionf().rotateX(20f * (float) (Math.PI / 180.0));
+            // Vanilla's renderEntityInInventoryFollowsMouse installs a scissor
+            // in screen space — inside this transformed canvas that scissor
+            // clips the entity away. Reproduce its angle math and render
+            // directly instead. Angles are translation-invariant, so computing
+            // them in local coordinates is equivalent.
+            float yaw = (float) Math.atan((cx - options.mouseX()) / 40.0);
+            float pitch = (float) Math.atan((cy - options.mouseY()) / 40.0);
+            camera = new Quaternionf().rotateX(pitch * 20f * (float) (Math.PI / 180.0));
             pose.mul(camera);
-            InventoryScreen.renderEntityInInventory(
-                    graphics,
-                    x + w / 2f, y + h / 2f, node.scale(),
-                    new Vector3f(0, entity.getBbHeight() / 2f, 0),
-                    pose, camera, entity
-            );
+            entity.yBodyRot = 180.0f + yaw * 20.0f;
+            entity.setYRot(180.0f + yaw * 40.0f);
+            entity.setXRot(-pitch * 20.0f);
+            entity.yHeadRot = entity.getYRot();
+            entity.yHeadRotO = entity.getYRot();
+        } else {
+            camera = new Quaternionf().rotateX(20f * (float) (Math.PI / 180.0));
+            pose.mul(camera);
         }
+        InventoryScreen.renderEntityInInventory(
+                graphics,
+                cx, cy, node.scale(),
+                new Vector3f(0, entity.getBbHeight() / 2f, 0),
+                pose, camera, entity
+        );
     }
 
     private static void renderSimple(
