@@ -1,15 +1,25 @@
 package dev.vfyjxf.cloudlib.ui.widget;
 
+import dev.vfyjxf.cloudlib.api.text.RichText;
+import dev.vfyjxf.cloudlib.api.text.layout.LaidOutText;
+import dev.vfyjxf.cloudlib.api.text.layout.RichTextMeasure;
+import dev.vfyjxf.cloudlib.api.text.render.RenderOptions;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
-import dev.vfyjxf.taffy.geometry.FloatSize;
+import dev.vfyjxf.cloudlib.text.RichTextManager;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Text display with auto-measuring for layout.
+ * <p>
+ * Internally backed by the rich text pipeline: the component is laid out by
+ * {@link dev.vfyjxf.cloudlib.api.text.layout.RichTextLayouter} and measured
+ * through taffy via {@link RichTextMeasure}. Unlike the legacy implementation,
+ * text wraps when the layout imposes a width smaller than the content.
  */
 public class TextWidget extends Widget {
 
@@ -18,6 +28,8 @@ public class TextWidget extends Widget {
     private Component text;
     private int color = 0xFFFFFF;
     private boolean shadow = false;
+
+    private @Nullable RichTextMeasure measure;
 
     //endregion
 
@@ -42,11 +54,14 @@ public class TextWidget extends Widget {
     private TextWidget(Component text) {
         this.text = text;
         this.onMount((scene, context, handle) -> {
-            scene.layoutTree().setMeasureFunc(nodeId(), (style, availableSpace) -> {
-                var font = context.font();
-                return new FloatSize(font.width(this.text), font.lineHeight);
-            });
+            measure = createMeasure();
+            scene.layoutTree().setMeasureFunc(nodeId(), measure);
         });
+        this.onUnmount(() -> measure = null);
+    }
+
+    private RichTextMeasure createMeasure() {
+        return RichTextManager.getInstance().measure(RichText.of(text));
     }
 
     //endregion
@@ -59,17 +74,20 @@ public class TextWidget extends Widget {
 
     public TextWidget setText(Component text) {
         this.text = text;
+        if (measure != null) {
+            measure = createMeasure();
+            scene().layoutTree().setMeasureFunc(nodeId(), measure);
+            scene().layoutTree().markDirty(nodeId());
+        }
         return this;
     }
 
     public TextWidget setText(LangEntry entry, Object... args) {
-        this.text = entry.get(args);
-        return this;
+        return setText(entry.get(args));
     }
 
     public TextWidget setText(String text) {
-        this.text = Component.literal(text);
-        return this;
+        return setText(Component.literal(text));
     }
 
     public int color() {
@@ -96,7 +114,14 @@ public class TextWidget extends Widget {
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        canvas.text(text, 0, 0, color, shadow);
+        if (measure == null) return;
+        LaidOutText laidOut = measure.layoutAt(Math.max(0, width()));
+        RenderOptions options = RenderOptions.DEFAULT
+                .withDefaultColor(color | 0xFF000000)
+                .withShadow(shadow)
+                .withMouse(mouseX, mouseY)
+                .withPartialTicks(partialTicks);
+        RichTextManager.getInstance().renderer().render(canvas, laidOut, 0, 0, options);
     }
 
     //endregion
