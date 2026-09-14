@@ -370,6 +370,9 @@ public class Widget implements Renderable,
 
     public Widget onTick(WidgetEvent.OnTick listener) {
         events().register(WidgetEvent.onTick, listener);
+        // Registering a tick listener implies the widget needs ticking —
+        // the scene only ticks widgets flagged as tickable.
+        setTickable(true);
         return this;
     }
 

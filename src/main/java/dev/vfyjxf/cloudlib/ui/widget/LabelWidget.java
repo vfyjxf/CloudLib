@@ -1,16 +1,25 @@
 package dev.vfyjxf.cloudlib.ui.widget;
 
+import dev.vfyjxf.cloudlib.api.text.RichText;
+import dev.vfyjxf.cloudlib.api.text.RichTexts;
+import dev.vfyjxf.cloudlib.api.text.layout.LaidOutText;
+import dev.vfyjxf.cloudlib.api.text.layout.RichTextMeasure;
+import dev.vfyjxf.cloudlib.api.text.layout.TextAlignment;
+import dev.vfyjxf.cloudlib.api.text.render.RenderOptions;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
-import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * Simple text label with alignment and auto-measuring.
+ * <p>
+ * Internally backed by the rich text pipeline; alignment is applied against the
+ * widget's laid-out width. Unlike the legacy implementation, text wraps when the
+ * layout imposes a width smaller than the content.
  */
 public class LabelWidget extends Widget {
 
@@ -20,6 +29,9 @@ public class LabelWidget extends Widget {
     private int color = 0xFFFFFF;
     private boolean shadow = true;
     private @Nullable TextAlign align = TextAlign.LEFT;
+
+    private @Nullable RichTextMeasure measure;
+    private @Nullable TextAlignment appliedAlignment;
 
     //endregion
 
@@ -52,11 +64,27 @@ public class LabelWidget extends Widget {
     private LabelWidget(Component text) {
         this.text = text;
         this.onMount((scene, context, handle) -> {
-            scene.layoutTree().setMeasureFunc(nodeId(), (style, availableSpace) -> {
-                var font = context.font();
-                return new FloatSize(font.width(this.text), font.lineHeight);
-            });
+            measure = createMeasure();
+            scene.layoutTree().setMeasureFunc(nodeId(), measure);
         });
+        this.onUnmount(() -> measure = null);
+    }
+
+    private RichTextMeasure createMeasure() {
+        RichTextMeasure measure = RichTexts.measure(RichText.of(text));
+        TextAlignment alignment = mapAlignment(align);
+        measure.withAlignment(alignment);
+        appliedAlignment = alignment;
+        return measure;
+    }
+
+    private static TextAlignment mapAlignment(@Nullable TextAlign align) {
+        if (align == null) return TextAlignment.LEFT;
+        return switch (align) {
+            case LEFT -> TextAlignment.LEFT;
+            case CENTER -> TextAlignment.CENTER;
+            case RIGHT -> TextAlignment.RIGHT;
+        };
     }
 
     //endregion
@@ -69,17 +97,20 @@ public class LabelWidget extends Widget {
 
     public LabelWidget setText(Component text) {
         this.text = text;
+        if (measure != null) {
+            measure = createMeasure();
+            scene().layoutTree().setMeasureFunc(nodeId(), measure);
+            scene().layoutTree().markDirty(nodeId());
+        }
         return this;
     }
 
     public LabelWidget setText(LangEntry entry, Object... args) {
-        this.text = entry.get(args);
-        return this;
+        return setText(entry.get(args));
     }
 
     public LabelWidget setText(String text) {
-        this.text = Component.literal(text);
-        return this;
+        return setText(Component.literal(text));
     }
 
     public int color() {
@@ -106,6 +137,14 @@ public class LabelWidget extends Widget {
 
     public LabelWidget setAlign(@Nullable TextAlign align) {
         this.align = align;
+        if (measure != null) {
+            TextAlignment alignment = mapAlignment(align);
+            if (alignment != appliedAlignment) {
+                measure.withAlignment(alignment);
+                appliedAlignment = alignment;
+                scene().layoutTree().markDirty(nodeId());
+            }
+        }
         return this;
     }
 
@@ -116,17 +155,14 @@ public class LabelWidget extends Widget {
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         super.renderInternal(canvas, mouseX, mouseY, partialTicks);
-        var font = context().font();
-        int textWidth = font.width(text);
-
-        int x = switch (align) {
-            case LEFT -> 0;
-            case CENTER -> (width() - textWidth) / 2;
-            case RIGHT -> width() - textWidth;
-            case null -> 0;
-        };
-
-        canvas.text(text, x, 0, color, shadow);
+        if (measure == null) return;
+        LaidOutText laidOut = measure.layoutAt(Math.max(0, width()));
+        RenderOptions options = RenderOptions.DEFAULT
+                .withDefaultColor(color | 0xFF000000)
+                .withShadow(shadow)
+                .withMouse(mouseX, mouseY)
+                .withPartialTicks(partialTicks);
+        RichTexts.renderer().render(canvas, laidOut, 0, 0, options);
     }
 
     //endregion

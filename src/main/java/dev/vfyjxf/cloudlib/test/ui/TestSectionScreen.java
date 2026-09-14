@@ -24,7 +24,7 @@ import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
  * Three sections with expand/collapse functionality,
  * plus vertical scrolling on the root container.
  */
-@TestScreen
+//@TestScreen
 public class TestSectionScreen extends BasicScreen {
 
     public TestSectionScreen() {

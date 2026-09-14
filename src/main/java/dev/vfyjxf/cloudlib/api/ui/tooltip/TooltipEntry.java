@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.tooltip;
 
+import dev.vfyjxf.cloudlib.api.text.RichText;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 
@@ -21,6 +22,14 @@ public sealed interface TooltipEntry {
         return new DynamicEntry(provider);
     }
 
+    /**
+     * A rich text block inside a tooltip. Purely textual documents degrade to a
+     * vanilla component line; rich content is rendered by the rich text pipeline.
+     */
+    static TooltipEntry richText(RichText text) {
+        return new RichTextEntry(text);
+    }
+
     //endregion
 
     //region types
@@ -32,6 +41,9 @@ public sealed interface TooltipEntry {
     }
 
     record DynamicEntry(Supplier<Component> provider) implements TooltipEntry {
+    }
+
+    record RichTextEntry(RichText text) implements TooltipEntry {
     }
 
     //endregion
