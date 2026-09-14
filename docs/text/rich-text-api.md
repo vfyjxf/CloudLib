@@ -10,10 +10,25 @@ entities, interactive (clickable/hoverable) fragments, and embedded live widgets
 Packages:
 
 - `dev.vfyjxf.cloudlib.api.text` — document model (`RichText`, `RichNode` tree, actions, styles)
+  and the `RichTexts` entry point
 - `dev.vfyjxf.cloudlib.api.text.layout` — layout engine (`RichTextLayouter`, `RichTextMeasure` for taffy)
 - `dev.vfyjxf.cloudlib.api.text.render` — rendering SPI (`RichTextRenderer`, `RenderOptions`, `CustomRenderer`)
-- `dev.vfyjxf.cloudlib.text` — vanilla-backed implementations and `RichTextManager`
+- `dev.vfyjxf.cloudlib.text` — vanilla-backed implementations (internal; go through `RichTexts`)
 - `dev.vfyjxf.cloudlib.ui.widget.RichTextWidget` — the widget
+
+## Entry points
+
+Everything outside the widget pipeline goes through the `RichTexts` facade:
+
+```java
+RichTextMeasure measure = RichTexts.measure(text);                       // taffy MeasureFunc
+LaidOutText laidOut = RichTexts.layout(text.root(), constraints);        // one-off layout
+RichTexts.renderer().render(canvas, laidOut, x, y, RenderOptions.DEFAULT);
+RichTexts.layouter();                                                    // shared engine
+```
+
+The services behind it (vanilla font measuring, the active language) are shared
+client-side singletons and are dropped automatically on resource reload.
 
 ## Building documents
 
@@ -147,7 +162,7 @@ renders through `RichTextTooltipComponent` (client factory registered by
 ## Extending
 
 - `GlyphMeasurer` / `TranslationResolver` decouple the engine from the vanilla font
-  and language (the unit tests run on a fake measurer; `RichTextManager` wires the
+  and language (the unit tests run on a fake measurer; `RichTexts` is backed by the
   vanilla ones).
 - `RichTextRenderer` can be replaced wholesale; `CustomRenderNode` covers one-off
   inline drawing.
@@ -156,9 +171,10 @@ renders through `RichTextTooltipComponent` (client factory registered by
 
 - Word-level bidi/RTL shaping is not supported beyond what the vanilla font does per
   glyph run (same as vanilla tooltips).
-- The active language is captured per layout; after a locale or resource-pack change,
-  call `RichTextManager.invalidate()` and re-create measures (widgets recreate their
-  measure on mount, so reopened screens pick up changes automatically).
+- The active language and font are captured per service instance; the instance is
+  dropped automatically on resource reload (locale or pack change), so re-measured
+  documents pick up the new state. Widgets recreate their measure on mount, so
+  reopened screens always reflect the current language.
 - Text set on an already-mounted `TextWidget`/`LabelWidget`/`RichTextWidget`
   re-measures automatically; changing the `text-align` style marks the node dirty
   through the style change listener.

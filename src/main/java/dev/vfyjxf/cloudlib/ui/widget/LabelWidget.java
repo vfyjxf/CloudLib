@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.ui.widget;
 
 import dev.vfyjxf.cloudlib.api.text.RichText;
+import dev.vfyjxf.cloudlib.api.text.RichTexts;
 import dev.vfyjxf.cloudlib.api.text.layout.LaidOutText;
 import dev.vfyjxf.cloudlib.api.text.layout.RichTextMeasure;
 import dev.vfyjxf.cloudlib.api.text.layout.TextAlignment;
@@ -10,7 +11,6 @@ import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
-import dev.vfyjxf.cloudlib.text.RichTextManager;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
@@ -71,7 +71,7 @@ public class LabelWidget extends Widget {
     }
 
     private RichTextMeasure createMeasure() {
-        RichTextMeasure measure = RichTextManager.getInstance().measure(RichText.of(text));
+        RichTextMeasure measure = RichTexts.measure(RichText.of(text));
         TextAlignment alignment = mapAlignment(align);
         measure.withAlignment(alignment);
         appliedAlignment = alignment;
@@ -162,7 +162,7 @@ public class LabelWidget extends Widget {
                 .withShadow(shadow)
                 .withMouse(mouseX, mouseY)
                 .withPartialTicks(partialTicks);
-        RichTextManager.getInstance().renderer().render(canvas, laidOut, 0, 0, options);
+        RichTexts.renderer().render(canvas, laidOut, 0, 0, options);
     }
 
     //endregion

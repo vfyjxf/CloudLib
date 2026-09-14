@@ -6,15 +6,18 @@ import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.RichTextTooltipComponent;
 import dev.vfyjxf.cloudlib.data.lang.CloudLibLangProvider;
 import dev.vfyjxf.cloudlib.text.ClientRichTextTooltipComponent;
+import dev.vfyjxf.cloudlib.text.RichTextManager;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayApiImpl;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayEventHandler;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayRegisterImpl;
 import net.minecraft.data.DataProvider;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
@@ -34,6 +37,7 @@ public final class CloudLibClient extends CloudLib {
         clientPlugins = PluginLoader.loadPlugin(logger, "CloudLib Client Plugin", AnnotationPluginLookup.of(CloudLibClientPlugin.class)).toImmutable();
         modBus.addListener(this::gatherData);
         modBus.addListener(this::registerClientTooltipComponentFactories);
+        modBus.addListener(this::registerClientReloadListeners);
     }
 
     @Override
@@ -59,6 +63,12 @@ public final class CloudLibClient extends CloudLib {
 
     private void registerClientTooltipComponentFactories(RegisterClientTooltipComponentFactoriesEvent event) {
         event.register(RichTextTooltipComponent.class, ClientRichTextTooltipComponent::new);
+    }
+
+    private void registerClientReloadListeners(RegisterClientReloadListenersEvent event) {
+        // Rich text services capture the font and language; drop them on reload so
+        // locale / resource-pack changes take effect without a restart.
+        event.registerReloadListener((ResourceManagerReloadListener) resourceManager -> RichTextManager.invalidate());
     }
 
     private void gatherData(GatherDataEvent event) {

@@ -8,6 +8,7 @@ import dev.vfyjxf.cloudlib.api.text.GroupNode;
 import dev.vfyjxf.cloudlib.api.text.HoverAction;
 import dev.vfyjxf.cloudlib.api.text.RichNode;
 import dev.vfyjxf.cloudlib.api.text.RichText;
+import dev.vfyjxf.cloudlib.api.text.RichTexts;
 import dev.vfyjxf.cloudlib.api.text.StyledNode;
 import dev.vfyjxf.cloudlib.api.text.WidgetNode;
 import dev.vfyjxf.cloudlib.api.text.layout.LaidOutText;
@@ -27,7 +28,6 @@ import dev.vfyjxf.cloudlib.api.ui.style.property.layout.SizeProperty;
 import dev.vfyjxf.cloudlib.api.ui.style.property.layout.TextAlignProperty;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
-import dev.vfyjxf.cloudlib.text.RichTextManager;
 import dev.vfyjxf.taffy.style.TaffyDimension;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import dev.vfyjxf.taffy.style.TextAlign;
@@ -104,7 +104,7 @@ public class RichTextWidget extends CompositeWidget<Widget> {
         syncEmbeddedWidgets();
 
         onMount((scene, context, handle) -> {
-            measure = RichTextManager.getInstance().measure(this.text);
+            measure = RichTexts.measure(this.text);
             measure.withAlignment(currentAlignment());
             scene.layoutTree().setMeasureFunc(nodeId(), measure);
             syncEmbeddedWidgets();
@@ -139,7 +139,7 @@ public class RichTextWidget extends CompositeWidget<Widget> {
         this.text = text;
         syncEmbeddedWidgets();
         if (measure != null) {
-            measure = RichTextManager.getInstance().measure(text);
+            measure = RichTexts.measure(text);
             measure.withAlignment(currentAlignment());
             scene().layoutTree().setMeasureFunc(nodeId(), measure);
             markLayoutDirty();
@@ -461,7 +461,7 @@ public class RichTextWidget extends CompositeWidget<Widget> {
                 .withShadow(shadow)
                 .withMouse(mouseX - contentX(), mouseY - contentY())
                 .withPartialTicks(partialTicks);
-        RichTextManager.getInstance().renderer().render(canvas, laidOut, contentX(), contentY(), options);
+        RichTexts.renderer().render(canvas, laidOut, contentX(), contentY(), options);
     }
 
     //endregion

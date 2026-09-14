@@ -6,11 +6,24 @@ CloudLib 的富文本系统是一套与原版兼容的文档模型，自带排�
 
 包结构：
 
-- `dev.vfyjxf.cloudlib.api.text` — 文档模型（`RichText`、`RichNode` 树、动作、样式）
+- `dev.vfyjxf.cloudlib.api.text` — 文档模型（`RichText`、`RichNode` 树、动作、样式）与 `RichTexts` 入口
 - `dev.vfyjxf.cloudlib.api.text.layout` — 排版引擎（`RichTextLayouter`、对接 taffy 的 `RichTextMeasure`）
 - `dev.vfyjxf.cloudlib.api.text.render` — 渲染 SPI（`RichTextRenderer`、`RenderOptions`、`CustomRenderer`）
-- `dev.vfyjxf.cloudlib.text` — 基于原版的实现与 `RichTextManager`
+- `dev.vfyjxf.cloudlib.text` — 基于原版的实现（内部包；请通过 `RichTexts` 访问）
 - `dev.vfyjxf.cloudlib.ui.widget.RichTextWidget` — widget
+
+## 入口
+
+widget 管线之外的一切都通过 `RichTexts` 门面：
+
+```java
+RichTextMeasure measure = RichTexts.measure(text);                       // taffy MeasureFunc
+LaidOutText laidOut = RichTexts.layout(text.root(), constraints);        // 一次性排版
+RichTexts.renderer().render(canvas, laidOut, x, y, RenderOptions.DEFAULT);
+RichTexts.layouter();                                                    // 共享引擎
+```
+
+其背后的服务（原版字体测量、当前语言）是客户端共享单例，资源重载时会自动丢弃。
 
 ## 编写文档
 
@@ -122,11 +135,11 @@ widget 通过 taffy 自动测量（被施加宽度时换行），跟随 `text-al
 
 ## 扩展
 
-- `GlyphMeasurer` / `TranslationResolver` 把引擎与原版字体、语言解耦（单元测试跑在假测量器上；`RichTextManager` 接入原版实现）。
+- `GlyphMeasurer` / `TranslationResolver` 把引擎与原版字体、语言解耦（单元测试跑在假测量器上；`RichTexts` 背后接入原版实现）。
 - `RichTextRenderer` 可整体替换；`CustomRenderNode` 用于一次性的内联绘制。
 
 ## 限制
 
 - 不支持超出原版字体逐段能力的词级 bidi/RTL 塑形（与原版 tooltip 一致）。
-- 当前语言按排版时捕获；切换语言或资源包后调用 `RichTextManager.invalidate()` 并重建 measure（widget 在挂载时重建 measure，重开界面即生效）。
+- 当前语言与字体按服务实例捕获；实例在资源重载（切换语言或资源包）时自动丢弃，重新测量的文档即使用新状态。widget 在挂载时重建 measure，重开界面始终反映当前语言。
 - 对已挂载的 `TextWidget`/`LabelWidget`/`RichTextWidget` 重设文本会自动重新测量；修改 `text-align` 样式会通过样式变更监听器标脏。

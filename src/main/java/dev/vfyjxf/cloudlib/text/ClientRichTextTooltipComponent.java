@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.text;
 
+import dev.vfyjxf.cloudlib.api.text.RichTexts;
 import dev.vfyjxf.cloudlib.api.text.layout.LaidOutText;
 import dev.vfyjxf.cloudlib.api.text.layout.LayoutConstraints;
 import dev.vfyjxf.cloudlib.api.text.render.RenderOptions;
@@ -25,9 +26,7 @@ public final class ClientRichTextTooltipComponent implements ClientTooltipCompon
 
     private LaidOutText laidOut() {
         if (laidOut == null) {
-            laidOut = RichTextManager.getInstance()
-                    .layouter()
-                    .layout(component.text().root(), LayoutConstraints.unconstrained());
+            laidOut = RichTexts.layout(component.text().root(), LayoutConstraints.unconstrained());
         }
         return laidOut;
     }
@@ -47,6 +46,6 @@ public final class ClientRichTextTooltipComponent implements ClientTooltipCompon
         SceneCanvas canvas = SceneCanvas.create(graphics);
         RenderOptions options = RenderOptions.DEFAULT
                 .withMouse((float) ScreenUtil.getMouseX() - x, (float) ScreenUtil.getMouseY() - y);
-        RichTextManager.getInstance().renderer().render(canvas, laidOut(), x, y, options);
+        RichTexts.renderer().render(canvas, laidOut(), x, y, options);
     }
 }

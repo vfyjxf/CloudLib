@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.ui.widget;
 
 import dev.vfyjxf.cloudlib.api.text.RichText;
+import dev.vfyjxf.cloudlib.api.text.RichTexts;
 import dev.vfyjxf.cloudlib.api.text.layout.LaidOutText;
 import dev.vfyjxf.cloudlib.api.text.layout.RichTextMeasure;
 import dev.vfyjxf.cloudlib.api.text.render.RenderOptions;
@@ -9,7 +10,6 @@ import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
-import dev.vfyjxf.cloudlib.text.RichTextManager;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
@@ -61,7 +61,7 @@ public class TextWidget extends Widget {
     }
 
     private RichTextMeasure createMeasure() {
-        return RichTextManager.getInstance().measure(RichText.of(text));
+        return RichTexts.measure(RichText.of(text));
     }
 
     //endregion
@@ -121,7 +121,7 @@ public class TextWidget extends Widget {
                 .withShadow(shadow)
                 .withMouse(mouseX, mouseY)
                 .withPartialTicks(partialTicks);
-        RichTextManager.getInstance().renderer().render(canvas, laidOut, 0, 0, options);
+        RichTexts.renderer().render(canvas, laidOut, 0, 0, options);
     }
 
     //endregion
