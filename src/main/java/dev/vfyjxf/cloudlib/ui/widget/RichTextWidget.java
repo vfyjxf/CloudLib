@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.ui.widget;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
+import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Insets;
 import dev.vfyjxf.cloudlib.api.text.ClickAction;
 import dev.vfyjxf.cloudlib.api.text.GroupNode;
@@ -21,12 +21,14 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
+import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.style.property.layout.PositionTypeProperty;
 import dev.vfyjxf.cloudlib.api.ui.style.property.layout.SizeProperty;
 import dev.vfyjxf.cloudlib.api.ui.style.property.layout.TextAlignProperty;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
 import dev.vfyjxf.cloudlib.text.RichTextManager;
+import dev.vfyjxf.taffy.style.TaffyDimension;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import dev.vfyjxf.taffy.style.TextAlign;
 import dev.vfyjxf.taffy.tree.Layout;
@@ -72,6 +74,8 @@ public class RichTextWidget extends CompositeWidget<Widget> {
 
     private @Nullable RichTextMeasure measure;
     private boolean layoutApplied;
+    private int intrinsicMinWidth = -1;
+    private int intrinsicMinHeight = -1;
 
     //endregion
 
@@ -110,9 +114,11 @@ public class RichTextWidget extends CompositeWidget<Widget> {
         style().addChangeListener(TextAlignProperty.type, (oldValue, newValue) -> onAlignmentChanged());
 
         onMouseClick((input, clickCount, context) -> {
-            if (input.key().getType() != InputConstants.Type.MOUSE) return EventDispatch.pass;
-            float lx = (float) input.mouseX() - contentX();
-            float ly = (float) input.mouseY() - contentY();
+            if (!input.isMouse()) return EventDispatch.pass;
+            // Mouse events carry scene coordinates; convert to widget-local first.
+            FloatPos local = sceneToLocal(input.mouseX(), input.mouseY());
+            float lx = (float) local.x - contentX();
+            float ly = (float) local.y - contentY();
             TextFragment fragment = laidOut().interactiveFragmentAt(lx, ly);
             ClickAction action = fragment != null ? fragment.onClick() : null;
             if (action == null) return EventDispatch.pass;
@@ -240,6 +246,44 @@ public class RichTextWidget extends CompositeWidget<Widget> {
     public void applyLayout() {
         super.applyLayout();
         layoutApplied = true;
+        syncIntrinsicMinSize();
+    }
+
+    /**
+     * Embedded widgets make this a taffy <em>container</em> node — and taffy only
+     * invokes the leaf measure function on nodes without children, so a
+     * RichTextWidget with embedded children gets its size derived from the
+     * (absolutely positioned, size-contributing-nothing) children and collapses.
+     * Enforce the measured content size as min-size in that case; the next
+     * layout pass picks it up.
+     */
+    private void syncIntrinsicMinSize() {
+        if (children().isEmpty()) {
+            // Back to a leaf node — the measure func drives sizing again, so
+            // drop any previously enforced min-size.
+            if (intrinsicMinWidth >= 0 || intrinsicMinHeight >= 0) {
+                intrinsicMinWidth = -1;
+                intrinsicMinHeight = -1;
+                useStyle(UIStyles.minWidth(TaffyDimension.AUTO), UIStyles.minHeight(TaffyDimension.AUTO));
+                markLayoutDirty();
+            }
+            return;
+        }
+        LaidOutText laidOut = laidOut();
+        if (laidOut.isEmpty()) return;
+        Layout layout = layout();
+        int minW = (int) Math.ceil(laidOut.width()
+                + layout.padding().left + layout.padding().right
+                + layout.border().left + layout.border().right);
+        int minH = (int) Math.ceil(laidOut.height()
+                + layout.padding().top + layout.padding().bottom
+                + layout.border().top + layout.border().bottom);
+        if (minW != intrinsicMinWidth || minH != intrinsicMinHeight) {
+            intrinsicMinWidth = minW;
+            intrinsicMinHeight = minH;
+            useStyle(UIStyles.minWidth(minW), UIStyles.minHeight(minH));
+            markLayoutDirty();
+        }
     }
 
     //endregion
