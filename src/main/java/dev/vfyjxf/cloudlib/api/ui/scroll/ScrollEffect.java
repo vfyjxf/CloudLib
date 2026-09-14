@@ -484,12 +484,8 @@ public final class ScrollEffect implements Effect {
         canvas.texture(icon, 0, 0, width, height);
 
         // 2. Render children with scroll clipping
-        // pushClip needs absolute screen coords
-        FloatPos sceneOrigin = composite.localToScene(0, 0);
-        int absX = (int) sceneOrigin.x;
-        int absY = (int) sceneOrigin.y;
-
-        canvas.pushClip(absX + insets.left(), absY + insets.top(), viewportWidth, viewportHeight);
+        // pushClip takes local coordinates (converted to screen space internally)
+        canvas.pushClip(insets.left(), insets.top(), viewportWidth, viewportHeight);
         // Push scroll translation: children are rendered shifted by (-scrollX, -scrollY)
         canvas.pushTransform();
         canvas.translate(-scrollX, -scrollY);

@@ -22,6 +22,7 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11;
 
@@ -1538,17 +1539,34 @@ public final class SceneCanvas {
 
     //region clipping
 
+    /**
+     * Pushes a clip region given in the current local (transformed) space.
+     * The clip stack stores screen-space rects — the region is converted with
+     * the current transform, so callers always pass local coordinates.
+     */
     public SceneCanvas pushClip(int x, int y, int width, int height) {
         // Flush pending text + batch under the current clip before changing it
         flushBatch();
-        clipStack.push(x, y, width, height);
+        clipStack.push(localRectToScreen(x, y, width, height));
         return this;
     }
 
     public SceneCanvas pushClip(Rect rect) {
-        flushBatch();
-        clipStack.push(rect);
-        return this;
+        return pushClip(rect.x(), rect.y(), rect.width(), rect.height());
+    }
+
+    /**
+     * Converts a rect from the current local space to screen space (AABB of
+     * the transformed corners).
+     */
+    private Rect localRectToScreen(int x, int y, int width, int height) {
+        Vector3f tl = currentTransform.transformPosition(x, y, 0, new Vector3f());
+        Vector3f br = currentTransform.transformPosition(x + width, y + height, 0, new Vector3f());
+        int left = (int) Math.floor(Math.min(tl.x, br.x));
+        int top = (int) Math.floor(Math.min(tl.y, br.y));
+        int right = (int) Math.ceil(Math.max(tl.x, br.x));
+        int bottom = (int) Math.ceil(Math.max(tl.y, br.y));
+        return new Rect(left, top, right - left, bottom - top);
     }
 
     public SceneCanvas popClip() {
