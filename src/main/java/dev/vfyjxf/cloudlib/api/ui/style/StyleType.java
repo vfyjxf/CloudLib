@@ -17,7 +17,7 @@ import java.util.function.Supplier;
  * <p>
  * StyleType now also carries metadata for inspection support:
  * <ul>
- *   <li>{@link #displayName} - Human-readable name for Inspector UI</li>
+ *   <li>{@link #displayName} - Human-readable name for debug views</li>
  *   <li>{@link #category} - Category for grouping (layout/visual)</li>
  *   <li>{@link #formatter} - Custom value formatter for inspection display</li>
  * </ul>

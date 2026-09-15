@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.plugin.AnnotationPluginLookup;
 import dev.vfyjxf.cloudlib.api.plugin.CloudLibClientPlugin;
 import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
 import dev.vfyjxf.cloudlib.data.lang.LangKeyProvider;
+import dev.vfyjxf.cloudlib.ui.KeyMappings;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayApiImpl;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayEventHandler;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayRegisterImpl;
@@ -32,6 +33,7 @@ public final class CloudLibClient extends CloudLib {
         clientPlugins = PluginLoader.loadPlugin(logger, "CloudLib Client Plugin", AnnotationPluginLookup.of(CloudLibClientPlugin.class)).toImmutable();
         modBus.addListener(this::gatherData);
         modBus.addListener(this::registerClientTooltipComponentFactories);
+        modBus.addListener(KeyMappings::register);
     }
 
     @Override

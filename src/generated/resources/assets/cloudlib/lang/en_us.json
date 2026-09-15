@@ -1,5 +1,6 @@
 {
   "cloudlib.keys.debug": "Debug",
   "cloudlib.keys.general": "General",
+  "cloudlib.keys.open_devtools": "Open DevTools",
   "cloudlib.keys.rebuild_ui": "Rebuild UI"
 }

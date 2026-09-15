@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
  * their own StyleProperty to add custom styling capabilities.
  * <p>
  * StyleProperty now supports inspection via {@link #collectInspection(InspectionInfoCollector)},
- * allowing properties to contribute to the Inspector debug view.
+ * allowing properties to contribute to the debug overlay's details view.
  *
  * @see UIStyle
  * @see UIStyles

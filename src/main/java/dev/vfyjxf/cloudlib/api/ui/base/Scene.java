@@ -4,15 +4,20 @@ import dev.vfyjxf.cloudlib.api.event.EventDefinition;
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.event.context.BubbleContext;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
+import dev.vfyjxf.cloudlib.api.math.Insets;
 import dev.vfyjxf.cloudlib.api.performer.PerformerContainer;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree.TraversalControl;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
+import dev.vfyjxf.cloudlib.api.ui.debug.DebugOverlay;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvents;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
+import dev.vfyjxf.cloudlib.debug.DebugConfig;
+import dev.vfyjxf.cloudlib.debug.Debugs;
+import dev.vfyjxf.cloudlib.ui.KeyMappings;
+import dev.vfyjxf.cloudlib.ui.debug.DebugOverlayImpl;
 import dev.vfyjxf.cloudlib.ui.drag.DraggableManager;
 import dev.vfyjxf.cloudlib.util.Checks;
 import dev.vfyjxf.cloudlib.util.ScreenUtil;
@@ -426,6 +431,7 @@ public final class Scene {
             return WidgetTree.TraversalControl.proceed;
         });
         context.tick();
+        tickDebug();
     }
 
     //endregion
@@ -434,6 +440,7 @@ public final class Scene {
 
     private float width = Float.NaN;
     private float height = Float.NaN;
+    private Insets debugInsets = Insets.zero;
 
     public TaffyTree layoutTree() {
         return tree;
@@ -444,10 +451,42 @@ public final class Scene {
         this.height = height;
     }
 
+    /**
+     * Reserves space around the edges of the scene for the debug panel.
+     * The root widget will be offset and sized to the remaining content area.
+     */
+    public void setDebugInsets(Insets insets) {
+        this.debugInsets = insets;
+        updateRootLayoutHandler();
+    }
+
+    public Insets debugInsets() {
+        return debugInsets;
+    }
+
+    private void updateRootLayoutHandler() {
+        if (debugInsets == Insets.zero) {
+            root.onLayout(null);
+            return;
+        }
+        root.onLayout((widget, scope) -> scope.useTaffy()
+                .setSize(
+                        Math.max(0, width - debugInsets.left() - debugInsets.right()),
+                        Math.max(0, height - debugInsets.top() - debugInsets.bottom())
+                )
+                .offset(debugInsets.left(), debugInsets.top()));
+    }
+
     public void layout() {
+        float effW = width;
+        float effH = height;
+        if (debugInsets != Insets.zero) {
+            effW = Math.max(0, width - debugInsets.left() - debugInsets.right());
+            effH = Math.max(0, height - debugInsets.top() - debugInsets.bottom());
+        }
         tree.computeLayout(root.nodeId(), new TaffySize<>(
-                Float.isNaN(width) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(width),
-                Float.isNaN(height) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(height)
+                Float.isNaN(effW) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(effW),
+                Float.isNaN(effH) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(effH)
         ));
     }
 
@@ -565,6 +604,14 @@ public final class Scene {
     }
 
     public void destroy() {
+        if (debugOverlay != null) {
+            try {
+                debugOverlay.dispose();
+            } catch (Throwable t) {
+                Debugs.log.error("Debug overlay dispose failed", t);
+            }
+            debugOverlay = null;
+        }
         if (!root.lifecycle.unmounted()) {
             WidgetTree.walkBottomUp(root, true, -1, ((widget, depth) -> {
                 widget.unmount();
@@ -653,8 +700,6 @@ public final class Scene {
         }
     }
 
-    private @Nullable Inspector inspector;
-
     /**
      * Adds a widget to the specified layer.
      * <p>
@@ -667,13 +712,6 @@ public final class Scene {
     public void addToLayer(SceneLayer layer, Widget widget) {
         if (widget.scene != this) {
             throw new IllegalArgumentException("Widget must be mounted to this scene");
-        }
-        if (layer == SceneLayer.debug) {
-            if (!(widget instanceof Inspector debugger)) {
-                throw new IllegalArgumentException("Only Inspector can be added to debug layer");
-            }
-            this.inspector = debugger;
-            return;
         }
         removeFromAllLayers(widget);
         var layerWidgets = extraLayers.get(layer);
@@ -714,6 +752,65 @@ public final class Scene {
         extraLayers.get(layer).sortThis(Comparator.comparingInt(Widget::zIndex));
     }
 
+
+    //endregion
+
+    //region debug overlay
+
+    private @Nullable DebugOverlayImpl debugOverlay;
+
+    /**
+     * Returns the DevTools-style debug overlay for this scene, lazily created on
+     * first access.
+     * <p>
+     * The overlay is fully isolated from this scene: it owns a separate scene for
+     * its UI and renders as a dedicated phase after this scene has finished
+     * rendering. It never participates in this scene's layout, hit testing,
+     * event bubbling or widget ticking.
+     *
+     * @return the debug overlay, or {@code null} when debug mode is disabled
+     */
+    public @Nullable DebugOverlay debugOverlay() {
+        if (!DebugConfig.enableDebug()) return null;
+        if (debugOverlay == null) {
+            debugOverlay = new DebugOverlayImpl(this);
+        }
+        return debugOverlay;
+    }
+
+    /**
+     * @return the context this scene is mounted with.
+     */
+    public SceneContext context() {
+        return context;
+    }
+
+    private boolean debugInputActive() {
+        return debugOverlay != null && debugOverlay.isOpen();
+    }
+
+    /**
+     * Renders the debug overlay as a fully isolated phase after all scene content
+     * (including tooltips and drag ghosts). Failures are contained so debug
+     * tooling can never corrupt the scene's rendering state.
+     */
+    private void renderDebug(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        if (debugOverlay == null || !debugOverlay.isOpen()) return;
+        try {
+            debugOverlay.render(graphics, mouseX, mouseY, partialTick);
+        } catch (Throwable t) {
+            Debugs.log.error("Debug overlay render failed", t);
+        }
+    }
+
+    private void tickDebug() {
+        if (debugOverlay == null) return;
+        try {
+            debugOverlay.tick();
+        } catch (Throwable t) {
+            Debugs.log.error("Debug overlay tick failed", t);
+        }
+    }
 
     //endregion
 
@@ -821,15 +918,8 @@ public final class Scene {
             ScreenUtil.renderTooltip(graphics, hoverTooltip, mouseX, mouseY);
         }
 
-        if (inspector != null) {
-            canvas.pushViewport(inspector.viewport());
-            FloatPos localMouse = inspector.viewport().parentToLocal(mouseX, mouseY);
-            inspector.render(canvas, (int) localMouse.x, (int) localMouse.y, partialTick);
-            canvas.popViewport();
-            canvas.flushBatch();
-        }
-
         draggableManager.renderDragging(graphics, mouseX, mouseY, partialTick);
+        renderDebug(graphics, mouseX, mouseY, partialTick);
         runPostRender();
         cleanWidgets();
     }
@@ -1000,6 +1090,7 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (debugInputActive() && debugOverlay.mouseClicked(mouseX, mouseY, button)) return true;
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             Widget focusable = findFocusable(target, mouseX, mouseY);
@@ -1043,6 +1134,7 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (debugInputActive() && debugOverlay.mouseReleased(mouseX, mouseY, button)) return true;
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             InputContext input = InputContext.fromMouse(mouseX, mouseY, button);
@@ -1092,6 +1184,7 @@ public final class Scene {
      * @param mouseY the Y coordinate of the mouse.
      */
     public void mouseMoved(double mouseX, double mouseY) {
+        if (debugInputActive() && debugOverlay.mouseMoved(mouseX, mouseY)) return;
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             target.listeners(InputEvents.onMouseMoved).onMoved(mouseX, mouseY, target.interruptible());
@@ -1150,6 +1243,7 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (debugInputActive() && debugOverlay.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             var input = InputContext.fromMouse(mouseX, mouseY, button);
@@ -1163,6 +1257,7 @@ public final class Scene {
     }
 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (debugInputActive() && debugOverlay.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) return true;
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             var bubble = target.bubble();
@@ -1186,6 +1281,17 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        InputContext keyInput = InputContext.fromKeyboard(
+                keyCode, scanCode, modifiers, ScreenUtil.getMouseX(), ScreenUtil.getMouseY()
+        );
+        if (keyInput.pressed(KeyMappings.openDevTools)) {
+            DebugOverlay overlay = debugOverlay();
+            if (overlay != null) {
+                overlay.toggle();
+                return true;
+            }
+        }
+        if (debugInputActive() && debugOverlay.keyPressed(keyCode, scanCode, modifiers)) return true;
         Widget fw = focusingWidget();
         if (fw == null || !fw.lifecycle.mounted()) return false;
         var localMouse = root.sceneToLocal(ScreenUtil.getMouseX(), ScreenUtil.getMouseY());
@@ -1209,6 +1315,7 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        if (debugInputActive() && debugOverlay.keyReleased(keyCode, scanCode, modifiers)) return true;
         Widget fw = focusingWidget();
         if (fw == null || !fw.lifecycle.mounted()) return false;
         var localMouse = root.sceneToLocal(ScreenUtil.getMouseX(), ScreenUtil.getMouseY());
@@ -1231,6 +1338,7 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean charTyped(char codePoint, int modifiers) {
+        if (debugInputActive() && debugOverlay.charTyped(codePoint, modifiers)) return true;
         Widget fw = focusingWidget();
         if (fw != null && fw.lifecycle.mounted()) {
             var bubble = fw.bubble();
@@ -1280,12 +1388,6 @@ public final class Scene {
         // Content layer (root tree)
         Widget rootHit = mountedHit(WidgetTree.hitTest(root, mouseX, mouseY));
         if (rootHit != null) return rootHit;
-
-        // Debug layer — inspector has the lowest priority so it never shadows
-        // other widgets during mouse tracking.
-        if (inspector != null) {
-            return mountedHit(WidgetTree.hitTest(inspector, mouseX, mouseY));
-        }
 
         return null;
     }
