@@ -8,10 +8,9 @@
  * is the selection spec — nearest / edge(t) / corner / center — that
  * callers use to pick where a connection lands.
  * <p>
- * The world-space counterpart is
- * {@link dev.vfyjxf.cloudlib.api.ui.inworld.render.QuadBorder}, which
- * measures a {@code WorldUiPanel}'s live quad the same way. Trace links
- * consume both; measurement itself draws nothing — stroking a border is
- * always opt-in.
+ * The world-space counterpart lives in the inworld stack (Nimbus):
+ * {@code QuadBorder} measures a {@code WorldUiPanel}'s live quad the same
+ * way. Trace links consume both; measurement itself draws nothing —
+ * stroking a border is always opt-in.
  */
 package dev.vfyjxf.cloudlib.api.ui.border;
