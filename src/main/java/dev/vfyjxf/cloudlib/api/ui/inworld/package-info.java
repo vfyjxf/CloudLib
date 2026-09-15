@@ -60,5 +60,19 @@
  *       deterministic distribution math shared by client preview and
  *       server commit.</li>
  * </ul>
+ *
+ * <h3>Subpackages</h3>
+ * <ul>
+ *   <li>{@link dev.vfyjxf.cloudlib.api.ui.inworld.render} — the shared
+ *       render pipeline: {@code WorldUiPanel} surfaces paint offscreen,
+ *       {@code WorldUiRenderer} composites them sorted far-to-near with
+ *       premultiplied blending at {@code AFTER_LEVEL} (no OIT).</li>
+ *   <li>{@link dev.vfyjxf.cloudlib.api.ui.inworld.layout} — the port /
+ *       leader-line system: hosts submit {@code PanelRequest}s and
+ *       {@code SourceProvider}s, {@code InworldLayout} solves placement
+ *       and routes leader lines between source attachments and panel
+ *       ports; {@code LayoutPanels} / {@code LayoutRender} bridge the
+ *       result into rendering.</li>
+ * </ul>
  */
 package dev.vfyjxf.cloudlib.api.ui.inworld;
