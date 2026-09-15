@@ -7,6 +7,7 @@ import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
+import dev.vfyjxf.cloudlib.ui.Textures;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -26,15 +27,15 @@ public class PanelWidget extends CompositeWidget<Widget> {
 
     //region colors
 
-    private int titleColor = 0xFFFFFF;
+    private int titleColor = 0xFF3F3F3F;
 
     //endregion
 
     //region textures
 
-    private VisualTexture backgroundTexture = new ColorTexture(0xCC222222);
-    private VisualTexture borderTexture = new ColorTexture(0xFF555555);
-    private VisualTexture titleBarTexture = new ColorTexture(0xFF333333);
+    private VisualTexture backgroundTexture = Textures.FLAT;
+    private VisualTexture borderTexture = new ColorTexture(0x00000000);
+    private VisualTexture titleBarTexture = Textures.BORDER_DARK;
 
     //endregion
 
@@ -140,7 +141,7 @@ public class PanelWidget extends CompositeWidget<Widget> {
             var font = context().font();
             int textX = borderWidth + 4;
             int textY = borderWidth + (titleBarHeight - font.lineHeight) / 2;
-            canvas.text(title, textX, textY, titleColor, true);
+            canvas.text(title, textX, textY, titleColor, false);
 
             contentY = borderWidth + titleBarHeight;
         }

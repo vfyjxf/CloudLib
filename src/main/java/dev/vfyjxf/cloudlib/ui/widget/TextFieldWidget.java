@@ -8,6 +8,7 @@ import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
+import dev.vfyjxf.cloudlib.ui.Textures;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,16 +33,16 @@ public class TextFieldWidget extends Widget {
 
     //region colors
 
-    private int textColor = 0xFFFFFF;
-    private int placeholderColor = 0x808080;
-    private int cursorColor = 0xFFFFFF;
+    private int textColor = 0xFF3F3F3F;
+    private int placeholderColor = 0xFF8B8B8B;
+    private int cursorColor = 0xFF3F3F3F;
 
     //endregion
 
     //region textures
 
-    private VisualTexture backgroundTexture = new ColorTexture(0xFF000000);
-    private VisualTexture borderTexture = new ColorTexture(0xFFA0A0A0);
+    private VisualTexture backgroundTexture = Textures.INSET;
+    private VisualTexture borderTexture = new ColorTexture(0x00000000);
 
     //endregion
 

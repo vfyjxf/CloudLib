@@ -37,3 +37,4 @@ run-*
 .codex
 .vscode
 .worktrees
+.zcode/
