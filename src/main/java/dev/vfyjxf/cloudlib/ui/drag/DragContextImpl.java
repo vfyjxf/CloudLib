@@ -4,7 +4,7 @@ import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
 import dev.vfyjxf.cloudlib.api.ui.drag.DraggableElement;
-import dev.vfyjxf.cloudlib.utils.ScreenUtil;
+import dev.vfyjxf.cloudlib.util.ScreenUtil;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 

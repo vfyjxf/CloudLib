@@ -1,0 +1,4 @@
+interface:
+  display_name: "CloudLib ModDev UI"
+  short_description: "Inspect CloudLib-specific ModDevMCP UI structure and widget state"
+  default_prompt: "Use $cloudlib-moddev-ui after $moddev-usage when a screen reports driverId=cloudlib-screen and standard ui inspection is not enough."

@@ -9,3 +9,8 @@ pluginManagement {
 plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 }
+
+includeBuild 'cloudlang-plugin'
+
+//don't uncomment this,intellij idea has a bug when name doesn't match folder name
+//rootProject.name = 'CloudLib'

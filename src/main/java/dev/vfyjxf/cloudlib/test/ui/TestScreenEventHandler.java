@@ -20,7 +20,7 @@ import org.objectweb.asm.Type;
 
 import java.util.function.Supplier;
 
-@EventBusSubscriber(value = Dist.CLIENT, modid = Constants.MOD_ID)
+@EventBusSubscriber(value = Dist.CLIENT, modid = Constants.modId)
 public class TestScreenEventHandler {
 
     public static final KeyMapping openTestScreen = new KeyMapping(
@@ -41,10 +41,8 @@ public class TestScreenEventHandler {
                     String memberName = annotation.memberName();
                     testScreenSupplier = () -> {
                         try {
-                            var constructor = Class.forName(memberName).getDeclaredConstructor();
-                            constructor.setAccessible(true);
-                            return (Screen) constructor.newInstance();
-                        } catch (ReflectiveOperationException e) {
+                            return (Screen) Class.forName(memberName).getDeclaredConstructor().newInstance();
+                        } catch (Exception e) {
                             e.printStackTrace();
                             return null;
                         }

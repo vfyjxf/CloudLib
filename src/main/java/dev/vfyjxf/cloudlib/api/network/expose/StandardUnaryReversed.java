@@ -4,7 +4,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 
 import java.util.function.Consumer;
 
-public final class StandardUnaryReversed<T> implements UnaryReversed<T>, ReversedTranscoder {
+final class StandardUnaryReversed<T> implements UnaryReversed<T>, ReversedTranscoder {
 
     private final StandardReversed<T, T> reversed;
 

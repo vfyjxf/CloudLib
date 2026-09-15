@@ -1,0 +1,20 @@
+{
+    "blend": {
+        "func": "add",
+        "srcrgb": "srcalpha",
+        "dstrgb": "1-srcalpha"
+    },
+    "vertex": "cloudlib:shadow",
+    "fragment": "cloudlib:shadow",
+    "attributes": [ "Position", "UV0" ],
+    "samplers": [],
+    "uniforms": [
+        { "name": "ModelViewMat",   "type": "matrix4x4", "count": 16, "values": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] },
+        { "name": "ProjMat",        "type": "matrix4x4", "count": 16, "values": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] },
+        { "name": "FillColor",      "type": "float",     "count": 4,  "values": [0.0, 0.0, 0.0, 0.0] },
+        { "name": "Size",           "type": "float",     "count": 2,  "values": [0.0, 0.0] },
+        { "name": "Radii",          "type": "float",     "count": 4,  "values": [0.0, 0.0, 0.0, 0.0] },
+        { "name": "ShadowSpread",   "type": "float",     "count": 1,  "values": [0.0] },
+        { "name": "ShadowSoftness", "type": "float",     "count": 1,  "values": [8.0] }
+    ]
+}

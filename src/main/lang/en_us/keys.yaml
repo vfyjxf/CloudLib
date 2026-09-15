@@ -1,0 +1,15 @@
+# Key mapping categories and names.
+# Nested mappings flatten to dotted translation keys, e.g. cloudlib.keys.debug below.
+# An entry may use the annotated leaf form to declare an explicit constant name for the
+# generated key class instead of the derived one ('$field' is a reserved token, it is
+# never a translation key):
+#   general:
+#     value: General
+#     $field: generalCategory
+cloudlib:
+  keys:
+    debug: Debug
+    general:
+      value: General
+      $field: generalCategory
+    rebuild_ui: Rebuild UI

@@ -1,12 +1,12 @@
 package dev.vfyjxf.cloudlib;
 
-import dev.vfyjxf.cloudlib.api.registry.ModuleEntryPoint;
-import dev.vfyjxf.cloudlib.api.utils.ServiceLoading;
+import dev.vfyjxf.cloudlib.api.plugin.AnnotationPluginLookup;
+import dev.vfyjxf.cloudlib.api.plugin.CloudLibPlugin;
+import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
 import dev.vfyjxf.cloudlib.debug.DebugConfig;
-import dev.vfyjxf.cloudlib.network.CloudlibNetworkPayloads;
+import dev.vfyjxf.cloudlib.network.CloudlibPayloads;
 import dev.vfyjxf.cloudlib.test.TestRegistry;
-import dev.vfyjxf.cloudlib.test.sync.TestBlockEntity;
-import dev.vfyjxf.cloudlib.utils.Locations;
+import dev.vfyjxf.cloudlib.util.Locations;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -14,38 +14,40 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLConstructModEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.eclipse.collections.api.collection.ImmutableCollection;
+import net.neoforged.fml.loading.FMLEnvironment;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public abstract class CloudLib {
-    public static final Logger logger = LogManager.getLogger("CloudLib");
-    protected final ImmutableCollection<ModuleEntryPoint> plugins;
+public sealed abstract class CloudLib permits CloudLibClient, CloudLibServer {
+    public static final Logger logger = LoggerFactory.getLogger("CloudLib");
+    protected final ImmutableList<CloudLibPlugin> plugins;
 
+    //TODO:Move thread unsafe operations to constructModEvent
     public CloudLib(ModContainer container, IEventBus modBus, Dist dist) {
         //region internal init
-        plugins = ServiceLoading.load(ModuleEntryPoint.class).toImmutable();
+        plugins = PluginLoader.loadPlugin(logger, "CloudLib Plugin", AnnotationPluginLookup.of(CloudLibPlugin.class)).toImmutable();
         //endregion
 
         //region debug & test init
-        TestRegistry.register(modBus);
-        DebugConfig.register(container);
+        if (!FMLEnvironment.production) {
+            TestRegistry.register(modBus);
+            DebugConfig.register(container);
+        }
         //region
 
         //region fml lifecycle listener
+        modBus.addListener(this::constructMod);
         modBus.addListener(this::commonSetup);
         modBus.addListener(this::loadComplete);
         //region
 
         //region register
-        modBus.addListener(CloudlibNetworkPayloads::register);
+        modBus.addListener(CloudlibPayloads::register);
         //endregion
     }
 
     protected void constructMod(FMLConstructModEvent event) {
-        event.enqueueWork(() -> {
-            var a = TestBlockEntity.Menu.INFO;
-        });
     }
 
     protected void commonSetup(FMLCommonSetupEvent event) {
@@ -55,7 +57,7 @@ public abstract class CloudLib {
     }
 
     public static ResourceLocation of(String path) {
-        return Locations.of(path);
+        return Locations.ofMod(path);
     }
 
 }

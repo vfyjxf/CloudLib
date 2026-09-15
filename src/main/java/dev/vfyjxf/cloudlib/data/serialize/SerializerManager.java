@@ -2,9 +2,9 @@ package dev.vfyjxf.cloudlib.data.serialize;
 
 import com.google.gson.JsonObject;
 import dev.vfyjxf.cloudlib.api.data.serialize.Save;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import net.lenni0451.reflect.accessor.FieldAccessor;
 import net.minecraft.nbt.CompoundTag;
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Stacks;
 import org.eclipse.collections.api.list.ImmutableList;
@@ -28,7 +28,7 @@ public class SerializerManager {
 
     public ImmutableList<Field> getFieldsToSave(Class<?> clazz) {
         return fieldsToSave.getIfAbsentPut(clazz, () -> {
-            MutableList<Field> fields = Lists.mutable.empty();
+            MutableList<Field> fields = MutableLists.empty();
             var type = clazz;
             while (type != null) {
                 for (Field declaredField : type.getDeclaredFields()) {

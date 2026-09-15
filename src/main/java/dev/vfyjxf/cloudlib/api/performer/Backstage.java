@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.performer;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * C backstage is a container for performers.
+ * Backstage is a container for performers.
  * <p>
  * It represents the "performers" needed for a "play"
  * <p>

@@ -59,9 +59,9 @@ sealed abstract class BasicLayerExpose<E>
         LayerSnapshot<T> layerSnapshot = layerSnapshot();
         Snapshot<T> snapshot = layerSnapshot.snapshot();
         return switch (layerSnapshot.currentState()) {
-            case UNCHANGED -> false;
-            case CHANGED -> true;
-            case ILLEGAL -> {
+            case unchanged -> false;
+            case changed -> true;
+            case illegal -> {
                 boolean readonly = snapshot instanceof Snapshot.Readonly;
                 throw new IllegalStateException("Illegally modifity a " + (readonly ? "readonly" : "immutable reference") + " snapshot(id:" + id() + " name:" + name() + ")");
             }

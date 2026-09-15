@@ -77,7 +77,7 @@ public non-sealed interface Expose<T> extends ExposeCommon {
 
     /**
      * @return the previous value of this Expose
-     * @throws IllegalStateException if the snapshot is {@link dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot.None}
+     * @throws IllegalStateException if the snapshot is {@link Snapshot.None}
      */
     default @UnknownNullability T previous() throws IllegalStateException {
         return snapshot().readValue();
@@ -87,9 +87,9 @@ public non-sealed interface Expose<T> extends ExposeCommon {
     default boolean changed() {
         var snapshot = snapshot();
         return switch (snapshot.currentState(current())) {
-            case UNCHANGED -> false;
-            case CHANGED -> true;
-            case ILLEGAL -> {
+            case unchanged -> false;
+            case changed -> true;
+            case illegal -> {
                 boolean readonly = snapshot instanceof Snapshot.Readonly;
                 throw new IllegalStateException("Illegally modifity a " + (readonly ? "readonly" : "immutable reference") + " snapshot(id:" + id() + " name:" + name() + ")");
             }

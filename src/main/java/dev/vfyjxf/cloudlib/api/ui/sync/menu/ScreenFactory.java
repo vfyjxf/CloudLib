@@ -10,8 +10,4 @@ public interface ScreenFactory<M extends AbstractContainerMenu, S extends Screen
 
     S createScreen(M menu, Inventory inventory);
 
-//    default S createScreen(M menu, Inventory inventory) {
-//        return createScreen(menu, inventory);
-//    }
-
 }

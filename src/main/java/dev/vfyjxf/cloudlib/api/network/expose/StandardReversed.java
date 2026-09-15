@@ -1,10 +1,10 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
+import dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot;
 import dev.vfyjxf.cloudlib.api.event.SimpleEvent;
 import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
 import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
-import dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot;
-import dev.vfyjxf.cloudlib.api.utils.Maybe;
+import dev.vfyjxf.cloudlib.api.util.Maybe;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
@@ -26,16 +26,16 @@ final class StandardReversed<S, R> extends BasicExpose<Void> implements Reversed
             FlowDecoder<R> reversedDecoder
     ) {
         super(name, id,
-              Snapshot.noneOf(),
-              () -> {
-                  throw new UnsupportedOperationException("StandardReversed doesn't bound to a value");
-              },
-              (byteBuf, element) -> {
-                  throw new UnsupportedOperationException("StandardReversed can't send data to client");
-              },
-              (byteBuf -> {
-                  throw new UnsupportedOperationException("StandardReversed can't receive data from server");
-              })
+                Snapshot.noneOf(),
+                () -> {
+                    throw new UnsupportedOperationException("StandardReversed doesn't bound to a value");
+                },
+                (byteBuf, element) -> {
+                    throw new UnsupportedOperationException("StandardReversed can't send data to client");
+                },
+                (byteBuf -> {
+                    throw new UnsupportedOperationException("StandardReversed can't receive data from server");
+                })
         );
         this.reversedEncoder = reversedEncoder;
         this.reversedDecoder = reversedDecoder;

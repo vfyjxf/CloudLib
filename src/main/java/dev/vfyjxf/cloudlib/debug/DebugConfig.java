@@ -34,7 +34,7 @@ public class DebugConfig {
         builder.push("network debug");
         {
             debugExpose = builder.comment("Enable expose debug mode")
-                    .define("debug_expose", false);
+                                 .define("debug_expose", false);
         }
         builder.pop();
         SPEC = builder.build();

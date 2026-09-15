@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.test;
 
 import dev.vfyjxf.cloudlib.Constants;
+import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import dev.vfyjxf.cloudlib.test.sync.TestBlock;
 import dev.vfyjxf.cloudlib.test.sync.TestBlockEntity;
 import net.minecraft.core.registries.Registries;
@@ -16,7 +17,6 @@ import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,8 +26,8 @@ import java.util.function.Supplier;
 
 public final class TestRegistry {
 
-    private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(Constants.MOD_ID);
-    private static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(Constants.MOD_ID);
+    private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(Constants.modId);
+    private static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(Constants.modId);
 
     public static final DeferredBlock<TestBlock> testBlock = block(
             "test_block",
@@ -35,7 +35,7 @@ public final class TestRegistry {
             BlockItem::new
     );
 
-    private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, Constants.MOD_ID);
+    private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, Constants.modId);
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TestBlockEntity>> testBlockEntity =
             BLOCK_ENTITIES.register(
@@ -68,19 +68,19 @@ public final class TestRegistry {
     }
 
     private static class CreativeTabValues {
-        public static final DeferredRegister<CreativeModeTab> CREATIVE_TAB = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Constants.MOD_ID);
-        public static final MutableList<DeferredItem<?>> creativeTagItems = Lists.mutable.empty();
+        public static final DeferredRegister<CreativeModeTab> CREATIVE_TAB = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Constants.modId);
+        public static final MutableList<DeferredItem<?>> creativeTagItems = MutableLists.empty();
         public static final DeferredHolder<CreativeModeTab, CreativeModeTab> creativeTab = CREATIVE_TAB.register(
                 "conduit_tab",
                 () -> CreativeModeTab.builder()
-                        .title(Component.literal("Debug Entries"))
-                        .icon(() -> Blocks.DARK_OAK_DOOR.asItem().getDefaultInstance())
-                        .displayItems((parameters, output) -> {
-                            for (DeferredItem<?> creativeTagItem : creativeTagItems) {
-                                output.accept(creativeTagItem.get());
-                            }
-                        })
-                        .build()
+                                     .title(Component.literal("Debug Entries"))
+                                     .icon(() -> Blocks.DARK_OAK_DOOR.asItem().getDefaultInstance())
+                                     .displayItems((parameters, output) -> {
+                                         for (DeferredItem<?> creativeTagItem : creativeTagItems) {
+                                             output.accept(creativeTagItem.get());
+                                         }
+                                     })
+                                     .build()
         );
     }
 

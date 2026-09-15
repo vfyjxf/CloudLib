@@ -1,56 +1,80 @@
 package dev.vfyjxf.cloudlib;
 
-import dev.vfyjxf.cloudlib.api.registry.ModuleEntryPoint;
-import dev.vfyjxf.cloudlib.api.registry.ui.IUIRegistry;
-import dev.vfyjxf.cloudlib.api.ui.text.RichTooltipComponent;
-import dev.vfyjxf.cloudlib.data.lang.LangKeyProvider;
-import dev.vfyjxf.cloudlib.ui.GuiEventHandler;
-import dev.vfyjxf.cloudlib.ui.UIManager;
-import dev.vfyjxf.cloudlib.ui.UIRegistry;
-import dev.vfyjxf.cloudlib.utils.Singletons;
+import dev.vfyjxf.cloudlib.api.plugin.AnnotationPluginLookup;
+import dev.vfyjxf.cloudlib.api.plugin.CloudLibClientPlugin;
+import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
+import dev.vfyjxf.cloudlib.api.ui.tooltip.RichTextTooltipComponent;
+import dev.vfyjxf.cloudlib.data.lang.CloudLibLangProvider;
+import dev.vfyjxf.cloudlib.text.ClientRichTextTooltipComponent;
+import dev.vfyjxf.cloudlib.text.RichTextManager;
+import dev.vfyjxf.cloudlib.ui.overlay.OverlayApiImpl;
+import dev.vfyjxf.cloudlib.ui.overlay.OverlayEventHandler;
+import dev.vfyjxf.cloudlib.ui.overlay.OverlayRegisterImpl;
 import net.minecraft.data.DataProvider;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.function.Function;
+@Mod(value = Constants.modId, dist = Dist.CLIENT)
+public final class CloudLibClient extends CloudLib {
 
-@Mod(value = Constants.MOD_ID, dist = Dist.CLIENT)
-public class CloudLibClient extends CloudLib {
+    public static final Logger logger = LoggerFactory.getLogger("CloudLib Client");
+
+    private final ImmutableList<CloudLibClientPlugin> clientPlugins;
 
     public CloudLibClient(ModContainer container, IEventBus modBus, Dist dist) {
         super(container, modBus, dist);
+        clientPlugins = PluginLoader.loadPlugin(logger, "CloudLib Client Plugin", AnnotationPluginLookup.of(CloudLibClientPlugin.class)).toImmutable();
         modBus.addListener(this::gatherData);
         modBus.addListener(this::registerClientTooltipComponentFactories);
-        Singletons.attachInstance(GuiEventHandler.class, new GuiEventHandler());
-        NeoForge.EVENT_BUS.register(GuiEventHandler.getInstance());
-        Singletons.attachInstance(IUIRegistry.class, new UIRegistry());
-        NeoForge.EVENT_BUS.register(UIManager.instance());
+        modBus.addListener(this::registerClientReloadListeners);
     }
 
     @Override
     protected void loadComplete(FMLLoadCompleteEvent event) {
-        event.enqueueWork(() -> {
-            IUIRegistry registry = Singletons.get(IUIRegistry.class);
-            for (ModuleEntryPoint plugin : plugins) {
-                plugin.registerUI(registry);
+        var register = new OverlayRegisterImpl();
+
+        for (CloudLibClientPlugin plugin : clientPlugins) {
+            try {
+                plugin.registerOverlay(register);
+            } catch (Exception e) {
+                logger.warn("Failed to register overlays for plugin {}", plugin.pluginId(), e);
             }
-        });
+        }
+
+        var api = new OverlayApiImpl(register);
+        OverlayApiImpl.attach(api);
+
+        var eventHandler = new OverlayEventHandler(api.manager());
+        api.setEventHandler(eventHandler);
+        NeoForge.EVENT_BUS.register(eventHandler);
+        eventHandler.refreshCurrentScreen();
     }
 
     private void registerClientTooltipComponentFactories(RegisterClientTooltipComponentFactoriesEvent event) {
-        event.register(RichTooltipComponent.class, Function.identity());
+        event.register(RichTextTooltipComponent.class, ClientRichTextTooltipComponent::new);
+    }
+
+    private void registerClientReloadListeners(RegisterClientReloadListenersEvent event) {
+        // Rich text services capture the font and language; drop them on reload so
+        // locale / resource-pack changes take effect without a restart.
+        event.registerReloadListener((ResourceManagerReloadListener) resourceManager -> RichTextManager.invalidate());
     }
 
     private void gatherData(GatherDataEvent event) {
         event.getGenerator().addProvider(
                 event.includeClient(),
-                (DataProvider.Factory<DataProvider>) (output) -> new LangKeyProvider(Constants.MOD_ID, output)
+                (DataProvider.Factory<DataProvider>) CloudLibLangProvider::new
         );
     }
 

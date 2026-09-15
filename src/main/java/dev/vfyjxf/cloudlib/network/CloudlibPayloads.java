@@ -1,0 +1,49 @@
+package dev.vfyjxf.cloudlib.network;
+
+import dev.vfyjxf.cloudlib.Constants;
+import dev.vfyjxf.cloudlib.api.network.payload.ClientPayloadInfo;
+import dev.vfyjxf.cloudlib.api.network.payload.ClientboundPayload;
+import dev.vfyjxf.cloudlib.api.network.payload.ServerPayloadInfo;
+import dev.vfyjxf.cloudlib.api.network.payload.ServerboundPayload;
+import dev.vfyjxf.cloudlib.network.payload.MenuDataReversedPacket;
+import dev.vfyjxf.cloudlib.network.payload.MenuSyncDownstreamPacket;
+import dev.vfyjxf.cloudlib.util.Locations;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class CloudlibPayloads {
+
+    public static final Logger log = LoggerFactory.getLogger("CloudlibNetworkPayloads");
+
+    public static void register(RegisterPayloadHandlersEvent event) {
+        //TODO:provide a meaningful version.
+        PayloadRegistrar registrar = event.registrar(Constants.modId);
+        //region play 2 client
+        MenuSyncDownstreamPacket.info.registerPlay(registrar);
+        MenuDataReversedPacket.info.registerPlay(registrar);
+        //endregion
+
+        //region play 2 server
+
+        //endregion
+    }
+
+
+    public static <T extends ClientboundPayload> ClientPayloadInfo<T> createClientInfo(
+            StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec,
+            String path
+    ) {
+        return ClientPayloadInfo.create(streamCodec, Locations.ofMod(path));
+    }
+
+    public static <T extends ServerboundPayload> ServerPayloadInfo<T> createServerInfo(
+            StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec,
+            String path
+    ) {
+        return ServerPayloadInfo.create(streamCodec, Locations.ofMod(path));
+    }
+}

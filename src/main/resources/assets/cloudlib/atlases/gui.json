@@ -2,7 +2,7 @@
   "sources": [
     {
       "type": "directory",
-      "source": "gui",
+      "source": "cloudlib/gui",
       "prefix": ""
     }
   ]
