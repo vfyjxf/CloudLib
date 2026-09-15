@@ -15,6 +15,7 @@ import dev.vfyjxf.cloudlib.api.performer.Backstage;
 import dev.vfyjxf.cloudlib.api.performer.PerformerContainer;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.Renderable;
+import dev.vfyjxf.cloudlib.api.ui.border.RectBorder;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
@@ -641,6 +642,15 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         return new Rect(absolutePos().x(), absolutePos().y(), size().width(), size().height());
     }
 
+    /**
+     * This widget's border as a measurable frame in scene space —
+     * edge/corner points, perimeter walking and connection ports. The
+     * measurement half of the trace API; drawing is opt-in.
+     */
+    public final RectBorder border() {
+        return RectBorder.of(absoluteBounds());
+    }
+
     @Contract("_ -> this")
     protected Widget setWidth(int width) {
         return setSize(width, size().height());
@@ -1133,11 +1143,11 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
      * surface and reapplies it — the immediate (non-batched) path.
      */
     public void refreshTheme() {
-        var theme = scene != null ? scene.theme() : dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.active();
+        var theme = scene != null ? scene.theme() : dev.vfyjxf.cloudlib.api.ui.theme.Themes.active();
         if (theme == null) {
             return;
         }
-        applyThemeStyle(dev.vfyjxf.cloudlib.api.ui.theme.ThemeEngine.resolve(theme, this));
+        applyThemeStyle(theme.resolve(this));
     }
 
     /**
@@ -1145,7 +1155,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
      * segments: {@code defaultStyle → themeStyle → codeStyles}.
      * <p>
      * Shared by {@link #refreshTheme}, the scene's dirty flush, and whole-tree
-     * refreshes ({@code ThemeEngine.applyTree}).
+     * refreshes ({@code Theme.applyTree}).
      */
     public void applyThemeStyle(UIStyle resolved) {
         if (Objects.equals(resolved, themeStyle)) {

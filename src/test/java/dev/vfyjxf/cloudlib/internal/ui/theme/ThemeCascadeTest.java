@@ -4,7 +4,6 @@ import dev.vfyjxf.cloudlib.api.css.CssParser;
 import dev.vfyjxf.cloudlib.api.css.Stylesheet;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.theme.Theme;
-import dev.vfyjxf.cloudlib.api.ui.theme.ThemeEngine;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
@@ -55,7 +54,7 @@ class ThemeCascadeTest {
 
     private static UIStyle styleOf(Theme theme, dev.vfyjxf.cloudlib.api.ui.base.Widget node) {
         List<String> warnings = new ArrayList<>();
-        return ThemeEngine.resolve(theme, node, warnings::add);
+        return theme.resolve(node, warnings::add);
     }
 
     /**
@@ -275,7 +274,7 @@ class ThemeCascadeTest {
     void unresolvedVarDropsDeclaration() {
         List<String> warnings = new ArrayList<>();
         Theme t = theme("button { padding: var(--missing) } button { margin: 2px }");
-        UIStyle s = ThemeEngine.resolve(t, new Node("button"), warnings::add);
+        UIStyle s = t.resolve(new Node("button"), warnings::add);
         assertNull(prop(s, "padding"));
         assertNotNull(prop(s, "margin")); // sibling declaration survives
     }
@@ -330,7 +329,7 @@ class ThemeCascadeTest {
     void unsupportedUnitsDrop() {
         List<String> warnings = new ArrayList<>();
         Theme t = theme("a { padding: 2em; margin: 1rem; gap: 4px }");
-        UIStyle s = ThemeEngine.resolve(t, new Node("a"), warnings::add);
+        UIStyle s = t.resolve(new Node("a"), warnings::add);
         assertNull(prop(s, "padding")); // em unsupported
         assertNull(prop(s, "margin")); // rem unsupported
         assertNotNull(prop(s, "gap")); // px still fine
@@ -370,7 +369,7 @@ class ThemeCascadeTest {
     void unknownPropertyWarnsAndSkips() {
         List<String> warnings = new ArrayList<>();
         Theme t = theme("a { frobnicate: 3px; padding: 4px }");
-        UIStyle s = ThemeEngine.resolve(t, new Node("a"), warnings::add);
+        UIStyle s = t.resolve(new Node("a"), warnings::add);
         assertTrue(warnings.stream().anyMatch(w -> w.contains("frobnicate")));
         assertNotNull(prop(s, "padding"));
     }
@@ -379,7 +378,7 @@ class ThemeCascadeTest {
     void invalidValueDropsOnlyThatDeclaration() {
         List<String> warnings = new ArrayList<>();
         Theme t = theme("a { padding: banana; margin: 2px }");
-        UIStyle s = ThemeEngine.resolve(t, new Node("a"), warnings::add);
+        UIStyle s = t.resolve(new Node("a"), warnings::add);
         assertNull(prop(s, "padding"));
         assertNotNull(prop(s, "margin"));
     }

@@ -7,7 +7,7 @@ import dev.vfyjxf.cloudlib.api.css.CssParser;
 import dev.vfyjxf.cloudlib.api.css.Rule;
 import dev.vfyjxf.cloudlib.api.css.Stylesheet;
 import dev.vfyjxf.cloudlib.api.ui.theme.Theme;
-import dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager;
+import dev.vfyjxf.cloudlib.api.ui.theme.Themes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -29,7 +29,7 @@ import java.util.Map;
 
 /**
  * Loads {@code assets/<ns>/ui/themes/**.css} from the resource manager into the
- * {@link ThemeManager} registry, resolving {@code @import} references between
+ * {@link Themes} registry, resolving {@code @import} references between
  * theme files.
  * <p>
  * Registered on the client reload bus ({@code RegisterClientReloadListenersEvent}).
@@ -128,7 +128,7 @@ public final class ThemeLoader extends SimplePreparableReloadListener<ThemeLoade
             }
         }
         for (Theme theme : resolved.values()) {
-            ThemeManager.register(theme);
+            Themes.register(theme);
         }
 
         // activation: user config > manifest defaults > standard fallback
@@ -156,12 +156,7 @@ public final class ThemeLoader extends SimplePreparableReloadListener<ThemeLoade
                 wanted.add(standard);
             }
         }
-        wanted.retainAll(resolved.keySet());
-        ThemeManager.setStack(wanted);
-
-        if (!resolved.isEmpty()) {
-            ThemeManager.notifyChanged();
-        }
+        Themes.setActive(wanted);
         logger.info("Loaded {} theme(s): {}, active: {}", resolved.size(), resolved.keySet(), wanted);
     }
 

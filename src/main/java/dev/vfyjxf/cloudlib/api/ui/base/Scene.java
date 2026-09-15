@@ -443,17 +443,17 @@ public final class Scene {
      */
     public @org.jetbrains.annotations.Nullable dev.vfyjxf.cloudlib.api.ui.theme.Theme theme() {
         if (themeOverride != null) {
-            var t = dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.get(themeOverride);
+            var t = dev.vfyjxf.cloudlib.api.ui.theme.Themes.get(themeOverride);
             if (t != null) return t;
         }
-        return dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.active();
+        return dev.vfyjxf.cloudlib.api.ui.theme.Themes.active();
     }
 
     /** Re-resolves the whole tree against {@link #theme()}. */
     public void refreshTheme() {
         var theme = theme();
         if (theme != null && root.lifecycle.mounted()) {
-            dev.vfyjxf.cloudlib.api.ui.theme.ThemeEngine.applyTree(theme, root, null);
+            theme.applyTree(root);
         }
     }
 
@@ -467,7 +467,7 @@ public final class Scene {
 
     /**
      * Re-resolves every dirty widget's theme segment. Whole-tree refreshes
-     * ({@code ThemeManager.refreshTree}) bypass this queue and use a shared
+     * ({@code Themes.refreshTree}) bypass this queue and use a shared
      * cascade context instead.
      */
     public void flushStyleDirty() {
@@ -481,7 +481,7 @@ public final class Scene {
         }
         var ctx = new dev.vfyjxf.cloudlib.internal.ui.theme.Cascade.ResolveContext(theme);
         for (Widget widget : styleDirty) {
-            widget.applyThemeStyle(dev.vfyjxf.cloudlib.api.ui.theme.ThemeEngine.resolveShared(theme, widget, ctx));
+            widget.applyThemeStyle(theme.resolveShared(widget, ctx));
         }
         styleDirty.clear();
     }

@@ -6,7 +6,6 @@ import dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValues;
 import dev.vfyjxf.cloudlib.api.ui.theme.Theme;
-import dev.vfyjxf.cloudlib.api.ui.theme.ThemeEngine;
 import dev.vfyjxf.taffy.style.LengthPercentage;
 import dev.vfyjxf.taffy.style.TaffyDisplay;
 import net.minecraft.resources.ResourceLocation;
@@ -128,7 +127,7 @@ class StyleSystemTest {
     @Test
     void cssShorthandExpandsToLonghands() {
         Theme t = theme("a { padding: 4px }");
-        UIStyle s = ThemeEngine.resolve(t, new Node("a"));
+        UIStyle s = t.resolve(new Node("a"));
         for (StyleKey<?> key :
                 List.of(Styles.paddingTop, Styles.paddingRight, Styles.paddingBottom, Styles.paddingLeft)) {
             StyleValue<?> v = s.get(key);
@@ -140,7 +139,7 @@ class StyleSystemTest {
     @Test
     void cssLonghandAfterShorthandWinsItsEdge() {
         Theme t = theme("a { padding: 2px; padding-left: 9px }");
-        UIStyle s = ThemeEngine.resolve(t, new Node("a"));
+        UIStyle s = t.resolve(new Node("a"));
         assertEquals(2f, ((LengthPercentage) s.get(Styles.paddingTop).value()).getValue());
         assertEquals(9f, ((LengthPercentage) s.get(Styles.paddingLeft).value()).getValue());
     }
@@ -148,7 +147,7 @@ class StyleSystemTest {
     @Test
     void cssShorthandAfterLonghandWinsAllEdges() {
         Theme t = theme("a { padding-left: 9px; padding: 2px }");
-        UIStyle s = ThemeEngine.resolve(t, new Node("a"));
+        UIStyle s = t.resolve(new Node("a"));
         assertEquals(2f, ((LengthPercentage) s.get(Styles.paddingLeft).value()).getValue());
         assertEquals(2f, ((LengthPercentage) s.get(Styles.paddingTop).value()).getValue());
     }
@@ -156,7 +155,7 @@ class StyleSystemTest {
     @Test
     void javaAndCssProduceEquivalentStyles() {
         Theme t = theme("a { padding: 4px; display: flex; gap: 6px }");
-        UIStyle css = ThemeEngine.resolve(t, new Node("a"));
+        UIStyle css = t.resolve(new Node("a"));
         UIStyle java = UIStyle.of(padding(4), displayFlex(), gap(6));
         // same key set
         for (StyleValue<?> v : css.values()) {

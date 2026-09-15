@@ -46,7 +46,7 @@ public final class ThemeProfileMain {
         for (int iter = 0; iter < iterations; iter++) {
             Cascade.ResolveContext ctx = new Cascade.ResolveContext(theme);
             for (var n : nodes) {
-                dev.vfyjxf.cloudlib.api.ui.theme.ThemeEngine.resolveShared(theme, n, ctx);
+                theme.resolveShared(n, ctx);
             }
         }
         long ms = (System.nanoTime() - start) / 1_000_000;

@@ -66,10 +66,10 @@ public final class CloudLibClient extends CloudLib {
     private void registerClientReloadListeners(
             net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent event) {
         event.registerReloadListener(dev.vfyjxf.cloudlib.internal.ui.theme.ThemeLoader.instance);
-        // theme stack changes (pack reload, activate/deactivate) re-resolve all live scenes
-        dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.onChange(() -> {
+        // theme selection changes (pack reload, setActive) re-resolve all live scenes
+        dev.vfyjxf.cloudlib.api.ui.theme.Themes.onChange(() -> {
             for (var scene : dev.vfyjxf.cloudlib.api.ui.base.Scene.liveScenes()) {
-                dev.vfyjxf.cloudlib.api.ui.theme.ThemeManager.refreshTree(scene.root());
+                dev.vfyjxf.cloudlib.api.ui.theme.Themes.refreshTree(scene.root());
             }
         });
     }

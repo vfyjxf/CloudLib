@@ -5,7 +5,8 @@ pluginManagement {
         maven { url = 'https://maven.neoforged.net/releases' }
     }
     // also resolves 'dev.vfyjxf.cloudlib.lang' when this build is included
-    // inside another composite (e.g. the nimbusprojection dev build)
+    // inside another composite (e.g. the nimbus dev build, which lives in
+    // its own repository alongside this checkout)
     includeBuild 'cloudlang-plugin'
 }
 

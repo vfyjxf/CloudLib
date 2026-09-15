@@ -2,9 +2,13 @@ package dev.vfyjxf.cloudlib.api.ui.theme;
 
 import dev.vfyjxf.cloudlib.api.css.ComponentValue;
 import dev.vfyjxf.cloudlib.api.css.Declaration;
+import dev.vfyjxf.cloudlib.api.css.Rule;
 import dev.vfyjxf.cloudlib.api.css.StyleRule;
 import dev.vfyjxf.cloudlib.api.css.Stylesheet;
+import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
+import dev.vfyjxf.cloudlib.internal.ui.theme.Cascade;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,12 +16,14 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
- * A parsed theme: an id plus the flattened, {@code @import}-resolved rule list.
+ * A theme: a parsed stylesheet that resolves into a {@link UIStyle} per widget.
  * <p>
- * Rules keep source order across the whole import chain — later declarations of
- * equal specificity win per the cascade.
+ * A theme <em>is</em> a style — every widget resolves its own {@code UIStyle}
+ * from the same rule list, then applies it through the usual style machinery
+ * (below code styles, above widget defaults).
  * <p>
  * For matching speed, rules are bucketed by the rightmost compound's tag /
  * classes / id — a node only tests rules that could possibly match it, plus the
@@ -40,6 +46,75 @@ public final class Theme {
     public Stylesheet sheet() {
         return sheet;
     }
+
+    // region composition
+
+    /**
+     * Layers several themes into one: their rule lists concatenate in stack
+     * order, so a later layer wins equal-specificity ties — the real cascade
+     * does the rest. A single layer returns itself (keeps its own id).
+     */
+    public static Theme compose(List<Theme> layers) {
+        if (layers.isEmpty()) {
+            throw new IllegalArgumentException("compose() needs at least one layer");
+        }
+        if (layers.size() == 1) {
+            return layers.get(0);
+        }
+        List<Rule> rules = new ArrayList<>();
+        StringBuilder path = new StringBuilder("stack/");
+        for (Theme layer : layers) {
+            rules.addAll(layer.sheet.rules());
+            path.append(layer.id.getPath().replace('/', '_')).append('_');
+        }
+        path.setLength(path.length() - 1);
+        return new Theme(ResourceLocation.fromNamespaceAndPath("cloudlib", path.toString()), new Stylesheet(rules));
+    }
+
+    // endregion
+
+    // region resolve
+
+    /**
+     * Resolves this theme against {@code node} into a {@code UIStyle}.
+     *
+     * @param warn sink for dropped/invalid declarations (may be null)
+     */
+    public UIStyle resolve(Widget node, @Nullable Consumer<String> warn) {
+        return ThemeEngine.resolve(new Cascade.ResolveContext(this), this, node, warn);
+    }
+
+    /** Convenience overload without a warning sink. */
+    public UIStyle resolve(Widget node) {
+        return resolve(node, null);
+    }
+
+    /** Resolves through a shared cascade context — used by scene dirty flushes. */
+    public UIStyle resolveShared(Widget node, Cascade.ResolveContext ctx) {
+        return ThemeEngine.resolve(ctx, this, node, null);
+    }
+
+    /**
+     * Re-resolves this theme for {@code root} and its whole subtree, sharing one
+     * cascade context so ancestors resolve once per pass. Each widget applies the
+     * resolved style into its theme segment — see {@link Widget#applyThemeStyle}.
+     */
+    public void applyTree(Widget root, @Nullable Consumer<String> warn) {
+        applyTree(new Cascade.ResolveContext(this), root, warn);
+    }
+
+    public void applyTree(Widget root) {
+        applyTree(root, null);
+    }
+
+    private void applyTree(Cascade.ResolveContext ctx, Widget widget, @Nullable Consumer<String> warn) {
+        widget.applyThemeStyle(ThemeEngine.resolve(ctx, this, widget, warn));
+        if (widget instanceof CompositeWidget<?> composite) {
+            composite.children().forEach(c -> applyTree(ctx, c, warn));
+        }
+    }
+
+    // endregion
 
     // region rule access
 

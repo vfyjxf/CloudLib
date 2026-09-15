@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.canvas;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
@@ -360,7 +361,14 @@ public final class SceneCanvas {
                 RenderSystem.setShaderTexture(0, tb.texture);
                 RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
                 RenderSystem.enableBlend();
-                RenderSystem.defaultBlendFunc();
+                // true src-over on BOTH channels — vanilla defaultBlendFunc
+                // uses (ONE, ZERO) alpha which would overwrite the target's
+                // coverage; an offscreen UI surface must accumulate it
+                RenderSystem.blendFuncSeparate(
+                        GlStateManager.SourceFactor.SRC_ALPHA,
+                        GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                        GlStateManager.SourceFactor.ONE,
+                        GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 
                 BufferBuilder buffer =
                         Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
@@ -391,7 +399,11 @@ public final class SceneCanvas {
             } else if (cmd instanceof BatchState.ColoredBatch cb) {
                 RenderSystem.setShader(GameRenderer::getPositionColorShader);
                 RenderSystem.enableBlend();
-                RenderSystem.defaultBlendFunc();
+                RenderSystem.blendFuncSeparate(
+                        GlStateManager.SourceFactor.SRC_ALPHA,
+                        GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                        GlStateManager.SourceFactor.ONE,
+                        GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 
                 BufferBuilder buffer =
                         Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
@@ -700,6 +712,54 @@ public final class SceneCanvas {
 
     public SceneCanvas line(int x1, int y1, int x2, int y2, int color) {
         return line(x1, y1, x2, y2, 1f, color);
+    }
+
+    /**
+     * Adds a single four-vertex quad to the colored batch — the
+     * freeform primitive behind joined strokes and other non-rectangular
+     * geometry. Vertices are given in local space in perimeter order
+     * with one ARGB color each. <strong>Batchable</strong> — same path
+     * as {@link #line}.
+     * <p>
+     * Winding is normalized to front-facing: face culling is ambient GL
+     * state the canvas never touches, so a reversed perimeter would
+     * silently vanish under an enabled cull face. Either perimeter
+     * direction is accepted.
+     */
+    public SceneCanvas coloredQuad(
+            float x0,
+            float y0,
+            float x1,
+            float y1,
+            float x2,
+            float y2,
+            float x3,
+            float y3,
+            int c0,
+            int c1,
+            int c2,
+            int c3) {
+        flushForwardedDraw();
+        float[] v0 = transformPointLocal(x0, y0);
+        float[] v1 = transformPointLocal(x1, y1);
+        float[] v2 = transformPointLocal(x2, y2);
+        float[] v3 = transformPointLocal(x3, y3);
+        // negative shoelace = visually CCW = GL front face — a reversed
+        // perimeter is flipped back, keeping each color on its vertex
+        float shoelace = v0[0] * v1[1]
+                - v1[0] * v0[1]
+                + v1[0] * v2[1]
+                - v2[0] * v1[1]
+                + v2[0] * v3[1]
+                - v3[0] * v2[1]
+                + v3[0] * v0[1]
+                - v0[0] * v3[1];
+        if (shoelace > 0) {
+            batchState.addColoredGradient(v0[0], v0[1], v3[0], v3[1], v2[0], v2[1], v1[0], v1[1], c0, c3, c2, c1);
+        } else {
+            batchState.addColoredGradient(v0[0], v0[1], v1[0], v1[1], v2[0], v2[1], v3[0], v3[1], c0, c1, c2, c3);
+        }
+        return this;
     }
 
     // region shader shapes
@@ -1344,9 +1404,15 @@ public final class SceneCanvas {
         if (label != null) {
             int tx = x + 17 - font().width(label);
             int ty = y + 9;
+            // match vanilla GuiGraphics.renderItemDecorations: the count sits
+            // on a z-layer above item models (z≈150), so it survives the
+            // rendertype.text depth test against their written depth
+            graphics.pose().pushPose();
+            graphics.pose().translate(0, 0, 200);
             // vanilla count is bright white with a dark outline
             text(label, tx + 1, ty + 1, 0xFF3C3C3C);
             text(label, tx, ty, 0xFFFFFFFF);
+            graphics.pose().popPose();
         }
         return this;
     }
