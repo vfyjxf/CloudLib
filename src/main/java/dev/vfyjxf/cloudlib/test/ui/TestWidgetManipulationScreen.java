@@ -1,13 +1,12 @@
 package dev.vfyjxf.cloudlib.test.ui;
 
 import dev.vfyjxf.cloudlib.api.ui.base.BasicScreen;
-import dev.vfyjxf.cloudlib.api.ui.base.SceneLayer;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree;
-import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
+import dev.vfyjxf.cloudlib.ui.Textures;
 import dev.vfyjxf.cloudlib.ui.widget.BoxWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ButtonWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
@@ -59,7 +58,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         var mainContainer = ColumnWidget.create(8);
         mainContainer.useStyle(UIStyle.of(
                 UIStyles.padding(16),
-                UIStyles.background(new ColorTexture(0xCC222222))
+                UIStyles.background(Textures.FRAME)
         ));
 
         // Header
@@ -86,17 +85,9 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
         mainGroup().addWidget(mainContainer);
 
-        mainGroup().addWidget(
-                Inspector.create()
-                         .setTrackMouse(true)
-                         .setDisplayMode(Inspector.DisplayMode.FULL)
-                         .useStyle(UIStyles.positionAbsolute(), UIStyles.sizeOf(280, 180))
-                         .setSceneLayer(SceneLayer.debug)
-        );
-
         // Create the reusable widget
         reusableWidget = LabelWidget.of("★ REUSABLE ★")
-                                    .setColor(0xFFFF00FF);
+                                    .setColor(0xFF3F3F3F);
         reusableWidget.onInit((self) -> {
             System.out.println("Reusable widget initialized");
             reuseCount++;
@@ -115,7 +106,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         });
         reusableWidget.useStyle(UIStyle.of(
                 UIStyles.padding(4),
-                UIStyles.background(new ColorTexture(0x80FF00FF))
+                UIStyles.background(Textures.OUTLINED_FLAT)
         ));
     }
 
@@ -126,15 +117,15 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         header.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
         var title = LabelWidget.of("Widget Manipulation Test")
-                               .setColor(0xFFFFAA00)
-                               .setShadow(true);
+                               .setColor(0xFF3F3F3F)
+                               .setShadow(false);
         title.useStyle(UIStyle.of(UIStyles.sizeOf(200, 12)));
         header.addWidget(title);
 
         header.addWidget(SpacerWidget.create());
 
         statsLabel = LabelWidget.of("Widgets: 0")
-                                .setColor(0xFF88FF88);
+                                .setColor(0xFF555555);
         statsLabel.useStyle(UIStyle.of(UIStyles.sizeOf(100, 12)));
         header.addWidget(statsLabel);
 
@@ -145,12 +136,12 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         var panel = ColumnWidget.create(8);
         panel.useStyle(UIStyle.of(
                 UIStyles.padding(8),
-                UIStyles.background(new ColorTexture(0x40000000))
+                UIStyles.background(Textures.INSET)
         ));
 
         // Row 1: Add Operations
         var addRow = RowWidget.create(4);
-        addRow.addWidget(LabelWidget.of("Add:").setColor(0xFFAAAA00));
+        addRow.addWidget(LabelWidget.of("Add:").setColor(0xFF3F3F3F));
 
         addRow.addWidget(createButton("Add to A", this::addWidgetToA, 0xFF0066CC));
         addRow.addWidget(createButton("Add to B", this::addWidgetToB, 0xFF006600));
@@ -164,7 +155,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
         // Row 2: Remove Operations
         var removeRow = RowWidget.create(4);
-        removeRow.addWidget(LabelWidget.of("Remove:").setColor(0xFFAA0000));
+        removeRow.addWidget(LabelWidget.of("Remove:").setColor(0xFF3F3F3F));
 
         removeRow.addWidget(createButton("Remove First A", this::removeFirstFromA, 0xFFCC6600));
         removeRow.addWidget(createButton("Remove Last B", this::removeLastFromB, 0xFFCC6600));
@@ -175,7 +166,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
         // Row 3: Move Operations
         var moveRow = RowWidget.create(4);
-        moveRow.addWidget(LabelWidget.of("Move:").setColor(0xFF00AAAA));
+        moveRow.addWidget(LabelWidget.of("Move:").setColor(0xFF3F3F3F));
 
         moveRow.addWidget(createButton("Move First A→B", this::moveFirstAToB, 0xFF008888));
         moveRow.addWidget(createButton("Move Last B→A", this::moveLastBToA, 0xFF008888));
@@ -184,7 +175,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
         // Row 4: Reuse Operations
         var reuseRow = RowWidget.create(4);
-        reuseRow.addWidget(LabelWidget.of("Reuse:").setColor(0xFFFF00FF));
+        reuseRow.addWidget(LabelWidget.of("Reuse:").setColor(0xFF3F3F3F));
 
         reuseRow.addWidget(createButton("Toggle Reusable", this::toggleReusableWidget, 0xFFAA00AA));
         reuseRow.addWidget(createButton("Detach Reusable", this::detachReusableWidget, 0xFF880088));
@@ -194,7 +185,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
         // Row 5: Destroy Operations
         var destroyRow = RowWidget.create(4);
-        destroyRow.addWidget(LabelWidget.of("Destroy:").setColor(0xFFFF4444));
+        destroyRow.addWidget(LabelWidget.of("Destroy:").setColor(0xFF3F3F3F));
 
         destroyRow.addWidget(createButton("Destroy A (bottomUp)", this::destroyContainerA, 0xFFAA0000));
         destroyRow.addWidget(createButton("Destroy B (deepestFirst)", this::destroyContainerB, 0xFFAA0000));
@@ -212,15 +203,15 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         boxA.useStyle(UIStyle.of(
                 UIStyles.flexGrow(1),
                 UIStyles.padding(12),
-                UIStyles.background(new ColorTexture(0x30336699))
+                UIStyles.background(Textures.FLAT)
         ));
 
         var columnA = ColumnWidget.create(8);
         columnA.useStyle(UIStyle.of(UIStyles.sizeOf(-1, -1)));
 
         var labelA = LabelWidget.of("▼ Container A")
-                                .setColor(0xFF88AAFF)
-                                .setShadow(true);
+                                .setColor(0xFF3F3F3F)
+                                .setShadow(false);
         labelA.useStyle(UIStyle.of(UIStyles.heightOf(14)));
         columnA.addWidget(labelA);
 
@@ -228,7 +219,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         containerA.useStyle(UIStyle.of(
                 UIStyles.flexGrow(1),
                 UIStyles.padding(8),
-                UIStyles.background(new ColorTexture(0x18FFFFFF))
+                UIStyles.background(Textures.INSET)
         ));
         columnA.addWidget(containerA);
 
@@ -236,8 +227,8 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         row.addWidget(boxA);
 
         // Vertical Divider
-        var divider = DividerWidget.vertical().setColor(0xFF666666);
-        divider.useStyle(UIStyle.of(UIStyles.widthOf(2)));
+        var divider = DividerWidget.vertical().setColor(0xFF555555);
+        divider.useStyle(UIStyle.of(UIStyles.widthOf(1)));
         row.addWidget(divider);
 
         // Container B
@@ -245,15 +236,15 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         boxB.useStyle(UIStyle.of(
                 UIStyles.flexGrow(1),
                 UIStyles.padding(12),
-                UIStyles.background(new ColorTexture(0x30336633))
+                UIStyles.background(Textures.FLAT)
         ));
 
         var columnB = ColumnWidget.create(8);
         columnB.useStyle(UIStyle.of(UIStyles.sizeOf(-1, -1)));
 
         var labelB = LabelWidget.of("▼ Container B")
-                                .setColor(0xFF88FF88)
-                                .setShadow(true);
+                                .setColor(0xFF3F3F3F)
+                                .setShadow(false);
         labelB.useStyle(UIStyle.of(UIStyles.heightOf(14)));
         columnB.addWidget(labelB);
 
@@ -261,7 +252,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         containerB.useStyle(UIStyle.of(
                 UIStyles.flexGrow(1),
                 UIStyles.padding(8),
-                UIStyles.background(new ColorTexture(0x18FFFFFF))
+                UIStyles.background(Textures.INSET)
         ));
         columnB.addWidget(containerB);
 
@@ -276,7 +267,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         statusBar.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
         statusLabel = LabelWidget.of("Ready")
-                                 .setColor(0xFFAAAAAA);
+                                 .setColor(0xFF555555);
         statusLabel.useStyle(UIStyle.of(UIStyles.flexGrow(1)));
         statusBar.addWidget(statusLabel);
 
@@ -285,13 +276,12 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
     private Widget createDivider() {
         var divider = DividerWidget.horizontal().setColor(0xFF555555);
-        divider.useStyle(UIStyle.of(UIStyles.heightOf(2)));
+        divider.useStyle(UIStyle.of(UIStyles.heightOf(1)));
         return divider;
     }
 
     private ButtonWidget createButton(String label, Runnable action, int color) {
-        var btn = ButtonWidget.of(label, action)
-                              .setColors(color, lighten(color), darken(color));
+        var btn = ButtonWidget.of(label, action);
         btn.useStyle(UIStyle.of(UIStyles.minWidth(90), UIStyles.heightOf(18), UIStyles.padding(2)));
         return btn;
     }
@@ -316,11 +306,11 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
     private LabelWidget createNumberedWidget(int number, int color) {
         var widget = LabelWidget.of("#" + number)
-                                .setColor(color)
-                                .setShadow(true);
+                                .setColor(0xFF3F3F3F)
+                                .setShadow(false);
         widget.useStyle(UIStyle.of(
                 UIStyles.padding(4, 8),
-                UIStyles.background(new ColorTexture(0x30000000))
+                UIStyles.background(Textures.INSET)
         ));
         return widget;
     }

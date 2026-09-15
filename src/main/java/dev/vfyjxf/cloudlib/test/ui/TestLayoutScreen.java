@@ -1,454 +1,569 @@
 package dev.vfyjxf.cloudlib.test.ui;
 
 import dev.vfyjxf.cloudlib.api.ui.base.BasicScreen;
-import dev.vfyjxf.cloudlib.api.ui.base.SceneLayer;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
+import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollDirection;
+import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollState;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
-import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
+import dev.vfyjxf.cloudlib.ui.Textures;
 import dev.vfyjxf.cloudlib.ui.widget.BoxWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ButtonWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
 import dev.vfyjxf.cloudlib.ui.widget.DividerWidget;
 import dev.vfyjxf.cloudlib.ui.widget.LabelWidget;
+import dev.vfyjxf.cloudlib.ui.widget.PanelWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ProgressBarWidget;
 import dev.vfyjxf.cloudlib.ui.widget.RowWidget;
+import dev.vfyjxf.cloudlib.ui.widget.SliderWidget;
 import dev.vfyjxf.cloudlib.ui.widget.SpacerWidget;
 import dev.vfyjxf.cloudlib.ui.widget.TextFieldWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ToggleWidget;
+import dev.vfyjxf.taffy.style.TaffyDimension;
 
+import static dev.vfyjxf.cloudlib.api.ui.effect.UIEffects.scrollable;
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
 
 /**
- * Test screen demonstrating all basic UI components.
+ * Comprehensive test screen demonstrating all UI components with the Cirrus theme.
  * <p>
- * This screen showcases the component library:
- * <ul>
- *   <li>Layout: Column, Row, Box, Spacer, Divider, ScrollPanel</li>
- *   <li>Basic: Label, Button, TextField, Toggle, ProgressBar</li>
- *   <li>Styling: backgrounds, colors, padding, gaps</li>
- * </ul>
+ * Showcases: Panel, Button, TextField, Toggle, Slider, ProgressBar, Label,
+ * Divider, Spacer, Scroll, and various layout combinations.
  */
-//@TestScreen
+@TestScreen
 public class TestLayoutScreen extends BasicScreen {
 
-    // State for interactive components
-    private double progressValue = 0.0;
-    private boolean toggleState = false;
-    private String searchText = "";
+    // State
+    private double progressValue = 0.35;
+    private double sliderValue = 50;
     private int clickCount = 0;
+    private boolean darkMode = false;
+    private boolean autoProgress = true;
+    private String inputText = "";
+    private LabelWidget statusLabel;
+    private LabelWidget sliderValueLabel;
+    private LabelWidget clickCountLabel;
+    private LabelWidget inputEchoLabel;
 
     public TestLayoutScreen() {
         buildUI();
     }
 
     private void buildUI() {
-        // Main container with padding
-        var mainContainer = ColumnWidget.create();
-        mainContainer.setSpacing(8);
-        mainContainer.useStyle(UIStyle.of(
-                padding(16),
-                background(new ColorTexture(0xCC222222))
+        // Root scroll container
+        var scrollState = ScrollState.create(ScrollDirection.vertical)
+                                     .scrollSpeed(12)
+                                     .smooth(true)
+                                     .smoothSpeed(0.35f)
+                                     .trackTexture(Textures.SCROLL_TRACK)
+                                     .thumbTexture(Textures.SCROLLBAR_VERTICAL)
+                                     .scrollbarWidth(7);
+
+        var root = ColumnWidget.create(10);
+        root.useStyle(UIStyle.of(
+                flexColumn(),
+                padding(12),
+                sizeOf(TaffyDimension.percent(1f), TaffyDimension.percent(1f)),
+                background(Textures.FRAME)
+        ));
+        root.useEffect(scrollable(scrollState));
+        root.onMouseScrolled((mx, my, sx, sy, ctx) -> {
+            scrollState.scrollBy(0, (float) (-sy * scrollState.scrollSpeed()));
+            return dev.vfyjxf.cloudlib.api.event.EventDispatch.consumed;
+        });
+
+        // Header
+        root.addWidget(createHeader());
+
+        // Main content: 3-column layout
+        var contentRow = RowWidget.create(10);
+        contentRow.useStyle(UIStyle.of(
+                widthOf(TaffyDimension.percent(1f)),
+                flexGrow(1),
+                minHeight(0),
+                flexWrap(),
+                rowGap(10)
         ));
 
-        // ==================== Header Section ====================
-        var header = createHeader();
-        mainContainer.addWidget(header);
+        contentRow.addWidget(createControlsPanel());
+        contentRow.addWidget(createPreviewPanel());
+        contentRow.addWidget(createListPanel());
 
-        // Divider
-        var headerDivider = DividerWidget.horizontal()
-										 .setColor(0xFF555555)
-										 .setThickness(2);
-        headerDivider.useStyle(UIStyle.of(heightOf(4)));
-        mainContainer.addWidget(headerDivider);
+        root.addWidget(contentRow);
 
-        // ==================== Main Content ====================
-        var contentRow = RowWidget.create();
-        contentRow.setSpacing(16);
-        contentRow.useStyle(UIStyle.of(flexGrow(1)));
+        // Bottom section
+        root.addWidget(createDivider());
+        root.addWidget(createColorShowcase());
+        root.addWidget(createDivider());
+        root.addWidget(createFooter());
 
-        // Left Panel - Controls
-        var leftPanel = createLeftPanel();
-        contentRow.addWidget(leftPanel);
-
-        // Vertical Divider
-        var verticalDivider = DividerWidget.vertical()
-                                           .setColor(0xFF444444);
-        verticalDivider.useStyle(UIStyle.of(widthOf(2)));
-        contentRow.addWidget(verticalDivider);
-
-        // Right Panel - Preview
-        var rightPanel = createRightPanel();
-        contentRow.addWidget(rightPanel);
-
-        mainContainer.addWidget(contentRow);
-
-        // ==================== Footer Section ====================
-        var footerDivider = DividerWidget.horizontal()
-                                         .setColor(0xFF555555);
-        footerDivider.useStyle(UIStyle.of(heightOf(2)));
-        mainContainer.addWidget(footerDivider);
-
-        var footer = createFooter();
-        mainContainer.addWidget(footer);
-
-        // Add to main group
-        mainGroup().addWidget(mainContainer);
-
-        mainGroup().addWidget(
-                Inspector.create()
-                         .setTrackMouse(true)
-                         .useStyle(UIStyles.positionAbsolute(), UIStyles.sizeOf(280, 200))
-                         .setSceneLayer(SceneLayer.debug)
-        );
+        mainGroup().addWidget(root);
     }
 
-    /**
-     * Creates the header section with title and search.
-     */
-    private Widget createHeader() {
-        var header = RowWidget.create();
-        header.setSpacing(16);
-        header.useStyle(UIStyle.of(alignItemsCenter()));
+    // ==================== Header ====================
 
-        // Title
-        var title = LabelWidget.of("CloudLib UI Components Demo")
-							   .setColor(0xFFFFAA00)
-							   .setShadow(true);
-        title.useStyle(UIStyle.of(sizeOf(200, 12)));
+    private Widget createHeader() {
+        var header = RowWidget.create(12);
+        header.useStyle(UIStyle.of(
+                widthOf(TaffyDimension.percent(1f)),
+                alignItemsCenter(),
+                flexShrink(0),
+                padding(4, 0)
+        ));
+
+        var title = LabelWidget.of("CloudLib UI Showcase")
+                               .setColor(0xFF3F3F3F)
+                               .setShadow(false);
+        title.useStyle(UIStyle.of(flexShrink(0)));
         header.addWidget(title);
 
-        // Spacer to push elements apart
         header.addWidget(SpacerWidget.create());
 
-        // Search Field
-        var searchField = TextFieldWidget.create()
-										 .setPlaceholder("Search...")
-										 .onTextChanged(text -> this.searchText = text);
-        searchField.useStyle(UIStyle.of(
-                sizeOf(150, 20)
-        ));
-        header.addWidget(searchField);
+        // Search field
+        var search = TextFieldWidget.create()
+                                    .setPlaceholder("Search components...")
+                                    .onTextChanged(t -> inputText = t);
+        search.useStyle(UIStyle.of(sizeOf(140, 20), flexShrink(0)));
+        header.addWidget(search);
 
-        // Settings Toggle
-        var settingsToggle = ToggleWidget.create(false)
-										 .onToggle(state -> System.out.println("Settings: " + state))
-										 .setColors(0xFF666666, 0xFF00AA00);
-        settingsToggle.useStyle(UIStyle.of(sizeOf(30, 16)));
-        header.addWidget(settingsToggle);
+        // Dark mode toggle
+        var darkToggle = ToggleWidget.create(false)
+                                     .onToggle(state -> {
+                                         darkMode = state;
+                                         updateStatus("Dark mode: " + state);
+                                     });
+        darkToggle.useStyle(UIStyle.of(sizeOf(36, 18), flexShrink(0)));
+        header.addWidget(darkToggle);
 
         return header;
     }
 
-    /**
-     * Creates the left panel with various controls.
-     */
-    private Widget createLeftPanel() {
-        var panel = ColumnWidget.create();
-        panel.setSpacing(12);
+    // ==================== Controls Panel (Left) ====================
+
+    private Widget createControlsPanel() {
+        var panel = PanelWidget.create("Controls");
         panel.useStyle(UIStyle.of(
-                sizeOf(180, -1),
-                padding(8),
-                background(new ColorTexture(0x40000000))
+                widthOf(TaffyDimension.percent(0.33f)),
+                minWidth(180),
+                flexGrow(1),
+                minHeight(200)
         ));
+        panel.setContentPadding(8);
 
-        // Section Title
-        var controlsTitle = LabelWidget.of("Controls")
-                                       .setColor(0xFFFFFF00);
-        panel.addWidget(controlsTitle);
+        var content = ColumnWidget.create(8);
+        content.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f))));
 
-        // Button Group
-        var buttonGroup = createButtonGroup();
-        panel.addWidget(buttonGroup);
+        // Buttons section
+        content.addWidget(createSectionLabel("Buttons"));
+        content.addWidget(createButtonGrid());
 
-        // Progress Section
-        var progressSection = createProgressSection();
-        panel.addWidget(progressSection);
+        // Slider section
+        content.addWidget(createDivider());
+        content.addWidget(createSectionLabel("Slider"));
+        content.addWidget(createSliderSection());
 
-        // Toggle Section
-        var toggleSection = createToggleSection();
-        panel.addWidget(toggleSection);
+        // Progress section
+        content.addWidget(createDivider());
+        content.addWidget(createSectionLabel("Progress"));
+        content.addWidget(createProgressSection());
 
-        // Spacer at bottom
-        panel.addWidget(SpacerWidget.create());
-
+        panel.addChild(content);
         return panel;
     }
 
-    /**
-     * Creates a group of buttons.
-     */
-    private Widget createButtonGroup() {
-        var group = ColumnWidget.create();
-        group.setSpacing(4);
+    private Widget createButtonGrid() {
+        var grid = ColumnWidget.create(4);
 
-        // Action Buttons
-        var row1 = RowWidget.create();
-        row1.setSpacing(4);
+        // Row 1: Primary actions
+        var row1 = RowWidget.create(4);
+        row1.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f))));
 
-        var primaryBtn = ButtonWidget.of("Primary", () -> clickCount++)
-									 .setColors(0xFF0066CC, 0xFF0088FF, 0xFF004499);
-        primaryBtn.useStyle(UIStyle.of(sizeOf(80, 20)));
-        row1.addWidget(primaryBtn);
+        var btn1 = ButtonWidget.of("Click Me", () -> {
+            clickCount++;
+            updateStatus("Button clicked " + clickCount + " times");
+        });
+        btn1.useStyle(UIStyle.of(flexGrow(1), heightOf(20)));
+        row1.addWidget(btn1);
 
-        var secondaryBtn = ButtonWidget.of("Secondary", () -> System.out.println("Secondary clicked"))
-                                       .setColors(0xFF666666, 0xFF888888, 0xFF444444);
-        secondaryBtn.useStyle(UIStyle.of(sizeOf(80, 20)));
-        row1.addWidget(secondaryBtn);
+        var btn2 = ButtonWidget.of("Reset", () -> {
+            clickCount = 0;
+            progressValue = 0;
+            updateStatus("Reset");
+        });
+        btn2.useStyle(UIStyle.of(flexGrow(1), heightOf(20)));
+        row1.addWidget(btn2);
 
-        group.addWidget(row1);
+        grid.addWidget(row1);
 
-        // Danger Button
-        var dangerBtn = ButtonWidget.of("Danger Action", () -> System.out.println("Danger!"))
-                                    .setColors(0xFFCC0000, 0xFFEE0000, 0xFFAA0000);
-        dangerBtn.useStyle(UIStyle.of(sizeOf(164, 20)));
-        group.addWidget(dangerBtn);
+        // Row 2: Disabled + long text
+        var disabled = ButtonWidget.of("Disabled Button")
+                                   .setEnabled(false);
+        disabled.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), heightOf(20)));
+        grid.addWidget(disabled);
 
-        // Disabled Button
-        var disabledBtn = ButtonWidget.of("Disabled")
-                                      .setEnabled(false);
-        disabledBtn.useStyle(UIStyle.of(sizeOf(164, 20)));
-        group.addWidget(disabledBtn);
+        // Row 3: Small buttons
+        var row3 = RowWidget.create(4);
+        row3.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f))));
 
-        return group;
+        for (int i = 1; i <= 3; i++) {
+            int idx = i;
+            var btn = ButtonWidget.of("B" + i, () -> updateStatus("Button " + idx + " pressed"));
+            btn.useStyle(UIStyle.of(flexGrow(1), heightOf(18)));
+            row3.addWidget(btn);
+        }
+        grid.addWidget(row3);
+
+        return grid;
     }
 
-    /**
-     * Creates the progress bar section.
-     */
-    private Widget createProgressSection() {
-        var section = ColumnWidget.create();
-        section.setSpacing(4);
+    private Widget createSliderSection() {
+        var section = ColumnWidget.create(4);
 
-        // Label
-        var label = LabelWidget.of("Progress Bars")
-                               .setColor(0xFFAAAAAA);
-        section.addWidget(label);
+        // Slider value label
+        sliderValueLabel = LabelWidget.of("Value: 50")
+                                      .setColor(0xFF3F3F3F);
+        section.addWidget(sliderValueLabel);
 
-        // Horizontal Progress
-        var horizontalProgress = ProgressBarWidget.create(() -> progressValue)
-												  .setDirection(ProgressBarWidget.Direction.LEFT_TO_RIGHT)
-												  .setColors(0xFF333333, 0xFF00AA00);
-        horizontalProgress.useStyle(UIStyle.of(sizeOf(164, 12)));
-        section.addWidget(horizontalProgress);
+        // Horizontal slider
+        var slider = SliderWidget.create(0, 100, 50)
+                                 .onValueChanged(v -> {
+                                     sliderValue = v;
+                                     sliderValueLabel.setText("Value: " + v.intValue());
+                                 });
+        slider.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), heightOf(20)));
+        section.addWidget(slider);
 
-        // Vertical Progress (in HStack for horizontal layout)
-        var verticalRow = RowWidget.create();
-        verticalRow.setSpacing(4);
+        // Vertical sliders row
+        var vRow = RowWidget.create(6);
+        vRow.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), justifyCenter()));
 
-        var verticalProgress1 = ProgressBarWidget.create(() -> progressValue)
-                                                 .setDirection(ProgressBarWidget.Direction.BOTTOM_TO_TOP)
-                                                 .setColors(0xFF333333, 0xFF0066CC);
-        verticalProgress1.useStyle(UIStyle.of(sizeOf(20, 40)));
-        verticalRow.addWidget(verticalProgress1);
-
-        var verticalProgress2 = ProgressBarWidget.create(() -> Math.min(1.0, progressValue * 1.5))
-                                                 .setDirection(ProgressBarWidget.Direction.BOTTOM_TO_TOP)
-                                                 .setColors(0xFF333333, 0xFFCC6600);
-        verticalProgress2.useStyle(UIStyle.of(sizeOf(20, 40)));
-        verticalRow.addWidget(verticalProgress2);
-
-        var verticalProgress3 = ProgressBarWidget.create(() -> Math.min(1.0, progressValue * 2.0))
-                                                 .setDirection(ProgressBarWidget.Direction.BOTTOM_TO_TOP)
-                                                 .setColors(0xFF333333, 0xFFCC0066);
-        verticalProgress3.useStyle(UIStyle.of(sizeOf(20, 40)));
-        verticalRow.addWidget(verticalProgress3);
-
-        section.addWidget(verticalRow);
-
-        // Progress Controls
-        var controlRow = RowWidget.create();
-        controlRow.setSpacing(4);
-
-        var decreaseBtn = ButtonWidget.of("-", () -> progressValue = Math.max(0, progressValue - 0.1))
-                                      .setColors(0xFF555555, 0xFF777777, 0xFF333333);
-        decreaseBtn.useStyle(UIStyle.of(sizeOf(30, 18)));
-        controlRow.addWidget(decreaseBtn);
-
-        var increaseBtn = ButtonWidget.of("+", () -> progressValue = Math.min(1, progressValue + 0.1))
-                                      .setColors(0xFF555555, 0xFF777777, 0xFF333333);
-        increaseBtn.useStyle(UIStyle.of(sizeOf(30, 18)));
-        controlRow.addWidget(increaseBtn);
-
-        var resetBtn = ButtonWidget.of("Reset", () -> progressValue = 0)
-                                   .setColors(0xFF555555, 0xFF777777, 0xFF333333);
-        resetBtn.useStyle(UIStyle.of(sizeOf(50, 18)));
-        controlRow.addWidget(resetBtn);
-
-        section.addWidget(controlRow);
+        for (int i = 0; i < 4; i++) {
+            double initial = 20 + i * 20;
+            var vs = SliderWidget.create(0, 100, initial)
+                                 .setOrientation(SliderWidget.Orientation.VERTICAL)
+                                 .onValueChanged(v -> {});
+            vs.useStyle(UIStyle.of(widthOf(16), heightOf(50)));
+            vRow.addWidget(vs);
+        }
+        section.addWidget(vRow);
 
         return section;
     }
 
-    /**
-     * Creates the toggle section.
-     */
-    private Widget createToggleSection() {
-        var section = ColumnWidget.create();
-        section.setSpacing(4);
+    private Widget createProgressSection() {
+        var section = ColumnWidget.create(4);
 
-        var label = LabelWidget.of("Toggles")
-                               .setColor(0xFFAAAAAA);
-        section.addWidget(label);
+        // Auto-progress toggle
+        var autoRow = RowWidget.create(8);
+        autoRow.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), alignItemsCenter()));
 
-        // Toggle rows
-        for (int i = 1; i <= 3; i++) {
-            var row = RowWidget.create();
-            row.setSpacing(8);
-            row.useStyle(UIStyle.of(alignItemsCenter()));
+        var autoLabel = LabelWidget.of("Auto animate").setColor(0xFF3F3F3F);
+        autoRow.addWidget(autoLabel);
+        autoRow.addWidget(SpacerWidget.create());
 
-            var optionLabel = LabelWidget.of("Option " + i);
-            optionLabel.useStyle(UIStyle.of(widthOf(100)));
-            row.addWidget(optionLabel);
+        var autoToggle = ToggleWidget.create(true)
+                                     .onToggle(state -> autoProgress = state);
+        autoToggle.useStyle(UIStyle.of(sizeOf(36, 18)));
+        autoRow.addWidget(autoToggle);
+        section.addWidget(autoRow);
 
-            row.addWidget(SpacerWidget.create());
+        // Horizontal progress bar
+        var hProgress = ProgressBarWidget.create(() -> progressValue)
+                                         .setDirection(ProgressBarWidget.Direction.LEFT_TO_RIGHT)
+                                         .setColors(0xFF555555, 0xFF3A8CFF);
+        hProgress.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), heightOf(14)));
+        section.addWidget(hProgress);
 
-            int finalI = i;
-            var toggle = ToggleWidget.create(i == 1)
-                                     .onToggle(state -> System.out.println("Option " + finalI + ": " + state))
-                                     .setColors(0xFF555555, 0xFF00CC66);
-            toggle.useStyle(UIStyle.of(sizeOf(36, 18)));
+        // Vertical progress bars
+        var vRow = RowWidget.create(4);
+        vRow.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), justifyCenter()));
+
+        int[] colors = {0xFF22C55E, 0xFFF97316, 0xFFEF4444, 0xFF8B5CF6};
+        for (int i = 0; i < colors.length; i++) {
+            double factor = 0.7 - i * 0.15;
+            var vp = ProgressBarWidget.create(() -> Math.min(1.0, progressValue * factor + 0.1))
+                                       .setDirection(ProgressBarWidget.Direction.BOTTOM_TO_TOP)
+                                       .setColors(0xFF555555, colors[i]);
+            vp.useStyle(UIStyle.of(widthOf(22), heightOf(50)));
+            vRow.addWidget(vp);
+        }
+        section.addWidget(vRow);
+
+        // Progress controls
+        var ctrlRow = RowWidget.create(4);
+        ctrlRow.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f))));
+
+        var dec = ButtonWidget.of("-10%", () -> progressValue = Math.max(0, progressValue - 0.1));
+        dec.useStyle(UIStyle.of(flexGrow(1), heightOf(18)));
+        ctrlRow.addWidget(dec);
+
+        var inc = ButtonWidget.of("+10%", () -> progressValue = Math.min(1, progressValue + 0.1));
+        inc.useStyle(UIStyle.of(flexGrow(1), heightOf(18)));
+        ctrlRow.addWidget(inc);
+
+        section.addWidget(ctrlRow);
+
+        return section;
+    }
+
+    // ==================== Preview Panel (Center) ====================
+
+    private Widget createPreviewPanel() {
+        var panel = PanelWidget.create("Preview");
+        panel.useStyle(UIStyle.of(
+                widthOf(TaffyDimension.percent(0.33f)),
+                minWidth(180),
+                flexGrow(1),
+                minHeight(200)
+        ));
+        panel.setContentPadding(8);
+
+        var content = ColumnWidget.create(8);
+        content.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f))));
+
+        // Toggle section
+        content.addWidget(createSectionLabel("Toggles"));
+        content.addWidget(createToggleGrid());
+
+        // Text input section
+        content.addWidget(createDivider());
+        content.addWidget(createSectionLabel("Text Input"));
+
+        var inputField = TextFieldWidget.create()
+                                        .setPlaceholder("Type something...")
+                                        .onTextChanged(t -> {
+                                            inputText = t;
+                                            inputEchoLabel.setText("Echo: " + t);
+                                        });
+        inputField.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), heightOf(20)));
+        content.addWidget(inputField);
+
+        inputEchoLabel = LabelWidget.of("Echo: ")
+                                    .setColor(0xFF555555);
+        content.addWidget(inputEchoLabel);
+
+        // Multi-line text display
+        content.addWidget(createDivider());
+        content.addWidget(createSectionLabel("Info"));
+        content.addWidget(createInfoBox());
+
+        panel.addChild(content);
+        return panel;
+    }
+
+    private Widget createToggleGrid() {
+        var grid = ColumnWidget.create(4);
+
+        String[] labels = {"Enable feature A", "Show debug info", "Auto-save", "Verbose logging"};
+        for (int i = 0; i < labels.length; i++) {
+            var row = RowWidget.create(8);
+            row.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), alignItemsCenter()));
+
+            var label = LabelWidget.of(labels[i]).setColor(0xFF3F3F3F);
+            label.useStyle(UIStyle.of(flexGrow(1)));
+            row.addWidget(label);
+
+            int idx = i;
+            var toggle = ToggleWidget.create(i % 2 == 0)
+                                     .onToggle(state -> updateStatus(labels[idx] + ": " + state));
+            toggle.useStyle(UIStyle.of(sizeOf(36, 18), flexShrink(0)));
             row.addWidget(toggle);
 
-            section.addWidget(row);
+            grid.addWidget(row);
         }
 
-        return section;
+        return grid;
     }
 
-    /**
-     * Creates the right preview panel.
-     */
-    private Widget createRightPanel() {
-        var panel = ColumnWidget.create();
-        panel.setSpacing(8);
-        panel.useStyle(UIStyle.of(
-                flexGrow(1),
+    private Widget createInfoBox() {
+        var box = BoxWidget.create();
+        box.useStyle(UIStyle.of(
+                widthOf(TaffyDimension.percent(1f)),
+                background(Textures.INSET),
                 padding(8),
-                background(new ColorTexture(0x40000000))
+                flexColumn(),
+                rowGap(4)
         ));
 
-        // Title
-        var previewTitle = LabelWidget.of("Preview Panel")
-                                      .setColor(0xFFFFFF00);
-        panel.addWidget(previewTitle);
+        String[] infos = {
+                "Framework: CloudLib UI",
+                "Theme: Cirrus Light",
+                "Layout: Taffy Flexbox",
+                "Rendering: SceneCanvas"
+        };
 
-        // ZStack Demo - Layered content
-        var zstackDemo = createZStackDemo();
-        panel.addWidget(zstackDemo);
+        for (String info : infos) {
+            var label = LabelWidget.of(info).setColor(0xFF555555);
+            label.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f))));
+            box.addChild(label);
+        }
 
+        return box;
+    }
+
+    // ==================== List Panel (Right) ====================
+
+    private Widget createListPanel() {
+        var panel = PanelWidget.create("Items");
+        panel.useStyle(UIStyle.of(
+                widthOf(TaffyDimension.percent(0.33f)),
+                minWidth(180),
+                flexGrow(1),
+                minHeight(200)
+        ));
+        panel.setContentPadding(6);
+
+        var content = ColumnWidget.create(4);
+        content.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f))));
+
+        // List items
+        String[] items = {
+                "Apple", "Banana", "Cherry", "Date",
+                "Elderberry", "Fig", "Grape", "Honeydew"
+        };
+
+        for (int i = 0; i < items.length; i++) {
+            int idx = i;
+            var item = RowWidget.create(8);
+            item.useStyle(UIStyle.of(
+                    widthOf(TaffyDimension.percent(1f)),
+                    padding(4, 6),
+                    alignItemsCenter(),
+                    background(i % 2 == 0 ? Textures.FLAT : Textures.INSET)
+            ));
+
+            var num = LabelWidget.of(String.valueOf(i + 1))
+                                 .setColor(0xFF3A8CFF);
+            num.useStyle(UIStyle.of(widthOf(16), flexShrink(0)));
+            item.addWidget(num);
+
+            var name = LabelWidget.of(items[i])
+                                  .setColor(0xFF3F3F3F);
+            name.useStyle(UIStyle.of(flexGrow(1)));
+            item.addWidget(name);
+
+            var selectBtn = ButtonWidget.of(">", () -> updateStatus("Selected: " + items[idx]));
+            selectBtn.useStyle(UIStyle.of(sizeOf(20, 16), flexShrink(0)));
+            item.addWidget(selectBtn);
+
+            content.addWidget(item);
+        }
+
+        // Add item row
+        var addRow = RowWidget.create(4);
+        addRow.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f))));
+
+        var addBtn = ButtonWidget.of("+ Add Item", () -> updateStatus("Item added"));
+        addBtn.useStyle(UIStyle.of(flexGrow(1), heightOf(18)));
+        addRow.addWidget(addBtn);
+
+        content.addWidget(addRow);
+
+        panel.addChild(content);
         return panel;
     }
 
-    /**
-     * Creates a ZStack demonstration.
-     */
-    private Widget createZStackDemo() {
-        var container = ColumnWidget.create();
-        container.setSpacing(4);
+    // ==================== Color Showcase ====================
 
-        var label = LabelWidget.of("ZStack Layering")
-                               .setColor(0xFFAAAAAA);
-        container.addWidget(label);
+    private Widget createColorShowcase() {
+        var section = ColumnWidget.create(6);
+        section.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), flexShrink(0)));
 
-        var zstack = BoxWidget.create();
-        zstack.useStyle(UIStyle.of(sizeOf(150, 60)));
+        section.addWidget(createSectionLabel("Texture Showcase"));
 
-        // Background layer
-        var background = new Widget();
-        background.useStyle(UIStyle.of(
-                sizeOf(150, 60),
-                background(new ColorTexture(0xFF004466))
-        ));
-        zstack.addChild(background);
+        var row = RowWidget.create(4);
+        row.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), flexWrap(), rowGap(4)));
 
-        // Middle layer
-        var middleLayer = LabelWidget.of("Background")
-                                     .setColor(0xFF88CCFF)
-                                     .setAlign(LabelWidget.TextAlign.CENTER);
-        middleLayer.useStyle(UIStyle.of(
-                sizeOf(150, 20),
-                margin(20, 0, 0, 0)
-        ));
-        zstack.addChild(middleLayer);
+        // Texture swatches
+        var swatches = new Object[][]{
+                {"FRAME", Textures.FRAME},
+                {"FLAT", Textures.FLAT},
+                {"INSET", Textures.INSET},
+                {"DARK", Textures.DARK},
+                {"OUTLINED_FLAT", Textures.OUTLINED_FLAT},
+                {"OUTLINED_INSET", Textures.OUTLINED_INSET},
+                {"BORDER_DARK", Textures.BORDER_DARK},
+                {"BORDER_LIGHT", Textures.BORDER_LIGHT},
+                {"SCROLL_TRACK", Textures.SCROLL_TRACK},
+        };
 
-        // Top layer
-        var topLayer = LabelWidget.of("Overlay Text")
-                                  .setColor(0xFFFFFFFF)
-                                  .setAlign(LabelWidget.TextAlign.CENTER);
-        topLayer.useStyle(UIStyle.of(
-                sizeOf(150, 20),
-                margin(5, 0, 0, 0)
-        ));
-        zstack.addChild(topLayer);
+        for (Object[] sw : swatches) {
+            var swatch = BoxWidget.create();
+            swatch.useStyle(UIStyle.of(
+                    widthOf(70),
+                    heightOf(40),
+                    flexShrink(0),
+                    background((dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture) sw[1]),
+                    alignItemsCenter(),
+                    justifyCenter()
+            ));
 
-        container.addWidget(zstack);
-        return container;
+            var label = LabelWidget.of((String) sw[0])
+                                   .setColor(0xFF3F3F3F)
+                                   .setShadow(false);
+            label.useStyle(UIStyle.of(heightOf(10)));
+            swatch.addChild(label);
+            row.addWidget(swatch);
+        }
+
+        section.addWidget(row);
+        return section;
     }
 
-    /**
-     * Creates a single list item.
-     */
-    private Widget createListItem(String text, boolean highlighted) {
-        var item = RowWidget.create();
-        item.setSpacing(8);
-        item.useStyle(UIStyle.of(
-                padding(4, 8, 4, 8),
-                background(new ColorTexture(highlighted ? 0x40FFAA00 : 0x20FFFFFF)),
-                alignItemsCenter()
-        ));
+    // ==================== Footer ====================
 
-        var itemLabel = LabelWidget.of(text)
-                                   .setColor(highlighted ? 0xFFFFAA00 : 0xFFCCCCCC);
-        item.addWidget(itemLabel);
-
-        item.addWidget(SpacerWidget.create());
-
-        var selectBtn = ButtonWidget.of("Select", () -> System.out.println("Selected: " + text))
-                                    .setColors(0xFF444444, 0xFF666666, 0xFF333333);
-        selectBtn.useStyle(UIStyle.of(sizeOf(50, 16)));
-        item.addWidget(selectBtn);
-
-        return item;
-    }
-
-    /**
-     * Creates the footer section.
-     */
     private Widget createFooter() {
-        var footer = RowWidget.create();
-        footer.setSpacing(16);
-        footer.useStyle(UIStyle.of(alignItemsCenter()));
+        var footer = RowWidget.create(12);
+        footer.useStyle(UIStyle.of(
+                widthOf(TaffyDimension.percent(1f)),
+                alignItemsCenter(),
+                flexShrink(0),
+                padding(4, 0)
+        ));
 
-        // Status text
-        var statusLabel = LabelWidget.of("Status: Ready")
-                                     .setColor(0xFF00FF00);
+        statusLabel = LabelWidget.of("Status: Ready")
+                                 .setColor(0xFF555555);
+        statusLabel.useStyle(UIStyle.of(flexGrow(1)));
         footer.addWidget(statusLabel);
 
-        footer.addWidget(SpacerWidget.create());
+        clickCountLabel = LabelWidget.of("Clicks: 0")
+                                     .setColor(0xFF555555);
+        clickCountLabel.useStyle(UIStyle.of(flexShrink(0)));
+        footer.addWidget(clickCountLabel);
 
-        // Click counter
-        var clickLabel = LabelWidget.of("Clicks: " + clickCount)
-                                    .setColor(0xFFAAAAAA);
-        clickLabel.onInit(self -> {
-            // This would ideally update dynamically
-        });
-        footer.addWidget(clickLabel);
-
-        // Close button
-        var closeBtn = ButtonWidget.of("Close", this::onClose)
-                                   .setColors(0xFF555555, 0xFF777777, 0xFF333333);
-        closeBtn.useStyle(UIStyle.of(sizeOf(60, 20)));
+        var closeBtn = ButtonWidget.of("Close", this::onClose);
+        closeBtn.useStyle(UIStyle.of(sizeOf(60, 20), flexShrink(0)));
         footer.addWidget(closeBtn);
 
         return footer;
     }
 
+    // ==================== Helpers ====================
+
+    private Widget createSectionLabel(String text) {
+        var label = LabelWidget.of(text)
+                               .setColor(0xFF2E7D6A)
+                               .setShadow(false);
+        label.useStyle(UIStyle.of(heightOf(12), flexShrink(0)));
+        return label;
+    }
+
+    private Widget createDivider() {
+        var divider = DividerWidget.horizontal().setColor(0xFF8B8B8B);
+        divider.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), heightOf(1), flexShrink(0)));
+        return divider;
+    }
+
+    private void updateStatus(String message) {
+        if (statusLabel != null) statusLabel.setText("Status: " + message);
+        if (clickCountLabel != null) clickCountLabel.setText("Clicks: " + clickCount);
+    }
+
     @Override
     public void tick() {
         super.tick();
-        // Animate progress slowly
-        // progressValue = (progressValue + 0.005) % 1.0;
+        if (autoProgress) {
+            progressValue += 0.008;
+            if (progressValue > 1.0) progressValue = 0.0;
+        }
     }
 }

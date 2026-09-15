@@ -5,6 +5,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
+import dev.vfyjxf.cloudlib.ui.Textures;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
 import dev.vfyjxf.cloudlib.ui.widget.LabelWidget;
 import dev.vfyjxf.cloudlib.ui.widget.RowWidget;
@@ -63,7 +64,7 @@ public class TestNestedLayoutScreen extends BasicScreen {
         wrapper.setSpacing(4);
 
         var label = LabelWidget.of("Case1: w=100%,max=100x100,ar=1")
-                               .setColor(0xFFFFFFFF).setShadow(true);
+                               .setColor(0xFF3F3F3F).setShadow(false);
         label.useStyle(UIStyle.of(sizeOf(200, 12)));
         wrapper.addWidget(label);
 
@@ -71,7 +72,7 @@ public class TestNestedLayoutScreen extends BasicScreen {
         var grandparent = ColumnWidget.create();
         grandparent.useStyle(UIStyle.of(
                 sizeOf(200, 200),
-                background(new ColorTexture(0xFF333333))
+                background(Textures.DARK)
         ));
 
         // Parent: green, auto height
@@ -107,7 +108,7 @@ public class TestNestedLayoutScreen extends BasicScreen {
         wrapper.setSpacing(4);
 
         var label = LabelWidget.of("Case2: w=100px,ar=1 (no max)")
-                               .setColor(0xFFFFFFFF).setShadow(true);
+                               .setColor(0xFF3F3F3F).setShadow(false);
         label.useStyle(UIStyle.of(sizeOf(200, 12)));
         wrapper.addWidget(label);
 
@@ -115,7 +116,7 @@ public class TestNestedLayoutScreen extends BasicScreen {
         var grandparent = ColumnWidget.create();
         grandparent.useStyle(UIStyle.of(
                 sizeOf(200, 200),
-                background(new ColorTexture(0xFF333333))
+                background(Textures.DARK)
         ));
 
         // Parent: green, auto height
