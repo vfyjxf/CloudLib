@@ -1249,7 +1249,18 @@ public final class SceneCanvas {
     private void applyScissor() {
         Rect clip = clipStack.current();
         if (clip != null) {
-            graphics.enableScissor(clip.x(), clip.y(), clip.right(), clip.bottom());
+            // Clip rects are stored in scene space, but GuiGraphics.enableScissor
+            // only multiplies by the GUI scale — it ignores the pose entirely.
+            // Transform the rect by the current pose ourselves so scissoring
+            // stays correct when the scene renders under an outer transform
+            // (e.g. the DevTools overlay's independent screen-pixel scale).
+            // At the identity pose this is exactly the old behavior.
+            Matrix4f pose = graphics.pose().last().pose();
+            Vector4f min = pose.transform(new Vector4f(clip.x(), clip.y(), 0, 1));
+            Vector4f max = pose.transform(new Vector4f(clip.right(), clip.bottom(), 0, 1));
+            graphics.enableScissor(
+                    Math.round(min.x()), Math.round(min.y()),
+                    Math.round(max.x()), Math.round(max.y()));
         }
     }
 
