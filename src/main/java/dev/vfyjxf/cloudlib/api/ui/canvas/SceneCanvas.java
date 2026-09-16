@@ -21,6 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.client.model.data.ModelData;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
@@ -1379,7 +1380,7 @@ public final class SceneCanvas {
         if (stack.isEmpty()) return this;
         var model =
                 Minecraft.getInstance().getItemRenderer().getItemModelShaper().getItemModel(stack);
-        TextureAtlasSprite sprite = model.getParticleIcon(net.neoforged.neoforge.client.model.data.ModelData.EMPTY);
+        TextureAtlasSprite sprite = model.getParticleIcon(ModelData.EMPTY);
         // the canvas's own textured batch — unlike the forwarded GuiGraphics
         // blit this is proven to rasterize inside offscreen panel targets
         sprite(sprite, x, y, 16, 16);

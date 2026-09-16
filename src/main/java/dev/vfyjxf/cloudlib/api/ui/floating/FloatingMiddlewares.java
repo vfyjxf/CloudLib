@@ -11,7 +11,7 @@ import java.util.function.Supplier;
  * <p>
  * Example usage:
  * <pre>{@code
- * import static dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares.*;
+ * import static FloatingMiddlewares.*;
  *
  * widget.useEffect(floating(referenceWidget, FloatingPlacement.bottom,
  *     offset(8),

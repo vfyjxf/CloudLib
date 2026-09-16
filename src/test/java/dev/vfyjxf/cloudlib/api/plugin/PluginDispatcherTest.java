@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -154,7 +155,7 @@ public class PluginDispatcherTest {
         var graph = DependencyGraph.build(List.of(a, b, c, d));
         assertEquals(1, graph.depth());
 
-        var threadNames = Collections.synchronizedSet(new java.util.HashSet<String>());
+        var threadNames = Collections.synchronizedSet(new HashSet<String>());
         ExecutorService executor = Executors.newFixedThreadPool(4);
         var dispatcher = PluginDispatcher.fromGraph(graph, executor);
 

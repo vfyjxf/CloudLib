@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
+import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 
@@ -14,9 +15,9 @@ final class OverlayTestMinecrafts {
 
     static Minecraft dummyMinecraft() {
         try {
-            Field field = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+            Field field = Unsafe.class.getDeclaredField("theUnsafe");
             field.setAccessible(true);
-            sun.misc.Unsafe unsafe = (sun.misc.Unsafe) field.get(null);
+            Unsafe unsafe = (Unsafe) field.get(null);
             return (Minecraft) unsafe.allocateInstance(Minecraft.class);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to allocate Minecraft instance for test", e);

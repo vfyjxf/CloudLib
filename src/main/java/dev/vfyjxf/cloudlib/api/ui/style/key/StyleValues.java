@@ -1,7 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.style.key;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * A group of {@link StyleValue}s — what shorthand factories like
@@ -19,7 +18,7 @@ public record StyleValues(List<StyleValue<?>> values) implements StyleEntry {
     }
 
     @Override
-    public void collectInto(Consumer<StyleValue<?>> out) {
-        values.forEach(out);
+    public void collectInto(StyleCollector out) {
+        values.forEach(out::accept);
     }
 }

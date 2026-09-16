@@ -1,7 +1,7 @@
-package dev.vfyjxf.cloudlib.internal.ui.theme;
+package dev.vfyjxf.cloudlib.internal.ui.style;
 
 import dev.vfyjxf.cloudlib.api.css.CssParser;
-import dev.vfyjxf.cloudlib.api.ui.theme.Theme;
+import dev.vfyjxf.cloudlib.api.ui.style.Theme;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;

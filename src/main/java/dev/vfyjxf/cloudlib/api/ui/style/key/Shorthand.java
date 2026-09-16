@@ -9,9 +9,9 @@ import java.util.List;
  * A css shorthand — a declaration name that expands into several longhand
  * {@link StyleValue}s at declaration-collection time.
  * <p>
- * The {@link Styles} registry is longhand-only; shorthand names live in a
- * separate table inside {@link StyleRegistry} and expand to longhand values
- * that then compete in the cascade under their own key ids.
+ * The {@link BuiltinKeys} vocabulary is longhand-only; shorthand names live
+ * in a separate fixed table there and expand to longhand values that then
+ * compete in the cascade under their own key ids.
  */
 @FunctionalInterface
 public interface Shorthand {

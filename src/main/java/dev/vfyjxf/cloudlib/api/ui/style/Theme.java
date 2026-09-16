@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.api.ui.theme;
+package dev.vfyjxf.cloudlib.api.ui.style;
 
 import dev.vfyjxf.cloudlib.api.css.ComponentValue;
 import dev.vfyjxf.cloudlib.api.css.Declaration;
@@ -7,14 +7,15 @@ import dev.vfyjxf.cloudlib.api.css.StyleRule;
 import dev.vfyjxf.cloudlib.api.css.Stylesheet;
 import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.internal.ui.theme.Cascade;
+import dev.vfyjxf.cloudlib.internal.ui.style.Cascade;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -31,12 +32,25 @@ import java.util.function.Consumer;
  */
 public final class Theme {
 
+    /**
+     * Display metadata from the theme's {@code theme.json} — both fields
+     * optional; {@code null} when the theme was built programmatically or the
+     * descriptor omitted them.
+     */
+    public record Meta(@Nullable String name, @Nullable String description) {}
+
     private final ResourceLocation id;
     private final Stylesheet sheet;
+    private final @Nullable Meta meta;
 
     public Theme(ResourceLocation id, Stylesheet sheet) {
+        this(id, sheet, null);
+    }
+
+    public Theme(ResourceLocation id, Stylesheet sheet, @Nullable Meta meta) {
         this.id = id;
         this.sheet = sheet;
+        this.meta = meta;
     }
 
     public ResourceLocation id() {
@@ -45,6 +59,10 @@ public final class Theme {
 
     public Stylesheet sheet() {
         return sheet;
+    }
+
+    public @Nullable Meta meta() {
+        return meta;
     }
 
     // region composition
@@ -68,7 +86,11 @@ public final class Theme {
             path.append(layer.id.getPath().replace('/', '_')).append('_');
         }
         path.setLength(path.length() - 1);
-        return new Theme(ResourceLocation.fromNamespaceAndPath("cloudlib", path.toString()), new Stylesheet(rules));
+        // the top layer's meta describes the stack
+        return new Theme(
+                ResourceLocation.fromNamespaceAndPath("cloudlib", path.toString()),
+                new Stylesheet(rules),
+                layers.get(layers.size() - 1).meta());
     }
 
     // endregion
@@ -160,7 +182,7 @@ public final class Theme {
         }
         List<IndexedRule> cand = new ArrayList<>(always.size());
         cand.addAll(always);
-        List<IndexedRule> tagged = byTag.get(node.styleTag().toLowerCase(java.util.Locale.ROOT));
+        List<IndexedRule> tagged = byTag.get(node.styleTag().toLowerCase(Locale.ROOT));
         if (tagged != null) {
             cand.addAll(tagged);
         }
@@ -177,7 +199,7 @@ public final class Theme {
             }
         }
         // merge buckets back into global source order — int sort, no record hashing
-        cand.sort(java.util.Comparator.comparingInt(IndexedRule::order));
+        cand.sort(Comparator.comparingInt(IndexedRule::order));
         List<StyleRule> out = new ArrayList<>(cand.size());
         StyleRule last = null;
         for (IndexedRule ir : cand) {
@@ -227,7 +249,7 @@ public final class Theme {
                         cls.computeIfAbsent(c, k -> new ArrayList<>()).add(ir);
                     }
                 } else if (last.tag() != null) {
-                    tag.computeIfAbsent(last.tag().toLowerCase(java.util.Locale.ROOT), k -> new ArrayList<>())
+                    tag.computeIfAbsent(last.tag().toLowerCase(Locale.ROOT), k -> new ArrayList<>())
                             .add(ir);
                 } else {
                     all.add(ir);

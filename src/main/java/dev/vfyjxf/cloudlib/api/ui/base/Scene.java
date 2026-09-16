@@ -11,8 +11,12 @@ import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvents;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
+import dev.vfyjxf.cloudlib.api.ui.style.StyleEvents;
+import dev.vfyjxf.cloudlib.api.ui.style.Theme;
+import dev.vfyjxf.cloudlib.api.ui.style.Themes;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
+import dev.vfyjxf.cloudlib.internal.ui.style.Cascade;
 import dev.vfyjxf.cloudlib.ui.drag.DraggableManager;
 import dev.vfyjxf.cloudlib.util.Checks;
 import dev.vfyjxf.cloudlib.util.ScreenUtil;
@@ -25,13 +29,18 @@ import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
+import net.minecraft.resources.ResourceLocation;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -417,22 +426,22 @@ public final class Scene {
     /**
      * Widgets whose selector-visible surface changed since the last flush.
      */
-    private final java.util.Set<Widget> styleDirty = new java.util.LinkedHashSet<>();
+    private final Set<Widget> styleDirty = new LinkedHashSet<>();
 
     /**
      * Per-scene theme override — when set, this scene resolves against it
      * instead of the global stack (the global stack is the recommended
      * default, not an obligation).
      */
-    @org.jetbrains.annotations.Nullable
-    private net.minecraft.resources.ResourceLocation themeOverride;
+    @Nullable
+    private ResourceLocation themeOverride;
 
     /**
      * Pins this scene to a theme (null → follow the global stack). The id is
      * resolved lazily — themes register on resource load, which may postdate
      * scene construction.
      */
-    public void setTheme(@org.jetbrains.annotations.Nullable net.minecraft.resources.ResourceLocation themeId) {
+    public void setTheme(@Nullable ResourceLocation themeId) {
         this.themeOverride = themeId;
         refreshTheme();
     }
@@ -441,12 +450,12 @@ public final class Scene {
      * The theme this scene resolves against — the override, else the top of
      * the global stack, else null.
      */
-    public @org.jetbrains.annotations.Nullable dev.vfyjxf.cloudlib.api.ui.theme.Theme theme() {
+    public @Nullable Theme theme() {
         if (themeOverride != null) {
-            var t = dev.vfyjxf.cloudlib.api.ui.theme.Themes.get(themeOverride);
+            var t = Themes.get(themeOverride);
             if (t != null) return t;
         }
-        return dev.vfyjxf.cloudlib.api.ui.theme.Themes.active();
+        return Themes.active();
     }
 
     /** Re-resolves the whole tree against {@link #theme()}. */
@@ -479,7 +488,7 @@ public final class Scene {
             styleDirty.clear();
             return;
         }
-        var ctx = new dev.vfyjxf.cloudlib.internal.ui.theme.Cascade.ResolveContext(theme);
+        var ctx = new Cascade.ResolveContext(theme);
         for (Widget widget : styleDirty) {
             widget.applyThemeStyle(theme.resolveShared(widget, ctx));
         }
@@ -581,13 +590,19 @@ public final class Scene {
      * Live scenes — every mounted scene registers here so global refresh
      * passes (theme reload) can re-resolve every active widget tree.
      */
-    private static final java.util.Set<Scene> liveScenes =
-            java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
+    private static final Set<Scene> liveScenes = Collections.newSetFromMap(new WeakHashMap<>());
 
     /** All currently-mounted scenes, for theme refresh iteration. */
-    public static java.util.Set<Scene> liveScenes() {
-        return java.util.Collections.unmodifiableSet(liveScenes);
+    public static Set<Scene> liveScenes() {
+        return Collections.unmodifiableSet(liveScenes);
     }
+
+    /**
+     * The scene's subscription to {@link StyleEvents#themeReload}
+     * — a reloaded theme stack re-resolves this whole tree (theme override
+     * honored inside {@link #refreshTheme}).
+     */
+    private final StyleEvents.OnThemeReload themeReloadListener = this::refreshTheme;
 
     public void mount(SceneContext context) {
         this.context = context;
@@ -600,6 +615,7 @@ public final class Scene {
             return TraversalControl.proceed;
         });
         liveScenes.add(this);
+        StyleEvents.themeReload.register(themeReloadListener);
         // late theme attach: resolve the effective theme once the tree is mounted
         refreshTheme();
     }
@@ -659,6 +675,7 @@ public final class Scene {
 
     public void destroy() {
         liveScenes.remove(this);
+        StyleEvents.themeReload.unregister(themeReloadListener);
         if (!root.lifecycle.unmounted()) {
             WidgetTree.walkBottomUp(root, true, -1, ((widget, depth) -> {
                 widget.unmount();

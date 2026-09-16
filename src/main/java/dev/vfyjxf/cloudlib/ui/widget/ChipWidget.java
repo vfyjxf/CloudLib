@@ -10,7 +10,7 @@ import org.lwjgl.glfw.GLFW;
 /**
  * A tiny action chip: outline-only rect + short label.
  * Used by the in-world demo panels instead of the chunky vanilla-style
- * {@link dev.vfyjxf.cloudlib.ui.widget.ButtonWidget}.
+ * {@link ButtonWidget}.
  */
 public class ChipWidget extends Widget {
 
@@ -80,10 +80,6 @@ public class ChipWidget extends Widget {
         }
         canvas.strokeRect(0, 0, w, h, border);
         var font = context().font();
-        canvas.text(
-                label,
-                (w - font.width(label)) / 2,
-                (h - font.lineHeight) / 2 + 1,
-                hot ? 0xFFE8F4F8 : 0xFF7C93A3);
+        canvas.text(label, (w - font.width(label)) / 2, (h - font.lineHeight) / 2 + 1, hot ? 0xFFE8F4F8 : 0xFF7C93A3);
     }
 }

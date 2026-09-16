@@ -1,16 +1,14 @@
-package dev.vfyjxf.cloudlib.api.ui.theme;
+package dev.vfyjxf.cloudlib.api.ui.style;
 
 import dev.vfyjxf.cloudlib.api.css.ComponentValue;
 import dev.vfyjxf.cloudlib.api.css.Declaration;
+import dev.vfyjxf.cloudlib.api.css.Tokens;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import dev.vfyjxf.cloudlib.api.ui.style.Styles;
-import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.key.Shorthand;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleParseContext;
-import dev.vfyjxf.cloudlib.api.ui.style.key.StyleRegistry;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue;
-import dev.vfyjxf.cloudlib.internal.ui.theme.Cascade;
+import dev.vfyjxf.cloudlib.internal.ui.style.Cascade;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -21,7 +19,7 @@ import java.util.function.Consumer;
 
 /**
  * The {@link Theme#resolve} implementation: the cascade produces the winning
- * declarations in order; each then goes through the {@link StyleRegistry} —
+ * declarations in order; each then goes through the builtin vocabulary —
  * longhand names parse through their key's {@code parser}, shorthand names
  * expand into longhand {@link StyleValue}s — and the resulting values land in
  * a {@code Map<StyleKey, StyleValue>} where later declarations win per key.
@@ -39,14 +37,20 @@ final class ThemeEngine {
         // StyleValues — per-key, last write wins. var-free declarations are
         // node-independent → memoize their parsed values on declaration identity.
         Map<StyleKey<?>, StyleValue<?>> out = new LinkedHashMap<>();
+        Map<String, Tokens> vars = new LinkedHashMap<>();
         Map<Declaration, List<StyleValue<?>>> valueCache = ctx.valueCache();
         for (Map.Entry<String, Cascade.ResolvedDecl> e : resolved.entrySet()) {
             String name = e.getKey();
             Cascade.ResolvedDecl decl = e.getValue();
-            if (name.startsWith("--")) {
-                continue; // custom properties are var() inputs, not style props
-            }
             List<ComponentValue> tokens = decl.value();
+            if (name.startsWith("--")) {
+                // custom properties are style values — the resolved (var()-
+                // substituted) token stream lands on the node's var table
+                if (!tokens.isEmpty()) {
+                    vars.put(name, Tokens.of(tokens));
+                }
+                continue;
+            }
             if (tokens.isEmpty()) {
                 continue; // poisoned by an unresolved var()
             }
@@ -68,7 +72,9 @@ final class ThemeEngine {
                 out.put(sv.key(), sv);
             }
         }
-        return out.isEmpty() ? UIStyle.empty : UIStyle.ofDistinctValues(new ArrayList<>(out.values()));
+        return out.isEmpty() && vars.isEmpty()
+                ? UIStyle.empty
+                : UIStyle.ofDistinctValues(new ArrayList<>(out.values()), vars);
     }
 
     /** Parses one resolved declaration into longhand values (key or shorthand). */
@@ -86,7 +92,7 @@ final class ThemeEngine {
             StyleValue<?> value = parseValue(key, tokens, parseCtx, warn, name);
             return value == null ? null : List.of(value);
         }
-        Shorthand shorthand = StyleRegistry.get().shorthand(name);
+        Shorthand shorthand = Styles.shorthand(name);
         if (shorthand != null) {
             return expand(shorthand, tokens, parseCtx, warn, name);
         }

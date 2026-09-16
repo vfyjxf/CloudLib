@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.css.ComponentValue;
 import dev.vfyjxf.cloudlib.api.ui.texture.BorderTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.GradientTexture;
+import dev.vfyjxf.cloudlib.api.ui.texture.ImageTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.NineSliceTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.SpriteTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.TiledTexture;
@@ -19,6 +20,11 @@ import java.util.Locale;
  * {@code nine-slice(loc,border[,w,h])}, {@code sprite(loc[,w,h])},
  * {@code tiled(loc,w,h)}, {@code color(argb)}, {@code linear-gradient(c1,c2[,vertical])},
  * {@code border-texture(color,thickness)}.
+ * <p>
+ * {@code sprite(loc)} resolves through the GUI sprite atlas (vanilla semantics —
+ * use it for {@code gui/sprites/**} entries); {@code sprite(loc,w,h)} blits the
+ * region from the texture file at {@code textures/<path>.png} directly, which is
+ * how the bundled theme assets are addressed.
  */
 public final class CssTextures {
 
@@ -60,6 +66,19 @@ public final class CssTextures {
         return null;
     }
 
+    /**
+     * Expands a short texture id ({@code cloudlib:gui/panel/dark}) into the
+     * resource path the texture system actually loads
+     * ({@code cloudlib:textures/gui/panel/dark.png}) — file-backed texture fns
+     * bind raw files, so the {@code textures/} prefix + {@code .png} suffix are
+     * supplied here rather than making theme authors write them.
+     */
+    private static @Nullable ResourceLocation fileLocation(ComponentValue v) {
+        ResourceLocation loc = location(v);
+        if (loc == null) return null;
+        return loc.withPath(p -> "textures/" + p + ".png");
+    }
+
     private static @Nullable Float num(ComponentValue v) {
         if (v instanceof ComponentValue.NumericValue n) {
             return (float) n.value();
@@ -71,7 +90,7 @@ public final class CssTextures {
 
     private static @Nullable VisualTexture nineSlice(List<ComponentValue> args) {
         if (args.isEmpty()) return null;
-        ResourceLocation loc = location(args.get(0));
+        ResourceLocation loc = fileLocation(args.get(0));
         if (loc == null) return null;
         // nine-slice(loc, border) | nine-slice(loc, border, w, h)
         Float border = args.size() > 1 ? num(args.get(1)) : null;
@@ -96,16 +115,17 @@ public final class CssTextures {
         Float w = num(args.get(1));
         Float h = args.size() > 2 ? num(args.get(2)) : null;
         if (w == null || h == null) return null;
-        return SpriteTexture.fromGuiSprite(loc, w.intValue(), h.intValue());
+        // explicit dims = a file-backed blit of that region, not an atlas sprite
+        return ImageTexture.of(fileLocation(args.get(0)), w.intValue(), h.intValue());
     }
 
     private static @Nullable VisualTexture tiled(List<ComponentValue> args) {
         if (args.size() < 3) return null;
-        ResourceLocation loc = location(args.get(0));
+        ResourceLocation loc = fileLocation(args.get(0));
         Float w = num(args.get(1));
         Float h = num(args.get(2));
         if (loc == null || w == null || h == null) return null;
-        return TiledTexture.sprite(loc, w.intValue(), h.intValue());
+        return TiledTexture.of(loc, w.intValue(), h.intValue());
     }
 
     private static @Nullable VisualTexture gradient(List<ComponentValue> args) {

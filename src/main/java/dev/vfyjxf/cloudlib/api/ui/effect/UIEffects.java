@@ -15,7 +15,7 @@ import dev.vfyjxf.cloudlib.api.util.MutableLists;
  * <p>
  * Example usage:
  * <pre>{@code
- * import static dev.vfyjxf.cloudlib.api.ui.effect.UIEffects.*;
+ * import static UIEffects.*;
  *
  * widget.useEffect(autoFocus());
  * widget.useEffect(scrollable(ScrollDirection.vertical));
@@ -119,7 +119,7 @@ public final class UIEffects {
      * recomputed every frame using the configured middleware pipeline.
      *
      * <pre>{@code
-     * import static dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares.*;
+     * import static FloatingMiddlewares.*;
      *
      * Widget button = ButtonWidget.of("Click me", () -> {});
      * Widget tooltip = LabelWidget.of("Tooltip text");

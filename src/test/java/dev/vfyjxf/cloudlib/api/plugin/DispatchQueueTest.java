@@ -6,7 +6,9 @@ import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.CloudNamespaces;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -44,7 +46,7 @@ public class DispatchQueueTest {
         ExecutorService executor = Executors.newFixedThreadPool(4);
         var queue = dispatcher.createQueue(executor);
 
-        var threadNames = Collections.synchronizedSet(new java.util.HashSet<String>());
+        var threadNames = Collections.synchronizedSet(new HashSet<String>());
 
         try {
             queue.enqueue(plugin -> {
@@ -134,7 +136,7 @@ public class DispatchQueueTest {
         var a = plugin("a");
         var dispatcher = PluginDispatcher.create(MutableLists.of(a));
         var queue = dispatcher.createQueue();
-        var log = Collections.synchronizedList(new java.util.ArrayList<String>());
+        var log = Collections.synchronizedList(new ArrayList<String>());
 
         queue.enqueue(plugin -> log.add("batch1-taskA"));
         queue.enqueue(plugin -> log.add("batch1-taskB"));
@@ -199,7 +201,7 @@ public class DispatchQueueTest {
         var graph = DependencyGraph.build(List.of(a, b, c));
         var dispatcher = PluginDispatcher.fromGraph(graph);
         var queue = dispatcher.createQueue();
-        var order = Collections.synchronizedList(new java.util.ArrayList<String>());
+        var order = Collections.synchronizedList(new ArrayList<String>());
 
         queue.enqueue(plugin -> order.add(plugin.pluginId().path()));
         queue.execute();
@@ -271,8 +273,8 @@ public class DispatchQueueTest {
         // Per-task latch: B and C should run concurrently within each task's dispatch
         var task1BC = new CountDownLatch(2);
         var task2BC = new CountDownLatch(2);
-        var order1 = Collections.synchronizedList(new java.util.ArrayList<String>());
-        var order2 = Collections.synchronizedList(new java.util.ArrayList<String>());
+        var order1 = Collections.synchronizedList(new ArrayList<String>());
+        var order2 = Collections.synchronizedList(new ArrayList<String>());
 
         try {
             queue.enqueue(plugin -> {

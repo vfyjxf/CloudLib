@@ -1,0 +1,6 @@
+{
+  "name": "Standard",
+  "description": "The stock OreUI-style pixel theme.",
+  "css": ["base.css"],
+  "default": true
+}

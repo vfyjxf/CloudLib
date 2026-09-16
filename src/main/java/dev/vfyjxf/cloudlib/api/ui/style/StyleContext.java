@@ -1,14 +1,20 @@
 package dev.vfyjxf.cloudlib.api.ui.style;
 
+import dev.vfyjxf.cloudlib.api.css.Tokens;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
+import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey;
+import dev.vfyjxf.cloudlib.api.ui.style.key.StyleParseContext;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue;
+import dev.vfyjxf.cloudlib.internal.ui.style.Cascade;
 import dev.vfyjxf.taffy.style.TaffyStyle;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.impl.factory.Lists;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +44,13 @@ public class StyleContext {
     private final VisualContext visualContext;
     private final List<StyleValue<?>> applied;
     private final LinkedHashMap<StyleKey<?>, Object> valuesByKey;
+
+    /**
+     * The computed custom-property table — {@code --name → token stream}.
+     * Populated by theme resolution (values already {@code var()}-substituted)
+     * and by inline writes via {@link #setVar}.
+     */
+    private final Map<String, Tokens> vars = new LinkedHashMap<>();
 
     /**
      * Change listeners registered for specific style keys.
@@ -131,6 +144,63 @@ public class StyleContext {
         set(value.key(), value.value());
     }
 
+    // region custom properties (--*)
+
+    /**
+     * The computed custom-property table — every {@code --name} currently bound
+     * on this widget, values already {@code var()}-substituted.
+     */
+    public Map<String, Tokens> vars() {
+        return Collections.unmodifiableMap(vars);
+    }
+
+    /** The resolved token stream bound to {@code --name}, or {@code null}. */
+    public @Nullable Tokens varRaw(String name) {
+        return vars.get(name);
+    }
+
+    public boolean hasVar(String name) {
+        return vars.containsKey(name);
+    }
+
+    /**
+     * Reads a custom property through a {@link StyleVar} lens — parses the
+     * resolved tokens, falling back to {@link StyleVar#fallback()} when the
+     * property is unset or unparseable.
+     */
+    public <T> @Nullable T var(StyleVar<T> var) {
+        Tokens tokens = vars.get(var.name());
+        if (tokens == null || tokens.isEmpty()) {
+            return var.fallback();
+        }
+        T parsed = var.parse(tokens.values(), StyleParseContext.plain());
+        return parsed != null ? parsed : var.fallback();
+    }
+
+    /**
+     * Binds a custom property — the application path for both theme-resolved
+     * bindings and java-side inline writes.
+     * <p>
+     * {@code var()} references inside {@code value} are substituted against the
+     * vars already in this table; an unresolvable substitution keeps the raw
+     * tokens (the binding may become meaningful once later vars arrive).
+     */
+    public void setVar(String name, Tokens value) {
+        vars.put(name, Cascade.substituteVars(value, vars));
+    }
+
+    /** Typed write — serializes through the lens's writer. */
+    public <T> void setVar(StyleVar<T> var, T value) {
+        setVar(var.name(), var.writeTokens(value));
+    }
+
+    /** Removes a custom-property binding. */
+    public void removeVar(String name) {
+        vars.remove(name);
+    }
+
+    // endregion
+
     // region change listeners
 
     /**
@@ -145,9 +215,7 @@ public class StyleContext {
         if (changeListeners == null) {
             changeListeners = new LinkedHashMap<>();
         }
-        changeListeners
-                .computeIfAbsent(key, k -> org.eclipse.collections.impl.factory.Lists.mutable.empty())
-                .add(listener);
+        changeListeners.computeIfAbsent(key, k -> Lists.mutable.empty()).add(listener);
         return this;
     }
 
@@ -192,12 +260,14 @@ public class StyleContext {
 
     /**
      * Collects style information for inspection/debugging — emits every applied
-     * value as {@code key-id = formatted-value}.
+     * value as {@code key-id = formatted-value}, then every bound custom
+     * property under its {@code --name} as css text.
      */
     public void collectStyleInspection(InspectionInfoCollector collector) {
         for (StyleValue<?> value : applied) {
             collectFormatted(collector, value);
         }
+        vars.forEach((name, tokens) -> collector.add(name, tokens.text(), InspectionProperty.categoryVars));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -218,6 +288,7 @@ public class StyleContext {
     public void reset() {
         applied.clear();
         valuesByKey.clear();
+        vars.clear();
         layoutStyle = new TaffyStyle();
         visualContext.reset();
     }

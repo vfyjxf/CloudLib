@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.internal.ui.style;
 
 import dev.vfyjxf.cloudlib.api.ui.base.SceneLayer;
 import dev.vfyjxf.cloudlib.api.ui.style.Edge;
+import dev.vfyjxf.cloudlib.api.ui.style.Shadow;
 import dev.vfyjxf.cloudlib.api.ui.style.VisualContext;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleApply;
 import dev.vfyjxf.taffy.geometry.TaffyLine;
@@ -107,7 +108,7 @@ public final class StyleApplies {
             (ctx, v) -> ctx.visualContext().border(v, ctx.visualContext().borderColor());
 
     /** Drop shadow → {@link VisualContext#setShadow}. */
-    public static final StyleApply<dev.vfyjxf.cloudlib.api.ui.style.Shadow> shadow =
+    public static final StyleApply<Shadow> shadow =
             (ctx, v) -> ctx.visualContext().setShadow(v.offsetX(), v.offsetY(), v.blurRadius(), v.color());
 
     /** Scene layer → stored on the context (read by scene compositing). */

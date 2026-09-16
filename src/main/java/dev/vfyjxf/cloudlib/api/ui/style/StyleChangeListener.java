@@ -1,12 +1,13 @@
 package dev.vfyjxf.cloudlib.api.ui.style;
 
+import dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * Listener for style property changes.
  * <p>
  * This interface allows widgets to react to specific property changes during style application.
- * Listeners are registered via {@link StyleContext#addChangeListener(dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey, StyleChangeListener)}.
+ * Listeners are registered via {@link StyleContext#addChangeListener(StyleKey, StyleChangeListener)}.
  * <p>
  * Example usage:
  * <pre>{@code

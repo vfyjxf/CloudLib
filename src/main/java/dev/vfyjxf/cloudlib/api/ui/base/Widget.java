@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import dev.vfyjxf.cloudlib.api.css.Tokens;
 import dev.vfyjxf.cloudlib.api.data.DataAttachable;
 import dev.vfyjxf.cloudlib.api.data.DataContainer;
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
@@ -26,9 +27,12 @@ import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
 import dev.vfyjxf.cloudlib.api.ui.layout.LayoutHandler;
 import dev.vfyjxf.cloudlib.api.ui.layout.LayoutScope;
 import dev.vfyjxf.cloudlib.api.ui.style.StyleContext;
+import dev.vfyjxf.cloudlib.api.ui.style.StyleVar;
 import dev.vfyjxf.cloudlib.api.ui.style.Styles;
+import dev.vfyjxf.cloudlib.api.ui.style.Themes;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.api.ui.style.VisualContext;
+import dev.vfyjxf.cloudlib.api.ui.style.key.StyleCollector;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleEntry;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue;
@@ -46,6 +50,7 @@ import org.jetbrains.annotations.UnknownNullability;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -229,6 +234,14 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
      */
     @Nullable
     UIStyle themeStyle;
+
+    /**
+     * Inline custom properties — the java-side counterpart of
+     * {@code element.style.setProperty("--x", …)}. Raw (unsubstituted) token
+     * values; the cascade merges them into this node's resolved {@code --*}
+     * table at top priority, so theme declarations can {@code var()} them.
+     */
+    private final Map<String, Tokens> codeVars = new LinkedHashMap<>();
     /**
      * Style values applied through {@link #useStyle}/{@link #set} — the
      * code segment, applied last so it always wins.
@@ -1009,6 +1022,10 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
     public final Widget useStyle(UIStyle style) {
         codeStyles.addAll(style.values());
         style.apply(this.style);
+        if (!style.vars().isEmpty()) {
+            codeVars.putAll(style.vars());
+            markStyleDirty();
+        }
         if (scene != null) {
             scene.tree.markDirty(nodeId);
         }
@@ -1016,11 +1033,26 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
     }
 
     public final Widget useStyle(StyleEntry... entries) {
-        for (StyleEntry entry : entries) {
-            entry.collectInto(v -> {
+        boolean[] sawVar = {false};
+        StyleCollector sink = new StyleCollector() {
+            @Override
+            public void accept(StyleValue<?> v) {
                 codeStyles.add(v);
                 style.apply(v);
-            });
+            }
+
+            @Override
+            public void var(String name, Tokens value) {
+                codeVars.put(name, value);
+                style.setVar(name, value);
+                sawVar[0] = true;
+            }
+        };
+        for (StyleEntry entry : entries) {
+            entry.collectInto(sink);
+        }
+        if (sawVar[0]) {
+            markStyleDirty();
         }
         if (scene != null) {
             scene.tree.markDirty(nodeId);
@@ -1038,6 +1070,53 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
             scene.tree.markDirty(nodeId);
         }
         return this;
+    }
+
+    /**
+     * Sets an inline custom property — {@code element.style.setProperty}.
+     * <p>
+     * The raw tokens are stored on this widget and merged into its resolved
+     * {@code --*} table at top priority: theme declarations referencing
+     * {@code var(name)} see the new value after the next style flush.
+     */
+    public final Widget setVar(String name, Tokens value) {
+        if (!name.startsWith("--")) {
+            throw new IllegalArgumentException("custom property names start with '--': " + name);
+        }
+        codeVars.put(name, value);
+        style.setVar(name, value);
+        markStyleDirty();
+        if (scene != null) {
+            scene.tree.markDirty(nodeId);
+        }
+        return this;
+    }
+
+    /** Tokenizes css source and binds it to {@code name} — see {@link #setVar(String, Tokens)}. */
+    public final Widget setVar(String name, String cssValue) {
+        return setVar(name, Tokens.of(cssValue));
+    }
+
+    /** Typed inline write — serializes through the lens's writer. */
+    public final <T> Widget setVar(StyleVar<T> var, T value) {
+        return setVar(var.name(), var.writeTokens(value));
+    }
+
+    /** Removes an inline custom property. */
+    public final Widget removeVar(String name) {
+        if (codeVars.remove(name) != null) {
+            style.removeVar(name);
+            markStyleDirty();
+            if (scene != null) {
+                scene.tree.markDirty(nodeId);
+            }
+        }
+        return this;
+    }
+
+    /** The inline custom properties written via {@code setVar}/{@code useStyle} — raw tokens. */
+    public Map<String, Tokens> codeVars() {
+        return codeVars;
     }
 
     /**
@@ -1143,7 +1222,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
      * surface and reapplies it — the immediate (non-batched) path.
      */
     public void refreshTheme() {
-        var theme = scene != null ? scene.theme() : dev.vfyjxf.cloudlib.api.ui.theme.Themes.active();
+        var theme = scene != null ? scene.theme() : Themes.active();
         if (theme == null) {
             return;
         }
@@ -1178,6 +1257,10 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         for (StyleValue<?> value : codeStyles) {
             style.apply(value);
         }
+        // inline vars re-apply raw — setVar substitutes var() refs against the
+        // vars already in the table (the resolved theme vars), so the result
+        // matches what the cascade produced
+        codeVars.forEach(style::setVar);
         if (scene != null) {
             // reset() swaps in a fresh TaffyStyle — the tree still holds the
             // old object, so every layout write since reset would be lost.

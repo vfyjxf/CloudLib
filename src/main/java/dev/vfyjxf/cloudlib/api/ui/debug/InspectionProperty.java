@@ -13,6 +13,7 @@ public record InspectionProperty(String name, String value, @Nullable String def
     public static final String categoryState = "state";
     public static final String categoryVisual = "visual";
     public static final String categoryData = "data";
+    public static final String categoryVars = "vars";
 
     /**
      * Whether the current value differs from the default.

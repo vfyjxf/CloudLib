@@ -1,16 +1,19 @@
 package dev.vfyjxf.cloudlib.api.ui.style;
 
 import dev.vfyjxf.cloudlib.api.css.CssParser;
+import dev.vfyjxf.cloudlib.api.css.Tokens;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.style.key.StyleCollector;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValues;
-import dev.vfyjxf.cloudlib.api.ui.theme.Theme;
 import dev.vfyjxf.taffy.style.LengthPercentage;
 import dev.vfyjxf.taffy.style.TaffyDisplay;
 import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.List;
 
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
@@ -55,9 +58,9 @@ class StyleSystemTest {
     }
 
     @Test
-    void everyBuiltinKeyIsRegistered() {
+    void everyBuiltinKeyIsIndexed() {
         // the constant table and the index must agree
-        var all = dev.vfyjxf.cloudlib.api.ui.style.key.StyleRegistry.get().all();
+        var all = Styles.all();
         assertTrue(all.contains(Styles.paddingLeft));
         assertTrue(all.size() > 60, "expected 60+ builtin keys, got " + all.size());
         for (StyleKey<?> key : all) {
@@ -70,8 +73,16 @@ class StyleSystemTest {
     @Test
     void boxFactoryExpandsToFourLonghands() {
         StyleValues group = padding(4);
-        List<StyleValue<?>> values = new java.util.ArrayList<>();
-        group.collectInto(values::add);
+        List<StyleValue<?>> values = new ArrayList<>();
+        group.collectInto(new StyleCollector() {
+            @Override
+            public void accept(StyleValue<?> value) {
+                values.add(value);
+            }
+
+            @Override
+            public void var(String name, Tokens value) {}
+        });
         assertEquals(4, values.size());
         assertTrue(values.stream().anyMatch(v -> v.key() == Styles.paddingLeft));
         assertTrue(values.stream().anyMatch(v -> v.key() == Styles.paddingRight));
@@ -166,16 +177,15 @@ class StyleSystemTest {
         }
     }
 
-    // ------------------------------------------------------------------ registry errors
+    // ------------------------------------------------------------------ closed vocabulary
 
     @Test
-    void duplicateKeyRegistrationThrows() {
-        assertThrows(IllegalArgumentException.class, () -> dev.vfyjxf.cloudlib.api.ui.style.key.StyleRegistry.get()
-                .register(new StyleKey<>(
-                        "padding-left", // already taken by a builtin
-                        LengthPercentage.class,
-                        dev.vfyjxf.cloudlib.api.ui.style.key.StyleScope.layout,
-                        (values, ctx) -> null,
-                        (ctx, v) -> {})));
+    void styleKeyIsNotPubliclyConstructible() {
+        // the builtin vocabulary is closed — StyleKey offers no accessible ctor
+        for (var ctor : StyleKey.class.getDeclaredConstructors()) {
+            assertFalse(
+                    Modifier.isPublic(ctor.getModifiers()) || Modifier.isProtected(ctor.getModifiers()),
+                    "StyleKey ctor must not be accessible: " + ctor);
+        }
     }
 }

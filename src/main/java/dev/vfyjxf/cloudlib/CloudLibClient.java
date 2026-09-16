@@ -4,6 +4,10 @@ import dev.vfyjxf.cloudlib.api.plugin.AnnotationPluginLookup;
 import dev.vfyjxf.cloudlib.api.plugin.CloudLibClientPlugin;
 import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
 import dev.vfyjxf.cloudlib.data.lang.CloudLibLangProvider;
+import dev.vfyjxf.cloudlib.internal.ui.style.StyleConfig;
+import dev.vfyjxf.cloudlib.internal.ui.style.StyleLoader;
+import dev.vfyjxf.cloudlib.internal.ui.style.StyleWatcher;
+import dev.vfyjxf.cloudlib.ui.CloudLibCommands;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayApiImpl;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayEventHandler;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayRegisterImpl;
@@ -13,6 +17,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
@@ -29,17 +34,19 @@ public final class CloudLibClient extends CloudLib {
 
     public CloudLibClient(ModContainer container, IEventBus modBus, Dist dist) {
         super(container, modBus, dist);
-        dev.vfyjxf.cloudlib.internal.ui.theme.ThemeConfig.register(container);
+        StyleConfig.register(container);
         clientPlugins = PluginLoader.loadPlugin(
                         logger, "CloudLib Client Plugin", AnnotationPluginLookup.of(CloudLibClientPlugin.class))
                 .toImmutable();
         modBus.addListener(this::gatherData);
         modBus.addListener(this::registerClientTooltipComponentFactories);
         modBus.addListener(this::registerClientReloadListeners);
+        NeoForge.EVENT_BUS.addListener(CloudLibCommands::register);
     }
 
     @Override
     protected void loadComplete(FMLLoadCompleteEvent event) {
+        event.enqueueWork(StyleWatcher::start);
         var register = new OverlayRegisterImpl();
 
         for (CloudLibClientPlugin plugin : clientPlugins) {
@@ -63,15 +70,8 @@ public final class CloudLibClient extends CloudLib {
         //        event.register(RichTooltipComponent.class, Function.identity());
     }
 
-    private void registerClientReloadListeners(
-            net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent event) {
-        event.registerReloadListener(dev.vfyjxf.cloudlib.internal.ui.theme.ThemeLoader.instance);
-        // theme selection changes (pack reload, setActive) re-resolve all live scenes
-        dev.vfyjxf.cloudlib.api.ui.theme.Themes.onChange(() -> {
-            for (var scene : dev.vfyjxf.cloudlib.api.ui.base.Scene.liveScenes()) {
-                dev.vfyjxf.cloudlib.api.ui.theme.Themes.refreshTree(scene.root());
-            }
-        });
+    private void registerClientReloadListeners(RegisterClientReloadListenersEvent event) {
+        event.registerReloadListener(StyleLoader.instance);
     }
 
     private void gatherData(GatherDataEvent event) {

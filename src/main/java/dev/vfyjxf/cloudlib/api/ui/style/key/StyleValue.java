@@ -16,7 +16,7 @@ public record StyleValue<T>(StyleKey<T> key, T value) implements StyleEntry {
     }
 
     @Override
-    public void collectInto(java.util.function.Consumer<StyleValue<?>> out) {
+    public void collectInto(StyleCollector out) {
         out.accept(this);
     }
 }

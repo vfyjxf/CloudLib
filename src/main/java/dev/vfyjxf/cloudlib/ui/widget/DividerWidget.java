@@ -95,7 +95,8 @@ public class DividerWidget extends Widget {
         int x = (width() - w) / 2;
         int y = (height() - h) / 2;
 
-        canvas.texture(texture, x, y, w, h);
+        VisualTexture themed = style().visualContext().background();
+        canvas.texture(themed != null && !themed.isEmpty() ? themed : texture, x, y, w, h);
     }
 
     // endregion

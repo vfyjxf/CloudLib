@@ -40,7 +40,7 @@ import java.util.Objects;
  *
  * <h3>Usage</h3>
  * <pre>{@code
- * import static dev.vfyjxf.cloudlib.api.ui.floating.FloatingMiddlewares.*;
+ * import static FloatingMiddlewares.*;
  *
  * Widget reference = ButtonWidget.of("Hover me", () -> {});
  * Widget tooltip = LabelWidget.of("Tooltip content");

@@ -5,6 +5,7 @@ import dev.vfyjxf.cloudlib.api.data.handle.Handle;
 import dev.vfyjxf.cloudlib.api.network.UnaryFlowHandler;
 import dev.vfyjxf.cloudlib.api.network.expose.UnaryReversed;
 import dev.vfyjxf.cloudlib.blockentity.BasicSyncedBlockEntity;
+import dev.vfyjxf.cloudlib.blockentity.BlockEntitySyncBatcher;
 import dev.vfyjxf.cloudlib.blockentity.Schema;
 import dev.vfyjxf.cloudlib.test.TestRegistry;
 import net.minecraft.core.BlockPos;
@@ -25,7 +26,7 @@ import java.util.List;
  * instance-independent and reusable. The block entity creates instance-bound {@link Handle}s from
  * them via the React-hook-style {@code useSynced(schema)} factory, which implicitly wires both
  * serialization and sync. Sync changes are batched into one packet per dimension per tick by
- * {@link dev.vfyjxf.cloudlib.blockentity.BlockEntitySyncBatcher}.
+ * {@link BlockEntitySyncBatcher}.
  * <p>
  * {@link #action} is a client → server reversed channel used by the in-world UI
  * panel: buttons queue an action id on the client, the server validates and

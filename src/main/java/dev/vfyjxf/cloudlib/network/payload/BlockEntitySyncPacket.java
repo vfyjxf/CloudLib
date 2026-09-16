@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.network.payload;
 
 import dev.vfyjxf.cloudlib.api.network.payload.ClientPayloadInfo;
 import dev.vfyjxf.cloudlib.api.network.payload.ClientboundPayload;
+import dev.vfyjxf.cloudlib.blockentity.BlockEntitySyncBatcher;
 import dev.vfyjxf.cloudlib.blockentity.SyncedBlockEntity;
 import dev.vfyjxf.cloudlib.network.CloudlibPayloads;
 import io.netty.buffer.Unpooled;
@@ -18,7 +19,7 @@ import java.util.List;
 
 /**
  * Merged sync updates of multiple block entities, sent once per dimension per tick by
- * {@link dev.vfyjxf.cloudlib.blockentity.BlockEntitySyncBatcher}. The client applies only entries
+ * {@link BlockEntitySyncBatcher}. The client applies only entries
  * whose block entity it has loaded.
  */
 public record BlockEntitySyncPacket(List<Entry> entries) implements ClientboundPayload {

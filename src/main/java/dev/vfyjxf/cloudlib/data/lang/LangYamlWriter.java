@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.data.lang;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -21,7 +22,7 @@ final class LangYamlWriter {
                     .append(escape(entry.getValue()))
                     .append("\"\n");
         }
-        return out.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        return out.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     private static String key(String key) {

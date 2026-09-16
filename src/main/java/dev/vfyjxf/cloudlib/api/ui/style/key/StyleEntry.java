@@ -1,18 +1,16 @@
 package dev.vfyjxf.cloudlib.api.ui.style.key;
 
-import java.util.function.Consumer;
-
 /**
- * Anything that can contribute {@link StyleValue}s to a style — either a single
- * value ({@link StyleValue}) or a group produced by a shorthand factory
- * ({@link StyleValues}).
+ * Anything that can contribute to a style — a builtin value ({@link
+ * StyleValue}), a group produced by a shorthand factory ({@link StyleValues}),
+ * or a css custom-property binding ({@link VarBinding}).
  * <p>
  * {@code UIStyle.of(...)} and {@code Widget.useStyle(...)} accept
- * {@code StyleEntry} varargs so {@code padding(4)}-style factories that expand
- * into several longhands flatten transparently.
+ * {@code StyleEntry} varargs so {@code padding(4)}-style factories and
+ * {@code var("--x", "4px")} bindings flatten transparently.
  */
-public sealed interface StyleEntry permits StyleValue, StyleValues {
+public sealed interface StyleEntry permits StyleValue, StyleValues, VarBinding {
 
-    /** Emits every style value this entry stands for, in order. */
-    void collectInto(Consumer<StyleValue<?>> out);
+    /** Emits every contribution this entry stands for, in order. */
+    void collectInto(StyleCollector out);
 }

@@ -1,4 +1,4 @@
-package dev.vfyjxf.cloudlib.internal.ui.theme;
+package dev.vfyjxf.cloudlib.internal.ui.style;
 
 import dev.vfyjxf.cloudlib.api.css.AttributeSelector;
 import dev.vfyjxf.cloudlib.api.css.Combinator;

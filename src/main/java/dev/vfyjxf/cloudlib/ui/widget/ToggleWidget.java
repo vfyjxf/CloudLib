@@ -57,12 +57,19 @@ public class ToggleWidget extends Widget {
     }
 
     public ToggleWidget setToggled(boolean toggled) {
-        this.toggled = toggled;
+        if (this.toggled != toggled) {
+            this.toggled = toggled;
+            if (toggled) {
+                addStyleState("checked");
+            } else {
+                removeStyleState("checked");
+            }
+        }
         return this;
     }
 
     public ToggleWidget toggle() {
-        this.toggled = !this.toggled;
+        setToggled(!toggled);
         if (onToggle != null) {
             onToggle.accept(toggled);
         }
@@ -97,13 +104,15 @@ public class ToggleWidget extends Widget {
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        super.renderInternal(canvas, mouseX, mouseY, partialTicks);
-
-        VisualTexture texture;
-        if (hovered() && hoverTexture != null) {
-            texture = hoverTexture;
-        } else {
-            texture = toggled ? onTexture : offTexture;
+        // theme wins: a non-empty resolved background already encodes the
+        // current state (toggle:checked/:hover are cascade-selected)
+        VisualTexture texture = style().visualContext().background();
+        if (texture == null || texture.isEmpty()) {
+            if (hovered() && hoverTexture != null) {
+                texture = hoverTexture;
+            } else {
+                texture = toggled ? onTexture : offTexture;
+            }
         }
 
         canvas.texture(texture, 0, 0, width(), height());

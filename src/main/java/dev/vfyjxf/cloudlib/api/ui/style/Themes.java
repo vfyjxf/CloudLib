@@ -1,11 +1,14 @@
-package dev.vfyjxf.cloudlib.api.ui.theme;
+package dev.vfyjxf.cloudlib.api.ui.style;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.internal.ui.style.StyleLoader;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -27,7 +30,6 @@ public final class Themes {
 
     private static final Map<ResourceLocation, Theme> themes = new ConcurrentHashMap<>();
     private static final List<ResourceLocation> activeIds = new CopyOnWriteArrayList<>();
-    private static final List<Runnable> changeListeners = new CopyOnWriteArrayList<>();
 
     /** The composed view of {@link #activeIds} — rebuilt lazily, null = stale. */
     private static volatile @Nullable Theme merged;
@@ -89,10 +91,8 @@ public final class Themes {
         if (m != null) {
             return m;
         }
-        List<Theme> layers = activeIds.stream()
-                .map(themes::get)
-                .filter(java.util.Objects::nonNull)
-                .toList();
+        List<Theme> layers =
+                activeIds.stream().map(themes::get).filter(Objects::nonNull).toList();
         if (layers.isEmpty()) {
             return null;
         }
@@ -101,9 +101,22 @@ public final class Themes {
         return m;
     }
 
-    /** Listener fired whenever the active theme may have changed (reload, selection). */
-    public static void onChange(Runnable listener) {
-        changeListeners.add(listener);
+    /**
+     * Reparses every pack's theme descriptors and css and re-installs the
+     * registry + active selection — the manual reload entry point (dev tools,
+     * the {@code Alt+R} keybind, file watching). Runs the resource reload
+     * inline; call on the client/render thread.
+     */
+    public static void reload() {
+        var mc = Minecraft.getInstance();
+        if (mc == null) {
+            return;
+        }
+        var manager = mc.getResourceManager();
+        if (manager == null) {
+            return;
+        }
+        StyleLoader.instance.reload(manager, mc.getProfiler());
     }
 
     /**
@@ -123,10 +136,12 @@ public final class Themes {
         merged = null;
     }
 
-    /** Fires change listeners — called by the theme loader after registration. */
+    /**
+     * Fires {@link StyleEvents#themeReload} — called by the style loader after
+     * registration and by {@link #setActive}/{@link #unregister} on selection
+     * changes. Mounted scenes listen and re-resolve their trees.
+     */
     public static void notifyChanged() {
-        for (Runnable listener : changeListeners) {
-            listener.run();
-        }
+        StyleEvents.themeReload.invoker().onThemeReload();
     }
 }

@@ -1,12 +1,13 @@
-package dev.vfyjxf.cloudlib.internal.ui.theme;
+package dev.vfyjxf.cloudlib.internal.ui.style;
 
 import dev.vfyjxf.cloudlib.api.css.CssParser;
 import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import dev.vfyjxf.cloudlib.api.ui.theme.Theme;
+import dev.vfyjxf.cloudlib.api.ui.style.Theme;
 import net.minecraft.resources.ResourceLocation;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.Unmodifiable;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -191,7 +192,7 @@ class ThemePerfTest {
      */
     @Test
     void profilingWorkload() {
-        org.junit.jupiter.api.Assumptions.assumeTrue(
+        Assumptions.assumeTrue(
                 Boolean.getBoolean("cloudlib.theme.profile"),
                 "profiling workload — enable with -Dcloudlib.theme.profile=1");
         StringBuilder css = new StringBuilder(":root { --c: #FFF; --pad: 4px }\n");

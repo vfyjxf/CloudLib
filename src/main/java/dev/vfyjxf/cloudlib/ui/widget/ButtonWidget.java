@@ -71,8 +71,20 @@ public class ButtonWidget extends Widget {
             return EventDispatch.pass;
         });
 
+        onMouseClicked((input, context) -> {
+            if (enabled) {
+                setPressed(true);
+            }
+            return EventDispatch.pass;
+        });
+
+        onMouseReleased((input, context) -> {
+            setPressed(false);
+            return EventDispatch.pass;
+        });
+
         onMouseLeave((mouseX, mouseY, context) -> {
-            pressed = false;
+            setPressed(false);
         });
 
         onMount((scene, context, handle) -> {
@@ -115,6 +127,18 @@ public class ButtonWidget extends Widget {
         return this;
     }
 
+    private void setPressed(boolean pressed) {
+        if (this.pressed == pressed) {
+            return;
+        }
+        this.pressed = pressed;
+        if (pressed) {
+            addStyleState("pressed");
+        } else {
+            removeStyleState("pressed");
+        }
+    }
+
     public ButtonWidget setTextures(VisualTexture normal, VisualTexture hover, VisualTexture pressed) {
         this.normalTexture = normal;
         this.hoverTexture = hover;
@@ -155,25 +179,31 @@ public class ButtonWidget extends Widget {
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        VisualTexture texture;
-        if (!enabled) {
-            texture = disabledTexture;
-        } else if (pressed) {
-            texture = pressedTexture;
-        } else if (hovered()) {
-            texture = hoverTexture;
-        } else {
-            texture = normalTexture;
+        // theme wins: a non-empty resolved background already encodes the
+        // current state (button:hover/:pressed/:disabled are cascade-selected)
+        VisualTexture texture = style().visualContext().background();
+        if (texture == null || texture.isEmpty()) {
+            if (!enabled) {
+                texture = disabledTexture;
+            } else if (pressed) {
+                texture = pressedTexture;
+            } else if (hovered()) {
+                texture = hoverTexture;
+            } else {
+                texture = normalTexture;
+            }
         }
 
         canvas.texture(texture, 0, 0, width(), height());
 
         // Icon
+        VisualTexture icon =
+                iconTexture != null ? iconTexture : style().visualContext().icon();
         int iconOffset = 0;
-        if (iconTexture != null) {
+        if (icon != null && !icon.isEmpty()) {
             int iconSize = Math.min(height() - 4, 16);
             int iconY = (height() - iconSize) / 2;
-            canvas.texture(iconTexture, 4, iconY, iconSize, iconSize);
+            canvas.texture(icon, 4, iconY, iconSize, iconSize);
             iconOffset = iconSize + 4;
         }
 
@@ -182,7 +212,8 @@ public class ButtonWidget extends Widget {
         int textWidth = font.width(label);
         int textX = iconOffset + (width() - iconOffset - textWidth) / 2;
         int textY = (height() - font.lineHeight) / 2;
-        int color = enabled ? textColor : disabledTextColor;
+        Integer themedColor = style().visualContext().textColor();
+        int color = themedColor != null ? themedColor : enabled ? textColor : disabledTextColor;
 
         canvas.text(label, textX, textY, color, true);
     }

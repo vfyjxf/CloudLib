@@ -1,9 +1,11 @@
 package dev.vfyjxf.cloudlib.api.ui.style;
 
+import dev.vfyjxf.cloudlib.api.css.Tokens;
 import dev.vfyjxf.cloudlib.api.ui.base.SceneLayer;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValues;
+import dev.vfyjxf.cloudlib.api.ui.style.key.VarBinding;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
@@ -40,7 +42,7 @@ import java.util.List;
  * <p>
  * Example usage:
  * <pre>{@code
- * import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
+ * import static UIStyles.*;
  *
  * var cardStyle = UIStyle.of(
  *     padding(4),
@@ -1230,6 +1232,25 @@ public final class UIStyles {
     }
 
     // endregion
+
+    // endregion
+
+    // region custom properties
+
+    /** Binds a css custom property to tokenized css source — {@code var("--pad", "4px")}. */
+    public static VarBinding var(String name, String cssValue) {
+        return new VarBinding(name, Tokens.of(cssValue));
+    }
+
+    /** Binds a css custom property to a raw token stream. */
+    public static VarBinding var(String name, Tokens value) {
+        return new VarBinding(name, value);
+    }
+
+    /** Binds a custom property through a {@link StyleVar} lens — serializes via its writer. */
+    public static <T> VarBinding var(StyleVar<T> var, T value) {
+        return new VarBinding(var.name(), var.writeTokens(value));
+    }
 
     // endregion
 }

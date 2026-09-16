@@ -1,12 +1,16 @@
-package dev.vfyjxf.cloudlib.internal.ui.theme;
+package dev.vfyjxf.cloudlib.internal.ui.style;
 
+import dev.vfyjxf.cloudlib.api.css.ComplexSelector;
 import dev.vfyjxf.cloudlib.api.css.ComponentValue;
 import dev.vfyjxf.cloudlib.api.css.Declaration;
 import dev.vfyjxf.cloudlib.api.css.Specificity;
 import dev.vfyjxf.cloudlib.api.css.StyleRule;
+import dev.vfyjxf.cloudlib.api.css.Tokens;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.style.Styles;
-import dev.vfyjxf.cloudlib.api.ui.theme.Theme;
+import dev.vfyjxf.cloudlib.api.ui.style.Theme;
+import dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey;
+import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -18,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * The cascade: for a {@link Widget} node, collects every matching declaration,
@@ -25,7 +30,7 @@ import java.util.Set;
  * substitutes {@code var(--x, fallback)}, and produces the resolved property map.
  * <p>
  * Inheritance follows the web rule: a property inherits when its
- * {@link dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey} is flagged
+ * {@link StyleKey} is flagged
  * {@code inherited} ({@code color}, {@code text-align}, {@code direction});
  * all custom properties ({@code --*}) inherit unconditionally.
  * <p>
@@ -71,19 +76,17 @@ public final class Cascade {
         private final Theme theme;
         private final SelectorMatcher.MatchContext match = new SelectorMatcher.MatchContext();
         private final Map<Widget, Map<String, ResolvedDecl>> resolved = new IdentityHashMap<>();
-        private final Map<dev.vfyjxf.cloudlib.api.css.ComplexSelector, Specificity> specificity =
-                new IdentityHashMap<>();
+        private final Map<ComplexSelector, Specificity> specificity = new IdentityHashMap<>();
         /** {@code var()}-presence per shared declaration — computed once per pass. */
         private final Map<Declaration, Boolean> declHasVar = new IdentityHashMap<>();
         /**
          * Parsed {@code StyleValue}s per var-free declaration — shared across the
          * pass so a rule's value parses once for the whole tree, not per node.
          */
-        private final Map<Declaration, List<dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue<?>>> valueCache =
-                new IdentityHashMap<>();
+        private final Map<Declaration, List<StyleValue<?>>> valueCache = new IdentityHashMap<>();
 
         /** The per-pass declaration→parsed-values memo (engine use). */
-        public Map<Declaration, List<dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue<?>>> valueCache() {
+        public Map<Declaration, List<StyleValue<?>>> valueCache() {
             return valueCache;
         }
 
@@ -111,8 +114,7 @@ public final class Cascade {
                 Specificity best = null;
                 for (var sel : rule.selectors()) {
                     if (SelectorMatcher.matches(match, sel, node)) {
-                        Specificity s = specificity.computeIfAbsent(
-                                sel, dev.vfyjxf.cloudlib.api.css.ComplexSelector::specificity);
+                        Specificity s = specificity.computeIfAbsent(sel, ComplexSelector::specificity);
                         if (best == null || s.compareTo(best) > 0) {
                             best = s;
                         }
@@ -158,12 +160,30 @@ public final class Cascade {
                     }
                 }
             }
+            // inline custom properties — java-side setVar bindings behave like
+            // style-attribute declarations: they sit above every theme winner
+            // in this node's resolved map and feed var() like any other --*.
+            Map<String, Tokens> inline = node.codeVars();
+            if (!inline.isEmpty()) {
+                for (Map.Entry<String, Tokens> e : inline.entrySet()) {
+                    List<ComponentValue> vals = e.getValue().values();
+                    Declaration synth = new Declaration(e.getKey(), vals, false);
+                    local.put(e.getKey(), new ResolvedDecl(synth, vals, containsVar(vals)));
+                }
+            }
             // var() substitution — runs against this node's own resolved map;
             // per-node varCache: expanding --pad under this node's bindings is
             // deterministic, so repeated uses expand once. var-free declarations
             // pass through untouched — their values are node-independent, so the
             // engine downstream can memoize parse results on declaration identity.
             Map<String, List<ComponentValue>> varCache = new HashMap<>();
+            Function<String, List<ComponentValue>> env = name -> {
+                ResolvedDecl d = local.get(name);
+                if (d != null) {
+                    return d.value();
+                }
+                return theme.rootVars().get(name);
+            };
             Map<String, ResolvedDecl> out = new LinkedHashMap<>();
             for (Map.Entry<String, ResolvedDecl> e : local.entrySet()) {
                 ResolvedDecl decl = e.getValue();
@@ -173,7 +193,7 @@ public final class Cascade {
                 }
                 out.put(
                         e.getKey(),
-                        new ResolvedDecl(decl.declaration(), substitute(decl.value(), local, theme, varCache), true));
+                        new ResolvedDecl(decl.declaration(), substitute(decl.value(), env, varCache), true));
             }
             return out;
         }
@@ -189,14 +209,34 @@ public final class Cascade {
      */
     private static List<ComponentValue> substitute(
             List<ComponentValue> values,
-            Map<String, ResolvedDecl> resolved,
-            Theme theme,
+            Function<String, @Nullable List<ComponentValue>> env,
             Map<String, List<ComponentValue>> varCache) {
         if (!containsVar(values)) {
             return values; // fast path — no var() anywhere, skip the copy
         }
-        List<ComponentValue> out = substituteList(values, resolved, theme, varCache, new HashSet<>());
+        List<ComponentValue> out = substituteList(values, env, varCache, new HashSet<>());
         return out == null ? List.of() : out;
+    }
+
+    /**
+     * Apply-time {@code var()} resolution for the {@code StyleContext} var
+     * table — substitutes references against the already-resolved {@code env}.
+     * Unlike cascade substitution, an unresolvable reference keeps the raw
+     * tokens (a later binding may complete it).
+     */
+    public static Tokens substituteVars(Tokens value, Map<String, Tokens> env) {
+        if (!containsVar(value.values())) {
+            return value;
+        }
+        List<ComponentValue> out = substituteList(
+                value.values(),
+                name -> {
+                    Tokens t = env.get(name);
+                    return t == null ? null : t.values();
+                },
+                new HashMap<>(),
+                new HashSet<>());
+        return out == null ? value : Tokens.of(out);
     }
 
     private static boolean containsVar(List<ComponentValue> values) {
@@ -222,22 +262,21 @@ public final class Cascade {
      */
     private static @Nullable List<ComponentValue> substituteList(
             List<ComponentValue> values,
-            Map<String, ResolvedDecl> resolved,
-            Theme theme,
+            Function<String, @Nullable List<ComponentValue>> env,
             Map<String, List<ComponentValue>> varCache,
             Set<String> inFlight) {
         List<ComponentValue> out = new ArrayList<>(values.size());
         for (ComponentValue v : values) {
             if (v instanceof ComponentValue.Function fn) {
                 if (fn.name().equalsIgnoreCase("var")) {
-                    List<ComponentValue> expanded = expandVar(fn, resolved, theme, varCache, inFlight);
+                    List<ComponentValue> expanded = expandVar(fn, env, varCache, inFlight);
                     if (expanded == null) {
                         return null; // unresolved var → invalid at computed-value time
                     }
                     out.addAll(expanded);
                     continue;
                 }
-                List<ComponentValue> inner = substituteList(fn.args(), resolved, theme, varCache, inFlight);
+                List<ComponentValue> inner = substituteList(fn.args(), env, varCache, inFlight);
                 if (inner == null) {
                     return null;
                 }
@@ -245,7 +284,7 @@ public final class Cascade {
                 continue;
             }
             if (v instanceof ComponentValue.Block block) {
-                List<ComponentValue> inner = substituteList(block.values(), resolved, theme, varCache, inFlight);
+                List<ComponentValue> inner = substituteList(block.values(), env, varCache, inFlight);
                 if (inner == null) {
                     return null;
                 }
@@ -259,8 +298,7 @@ public final class Cascade {
 
     private static @Nullable List<ComponentValue> expandVar(
             ComponentValue.Function var,
-            Map<String, ResolvedDecl> resolved,
-            Theme theme,
+            Function<String, @Nullable List<ComponentValue>> env,
             Map<String, List<ComponentValue>> varCache,
             Set<String> inFlight) {
         List<ComponentValue> args = var.args();
@@ -278,14 +316,10 @@ public final class Cascade {
             if (expanded != null) {
                 return expanded;
             }
-            ResolvedDecl foundDecl = resolved.get(varName);
-            List<ComponentValue> found = foundDecl != null ? foundDecl.value() : null;
-            if (found == null) {
-                found = theme.rootVars().get(varName);
-            }
+            List<ComponentValue> found = env.apply(varName);
             if (found != null) {
                 // the var's own value may reference further vars — expand recursively
-                expanded = substituteList(found, resolved, theme, varCache, inFlight);
+                expanded = substituteList(found, env, varCache, inFlight);
                 if (expanded == null) {
                     return null;
                 }
@@ -305,7 +339,7 @@ public final class Cascade {
                 if (comma < 0) {
                     return null;
                 }
-                expanded = substituteList(args.subList(comma + 1, args.size()), resolved, theme, varCache, inFlight);
+                expanded = substituteList(args.subList(comma + 1, args.size()), env, varCache, inFlight);
                 if (expanded == null) {
                     return null;
                 }

@@ -1,37 +1,169 @@
 /*
  * cloudlib:standard — the stock OreUI-style pixel theme.
- * Assets ported from CalculatorCirrus (directed-graph-calculator branch).
+ * Assets ported from CalculatorCirrus; slice borders and source rects
+ * mirror dev.vfyjxf.cirrus.ui.CirrusTextures.
+ *
+ * Texture fns: nine-slice(loc, border[, w, h]) blits the file at
+ * textures/<loc>.png; sprite(loc, w, h) blits that file region;
+ * sprite(loc) resolves through the GUI sprite atlas instead.
  */
 
 :root {
     /* palette */
-    --accent:        #5BC0EB;
-    --accent-dim:    #5BC0EB66;
-    --text:          #F4F4F4FF;
-    --text-dim:      #9AA7B4FF;
-    --text-on-accent:#10141AFF;
-    --danger:        #E05252FF;
-    --ok:            #6BCB77FF;
+    --accent:         #5BC0EB;
+    --accent-dim:     #5BC0EB66;
+    --text:           #F4F4F4FF;
+    --text-dim:       #A8B0B8FF;
+    --text-dim-strong:#4E575FFF;
+    --text-on-accent: #10141AFF;
+    --danger:         #E05252FF;
+    --ok:             #6BCB77FF;
 
-    /* reusable texture values */
-    --panel:         nine-slice("cloudlib:gui/panel/dark", 3);
-    --panel-flat:    nine-slice("cloudlib:gui/panel/flat", 3);
-    --panel-inset:   nine-slice("cloudlib:gui/panel/inset", 3);
-    --frame-dark:    nine-slice("cloudlib:gui/frame/dark", 3);
-    --frame-light:   nine-slice("cloudlib:gui/frame/light", 3);
-    --slot:          nine-slice("cloudlib:gui/slot/base", 2);
-    --slot-dark:     nine-slice("cloudlib:gui/slot/dark", 2);
-    --btn:           nine-slice("cloudlib:gui/button/base", 2);
-    --btn-hover:     nine-slice("cloudlib:gui/button/hover", 2);
-    --btn-down:      nine-slice("cloudlib:gui/button/pressed", 2);
+    /* ---- surfaces ---- */
+    /* the fullscreen window chrome: 32x37 source, 10px uniform border —
+       the tall top edge doubles as the title strip */
+    --window:              nine-slice("cloudlib:gui/panel/frame", 10, 32, 37);
+    --panel:               nine-slice("cloudlib:gui/panel/dark", 4, 16, 16);
+    --panel-flat:          nine-slice("cloudlib:gui/panel/flat", 4, 18, 18);
+    --panel-inset:         nine-slice("cloudlib:gui/panel/inset", 4, 18, 18);
+    --panel-outlined:      nine-slice("cloudlib:gui/panel/outlined_flat", 4, 20, 20);
+    --panel-outlined-inset: nine-slice("cloudlib:gui/panel/outlined_inset", 4, 20, 20);
+    --frame-dark:          nine-slice("cloudlib:gui/frame/dark", 4, 18, 18);
+    --frame-light:         nine-slice("cloudlib:gui/frame/light", 4, 18, 18);
+
+    /* ---- slots ---- */
+    --slot:       nine-slice("cloudlib:gui/slot/base", 4, 18, 18);
+    --slot-dark:  nine-slice("cloudlib:gui/slot/dark", 4, 18, 18);
+
+    /* ---- buttons ---- */
+    --btn:        nine-slice("cloudlib:gui/button/base", 4, 14, 16);
+    --btn-hover:  nine-slice("cloudlib:gui/button/hover", 4, 14, 15);
+    --btn-down:   nine-slice("cloudlib:gui/button/pressed", 4, 14, 15);
+
+    /* ---- scrollbars ---- */
+    --scroll-track:      nine-slice("cloudlib:gui/scroll/track", 4, 18, 9);
+    --scroll-track-fill: nine-slice("cloudlib:gui/scroll/track_fill", 1, 3, 3);
+    --scroll-thumb:      sprite("cloudlib:gui/scroll/bar", 7, 8);
+    --scroll-thumb-h:    nine-slice("cloudlib:gui/scroll/bar_horizontal", 2, 7, 9);
+
+    /* ---- tabs (plain sprites, not sliced) ---- */
+    --tab-select:   sprite("cloudlib:gui/tab/select", 21, 22);
+    --tab-hover:    sprite("cloudlib:gui/tab/hover", 21, 22);
+    --tab-unselect: sprite("cloudlib:gui/tab/unselect", 20, 22);
+
+    /* ---- toggle checked (7x7 checkbox set) ---- */
+    --check-off:        sprite("cloudlib:gui/toggle_checked/unselect", 7, 7);
+    --check-off-hover:  sprite("cloudlib:gui/toggle_checked/unselect_hover", 7, 7);
+    --check-on:         sprite("cloudlib:gui/toggle_checked/select", 7, 7);
+    --check-on-hover:   sprite("cloudlib:gui/toggle_checked/select_hover", 7, 7);
+
+    /* ---- switch: slide frames + rocker halves ---- */
+    --switch-off:        sprite("cloudlib:gui/switch/slide_off", 20, 13);
+    --switch-off-hover:  sprite("cloudlib:gui/switch/slide_off_hover", 20, 12);
+    --switch-on:         sprite("cloudlib:gui/switch/slide_on", 20, 13);
+    --switch-on-hover:   sprite("cloudlib:gui/switch/slide_on_hover", 20, 12);
+
+    --switch-rock-left-on:        sprite("cloudlib:gui/switch/rock_left_on", 9, 9);
+    --switch-rock-left-on-hover:  sprite("cloudlib:gui/switch/rock_left_on_hover", 9, 9);
+    --switch-rock-left-off:       sprite("cloudlib:gui/switch/rock_left_off", 9, 9);
+    --switch-rock-left-off-hover: sprite("cloudlib:gui/switch/rock_left_off_hover", 9, 9);
+    --switch-rock-right-on:        sprite("cloudlib:gui/switch/rock_right_on", 9, 9);
+    --switch-rock-right-on-hover:  sprite("cloudlib:gui/switch/rock_right_on_hover", 9, 9);
+    --switch-rock-right-off:       sprite("cloudlib:gui/switch/rock_right_off", 9, 9);
+    --switch-rock-right-off-hover: sprite("cloudlib:gui/switch/rock_right_off_hover", 9, 9);
+
+    --switch-bg-on-left:         sprite("cloudlib:gui/switch/rock_on_left", 11, 13);
+    --switch-bg-on-left-hover:   sprite("cloudlib:gui/switch/rock_on_hover_left", 11, 13);
+    --switch-bg-on-right:        sprite("cloudlib:gui/switch/rock_on_right", 9, 12);
+    --switch-bg-on-right-hover:  sprite("cloudlib:gui/switch/rock_on_hover_right", 9, 12);
+    --switch-bg-off-left:        sprite("cloudlib:gui/switch/rock_off_left", 9, 12);
+    --switch-bg-off-left-hover:  sprite("cloudlib:gui/switch/rock_off_hover_left", 9, 12);
+    --switch-bg-off-right:       sprite("cloudlib:gui/switch/rock_off_right", 11, 13);
+    --switch-bg-off-right-hover: sprite("cloudlib:gui/switch/rock_off_hover_right", 11, 13);
+
+    /* ---- triple toggle (segmented, sliced) ---- */
+    --triple-left-on:      nine-slice("cloudlib:gui/toggle_triple/left_selected", 9, 42, 30);
+    --triple-left-off:     nine-slice("cloudlib:gui/toggle_triple/left_unselected", 9, 78, 28);
+    --triple-mid-left:     nine-slice("cloudlib:gui/toggle_triple/middle_left", 9, 39, 28);
+    --triple-mid:          nine-slice("cloudlib:gui/toggle_triple/middle_middle", 9, 42, 30);
+    --triple-mid-right:    nine-slice("cloudlib:gui/toggle_triple/middle_right", 9, 39, 28);
+    --triple-right-on:     nine-slice("cloudlib:gui/toggle_triple/right_selected", 9, 42, 30);
+    --triple-right-off:    nine-slice("cloudlib:gui/toggle_triple/right_unselected", 9, 78, 28);
+
+    /* ---- pager ---- */
+    --pager-button: nine-slice("cloudlib:gui/pager/button", 3, 8, 10);
+    --pager-arrow:  nine-slice("cloudlib:gui/pager/arrow", 3, 9, 10);
+
+    /* ---- signs ---- */
+    --sign-bar:    nine-slice("cloudlib:gui/sign/bar", 2, 45, 4);
+    --sign-amount: sprite("cloudlib:gui/sign/amount_sign", 7, 7);
+
+    /* ---- icons ---- */
+    --icon-add:             sprite("cloudlib:gui/icons/add_icon", 12, 12);
+    --icon-bookmark:        sprite("cloudlib:gui/icons/bookmark_icon", 16, 16);
+    --icon-crafting-helper: sprite("cloudlib:gui/icons/crafting_helper_icon", 16, 16);
+    --icon-memo:            sprite("cloudlib:gui/icons/memo_icon", 16, 16);
+    --icon-search-big:      sprite("cloudlib:gui/icons/search_icon", 16, 16);
+    --icon-history:         sprite("cloudlib:gui/icons/view_history_icon", 16, 16);
+
+    --icon-arrow-up:          sprite("cloudlib:gui/icon/arrow_up", 10, 10);
+    --icon-arrow-up-on:       sprite("cloudlib:gui/icon/arrow_up_selected", 10, 10);
+    --icon-arrow-down:        sprite("cloudlib:gui/icon/arrow_down", 10, 10);
+    --icon-arrow-down-on:     sprite("cloudlib:gui/icon/arrow_down_selected", 10, 10);
+    --icon-arrow-right:       sprite("cloudlib:gui/icon/arrow_right", 10, 10);
+    --icon-delete:            sprite("cloudlib:gui/icon/delete", 10, 10);
+    --icon-delete-on:         sprite("cloudlib:gui/icon/delete_seleted", 10, 10);
+    --icon-finished:          sprite("cloudlib:gui/icon/finished", 11, 11);
+    --icon-next:              sprite("cloudlib:gui/icon/next", 12, 12);
+    --icon-next-down:         sprite("cloudlib:gui/icon/next_pressed", 12, 12);
+    --icon-pause:             sprite("cloudlib:gui/icon/pause", 11, 11);
+    --icon-play:              sprite("cloudlib:gui/icon/play", 11, 11);
+    --icon-search:            sprite("cloudlib:gui/icon/search", 10, 10);
+    --icon-search-on:         sprite("cloudlib:gui/icon/search_selected", 10, 10);
+    --icon-setting:           sprite("cloudlib:gui/icon/setting", 10, 10);
+    --icon-setting-on:        sprite("cloudlib:gui/icon/setting_selected", 10, 10);
+    --icon-start:             sprite("cloudlib:gui/icon/start", 12, 12);
+    --icon-start-down:        sprite("cloudlib:gui/icon/start_pressed", 12, 12);
+
+    --icon-sm-left:      sprite("cloudlib:gui/icon/small/arrow_left", 5, 6);
+    --icon-sm-left-on:   sprite("cloudlib:gui/icon/small/arrow_left_selected", 5, 6);
+    --icon-sm-right:     sprite("cloudlib:gui/icon/small/arrow_right", 5, 6);
+    --icon-sm-right-on:  sprite("cloudlib:gui/icon/small/arrow_right_selected", 5, 6);
+    --icon-sm-minus:     sprite("cloudlib:gui/icon/small/minus", 5, 6);
+    --icon-sm-minus-on:  sprite("cloudlib:gui/icon/small/minus_selected", 5, 6);
+    --icon-sm-plus:      sprite("cloudlib:gui/icon/small/plus", 5, 6);
+    --icon-sm-plus-on:   sprite("cloudlib:gui/icon/small/plus_selected", 5, 6);
+
+    --icon-mid-left:       sprite("cloudlib:gui/icon/middle/arrow_left", 9, 9);
+    --icon-mid-left-down:  sprite("cloudlib:gui/icon/middle/arrow_left_down", 9, 9);
+    --icon-mid-right:      sprite("cloudlib:gui/icon/middle/arrow_right", 9, 9);
+    --icon-mid-right-down: sprite("cloudlib:gui/icon/middle/arrow_right_down", 9, 9);
+
+    /* ---- sign / amount / energy glyphs ---- */
+    --sign-catalyst: sprite("cloudlib:gui/icon/sign/catalyst", 3, 19);
+    --sign-fluid:    sprite("cloudlib:gui/icon/sign/fluid", 3, 19);
+    --sign-item:     sprite("cloudlib:gui/icon/sign/item", 3, 19);
+    --amount-ok:      sprite("cloudlib:gui/icon/sign/amount/avaible", 5, 5);
+    --amount-catalyst: sprite("cloudlib:gui/icon/sign/amount/catalyst", 5, 5);
+    --amount-missing:  sprite("cloudlib:gui/icon/sign/amount/missing", 5, 5);
+    --energy-ae:   sprite("cloudlib:gui/icon/sign/energy/ae", 9, 9);
+    --energy-eu:   sprite("cloudlib:gui/icon/sign/energy/eu", 9, 9);
+    --energy-fe:   sprite("cloudlib:gui/icon/sign/energy/fe", 9, 9);
+    --energy-mana: sprite("cloudlib:gui/icon/sign/energy/mana", 9, 9);
+    --energy-time: sprite("cloudlib:gui/icon/sign/energy/time", 9, 9);
+    --energy-vis:  sprite("cloudlib:gui/icon/sign/energy/vis", 9, 9);
 
     /* metrics */
-    --pad:           4px;
-    --gap:           4px;
-    --cell:          18px;
+    --pad:  4px;
+    --gap:  4px;
+    --cell: 18px;
 }
 
 /* ---------- generic chrome ---------- */
+
+label, text {
+    color: var(--text);
+}
 
 panel {
     background: var(--panel);
@@ -50,38 +182,43 @@ button {
     text-align: center;
 }
 button:hover    { background: var(--btn-hover); }
-button:pressed,
-button:active   { background: var(--btn-down); }
-button:disabled { color: var(--text-dim); }
+button:pressed  { background: var(--btn-down); }
+button:disabled { background: var(--btn); color: var(--text-dim-strong); }
 
-item-slot, .slot {
+toggle {
+    background: var(--switch-off);
+    width: 20px;
+    height: 13px;
+}
+toggle:hover          { background: var(--switch-off-hover); }
+toggle:checked        { background: var(--switch-on); }
+toggle:checked:hover  { background: var(--switch-on-hover); }
+
+divider {
+    background: var(--sign-bar);
+    height: 2px;
+}
+divider.vertical { width: 2px; height: auto; }
+
+.slot, item-slot {
     background: var(--slot);
     width: var(--cell);
     height: var(--cell);
 }
-item-slot:hover { background: var(--slot-dark); }
+.slot:hover, item-slot:hover { background: var(--slot-dark); }
 
-/* ---------- composite chrome ---------- */
+/* ---------- class variants ---------- */
 
-scrollbar        { background: nine-slice("cloudlib:gui/scroll/track", 1); }
-scrollbar::part(thumb) { background: sprite("cloudlib:gui/scroll/bar"); }
+.window              { background: var(--window); }
+panel.flat           { background: var(--panel-flat); }
+panel.inset          { background: var(--panel-inset); }
+panel.outlined       { background: var(--panel-outlined); }
+panel.outlined-inset { background: var(--panel-outlined-inset); }
 
-tab              { background: nine-slice("cloudlib:gui/tab/unselect", 3); color: var(--text-dim); }
-tab:hover        { background: nine-slice("cloudlib:gui/tab/hover", 3); }
-tab:selected     { background: nine-slice("cloudlib:gui/tab/select", 3); color: var(--text); }
+button.primary { background: var(--btn-hover); }
+button.danger  { color: var(--danger); }
 
-switch           { background: sprite("cloudlib:gui/switch/slide_off"); }
-switch:hover     { background: sprite("cloudlib:gui/switch/slide_off_hover"); }
-switch:checked   { background: sprite("cloudlib:gui/switch/slide_on"); }
-switch:checked:hover { background: sprite("cloudlib:gui/switch/slide_on_hover"); }
-
-pager            { background: nine-slice("cloudlib:gui/pager/button", 2); }
-pager::part(arrow) { icon: sprite("cloudlib:gui/pager/arrow"); }
-
-/* ---------- type-variant examples (classes) ---------- */
-
-button.primary        { color: var(--text-on-accent); }
-button.primary        { background: var(--btn-hover); }
-button.danger         { color: var(--danger); }
-panel.inset           { background: var(--panel-inset); }
-panel.flat            { background: var(--panel-flat); }
+check           { background: var(--check-off); width: 7px; height: 7px; }
+check:hover     { background: var(--check-off-hover); }
+check:checked   { background: var(--check-on); }
+check:checked:hover { background: var(--check-on-hover); }

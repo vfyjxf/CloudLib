@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
+import dev.vfyjxf.cloudlib.api.ui.style.Styles;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.network.chat.Component;
@@ -88,14 +89,14 @@ public class TextWidget extends Widget {
      * {@code text-shadow} value wins over the widget default ({@code false}).
      */
     public boolean shadow() {
-        Boolean v = style().get(dev.vfyjxf.cloudlib.api.ui.style.Styles.textShadow);
+        Boolean v = style().get(Styles.textShadow);
         return v != null ? v : shadow;
     }
 
     /** Code-level shadow override — writes the {@code text-shadow} style key. */
     public TextWidget setShadow(boolean shadow) {
         this.shadow = shadow;
-        set(dev.vfyjxf.cloudlib.api.ui.style.Styles.textShadow, shadow);
+        set(Styles.textShadow, shadow);
         return this;
     }
 

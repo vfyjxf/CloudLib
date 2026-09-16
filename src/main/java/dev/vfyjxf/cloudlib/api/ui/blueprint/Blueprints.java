@@ -17,7 +17,7 @@ import java.util.function.Consumer;
  * <p>
  * Import statically to use the Compose/Flutter-like syntax:
  * <pre>{@code
- * import static dev.vfyjxf.cloudlib.api.ui.blueprint.Blueprints.*;
+ * import static Blueprints.*;
  *
  * Column(() -> {
  *     Label("Title");

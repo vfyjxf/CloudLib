@@ -1,7 +1,9 @@
 package dev.vfyjxf.cloudlib.internal.ui.style;
 
 import dev.vfyjxf.cloudlib.api.css.ComponentValue;
+import dev.vfyjxf.cloudlib.api.ui.style.Shadow;
 import dev.vfyjxf.taffy.style.CalcExpression;
+import dev.vfyjxf.taffy.style.GridPlacement;
 import dev.vfyjxf.taffy.style.LengthPercentage;
 import dev.vfyjxf.taffy.style.LengthPercentageAuto;
 import dev.vfyjxf.taffy.style.TaffyDimension;
@@ -228,9 +230,9 @@ public final class CssValues {
 
     /**
      * {@code box-shadow: none | <off-x> <off-y> [blur] [color]} → a
-     * {@link dev.vfyjxf.cloudlib.api.ui.style.Shadow} value.
+     * {@link Shadow} value.
      */
-    public static @Nullable dev.vfyjxf.cloudlib.api.ui.style.Shadow shadow(List<ComponentValue> values) {
+    public static @Nullable Shadow shadow(List<ComponentValue> values) {
         List<ComponentValue> flat = values.stream()
                 .filter(c -> c != ComponentValue.Whitespace.instance)
                 .toList();
@@ -238,7 +240,7 @@ public final class CssValues {
         if (flat.size() == 1
                 && flat.get(0) instanceof ComponentValue.Ident id
                 && id.value().equalsIgnoreCase("none")) {
-            return dev.vfyjxf.cloudlib.api.ui.style.Shadow.none;
+            return Shadow.none;
         }
         List<Float> lengths = new ArrayList<>();
         Integer color = null;
@@ -254,7 +256,7 @@ public final class CssValues {
         if (lengths.size() < 2) return null;
         float ox = lengths.get(0), oy = lengths.get(1);
         float blur = lengths.size() > 2 ? lengths.get(2) : 0f;
-        return new dev.vfyjxf.cloudlib.api.ui.style.Shadow(ox, oy, blur, color != null ? color : 0x80000000);
+        return new Shadow(ox, oy, blur, color != null ? color : 0x80000000);
     }
 
     /** {@code aspect-ratio: <n> | <n> / <n>} */
@@ -279,8 +281,7 @@ public final class CssValues {
      * {@code <grid-placement>} — {@code auto | <int> | span <int> | <name> [<int>]}.
      * Consumes a single token for auto/line, or the pair for span/named forms.
      */
-    public static @Nullable dev.vfyjxf.taffy.style.GridPlacement placement(
-            List<ComponentValue> values, int[] consumed) {
+    public static @Nullable GridPlacement placement(List<ComponentValue> values, int[] consumed) {
         List<ComponentValue> flat = values.stream()
                 .filter(c -> c != ComponentValue.Whitespace.instance)
                 .toList();
@@ -289,35 +290,35 @@ public final class CssValues {
         if (first instanceof ComponentValue.Ident id) {
             String name = id.value();
             if (name.equalsIgnoreCase("auto")) {
-                return dev.vfyjxf.taffy.style.GridPlacement.auto();
+                return GridPlacement.auto();
             }
             if (name.equalsIgnoreCase("span") && flat.size() > 1) {
                 ComponentValue n = flat.get(1);
                 if (n instanceof ComponentValue.NumericValue num && num.integer()) {
                     consumed[0] = 2;
-                    return dev.vfyjxf.taffy.style.GridPlacement.span((int) num.value());
+                    return GridPlacement.span((int) num.value());
                 }
                 if (n instanceof ComponentValue.Ident name2) {
                     consumed[0] = 2;
-                    return dev.vfyjxf.taffy.style.GridPlacement.namedSpan(name2.value(), 1);
+                    return GridPlacement.namedSpan(name2.value(), 1);
                 }
                 return null;
             }
             // named line, optionally with index
             if (flat.size() > 1 && flat.get(1) instanceof ComponentValue.NumericValue num && num.integer()) {
                 consumed[0] = 2;
-                return dev.vfyjxf.taffy.style.GridPlacement.namedLine(name, (int) num.value());
+                return GridPlacement.namedLine(name, (int) num.value());
             }
-            return dev.vfyjxf.taffy.style.GridPlacement.namedLine(name);
+            return GridPlacement.namedLine(name);
         }
         if (first instanceof ComponentValue.NumericValue num && num.integer()) {
-            return dev.vfyjxf.taffy.style.GridPlacement.line((int) num.value());
+            return GridPlacement.line((int) num.value());
         }
         return null;
     }
 
     /** Single-token grid-placement parser (auto / line / named line). */
-    public static @Nullable dev.vfyjxf.taffy.style.GridPlacement placement(List<ComponentValue> values) {
+    public static @Nullable GridPlacement placement(List<ComponentValue> values) {
         return placement(values, new int[1]);
     }
 

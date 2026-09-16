@@ -3,6 +3,7 @@ package dev.vfyjxf.cloudlib;
 import dev.vfyjxf.cloudlib.api.plugin.AnnotationPluginLookup;
 import dev.vfyjxf.cloudlib.api.plugin.CloudLibPlugin;
 import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
+import dev.vfyjxf.cloudlib.api.ui.style.Styles;
 import dev.vfyjxf.cloudlib.blockentity.BlockEntitySyncBatcher;
 import dev.vfyjxf.cloudlib.debug.DebugConfig;
 import dev.vfyjxf.cloudlib.network.CloudlibPayloads;
@@ -65,17 +66,9 @@ public abstract sealed class CloudLib permits CloudLibClient, CloudLibServer {
     protected void constructMod(FMLConstructModEvent event) {}
 
     protected void commonSetup(FMLCommonSetupEvent event) {
-        // style keys must all be registered before the first theme parses —
-        // builtin constants self-register here; plugins then add their own
-        var registry = dev.vfyjxf.cloudlib.api.ui.style.key.StyleRegistry.get();
-        dev.vfyjxf.cloudlib.api.ui.style.Styles.init();
-        for (CloudLibPlugin plugin : plugins) {
-            try {
-                plugin.registerStyleKeys(registry);
-            } catch (Exception e) {
-                logger.warn("Failed to register style keys for plugin {}", plugin.pluginId(), e);
-            }
-        }
+        // force the builtin style vocabulary to initialize up front — a broken
+        // constant should fail fast rather than on first css parse
+        Styles.init();
     }
 
     protected void loadComplete(FMLLoadCompleteEvent event) {}

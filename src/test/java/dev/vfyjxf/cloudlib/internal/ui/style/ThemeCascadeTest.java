@@ -1,9 +1,15 @@
-package dev.vfyjxf.cloudlib.internal.ui.theme;
+package dev.vfyjxf.cloudlib.internal.ui.style;
 
+import dev.vfyjxf.cloudlib.api.css.CssError;
 import dev.vfyjxf.cloudlib.api.css.CssParser;
 import dev.vfyjxf.cloudlib.api.css.Stylesheet;
+import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
+import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.style.StyleVar;
+import dev.vfyjxf.cloudlib.api.ui.style.Styles;
+import dev.vfyjxf.cloudlib.api.ui.style.Theme;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.api.ui.theme.Theme;
+import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
@@ -16,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ThemeCascadeTest {
 
     /** A leaf test node — a real {@link Widget} with a fixed selector tag. */
-    static class Node extends dev.vfyjxf.cloudlib.api.ui.base.Widget {
+    static class Node extends Widget {
         private final String tag;
 
         Node(String tag) {
@@ -30,14 +36,14 @@ class ThemeCascadeTest {
     }
 
     /** A composite fixture — exposes the protected {@code addWidget}. */
-    static class Panel extends dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget<dev.vfyjxf.cloudlib.api.ui.base.Widget> {
+    static class Panel extends CompositeWidget<Widget> {
         private final String tag;
 
         Panel(String tag) {
             this.tag = tag;
         }
 
-        <W extends dev.vfyjxf.cloudlib.api.ui.base.Widget> W child(W w) {
+        <W extends Widget> W child(W w) {
             addWidget(w);
             return w;
         }
@@ -52,7 +58,7 @@ class ThemeCascadeTest {
         return new Theme(ResourceLocation.fromNamespaceAndPath("test", "t"), CssParser.parse(css));
     }
 
-    private static UIStyle styleOf(Theme theme, dev.vfyjxf.cloudlib.api.ui.base.Widget node) {
+    private static UIStyle styleOf(Theme theme, Widget node) {
         List<String> warnings = new ArrayList<>();
         return theme.resolve(node, warnings::add);
     }
@@ -61,7 +67,7 @@ class ThemeCascadeTest {
      * Resolves a (possibly shorthand / aliased) css name to its winning
      * {@link StyleValue} — box shorthands land on their {@code -top} longhand.
      */
-    private static @Nullable dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue<?> prop(UIStyle style, String name) {
+    private static @Nullable StyleValue<?> prop(UIStyle style, String name) {
         String mapped =
                 switch (name) {
                     case "padding", "margin", "inset", "border-width" -> name + "-top";
@@ -76,7 +82,7 @@ class ThemeCascadeTest {
                     case "textColor" -> "color";
                     default -> name;
                 };
-        var key = dev.vfyjxf.cloudlib.api.ui.style.Styles.byId(mapped);
+        var key = Styles.byId(mapped);
         return key == null ? null : style.get(key);
     }
 
@@ -288,6 +294,70 @@ class ThemeCascadeTest {
         assertNotNull(prop(styleOf(t, btn), "textColor"));
     }
 
+    @Test
+    void customPropsLandInStyleVars() {
+        Theme t = theme("button { --pad: 6px; --accent: #35D6D0 }");
+        UIStyle s = styleOf(t, new Node("button"));
+        assertNotNull(s.varRaw("--pad"));
+        assertEquals("6px", s.varRaw("--pad").text().trim());
+        assertEquals("#35D6D0", s.varRaw("--accent").text().trim());
+    }
+
+    @Test
+    void customPropsInheritIntoVars() {
+        Theme t = theme(":root { --accent: #FF0000 }");
+        Panel panel = new Panel("panel");
+        Node btn = panel.child(new Node("button"));
+        // --* inherits unconditionally: the child's vars carry the root binding
+        UIStyle s = styleOf(t, btn);
+        assertNotNull(s.varRaw("--accent"));
+        assertEquals("#FF0000", s.varRaw("--accent").text().trim());
+    }
+
+    @Test
+    void inlineVarWinsOverThemeVar() {
+        Theme t = theme("button { --pad: 1px; padding: var(--pad) }");
+        Node n = new Node("button");
+        n.setVar("--pad", "9px");
+        UIStyle s = styleOf(t, n);
+        var p = prop(s, "padding");
+        assertNotNull(p);
+        assertTrue(p.toString().contains("9")); // the inline binding feeds var()
+        assertEquals("9px", s.varRaw("--pad").text().trim());
+    }
+
+    @Test
+    void varChainedReferences() {
+        Theme t = theme("button { --a: 4px; --b: var(--a); padding: var(--b) }");
+        UIStyle s = styleOf(t, new Node("button"));
+        var p = prop(s, "padding");
+        assertNotNull(p);
+        assertTrue(p.toString().contains("4"));
+        assertEquals("4px", s.varRaw("--b").text().trim()); // --b resolves to --a's tokens
+    }
+
+    @Test
+    void varCycleDropsDeclaration() {
+        Theme t = theme("button { --a: var(--b); --b: var(--a); padding: var(--a); margin: 2px }");
+        UIStyle s = styleOf(t, new Node("button"));
+        assertNull(prop(s, "padding")); // cyclic --a poisons the consumer
+        assertNull(s.varRaw("--a")); // cyclic vars emit nothing
+        assertNull(s.varRaw("--b"));
+        assertNotNull(prop(s, "margin")); // unrelated declarations survive
+    }
+
+    @Test
+    void styleVarTypedRead() {
+        Theme t = theme("button { --accent: #35D6D0; --scale: 1.5 }");
+        UIStyle s = styleOf(t, new Node("button"));
+        var accent = StyleVar.color("--accent");
+        var scale = StyleVar.number("--scale");
+        assertEquals(0xFF35D6D0, s.var(accent));
+        assertEquals(1.5f, s.var(scale));
+        var missing = StyleVar.number("--missing").orElse(3f);
+        assertEquals(3f, s.var(missing)); // fallback on unset
+    }
+
     // ------------------------------------------------------------------ inheritance
 
     @Test
@@ -417,7 +487,27 @@ class ThemeCascadeTest {
 
     @Test
     void realStandardThemeParses() throws Exception {
-        assertThemeResolves("standard.css", "panel", "button", "item-slot", "scrollbar", "tab", "switch", "pager");
+        assertThemeResolves("standard/base.css", "panel", "button", "toggle", "divider", "label", "check");
+    }
+
+    @Test
+    void baseCssParsesAndStylesWidgets() throws Exception {
+        String path = "/assets/cloudlib/ui/themes/standard/base.css";
+        var in = ThemeCascadeTest.class.getResourceAsStream(path);
+        assertNotNull(in, path + " missing from classpath");
+        List<CssError> errors = new ArrayList<>();
+        Stylesheet sheet = CssParser.parse(new String(in.readAllBytes()), errors);
+        assertTrue(errors.isEmpty(), () -> "base.css parse errors: " + errors);
+        Theme theme = new Theme(ResourceLocation.fromNamespaceAndPath("cloudlib", "standard"), sheet);
+
+        Node button = new Node("button");
+        UIStyle s = styleOf(theme, button);
+        assertFalse(s.isEmpty(), "base.css resolves nothing for button");
+        assertNotNull(prop(s, "background"), "button background did not resolve");
+
+        Node hover = new Node("button");
+        hover.addStyleState("hover");
+        assertNotNull(prop(styleOf(theme, hover), "background"), "button:hover background did not resolve");
     }
 
     /**
@@ -430,7 +520,7 @@ class ThemeCascadeTest {
         var in = ThemeCascadeTest.class.getResourceAsStream(path);
         assertNotNull(in, path + " missing from classpath");
         String css = new String(in.readAllBytes());
-        List<dev.vfyjxf.cloudlib.api.css.CssError> errors = new ArrayList<>();
+        List<CssError> errors = new ArrayList<>();
         Stylesheet sheet = CssParser.parse(css, errors);
         assertTrue(errors.isEmpty(), () -> file + " parse errors: " + errors);
         assertFalse(sheet.rules().isEmpty());
