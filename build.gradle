@@ -95,15 +95,11 @@ neoForge {
 
 sourceSets {
     main {
-        java.exclude 'dev/vfyjxf/cloudlib/integration/moddevmcp/**'
         //datagen output lives next to the lang yaml under build/, like the modMetadata dir
         resources {
             srcDir layout.buildDirectory.dir('generated/datagen/resources')
             exclude '**/.cache/**'
         }
-    }
-    test {
-        java.exclude 'dev/vfyjxf/cloudlib/integration/moddevmcp/**'
     }
 }
 
