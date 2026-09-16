@@ -3,13 +3,12 @@ package dev.vfyjxf.cloudlib.ui.widget;
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.cloudlib.ui.hacker.HackerTheme;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 /**
- * A tiny hacker-mode action chip: outline-only rect + short label.
+ * A tiny action chip: outline-only rect + short label.
  * Used by the in-world demo panels instead of the chunky vanilla-style
  * {@link dev.vfyjxf.cloudlib.ui.widget.ButtonWidget}.
  */
@@ -72,7 +71,7 @@ public class ChipWidget extends Widget {
         int w = width();
         int h = height();
         boolean hot = hovered() || focused();
-        int border = hot ? HackerTheme.accent : HackerTheme.border;
+        int border = hot ? 0xFF35D6D0 : 0xB35C6E7E;
         if (pressed) {
             canvas.fill(0, 0, w, h, 0xF22E4E4C);
         } else if (hot) {
@@ -85,6 +84,6 @@ public class ChipWidget extends Widget {
                 label,
                 (w - font.width(label)) / 2,
                 (h - font.lineHeight) / 2 + 1,
-                hot ? HackerTheme.text : HackerTheme.textDim);
+                hot ? 0xFFE8F4F8 : 0xFF7C93A3);
     }
 }

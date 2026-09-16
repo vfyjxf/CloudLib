@@ -420,12 +420,6 @@ class ThemeCascadeTest {
         assertThemeResolves("standard.css", "panel", "button", "item-slot", "scrollbar", "tab", "switch", "pager");
     }
 
-    @Test
-    void realHackerThemeParses() throws Exception {
-        assertThemeResolves(
-                "hacker.css", "inworld-panel", "hint-chip", "leader-line", "scan-frame", "presence-pip", "item-slot");
-    }
-
     /**
      * Dogfood: load the bundled css, then resolve every declared tag and assert
      * each produces at least one style property — catches bad value shapes and
