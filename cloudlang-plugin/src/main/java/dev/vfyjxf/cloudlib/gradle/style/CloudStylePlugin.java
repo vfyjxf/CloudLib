@@ -16,6 +16,10 @@ import org.gradle.api.Project;
  *   <li>{@code lowerCamelConstants} — a lint step that fails the check when
  *       a {@code static final} field or enum constant isn't lowerCamelCase
  *       (report-only; renames are never auto-applied)</li>
+ *   <li>{@code noFullyQualifiedNames} — a lint step that fails the check when
+ *       code uses a fully qualified class reference that could be an import
+ *       (collision-forced qualifications and {@code // fqn-ok} suppressions
+ *       pass; literals and comments are never scanned)</li>
  * </ul>
  */
 public class CloudStylePlugin implements Plugin<Project> {
@@ -33,6 +37,7 @@ public class CloudStylePlugin implements Plugin<Project> {
             java.endWithNewline();
             java.custom("lowerCamelConstants",
                     (FormatterFunc) raw -> ConstantNamingLint.check(raw, projectName));
+            java.custom("noFullyQualifiedNames", (FormatterFunc) FqnLint::check);
         });
     }
 

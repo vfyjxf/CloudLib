@@ -64,8 +64,7 @@ final class LangKeysClassWriter {
             out.append('@').append(annotationSimpleName).append("(\"").append(GENERATOR_ID).append("\")\n");
         }
         out.append("public final class ").append(className).append(" {\n\n");
-        out.append("    private ").append(className).append("() {\n");
-        out.append("    }\n");
+        out.append("    private ").append(className).append("() {}\n");
         writeNode(root, out, entrySimpleName, 1, fieldNames, style);
         out.append("}\n");
         return out.toString();
@@ -116,8 +115,7 @@ final class LangKeysClassWriter {
         for (var child : node.children.entrySet()) {
             out.append('\n');
             out.append(indent).append("public static final class ").append(style.className(child.getKey())).append(" {\n\n");
-            out.append(indent).append("    private ").append(style.className(child.getKey())).append("() {\n");
-            out.append(indent).append("    }\n");
+            out.append(indent).append("    private ").append(style.className(child.getKey())).append("() {}\n");
             writeNode(child.getValue(), out, entrySimpleName, depth + 1, fieldNames, style);
             out.append(indent).append("}\n");
         }

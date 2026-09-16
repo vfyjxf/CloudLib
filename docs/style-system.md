@@ -51,49 +51,37 @@ folds into `StyleKey`. The 40 `XxxProperty` classes are deleted; their apply
 logic moves into each key's `applier`. `UIStyles` factories are rewritten as
 `Styles.padding.of(…)` delegates.
 
-## 2. Registration — DECIDED (predefined constants; register = index write)
+## 2. Vocabulary — DECIDED (closed; no registration)
 
-`Styles` is predefined constants — each key is a self-contained record
-constructed in its field initializer; `register()` only writes the key into
-the css-name index. Same idiom as `WidgetEvent`'s `EventDefinition` fields:
+The builtin property vocabulary is a **closed set**: `StyleKey` is a
+`final class` with a package-private constructor — `BuiltinKeys` (in the same
+`key` package) is the only construction site. `Styles` is the public facade
+delegating to it; every `Styles.paddingLeft`-style constant is a fixed
+builtin. There is no `StyleRegistry` and no `registerStyleKeys` plugin hook —
+`new StyleKey<>(…)` does not compile outside `BuiltinKeys`.
 
 ```java
-public final class Styles {
-
-    private Styles() {}
-
-    // region layout
+// api/ui/style/key/BuiltinKeys.java — the only place keys exist
+public class BuiltinKeys {
     public static final StyleKey<LengthPercentage> paddingLeft =
-            register(new StyleKey<>("padding-left", LengthPercentage.class,
-                    StyleScope.layout, EdgeSlotHandler.padding(Edge.left)));
-    // … every key, one constant each — longhand-only per §4b.3
-    // endregion
+            key("padding-left", LengthPercentage.class,
+                StyleScope.layout, CssValues::lengthPercentage,
+                StyleApplies::paddingLeft, StyleKey::formatLp, Edge::left);
 
-    private static <T> StyleKey<T> register(StyleKey<T> key) {
-        StyleRegistry.register(key);   // writes the css-name index + all() list
-        return key;
-    }
-
-    public static @Nullable StyleKey<?> byId(String cssName) {
-        return StyleRegistry.byId(cssName);
-    }
+    // fixed lookup tables — name → key, shorthand → expander, alias → name
+    public static @Nullable StyleKey<?> byId(String cssName) { … }
+    public static @Nullable Shorthand shorthand(String name) { … }
+    public static Collection<StyleKey<?>> all() { … }
 }
 ```
 
-The plugin hook's job is *timing*, not field population:
+External extensibility is the css-native mechanism: **`--*` custom
+properties** + `StyleVar<T>` (see §4d). A mod wanting new css-visible data
+declares `--my-thing` in a theme and holds a `StyleVar` lens — it never
+registers a key.
 
-```java
-void registerStyleKeys(StyleRegistry r) {
-    // builtin: forces Styles.<clinit> — all constants self-register
-    Styles.init();
-    // mods: register their own keys into the same index
-    r.register(new StyleKey<>("my-mod-foo", …));
-}
-```
-
-`Styles.init()` is a no-op that forces class init — touching it during plugin
-bootstrap guarantees the whole index exists before any CSS parses. Mod keys
-register through the same `StyleRegistry.register` the constants use.
+`Styles.init()` is still a no-op forcing class init so the whole index exists
+before any CSS parses.
 
 ## 3. Two front-ends, one layer — DECIDED
 
@@ -186,8 +174,8 @@ Ordered segments + dirty-mark flush stay as decided:
      `StyleValue`s; `UIStyle.of`/`useStyle` flatten groups uniformly.
    - `StyleContext` holds per-edge values; the taffy `Rect` is assembled at
      apply time (longhand applier patches one slot of the current rect).
-4. **`StyleParser`/`StyleApply`** — api-level functional interfaces; mods
-   register custom keys through the `registerStyleKeys` plugin hook.
+4. **`StyleParser`/`StyleApply`** — api-level functional interfaces used by
+   the builtin key definitions; there is no external registration (§2).
 5. **"Layers" = three ordered `UIStyle` fields, not a layer system** —
    `defaultStyle` (widget factory defaults) → `themeStyle` (theme cascade
    result) → `codeStyles` (useStyle/set). Rebuild = `style.reset()` then
@@ -199,33 +187,29 @@ Ordered segments + dirty-mark flush stay as decided:
    inside the theme cascade (theme rule vs theme rule), never escalates
    into `codeStyles`.
 
-## 4c. CSS loading & ordering — DECIDED (A+C combined)
+## 4c. CSS loading & ordering — DECIDED (descriptor-driven)
 
-**Entry point: resource packs only.** `assets/<ns>/ui/themes/*.css` — no
-config-dir themes, no code-side theme registration in v1. Keep it simple.
+**Entry point: resource packs only.** A theme is a directory —
+`assets/<ns>/ui/themes/<id>/theme.json` + its css files; the descriptor
+(`name`, `description`, `css` order, `extends` dependencies, `default` flag)
+is parsed by `StyleLoader`. Bare `*.css` files outside descriptor dirs load
+as implicit single-file themes. No config-dir themes; programmatic themes can
+still `Themes.register` directly.
 
-**Discovery ≠ activation.** Every discovered `.css` registers into
-`ThemeManager` by id. What actually applies:
+**Discovery ≠ activation.** Every discovered theme registers into `Themes` by
+id. What actually applies:
 
 ```java
-// activation stack = recommended default, in order:
-//   1. manifest-declared defaults  (pack's own themes.json)
-//   2. user config selection       (cloudlib.uiThemes = [...]) — appended, wins
+// activation stack, in order:
+//   1. user config selection   (cloudlib-themes.toml ui_themes = [...]) — wins
+//   2. descriptor defaults     (theme.json "default": true, pack order)
+//   3. cloudlib:standard       — the conventional base / final fallback
 // stack order = cascade order inside the theme segment; later wins
 ```
 
-**Pack manifest** — `assets/<ns>/ui/themes/themes.json` (optional):
-
-```json
-{
-  "default": ["cloudlib:standard"],       // ids this pack wants active
-  "order": ["base", "accents"]            // suggested relative order
-}
-```
-
-A pack manifest only *recommends*; user config is the authoritative
-selection. `cloudlib:standard` is the conventional base a manifest
-typically lists first.
+**`extends` composes themes** — dependency rules splice in before the
+dependent's own (source order); cycles cut with a warning. There is no
+`@import`.
 
 **Scene may self-decide.** The global stack is a *recommended default*,
 not a mandate: `scene.setTheme(theme)` / per-widget overrides may bypass
@@ -235,17 +219,54 @@ or replace it. The cascade resolves against the scene's effective stack.
 (later wins). `!important` stays inside the cascade (theme rule vs theme
 rule), never escalates into `codeStyles` — inline applies last, wins.
 
+**Reload**: `StyleLoader` is a client reload listener; `Themes.reload()` is
+the manual entry (`/cloudlib reload`, `StyleWatcher` file watching in dev).
+Every change fires `StyleEvents.themeReload`; mounted scenes subscribe and
+re-resolve their trees.
+
 **Out of v1**: `@layer`, config-dir themes, `registerThemes` plugin hook,
 hot per-scene theme switching UI.
+
+## 4d. Custom properties (`--*`) — DECIDED (css-native, no registration)
+
+Custom properties are real properties, not a parallel api:
+
+- **Cascade** — `--*` declarations compete in the same winners map
+  (specificity → order → `!important`), inherit unconditionally, and keep
+  their **raw token stream** (`Tokens`) as the value. `var(--x, fb)`
+  substitutes at computed-value time against the node's own resolved `--*`
+  table; cycles and unresolvable references poison the declaration.
+- **Storage** — resolved `--*` bindings ride on `UIStyle.vars()`
+  (`Map<String, Tokens>`) and land in `StyleContext.vars()`.
+- **Java lens** — `StyleVar<T>` is a mod-held constant: name + parser +
+  optional writer + optional fallback. No registration; whoever holds the
+  lens can read/write. Builtin codecs cover the common shapes:
+  `StyleVar.color/number/integer/bool/ident/tokens`.
+- **Reads** — `style().var(MyVars.accent)` (typed, falls back),
+  `style().varRaw("--accent")` (resolved tokens).
+- **Writes** — `widget.setVar(var, v)` / `setVar("--x", "4px")` are
+  **inline** bindings (`codeVars`): they top the node's var environment —
+  the style-attribute semantic — and `markStyleDirty` re-resolves theme
+  declarations referencing them. `UIStyles.var("--x", "4px")` /
+  `var(myVar, v)` produce `VarBinding` entries usable in `UIStyle.of(...)`.
+
+```java
+public static final StyleVar<Integer> accent = StyleVar.color("--accent");
+public static final StyleVar<Float>   pad    = StyleVar.number("--pad").orElse(4f);
+
+widget.setVar(MyVars.accent, 0xFFFF6FA5);
+Integer a = widget.style().var(MyVars.accent);
+```
 
 ## 5. Migration path — DECIDED (full cut, no compat shim)
 
 1. `StyleKey`/`StyleValue`/`StyleScope`/`ParseContext`/`StyleParser`/`StyleApply`
-   land in `api.ui.style.key`; `StyleRegistry` + plugin hook `registerStyleKeys`;
-   `Styles.bootstrap` called by the builtin plugin.
+   land in `api.ui.style.key`; `StyleKey` sealed — `BuiltinKeys` is the only
+   construction site; `Styles` is the public facade. `Styles.init()` runs at
+   common setup.
 2. Handlers ported per value shape (edge-box, dimension, enum, color, texture,
    grid-track, …). `PropertyParsers` deleted — CSS name resolution becomes
-   `StyleRegistry.byId` → `key.parser()`.
+   `BuiltinKeys.byId` → `key.parser()`; shorthands via `BuiltinKeys.shorthand`.
 3. `UIStyle` becomes `Map<StyleKey<?>, StyleValue<?>>`-backed (ordered);
    `StyleValue` replaces `StyleProperty` in all signatures; the 40
    `XxxProperty` classes deleted; `StyleType` deleted.

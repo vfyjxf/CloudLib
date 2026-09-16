@@ -1,8 +1,12 @@
 # CloudLib Theme System
 
-> Status: design — decisions confirmed, parser port in progress
+> Status: landed — descriptor-driven themes inside the style layer
 > Goal: resource-pack-loadable, cascade-capable styling for every CloudLib widget
 > (screens, overlays, in-world panels) plus a stock OreUI-style pixel theme.
+>
+> Themes are part of the **style layer** (`api/ui/style`, `internal/ui/style`) —
+> there is no separate theme package. The style loader reads `theme.json`
+> descriptors + stylesheets from resource packs into the `Themes` registry.
 
 ## 1. What exists today
 
@@ -38,17 +42,33 @@ registry* that resolves those styles from resource packs instead of code.
 
 ### File location & identity
 
+A theme is a **directory** under `ui/themes/` described by `theme.json`:
+
 ```
-assets/<namespace>/ui/themes/<path>.css      → theme id <namespace>:<path>
-assets/cloudlib/ui/themes/standard.css       → cloudlib:standard
-assets/cloudlib/ui/themes/hacker.css         → cloudlib:hacker
+assets/<namespace>/ui/themes/<id>/theme.json   → theme id <namespace>:<id>
+assets/<namespace>/ui/themes/<id>/*.css        → its stylesheets
+assets/cloudlib/ui/themes/standard/theme.json  → cloudlib:standard
 ```
 
-Layering uses **`@import`** — the web-standard composition mechanism:
-
-```css
-@import "cloudlib:standard";   /* pulled in at this position in the cascade */
+```json
+{
+  "name": "Standard",                          // display name → Theme.meta()
+  "description": "The stock pixel theme",
+  "css": ["base.css", "widgets.css"],          // composing files, in order;
+                                               // default: every direct-child *.css by name
+  "extends": ["cloudlib:core"],                // theme dependencies — their rules
+                                               // cascade before this theme's
+  "default": true                              // join the packs' recommended active stack
+}
 ```
+
+Layering uses **`extends`** — a theme-level dependency, resolved at load:
+the parent's rules are spliced in before the child's (source order), so the
+child wins equal-specificity ties. Cycles are cut with a warning. There is no
+css-level `@import` — the descriptor owns composition.
+
+A bare `*.css` outside every descriptor directory still loads as an implicit
+single-file theme (`ns:path` minus the extension) — useful for quick packs.
 
 ## 3. Theme anatomy
 
@@ -90,17 +110,19 @@ panel > item-slot { background: nine-slice("cloudlib:gui/slot/base", 2); }
    over normal declarations (kept — it is part of the standard cascade).
 2. **Specificity** `(a,b,c)` — ids > classes+attributes+pseudo-classes >
    types, per spec.
-3. **Order** — sheets apply in *cascade order*: the active theme list
-   (`cloudlib.ui_themes` config, ordered, default `["cloudlib:standard"]`)
-   flattened with each file's `@import`s inlined at their position.
-   Later sheets win ties.
-4. **Inline `useStyle`** — treated as the style attribute: wins over all
-   normal declarations, loses to `!important` theme rules. (Web-faithful.)
+3. **Order** — sheets apply in *cascade order*: the active stack
+   (`cloudlib-themes.toml` `ui_themes` config → descriptor `"default": true`
+   themes → `cloudlib:standard` fallback) flattened with each theme's
+   `extends` chain inlined first. Later sheets win ties.
+4. **Inline `useStyle`/`setVar`** — treated as the style attribute: wins over
+   all normal declarations (inline `--*` bindings top the node's var
+   environment too), loses to `!important` theme rules. (Web-faithful.)
 5. **Inheritance** — text-ish properties (`color`, `font`) inherit down the
-   widget tree; layout/box properties do not. Matches CSS.
-6. **Fallback** — `var(--x, fallback)` supported; unresolved vars make the
-   declaration invalid at computed-value time (spec behavior: property is
-   unset/inherited, never a parse error).
+   widget tree; layout/box properties do not; **custom properties (`--*`)
+   inherit unconditionally**. Matches CSS.
+6. **Fallback** — `var(--x, fallback)` supported; unresolved vars and var
+   cycles make the declaration invalid at computed-value time (the property
+   stays unset; the cyclic `--*` itself emits nothing).
 
 ### 3.2 Selectors
 
@@ -190,11 +212,12 @@ warning.
 | `padding*`, `margin*`, `gap`/`row-gap`/`column-gap`, `width`/`height`/`min-*`/`max-*`, `flex`/`flex-*`, `align-*`, `justify-*`, `grid-*`, `text-align` | taffy layout style |
 | `background`, `background-color`, `background-image`, `icon`, `border-width`, `border-color`, `box-shadow`, `opacity`, `z-index` | `VisualContext` |
 | `color`, `font`/`font-family`, `font-weight`, `font-style`, `text-decoration` | `VisualContext` text props |
-| `sound-*`, `cursor`, `--custom`, anything unknown | `VisualContext.setProperty(name, raw)` |
+| `--*` custom properties | `UIStyle.vars()` → `StyleContext.vars()` — raw token streams, `var()`-resolved; read via `StyleVar<T>` |
+| anything else unknown | warned + dropped (closed vocabulary — unknown non-`--` names are never keys) |
 
 Inheritance: only `color`, `font-family`, `font-weight`, `font-style`,
 `text-decoration`, `text-align`, `direction` inherit (web's inherited set,
-minus things taffy doesn't have).
+minus things taffy doesn't have) — plus every `--*`, which always inherits.
 
 ## 4. Widget model (landed)
 
@@ -216,26 +239,40 @@ Builtin pseudo mapping: `:hover`/`:hovered`←`hovered`, `:disabled`/`!active`,
 plus widget-pushed states (`:pressed`, `:checked`, `:selected`, `:engaged`…).
 
 Effective style resolution (per widget, recomputed on mount / state flip /
-theme reload via `Scene.liveScenes` → `ThemeManager.refreshTree`):
+theme reload via the `StyleEvents.themeReload` subscription every mounted
+`Scene` holds):
 `theme cascade (specificity→order, !important first) → inherited props →
-code useStyle replay`. Layout props mark the taffy node dirty; visual props
-repaint next frame. `useStyle` calls are recorded in `widget.codeStyles` so a
-theme refresh never loses code-applied styles — the inline-style rule.
+code useStyle/setVar replay`. Layout props mark the taffy node dirty; visual
+props repaint next frame. `useStyle` calls and inline vars are recorded in
+`widget.codeStyles`/`codeVars` so a theme refresh never loses code-applied
+styles — the inline-style rule.
 
 ## 5. Runtime (landed)
 
-- `ThemeLoader` (internal): `SimplePreparableReloadListener` on
-  `RegisterClientReloadListenersEvent` — reads `assets/*/ui/themes/**.css`,
-  parses once, flattens `@import` chains (cycle-safe), registers into
-  `ThemeManager`.
-- `ThemeManager` (api): `id → Theme` registry + activation **stack** —
-  `activate/deactivate/active/activeStack/onChange/refreshTree`.
-  `cloudlib:standard` auto-activates when present; packs override by id.
-- `ThemeEngine.resolve(theme, widget)` → `UIStyle`: `Cascade` (match →
-  specificity/order → var() → inherit) → `PropertyParsers` → `StyleProperty`s.
-- `Scene.liveScenes()` tracks mounted scenes; `ThemeManager.onChange` in
-  `CloudLibClient` re-resolves every live tree on reload — F3+T style hot
-  swap. Parse errors log `file:line:col` and never kill the game.
+- `StyleLoader` (internal/ui/style): `SimplePreparableReloadListener` on
+  `RegisterClientReloadListenersEvent` — scans `assets/*/ui/themes/`, reads
+  every `theme.json` descriptor + its css files, resolves `extends` chains
+  (cycle-safe), parses each stylesheet, registers into `Themes`, then picks
+  the active stack: `ui_themes` config → descriptor `default` themes →
+  `cloudlib:standard` fallback.
+- `Themes` (api/ui/style): `id → Theme` registry + the active-id **stack** —
+  `register/unregister/setActive/active/activeIds/refreshTree/reload`.
+  `Themes.reload()` re-runs the loader inline on the client thread.
+- `ThemeEngine` + `Cascade` (style layer): `Cascade` matches rules, orders
+  the cascade, substitutes `var()`, merges inline `codeVars` on top, and
+  inherits `--*` unconditionally; `ThemeEngine` parses winning declarations
+  through `BuiltinKeys` and emits `UIStyle` = values + `vars`.
+- `StyleEvents.themeReload` — the CloudLib event fired whenever the effective
+  theme may have changed (loader apply, `Themes.setActive`, `unregister`).
+  Each mounted `Scene` subscribes on mount and unsubscribes on destroy;
+  the listener calls `refreshTheme()` — re-resolving the tree while
+  honoring per-scene theme overrides.
+- **Dev loop**: `/cloudlib reload` (client command) reloads themes by hand;
+  `/cloudlib themes` lists the registry + active stack. `StyleWatcher`
+  (dev only, `ui_theme_watch` config) watches exploded mod roots, classpath
+  resource dirs and directory resource packs for `*.css`/`theme.json`
+  changes, debounces ~300ms, and reloads on the client thread.
+- Parse errors log `theme:file:line:col` and never kill the game.
 
 ## 6. Stock themes (CalculatorCirrus port)
 
@@ -266,12 +303,27 @@ From `directed-graph-calculator`, generic OreUI-style assets →
 
 ## 7. Extensibility
 
-- `TextureFactory` registry: `ThemeBootstrap.registerTextureType(name, fn)` —
-  custom `VisualTexture` types become themeable values.
-- Unknown/custom properties flow into `VisualContext.properties` — widgets
-  read theme-driven data (`--scanline-speed: 12`) CloudLib never heard of.
-- Custom pseudo-classes register matcher predicates (feature-owned state
-  vocabularies like `:engaged`).
+- **`--*` custom properties are the extension mechanism.** Themes declare them
+  like any other property; they cascade, inherit unconditionally, and keep
+  their raw token streams. Java reads them through `StyleVar<T>` lenses —
+  a mod-side constant declaring name + parser + optional writer/fallback,
+  no registration:
+
+  ```java
+  public static final StyleVar<Integer> accent = StyleVar.color("--accent");
+  public static final StyleVar<Float>  speed   = StyleVar.number("--speed").orElse(1f);
+
+  Float speed = widget.style().var(MyVars.speed);
+  widget.setVar(MyVars.accent, 0xFFFF6FA5);   // writer → tokens, inline-level priority
+  widget.setVar("--scanline", "12px");        // raw string write works too
+  ```
+
+- The builtin property vocabulary is **closed** — `StyleKey` is not publicly
+  constructible; `Styles.*`/`BuiltinKeys` are the only keys. Mods needing new
+  css-visible data use `--*` + `StyleVar`, exactly like the web.
+- Texture value functions (`nine-slice`, `sprite`, `tiled`, `color`,
+  `linear-gradient`, `border-texture`…) are a fixed builtin table in
+  `CssTextures`.
 
 ## 8. Quality bar (parser port acceptance)
 
