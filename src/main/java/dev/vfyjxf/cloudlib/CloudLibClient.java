@@ -8,6 +8,7 @@ import dev.vfyjxf.cloudlib.internal.ui.style.StyleConfig;
 import dev.vfyjxf.cloudlib.internal.ui.style.StyleLoader;
 import dev.vfyjxf.cloudlib.internal.ui.style.StyleWatcher;
 import dev.vfyjxf.cloudlib.ui.CloudLibCommands;
+import dev.vfyjxf.cloudlib.ui.KeyMappings;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayApiImpl;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayEventHandler;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayRegisterImpl;
@@ -41,6 +42,7 @@ public final class CloudLibClient extends CloudLib {
         modBus.addListener(this::gatherData);
         modBus.addListener(this::registerClientTooltipComponentFactories);
         modBus.addListener(this::registerClientReloadListeners);
+        modBus.addListener(KeyMappings::register);
         NeoForge.EVENT_BUS.addListener(CloudLibCommands::register);
     }
 

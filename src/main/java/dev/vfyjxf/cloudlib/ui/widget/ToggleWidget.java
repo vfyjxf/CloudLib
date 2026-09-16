@@ -7,6 +7,7 @@ import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
+import dev.vfyjxf.cloudlib.ui.Textures;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
@@ -25,8 +26,8 @@ public class ToggleWidget extends Widget {
 
     // region textures
 
-    private VisualTexture offTexture = new ColorTexture(0xFF666666);
-    private VisualTexture onTexture = new ColorTexture(0xFF00AA00);
+    private VisualTexture offTexture = Textures.Switch.off;
+    private VisualTexture onTexture = Textures.Switch.on;
     private @Nullable VisualTexture hoverTexture = null;
 
     // endregion

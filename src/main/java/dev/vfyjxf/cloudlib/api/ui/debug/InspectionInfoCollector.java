@@ -8,7 +8,8 @@ import org.eclipse.collections.impl.factory.Multimaps;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Collects {@link InspectionProperty} entries from a widget for display in {@link Inspector}.
+ * Collects {@link InspectionProperty} entries from a widget for display in debug tools
+ * such as the {@link DebugOverlay} details view.
  * Values are formatted to strings at collection time to prevent recursive toString calls.
  */
 public final class InspectionInfoCollector {

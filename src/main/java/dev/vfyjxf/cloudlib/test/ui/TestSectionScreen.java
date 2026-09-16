@@ -2,13 +2,11 @@ package dev.vfyjxf.cloudlib.test.ui;
 
 import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.ui.base.BasicScreen;
-import dev.vfyjxf.cloudlib.api.ui.base.SceneLayer;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import dev.vfyjxf.cloudlib.api.ui.debug.Inspector;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollDirection;
 import dev.vfyjxf.cloudlib.api.ui.scroll.ScrollState;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
-import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
+import dev.vfyjxf.cloudlib.ui.Textures;
 import dev.vfyjxf.cloudlib.ui.widget.ButtonWidget;
 import dev.vfyjxf.cloudlib.ui.widget.ColumnWidget;
 import dev.vfyjxf.cloudlib.ui.widget.LabelWidget;
@@ -37,9 +35,9 @@ public class TestSectionScreen extends BasicScreen {
                 .scrollSpeed(12)
                 .smooth(true)
                 .smoothSpeed(0.35f)
-                .trackTexture(new ColorTexture(0x60000000))
-                .thumbTexture(new ColorTexture(0xCC888888))
-                .scrollbarWidth(6);
+                .trackTexture(Textures.scrollTrack)
+                .thumbTexture(Textures.scrollbarVertical)
+                .scrollbarWidth(7);
 
         var root = ColumnWidget.create(8);
         root.useStyle(UIStyle.of(
@@ -47,7 +45,7 @@ public class TestSectionScreen extends BasicScreen {
                 alignItemsCenter(),
                 padding(8),
                 sizeOf(TaffyDimension.percent(1f), TaffyDimension.percent(1f)),
-                background(new ColorTexture(0xFF0F172A))));
+                background(Textures.frame)));
         root.useEffect(scrollable(scrollState));
         root.onMouseScrolled((mouseX, mouseY, scrollX, scrollY, context) -> {
             scrollState.scrollBy(0, (float) (-scrollY * scrollState.scrollSpeed()));
@@ -57,10 +55,9 @@ public class TestSectionScreen extends BasicScreen {
         // === Section 1 ===
         var section1 = createSection("第一个分组", true);
         section1.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(0.5f))));
-        var label1 = LabelWidget.of("这是第一个分组的内容").setColor(0xFFE2E8F0).setAlign(LabelWidget.TextAlign.CENTER);
-        label1.useStyle(UIStyle.of(
-                sizeOf(TaffyDimension.percent(1f), TaffyDimension.length(200)),
-                background(new ColorTexture(0xFF334155))));
+        var label1 = LabelWidget.of("这是第一个分组的内容").setColor(0xFF3F3F3F).setAlign(LabelWidget.TextAlign.CENTER);
+        label1.useStyle(
+                UIStyle.of(sizeOf(TaffyDimension.percent(1f), TaffyDimension.length(200)), background(Textures.inset)));
         addSectionContent(section1, label1, true);
         root.addWidget(section1);
 
@@ -72,11 +69,10 @@ public class TestSectionScreen extends BasicScreen {
                 alignItemsFlexStart(),
                 sizeOf(TaffyDimension.percent(1f), TaffyDimension.length(150)),
                 padding(4),
-                background(new ColorTexture(0xFF475569))));
+                background(Textures.flat)));
         for (int i = 1; i <= 3; i++) {
             int idx = i;
-            var btn = ButtonWidget.of("按钮 " + i, () -> System.out.println("press " + idx))
-                    .setColors(0xFF334155, 0xFF475569, 0xFF1E293B);
+            var btn = ButtonWidget.of("按钮 " + i, () -> System.out.println("press " + idx));
             btn.useStyle(UIStyle.of(sizeOf(100, 32), flexShrink(0)));
             content2.addWidget(btn);
         }
@@ -87,25 +83,17 @@ public class TestSectionScreen extends BasicScreen {
         var section3 = createSection("第三个分组 - 初始折叠", false);
         section3.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(0.5f))));
         var content3 = new Widget();
-        content3.useStyle(UIStyle.of(
-                sizeOf(TaffyDimension.percent(1f), TaffyDimension.length(180)),
-                background(new ColorTexture(0xFF64748B))));
+        content3.useStyle(
+                UIStyle.of(sizeOf(TaffyDimension.percent(1f), TaffyDimension.length(180)), background(Textures.dark)));
         addSectionContent(section3, content3, false);
         root.addWidget(section3);
 
         // === 底部提示 ===
-        var hint = LabelWidget.of("提示：点击分组标题可以展开/折叠内容").setColor(0xFF94A3B8).setAlign(LabelWidget.TextAlign.CENTER);
+        var hint = LabelWidget.of("提示：点击分组标题可以展开/折叠内容").setColor(0xFF555555).setAlign(LabelWidget.TextAlign.CENTER);
         hint.useStyle(UIStyle.of(sizeOf(TaffyDimension.percent(1f), TaffyDimension.length(30)), flexShrink(0)));
         root.addWidget(hint);
 
         mainGroup().addWidget(root);
-
-        // Inspector for debugging
-        mainGroup()
-                .addWidget(Inspector.create()
-                        .setTrackMouse(true)
-                        .useStyle(positionAbsolute(), sizeOf(280, 200))
-                        .setSceneLayer(SceneLayer.debug));
     }
 
     /**
@@ -122,16 +110,13 @@ public class TestSectionScreen extends BasicScreen {
         // Header row
         var header = RowWidget.create(4);
         header.useStyle(UIStyle.of(
-                widthOf(TaffyDimension.percent(1f)),
-                padding(6, 8),
-                alignItemsCenter(),
-                background(new ColorTexture(0xFF1E293B))));
+                widthOf(TaffyDimension.percent(1f)), padding(6, 8), alignItemsCenter(), background(Textures.dark)));
 
-        var arrow = LabelWidget.of(expanded ? "▼" : "▶").setColor(0xFFE2E8F0);
+        var arrow = LabelWidget.of(expanded ? "▼" : "▶").setColor(0xFF3F3F3F);
         arrow.useStyle(UIStyle.of(sizeOf(12, 12)));
         header.addWidget(arrow);
 
-        var titleLabel = LabelWidget.of(title).setColor(0xFFE2E8F0).setShadow(true);
+        var titleLabel = LabelWidget.of(title).setColor(0xFF3F3F3F).setShadow(false);
         header.addWidget(titleLabel);
 
         section.addWidget(header);

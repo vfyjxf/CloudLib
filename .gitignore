@@ -42,6 +42,7 @@ src/generated/
 .vscode
 .worktrees
 nimbusprojection/docs/
+.zcode/
 
 # runtime artifacts
 logs/

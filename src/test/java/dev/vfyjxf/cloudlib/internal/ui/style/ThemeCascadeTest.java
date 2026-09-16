@@ -424,7 +424,7 @@ class ThemeCascadeTest {
     void textureFunctions() {
         Theme t = theme(
                 """
-                a { background: nine-slice("cloudlib:gui/panel/dark", 3) }
+                a { background: nine-slice("cloudlib:gui/background/dark", 3) }
                 b { background: color(#102030) }
                 c { background: linear-gradient(#000, #FFF, vertical) }
                 d { background: tiled("cloudlib:gui/x", 16px, 16px) }

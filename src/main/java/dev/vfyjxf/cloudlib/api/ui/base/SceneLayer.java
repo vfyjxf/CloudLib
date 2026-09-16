@@ -33,17 +33,10 @@ public enum SceneLayer {
      * <p>
      * HitTest: {@link HitTestAction#none} - does not intercept input.
      */
-    overlay(HitTestAction.none),
-
-    /**
-     * Debug layer for development tools and overlays.
-     * <p>
-     * HitTest: {@link HitTestAction#enabled} - debug UI can receive input when enabled.
-     */
-    debug(HitTestAction.enabled);
+    overlay(HitTestAction.none);
 
     public static final ImmutableList<SceneLayer> layers = Lists.immutable.with(values());
-    public static final ImmutableList<SceneLayer> extraLayers = layers.reject(l -> l == content || l == debug);
+    public static final ImmutableList<SceneLayer> extraLayers = layers.reject(l -> l == content);
 
     /**
      * Gets the hit test mode of this layer.

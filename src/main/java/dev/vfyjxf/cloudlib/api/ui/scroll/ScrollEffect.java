@@ -189,27 +189,30 @@ public final class ScrollEffect implements Effect {
             }
         });
 
-        // Scrollbar thumb drag support
-        widget.onMouseClicked((input, context) -> {
-            if (!state.enabled()) {
-                stopAutoScroll();
-                return EventDispatch.pass;
-            }
-            if (input.isMiddleClick()) {
-                return handleMiddleMouseAutoScroll(composite, input.mouseX(), input.mouseY());
-            }
-            if (autoScrolling && input.isMouse()) {
-                stopAutoScroll();
-                return EventDispatch.consumed;
-            }
-            if (input.isMouse()) {
-                stopScrollbarDrag();
-            }
-            if (!state.draggable() || !state.showScrollbar() || !input.isLeftClick()) {
-                return EventDispatch.pass;
-            }
-            return handleMousePressed(composite, input.mouseX(), input.mouseY());
-        });
+        // Scrollbar thumb drag support — use capture phase so clicks on the
+        // scrollbar area are intercepted before children consume them.
+        widget.onMouseClicked(
+                (input, context) -> {
+                    if (!state.enabled()) {
+                        stopAutoScroll();
+                        return EventDispatch.pass;
+                    }
+                    if (input.isMiddleClick()) {
+                        return handleMiddleMouseAutoScroll(composite, input.mouseX(), input.mouseY());
+                    }
+                    if (autoScrolling && input.isMouse()) {
+                        stopAutoScroll();
+                        return EventDispatch.consumed;
+                    }
+                    if (input.isMouse()) {
+                        stopScrollbarDrag();
+                    }
+                    if (!state.draggable() || !state.showScrollbar() || !input.isLeftClick()) {
+                        return EventDispatch.pass;
+                    }
+                    return handleMousePressed(composite, input.mouseX(), input.mouseY());
+                },
+                false);
 
         widget.onMouseDragged((input, deltaX, deltaY, context) -> {
             if (!state.enabled()) {
@@ -591,7 +594,8 @@ public final class ScrollEffect implements Effect {
     private ScrollbarTrack verticalTrack(int width, int height, boolean hasHorizontal) {
         Insets insets = effectiveInsets(width, height);
         int barWidth = state.scrollbarWidth();
-        int x = Math.max(0, width - insets.right() - barWidth);
+        // Scrollbar sits in the reserved right inset area (if any), otherwise overlays content.
+        int x = Math.max(0, width - Math.max(insets.right(), barWidth));
         int y = insets.top();
         int reservedBottom = insets.bottom() + (hasHorizontal ? barWidth : 0);
         int length = Math.max(0, height - insets.top() - reservedBottom);
@@ -601,8 +605,9 @@ public final class ScrollEffect implements Effect {
     private ScrollbarTrack horizontalTrack(int width, int height, boolean hasVertical) {
         Insets insets = effectiveInsets(width, height);
         int barWidth = state.scrollbarWidth();
+        // Scrollbar sits in the reserved bottom inset area (if any), otherwise overlays content.
         int x = insets.left();
-        int y = Math.max(0, height - insets.bottom() - barWidth);
+        int y = Math.max(0, height - Math.max(insets.bottom(), barWidth));
         int reservedRight = insets.right() + (hasVertical ? barWidth : 0);
         int length = Math.max(0, width - insets.left() - reservedRight);
         return new ScrollbarTrack(y, x, length);

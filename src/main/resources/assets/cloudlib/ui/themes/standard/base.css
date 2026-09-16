@@ -22,18 +22,18 @@
     /* ---- surfaces ---- */
     /* the fullscreen window chrome: 32x37 source, 10px uniform border —
        the tall top edge doubles as the title strip */
-    --window:              nine-slice("cloudlib:gui/panel/frame", 10, 32, 37);
-    --panel:               nine-slice("cloudlib:gui/panel/dark", 4, 16, 16);
-    --panel-flat:          nine-slice("cloudlib:gui/panel/flat", 4, 18, 18);
-    --panel-inset:         nine-slice("cloudlib:gui/panel/inset", 4, 18, 18);
-    --panel-outlined:      nine-slice("cloudlib:gui/panel/outlined_flat", 4, 20, 20);
-    --panel-outlined-inset: nine-slice("cloudlib:gui/panel/outlined_inset", 4, 20, 20);
-    --frame-dark:          nine-slice("cloudlib:gui/frame/dark", 4, 18, 18);
-    --frame-light:         nine-slice("cloudlib:gui/frame/light", 4, 18, 18);
+    --window:              nine-slice("cloudlib:gui/background/frame", 10, 32, 37);
+    --panel:               nine-slice("cloudlib:gui/background/dark", 4, 16, 16);
+    --panel-flat:          nine-slice("cloudlib:gui/background/flat", 4, 18, 18);
+    --panel-inset:         nine-slice("cloudlib:gui/background/inset", 4, 18, 18);
+    --panel-outlined:      nine-slice("cloudlib:gui/background/outlined_flat", 4, 20, 20);
+    --panel-outlined-inset: nine-slice("cloudlib:gui/background/outlined_inset", 4, 20, 20);
+    --frame-dark:          nine-slice("cloudlib:gui/background/border_dark", 4, 18, 18);
+    --frame-light:         nine-slice("cloudlib:gui/background/border_light", 4, 18, 18);
 
     /* ---- slots ---- */
-    --slot:       nine-slice("cloudlib:gui/slot/base", 4, 18, 18);
-    --slot-dark:  nine-slice("cloudlib:gui/slot/dark", 4, 18, 18);
+    --slot:       nine-slice("cloudlib:gui/background/slot/base", 4, 18, 18);
+    --slot-dark:  nine-slice("cloudlib:gui/background/slot/dark", 4, 18, 18);
 
     /* ---- buttons ---- */
     --btn:        nine-slice("cloudlib:gui/button/base", 4, 14, 16);
@@ -41,10 +41,10 @@
     --btn-down:   nine-slice("cloudlib:gui/button/pressed", 4, 14, 15);
 
     /* ---- scrollbars ---- */
-    --scroll-track:      nine-slice("cloudlib:gui/scroll/track", 4, 18, 9);
-    --scroll-track-fill: nine-slice("cloudlib:gui/scroll/track_fill", 1, 3, 3);
-    --scroll-thumb:      sprite("cloudlib:gui/scroll/bar", 7, 8);
-    --scroll-thumb-h:    nine-slice("cloudlib:gui/scroll/bar_horizontal", 2, 7, 9);
+    --scroll-track:      nine-slice("cloudlib:gui/background/scroll", 4, 18, 9);
+    --scroll-track-fill: nine-slice("cloudlib:gui/scrollbar/scroll_track_fill", 1, 3, 3);
+    --scroll-thumb:      sprite("cloudlib:gui/scrollbar/scrollbar_vertical", 7, 8);
+    --scroll-thumb-h:    nine-slice("cloudlib:gui/scrollbar/scrollbar_horizontal", 2, 7, 9);
 
     /* ---- tabs (plain sprites, not sliced) ---- */
     --tab-select:   sprite("cloudlib:gui/tab/select", 21, 22);
@@ -52,51 +52,51 @@
     --tab-unselect: sprite("cloudlib:gui/tab/unselect", 20, 22);
 
     /* ---- toggle checked (7x7 checkbox set) ---- */
-    --check-off:        sprite("cloudlib:gui/toggle_checked/unselect", 7, 7);
-    --check-off-hover:  sprite("cloudlib:gui/toggle_checked/unselect_hover", 7, 7);
-    --check-on:         sprite("cloudlib:gui/toggle_checked/select", 7, 7);
-    --check-on-hover:   sprite("cloudlib:gui/toggle_checked/select_hover", 7, 7);
+    --check-off:        sprite("cloudlib:gui/toggle/checked/small/unselect", 7, 7);
+    --check-off-hover:  sprite("cloudlib:gui/toggle/checked/small/unselect_hover", 7, 7);
+    --check-on:         sprite("cloudlib:gui/toggle/checked/small/select", 7, 7);
+    --check-on-hover:   sprite("cloudlib:gui/toggle/checked/small/select_hover", 7, 7);
 
     /* ---- switch: slide frames + rocker halves ---- */
-    --switch-off:        sprite("cloudlib:gui/switch/slide_off", 20, 13);
-    --switch-off-hover:  sprite("cloudlib:gui/switch/slide_off_hover", 20, 12);
-    --switch-on:         sprite("cloudlib:gui/switch/slide_on", 20, 13);
-    --switch-on-hover:   sprite("cloudlib:gui/switch/slide_on_hover", 20, 12);
+    --switch-off:        sprite("cloudlib:gui/toggle/switch/slide_off", 20, 13);
+    --switch-off-hover:  sprite("cloudlib:gui/toggle/switch/slide_off_hover", 20, 12);
+    --switch-on:         sprite("cloudlib:gui/toggle/switch/slide_on", 20, 13);
+    --switch-on-hover:   sprite("cloudlib:gui/toggle/switch/slide_on_hover", 20, 12);
 
-    --switch-rock-left-on:        sprite("cloudlib:gui/switch/rock_left_on", 9, 9);
-    --switch-rock-left-on-hover:  sprite("cloudlib:gui/switch/rock_left_on_hover", 9, 9);
-    --switch-rock-left-off:       sprite("cloudlib:gui/switch/rock_left_off", 9, 9);
-    --switch-rock-left-off-hover: sprite("cloudlib:gui/switch/rock_left_off_hover", 9, 9);
-    --switch-rock-right-on:        sprite("cloudlib:gui/switch/rock_right_on", 9, 9);
-    --switch-rock-right-on-hover:  sprite("cloudlib:gui/switch/rock_right_on_hover", 9, 9);
-    --switch-rock-right-off:       sprite("cloudlib:gui/switch/rock_right_off", 9, 9);
-    --switch-rock-right-off-hover: sprite("cloudlib:gui/switch/rock_right_off_hover", 9, 9);
+    --switch-rock-left-on:        sprite("cloudlib:gui/toggle/switch/rock_left_on", 9, 9);
+    --switch-rock-left-on-hover:  sprite("cloudlib:gui/toggle/switch/rock_left_on_hover", 9, 9);
+    --switch-rock-left-off:       sprite("cloudlib:gui/toggle/switch/rock_left_off", 9, 9);
+    --switch-rock-left-off-hover: sprite("cloudlib:gui/toggle/switch/rock_left_off_hover", 9, 9);
+    --switch-rock-right-on:        sprite("cloudlib:gui/toggle/switch/rock_right_on", 9, 9);
+    --switch-rock-right-on-hover:  sprite("cloudlib:gui/toggle/switch/rock_right_on_hover", 9, 9);
+    --switch-rock-right-off:       sprite("cloudlib:gui/toggle/switch/rock_right_off", 9, 9);
+    --switch-rock-right-off-hover: sprite("cloudlib:gui/toggle/switch/rock_right_off_hover", 9, 9);
 
-    --switch-bg-on-left:         sprite("cloudlib:gui/switch/rock_on_left", 11, 13);
-    --switch-bg-on-left-hover:   sprite("cloudlib:gui/switch/rock_on_hover_left", 11, 13);
-    --switch-bg-on-right:        sprite("cloudlib:gui/switch/rock_on_right", 9, 12);
-    --switch-bg-on-right-hover:  sprite("cloudlib:gui/switch/rock_on_hover_right", 9, 12);
-    --switch-bg-off-left:        sprite("cloudlib:gui/switch/rock_off_left", 9, 12);
-    --switch-bg-off-left-hover:  sprite("cloudlib:gui/switch/rock_off_hover_left", 9, 12);
-    --switch-bg-off-right:       sprite("cloudlib:gui/switch/rock_off_right", 11, 13);
-    --switch-bg-off-right-hover: sprite("cloudlib:gui/switch/rock_off_hover_right", 11, 13);
+    --switch-bg-on-left:         sprite("cloudlib:gui/toggle/switch/rock_on_left", 11, 13);
+    --switch-bg-on-left-hover:   sprite("cloudlib:gui/toggle/switch/rock_on_hover_left", 11, 13);
+    --switch-bg-on-right:        sprite("cloudlib:gui/toggle/switch/rock_on_right", 9, 12);
+    --switch-bg-on-right-hover:  sprite("cloudlib:gui/toggle/switch/rock_on_hover_right", 9, 12);
+    --switch-bg-off-left:        sprite("cloudlib:gui/toggle/switch/rock_off_left", 9, 12);
+    --switch-bg-off-left-hover:  sprite("cloudlib:gui/toggle/switch/rock_off_hover_left", 9, 12);
+    --switch-bg-off-right:       sprite("cloudlib:gui/toggle/switch/rock_off_right", 11, 13);
+    --switch-bg-off-right-hover: sprite("cloudlib:gui/toggle/switch/rock_off_hover_right", 11, 13);
 
     /* ---- triple toggle (segmented, sliced) ---- */
-    --triple-left-on:      nine-slice("cloudlib:gui/toggle_triple/left_selected", 9, 42, 30);
-    --triple-left-off:     nine-slice("cloudlib:gui/toggle_triple/left_unselected", 9, 78, 28);
-    --triple-mid-left:     nine-slice("cloudlib:gui/toggle_triple/middle_left", 9, 39, 28);
-    --triple-mid:          nine-slice("cloudlib:gui/toggle_triple/middle_middle", 9, 42, 30);
-    --triple-mid-right:    nine-slice("cloudlib:gui/toggle_triple/middle_right", 9, 39, 28);
-    --triple-right-on:     nine-slice("cloudlib:gui/toggle_triple/right_selected", 9, 42, 30);
-    --triple-right-off:    nine-slice("cloudlib:gui/toggle_triple/right_unselected", 9, 78, 28);
+    --triple-left-on:      nine-slice("cloudlib:gui/toggle/triple/left_selected", 9, 42, 30);
+    --triple-left-off:     nine-slice("cloudlib:gui/toggle/triple/left_unselected", 9, 78, 28);
+    --triple-mid-left:     nine-slice("cloudlib:gui/toggle/triple/middle_left", 9, 39, 28);
+    --triple-mid:          nine-slice("cloudlib:gui/toggle/triple/middle_middle", 9, 42, 30);
+    --triple-mid-right:    nine-slice("cloudlib:gui/toggle/triple/middle_right", 9, 39, 28);
+    --triple-right-on:     nine-slice("cloudlib:gui/toggle/triple/right_selected", 9, 42, 30);
+    --triple-right-off:    nine-slice("cloudlib:gui/toggle/triple/right_unselected", 9, 78, 28);
 
     /* ---- pager ---- */
-    --pager-button: nine-slice("cloudlib:gui/pager/button", 3, 8, 10);
-    --pager-arrow:  nine-slice("cloudlib:gui/pager/arrow", 3, 9, 10);
+    --pager-button: nine-slice("cloudlib:gui/background/paged/button", 3, 8, 10);
+    --pager-arrow:  nine-slice("cloudlib:gui/background/paged/arrow", 3, 9, 10);
 
     /* ---- signs ---- */
-    --sign-bar:    nine-slice("cloudlib:gui/sign/bar", 2, 45, 4);
-    --sign-amount: sprite("cloudlib:gui/sign/amount_sign", 7, 7);
+    --sign-bar:    nine-slice("cloudlib:gui/background/sign/bar", 2, 45, 4);
+    --sign-amount: sprite("cloudlib:gui/background/sign/amount_sign", 7, 7);
 
     /* ---- icons ---- */
     --icon-add:             sprite("cloudlib:gui/icons/add_icon", 12, 12);

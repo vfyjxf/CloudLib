@@ -13,3 +13,4 @@ cloudlib:
       value: General
       $field: generalCategory
     rebuild_ui: Rebuild UI
+    open_devtools: Open DevTools

@@ -7,6 +7,7 @@ import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
+import dev.vfyjxf.cloudlib.ui.Textures;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
@@ -27,17 +28,18 @@ public class ButtonWidget extends Widget {
 
     // region colors
 
-    private int textColor = 0xFFFFFF;
-    private int disabledTextColor = 0xA0A0A0;
+    private int textColor = 0xFF3F3F3F;
+    private int disabledTextColor = 0xFF8B8B8B;
+    private boolean textShadow = false;
 
     // endregion
 
     // region textures
 
-    private VisualTexture normalTexture = new ColorTexture(0xFF555555);
-    private VisualTexture hoverTexture = new ColorTexture(0xFF777777);
-    private VisualTexture pressedTexture = new ColorTexture(0xFF333333);
-    private VisualTexture disabledTexture = new ColorTexture(0xFF444444);
+    private VisualTexture normalTexture = Textures.flat;
+    private VisualTexture hoverTexture = Textures.outlinedFlat;
+    private VisualTexture pressedTexture = Textures.inset;
+    private VisualTexture disabledTexture = Textures.dark;
     private @Nullable VisualTexture iconTexture = null;
 
     // endregion
@@ -173,6 +175,11 @@ public class ButtonWidget extends Widget {
         return this;
     }
 
+    public ButtonWidget setTextShadow(boolean shadow) {
+        this.textShadow = shadow;
+        return this;
+    }
+
     // endregion
 
     // region rendering
@@ -215,7 +222,7 @@ public class ButtonWidget extends Widget {
         Integer themedColor = style().visualContext().textColor();
         int color = themedColor != null ? themedColor : enabled ? textColor : disabledTextColor;
 
-        canvas.text(label, textX, textY, color, true);
+        canvas.text(label, textX, textY, color, textShadow);
     }
 
     // endregion

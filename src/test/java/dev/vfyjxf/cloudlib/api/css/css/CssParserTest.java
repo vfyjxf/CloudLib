@@ -584,7 +584,7 @@ class CssParserTest {
         Stylesheet s = sheet(
                 """
                 /* a stock theme exercising the full surface */
-                :root { --accent: #35D6D0; --frame: nine-slice("cloudlib:gui/panel/dark", 3); }
+                :root { --accent: #35D6D0; --frame: nine-slice("cloudlib:gui/background/dark", 3); }
                 panel { padding: 4px 6px; background: var(--frame); color: var(--accent, #fff); }
                 panel:focused > button.primary[icon] { border-width: 1px 2px; }
                 item-slot:nth-child(2n+1):not(.empty) { background: tiled("t", 16px 16px); }

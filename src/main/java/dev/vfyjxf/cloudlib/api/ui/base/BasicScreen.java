@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.host.ScreenSceneHost;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayApiImpl;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayRuntime;
+import dev.vfyjxf.taffy.style.TaffyDimension;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -51,7 +52,7 @@ public abstract class BasicScreen extends Screen {
     @Override
     protected void init() {
         detachOverlays();
-        mainGroup.useStyle(UIStyle.of(sizeOf(width, height)));
+        mainGroup.useStyle(UIStyle.of(sizeOf(TaffyDimension.percent(1f))));
         scene.init();
         scene.mount(SceneContext.create(new ScreenSceneHost(this)));
         scene.setLayoutArea(width, height);
@@ -96,7 +97,7 @@ public abstract class BasicScreen extends Screen {
     public void resize(Minecraft minecraft, int width, int height) {
         this.width = width;
         this.height = height;
-        mainGroup.useStyle(UIStyle.of(sizeOf(width, height)));
+        mainGroup.useStyle(UIStyle.of(sizeOf(TaffyDimension.percent(1f))));
         scene.setLayoutArea(width, height);
         scene.layout();
         mainGroup.applyLayout();

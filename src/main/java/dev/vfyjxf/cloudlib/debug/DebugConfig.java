@@ -8,7 +8,9 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public class DebugConfig {
 
     public static boolean enableDebug() {
-        return enableDebug.get();
+        // The config is only registered in non-production environments;
+        // reading the value in production would throw.
+        return !FMLEnvironment.production && enableDebug.get();
     }
 
     public static boolean debugExpose() {

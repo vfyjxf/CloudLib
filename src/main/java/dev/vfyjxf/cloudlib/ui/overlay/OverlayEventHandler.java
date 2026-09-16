@@ -9,6 +9,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetGroup;
 import dev.vfyjxf.cloudlib.api.ui.overlay.OverlayContext;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
+import dev.vfyjxf.taffy.style.TaffyDimension;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -80,7 +81,7 @@ public final class OverlayEventHandler {
 
         WidgetGroup<Widget> root = new WidgetGroup<>();
         root.setFocusNode(new FocusScopeNode());
-        root.useStyle(UIStyle.of(sizeOf(screen.width, screen.height)));
+        root.useStyle(UIStyle.of(sizeOf(TaffyDimension.percent(1f))));
 
         Scene scene = new Scene(root);
         scene.init();
@@ -125,7 +126,7 @@ public final class OverlayEventHandler {
             return;
         }
         var root = globalScene.root();
-        root.useStyle(UIStyle.of(sizeOf(screen.width, screen.height)));
+        root.useStyle(UIStyle.of(sizeOf(TaffyDimension.percent(1f))));
         globalScene.setLayoutArea(screen.width, screen.height);
         globalScene.stabilize();
         globalScene.layout();
@@ -144,7 +145,7 @@ public final class OverlayEventHandler {
             return;
         }
         var root = globalScene.root();
-        root.useStyle(UIStyle.of(sizeOf(event.getScreen().width, event.getScreen().height)));
+        root.useStyle(UIStyle.of(sizeOf(TaffyDimension.percent(1f))));
         globalScene.setLayoutArea(event.getScreen().width, event.getScreen().height);
         globalScene.stabilize();
         globalScene.layout();
