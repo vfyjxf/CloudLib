@@ -8,7 +8,7 @@
  * is the selection spec — nearest / edge(t) / corner / center — that
  * callers use to pick where a connection lands.
  * <p>
- * The world-space counterpart lives in the inworld stack (Nimbus):
+ * The world-space counterpart lives in the inworld stack:
  * {@code QuadBorder} measures a {@code WorldUiPanel}'s live quad the same
  * way. Trace links consume both; measurement itself draws nothing —
  * stroking a border is always opt-in.

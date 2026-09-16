@@ -5,12 +5,12 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.gui.GuiGraphics;
 
 /**
- * The destination a {@link UiRenderer} is bound to for one rendered frame.
+ * The destination a render pass is bound to for one rendered frame.
  * <p>
  * In-world UI draws in two physical passes — a world pass inside the level
  * render (quads in world space, depth-competing with terrain) and a screen
  * pass with the gui (2D overlay geometry in gui-scaled pixels). The target
- * variant tells the renderer which pass it is in and hands it the pass's
+ * variant tells the pass owner which pass it is in and hands it the pass's
  * drawing context; everything else about what gets drawn is the renderer's
  * business.
  */

@@ -11,7 +11,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.trace;
  *
  * @param <S> the scene variant this tracer draws into
  */
-public interface Tracer<S extends TraceScene> {
+public interface Tracer<S extends TraceScene<?>> {
 
     /**
      * Emits this tracer's geometry for {@code source} into {@code scene}'s

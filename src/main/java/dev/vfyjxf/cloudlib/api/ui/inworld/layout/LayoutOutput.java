@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld.layout;
 
+import dev.vfyjxf.cloudlib.api.ui.inworld.layout.inscreen.ScreenHints;
 import dev.vfyjxf.cloudlib.api.ui.inworld.render.QuadBasis;
 
 /**
@@ -27,7 +28,7 @@ public sealed interface LayoutOutput {
     /**
      * Placement deferred to the inscreen coordinator — the layout declines to
      * pick a spot and hands the surface over with its
-     * {@link dev.vfyjxf.cloudlib.api.ui.inworld.layout.inscreen.ScreenHints}.
+     * {@link ScreenHints}.
      */
     record Coordinated() implements LayoutOutput {}
 }

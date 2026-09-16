@@ -74,10 +74,6 @@ public final class TraceContext {
         return this;
     }
 
-    public boolean has(Key<?> key) {
-        return values.containsKey(key);
-    }
-
     /** The value bound to {@code key}, or null when absent. */
     @SuppressWarnings("unchecked")
     public <T> @Nullable T get(Key<T> key) {

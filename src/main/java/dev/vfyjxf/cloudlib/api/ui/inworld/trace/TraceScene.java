@@ -14,18 +14,20 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.render.RenderTarget.WorldTarget;
  * for the world pass, {@code GuiGraphics} for the screen pass) with the
  * {@link RenderBatch} trace geometry accumulates into; the pass owner flushes
  * the batch once so the whole pass draws in a single go.
+ *
+ * @param <E> the emitter/geometry-sink type the pass's batch accumulates into
  */
-public sealed interface TraceScene {
+public sealed interface TraceScene<E> {
 
     /** The render target of the pass this scene belongs to. */
     RenderTarget target();
 
     /** The batch trace geometry accumulates into during this pass. */
-    RenderBatch<?> batch();
+    RenderBatch<E> batch();
 
     /** The world pass: trace geometry in world space, drawn inside the level render. */
-    record WorldTraceScene(WorldTarget target, RenderBatch<?> batch) implements TraceScene {}
+    record WorldTraceScene<E>(WorldTarget target, RenderBatch<E> batch) implements TraceScene<E> {}
 
     /** The screen pass: trace geometry in gui-scaled pixels, drawn with the gui. */
-    record ScreenTraceScene(ScreenTarget target, RenderBatch<?> batch) implements TraceScene {}
+    record ScreenTraceScene<E>(ScreenTarget target, RenderBatch<E> batch) implements TraceScene<E> {}
 }

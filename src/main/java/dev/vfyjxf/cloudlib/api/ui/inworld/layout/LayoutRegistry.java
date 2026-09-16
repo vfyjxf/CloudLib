@@ -10,31 +10,18 @@ import java.util.function.Function;
  * Registration point for {@link Layout} implementations: layouts are looked
  * up by the <em>type</em> of the layout intent they resolve, and the factory
  * binds the intent instance to the layout it returns.
- * <p>
- * Registries compose by chaining — a registry created with a
- * {@linkplain #create(LayoutRegistry) parent} falls through to it when an
- * intent type isn't registered locally, so a semantic layer can overlay its
- * own layouts on a shared base registry.
  */
 public final class LayoutRegistry {
 
-    private final @Nullable LayoutRegistry parent;
     private final Map<Class<?>, Function<?, ? extends Layout<? extends LayoutContext>>> factories =
             new LinkedHashMap<>();
 
-    private LayoutRegistry(@Nullable LayoutRegistry parent) {
-        this.parent = parent;
-    }
-
     /** A fresh, empty registry. */
     public static LayoutRegistry create() {
-        return new LayoutRegistry(null);
+        return new LayoutRegistry();
     }
 
-    /** A fresh registry whose misses fall through to {@code parent}. */
-    public static LayoutRegistry create(LayoutRegistry parent) {
-        return new LayoutRegistry(parent);
-    }
+    private LayoutRegistry() {}
 
     /**
      * Registers {@code factory} as the layout source for intents of exactly
@@ -48,14 +35,13 @@ public final class LayoutRegistry {
     }
 
     /**
-     * The layout bound to {@code intent}, or null when its exact type is
-     * registered neither here nor in any parent.
+     * The layout bound to {@code intent}, or null when its exact type is not
+     * registered.
      */
     @SuppressWarnings("unchecked")
     public @Nullable Layout<? extends LayoutContext> layoutFor(Object intent) {
         Function<Object, ? extends Layout<? extends LayoutContext>> factory =
                 (Function<Object, ? extends Layout<? extends LayoutContext>>) factories.get(intent.getClass());
-        if (factory != null) return factory.apply(intent);
-        return parent == null ? null : parent.layoutFor(intent);
+        return factory == null ? null : factory.apply(intent);
     }
 }

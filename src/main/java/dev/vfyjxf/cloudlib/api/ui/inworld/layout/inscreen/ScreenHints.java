@@ -7,22 +7,11 @@ import org.jetbrains.annotations.Nullable;
  * a {@link ScreenLayoutCoordinator}, which keeps full placement authority —
  * hints steer, they never decide.
  * <p>
- * All fields carry their default semantics: no corner preference, no zoning
- * group, no collapse, indicators on.
+ * All fields carry their default semantics: no zoning group, no collapse,
+ * indicators on.
  */
 public final class ScreenHints {
 
-    /** The screen corner a panel prefers to gather into. */
-    public enum Corner {
-        topLeft,
-        topRight,
-        bottomLeft,
-        bottomRight,
-        /** Let the coordinator pick — typically the quadrant nearest the source's projection. */
-        auto
-    }
-
-    private Corner corner = Corner.auto;
     private @Nullable String group;
     private int groupLimit = Integer.MAX_VALUE;
     private boolean collapseOffscreen;
@@ -34,16 +23,6 @@ public final class ScreenHints {
     /** A fresh hints instance with all defaults. */
     public static ScreenHints create() {
         return new ScreenHints();
-    }
-
-    /** The preferred gathering corner. */
-    public Corner corner() {
-        return corner;
-    }
-
-    public ScreenHints corner(Corner corner) {
-        this.corner = corner;
-        return this;
     }
 
     /**

@@ -10,4 +10,5 @@
  * {@code inscreen} package holds the screen-placement coordinator and the
  * hints the API side steers it with.
  */
+@dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
 package dev.vfyjxf.cloudlib.api.ui.inworld.layout;

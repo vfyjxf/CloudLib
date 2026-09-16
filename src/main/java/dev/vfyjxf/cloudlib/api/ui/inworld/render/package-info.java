@@ -10,9 +10,9 @@
  * <p>
  * {@link dev.vfyjxf.cloudlib.api.ui.inworld.render.RenderTarget} names the
  * pass a frame draws into (world / screen);
- * {@link dev.vfyjxf.cloudlib.api.ui.inworld.render.UiRenderer} is the
- * per-renderer batching contract: geometry accumulates in a
- * {@link dev.vfyjxf.cloudlib.api.ui.inworld.render.RenderBatch} and flushes in
- * a single draw.
+ * {@link dev.vfyjxf.cloudlib.api.ui.inworld.render.RenderBatch} is the
+ * per-renderer batching contract: geometry accumulates in a batch's emitter
+ * and flushes in a single draw.
  */
+@dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
 package dev.vfyjxf.cloudlib.api.ui.inworld.render;
