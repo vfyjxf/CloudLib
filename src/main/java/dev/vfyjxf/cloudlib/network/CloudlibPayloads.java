@@ -9,6 +9,8 @@ import dev.vfyjxf.cloudlib.network.payload.BlockEntityReversedPacket;
 import dev.vfyjxf.cloudlib.network.payload.BlockEntitySyncPacket;
 import dev.vfyjxf.cloudlib.network.payload.ContainerContentsPayload;
 import dev.vfyjxf.cloudlib.network.payload.ContainerQueryPayload;
+import dev.vfyjxf.cloudlib.network.payload.EntityContainerContentsPayload;
+import dev.vfyjxf.cloudlib.network.payload.EntityContainerQueryPayload;
 import dev.vfyjxf.cloudlib.network.payload.MenuDataReversedPacket;
 import dev.vfyjxf.cloudlib.network.payload.MenuSyncDownstreamPacket;
 import dev.vfyjxf.cloudlib.util.Locations;
@@ -31,11 +33,13 @@ public class CloudlibPayloads {
         MenuDataReversedPacket.info.registerPlay(registrar);
         BlockEntitySyncPacket.info.registerPlay(registrar);
         ContainerContentsPayload.info.registerPlay(registrar);
+        EntityContainerContentsPayload.info.registerPlay(registrar);
         // endregion
 
         // region play 2 server
         BlockEntityReversedPacket.info.registerPlay(registrar);
         ContainerQueryPayload.info.registerPlay(registrar);
+        EntityContainerQueryPayload.info.registerPlay(registrar);
         // endregion
     }
 

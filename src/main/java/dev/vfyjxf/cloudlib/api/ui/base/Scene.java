@@ -5,6 +5,7 @@ import dev.vfyjxf.cloudlib.api.event.EventDispatch;
 import dev.vfyjxf.cloudlib.api.event.context.BubbleContext;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Insets;
+import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.performer.PerformerContainer;
 import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.base.WidgetTree.TraversalControl;
@@ -12,6 +13,9 @@ import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.debug.DebugOverlay;
 import dev.vfyjxf.cloudlib.api.ui.event.InputEvents;
 import dev.vfyjxf.cloudlib.api.ui.event.WidgetEvent;
+import dev.vfyjxf.cloudlib.api.ui.inworld.space.ExclusionContext;
+import dev.vfyjxf.cloudlib.api.ui.inworld.space.InworldExclusions;
+import dev.vfyjxf.cloudlib.api.ui.inworld.space.LayoutSpace;
 import dev.vfyjxf.cloudlib.api.ui.style.StyleEvents;
 import dev.vfyjxf.cloudlib.api.ui.style.Theme;
 import dev.vfyjxf.cloudlib.api.ui.style.Themes;
@@ -43,6 +47,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -527,14 +532,34 @@ public final class Scene {
     private float width = Float.NaN;
     private float height = Float.NaN;
     private Insets debugInsets = Insets.zero;
+    private Insets exclusionInsets = Insets.zero;
 
     public TaffyTree layoutTree() {
         return tree;
     }
 
+    /**
+     * Sets the scene's layout area and re-derives the exclusion-aware root
+     * area: the registered {@link InworldExclusions exclusion areas} are
+     * sampled against {@code width × height} and every edge one of them hugs
+     * is pushed inward (the {@link LayoutSpace} strut deduction), so the root
+     * — and everything laid out inside it — stays clear of e.g. the vanilla
+     * HUD. Interior exclusion rects that hug no edge cannot shrink a single
+     * root rectangle; those are the floating pipeline's job. When an exclusion
+     * change moves an edge, the tree is marked dirty so the next stabilize
+     * pass relayouts.
+     */
     public void setLayoutArea(float width, float height) {
         this.width = width;
         this.height = height;
+        Insets next = collectExclusionInsets();
+        if (!next.equals(exclusionInsets)) {
+            exclusionInsets = next;
+            updateRootLayoutHandler();
+            if (root.lifecycle.mounted()) {
+                tree.markDirty(root.nodeId());
+            }
+        }
     }
 
     /**
@@ -550,24 +575,58 @@ public final class Scene {
         return debugInsets;
     }
 
-    private void updateRootLayoutHandler() {
+    /** The edge insets the exclusion areas currently claim (strut deduction). */
+    public Insets exclusionInsets() {
+        return exclusionInsets;
+    }
+
+    private Insets collectExclusionInsets() {
+        if (Float.isNaN(width) || Float.isNaN(height) || width <= 0 || height <= 0) {
+            return Insets.zero;
+        }
+        int screenW = Math.round(width);
+        int screenH = Math.round(height);
+        List<Rect> exclusions = InworldExclusions.collect(new ExclusionContext(screenW, screenH, 0f));
+        if (exclusions.isEmpty()) {
+            return Insets.zero;
+        }
+        return LayoutSpace.of(screenW, screenH).withStruts(exclusions).strutInsets();
+    }
+
+    private Insets effectiveInsets() {
         if (debugInsets == Insets.zero) {
+            return exclusionInsets;
+        }
+        if (exclusionInsets == Insets.zero) {
+            return debugInsets;
+        }
+        return new Insets(
+                Math.max(debugInsets.top(), exclusionInsets.top()),
+                Math.max(debugInsets.right(), exclusionInsets.right()),
+                Math.max(debugInsets.bottom(), exclusionInsets.bottom()),
+                Math.max(debugInsets.left(), exclusionInsets.left()));
+    }
+
+    private void updateRootLayoutHandler() {
+        Insets insets = effectiveInsets();
+        if (insets == Insets.zero) {
             root.onLayout(null);
             return;
         }
         root.onLayout((widget, scope) -> scope.useTaffy()
                 .setSize(
-                        Math.max(0, width - debugInsets.left() - debugInsets.right()),
-                        Math.max(0, height - debugInsets.top() - debugInsets.bottom()))
-                .offset(debugInsets.left(), debugInsets.top()));
+                        Math.max(0, width - insets.left() - insets.right()),
+                        Math.max(0, height - insets.top() - insets.bottom()))
+                .offset(insets.left(), insets.top()));
     }
 
     public void layout() {
         float effW = width;
         float effH = height;
-        if (debugInsets != Insets.zero) {
-            effW = Math.max(0, width - debugInsets.left() - debugInsets.right());
-            effH = Math.max(0, height - debugInsets.top() - debugInsets.bottom());
+        Insets insets = effectiveInsets();
+        if (insets != Insets.zero) {
+            effW = Math.max(0, width - insets.left() - insets.right());
+            effH = Math.max(0, height - insets.top() - insets.bottom());
         }
         tree.computeLayout(
                 root.nodeId(),
@@ -995,6 +1054,39 @@ public final class Scene {
             root.render(canvas, (int) localMouse.x, (int) localMouse.y, partialTick);
             canvas.popViewport();
         }
+        renderExtraLayers(canvas, mouseX, mouseY, partialTick);
+
+        canvas.flushBatch();
+
+        if (hoverTooltip.notEmpty()) {
+            ScreenUtil.renderTooltip(graphics, hoverTooltip, mouseX, mouseY);
+        }
+
+        draggableManager.renderDragging(graphics, mouseX, mouseY, partialTick);
+        renderDebug(graphics, mouseX, mouseY, partialTick);
+        runPostRender();
+        cleanWidgets();
+    }
+
+    /**
+     * Renders the scene's extra-layer widgets (floating, overlay) with the
+     * same semantics {@link #render} uses: widgets laid out in
+     * {@link CoordinateSpace#scene} render against the raw scene transform —
+     * only their own viewport is pushed, so root-level translations (exclusion
+     * strut insets, debug insets) never enter their position — while
+     * parent-relative layer widgets render through their full ancestor
+     * viewport chain.
+     * <p>
+     * Custom render paths that bypass {@link #render} (e.g. an in-world UI
+     * layer compositing the scene onto its own canvas) must render layer
+     * widgets through this method to keep scene-space positioning intact.
+     *
+     * @param canvas      the canvas to render onto
+     * @param mouseX      the mouse x in scene space
+     * @param mouseY      the mouse y in scene space
+     * @param partialTick the partial tick
+     */
+    public void renderExtraLayers(SceneCanvas canvas, int mouseX, int mouseY, float partialTick) {
         for (SceneLayer layer : SceneLayer.extraLayers) {
             var layerWidgets = extraLayers.get(layer);
             for (int i = 0; i < layerWidgets.size(); i++) {
@@ -1024,17 +1116,6 @@ public final class Scene {
                 }
             }
         }
-
-        canvas.flushBatch();
-
-        if (hoverTooltip.notEmpty()) {
-            ScreenUtil.renderTooltip(graphics, hoverTooltip, mouseX, mouseY);
-        }
-
-        draggableManager.renderDragging(graphics, mouseX, mouseY, partialTick);
-        renderDebug(graphics, mouseX, mouseY, partialTick);
-        runPostRender();
-        cleanWidgets();
     }
 
     // endregion

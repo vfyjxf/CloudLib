@@ -32,10 +32,24 @@ import org.joml.Vector4f;
  *   <li><b>ray → face-plane:</b>
  *     {@code t = (p0 − o)·n / (d·n)};
  *     {@code u = (hit − p0)·uAxis}, {@code v = (hit − p0)·vAxis}.</li>
+ *   <li><b>camera basis:</b> the rows of {@code worldToView} are the camera's
+ *     right/up/backward axes in world space, so callers that only need
+ *     orientation (offscreen direction, orientation quads) can read them via
+ *     {@link #cameraRight()}/{@link #cameraUp()}/{@link #cameraForward()}
+ *     without touching a {@code Camera}.</li>
+ *   <li><b>world units per pixel:</b> at view depth {@code d} the visible
+ *     vertical extent is {@code 2·d·tan(fovY/2)} world units over
+ *     {@code screenHeight} pixels, so {@code worldPerPixel = 2·d·tan(fovY/2)/H}
+ *     with {@code tan(fovY/2) = 1/viewToClip.m11} (perspective
+ *     projections).</li>
  * </ul>
  */
 public final class Projection {
 
+    private static final double behindEpsilon = 1.0e-6;
+
+    private final Matrix4f worldToView;
+    private final Matrix4f viewToClip;
     private final Matrix4f worldToClip;
     private final Matrix4f clipToWorld;
     private final Vec3 cameraPos;
@@ -43,6 +57,8 @@ public final class Projection {
     private final int screenHeight;
 
     private Projection(Matrix4f worldToView, Matrix4f viewToClip, Vec3 cameraPos, int screenWidth, int screenHeight) {
+        this.worldToView = new Matrix4f(worldToView);
+        this.viewToClip = new Matrix4f(viewToClip);
         this.worldToClip = new Matrix4f(viewToClip).mul(worldToView);
         this.clipToWorld = new Matrix4f(worldToClip).invert();
         this.cameraPos = cameraPos;
@@ -80,6 +96,95 @@ public final class Projection {
 
     // endregion
 
+    // region matrices and camera basis
+
+    /**
+     * A copy of the world→view matrix (the level render pose). Mutating the
+     * returned matrix does not affect this projection.
+     */
+    public Matrix4f worldToView() {
+        return new Matrix4f(worldToView);
+    }
+
+    /** A copy of the view→clip (projection) matrix. */
+    public Matrix4f viewToClip() {
+        return new Matrix4f(viewToClip);
+    }
+
+    /**
+     * A copy of the combined world→clip matrix
+     * ({@code viewToClip · worldToView}) — the view-projection transform
+     * callers need for custom projections of world geometry.
+     */
+    public Matrix4f worldToClip() {
+        return new Matrix4f(worldToClip);
+    }
+
+    /**
+     * A copy of the inverse {@link #worldToClip()} matrix — unprojects clip
+     * space back to world space.
+     */
+    public Matrix4f clipToWorld() {
+        return new Matrix4f(clipToWorld);
+    }
+
+    /**
+     * The camera's right axis in world space — {@code +x} of view space, the
+     * direction of increasing screen x. Extracted from the rows of
+     * {@link #worldToView()}; works for any valid view matrix, including the
+     * straight-down/up pitch where a world-up look-at construction would
+     * degenerate.
+     */
+    public Vec3 cameraRight() {
+        return normalizeRow(0);
+    }
+
+    /** The camera's up axis in world space — {@code +y} of view space. */
+    public Vec3 cameraUp() {
+        return normalizeRow(1);
+    }
+
+    /** The camera's forward (look) axis in world space — {@code −z} of view space. */
+    public Vec3 cameraForward() {
+        return normalizeRow(2).scale(-1);
+    }
+
+    private Vec3 normalizeRow(int row) {
+        return new Vec3(worldToView.get(0, row), worldToView.get(1, row), worldToView.get(2, row)).normalize();
+    }
+
+    // endregion
+
+    // region depth and pixel scale
+
+    /**
+     * The world position's signed view-space depth: positive in front of the
+     * camera, negative behind, measured along {@link #cameraForward()}.
+     */
+    public double viewDepth(Vec3 world) {
+        return world.subtract(cameraPos).dot(cameraForward());
+    }
+
+    /**
+     * World units covered by one gui pixel at the given (signed) view depth —
+     * the perspective scale factor that keeps on-screen sizes proportional:
+     * {@code 2·|d|·tan(fovY/2) / screenHeight}. Perspective projections only.
+     */
+    public double worldPerPixelAtDepth(double viewDepth) {
+        double tanHalfFovY = 1.0 / viewToClip.m11();
+        return 2.0 * Math.abs(viewDepth) * tanHalfFovY / screenHeight;
+    }
+
+    /**
+     * World units covered by one gui pixel at the depth of {@code world} —
+     * see {@link #worldPerPixelAtDepth(double)}.
+     */
+    public double worldPerPixel(Vec3 world) {
+        return worldPerPixelAtDepth(viewDepth(world));
+    }
+
+    // endregion
+
     // region world → screen
 
     /**
@@ -90,7 +195,7 @@ public final class Projection {
      */
     public @Nullable FloatPos worldToScreen(Vec3 world) {
         Vector4f clip = worldToClip.transform(new Vector4f((float) world.x, (float) world.y, (float) world.z, 1.0f));
-        if (clip.w <= 1.0e-6f) return null;
+        if (clip.w <= (float) behindEpsilon) return null;
         float ndcX = clip.x / clip.w;
         float ndcY = clip.y / clip.w;
         return new FloatPos((ndcX + 1f) * 0.5f * screenWidth, (1f - ndcY) * 0.5f * screenHeight);
@@ -103,7 +208,7 @@ public final class Projection {
      */
     public @Nullable float[] worldToScreenDepth(Vec3 world) {
         Vector4f clip = worldToClip.transform(new Vector4f((float) world.x, (float) world.y, (float) world.z, 1.0f));
-        if (clip.w <= 1.0e-6f) return null;
+        if (clip.w <= (float) behindEpsilon) return null;
         float ndcX = clip.x / clip.w;
         float ndcY = clip.y / clip.w;
         return new float[] {(ndcX + 1f) * 0.5f * screenWidth, (1f - ndcY) * 0.5f * screenHeight, clip.w};
@@ -112,7 +217,7 @@ public final class Projection {
     /** @return true when the world position is in front of the camera */
     public boolean inFront(Vec3 world) {
         Vector4f clip = worldToClip.transform(new Vector4f((float) world.x, (float) world.y, (float) world.z, 1.0f));
-        return clip.w > 1.0e-6f;
+        return clip.w > (float) behindEpsilon;
     }
 
     /** Camera → point distance in blocks. */

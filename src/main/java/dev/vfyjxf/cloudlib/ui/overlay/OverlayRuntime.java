@@ -6,6 +6,7 @@ import dev.vfyjxf.cloudlib.api.ui.overlay.OverlayEntry;
 import dev.vfyjxf.cloudlib.api.ui.overlay.OverlayExclusion;
 import net.minecraft.client.renderer.Rect2i;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,8 +33,41 @@ public final class OverlayRuntime<T extends Widget> {
         return widget;
     }
 
+    /**
+     * The screen rectangles this overlay currently occupies — only what is
+     * really presented this frame. A widget the renderer would skip (hidden
+     * or being dragged) contributes nothing, and each reported rectangle is
+     * clipped to the context screen, so a panel parked off-screen never
+     * leaks its parked coordinates into the output.
+     */
     public List<Rect2i> exclusionAreas(OverlayContext context) {
+        if (!widget.shouldRender()) {
+            return List.of();
+        }
         OverlayExclusion<T> exclusion = entry.exclusion();
-        return exclusion == null ? List.of() : exclusion.areas(widget, context);
+        if (exclusion == null) {
+            return List.of();
+        }
+        List<Rect2i> areas = exclusion.areas(widget, context);
+        if (areas == null || areas.isEmpty()) {
+            return List.of();
+        }
+        int screenWidth = context.width();
+        int screenHeight = context.height();
+        List<Rect2i> presented = new ArrayList<>(areas.size());
+        for (Rect2i area : areas) {
+            if (area == null) {
+                continue;
+            }
+            int left = Math.max(area.getX(), 0);
+            int top = Math.max(area.getY(), 0);
+            int right = Math.min(area.getX() + area.getWidth(), screenWidth);
+            int bottom = Math.min(area.getY() + area.getHeight(), screenHeight);
+            if (right <= left || bottom <= top) {
+                continue;
+            }
+            presented.add(new Rect2i(left, top, right - left, bottom - top));
+        }
+        return List.copyOf(presented);
     }
 }

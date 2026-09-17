@@ -259,6 +259,41 @@ public final class FloatingMiddlewares {
         return AvoidRectsMiddleware.create(obstacles, padding, maxPush);
     }
 
+    /**
+     * Creates an avoid-rects middleware whose obstacles are the screen's
+     * registered {@link dev.vfyjxf.cloudlib.api.ui.inworld.space.InworldExclusions
+     * exclusion areas}, with default padding and push budget.
+     *
+     * @see AvoidRectsMiddleware#exclusions()
+     */
+    public static AvoidRectsMiddleware avoidExclusions() {
+        return AvoidRectsMiddleware.exclusions();
+    }
+
+    /**
+     * Creates an avoid-rects middleware avoiding the screen's registered
+     * exclusion areas with the given padding.
+     *
+     * @param padding extra clearance kept around each exclusion area
+     * @see AvoidRectsMiddleware#exclusions(int)
+     */
+    public static AvoidRectsMiddleware avoidExclusions(int padding) {
+        return AvoidRectsMiddleware.exclusions(padding);
+    }
+
+    /**
+     * Creates an avoid-rects middleware avoiding the screen's registered
+     * exclusion areas with full options.
+     *
+     * @param padding extra clearance kept around each exclusion area
+     * @param maxPush total displacement budget; overlaps that would cost
+     *                more to clear are accepted instead
+     * @see AvoidRectsMiddleware#exclusions(int, int)
+     */
+    public static AvoidRectsMiddleware avoidExclusions(int padding, int maxPush) {
+        return AvoidRectsMiddleware.exclusions(padding, maxPush);
+    }
+
     // endregion
 
     // region hide

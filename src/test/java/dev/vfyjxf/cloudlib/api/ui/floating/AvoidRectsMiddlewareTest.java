@@ -1,6 +1,8 @@
 package dev.vfyjxf.cloudlib.api.ui.floating;
 
 import dev.vfyjxf.cloudlib.api.math.Rect;
+import dev.vfyjxf.cloudlib.api.ui.inworld.space.ExclusionProvider;
+import dev.vfyjxf.cloudlib.api.ui.inworld.space.InworldExclusions;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -89,5 +91,48 @@ class AvoidRectsMiddlewareTest {
         var s = state(30, 10, 100, 40);
         AvoidRectsMiddleware.create(() -> obstacles, 0).run(s);
         assertTrue(s.x() >= 0);
+    }
+
+    @Test
+    void pureEscapeCoreClearsObstacleWithoutState() {
+        Rect obstacle = new Rect(60, 50, 100, 40);
+        var escaped = AvoidRectsMiddleware.escapeObstacles(50, 50, 100, 40, List.of(obstacle), 0, 64, boundary);
+        Rect result = new Rect((int) Math.round(escaped.x()), (int) Math.round(escaped.y()), 100, 40);
+        assertFalse(result.intersects(obstacle), "pure core must clear the obstacle");
+        assertTrue(escaped.y() < 50, "expected an upward escape");
+    }
+
+    @Test
+    void exclusionsSourceAvoidsRegisteredExclusionAreas() {
+        Rect exclusion = new Rect(60, 50, 100, 40);
+        ExclusionProvider provider = context -> List.of(exclusion);
+        InworldExclusions.register(provider);
+        try {
+            var s = state(50, 50, 100, 40);
+            AvoidRectsMiddleware.exclusions(0).run(s);
+            assertFalse(at(s, 100, 40).intersects(exclusion), "must escape a registered exclusion area");
+        } finally {
+            InworldExclusions.unregister(provider);
+        }
+    }
+
+    @Test
+    void exclusionsSourceCollectsAgainstTheStateBoundary() {
+        // provider only reports within a 400x300 viewport — the boundary drives
+        // the context, so the rect must survive collection and be avoided
+        Rect exclusion = new Rect(60, 50, 100, 40);
+        ExclusionProvider provider = context -> {
+            assertEquals(400, context.screenWidth());
+            assertEquals(300, context.screenHeight());
+            return List.of(exclusion);
+        };
+        InworldExclusions.register(provider);
+        try {
+            var s = state(50, 50, 100, 40);
+            AvoidRectsMiddleware.exclusions(0).run(s);
+            assertFalse(at(s, 100, 40).intersects(exclusion));
+        } finally {
+            InworldExclusions.unregister(provider);
+        }
     }
 }
