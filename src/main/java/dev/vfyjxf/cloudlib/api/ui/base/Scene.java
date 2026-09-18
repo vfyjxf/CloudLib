@@ -1136,6 +1136,17 @@ public final class Scene {
 
     private FloatPos lastClickPos;
 
+    /**
+     * The synthetic pointer: the most recent position any pointer-input
+     * entry saw, in scene coordinates. Keyboard input reads it instead of
+     * polling the OS mouse — a scene driven through synthesized input
+     * (world-mode crosshair pointing) has no OS mouse position at all.
+     */
+    private boolean pointerSeen;
+
+    private double pointerX;
+    private double pointerY;
+
     // region click region
 
     /**
@@ -1283,6 +1294,7 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        recordPointer(mouseX, mouseY);
         if (debugInputActive() && debugOverlay.mouseClicked(mouseX, mouseY, button)) return true;
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
@@ -1325,6 +1337,7 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        recordPointer(mouseX, mouseY);
         if (debugInputActive() && debugOverlay.mouseReleased(mouseX, mouseY, button)) return true;
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
@@ -1378,6 +1391,7 @@ public final class Scene {
      * @param mouseY the Y coordinate of the mouse.
      */
     public void mouseMoved(double mouseX, double mouseY) {
+        recordPointer(mouseX, mouseY);
         if (debugInputActive() && debugOverlay.mouseMoved(mouseX, mouseY)) return;
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
@@ -1441,8 +1455,14 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        recordPointer(mouseX, mouseY);
         if (debugInputActive() && debugOverlay.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
-        Widget target = hitTest(mouseX, mouseY);
+        // pointer capture: while a press is active, the drag stays with the
+        // widget the press hit — no re-hitTest, the same capture rule
+        // mouseReleased applies to its click determination. A capture target
+        // that unmounted mid-press falls back to the fresh hitTest.
+        Widget pressed = currentClickWidget;
+        Widget target = pressed != null && pressed.lifecycle.mounted() ? pressed : hitTest(mouseX, mouseY);
         if (target != null) {
             var input = InputContext.fromMouse(mouseX, mouseY, button);
             var bubble = target.bubble();
@@ -1456,6 +1476,7 @@ public final class Scene {
     }
 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        recordPointer(mouseX, mouseY);
         if (debugInputActive() && debugOverlay.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) return true;
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
@@ -1482,7 +1503,7 @@ public final class Scene {
      */
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         InputContext keyInput =
-                InputContext.fromKeyboard(keyCode, scanCode, modifiers, ScreenUtil.getMouseX(), ScreenUtil.getMouseY());
+                InputContext.fromKeyboard(keyCode, scanCode, modifiers, syntheticPointerX(), syntheticPointerY());
         if (keyInput.pressed(KeyMappings.openDevTools)) {
             DebugOverlay overlay = debugOverlay();
             if (overlay != null) {
@@ -1493,7 +1514,7 @@ public final class Scene {
         if (debugInputActive() && debugOverlay.keyPressed(keyCode, scanCode, modifiers)) return true;
         Widget fw = focusingWidget();
         if (fw == null || !fw.lifecycle.mounted()) return false;
-        var localMouse = root.sceneToLocal(ScreenUtil.getMouseX(), ScreenUtil.getMouseY());
+        var localMouse = root.sceneToLocal(syntheticPointerX(), syntheticPointerY());
         double mouseX = localMouse.x;
         double mouseY = localMouse.y;
         var input = InputContext.fromKeyboard(keyCode, scanCode, modifiers, mouseX, mouseY);
@@ -1515,7 +1536,7 @@ public final class Scene {
         if (debugInputActive() && debugOverlay.keyReleased(keyCode, scanCode, modifiers)) return true;
         Widget fw = focusingWidget();
         if (fw == null || !fw.lifecycle.mounted()) return false;
-        var localMouse = root.sceneToLocal(ScreenUtil.getMouseX(), ScreenUtil.getMouseY());
+        var localMouse = root.sceneToLocal(syntheticPointerX(), syntheticPointerY());
         double mouseX = localMouse.x;
         double mouseY = localMouse.y;
         var input = InputContext.fromKeyboard(keyCode, scanCode, modifiers, mouseX, mouseY);
@@ -1544,6 +1565,35 @@ public final class Scene {
                     (listener) -> listener.onCharTyped(codePoint, modifiers, bubble));
         }
         return false;
+    }
+
+    // endregion
+
+    // region synthetic pointer
+
+    /** Records the latest pointer position for the key-event synthetic pointer. */
+    private void recordPointer(double mouseX, double mouseY) {
+        pointerSeen = true;
+        pointerX = mouseX;
+        pointerY = mouseY;
+    }
+
+    /**
+     * The synthetic pointer x keyboard input resolves against: the last
+     * position a pointer entry saw; before any pointer input, the center of
+     * the layout area — the rest position a pointer-less world mode points
+     * from. (0 when even the layout area is unknown: an unmounted scene
+     * cannot dispatch key events anyway.)
+     */
+    private double syntheticPointerX() {
+        if (pointerSeen) return pointerX;
+        return Double.isNaN(width) ? 0 : width * 0.5;
+    }
+
+    /** The synthetic pointer y — see {@link #syntheticPointerX()}. */
+    private double syntheticPointerY() {
+        if (pointerSeen) return pointerY;
+        return Double.isNaN(height) ? 0 : height * 0.5;
     }
 
     // endregion

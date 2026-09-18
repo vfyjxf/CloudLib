@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld.algorithm;
 
+import dev.vfyjxf.cloudlib.api.ui.inworld.ScreenEdge;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -14,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DockCursorTest {
 
     private static final DockCursor bottomEdge() {
-        return new DockCursor(DockCursor.Edge.bottom, 1000, 10, 4);
+        return new DockCursor(ScreenEdge.bottom, 1000, 10, 4);
     }
 
     private static List<String> ids(List<DockCursor.Slot> slots) {
@@ -32,7 +33,7 @@ class DockCursorTest {
         assertEquals(10, a.start());
         assertEquals(114, b.start());
         assertEquals(318, c.start());
-        assertEquals(DockCursor.Edge.bottom, a.edge());
+        assertEquals(ScreenEdge.bottom, a.edge());
         assertEquals(314, b.end());
         assertEquals(343, c.center());
     }
@@ -53,7 +54,7 @@ class DockCursorTest {
 
     @Test
     void returnsNullWhenNoGapFits() {
-        DockCursor cursor = new DockCursor(DockCursor.Edge.top, 120, 10, 4);
+        DockCursor cursor = new DockCursor(ScreenEdge.top, 120, 10, 4);
 
         assertNotNull(cursor.allocate("a", 100));
         assertNull(cursor.allocate("b", 10));
@@ -150,8 +151,8 @@ class DockCursorTest {
         assertThrows(IllegalArgumentException.class, () -> cursor.allocate("b", Double.NaN));
         assertThrows(IllegalArgumentException.class, () -> cursor.resize("nope", 10));
         assertThrows(IllegalArgumentException.class, () -> cursor.resize("a", -1));
-        assertThrows(IllegalArgumentException.class, () -> new DockCursor(DockCursor.Edge.top, 0, 0, 0));
-        assertThrows(IllegalArgumentException.class, () -> new DockCursor(DockCursor.Edge.top, 100, -1, 0));
-        assertThrows(IllegalArgumentException.class, () -> new DockCursor(DockCursor.Edge.top, 100, 0, -1));
+        assertThrows(IllegalArgumentException.class, () -> new DockCursor(ScreenEdge.top, 0, 0, 0));
+        assertThrows(IllegalArgumentException.class, () -> new DockCursor(ScreenEdge.top, 100, -1, 0));
+        assertThrows(IllegalArgumentException.class, () -> new DockCursor(ScreenEdge.top, 100, 0, -1));
     }
 }

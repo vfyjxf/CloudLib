@@ -14,14 +14,15 @@ import java.util.Objects;
  * Adapters produce these from entity render positions, block-face poses or
  * world→screen projection; tests build them directly.
  *
- * @param screen the anchor's projected screen position, gui pixels
+ * @param screen the anchor's projected screen position, gui pixels — always
+ *        present (an anchor that does not project produces no frame)
  * @param world the anchor's world bounds; {@code null} for screen-space
  *        anchors
  * @param projectedSize the anchor's on-screen extent when meaningful (the
  *        projected size of an entity's nameplate anchor point or a block
  *        face); {@code null} when the anchor is a point
  */
-public record AnchorFrame(@Nullable FloatPos screen, @Nullable WorldAabb world, @Nullable Size projectedSize) {
+public record AnchorFrame(FloatPos screen, @Nullable WorldAabb world, @Nullable Size projectedSize) {
 
     public AnchorFrame {
         Objects.requireNonNull(screen, "screen");

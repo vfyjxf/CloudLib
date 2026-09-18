@@ -15,6 +15,9 @@
  *   <li>{@link VisibilityTracker} — the appear/linger/fade state machine that
  *       keeps rejected elements on screen for one decision epoch instead of
  *       blinking them away</li>
+ *   <li>{@link OcclusionFade} — the occlusion-fade policy value object
+ *       (hysteresis thresholds + frame gate) plus its drive constants and
+ *       easing helpers</li>
  * </ul>
  * <p>
  * Two rules hold for the whole package. First, time is always an explicit

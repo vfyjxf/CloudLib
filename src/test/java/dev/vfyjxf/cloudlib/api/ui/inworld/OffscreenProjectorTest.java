@@ -40,7 +40,7 @@ class OffscreenProjectorTest {
 
         assertFalse(result.onScreen());
         assertFalse(result.behind());
-        assertEquals(OffscreenProjector.Edge.left, result.edge());
+        assertEquals(ScreenEdge.left, result.edge());
         assertEquals(8, result.edgePoint().x(), eps);
         assertTrue(result.edgePoint().y() > 8 && result.edgePoint().y() < 262);
         assertTrue(result.dirX() < 0);
@@ -50,7 +50,7 @@ class OffscreenProjectorTest {
     void farUpTargetLandsOnTheTopEdge() {
         OffscreenProjector.Result result = projector.project(projection, new Vec3(0, 40, -10));
 
-        assertEquals(OffscreenProjector.Edge.top, result.edge());
+        assertEquals(ScreenEdge.top, result.edge());
         assertEquals(8, result.edgePoint().y(), eps);
         assertTrue(result.edgePoint().x() > 8 && result.edgePoint().x() < 472);
     }
@@ -58,10 +58,10 @@ class OffscreenProjectorTest {
     @Test
     void farDownAndFarRightTargetsLandOnTheirEdges() {
         assertEquals(
-                OffscreenProjector.Edge.bottom,
+                ScreenEdge.bottom,
                 projector.project(projection, new Vec3(0, -40, -10)).edge());
         assertEquals(
-                OffscreenProjector.Edge.right,
+                ScreenEdge.right,
                 projector.project(projection, new Vec3(50, 0, -10)).edge());
     }
 
@@ -98,7 +98,7 @@ class OffscreenProjectorTest {
         assertNotNull(result.edgePoint());
         // behind-left target points left, same side it would enter from
         assertTrue(result.dirX() < -0.5);
-        assertEquals(OffscreenProjector.Edge.left, result.edge());
+        assertEquals(ScreenEdge.left, result.edge());
     }
 
     @Test

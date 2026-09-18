@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld.coordinator;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -139,7 +141,7 @@ public final class VariantLadder {
      * @return the degraded rung, or {@code null} when {@code current} already
      *         is the weakest (there is nothing left to give)
      */
-    public InworldVariant degrade(InworldVariant current, RejectionReason reason) {
+    public @Nullable InworldVariant degrade(InworldVariant current, RejectionReason reason) {
         Objects.requireNonNull(current, "current");
         Objects.requireNonNull(reason, "reason");
         int target = Math.min(rungs.size() - 1, current.level() + degradeSteps(reason));
@@ -154,7 +156,7 @@ public final class VariantLadder {
      * @return the stronger rung, or {@code null} when {@code current} already
      *         is the strongest
      */
-    public InworldVariant upgrade(InworldVariant current) {
+    public @Nullable InworldVariant upgrade(InworldVariant current) {
         Objects.requireNonNull(current, "current");
         return current.level() == 0 ? null : rungs.get(current.level() - 1);
     }

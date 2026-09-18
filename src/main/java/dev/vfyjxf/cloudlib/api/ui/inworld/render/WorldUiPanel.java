@@ -97,8 +97,6 @@ public final class WorldUiPanel {
     private @Nullable Object tag;
 
     // renderer-owned per-frame state
-    private @Nullable QuadBasis basis;
-
     private @Nullable UiSurface surface;
 
     public WorldUiPanel(int width, int height) {
@@ -256,10 +254,28 @@ public final class WorldUiPanel {
 
     // region renderer internals
 
-    /** The surface FBO — created lazily on the render thread. Renderer-facing. */
-    public UiSurface surface() {
-        if (surface == null) surface = new UiSurface();
-        return surface;
+    /**
+     * Repaints the panel's surface with its {@link #painter(Painter)} — the
+     * renderer-facing surface entry. The offscreen target and the full GL
+     * state save/restore live behind it (see the internal surface); callers
+     * only choose the supersample factor and pass the quad's projected size
+     * for the mip decision.
+     *
+     * @param supersample the granted supersample factor for this repaint
+     * @param projectedW {@code projectedH} the quad's projected size in
+     *     framebuffer pixels (0 when unknown) — mip levels are regenerated
+     *     only while the world quad minifies the surface
+     */
+    public void renderSurface(int supersample, double projectedW, double projectedH, float partialTick) {
+        surface().render(width, height, supersample, projectedW, projectedH, painter, partialTick);
+    }
+
+    /**
+     * The supersample factor the surface was last rendered with — 0 while
+     * never rendered. Debug/introspection (texture dump sizing).
+     */
+    public int surfaceSupersample() {
+        return surface == null ? 0 : surface.supersample();
     }
 
     /** The surface's color texture object name, or 0 while unallocated — debug/introspection. */
@@ -267,22 +283,16 @@ public final class WorldUiPanel {
         return surface == null ? 0 : surface.colorTextureId();
     }
 
-    /** The quad resolved this frame, or null when hidden. */
-    public @Nullable QuadBasis basis() {
-        return basis;
-    }
-
-    /** Renderer-facing: records the quad the placer resolved for this frame. */
-    public WorldUiPanel basis(@Nullable QuadBasis basis) {
-        this.basis = basis;
-        return this;
-    }
-
     /** Releases the surface's GL objects — safe from any thread. */
     public void close() {
         UiSurface s = surface;
         surface = null;
         if (s != null) s.close();
+    }
+
+    private UiSurface surface() {
+        if (surface == null) surface = new UiSurface();
+        return surface;
     }
 
     // endregion

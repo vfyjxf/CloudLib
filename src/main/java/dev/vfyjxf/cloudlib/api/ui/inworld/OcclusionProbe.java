@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld;
 
+import dev.vfyjxf.cloudlib.internal.ui.inworld.LevelOcclusionProbe;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -12,8 +14,8 @@ import net.minecraft.world.phys.Vec3;
  * half-hidden panels fade gradually instead of popping (edge case ③).
  * <p>
  * The production implementation lives in the Minecraft-coupled adapter layer
- * (block clipping); tests and headless layout logic inject
- * {@link #alwaysClear()} or scripted fakes.
+ * (block clipping) behind {@link #ofLevel}; tests and headless layout logic
+ * inject {@link #alwaysClear()} or scripted fakes.
  */
 public interface OcclusionProbe {
 
@@ -49,5 +51,15 @@ public interface OcclusionProbe {
     /** The inverse no-op probe for tests: every segment blocked. */
     static OcclusionProbe alwaysOccluded() {
         return (from, to) -> false;
+    }
+
+    /**
+     * The probe over live level geometry — segments clipped through the
+     * visual block shapes with no fluids. Callers pass the current
+     * {@link BlockGetter} (usually the client level) and rebuild when it
+     * changes.
+     */
+    static OcclusionProbe ofLevel(BlockGetter level) {
+        return new LevelOcclusionProbe(level);
     }
 }

@@ -31,7 +31,8 @@ import org.joml.Vector4f;
  *     {@code dir = normalize(world − cameraPos)}.</li>
  *   <li><b>ray → face-plane:</b>
  *     {@code t = (p0 − o)·n / (d·n)};
- *     {@code u = (hit − p0)·uAxis}, {@code v = (hit − p0)·vAxis}.</li>
+ *     {@code u = (hit − p0)·uAxis}, {@code v = (hit − p0)·vAxis} —
+ *     see {@link dev.vfyjxf.cloudlib.api.ui.inworld.render.QuadBasis#hit}.</li>
  *   <li><b>camera basis:</b> the rows of {@code worldToView} are the camera's
  *     right/up/backward axes in world space, so callers that only need
  *     orientation (offscreen direction, orientation quads) can read them via
@@ -206,13 +207,16 @@ public final class Projection {
      *
      * @return screen x/y plus the point's view-space depth, or null when behind the camera
      */
-    public @Nullable float[] worldToScreenDepth(Vec3 world) {
+    public @Nullable ScreenPoint worldToScreenDepth(Vec3 world) {
         Vector4f clip = worldToClip.transform(new Vector4f((float) world.x, (float) world.y, (float) world.z, 1.0f));
         if (clip.w <= (float) behindEpsilon) return null;
         float ndcX = clip.x / clip.w;
         float ndcY = clip.y / clip.w;
-        return new float[] {(ndcX + 1f) * 0.5f * screenWidth, (1f - ndcY) * 0.5f * screenHeight, clip.w};
+        return new ScreenPoint((ndcX + 1f) * 0.5f * screenWidth, (1f - ndcY) * 0.5f * screenHeight, clip.w);
     }
+
+    /** A world→screen projection with its view-space depth ({@link #worldToScreenDepth}). */
+    public record ScreenPoint(float x, float y, float depth) {}
 
     /** @return true when the world position is in front of the camera */
     public boolean inFront(Vec3 world) {
@@ -244,46 +248,6 @@ public final class Projection {
     /** The ray through the screen center — the crosshair ray. */
     public Vec3 crosshairDirection() {
         return rayDirection(screenWidth * 0.5, screenHeight * 0.5);
-    }
-
-    /**
-     * Intersects a ray with a panel's face plane and converts the hit point
-     * into panel-local pixel coordinates.
-     * <p>
-     * {@code uAxis}/{@code vAxis} are the panel's px → world basis vectors
-     * (unit face direction × 1/pixelsPerBlock — the same axes used to place the
-     * panel in the world). Dividing the hit displacement by the squared axis
-     * length converts world units back to panel pixels:
-     * {@code u = (hit − p0)·u / |u|²}.
-     *
-     * @param origin   ray origin (usually {@link #cameraPos()})
-     * @param dir      ray direction
-     * @param originPx the plane origin (panel top-left corner) in world space
-     * @param uAxis    panel +x basis (px → world)
-     * @param vAxis    panel +y basis (px → world)
-     * @param normal   plane normal
-     * @param widthPx  panel width in pixels
-     * @param heightPx panel height in pixels
-     * @return panel-local hit position in pixels, or null when the ray misses
-     */
-    public static @Nullable FloatPos rayPlane(
-            Vec3 origin,
-            Vec3 dir,
-            Vec3 originPx,
-            Vec3 uAxis,
-            Vec3 vAxis,
-            Vec3 normal,
-            double widthPx,
-            double heightPx) {
-        double denom = dir.dot(normal);
-        if (Math.abs(denom) < 1.0e-7) return null;
-        double t = originPx.subtract(origin).dot(normal) / denom;
-        if (t <= 0) return null;
-        Vec3 hit = origin.add(dir.scale(t)).subtract(originPx);
-        double u = hit.dot(uAxis) / uAxis.lengthSqr();
-        double v = hit.dot(vAxis) / vAxis.lengthSqr();
-        if (u < 0 || v < 0 || u > widthPx || v > heightPx) return null;
-        return new FloatPos(u, v);
     }
 
     // endregion

@@ -35,14 +35,6 @@ public final class OffscreenProjector {
     private static final double degenerateEpsilon = 1.0e-9;
     private static final double minHalfExtent = 1.0;
 
-    /** The screen edge an indicator lands on. */
-    public enum Edge {
-        top,
-        right,
-        bottom,
-        left
-    }
-
     /**
      * One projection result. {@code dirX}/{@code dirY} form the unit
      * direction from the screen center toward the target in gui pixels
@@ -61,14 +53,19 @@ public final class OffscreenProjector {
             double angle,
             @Nullable FloatPos screenPos,
             @Nullable FloatPos edgePoint,
-            @Nullable Edge edge) {
+            @Nullable ScreenEdge edge) {
 
         static Result onScreen(double dirX, double dirY, FloatPos screenPos) {
             return new Result(true, false, dirX, dirY, Math.atan2(dirY, dirX), screenPos, null, null);
         }
 
         static Result offScreen(
-                boolean behind, double dirX, double dirY, @Nullable FloatPos screenPos, FloatPos edgePoint, Edge edge) {
+                boolean behind,
+                double dirX,
+                double dirY,
+                @Nullable FloatPos screenPos,
+                FloatPos edgePoint,
+                ScreenEdge edge) {
             return new Result(false, behind, dirX, dirY, Math.atan2(dirY, dirX), screenPos, edgePoint, edge);
         }
     }
@@ -151,7 +148,9 @@ public final class OffscreenProjector {
         double ty = Math.abs(dy) < degenerateEpsilon ? Double.POSITIVE_INFINITY : halfH / Math.abs(dy);
         double t = Math.min(tx, ty);
         FloatPos edgePoint = new FloatPos(centerX + dx * t, centerY + dy * t);
-        Edge edge = tx <= ty ? (dx < 0 ? Edge.left : Edge.right) : (dy < 0 ? Edge.top : Edge.bottom);
+        ScreenEdge edge = tx <= ty
+                ? (dx < 0 ? ScreenEdge.left : ScreenEdge.right)
+                : (dy < 0 ? ScreenEdge.top : ScreenEdge.bottom);
         return Result.offScreen(forward <= 0, dx, dy, screenPos, edgePoint, edge);
     }
 }

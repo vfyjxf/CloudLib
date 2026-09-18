@@ -3,6 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.algorithm;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.inworld.OffscreenProjector;
+import dev.vfyjxf.cloudlib.api.ui.inworld.ScreenEdge;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.RayFan;
 import org.junit.jupiter.api.Test;
 
@@ -170,7 +171,7 @@ class AlgorithmComboTest {
         List<String> runs = new ArrayList<>();
         for (int run = 0; run < 2; run++) {
             DockCursor cursor = new DockCursor(
-                    DockCursor.Edge.bottom,
+                    ScreenEdge.bottom,
                     1920,
                     profile.params().dockMargin(),
                     profile.params().dockSpacing());
@@ -210,8 +211,8 @@ class AlgorithmComboTest {
         AngleEncoder encoder = new AngleEncoder(1920, 1080, 24, profile.params().angleEncoderConfig());
         encoder.snap(0);
 
-        List<OffscreenProjector.Edge> sequence = new ArrayList<>();
-        sequence.add(OffscreenProjector.Edge.right);
+        List<ScreenEdge> sequence = new ArrayList<>();
+        sequence.add(ScreenEdge.right);
         FloatPos previous = null;
         for (int k = 1; k <= 720; k++) {
             double angle = 2 * Math.PI * k / 720;
@@ -232,12 +233,7 @@ class AlgorithmComboTest {
             }
         }
         assertEquals(
-                List.of(
-                        OffscreenProjector.Edge.right,
-                        OffscreenProjector.Edge.bottom,
-                        OffscreenProjector.Edge.left,
-                        OffscreenProjector.Edge.top,
-                        OffscreenProjector.Edge.right),
+                List.of(ScreenEdge.right, ScreenEdge.bottom, ScreenEdge.left, ScreenEdge.top, ScreenEdge.right),
                 sequence);
     }
 }

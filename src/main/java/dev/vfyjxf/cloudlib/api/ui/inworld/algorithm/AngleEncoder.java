@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.algorithm;
 
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.ui.inworld.OffscreenProjector;
+import dev.vfyjxf.cloudlib.api.ui.inworld.ScreenEdge;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.Smoothing;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.SwitchGate;
 
@@ -72,14 +73,13 @@ public final class AngleEncoder {
      * smoothed angle; {@code active} whether the target is actually
      * off-screen.
      */
-    public record Output(
-            boolean active, FloatPos position, OffscreenProjector.Edge edge, double angle, double smoothedAngle) {}
+    public record Output(boolean active, FloatPos position, ScreenEdge edge, double angle, double smoothedAngle) {}
 
     private final double screenWidth;
     private final double screenHeight;
     private final double insetMargin;
     private final Config config;
-    private final SwitchGate<OffscreenProjector.Edge> edgeGate;
+    private final SwitchGate<ScreenEdge> edgeGate;
 
     private double smoothedAngle;
 
@@ -103,9 +103,7 @@ public final class AngleEncoder {
         this.insetMargin = insetMargin;
         this.config = config;
         this.edgeGate = new SwitchGate<>(
-                new SwitchGate.Config(config.edgeBand(), config.edgeDwellTicks(), 0.0, 0),
-                OffscreenProjector.Edge.right,
-                0.0);
+                new SwitchGate.Config(config.edgeBand(), config.edgeDwellTicks(), 0.0, 0), ScreenEdge.right, 0.0);
     }
 
     public double screenWidth() {
@@ -136,9 +134,9 @@ public final class AngleEncoder {
         double t = Math.min(tx, ty);
         FloatPos position = new FloatPos(centerX + dx * t, centerY + dy * t);
 
-        OffscreenProjector.Edge desired = tx <= ty
-                ? (dx < 0 ? OffscreenProjector.Edge.left : OffscreenProjector.Edge.right)
-                : (dy < 0 ? OffscreenProjector.Edge.top : OffscreenProjector.Edge.bottom);
+        ScreenEdge desired = tx <= ty
+                ? (dx < 0 ? ScreenEdge.left : ScreenEdge.right)
+                : (dy < 0 ? ScreenEdge.top : ScreenEdge.bottom);
         edgeGate.propose(desired, smoothedAngle);
 
         return new Output(!result.onScreen(), position, edgeGate.current(), result.angle(), smoothedAngle);

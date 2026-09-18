@@ -9,6 +9,8 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.SpaceKind;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.VisibilityTracker;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 /**
  * The escape hatch (§7, plan A core): the three-callback strategy interface
  * for the scenarios the seven facets cannot express. An element embeds one
@@ -84,9 +86,8 @@ public interface InworldLayouter {
     record SpaceReservation(SpaceKind kind, int priority, boolean sticky, ElementMode mode) {
 
         public SpaceReservation {
-            if (kind == null || mode == null) {
-                throw new IllegalArgumentException("kind and mode must not be null");
-            }
+            Objects.requireNonNull(kind, "kind and mode must not be null");
+            Objects.requireNonNull(mode, "kind and mode must not be null");
         }
 
         /** An arbitrated, non-sticky reservation at priority 0 in {@code kind}. */
@@ -109,9 +110,7 @@ public interface InworldLayouter {
             VisibilityTracker.Phase phase, double alpha, @Nullable ElementRejection rejection, long epoch, long frame) {
 
         public Feedback {
-            if (phase == null) {
-                throw new IllegalArgumentException("phase must not be null");
-            }
+            Objects.requireNonNull(phase, "phase must not be null");
             if (!Double.isFinite(alpha) || alpha < 0 || alpha > 1) {
                 throw new IllegalArgumentException("alpha must be in [0, 1]: " + alpha);
             }

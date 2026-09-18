@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld.algorithm;
 
+import dev.vfyjxf.cloudlib.api.ui.inworld.ScreenEdge;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -14,31 +15,24 @@ import java.util.List;
  * adapts without reordering anything).
  * <p>
  * The scanline runs along the edge and is addressed by a single coordinate:
- * x for {@link Edge#top}/{@link Edge#bottom}, y for {@link Edge#left}/
- * {@link Edge#right}. {@link #allocate} is first-fit in coordinate order —
- * existing slots never move, a new slot takes the earliest gap that fits.
- * {@link #release} punches a hole; {@link #compact} slides every slot toward
- * the scanline origin <em>in coordinate order</em>, which is why compaction is
- * stable: elements keep their relative order, they are never re-sorted or
- * reshuffled. No two-dimensional packing ever happens here — the cross-edge
- * position (how far from the screen border) is the caller's constant.
+ * x for {@link ScreenEdge#top}/{@link ScreenEdge#bottom}, y for
+ * {@link ScreenEdge#left}/{@link ScreenEdge#right}. {@link #allocate} is
+ * first-fit in coordinate order — existing slots never move, a new slot takes
+ * the earliest gap that fits. {@link #release} punches a hole;
+ * {@link #compact} slides every slot toward the scanline origin <em>in
+ * coordinate order</em>, which is why compaction is stable: elements keep
+ * their relative order, they are never re-sorted or reshuffled. No
+ * two-dimensional packing ever happens here — the cross-edge position (how
+ * far from the screen border) is the caller's constant.
  */
 public final class DockCursor {
-
-    /** Which screen edge this cursor's scanline runs along. */
-    public enum Edge {
-        top,
-        right,
-        bottom,
-        left
-    }
 
     /**
      * One occupied interval of the scanline. {@code start} is the coordinate
      * of the interval's low end along the edge (see class docs for the axis
      * per edge); {@code width} its extent.
      */
-    public record Slot(String id, Edge edge, double start, double width) {
+    public record Slot(String id, ScreenEdge edge, double start, double width) {
 
         public Slot {
             if (id == null || id.isEmpty()) {
@@ -55,7 +49,7 @@ public final class DockCursor {
         }
     }
 
-    private final Edge edge;
+    private final ScreenEdge edge;
     private final double extent;
     private final double margin;
     private final double spacing;
@@ -71,7 +65,7 @@ public final class DockCursor {
      * @throws IllegalArgumentException if any parameter is not finite, if
      *         extent is not positive, or if margin/spacing are negative
      */
-    public DockCursor(Edge edge, double extent, double margin, double spacing) {
+    public DockCursor(ScreenEdge edge, double extent, double margin, double spacing) {
         if (extent <= 0 || !Double.isFinite(extent)) {
             throw new IllegalArgumentException("extent must be finite and positive: " + extent);
         }
@@ -87,7 +81,7 @@ public final class DockCursor {
         this.spacing = spacing;
     }
 
-    public Edge edge() {
+    public ScreenEdge edge() {
         return edge;
     }
 

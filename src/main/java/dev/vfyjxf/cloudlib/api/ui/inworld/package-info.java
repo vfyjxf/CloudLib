@@ -8,9 +8,11 @@
  * {@code QuadOrientation}), the panel contract ({@code WorldUiPanel}) and
  * the renderer batching contracts, {@code trace} the source↔panel trace
  * contracts, and {@code layout} the placement-resolution contracts.
- * {@code OffscreenProjector} computes off-screen/behind-target directions and
- * edge landing points, and {@code OcclusionProbe}/{@code OcclusionFade} the
- * line-of-sight sampling and fade policy behind occlusion fading. Everything
+ * {@code ScreenEdge} is the shared four-edge vocabulary those edge consumers
+ * address; {@code OffscreenProjector} computes off-screen/behind-target
+ * directions and edge landing points, and {@code OcclusionProbe} the
+ * line-of-sight sampling behind occlusion fading (the fade policy value
+ * object itself lives in {@code stability}). Everything
  * here is gui-scaled pixels on the screen side and world blocks on the level
  * side.
  */

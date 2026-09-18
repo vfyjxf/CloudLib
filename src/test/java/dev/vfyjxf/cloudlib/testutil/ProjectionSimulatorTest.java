@@ -50,6 +50,17 @@ class ProjectionSimulatorTest {
     }
 
     @Test
+    void depthProjectionCarriesScreenPositionAndViewDepth() {
+        Projection projection = ProjectionSimulator.create().build();
+
+        Projection.ScreenPoint point = projection.worldToScreenDepth(new Vec3(0, 0, -5));
+        assertNotNull(point);
+        assertEquals(240, point.x(), 0.01);
+        assertEquals(135, point.y(), 0.01);
+        assertEquals(5, point.depth(), 1.0e-3);
+    }
+
+    @Test
     void crosshairRayPointsAlongTheLookDirection() {
         Projection projection =
                 ProjectionSimulator.at(0, 0, 0).lookAt(1, 0, 0).screen(800, 400).build();

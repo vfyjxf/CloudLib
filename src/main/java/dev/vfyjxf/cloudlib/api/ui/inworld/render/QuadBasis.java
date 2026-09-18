@@ -361,19 +361,42 @@ public record QuadBasis(Vec3 origin, Vec3 u, Vec3 v) {
     // endregion
 
     /**
-     * Camera ray → panel-local pixels, or null when the ray misses the quad
-     * (parallel, behind the origin, or outside the w×h bounds).
+     * One accepted pick on a quad: the panel-local pixel position plus the
+     * ray parameter {@code t} (distance along a unit-length ray).
      */
-    public @Nullable FloatPos rayUv(Vec3 rayOrigin, Vec3 rayDir, int wPx, int hPx) {
-        double denom = rayDir.dot(normal());
+    public record QuadHit(FloatPos uv, double t) {}
+
+    /**
+     * Intersects the ray with this quad's plane and maps the hit point to
+     * panel-local pixels — the shared pick geometry behind crosshair pointing
+     * and gaze selection.
+     * <p>
+     * {@code normal} is the <em>explicit</em> plane normal (the pick side the
+     * caller granted, e.g. a layouter's resolved facing) — it may differ from
+     * {@link #normal()} and defines the plane together with {@link #origin()}.
+     * Back-face culling is the caller's rule (see the pointing geometry); this
+     * method only rejects parallel rays, hits behind the ray origin, and hits
+     * outside the {@code wPx × hPx} bounds.
+     *
+     * @param origin  ray origin (usually the camera position)
+     * @param dir     ray direction
+     * @param normal  the plane normal defining the pick plane
+     * @param wPx     panel width in pixels
+     * @param hPx     panel height in pixels
+     * @return the hit (panel-local uv plus ray distance), or null when the
+     *         ray is parallel to the plane, hits it behind the origin, or
+     *         lands outside the quad
+     */
+    public @Nullable QuadHit hit(Vec3 origin, Vec3 dir, Vec3 normal, int wPx, int hPx) {
+        double denom = dir.dot(normal);
         if (Math.abs(denom) < 1.0e-7) return null;
-        double t = origin.subtract(rayOrigin).dot(normal()) / denom;
+        double t = this.origin.subtract(origin).dot(normal) / denom;
         if (t <= 0) return null;
-        Vec3 hit = rayOrigin.add(rayDir.scale(t)).subtract(origin);
-        double uu = hit.dot(u) / u.lengthSqr();
-        double vv = hit.dot(v) / v.lengthSqr();
+        Vec3 displacement = origin.add(dir.scale(t)).subtract(this.origin);
+        double uu = displacement.dot(u) / u.lengthSqr();
+        double vv = displacement.dot(v) / v.lengthSqr();
         if (uu < 0 || vv < 0 || uu > wPx || vv > hPx) return null;
-        return new FloatPos(uu, vv);
+        return new QuadHit(new FloatPos(uu, vv), t);
     }
 
     /** Panel +x axis in world space for each face (right as seen from outside). */

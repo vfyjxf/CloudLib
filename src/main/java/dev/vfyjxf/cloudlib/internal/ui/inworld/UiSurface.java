@@ -9,6 +9,7 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.inworld.render.RenderStats;
 import dev.vfyjxf.cloudlib.api.ui.inworld.render.Supersampling;
+import dev.vfyjxf.cloudlib.api.ui.inworld.render.WorldUiPanel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.Nullable;
@@ -32,12 +33,6 @@ import org.lwjgl.opengl.GL30;
  * escapes to the scene framebuffer mid-pass.
  */
 public final class UiSurface implements AutoCloseable {
-
-    /** The painter callback: draws the surface's content for this frame. */
-    @FunctionalInterface
-    public interface Painter {
-        void paint(SceneCanvas canvas, int width, int height, float partialTick);
-    }
 
     private final Minecraft mc = Minecraft.getInstance();
     private final SurfaceBufferSource buffers = new SurfaceBufferSource();
@@ -85,7 +80,7 @@ public final class UiSurface implements AutoCloseable {
             int supersample,
             double projectedW,
             double projectedH,
-            Painter painter,
+            WorldUiPanel.Painter painter,
             float partialTick) {
         RenderSystem.assertOnRenderThread();
         // Capture the caller's render state BEFORE the size pass: a resize

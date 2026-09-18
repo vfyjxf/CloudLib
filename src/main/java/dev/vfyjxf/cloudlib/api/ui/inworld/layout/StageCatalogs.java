@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.FloatRect;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.math.Size;
+import dev.vfyjxf.cloudlib.api.ui.inworld.ScreenEdge;
 import dev.vfyjxf.cloudlib.api.ui.inworld.algorithm.AlgorithmProfile;
 import dev.vfyjxf.cloudlib.api.ui.inworld.algorithm.OrbitRing;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.PlacementCandidate;
@@ -523,16 +524,16 @@ public final class StageCatalogs {
         double dBottom = 1 - fy;
         double dLeft = fx;
         double dRight = 1 - fx;
-        String edge;
+        ScreenEdge edge;
         double min = Math.min(Math.min(dTop, dBottom), Math.min(dLeft, dRight));
         if (dTop == min) {
-            edge = "top";
+            edge = ScreenEdge.top;
         } else if (dBottom == min) {
-            edge = "bottom";
+            edge = ScreenEdge.bottom;
         } else if (dLeft == min) {
-            edge = "left";
+            edge = ScreenEdge.left;
         } else {
-            edge = "right";
+            edge = ScreenEdge.right;
         }
 
         // The blocking intervals along the edge's scanline: every exclusion
@@ -541,15 +542,15 @@ public final class StageCatalogs {
         double scanStart;
         double scanEnd;
         switch (edge) {
-            case "top" -> {
+            case top -> {
                 scanStart = 0;
                 scanEnd = margin + h;
             }
-            case "bottom" -> {
+            case bottom -> {
                 scanStart = env.screenHeight() - margin - h;
                 scanEnd = env.screenHeight();
             }
-            case "left" -> {
+            case left -> {
                 scanStart = 0;
                 scanEnd = margin + w;
             }
@@ -568,7 +569,7 @@ public final class StageCatalogs {
         }
         intervals.sort((a, b) -> Double.compare(a[0], b[0]));
 
-        double extent = edge.equals("top") || edge.equals("bottom") ? env.screenWidth() : env.screenHeight();
+        double extent = edge == ScreenEdge.top || edge == ScreenEdge.bottom ? env.screenWidth() : env.screenHeight();
         double cursor = margin;
         for (double[] interval : intervals) {
             if (cursor + w + spacing <= interval[0]) {
@@ -591,8 +592,13 @@ public final class StageCatalogs {
     }
 
     private static void addEdgeInterval(
-            List<double[]> intervals, String edge, Rect rect, double scanStart, double scanEnd, LayoutEnvironment env) {
-        boolean horizontal = edge.equals("top") || edge.equals("bottom");
+            List<double[]> intervals,
+            ScreenEdge edge,
+            Rect rect,
+            double scanStart,
+            double scanEnd,
+            LayoutEnvironment env) {
+        boolean horizontal = edge == ScreenEdge.top || edge == ScreenEdge.bottom;
         double alongStart = horizontal ? rect.x() : rect.y();
         double alongEnd = horizontal ? rect.right() : rect.bottom();
         double crossStart = horizontal ? rect.y() : rect.x();
@@ -604,11 +610,11 @@ public final class StageCatalogs {
     }
 
     private static FloatRect edgeRect(
-            String edge, double along, double margin, double w, double h, LayoutEnvironment env) {
+            ScreenEdge edge, double along, double margin, double w, double h, LayoutEnvironment env) {
         return switch (edge) {
-            case "top" -> new FloatRect(along, margin, w, h);
-            case "bottom" -> new FloatRect(along, env.screenHeight() - margin - h, w, h);
-            case "left" -> new FloatRect(margin, along, w, h);
+            case top -> new FloatRect(along, margin, w, h);
+            case bottom -> new FloatRect(along, env.screenHeight() - margin - h, w, h);
+            case left -> new FloatRect(margin, along, w, h);
             default -> new FloatRect(env.screenWidth() - margin - w, along, w, h);
         };
     }

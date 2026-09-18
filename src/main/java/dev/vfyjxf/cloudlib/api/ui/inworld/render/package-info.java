@@ -8,6 +8,12 @@
  * {@code LinesEmitter} — that a renderer resolves into a sorted translucent
  * world draw.
  * <p>
+ * {@link dev.vfyjxf.cloudlib.api.ui.inworld.render.WorldUiRenderer} is that
+ * renderer: the NeoForge level-stage pipeline that places each panel's quad,
+ * repaints its offscreen surface (content-version gated) and composites the
+ * sorted world pass; {@link dev.vfyjxf.cloudlib.api.ui.inworld.render.WorldLines}
+ * carries the emit helpers for companion line geometry.
+ * <p>
  * {@link dev.vfyjxf.cloudlib.api.ui.inworld.render.RenderTarget} names the
  * pass a frame draws into (world / screen);
  * {@link dev.vfyjxf.cloudlib.api.ui.inworld.render.RenderBatch} is the

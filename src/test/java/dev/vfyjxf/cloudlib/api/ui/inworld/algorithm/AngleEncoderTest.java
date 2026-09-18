@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.algorithm;
 
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.ui.inworld.OffscreenProjector;
+import dev.vfyjxf.cloudlib.api.ui.inworld.ScreenEdge;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -28,15 +29,15 @@ class AngleEncoderTest {
         return new OffscreenProjector.Result(false, false, dx, dy, angle, null, new FloatPos(dx, dy), edgeOf(angle));
     }
 
-    private static OffscreenProjector.Edge edgeOf(double angle) {
+    private static ScreenEdge edgeOf(double angle) {
         double halfW = screenWidth * 0.5 - inset;
         double halfH = screenHeight * 0.5 - inset;
         double tx = Math.abs(Math.cos(angle)) < 1.0e-9 ? Double.POSITIVE_INFINITY : halfW / Math.abs(Math.cos(angle));
         double ty = Math.abs(Math.sin(angle)) < 1.0e-9 ? Double.POSITIVE_INFINITY : halfH / Math.abs(Math.sin(angle));
         if (tx <= ty) {
-            return Math.cos(angle) < 0 ? OffscreenProjector.Edge.left : OffscreenProjector.Edge.right;
+            return Math.cos(angle) < 0 ? ScreenEdge.left : ScreenEdge.right;
         }
-        return Math.sin(angle) < 0 ? OffscreenProjector.Edge.top : OffscreenProjector.Edge.bottom;
+        return Math.sin(angle) < 0 ? ScreenEdge.top : ScreenEdge.bottom;
     }
 
     @Test
@@ -47,7 +48,7 @@ class AngleEncoderTest {
         AngleEncoder.Output output = encoder.update(offscreen(0), 1.0 / 60.0);
 
         assertTrue(output.active());
-        assertEquals(OffscreenProjector.Edge.right, output.edge());
+        assertEquals(ScreenEdge.right, output.edge());
         assertEquals(
                 screenWidth / 2 + (screenWidth / 2 - inset), output.position().x(), 1.0e-6);
         assertEquals(screenHeight / 2, output.position().y(), 1.0e-6);
@@ -60,7 +61,7 @@ class AngleEncoderTest {
 
         AngleEncoder.Output output = encoder.update(offscreen(Math.PI), 0.0);
 
-        assertEquals(OffscreenProjector.Edge.left, output.edge());
+        assertEquals(ScreenEdge.left, output.edge());
         assertEquals(
                 screenWidth / 2 - (screenWidth / 2 - inset), output.position().x(), 1.0e-6);
         assertEquals(screenHeight / 2, output.position().y(), 1.0e-6);
@@ -100,20 +101,15 @@ class AngleEncoderTest {
         }
 
         // the gated edge walks clockwise through all four edges and comes home
-        List<OffscreenProjector.Edge> sequence = new ArrayList<>();
-        sequence.add(OffscreenProjector.Edge.right);
+        List<ScreenEdge> sequence = new ArrayList<>();
+        sequence.add(ScreenEdge.right);
         for (AngleEncoder.Output output : outputs) {
             if (sequence.get(sequence.size() - 1) != output.edge()) {
                 sequence.add(output.edge());
             }
         }
         assertEquals(
-                List.of(
-                        OffscreenProjector.Edge.right,
-                        OffscreenProjector.Edge.bottom,
-                        OffscreenProjector.Edge.left,
-                        OffscreenProjector.Edge.top,
-                        OffscreenProjector.Edge.right),
+                List.of(ScreenEdge.right, ScreenEdge.bottom, ScreenEdge.left, ScreenEdge.top, ScreenEdge.right),
                 sequence);
     }
 
@@ -129,7 +125,7 @@ class AngleEncoderTest {
             encoder.update(offscreen(angle), 1.0 / 60.0);
         }
 
-        OffscreenProjector.Edge settled =
+        ScreenEdge settled =
                 encoder.update(offscreen(corner + 0.05), 1.0 / 60.0).edge();
         for (int i = 0; i < 50; i++) {
             double angle = corner + ((i % 2 == 0) ? 0.05 : -0.05);
@@ -147,7 +143,7 @@ class AngleEncoderTest {
 
         assertTrue(first.active());
         assertTrue(second.active());
-        assertTrue(second.edge() == OffscreenProjector.Edge.left || second.edge() == OffscreenProjector.Edge.bottom);
+        assertTrue(second.edge() == ScreenEdge.left || second.edge() == ScreenEdge.bottom);
         double dx = second.position().x() - first.position().x();
         double dy = second.position().y() - first.position().y();
         assertTrue(Math.sqrt(dx * dx + dy * dy) < 30.0);
@@ -164,7 +160,7 @@ class AngleEncoderTest {
 
         assertFalse(output.active());
         // the encoder still tracks the angle so re-activation glides from a sane place
-        assertEquals(OffscreenProjector.Edge.right, output.edge());
+        assertEquals(ScreenEdge.right, output.edge());
     }
 
     @Test
