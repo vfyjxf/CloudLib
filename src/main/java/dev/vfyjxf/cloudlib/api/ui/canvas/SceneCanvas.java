@@ -8,6 +8,7 @@ import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.base.Viewport;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.inworld.render.RenderStats;
 import dev.vfyjxf.cloudlib.api.ui.texture.BatchableTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.SizedTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
@@ -71,6 +72,26 @@ public final class SceneCanvas {
      */
     private boolean preserveDepth = false;
 
+    /**
+     * The supersample factor of the render target this canvas draws into —
+     * {@code 1} for the main GUI framebuffer, {@code ss} while an offscreen
+     * surface rasterizes at {@code ss} texels per logical pixel. SDF shader
+     * smoothing follows the target's actual texel density (see
+     * {@link #getSmoothing}) so antialiased edges stay calibrated to one
+     * target texel instead of the window's GUI scale.
+     */
+    private float targetSupersample = 1f;
+
+    /**
+     * Whether this canvas draws into an offscreen surface — set by
+     * {@link #targetSupersample(float)}, the offscreen path's declaration.
+     * The two target kinds carry different densities: the main GUI
+     * framebuffer rasterizes at {@code guiScale} pixels per logical pixel,
+     * an offscreen surface at its own {@code ss} texels per logical pixel,
+     * with the window's guiScale irrelevant inside the FBO.
+     */
+    private boolean offscreenTarget;
+
     private final BatchState batchState = new BatchState();
 
     private SceneCanvas(GuiGraphics graphics) {
@@ -86,6 +107,19 @@ public final class SceneCanvas {
      */
     public SceneCanvas preserveDepth() {
         this.preserveDepth = true;
+        return this;
+    }
+
+    /**
+     * Declares the supersample factor of the offscreen render target this
+     * canvas draws into — {@code ss} texels per logical pixel. SDF smoothing
+     * then follows the surface's own texel density; the window's guiScale
+     * never enters the FBO. A canvas that never calls this draws into the
+     * main GUI framebuffer and keeps the {@code 1/guiScale} smoothing.
+     */
+    public SceneCanvas targetSupersample(float supersample) {
+        this.targetSupersample = Math.max(1f, supersample);
+        this.offscreenTarget = true;
         return this;
     }
 
@@ -327,6 +361,7 @@ public final class SceneCanvas {
             if (graphicsBufferDirty) {
                 graphics.flush();
                 graphicsBufferDirty = false;
+                RenderStats.textBatchFlushed();
             }
             return;
         }
@@ -336,6 +371,7 @@ public final class SceneCanvas {
         if (graphicsBufferDirty) {
             graphics.flush();
             graphicsBufferDirty = false;
+            RenderStats.textBatchFlushed();
         }
 
         // Canvas quads are 2D painter-order UI. They must not write depth, otherwise
@@ -427,6 +463,8 @@ public final class SceneCanvas {
         if (prevDepthTest) RenderSystem.enableDepthTest();
         else RenderSystem.disableDepthTest();
 
+        // each same-type run became one draw call above — the frame-cost gauge
+        RenderStats.canvasBatchesFlushed(batchState.commands.size());
         batchState.clear();
     }
 
@@ -784,11 +822,30 @@ public final class SceneCanvas {
     }
 
     /**
-     * Returns the AA smoothing width in logical pixels, accounting for the
-     * current GUI scale so edges remain crisp at any scale factor.
+     * Returns the AA smoothing width in logical pixels for the target this
+     * canvas draws into — one target texel expressed in logical units. The
+     * two target kinds differ in what a texel is: the main GUI framebuffer
+     * rasterizes at {@code guiScale} framebuffer pixels per logical pixel
+     * ({@code 1/guiScale}), an offscreen surface at its own
+     * {@code targetSupersample} texels per logical pixel with the window's
+     * guiScale irrelevant inside the FBO ({@code 1/ss}) — SDF sizes are
+     * logical pixels, so the half-width must match the density actually
+     * being rasterized, never a product of the two.
      */
-    private static float getSmoothing() {
-        return 1.0f / (float) Minecraft.getInstance().getWindow().getGuiScale();
+    private float getSmoothing() {
+        return offscreenTarget
+                ? offscreenSmoothing(targetSupersample)
+                : smoothing((float) Minecraft.getInstance().getWindow().getGuiScale());
+    }
+
+    /** The main-GUI-target smoothing: {@code 1/guiScale} logical px — one framebuffer pixel. */
+    static float smoothing(float guiScale) {
+        return 1.0f / Math.max(1f, guiScale);
+    }
+
+    /** The offscreen-surface smoothing: {@code 1/ss} logical px — one surface texel. */
+    static float offscreenSmoothing(float targetSupersample) {
+        return 1.0f / Math.max(1f, targetSupersample);
     }
 
     /**
@@ -1364,6 +1421,7 @@ public final class SceneCanvas {
     private static final float zIncrement = 1f;
 
     public SceneCanvas renderItem(ItemStack stack, int x, int y) {
+        RenderStats.itemRendered();
         layeredGraphics().renderItem(stack, x, y);
         return this;
     }
@@ -1378,6 +1436,7 @@ public final class SceneCanvas {
      */
     public SceneCanvas renderItemIcon(ItemStack stack, int x, int y) {
         if (stack.isEmpty()) return this;
+        RenderStats.itemRendered();
         var model =
                 Minecraft.getInstance().getItemRenderer().getItemModelShaper().getItemModel(stack);
         TextureAtlasSprite sprite = model.getParticleIcon(ModelData.EMPTY);

@@ -7,6 +7,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
+import dev.vfyjxf.cloudlib.api.ui.inworld.render.RenderStats;
+import dev.vfyjxf.cloudlib.api.ui.inworld.render.Supersampling;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.Nullable;
@@ -39,11 +41,12 @@ public final class UiSurface implements AutoCloseable {
 
     private final Minecraft mc = Minecraft.getInstance();
     private final SurfaceBufferSource buffers = new SurfaceBufferSource();
+    private final MipmapChain mips = new MipmapChain();
 
     private @Nullable TextureTarget target;
     private int widthPx;
     private int heightPx;
-    private int supersample = 2;
+    private int supersample;
 
     /** The surface color texture, or 0 while unallocated. */
     public int colorTextureId() {
@@ -60,16 +63,38 @@ public final class UiSurface implements AutoCloseable {
         return heightPx;
     }
 
+    /** The supersample factor the surface was last rendered with (0 while never rendered). */
+    public int supersample() {
+        return supersample;
+    }
+
     /**
      * Repaints the surface: binds the target with a GUI ortho setup, runs the
      * painter, flushes every buffered draw, then restores the caller's full
      * render state (framebuffer, viewport, projection, model-view stack,
      * vertex sorting). Safe to call mid level-stage — it owns nothing ambient.
+     *
+     * @param projectedW {@code projectedH} the quad's projected size in
+     *     framebuffer pixels — mip levels are only regenerated while the world
+     *     quad minifies the surface (see {@link Supersampling#needsMipmap});
+     *     pass 0 when unknown
      */
-    public void render(int wPx, int hPx, int supersample, Painter painter, float partialTick) {
+    public void render(
+            int wPx,
+            int hPx,
+            int supersample,
+            double projectedW,
+            double projectedH,
+            Painter painter,
+            float partialTick) {
         RenderSystem.assertOnRenderThread();
-        if (!ensure(wPx, hPx, supersample)) return;
-
+        // Capture the caller's render state BEFORE the size pass: a resize
+        // inside ensure() ends with RenderTarget's unconditional
+        // glBindFramebuffer(GL_FRAMEBUFFER, 0), so a capture taken after it
+        // would read 0 on resize frames and the finally block below would
+        // restore the default framebuffer over the caller's target — that
+        // frame's whole world pass then draws into the wrong buffer and the
+        // end-of-frame blit erases every panel for one frame.
         int prevFbo = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
         int[] prevVp = new int[4];
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, prevVp);
@@ -81,11 +106,15 @@ public final class UiSurface implements AutoCloseable {
         float prevFogStart = RenderSystem.getShaderFogStart();
         float prevFogEnd = RenderSystem.getShaderFogEnd();
 
+        if (!ensure(wPx, hPx, supersample)) return;
+        RenderStats.surfaceRendered((long) widthPx * supersample * heightPx * supersample);
+
         var mv = RenderSystem.getModelViewStack();
         mv.pushMatrix();
         try {
             target.clear(Minecraft.ON_OSX);
             target.bindWrite(true);
+            RenderStats.fboBound();
             buffers.bindTo(target);
             // the surface owns its depth buffer — canvas layering relies on
             // depth clears, which silently no-op while depthMask is off
@@ -105,15 +134,33 @@ public final class UiSurface implements AutoCloseable {
 
             GuiGraphics graphics = new GuiGraphics(mc, new PoseStack(), buffers);
             SceneCanvas canvas = SceneCanvas.create(graphics);
+            // the surface rasterizes at ss texels per logical pixel — SDF
+            // smoothing must follow that density, not the window's gui scale
+            canvas.targetSupersample(supersample);
             painter.paint(canvas, wPx, hPx, partialTick);
             canvas.flushBatch();
             buffers.endBatch();
-            // regenerate mip levels — the world quad minifies the surface at
-            // distance/glancing angles and LINEAR alone shimmers badly
-            RenderSystem.bindTexture(target.getColorTextureId());
-            GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
+            // mip levels only filter the world quad's minification of the
+            // surface; while the quad magnifies, level 0 is all the LINEAR
+            // magnifier samples and regenerating the chain is pure waste —
+            // unless the chain is stale after a (re)allocation, in which
+            // case it is rebuilt this frame whatever the magnification
+            // (see MipmapChain)
+            boolean quadMinifies =
+                    Supersampling.needsMipmap(widthPx * supersample, heightPx * supersample, projectedW, projectedH);
+            if (mips.shouldGenerate(quadMinifies)) {
+                RenderSystem.bindTexture(target.getColorTextureId());
+                GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
+                RenderStats.mipmapGenerated();
+                mips.generated();
+                // the chain is complete again — put mipmap filtering back so
+                // the world pass samples a filtered chain, not bare level 0
+                GlStateManager._texParameter(
+                        GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
+            }
         } finally {
             GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, prevFbo);
+            RenderStats.fboBound();
             RenderSystem.viewport(prevVp[0], prevVp[1], prevVp[2], prevVp[3]);
             mv.popMatrix();
             RenderSystem.applyModelViewMatrix();
@@ -143,16 +190,25 @@ public final class UiSurface implements AutoCloseable {
         if (target == null) {
             target = new TextureTarget(w, h, true, Minecraft.ON_OSX);
             target.setClearColor(0f, 0f, 0f, 0f);
+            mips.reallocated();
+            RenderStats.surfaceResized();
         } else if (target.width != w || target.height != h) {
             target.resize(w, h, Minecraft.ON_OSX);
+            mips.reallocated();
+            RenderStats.surfaceResized();
         }
         // RenderTarget defaults its color texture to NEAREST and createBuffers
         // force-resets it — the world quad magnifies/minifies the surface, so
-        // NEAREST stairsteps text and SDF edges; re-assert every frame, with
-        // mipmaps so minification filters instead of shimmering (MAG can't
-        // take a mipmapped enum — set the filters directly)
+        // NEAREST stairsteps text and SDF edges. MIN follows the mip chain's
+        // validity: LINEAR while the chain is gone (a mipmap filter over a
+        // level-0-only texture is incomplete and samples opaque black), back
+        // to LINEAR_MIPMAP_LINEAR once a frame has rebuilt the chain. MAG
+        // can't take a mipmapped enum — set the filters directly.
         GlStateManager._bindTexture(target.getColorTextureId());
-        GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
+        GlStateManager._texParameter(
+                GL11.GL_TEXTURE_2D,
+                GL11.GL_TEXTURE_MIN_FILTER,
+                mips.minFilter() == MipmapChain.MinFilter.linear ? GL11.GL_LINEAR : GL11.GL_LINEAR_MIPMAP_LINEAR);
         GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         return true;
     }

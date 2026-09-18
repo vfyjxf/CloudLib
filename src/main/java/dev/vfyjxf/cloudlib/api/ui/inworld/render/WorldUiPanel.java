@@ -9,6 +9,9 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
+import java.util.function.LongSupplier;
+import java.util.function.Supplier;
+
 /**
  * One UI surface placed in the world: a logical w×h pixel canvas, a per-frame
  * {@link Placer} resolving its world quad, a {@link Painter} filling the
@@ -18,6 +21,19 @@ import org.joml.Matrix4f;
  * The pipeline is: {@code placer → surface FBO → sorted translucent draw}.
  * The panel itself is pure data + callbacks; a world UI renderer drives it
  * through the renderer-facing hooks at the bottom of this class.
+ * <p>
+ * <b>Content versioning (the dirty protocol).</b> By default a panel carries
+ * no version and is treated as always dirty: the renderer repaints its
+ * surface every frame, exactly like the pre-version pipeline. A panel whose
+ * painted content derives fully from observable values may declare a
+ * {@link #contentVersion(LongSupplier)}: while the long (and the surface's
+ * shape) is unchanged, the renderer skips the repaint entirely (no painter
+ * run, no FBO bind, no mip regeneration; the world quad keeps sampling the
+ * existing texture). The version must cover <b>every</b> source of visual
+ * change the painter reads (live values, animations, partial-tick-driven
+ * effects); anything time-dependent belongs on a version-less panel, which
+ * repaints per frame. {@link ContentVersions} has adapters for the common
+ * shapes (constant, equals-compared record token).
  */
 public final class WorldUiPanel {
 
@@ -70,6 +86,13 @@ public final class WorldUiPanel {
     private Placer placer = frame -> null;
     private @Nullable LinesEmitter lines;
 
+    /**
+     * The panel's content version, or null — null means always dirty: the
+     * renderer repaints the surface every frame (the default, and the exact
+     * pre-version behavior). See the class docs for the protocol.
+     */
+    private @Nullable LongSupplier contentVersion;
+
     /** caller-defined payload slot */
     private @Nullable Object tag;
 
@@ -99,7 +122,11 @@ public final class WorldUiPanel {
         return this;
     }
 
-    /** Supersampling factor for the surface texture (2 = 2× MSAA-like crispness). */
+    /**
+     * The minimum supersampling factor for the surface texture — the floor
+     * the adaptive renderer raises from when the quad is magnified on screen
+     * (an explicit value is a lower bound, not a fixed size).
+     */
     public int supersample() {
         return supersample;
     }
@@ -180,6 +207,49 @@ public final class WorldUiPanel {
     public WorldUiPanel tag(@Nullable Object tag) {
         this.tag = tag;
         return this;
+    }
+
+    // endregion
+
+    // region content version
+
+    /**
+     * The panel's content version supplier, or null when the panel declares
+     * none (always dirty — repaint every frame).
+     *
+     * <p>Renderer-facing: read on the render thread each frame before the
+     * surface repaint decision.
+     */
+    public @Nullable LongSupplier contentVersion() {
+        return contentVersion;
+    }
+
+    /**
+     * Declares the panel's content version — the dirty protocol from the
+     * class docs. While the returned long is unchanged (and the surface's
+     * shape holds), the renderer skips the surface repaint. {@code null}
+     * removes the version and restores always-dirty semantics.
+     */
+    public WorldUiPanel contentVersion(@Nullable LongSupplier contentVersion) {
+        this.contentVersion = contentVersion;
+        return this;
+    }
+
+    /** A constant content version — content that is fully built at setup and never changes. */
+    public WorldUiPanel contentVersion(long version) {
+        return contentVersion(ContentVersions.fixed(version));
+    }
+
+    /**
+     * A content version derived from an equals-compared token — see
+     * {@link ContentVersions#of(Supplier)}. Make the token a record over
+     * every live value the painter reads. The adapter is stateful (it
+     * counts its own observations), so create it once and keep it bound to
+     * this panel — a per-frame-recreated adapter degrades to a constant and
+     * never reports changes.
+     */
+    public WorldUiPanel contentVersion(Supplier<?> token) {
+        return contentVersion(ContentVersions.of(token));
     }
 
     // endregion
