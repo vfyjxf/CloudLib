@@ -84,4 +84,18 @@ public interface InworldElement {
     default boolean worldOnly() {
         return false;
     }
+
+    /**
+     * Whether this element's element-side stages consume the previous
+     * frame's committed layout — the zone context: the placement map, the
+     * committed leaders and the adjacency tables. The coordinator computes
+     * and exposes that snapshot (see
+     * {@code InworldCoordinator#previousZoneLayout}) only when at least one
+     * registered element declares this, so a population without zone
+     * consumers computes nothing and its behavior is exactly what it was
+     * without the zone layer. Default false.
+     */
+    default boolean consumesZoneLayout() {
+        return false;
+    }
 }

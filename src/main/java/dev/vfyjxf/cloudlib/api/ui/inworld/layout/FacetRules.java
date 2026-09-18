@@ -4,6 +4,8 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.algorithm.AlgorithmProfile;
 import dev.vfyjxf.cloudlib.api.ui.inworld.group.ClusterToRepresentative;
 import dev.vfyjxf.cloudlib.api.ui.inworld.group.OrbitAroundAnchor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpacePolicy;
+import dev.vfyjxf.cloudlib.api.ui.inworld.zone.LodTier;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The illegal-facet-combination table (§7 plan B: the behavior space must be
@@ -34,6 +36,24 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpacePolicy;
  *       candidates, or a world anchor whose frame carries the world box. The
  *       built-in candidate stages project screen rects, so a screen anchor
  *       with no custom layouter has nothing world-only to place</li>
+ *   <li><strong>zone participation</strong> — a zone declaration needs
+ *       screen-arbitration participation: not a ghost (a ghost participates
+ *       in nothing, which the zone cost's overlap/adjacency machinery
+ *       contradicts) and not world-only (the zone lattice proposes screen
+ *       rects; a world-only element leaves screen arbitration entirely)</li>
+ *   <li><strong>zone anchor</strong> — a zone declaration needs a declared
+ *       anchor with an anchor-positioned candidate family: the anchor must
+ *       not be {@code none} (the lattice docks to a declared anchor, a
+ *       no-anchor panel's placement comes from its candidates) and the
+ *       profile's placement must not be the dock cursor (its candidates scan
+ *       the screen edge — anchor position only picks the edge — so a zone
+ *       declaration would silently discard the profile's declared
+ *       behavior)</li>
+ *   <li><strong>zone entry tier</strong> — the zone facet's initial LOD tier
+ *       must be {@code full} or {@code compact}: the content-bearing tiers a
+ *       fresh element may enter at. {@code icon} and below are degradation
+ *       outcomes the coordinator's ladder owns, and {@code clustered} is the
+ *       grouping layer's verdict — neither is a legal declaration</li>
  * </ol>
  * Per-facet field validation (non-empty ids, finite coordinates, positive
  * radii, …) lives in the facet records themselves.
@@ -150,6 +170,54 @@ public final class FacetRules {
         if (worldOnly && !hasCustomLayouter && !anchor.worldAnchored()) {
             throw new IllegalArgumentException(
                     "worldOnly needs a custom layouter or a world anchor: " + anchor.kind() + " (rule 7)");
+        }
+    }
+
+    /**
+     * Rules 8–10: the zone facet's combinations. A null facet is the default
+     * and always legal — nothing below runs for it.
+     *
+     * @throws IllegalArgumentException with the rule number on violation
+     */
+    public static void validateZone(
+            @Nullable ZoneFacet zone,
+            AnchorFacet anchor,
+            SpaceFacet spaces,
+            AlgorithmProfile algorithm,
+            boolean worldOnly) {
+        if (zone == null) {
+            return;
+        }
+        rule8(zone, spaces, worldOnly);
+        rule9(anchor, algorithm);
+        rule10(zone);
+    }
+
+    private static void rule8(ZoneFacet zone, SpaceFacet spaces, boolean worldOnly) {
+        if (spaces.policy() == SpacePolicy.ghost) {
+            throw new IllegalArgumentException("a zone declaration needs screen participation, not ghost (rule 8)");
+        }
+        if (worldOnly) {
+            throw new IllegalArgumentException(
+                    "a zone declaration needs screen participation, not the world-only capability (rule 8)");
+        }
+    }
+
+    private static void rule9(AnchorFacet anchor, AlgorithmProfile algorithm) {
+        if (anchor.kind() == AnchorFacet.Kind.none) {
+            throw new IllegalArgumentException("a zone declaration needs a declared anchor, not none (rule 9)");
+        }
+        if (algorithm.placement() == AlgorithmProfile.Placement.dockCursor) {
+            throw new IllegalArgumentException(
+                    "a zone declaration needs an anchor-positioned candidate family, not the dock cursor (rule 9)");
+        }
+    }
+
+    private static void rule10(ZoneFacet zone) {
+        LodTier tier = zone.initialTier();
+        if (tier != LodTier.full && tier != LodTier.compact) {
+            throw new IllegalArgumentException(
+                    "a zone declaration enters at full or compact, not " + tier + " (rule 10)");
         }
     }
 }

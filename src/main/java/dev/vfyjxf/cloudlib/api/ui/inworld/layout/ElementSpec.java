@@ -23,6 +23,12 @@ import java.util.Objects;
  * coordinator bypasses screen arbitration entirely (rule 7 requires the
  * world representation such an element needs — a custom layouter or a world
  * anchor).
+ * <p>
+ * The optional {@link ZoneFacet} (Z2) declares the visual-zone placement
+ * path: a spec with one binds the zone strategies instead of the profile's
+ * defaults, and its ranker scores against the previous frame's committed
+ * layout. The default is null — no zone declaration, the exact pre-zone
+ * pipeline everywhere.
  *
  * @param id the element's unique id within its coordinator, non-empty
  * @param profile the closed profile binding the algorithm combination
@@ -33,6 +39,8 @@ import java.util.Objects;
  * @param stability the stability facet
  * @param degrade the degrade facet
  * @param group the group facet
+ * @param zone the zone facet, or null when the element does not declare the
+ *        zone path
  * @param custom the escape-hatch layouter, or null
  * @param worldOnly whether the element lives purely in world space: no
  *        screen projection, no screen-space coordination (default false)
@@ -47,8 +55,28 @@ public record ElementSpec(
         StabilityFacet stability,
         DegradeFacet degrade,
         GroupFacet group,
+        @Nullable ZoneFacet zone,
         @Nullable InworldLayouter custom,
         boolean worldOnly) {
+
+    /**
+     * The pre-zone constructor: a spec without a zone declaration, identical
+     * to passing a null zone facet.
+     */
+    public ElementSpec(
+            String id,
+            InworldProfile profile,
+            AnchorFacet anchor,
+            OrientationFacet orientation,
+            SpaceFacet spaces,
+            AvoidanceFacet avoidance,
+            StabilityFacet stability,
+            DegradeFacet degrade,
+            GroupFacet group,
+            @Nullable InworldLayouter custom,
+            boolean worldOnly) {
+        this(id, profile, anchor, orientation, spaces, avoidance, stability, degrade, group, null, custom, worldOnly);
+    }
 
     public ElementSpec {
         if (id == null || id.isEmpty()) {
@@ -64,6 +92,7 @@ public record ElementSpec(
         Objects.requireNonNull(group, "group");
         FacetRules.validate(anchor, orientation, spaces, avoidance, group, profile.algorithm());
         FacetRules.validateWorldOnly(worldOnly, anchor, custom != null);
+        FacetRules.validateZone(zone, anchor, spaces, profile.algorithm(), worldOnly);
     }
 
     /** A spec from the profile's facet preset (its default anchor) under {@code id}. */
@@ -85,6 +114,7 @@ public record ElementSpec(
                 facets.degrade(),
                 facets.group(),
                 null,
+                null,
                 false);
     }
 
@@ -92,7 +122,18 @@ public record ElementSpec(
     public ElementSpec custom(InworldLayouter layouter) {
         Objects.requireNonNull(layouter, "layouter");
         return new ElementSpec(
-                id, profile, anchor, orientation, spaces, avoidance, stability, degrade, group, layouter, worldOnly);
+                id,
+                profile,
+                anchor,
+                orientation,
+                spaces,
+                avoidance,
+                stability,
+                degrade,
+                group,
+                zone,
+                layouter,
+                worldOnly);
     }
 
     /**
@@ -111,43 +152,129 @@ public record ElementSpec(
             next = FacetRules.coheredOrientation(newAnchor);
         }
         return new ElementSpec(
-                id, profile, newAnchor, next, spaces, avoidance, stability, degrade, group, custom, worldOnly);
+                id, profile, newAnchor, next, spaces, avoidance, stability, degrade, group, zone, custom, worldOnly);
     }
 
     /** Swaps the orientation facet; an incompatible anchor/orientation pair throws (rule 1). */
     public ElementSpec withOrientation(OrientationFacet newOrientation) {
         return new ElementSpec(
-                id, profile, anchor, newOrientation, spaces, avoidance, stability, degrade, group, custom, worldOnly);
+                id,
+                profile,
+                anchor,
+                newOrientation,
+                spaces,
+                avoidance,
+                stability,
+                degrade,
+                group,
+                zone,
+                custom,
+                worldOnly);
     }
 
     /** Swaps the space facet. */
     public ElementSpec withSpaces(SpaceFacet newSpaces) {
         return new ElementSpec(
-                id, profile, anchor, orientation, newSpaces, avoidance, stability, degrade, group, custom, worldOnly);
+                id,
+                profile,
+                anchor,
+                orientation,
+                newSpaces,
+                avoidance,
+                stability,
+                degrade,
+                group,
+                zone,
+                custom,
+                worldOnly);
     }
 
     /** Swaps the avoidance facet. */
     public ElementSpec withAvoidance(AvoidanceFacet newAvoidance) {
         return new ElementSpec(
-                id, profile, anchor, orientation, spaces, newAvoidance, stability, degrade, group, custom, worldOnly);
+                id,
+                profile,
+                anchor,
+                orientation,
+                spaces,
+                newAvoidance,
+                stability,
+                degrade,
+                group,
+                zone,
+                custom,
+                worldOnly);
     }
 
     /** Swaps the stability facet. */
     public ElementSpec withStability(StabilityFacet newStability) {
         return new ElementSpec(
-                id, profile, anchor, orientation, spaces, avoidance, newStability, degrade, group, custom, worldOnly);
+                id,
+                profile,
+                anchor,
+                orientation,
+                spaces,
+                avoidance,
+                newStability,
+                degrade,
+                group,
+                zone,
+                custom,
+                worldOnly);
     }
 
     /** Swaps the degrade facet. */
     public ElementSpec withDegrade(DegradeFacet newDegrade) {
         return new ElementSpec(
-                id, profile, anchor, orientation, spaces, avoidance, stability, newDegrade, group, custom, worldOnly);
+                id,
+                profile,
+                anchor,
+                orientation,
+                spaces,
+                avoidance,
+                stability,
+                newDegrade,
+                group,
+                zone,
+                custom,
+                worldOnly);
     }
 
     /** Swaps the group facet. */
     public ElementSpec withGroup(GroupFacet newGroup) {
         return new ElementSpec(
-                id, profile, anchor, orientation, spaces, avoidance, stability, degrade, newGroup, custom, worldOnly);
+                id,
+                profile,
+                anchor,
+                orientation,
+                spaces,
+                avoidance,
+                stability,
+                degrade,
+                newGroup,
+                zone,
+                custom,
+                worldOnly);
+    }
+
+    /**
+     * Declares the zone facet (rules 8–10 validate the combination); a null
+     * facet removes the declaration and restores the default pipeline.
+     */
+    public ElementSpec withZone(@Nullable ZoneFacet newZone) {
+        return new ElementSpec(
+                id,
+                profile,
+                anchor,
+                orientation,
+                spaces,
+                avoidance,
+                stability,
+                degrade,
+                group,
+                newZone,
+                custom,
+                worldOnly);
     }
 
     /**
@@ -161,6 +288,17 @@ public record ElementSpec(
     /** Sets the world-only capability bit explicitly. */
     public ElementSpec withWorldOnly(boolean newWorldOnly) {
         return new ElementSpec(
-                id, profile, anchor, orientation, spaces, avoidance, stability, degrade, group, custom, newWorldOnly);
+                id,
+                profile,
+                anchor,
+                orientation,
+                spaces,
+                avoidance,
+                stability,
+                degrade,
+                group,
+                zone,
+                custom,
+                newWorldOnly);
     }
 }

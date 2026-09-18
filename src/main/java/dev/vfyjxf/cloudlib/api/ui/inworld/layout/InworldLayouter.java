@@ -36,6 +36,15 @@ import org.jetbrains.annotations.Nullable;
  * rects), the first candidate carrying a world box is granted
  * unconditionally, and {@link #arbitrated} receives that grant — its screen
  * half is empty, the world box is the placement.
+ * <p>
+ * Zone consumption (Z2, optional): a custom layouter may compose the zone
+ * strategies — {@code candidates.zoneGrid} and {@code rank.zoneCost} from
+ * {@link StageCatalogs} — and read the spec's {@code ZoneFacet}, the
+ * environment's previous committed layout ({@code LayoutEnvironment}'s zone
+ * snapshot, refreshed from {@code InworldCoordinator#previousZoneLayout})
+ * and the current LOD tier ({@code CoordinationResult.ElementState#lodTier})
+ * like any facet-driven element would. Nothing requires it: a layouter that
+ * ignores the zone vocabulary keeps its exact pre-zone behavior.
  */
 public interface InworldLayouter {
 

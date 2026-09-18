@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.coordinator;
 
 import dev.vfyjxf.cloudlib.api.math.FloatRect;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.VisibilityTracker;
+import dev.vfyjxf.cloudlib.api.ui.inworld.zone.LodTier;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -107,6 +108,44 @@ public record CoordinationResult(
             if (!Double.isFinite(alpha) || alpha < 0 || alpha > 1) {
                 throw new IllegalArgumentException("alpha must be in [0, 1]: " + alpha);
             }
+        }
+
+        /**
+         * The element's current {@link LodTier} — the coordinator's
+         * degradation result bridged into the zone layer's LOD vocabulary.
+         * The bridge reads the granted rung's {@link ContentTier}, not the
+         * rung index (ladders vary in length; the ladder guarantees only
+         * that the content tier never regresses down the rungs — rung 0 is
+         * the full-content form whenever the strongest rung carries
+         * {@code full}):
+         * <pre>
+         *   ContentTier.full            → LodTier.full
+         *   ContentTier.compact         → LodTier.compact
+         *   ContentTier.labelOnly       → LodTier.compact   (still text-bearing)
+         *   ContentTier.iconOnly        → LodTier.icon
+         *   ContentTier.pip             → LodTier.icon      (a minimal glyph)
+         *   ContentTier.directionalOnly → LodTier.icon      (a cue still renders)
+         *   no placement                → LodTier.hidden
+         * </pre>
+         * {@link LodTier#clustered} is unreachable from a content tier —
+         * clustering is the grouping layer's verdict over several elements,
+         * never a single ladder's. A lingering element retains its placement,
+         * so it reports the tier it is fading out from.
+         */
+        public LodTier lodTier() {
+            return placement == null
+                    ? LodTier.hidden
+                    : lodTierOf(placement.variant().contentTier());
+        }
+
+        /** The content-tier side of the {@link #lodTier()} bridge. */
+        public static LodTier lodTierOf(ContentTier tier) {
+            Objects.requireNonNull(tier, "tier");
+            return switch (tier) {
+                case full -> LodTier.full;
+                case compact, labelOnly -> LodTier.compact;
+                case iconOnly, pip, directionalOnly -> LodTier.icon;
+            };
         }
     }
 }

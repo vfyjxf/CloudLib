@@ -13,6 +13,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.stability.Smoothing;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.Spring2;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.SwitchGate;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.VisibilityTracker;
+import dev.vfyjxf.cloudlib.api.ui.inworld.zone.PreviousFrameLayout;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -65,6 +66,16 @@ import java.util.Optional;
  * receives an {@code ElementState} every frame and drives the visibility
  * tracker like any other element; its grant carries only the world half.
  * <p>
+ * Zone support (Z2): after every commit, when at least one registered
+ * element {@link InworldElement#consumesZoneLayout() consumes zone layout},
+ * the coordinator derives the previous frame's committed layout — placement
+ * map, leader segments, left-of/above adjacency — and exposes it via
+ * {@link #previousZoneLayout()} for the next frame's element-side zone
+ * scoring. The snapshot never feeds back into arbitration: it is a read-only
+ * view of what was committed, and a population without zone consumers
+ * computes nothing, so their frames are byte-identical to a run without the
+ * zone layer.
+ * <p>
  * Purity: no Minecraft types, no wall clock. Time ({@code nowSeconds},
  * {@code dtSeconds}) is an explicit frame input. Time should be monotonic
  * across frames; non-monotonic input is defensively tolerated (components
@@ -88,6 +99,7 @@ public final class InworldCoordinator {
     private List<Rect> lastExclusions = List.of();
     private double smoothedFreeFraction = Double.NaN;
     private @Nullable CoordinationResult lastResult;
+    private @Nullable PreviousFrameLayout zoneLayout;
 
     /**
      * @param config every threshold and rate the pipeline uses; see
@@ -178,6 +190,19 @@ public final class InworldCoordinator {
     /** The last committed frame's result, if any frame has run. */
     public Optional<CoordinationResult> lastResult() {
         return Optional.ofNullable(lastResult);
+    }
+
+    /**
+     * The last committed frame's layout in zone vocabulary — the placement
+     * map, the committed leaders and the adjacency tables — for the driving
+     * adapter to hand to the next frame's {@code LayoutEnvironment}. Empty
+     * when no frame has run or when no registered element consumes zone
+     * layout: the snapshot is computed only for zone-consuming populations,
+     * so everyone else's frames are byte-identical to a run without the
+     * zone layer.
+     */
+    public Optional<PreviousFrameLayout> previousZoneLayout() {
+        return Optional.ofNullable(zoneLayout);
     }
 
     /** The current decision epoch (incremented on every resolve). */
@@ -434,7 +459,30 @@ public final class InworldCoordinator {
         CoordinationResult result = new CoordinationResult(
                 frameCounter, epochCounter, resolveNow, cause, placements, elementStates, budget);
         lastResult = result;
+        // The zone snapshot (post-commit): the previous frame the zone ranker
+        // scores against. Computed only when a registered element consumes
+        // zone layout — a population without one never pays for it and the
+        // snapshot stays null.
+        zoneLayout = null;
+        for (ElementRuntime runtime : ordered) {
+            if (runtime.element.consumesZoneLayout()) {
+                zoneLayout = PreviousFrameLayout.of(zonePlacements(placements));
+                break;
+            }
+        }
         return result;
+    }
+
+    private static List<PreviousFrameLayout.Placement> zonePlacements(List<InworldPlacement> placements) {
+        List<PreviousFrameLayout.Placement> snapshot = new ArrayList<>(placements.size());
+        for (InworldPlacement placement : placements) {
+            Rect rect = placement.screenRect().toRect();
+            if (rect.width() <= 0 || rect.height() <= 0) {
+                continue; // world-only grants carry no screen half
+            }
+            snapshot.add(new PreviousFrameLayout.Placement(placement.elementId(), placement.anchor(), rect));
+        }
+        return snapshot;
     }
 
     // endregion

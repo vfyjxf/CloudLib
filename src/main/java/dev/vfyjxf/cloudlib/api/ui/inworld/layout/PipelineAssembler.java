@@ -17,9 +17,13 @@ import java.util.Objects;
  * <p>
  * The stage-to-strategy binding is closed: the profile's
  * {@link AlgorithmProfile.Placement} picks the candidate strategy, the
- * avoidance facet picks the filter, and stickiness picks the ranker. Third
- * parties change behavior by registering or replacing named strategies —
- * never by touching this pipeline.
+ * avoidance facet picks the filter, and stickiness picks the ranker. The one
+ * declarative opt-in is the zone facet: a spec carrying a
+ * {@link ZoneFacet} binds the zone strategies ({@code candidates.zoneGrid}
+ * and {@code rank.zoneCost}) in place of the defaults — no built-in profile
+ * presets a zone facet, so the default path is exactly the pre-zone
+ * pipeline. Third parties change behavior by registering or replacing named
+ * strategies — never by touching this pipeline.
  */
 public final class PipelineAssembler {
 
@@ -41,6 +45,9 @@ public final class PipelineAssembler {
     }
 
     private static StageCatalogs.CandidateStrategy resolveCandidates(ElementSpec spec) {
+        if (spec.zone() != null) {
+            return StageCatalogs.requireCandidateStrategy(StageCatalogs.candidatesZoneGrid);
+        }
         String name =
                 switch (spec.profile().algorithm().placement()) {
                     case none -> StageCatalogs.candidatesSingle;
@@ -63,6 +70,7 @@ public final class PipelineAssembler {
     }
 
     private static StageCatalogs.RankStrategy resolveRank(ElementSpec spec) {
-        return StageCatalogs.requireRankStrategy(StageCatalogs.rankWeightedLinear);
+        return StageCatalogs.requireRankStrategy(
+                spec.zone() != null ? StageCatalogs.rankZoneCost : StageCatalogs.rankWeightedLinear);
     }
 }

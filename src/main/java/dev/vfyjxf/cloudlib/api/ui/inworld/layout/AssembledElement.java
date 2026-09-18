@@ -12,10 +12,17 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.ProposeContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.SpaceBudget;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.SpaceKind;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.VariantLadder;
+import dev.vfyjxf.cloudlib.api.ui.inworld.zone.AttentionField;
+import dev.vfyjxf.cloudlib.api.ui.inworld.zone.GaussianAttention;
+import dev.vfyjxf.cloudlib.api.ui.inworld.zone.PreviousFrameLayout;
+import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneCost;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * An {@link ElementSpec} assembled into an {@link InworldElement} the
@@ -132,6 +139,11 @@ public final class AssembledElement implements InworldElement {
     }
 
     @Override
+    public boolean consumesZoneLayout() {
+        return spec.zone() != null;
+    }
+
+    @Override
     public ElementProposal propose(ProposeContext context) {
         Objects.requireNonNull(context, "context");
         requireEnvironment();
@@ -172,18 +184,71 @@ public final class AssembledElement implements InworldElement {
                 inset,
                 environment,
                 spec.profile().algorithm().params(),
-                spec.avoidance().avoids());
+                spec.avoidance().avoids(),
+                spec.zone());
         List<PlacementCandidate> generated = candidates.candidates(candidateContext);
         StageCatalogs.AvoidContext avoidContext = new StageCatalogs.AvoidContext(
                 spec.avoidance().avoids(), spec.avoidance().respectsExclusions(), environment);
         List<PlacementCandidate> surviving = avoid.filter(generated, avoidContext);
-        StageCatalogs.RankContext rankContext = new StageCatalogs.RankContext(
-                anchor,
-                incumbentCenter(context),
-                sticky(),
-                spec.profile().algorithm().params());
+        // A spec without a zone declaration builds no zone context — its rank
+        // context is exactly the pre-zone one.
+        StageCatalogs.RankContext rankContext = spec.zone() == null
+                ? new StageCatalogs.RankContext(
+                        anchor,
+                        incumbentCenter(context),
+                        sticky(),
+                        spec.profile().algorithm().params())
+                : new StageCatalogs.RankContext(
+                        anchor,
+                        incumbentCenter(context),
+                        sticky(),
+                        spec.profile().algorithm().params(),
+                        zoneInputs(context, anchor));
         List<PlacementCandidate> ranked = rank.rank(surviving, rankContext);
         return ElementProposal.of(context.variant(), anchor, ranked);
+    }
+
+    /**
+     * The zone scoring inputs for a zone-declaring spec: the unified cost
+     * context assembled from the frame environment (screen as the safe rect,
+     * exclusions), the coordinator's previous-frame snapshot (other
+     * elements' committed rects, their leaders, the adjacency tables) and
+     * the element's own runtime previous rect. Everything temporal is the
+     * previous committed frame — this frame's incremental placements never
+     * enter element-side scoring.
+     */
+    private StageCatalogs.RankContext.ZoneInputs zoneInputs(InworldLayoutContext context, FloatPos anchor) {
+        ZoneFacet zone = spec.zone();
+        LayoutEnvironment env = context.environment();
+        PreviousFrameLayout previous = env.previousLayout();
+        Map<String, Rect> placed = new LinkedHashMap<>();
+        if (previous != null) {
+            for (Map.Entry<String, Rect> entry : previous.placements().entrySet()) {
+                if (!entry.getKey().equals(spec.id())) {
+                    placed.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        InworldPlacement last = context.lastPlacement();
+        Rect previousRect = last == null ? null : last.screenRect().toRect();
+        AttentionField attention = zone.attention() != null ? zone.attention() : gaussianAttention(env);
+        ZoneCost.Context costContext = new ZoneCost.Context(
+                spec.id(),
+                anchor,
+                new Rect(0, 0, env.screenWidth(), env.screenHeight()),
+                attention,
+                placed,
+                env.exclusionRects(),
+                previousRect,
+                previous == null ? List.of() : previous.leadersExcluding(spec.id()),
+                previous == null ? Set.of() : previous.leftOf(),
+                previous == null ? Set.of() : previous.above());
+        return new StageCatalogs.RankContext.ZoneInputs(zone.weightsOrDefault(), costContext);
+    }
+
+    private static GaussianAttention gaussianAttention(LayoutEnvironment env) {
+        return GaussianAttention.atScreenCenter(
+                env.screenWidth(), env.screenHeight(), ZoneFacet.defaultAttentionSigmaPx);
     }
 
     private @Nullable FloatPos resolveAnchor() {

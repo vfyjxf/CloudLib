@@ -10,6 +10,9 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.PlacementCandidate;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.WorldAabb;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.RayFan;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpaceMask;
+import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneCandidates;
+import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneCost;
+import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneWeights;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -52,6 +55,14 @@ public final class StageCatalogs {
     /** The excentric column: a vertical label column beside the focus (Y-consistent variant). */
     public static final String candidatesExcentricColumn = "candidates.excentricColumn";
 
+    /**
+     * The zone-grid lattice (Z2): the 25 alignment-semantic candidates of
+     * {@link ZoneCandidates#generate} around the anchor, clamped into the
+     * safe rectangle — paired with {@link #rankZoneCost}, and bound only by
+     * a spec's {@link ZoneFacet} (no built-in profile references it).
+     */
+    public static final String candidatesZoneGrid = "candidates.zoneGrid";
+
     /** The passthrough filter: dodge nothing. */
     public static final String avoidNone = "avoid.none";
 
@@ -66,6 +77,15 @@ public final class StageCatalogs {
 
     /** The sticky ranker: the incumbent-matching candidate first, order otherwise kept. */
     public static final String rankIncumbentFirst = "rank.incumbentFirst";
+
+    /**
+     * The zone-cost ranker (Z2): candidates ordered by the unified
+     * {@link ZoneCost} score, ascending — strongest first. Scores against
+     * the previous frame's committed layout (see {@link RankContext.ZoneInputs});
+     * bound only by a spec's {@link ZoneFacet} (no built-in profile
+     * references it).
+     */
+    public static final String rankZoneCost = "rank.zoneCost";
 
     /**
      * Generates candidate placements for one propose round. Implementations
@@ -114,6 +134,8 @@ public final class StageCatalogs {
      * @param environment the frame's screen, exclusions, occupancy and clock
      * @param params the bound profile's algorithm parameters
      * @param avoids the layers whose occupancy blocks this element's arcs
+     * @param zone the spec's zone facet when it declares one (the zone
+     *        strategies read it); null on the default path
      */
     public record CandidateContext(
             FloatPos anchor,
@@ -122,7 +144,20 @@ public final class StageCatalogs {
             double insetPixels,
             LayoutEnvironment environment,
             AlgorithmProfile.Params params,
-            Set<SpaceMask> avoids) {
+            Set<SpaceMask> avoids,
+            @Nullable ZoneFacet zone) {
+
+        /** The pre-zone constructor: a context without a zone declaration. */
+        public CandidateContext(
+                FloatPos anchor,
+                Size variantSize,
+                OrientationFacet.Mode orientation,
+                double insetPixels,
+                LayoutEnvironment environment,
+                AlgorithmProfile.Params params,
+                Set<SpaceMask> avoids) {
+            this(anchor, variantSize, orientation, insetPixels, environment, params, avoids, null);
+        }
 
         public CandidateContext {
             Objects.requireNonNull(anchor, "anchor");
@@ -161,13 +196,49 @@ public final class StageCatalogs {
      *        the element holds one
      * @param sticky whether the element arbitrates sticky
      * @param params the bound profile's algorithm parameters
+     * @param zone the zone scoring inputs, built only for a spec that
+     *        declares a {@link ZoneFacet}; null everywhere on the default
+     *        path
      */
     public record RankContext(
-            FloatPos anchor, @Nullable FloatPos incumbentCenter, boolean sticky, AlgorithmProfile.Params params) {
+            FloatPos anchor,
+            @Nullable FloatPos incumbentCenter,
+            boolean sticky,
+            AlgorithmProfile.Params params,
+            @Nullable ZoneInputs zone) {
+
+        /** The pre-zone constructor: a context without zone inputs. */
+        public RankContext(
+                FloatPos anchor, @Nullable FloatPos incumbentCenter, boolean sticky, AlgorithmProfile.Params params) {
+            this(anchor, incumbentCenter, sticky, params, null);
+        }
 
         public RankContext {
             Objects.requireNonNull(anchor, "anchor");
             Objects.requireNonNull(params, "params");
+        }
+
+        /**
+         * The zone ranker's scoring inputs: the unified cost's weights plus
+         * its context. Everything temporal in the context — the placed map,
+         * the leaders, the adjacency tables — is the <em>previous frame's
+         * committed layout</em>, never this frame's incremental placements:
+         * every zone element therefore scores the same snapshot regardless
+         * of its position in the arbitration order (frame-order independent,
+         * deterministic), while the coordinator's fit check remains the hard
+         * constraint for the current frame.
+         *
+         * @param weights the zone facet's effective weights
+         * @param context the unified cost context (safe rect, attention,
+         *        previous committed placements, exclusions, previous rect,
+         *        other elements' leaders, previous adjacency)
+         */
+        public record ZoneInputs(ZoneWeights weights, ZoneCost.Context context) {
+
+            public ZoneInputs {
+                Objects.requireNonNull(weights, "weights");
+                Objects.requireNonNull(context, "context");
+            }
         }
     }
 
@@ -187,11 +258,13 @@ public final class StageCatalogs {
         putCandidate(candidatesOrbitRing, StageCatalogs::orbitRingCandidates);
         putCandidate(candidatesDockCursor, StageCatalogs::dockCursorCandidates);
         putCandidate(candidatesExcentricColumn, StageCatalogs::excentricColumnCandidates);
+        putCandidate(candidatesZoneGrid, StageCatalogs::zoneGridCandidates);
         putAvoid(avoidNone, (candidates, context) -> candidates);
         putAvoid(avoidExclusions, StageCatalogs::filterExclusions);
         putAvoid(avoidExclusionsAndMasks, StageCatalogs::filterExclusionsAndMasks);
         putRank(rankWeightedLinear, StageCatalogs::rankWeighted);
         putRank(rankIncumbentFirst, StageCatalogs::rankIncumbent);
+        putRank(rankZoneCost, StageCatalogs::rankZoneCost);
     }
 
     // region registration
@@ -341,11 +414,13 @@ public final class StageCatalogs {
                     candidatesOrbitRing,
                     candidatesDockCursor,
                     candidatesExcentricColumn,
+                    candidatesZoneGrid,
                     avoidNone,
                     avoidExclusions,
                     avoidExclusionsAndMasks,
                     rankWeightedLinear,
-                    rankIncumbentFirst -> true;
+                    rankIncumbentFirst,
+                    rankZoneCost -> true;
             default -> false;
         };
     }
@@ -555,6 +630,37 @@ public final class StageCatalogs {
     }
 
     /**
+     * The zone-grid lattice: {@link ZoneCandidates#generate}'s 25
+     * alignment-semantic candidates around the anchor, clamped into the safe
+     * rectangle (the full screen — HUD bands are penalized by the cost's hud
+     * term, not excised from the lattice), deduplicated, as screen-only
+     * candidates. The lattice uses the variant's full footprint — the
+     * block-face inset is a quad-hugging concept it does not apply. When the
+     * panel cannot fit the safe rectangle at all, the anchor-centered
+     * footprint is still proposed so the coordinator has something to reject.
+     */
+    private static List<PlacementCandidate> zoneGridCandidates(CandidateContext context) {
+        LayoutEnvironment env = context.environment();
+        Rect safeRect = new Rect(0, 0, env.screenWidth(), env.screenHeight());
+        ZoneCandidates.Config config =
+                context.zone() != null ? context.zone().candidatesConfigOrDefault() : ZoneCandidates.Config.defaults();
+        List<ZoneCandidates.Candidate> lattice =
+                ZoneCandidates.generate(context.anchor(), context.variantSize(), safeRect, config);
+        List<PlacementCandidate> candidates = new ArrayList<>(lattice.size());
+        for (ZoneCandidates.Candidate candidate : lattice) {
+            Rect rect = candidate.rect();
+            candidates.add(PlacementCandidate.screen(new FloatRect(rect.x(), rect.y(), rect.width(), rect.height())));
+        }
+        if (candidates.isEmpty()) {
+            candidates.add(PlacementCandidate.screen(FloatRect.around(
+                    context.anchor(),
+                    context.variantSize().width(),
+                    context.variantSize().height())));
+        }
+        return candidates;
+    }
+
+    /**
      * The anchor-centered footprint: the variant rect shrunk by the declared
      * inset when the orientation is a block face.
      */
@@ -704,6 +810,26 @@ public final class StageCatalogs {
             }
         }
         ranked.addAll(rest);
+        return ranked;
+    }
+
+    /**
+     * The zone-cost ranker: candidates ordered by the unified
+     * {@link ZoneCost} score ascending, ties staying in canonical order (the
+     * same epsilon tolerance as the weighted-linear ranker; {@code List.sort}
+     * is stable). Without zone inputs there is nothing to score — the
+     * canonical order stands.
+     */
+    private static List<PlacementCandidate> rankZoneCost(List<PlacementCandidate> candidates, RankContext context) {
+        RankContext.ZoneInputs zone = context.zone();
+        if (zone == null) {
+            return candidates;
+        }
+        ZoneCost cost = new ZoneCost(zone.weights());
+        List<PlacementCandidate> ranked = new ArrayList<>(candidates);
+        ranked.sort((a, b) -> compareCosts(
+                cost.cost(a.screenRect().toRect(), zone.context()),
+                cost.cost(b.screenRect().toRect(), zone.context())));
         return ranked;
     }
 

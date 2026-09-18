@@ -64,3 +64,11 @@
 4. **ghost 候选**：ghost 只允许 anchoredQuad/none（单候选）族，不得使用 dock/环/列等占位机器。
 5. **分组锚点**：`OrbitAroundAnchor`/`ClusterToRepresentative` 需要世界锚点。
 6. **分组×算法**：`ClusterToRepresentative` 需要 profile 的算法绑定聚类（nameplate/orbit 族）。
+7. **worldOnly 能力**：worldOnly 元素必须自带世界表示——提议世界候选的 custom layouter，或携带世界
+  包围盒的世界锚点。
+8. **zone 参与**（Z2）：声明 `ZoneFacet` 必须参与屏幕仲裁——不得是 ghost（ghost 与 zone 成本的
+   overlap/邻接机器矛盾），也不得是 worldOnly（zone 点阵是屏幕矩形，worldOnly 完全绕开屏幕仲裁）。
+9. **zone 锚点**（Z2）：声明 zone 必须有已声明锚点（非 `none`——点阵停靠在声明的锚点上）且 profile 的
+   placement 族是锚点定位的（不得是 dockCursor——dock 候选沿屏幕边扫描，锚点只选边）。
+10. **zone 入场级**（Z2）：`ZoneFacet` 的初始 LodTier 只能是 `full`/`compact`（内容承载级）；
+    `icon` 及以下是协调器阶梯的降级结果，`clustered` 是分组层的裁决，都不是合法声明。
