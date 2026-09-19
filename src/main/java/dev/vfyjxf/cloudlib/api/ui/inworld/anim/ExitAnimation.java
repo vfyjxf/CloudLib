@@ -72,7 +72,7 @@ public record ExitAnimation(Kind kind, int durationMs, Easing easing) {
     }
 
     /** The hard ceiling on any exit animation — zombie overlays must die young. */
-    public static final int maxDurationMs = 300;
+    public static final int maxDurationMs = 500;
 
     /** The scale {@link Kind#fadeScale} shrinks to by the end of the exit. */
     public static final float endScale = 0.8f;
