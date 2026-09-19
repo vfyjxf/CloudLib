@@ -106,7 +106,7 @@ class AlgorithmComboTest {
             List<LeaderRouter.Leader> leaders = new ArrayList<>(epoch.size());
             for (Clusterer.Member member : epoch) {
                 SlotAssigner.Slot slot = slotById.get(assignment.of(member.id()).slotId());
-                leaders.add(new LeaderRouter.Leader(member.id(), member.x(), member.y(), slot.x(), slot.y() - 24));
+                leaders.add(LeaderRouter.Leader.toPoint(member.id(), member.x(), member.y(), slot.x(), slot.y() - 24));
             }
             List<LeaderRouter.Route> routes = router.route(leaders, clusterMap);
 

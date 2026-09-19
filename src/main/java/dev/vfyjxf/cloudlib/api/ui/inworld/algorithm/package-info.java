@@ -14,8 +14,16 @@
  *       freed arcs subtracted via {@link dev.vfyjxf.cloudlib.api.ui.inworld.space.RayFan},
  *       expanding outward ring by ring as capacity runs out</li>
  *   <li>{@link LeaderRouter} — leader-line routing with the s-leader →
- *       po-leader upgrade on crossings and shared-trunk hyperleaders for
- *       clusters, gated against ping-ponging</li>
+ *       po-leader upgrade (baseline crossings, close parallels, obstacle
+ *       cuts) and shared-trunk hyperleaders for clusters, gated against
+ *       ping-ponging and layered with the quantize/reuse/switch-cost
+ *       anti-flash hysteresis</li>
+ *   <li>{@link LeaderGridRouter} — the candidate-grid A* that produces one
+ *       leader's orthogonal polyline: bend-penalized, hug-penalized,
+ *       lane-centered, deterministic</li>
+ *   <li>{@link AttachPointResolver} — the label-side port resolution: fixed
+ *       mid-ports with the 55°/35° face-switch band, the 48 px exit deadzone
+ *       and the perimeter slide transition</li>
  *   <li>{@link AngleEncoder} — the ANGLE encoding for off-screen indicators:
  *       the indicator slides around all four screen edges, its position is the
  *       target's angle (Lin et al.'s user-tested optimum)</li>

@@ -237,7 +237,7 @@ public enum AlgorithmProfile {
 
         /** {@link LeaderRouter} config for this profile. */
         public LeaderRouter.Config leaderRouterConfig() {
-            return new LeaderRouter.Config(LeaderRouter.Elbow.horizontalFirst, leaderBand, leaderDwellEpochs);
+            return LeaderRouter.Config.of(leaderBand, leaderDwellEpochs);
         }
 
         /** {@link AngleEncoder} config for this profile. */
