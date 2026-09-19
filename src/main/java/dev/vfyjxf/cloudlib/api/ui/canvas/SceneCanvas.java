@@ -1311,12 +1311,32 @@ public final class SceneCanvas {
 
     // region text
 
+    /**
+     * Minecraft's font renderer promotes a text color whose alpha byte is
+     * below 4 to <em>fully opaque</em> ({@code Font.adjustColor}:
+     * {@code (color & 0xFC000000) == 0 → color | 0xFF000000}) — a legacy of
+     * the signed-alpha era. A subtree fade's tail (exit animations, occlusion
+     * fades) passes through exactly that band, and the guard turns the last
+     * one-to-three near-invisible frames of <em>text</em> into a bright flash
+     * while every other primitive keeps fading. A draw that faint (≤ 3/255
+     * opacity) is indistinguishable from nothing — skip it instead of letting
+     * the guard flash it.
+     */
+    private static final int textAlphaFloor = 4;
+
+    /** Whether a text color falls into Minecraft's opaque-promotion band (alpha byte < 4). */
+    static boolean belowTextAlphaFloor(int argb) {
+        return ((argb >>> 24) & 0xFF) < textAlphaFloor;
+    }
+
     public SceneCanvas drawString(String text, int x, int y, int color) {
         return drawString(text, x, y, color, false);
     }
 
     public SceneCanvas drawString(String text, int x, int y, int color, boolean dropShadow) {
-        textDraw(() -> graphics.drawString(font(), text, x, y, tint(color), dropShadow));
+        int tinted = tint(color);
+        if (belowTextAlphaFloor(tinted)) return this;
+        textDraw(() -> graphics.drawString(font(), text, x, y, tinted, dropShadow));
         return this;
     }
 
@@ -1325,7 +1345,9 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas drawString(Component text, int x, int y, int color, boolean dropShadow) {
-        textDraw(() -> graphics.drawString(font(), text, x, y, tint(color), dropShadow));
+        int tinted = tint(color);
+        if (belowTextAlphaFloor(tinted)) return this;
+        textDraw(() -> graphics.drawString(font(), text, x, y, tinted, dropShadow));
         return this;
     }
 
@@ -1334,7 +1356,9 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas drawString(FormattedCharSequence text, int x, int y, int color, boolean dropShadow) {
-        textDraw(() -> graphics.drawString(font(), text, x, y, tint(color), dropShadow));
+        int tinted = tint(color);
+        if (belowTextAlphaFloor(tinted)) return this;
+        textDraw(() -> graphics.drawString(font(), text, x, y, tinted, dropShadow));
         return this;
     }
 
@@ -1407,11 +1431,13 @@ public final class SceneCanvas {
             if (text == null || text.isEmpty()) {
                 return;
             }
+            int tinted = multiplyColor(color, tint.getAsInt());
+            if (belowTextAlphaFloor(tinted)) return; // Font.adjustColor would render it opaque
             font.drawInBatch(
                     text,
                     x,
                     y,
-                    multiplyColor(color, tint.getAsInt()),
+                    tinted,
                     dropShadow,
                     graphics.pose().last().pose(),
                     graphics.bufferSource(),
@@ -1438,11 +1464,13 @@ public final class SceneCanvas {
             if (text == null) {
                 return;
             }
+            int tinted = multiplyColor(color, tint.getAsInt());
+            if (belowTextAlphaFloor(tinted)) return; // Font.adjustColor would render it opaque
             font.drawInBatch(
                     text,
                     x,
                     y,
-                    multiplyColor(color, tint.getAsInt()),
+                    tinted,
                     dropShadow,
                     graphics.pose().last().pose(),
                     graphics.bufferSource(),

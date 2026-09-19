@@ -3,6 +3,8 @@ package dev.vfyjxf.cloudlib.api.ui.canvas;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The tint arithmetic behind {@link SceneCanvas#color(int)}: every
@@ -51,5 +53,18 @@ class SceneCanvasTintTest {
         int quarter = SceneCanvas.multiplyColor(half, 0x80FFFFFF);
         assertEquals(0x40, (quarter >>> 24) & 0xFF);
         assertEquals(0x40FFFFFF, quarter);
+    }
+
+    @Test
+    void theTextAlphaFloorMatchesMinecraftsOpaquePromotionBand() {
+        // Font.adjustColor promotes (color & 0xFC000000) == 0 — alpha byte
+        // 0..3 — to fully opaque; the canvas must treat exactly that band as
+        // the skip floor, and nothing above it
+        for (int a = 0; a <= 3; a++) {
+            assertTrue(SceneCanvas.belowTextAlphaFloor((a << 24) | 0xE8F0FF), "alpha " + a + " is in the band");
+        }
+        for (int a = 4; a <= 255; a++) {
+            assertFalse(SceneCanvas.belowTextAlphaFloor((a << 24) | 0xE8F0FF), "alpha " + a + " is above the band");
+        }
     }
 }
