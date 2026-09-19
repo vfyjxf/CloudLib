@@ -42,7 +42,13 @@ import java.util.Optional;
  * The arbitration order is a total order fixed for the frame:
  * {@code spaceKind (world → tracked → panel), then priority (desc), then
  * sticky-first, then registration order}. No hash iteration and no randomness
- * participate anywhere, so equal inputs always produce equal results.
+ * participate anywhere, so equal inputs always produce equal results. The
+ * same order releases coinciding targets: a fixed variant granted on top of a
+ * non-pushable element committed earlier in the round walks its preference
+ * list to its first non-coinciding candidate — the pair could never separate
+ * any other way (both are exempt from the bitmap veto and neither is
+ * pushable), and the deterministic winner keeps the assignment stable across
+ * resolves instead of alternating.
  * <p>
  * Negotiation: round 0, everyone proposes the rung the coordinator hands them
  * (upgraded one step on epoch boundaries when below the strongest), and an
@@ -87,6 +93,12 @@ public final class InworldCoordinator {
     private static final double stickyMatchEpsilonPx = 0.25;
     private static final double discreteRectEpsilonPx = 0.5;
     private static final double outOfBoundsEpsilon = 1.0e-6;
+    /**
+     * The stacking threshold of the ordered release: an intersection covering
+     * this fraction of the smaller rect is a coinciding target the arbitration
+     * must break (below it the graze stays tolerated — the exempt contract).
+     */
+    private static final double coincidenceFraction = 0.5;
 
     private final Config config;
     private final Map<String, ElementRuntime> runtimes = new LinkedHashMap<>();
@@ -648,7 +660,10 @@ public final class InworldCoordinator {
         if (placement.variant().spacePolicy() != SpacePolicy.ghost) {
             scope.bitmap.mark(placement.screenRect().toRect());
         }
-        scope.committed.add(Committed.of(runtime.element.id(), placement.screenRect()));
+        scope.committed.add(Committed.of(
+                runtime.element.id(),
+                placement.screenRect(),
+                placement.variant().spacePolicy().pushable()));
         if (runtime.gate == null) {
             runtime.gate =
                     new SwitchGate<>(config.switchGate(), placement.variant().level(), 0.0);
@@ -658,9 +673,11 @@ public final class InworldCoordinator {
     /**
      * Picks the granted candidate: the sticky incumbent first when it is
      * among the candidates and still fits, else the element's preference
-     * order; then gates the discrete variant switch (the triple gate keeps
-     * small tier oscillations from committing, unless survival forces the
-     * switch).
+     * order — then, for a fixed variant whose choice lands on top of a
+     * non-pushable element committed earlier this round, the ordered release
+     * walks the preference list past the coinciding candidates; finally the
+     * discrete variant switch is gated (the triple gate keeps small tier
+     * oscillations from committing, unless survival forces the switch).
      */
     private Acceptance tryAccept(ElementRuntime runtime, ElementProposal proposal, RoundScope scope) {
         InworldVariant variant = proposal.variant();
@@ -693,6 +710,34 @@ public final class InworldCoordinator {
                 if (firstFailure == null) {
                     firstFailure = fit;
                 }
+            }
+        }
+        if (chosen != null && chosenRect != null) {
+            // The ordered release of coinciding targets: a fixed element is
+            // granted its preferred candidate without a bitmap veto, so two
+            // non-pushable elements whose preference orders agree (co-anchored
+            // panels) both take the same slot — the next resolve's overlap
+            // scoring pushes them in lockstep onto a mirrored slot and back,
+            // alternating every resolve: the targets coincide forever, the
+            // pair flickers and never separates. When at least one side is
+            // pushable the continuous layer separates them (the exempt
+            // contract stands); when both are non-pushable nothing else ever
+            // will, so the arbitration order must break the tie the way it
+            // breaks every other contention: the element committed earlier in
+            // the round keeps the contested slot, and this element walks its
+            // own preference list to its first candidate that does not
+            // coincide — still its own geometry, no degradation, no
+            // coordinator-invented rect. While the inputs hold, every resolve
+            // produces the same deterministic assignment (the flicker stops);
+            // once the environment allows — the anchors separate — the walk
+            // finds nothing to avoid and the element takes its best slot
+            // again. Grazes below the coincidence fraction stay tolerated,
+            // and an element every one of whose candidates coincides keeps
+            // its preferred one (no starvation).
+            PlacementCandidate released = releaseCoincidence(proposal, variant, scope, chosen, chosenRect);
+            if (released != chosen) {
+                chosen = released;
+                chosenRect = fitRect(chosen, variant, scope).rect();
             }
         }
         if (chosen == null || chosenRect == null) {
@@ -734,6 +779,68 @@ public final class InworldCoordinator {
             }
         }
         return Acceptance.accepted(placement);
+    }
+
+    /**
+     * The coincidence test of the ordered release: the intersection covers at
+     * least {@link #coincidenceFraction} of the smaller rect — stacking, not
+     * grazing — against a committed rect whose element nothing can push.
+     */
+    private static boolean coincidesWithNonPushable(FloatRect rect, RoundScope scope) {
+        for (Committed committed : scope.committed) {
+            if (committed.pushable()) {
+                continue; // the continuous layer separates pushable pairs
+            }
+            double ix = Math.min(rect.right(), committed.rect().right())
+                    - Math.max(rect.x(), committed.rect().x());
+            double iy = Math.min(rect.bottom(), committed.rect().bottom())
+                    - Math.max(rect.y(), committed.rect().y());
+            if (ix <= 0 || iy <= 0) {
+                continue;
+            }
+            double smaller = Math.min(rectArea(rect), rectArea(committed.rect()));
+            if (smaller > 0 && ix * iy / smaller >= coincidenceFraction) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Walks the proposal's preference order past candidates that coincide
+     * with non-pushable commits made earlier this round. Returns the
+     * preferred candidate unchanged when the variant is not fixed (the
+     * bitmap veto already rules non-exempt candidates, and ghosts are
+     * invisible to arbitration), when the preferred rect coincides with
+     * nothing, or when every candidate coincides (no starvation — the
+     * preferred one stands).
+     */
+    private PlacementCandidate releaseCoincidence(
+            ElementProposal proposal,
+            InworldVariant variant,
+            RoundScope scope,
+            PlacementCandidate preferred,
+            FloatRect preferredRect) {
+        if (variant.spacePolicy() != SpacePolicy.fixed) {
+            return preferred;
+        }
+        if (!coincidesWithNonPushable(preferredRect, scope)) {
+            return preferred;
+        }
+        for (PlacementCandidate candidate : proposal.candidates()) {
+            if (candidate == preferred) {
+                continue;
+            }
+            Fit fit = fitRect(candidate, variant, scope);
+            if (fit.ok() && !coincidesWithNonPushable(fit.rect(), scope)) {
+                return candidate;
+            }
+        }
+        return preferred;
+    }
+
+    private static double rectArea(FloatRect rect) {
+        return rect.width() * rect.height();
     }
 
     private Fit fitRect(PlacementCandidate candidate, InworldVariant variant, RoundScope scope) {
@@ -1094,10 +1201,10 @@ public final class InworldCoordinator {
         }
     }
 
-    private record Committed(String elementId, FloatRect rect) {
+    private record Committed(String elementId, FloatRect rect, boolean pushable) {
 
-        static Committed of(String elementId, FloatRect rect) {
-            return new Committed(elementId, rect);
+        static Committed of(String elementId, FloatRect rect, boolean pushable) {
+            return new Committed(elementId, rect, pushable);
         }
     }
 
