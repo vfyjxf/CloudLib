@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.IntSupplier;
 
 /**
  * Rendering canvas with transform, clip and automatic batch rendering.
@@ -501,6 +502,19 @@ public final class SceneCanvas {
 
     // region color
 
+    /**
+     * Sets the canvas tint: every subsequent draw multiplies its own color by
+     * it — fills, text, gradients, lines, freeform quads and shader shapes
+     * alike — until the next {@link #color} or {@link #resetColor}. This is
+     * how a subtree-wide fade composes with each widget's own colors: set the
+     * tint (scaled alpha, white channels) around the subtree's render.
+     * <p>
+     * Texture-only primitives ({@link #texture}, {@link #quad},
+     * {@link #sprite}) carry no color of their own, so the tint is their
+     * color. Forwarded vanilla rendering ({@link #graphics},
+     * {@link #renderItem}, …) cannot be tinted. The default (and
+     * {@link #resetColor}) white tint draws everything unchanged.
+     */
     public SceneCanvas color(int argb) {
         this.currentColor = argb;
         return this;
@@ -513,6 +527,29 @@ public final class SceneCanvas {
 
     public int currentColor() {
         return currentColor;
+    }
+
+    /**
+     * Multiplies two ARGB colors per channel — the tint arithmetic behind
+     * {@link #color(int)}. Public so callers can predict a tinted draw's
+     * effective color (paint-level assertions included).
+     */
+    public static int multiplyColor(int base, int tint) {
+        if (tint == 0xFFFFFFFF) return base;
+        int a = channel(((base >>> 24) & 0xFF) * ((tint >>> 24) & 0xFF));
+        int r = channel(((base >>> 16) & 0xFF) * ((tint >>> 16) & 0xFF));
+        int g = channel(((base >>> 8) & 0xFF) * ((tint >>> 8) & 0xFF));
+        int b = channel((base & 0xFF) * (tint & 0xFF));
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    private static int channel(int product) {
+        return (product + 127) / 255;
+    }
+
+    /** The passed color multiplied by the current tint. */
+    private int tint(int argb) {
+        return multiplyColor(argb, currentColor);
     }
 
     // endregion
@@ -668,7 +705,7 @@ public final class SceneCanvas {
             return this;
         }
         flushForwardedDraw();
-        batchEmitter.colored(x, y, width, height, color);
+        batchEmitter.colored(x, y, width, height, tint(color));
         return this;
     }
 
@@ -694,7 +731,18 @@ public final class SceneCanvas {
         float[] tr = transformPointLocal(x + width, y);
         float[] tl = transformPointLocal(x, y);
         batchState.addColoredGradient(
-                bl[0], bl[1], br[0], br[1], tr[0], tr[1], tl[0], tl[1], colorBL, colorBR, colorTR, colorTL);
+                bl[0],
+                bl[1],
+                br[0],
+                br[1],
+                tr[0],
+                tr[1],
+                tl[0],
+                tl[1],
+                tint(colorBL),
+                tint(colorBR),
+                tint(colorTR),
+                tint(colorTL));
         return this;
     }
 
@@ -745,7 +793,7 @@ public final class SceneCanvas {
         float[] v1 = transformPointLocal(x2 + nx, y2 + ny);
         float[] v2 = transformPointLocal(x2 - nx, y2 - ny);
         float[] v3 = transformPointLocal(x1 - nx, y1 - ny);
-        batchState.addColored(v0[0], v0[1], v1[0], v1[1], v2[0], v2[1], v3[0], v3[1], color);
+        batchState.addColored(v0[0], v0[1], v1[0], v1[1], v2[0], v2[1], v3[0], v3[1], tint(color));
         return this;
     }
 
@@ -794,9 +842,11 @@ public final class SceneCanvas {
                 + v3[0] * v0[1]
                 - v0[0] * v3[1];
         if (shoelace > 0) {
-            batchState.addColoredGradient(v0[0], v0[1], v3[0], v3[1], v2[0], v2[1], v1[0], v1[1], c0, c3, c2, c1);
+            batchState.addColoredGradient(
+                    v0[0], v0[1], v3[0], v3[1], v2[0], v2[1], v1[0], v1[1], tint(c0), tint(c3), tint(c2), tint(c1));
         } else {
-            batchState.addColoredGradient(v0[0], v0[1], v1[0], v1[1], v2[0], v2[1], v3[0], v3[1], c0, c1, c2, c3);
+            batchState.addColoredGradient(
+                    v0[0], v0[1], v1[0], v1[1], v2[0], v2[1], v3[0], v3[1], tint(c0), tint(c1), tint(c2), tint(c3));
         }
         return this;
     }
@@ -961,11 +1011,11 @@ public final class SceneCanvas {
 
         directDraw(() -> {
             RenderSystem.setShader(() -> shader);
-            setColorUniform(shader, "FillColor", fillColor);
+            setColorUniform(shader, "FillColor", tint(fillColor));
             shader.getUniform("Size").set((float) width, (float) height);
             shader.getUniform("Radii").set(radiusBR, radiusTR, radiusBL, radiusTL);
             shader.getUniform("BorderWidth").set(borderWidth);
-            setColorUniform(shader, "BorderColor", borderColor);
+            setColorUniform(shader, "BorderColor", tint(borderColor));
             shader.getUniform("Smoothing").set(getSmoothing());
             if (texture != null) {
                 shader.getUniform("HasTexture").set(1);
@@ -1030,10 +1080,10 @@ public final class SceneCanvas {
 
         directDraw(() -> {
             RenderSystem.setShader(() -> shader);
-            setColorUniform(shader, "FillColor", fillColor);
+            setColorUniform(shader, "FillColor", tint(fillColor));
             shader.getUniform("Size").set(width, height);
             shader.getUniform("BorderWidth").set(borderWidth);
-            setColorUniform(shader, "BorderColor", borderColor);
+            setColorUniform(shader, "BorderColor", tint(borderColor));
             shader.getUniform("Smoothing").set(getSmoothing());
             if (texture != null) {
                 shader.getUniform("HasTexture").set(1);
@@ -1190,10 +1240,10 @@ public final class SceneCanvas {
             shader.getUniform("CurveType").set(curveType);
             shader.getUniform("LineWidth").set(lineWidth * 0.5f);
             shader.getUniform("Smoothing").set(getSmoothing());
-            setColorUniform(shader, "ColorStart", colorStart);
-            setColorUniform(shader, "ColorEnd", colorEnd);
+            setColorUniform(shader, "ColorStart", tint(colorStart));
+            setColorUniform(shader, "ColorEnd", tint(colorEnd));
             shader.getUniform("GlowWidth").set(glowWidth);
-            setColorUniform(shader, "GlowColor", glowColor);
+            setColorUniform(shader, "GlowColor", tint(glowColor));
             drawShaderQuad(minX, minY, qw, qh);
         });
         return this;
@@ -1243,7 +1293,7 @@ public final class SceneCanvas {
 
         directDraw(() -> {
             RenderSystem.setShader(() -> shader);
-            setColorUniform(shader, "FillColor", shadowColor);
+            setColorUniform(shader, "FillColor", tint(shadowColor));
             shader.getUniform("Size").set(qw, qh);
             shader.getUniform("Radii").set(radiusBR, radiusTR, radiusBL, radiusTL);
             shader.getUniform("ShadowSpread").set(totalSpread);
@@ -1266,7 +1316,7 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas drawString(String text, int x, int y, int color, boolean dropShadow) {
-        textDraw(() -> graphics.drawString(font(), text, x, y, color, dropShadow));
+        textDraw(() -> graphics.drawString(font(), text, x, y, tint(color), dropShadow));
         return this;
     }
 
@@ -1275,7 +1325,7 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas drawString(Component text, int x, int y, int color, boolean dropShadow) {
-        textDraw(() -> graphics.drawString(font(), text, x, y, color, dropShadow));
+        textDraw(() -> graphics.drawString(font(), text, x, y, tint(color), dropShadow));
         return this;
     }
 
@@ -1284,7 +1334,7 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas drawString(FormattedCharSequence text, int x, int y, int color, boolean dropShadow) {
-        textDraw(() -> graphics.drawString(font(), text, x, y, color, dropShadow));
+        textDraw(() -> graphics.drawString(font(), text, x, y, tint(color), dropShadow));
         return this;
     }
 
@@ -1332,7 +1382,7 @@ public final class SceneCanvas {
         graphics.pose().mulPose(localTransform());
         graphics.pose().translate(0, 0, zOffset);
         try {
-            draw.accept(new TextBatch(graphics, font()));
+            draw.accept(new TextBatch(graphics, font(), () -> currentColor));
         } finally {
             graphics.pose().popPose();
             graphics.flush();
@@ -1345,10 +1395,12 @@ public final class SceneCanvas {
     public static final class TextBatch {
         private final GuiGraphics graphics;
         private final Font font;
+        private final IntSupplier tint;
 
-        private TextBatch(GuiGraphics graphics, Font font) {
+        private TextBatch(GuiGraphics graphics, Font font, IntSupplier tint) {
             this.graphics = graphics;
             this.font = font;
+            this.tint = tint;
         }
 
         public void drawString(String text, int x, int y, int color, boolean dropShadow) {
@@ -1359,7 +1411,7 @@ public final class SceneCanvas {
                     text,
                     x,
                     y,
-                    color,
+                    multiplyColor(color, tint.getAsInt()),
                     dropShadow,
                     graphics.pose().last().pose(),
                     graphics.bufferSource(),
@@ -1390,7 +1442,7 @@ public final class SceneCanvas {
                     text,
                     x,
                     y,
-                    color,
+                    multiplyColor(color, tint.getAsInt()),
                     dropShadow,
                     graphics.pose().last().pose(),
                     graphics.bufferSource(),
