@@ -8,13 +8,20 @@
 // `Normal` is not a surface normal here — it is the direction from this vertex
 // to its neighbour along the line (vanilla's own line convention), so
 // Position + Normal is a second sample of the stroke and the two projected
-// samples give the screen-space direction to offset across. The pair of
-// vertices that makes one segment is displaced to opposite sides, so the line
-// rasterizes as a quad of exactly LineWidth + 2 * EdgeWidth pixels.
+// samples give the screen-space direction to offset across.
+//
+// One connector is four vertices in a TRIANGLE_STRIP: the panel end twice,
+// then the anchor twice. gl_VertexID % 2 puts each pair on opposite sides of
+// the centreline, so the two triangles (0,1,2) and (2,1,3) cover the whole
+// band — strips, not lines. A LINES pair would rasterize only vanilla's
+// ~1 px diagonal across that band (vanilla gets away with it because its
+// LineWidth is a constant 1), and setDefaultUniforms overwrites the LineWidth
+// uniform outright for LINES/LINE_STRIP draws.
 //
 // vertexArc is the sample's position along the line, 0 at the panel end and 1
-// at the world end; it feeds the same dash/fade/window arithmetic the HUD
-// shader resolves per fragment.
+// at the world end; it is derived from the vertex PAIR index, since the two
+// vertices of a pair are the same sample. It feeds the same dash/fade/window
+// arithmetic the HUD shader resolves per fragment.
 
 in vec3 Position;
 in vec4 Color;
@@ -62,5 +69,5 @@ void main() {
     }
 
     vertexColor = Color;
-    vertexArc = float(gl_VertexID) / max(float(VertexCount - 1), 1.0);
+    vertexArc = float(gl_VertexID / 2) / max(float(VertexCount / 2 - 1), 1.0);
 }

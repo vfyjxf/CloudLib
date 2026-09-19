@@ -128,6 +128,11 @@ class GuideLineShaderResourceTest {
                 vsh.contains("vec4(Position + Normal, 1.0)"), "Normal is the neighbour sample, not a surface normal");
         assertTrue(vsh.contains("gl_VertexID % 2"), "the pair is displaced to opposite sides");
         assertTrue(vsh.contains("vertexArc") && vsh.contains("vertexSide"), "the fragment stage's varyings");
+        // one connector is a strip of four vertices: two per end, so the arc
+        // index counts PAIRS — the two vertices of a pair are one sample
+        assertTrue(
+                vsh.contains("gl_VertexID / 2") && vsh.contains("VertexCount / 2 - 1"),
+                "the arc derives from the vertex pair index, not the raw vertex id");
     }
 
     // region tiny json readers
