@@ -25,6 +25,8 @@ public final class CloudShaders {
     private static @Nullable ShaderInstance circle;
     private static @Nullable ShaderInstance bezierCurve;
     private static @Nullable ShaderInstance shadow;
+    private static @Nullable ShaderInstance guideLineHud;
+    private static @Nullable ShaderInstance guideLineWorld;
 
     private CloudShaders() {}
 
@@ -45,6 +47,13 @@ public final class CloudShaders {
         event.registerShader(
                 new ShaderInstance(provider, Locations.ofMod("shadow"), DefaultVertexFormat.POSITION_TEX),
                 s -> shadow = s);
+        event.registerShader(
+                new ShaderInstance(provider, Locations.ofMod("guide_line_hud"), DefaultVertexFormat.POSITION_TEX),
+                s -> guideLineHud = s);
+        event.registerShader(
+                new ShaderInstance(
+                        provider, Locations.ofMod("guide_line_world"), DefaultVertexFormat.POSITION_COLOR_NORMAL),
+                s -> guideLineWorld = s);
         logger.info("Registered CloudLib SDF shaders");
     }
 
@@ -66,6 +75,16 @@ public final class CloudShaders {
 
     public static @Nullable ShaderInstance shadow() {
         return shadow;
+    }
+
+    /** The screen-pass guide-line shader — {@code Points[]} polyline in, one quad out. */
+    public static @Nullable ShaderInstance guideLineHud() {
+        return guideLineHud;
+    }
+
+    /** The world-pass guide-line shader — NDC-expanded line strip, the HUD's fragment math. */
+    public static @Nullable ShaderInstance guideLineWorld() {
+        return guideLineWorld;
     }
 
     // endregion

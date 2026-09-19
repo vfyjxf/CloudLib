@@ -1,0 +1,41 @@
+{
+    "blend": {
+        "func": "add",
+        "srcrgb": "srcalpha",
+        "dstrgb": "1-srcalpha"
+    },
+    "vertex": "cloudlib:guide_line_hud",
+    "fragment": "cloudlib:guide_line_hud",
+    "attributes": [ "Position", "UV0" ],
+    "samplers": [],
+    "uniforms": [
+        { "name": "ModelViewMat",  "type": "matrix4x4", "count": 16,  "values": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] },
+        { "name": "ProjMat",       "type": "matrix4x4", "count": 16,  "values": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] },
+        { "name": "Size",          "type": "float",     "count": 2,   "values": [0.0, 0.0] },
+        { "name": "Points",        "type": "float",     "count": 128, "values": [
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ] },
+        { "name": "PointCount",    "type": "int",       "count": 1,   "values": [0] },
+        { "name": "Marker",        "type": "int",       "count": 1,   "values": [0] },
+        { "name": "MarkerSize",    "type": "float",     "count": 1,   "values": [0.0] },
+        { "name": "PortTick",      "type": "float",     "count": 1,   "values": [0.0] },
+        { "name": "LineColor",     "type": "float",     "count": 4,   "values": [1.0, 1.0, 1.0, 1.0] },
+        { "name": "EdgeColor",     "type": "float",     "count": 4,   "values": [0.0, 0.0, 0.0, 0.0] },
+        { "name": "LineWidth",     "type": "float",     "count": 1,   "values": [2.0] },
+        { "name": "EdgeWidth",     "type": "float",     "count": 1,   "values": [1.0] },
+        { "name": "Smoothing",     "type": "float",     "count": 1,   "values": [1.0] },
+        { "name": "FadeFraction",  "type": "float",     "count": 1,   "values": [0.0] },
+        { "name": "FadeAlpha",     "type": "float",     "count": 1,   "values": [1.0] },
+        { "name": "DashPeriod",    "type": "float",     "count": 1,   "values": [0.0] },
+        { "name": "DashDuty",      "type": "float",     "count": 1,   "values": [0.5] },
+        { "name": "DashPhase",     "type": "float",     "count": 1,   "values": [0.0] },
+        { "name": "ArcStart",      "type": "float",     "count": 1,   "values": [0.0] },
+        { "name": "ArcEnd",        "type": "float",     "count": 1,   "values": [1.0] }
+    ]
+}

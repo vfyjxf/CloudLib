@@ -8,6 +8,7 @@ import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.base.Viewport;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
+import dev.vfyjxf.cloudlib.api.ui.inworld.anim.GuideLineSdf;
 import dev.vfyjxf.cloudlib.api.ui.inworld.render.RenderStats;
 import dev.vfyjxf.cloudlib.api.ui.texture.BatchableTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.SizedTexture;
@@ -1245,6 +1246,72 @@ public final class SceneCanvas {
             shader.getUniform("GlowWidth").set(glowWidth);
             setColorUniform(shader, "GlowColor", tint(glowColor));
             drawShaderQuad(minX, minY, qw, qh);
+        });
+        return this;
+    }
+
+    // endregion
+
+    // region guide lines
+
+    /**
+     * Draws one guide-line stroke: the polyline is uploaded whole (at most
+     * {@link GuideLineStyle#maxPoints} samples, decimated by arc length beyond
+     * that) and one quad covers its bounding box, so the dash, the gradient,
+     * the AA edges, the end markers and the entry reveal all resolve per
+     * fragment — the dash's phase is an uniform-only change for the next
+     * frame's draw. Not batchable: it goes through its own shader and bypasses
+     * the vertex batch, which is what keeps it out of any HUD batching layer.
+     * <p>
+     * Points are ordered from the panel end to the world end: arc fraction 0
+     * (the port tick, the reveal's start) is the first sample, the target-end
+     * marker sits on the last.
+     *
+     * @param points the polyline in screen px, panel end first
+     * @param style the resolved stroke look
+     */
+    public SceneCanvas guideLine(List<FloatPos> points, GuideLineStyle style) {
+        ShaderInstance shader = CloudShaders.guideLineHud();
+        if (shader == null || points.size() < 2 || style == null) return this;
+        List<FloatPos> samples = points.size() > GuideLineStyle.maxPoints
+                ? GuideLineSdf.resample(points, GuideLineStyle.maxPoints)
+                : points;
+
+        float margin = Math.max(style.lineWidth() * 0.5f + style.edgeWidth(), style.markerSize()) + 2f;
+        float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE;
+        float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
+        for (FloatPos p : samples) {
+            if (!Double.isFinite(p.x()) || !Double.isFinite(p.y())) return this;
+            minX = (float) Math.min(minX, p.x());
+            minY = (float) Math.min(minY, p.y());
+            maxX = (float) Math.max(maxX, p.x());
+            maxY = (float) Math.max(maxY, p.y());
+        }
+        minX -= margin;
+        minY -= margin;
+        float qx = minX;
+        float qy = minY;
+        float qw = maxX + margin - qx;
+        float qh = maxY + margin - qy;
+
+        float[] uniformPoints = new float[GuideLineStyle.maxPoints * 2];
+        for (int i = 0; i < samples.size(); i++) {
+            uniformPoints[i * 2] = (float) (samples.get(i).x() - qx);
+            uniformPoints[i * 2 + 1] = (float) (samples.get(i).y() - qy);
+        }
+        int count = samples.size();
+
+        directDraw(() -> {
+            RenderSystem.setShader(() -> shader);
+            shader.getUniform("Size").set(qw, qh);
+            shader.getUniform("Points").set(uniformPoints);
+            shader.getUniform("PointCount").set(count);
+            shader.getUniform("Marker").set(style.marker().ordinal());
+            shader.getUniform("MarkerSize").set(style.markerSize());
+            shader.getUniform("PortTick").set(style.portTick());
+            shader.getUniform("Smoothing").set(getSmoothing());
+            GuideLineUniforms.applyStyle(shader, style);
+            drawShaderQuad(qx, qy, qw, qh);
         });
         return this;
     }
