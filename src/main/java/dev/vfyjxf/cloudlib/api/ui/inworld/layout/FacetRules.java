@@ -1,11 +1,14 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld.layout;
 
 import dev.vfyjxf.cloudlib.api.ui.inworld.algorithm.AlgorithmProfile;
+import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.AvoidanceClass;
 import dev.vfyjxf.cloudlib.api.ui.inworld.group.ClusterToRepresentative;
 import dev.vfyjxf.cloudlib.api.ui.inworld.group.OrbitAroundAnchor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpacePolicy;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.LodTier;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 /**
  * The illegal-facet-combination table (§7 plan B: the behavior space must be
@@ -54,6 +57,13 @@ import org.jetbrains.annotations.Nullable;
  *       fresh element may enter at. {@code icon} and below are degradation
  *       outcomes the coordinator's ladder owns, and {@code clustered} is the
  *       grouping layer's verdict — neither is a legal declaration</li>
+ *   <li><strong>rigid yield</strong> — the rigid avoidance class is a
+ *       screen-plane placement declaration: it needs the element not to be
+ *       world-only (the world-only capability already leaves screen
+ *       arbitration — there is no screen rect a rigid grant would place) and
+ *       no zone declaration (the zone path binds candidate ranking the rigid
+ *       flow never runs — the declaration would silently discard the
+ *       profile's zone behavior)</li>
  * </ol>
  * Per-facet field validation (non-empty ids, finite coordinates, positive
  * radii, …) lives in the facet records themselves.
@@ -218,6 +228,29 @@ public final class FacetRules {
         if (tier != LodTier.full && tier != LodTier.compact) {
             throw new IllegalArgumentException(
                     "a zone declaration enters at full or compact, not " + tier + " (rule 10)");
+        }
+    }
+
+    /**
+     * Rule 11: the rigid avoidance class is a screen-plane placement
+     * declaration — not valid on a world-only element (which has no screen
+     * rect to place) and not combinable with a zone declaration (whose
+     * candidate ranking the rigid flow never runs).
+     *
+     * @throws IllegalArgumentException with the rule number on violation
+     */
+    public static void validateAvoidanceClass(
+            AvoidanceClass avoidanceClass, boolean worldOnly, @Nullable ZoneFacet zone) {
+        Objects.requireNonNull(avoidanceClass, "avoidanceClass");
+        if (avoidanceClass != AvoidanceClass.rigid) {
+            return;
+        }
+        if (worldOnly) {
+            throw new IllegalArgumentException("rigid places a screen rect, not the world-only capability (rule 11)");
+        }
+        if (zone != null) {
+            throw new IllegalArgumentException(
+                    "rigid never ranks candidates, so a zone declaration is discarded (rule 11)");
         }
     }
 }

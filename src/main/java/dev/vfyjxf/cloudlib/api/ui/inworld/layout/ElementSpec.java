@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld.layout;
 
+import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.AvoidanceClass;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -44,6 +45,9 @@ import java.util.Objects;
  * @param custom the escape-hatch layouter, or null
  * @param worldOnly whether the element lives purely in world space: no
  *        screen projection, no screen-space coordination (default false)
+ * @param avoidanceClass the element's yield declaration — rigid places
+ *        itself directly and blocks nobody; standard is the full
+ *        arbitration participation (default standard)
  */
 public record ElementSpec(
         String id,
@@ -57,7 +61,8 @@ public record ElementSpec(
         GroupFacet group,
         @Nullable ZoneFacet zone,
         @Nullable InworldLayouter custom,
-        boolean worldOnly) {
+        boolean worldOnly,
+        AvoidanceClass avoidanceClass) {
 
     /**
      * The pre-zone constructor: a spec without a zone declaration, identical
@@ -78,6 +83,39 @@ public record ElementSpec(
         this(id, profile, anchor, orientation, spaces, avoidance, stability, degrade, group, null, custom, worldOnly);
     }
 
+    /**
+     * The pre-yield constructor: a spec declaring the standard avoidance
+     * class, identical to passing {@link AvoidanceClass#standard}.
+     */
+    public ElementSpec(
+            String id,
+            InworldProfile profile,
+            AnchorFacet anchor,
+            OrientationFacet orientation,
+            SpaceFacet spaces,
+            AvoidanceFacet avoidance,
+            StabilityFacet stability,
+            DegradeFacet degrade,
+            GroupFacet group,
+            @Nullable ZoneFacet zone,
+            @Nullable InworldLayouter custom,
+            boolean worldOnly) {
+        this(
+                id,
+                profile,
+                anchor,
+                orientation,
+                spaces,
+                avoidance,
+                stability,
+                degrade,
+                group,
+                zone,
+                custom,
+                worldOnly,
+                AvoidanceClass.standard);
+    }
+
     public ElementSpec {
         if (id == null || id.isEmpty()) {
             throw new IllegalArgumentException("id must not be empty");
@@ -93,6 +131,7 @@ public record ElementSpec(
         FacetRules.validate(anchor, orientation, spaces, avoidance, group, profile.algorithm());
         FacetRules.validateWorldOnly(worldOnly, anchor, custom != null);
         FacetRules.validateZone(zone, anchor, spaces, profile.algorithm(), worldOnly);
+        FacetRules.validateAvoidanceClass(avoidanceClass, worldOnly, zone);
     }
 
     /** A spec from the profile's facet preset (its default anchor) under {@code id}. */
@@ -115,7 +154,8 @@ public record ElementSpec(
                 facets.group(),
                 null,
                 null,
-                false);
+                false,
+                AvoidanceClass.standard);
     }
 
     /** The escape hatch: this spec with {@code layouter} embedded. */
@@ -133,7 +173,8 @@ public record ElementSpec(
                 group,
                 zone,
                 layouter,
-                worldOnly);
+                worldOnly,
+                avoidanceClass);
     }
 
     /**
@@ -152,7 +193,19 @@ public record ElementSpec(
             next = FacetRules.coheredOrientation(newAnchor);
         }
         return new ElementSpec(
-                id, profile, newAnchor, next, spaces, avoidance, stability, degrade, group, zone, custom, worldOnly);
+                id,
+                profile,
+                newAnchor,
+                next,
+                spaces,
+                avoidance,
+                stability,
+                degrade,
+                group,
+                zone,
+                custom,
+                worldOnly,
+                avoidanceClass);
     }
 
     /** Swaps the orientation facet; an incompatible anchor/orientation pair throws (rule 1). */
@@ -169,7 +222,8 @@ public record ElementSpec(
                 group,
                 zone,
                 custom,
-                worldOnly);
+                worldOnly,
+                avoidanceClass);
     }
 
     /** Swaps the space facet. */
@@ -186,7 +240,8 @@ public record ElementSpec(
                 group,
                 zone,
                 custom,
-                worldOnly);
+                worldOnly,
+                avoidanceClass);
     }
 
     /** Swaps the avoidance facet. */
@@ -203,7 +258,8 @@ public record ElementSpec(
                 group,
                 zone,
                 custom,
-                worldOnly);
+                worldOnly,
+                avoidanceClass);
     }
 
     /** Swaps the stability facet. */
@@ -220,7 +276,8 @@ public record ElementSpec(
                 group,
                 zone,
                 custom,
-                worldOnly);
+                worldOnly,
+                avoidanceClass);
     }
 
     /** Swaps the degrade facet. */
@@ -237,7 +294,8 @@ public record ElementSpec(
                 group,
                 zone,
                 custom,
-                worldOnly);
+                worldOnly,
+                avoidanceClass);
     }
 
     /** Swaps the group facet. */
@@ -254,7 +312,8 @@ public record ElementSpec(
                 newGroup,
                 zone,
                 custom,
-                worldOnly);
+                worldOnly,
+                avoidanceClass);
     }
 
     /**
@@ -274,7 +333,8 @@ public record ElementSpec(
                 group,
                 newZone,
                 custom,
-                worldOnly);
+                worldOnly,
+                avoidanceClass);
     }
 
     /**
@@ -299,6 +359,29 @@ public record ElementSpec(
                 group,
                 zone,
                 custom,
-                newWorldOnly);
+                newWorldOnly,
+                avoidanceClass);
+    }
+
+    /**
+     * Declares the element's yield class (rule 11 validates the combination):
+     * {@link AvoidanceClass#rigid} places the element directly and makes its
+     * rect block nobody; {@link AvoidanceClass#standard} is the default.
+     */
+    public ElementSpec withAvoidanceClass(AvoidanceClass newAvoidanceClass) {
+        return new ElementSpec(
+                id,
+                profile,
+                anchor,
+                orientation,
+                spaces,
+                avoidance,
+                stability,
+                degrade,
+                group,
+                zone,
+                custom,
+                worldOnly,
+                newAvoidanceClass);
     }
 }

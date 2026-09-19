@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld.layout;
 
+import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.AvoidanceClass;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.ElementProposal;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.InworldPlacement;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.SpaceKind;
@@ -142,6 +143,38 @@ class ElementSpecValidationTest {
                 ElementSpec.from(InworldProfile.dock, "x").custom(noopLayouter).withWorldOnly());
         // flipping the bit back off revalidates cleanly
         assertDoesNotThrow(() -> ElementSpec.from(InworldProfile.dock, "x").withWorldOnly(false));
+    }
+
+    // endregion
+
+    // region rule 11: rigid yield
+
+    @Test
+    void rigidYieldNeedsTheScreenPlaneNotTheWorldOnlyCapability() {
+        // rigid is declarable on an ordinary screen-plane spec
+        assertDoesNotThrow(() -> ElementSpec.from(InworldProfile.dock, "x").withAvoidanceClass(AvoidanceClass.rigid));
+        assertEquals(
+                AvoidanceClass.standard,
+                ElementSpec.from(InworldProfile.dock, "x").avoidanceClass(),
+                "the default is the standard participation");
+        // the world-only capability already leaves screen arbitration — rigid
+        // on top has no screen rect to place
+        assertThrows(IllegalArgumentException.class, () -> ElementSpec.from(InworldProfile.nameplate, "x")
+                .withWorldOnly()
+                .withAvoidanceClass(AvoidanceClass.rigid));
+    }
+
+    @Test
+    void rigidYieldCannotDeclareZone() {
+        // the zone path binds candidate ranking the rigid flow never runs —
+        // the declaration would be silently discarded
+        assertThrows(IllegalArgumentException.class, () -> ElementSpec.from(InworldProfile.facePanel, "z")
+                .withZone(ZoneFacet.of())
+                .withAvoidanceClass(AvoidanceClass.rigid));
+        // and back to standard the very same declaration is legal
+        assertDoesNotThrow(() -> ElementSpec.from(InworldProfile.facePanel, "z")
+                .withZone(ZoneFacet.of())
+                .withAvoidanceClass(AvoidanceClass.standard));
     }
 
     // endregion

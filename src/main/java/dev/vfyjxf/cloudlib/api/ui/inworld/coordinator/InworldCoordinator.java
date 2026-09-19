@@ -72,6 +72,20 @@ import java.util.Optional;
  * receives an {@code ElementState} every frame and drives the visibility
  * tracker like any other element; its grant carries only the world half.
  * <p>
+ * Rigid yield ({@link InworldElement#avoidanceClass()}): an element that
+ * declares {@link AvoidanceClass#rigid} leaves the arbitration flow the same
+ * way, minus the world-half-only grant. It still proposes each frame and is
+ * placed directly at its first screen candidate — the declared
+ * {@code anchor + offset}, edge-clamped into the work area — with no
+ * candidate competition, no sticky re-pick and no relaxation; the clamp acts
+ * on the final rect alone and never rewrites the declared offset basis. Its
+ * rect blocks nobody (no bitmap, no round committed set, no zone snapshot,
+ * no budget feedback) and nothing ever displaces it; the grant is readable
+ * through the committed result like any other placement, it is shared state
+ * for nobody else to consume. Registering or unregistering one re-resolves
+ * nothing — every standard element's outcome is exactly what it would be
+ * without the rigid element registered.
+ * <p>
  * Zone support (Z2): after every commit, when at least one registered
  * element {@link InworldElement#consumesZoneLayout() consumes zone layout},
  * the coordinator derives the previous frame's committed layout — placement
@@ -140,10 +154,10 @@ public final class InworldCoordinator {
 
     /**
      * Registers an element. Takes effect at the next frame (a membership
-     * change is a renegotiation cause). Registering a world-only element is
-     * not a renegotiation cause: it never touches the arbitration inputs, so
-     * the projecting elements' outcome stays byte-identical to a run without
-     * it.
+     * change is a renegotiation cause). Registering a world-only or rigid
+     * element is not a renegotiation cause: neither ever touches the
+     * arbitration inputs, so the arbitrating elements' outcome stays
+     * byte-identical to a run without it.
      *
      * @throws IllegalArgumentException if the id is already registered
      */
@@ -154,7 +168,7 @@ public final class InworldCoordinator {
             throw new IllegalArgumentException("element id already registered: " + element.id());
         }
         runtimes.put(element.id(), new ElementRuntime(element, registrationCounter++, config));
-        if (!element.worldOnly()) {
+        if (arbitrationParticipant(element)) {
             membershipDirty = true;
         }
     }
@@ -162,8 +176,8 @@ public final class InworldCoordinator {
     /**
      * Unregisters an element; its placement is gone from the next frame on
      * (deregistration does not linger — lingering is for rejections and
-     * retracted anchors). Unregistering a world-only element is not a
-     * renegotiation cause.
+     * retracted anchors). Unregistering a world-only or rigid element is not
+     * a renegotiation cause.
      *
      * @return whether such an element was registered
      */
@@ -172,10 +186,24 @@ public final class InworldCoordinator {
         if (runtime == null) {
             return false;
         }
-        if (!runtime.element.worldOnly()) {
+        if (arbitrationParticipant(runtime.element)) {
             membershipDirty = true;
         }
         return true;
+    }
+
+    /**
+     * Whether the element takes part in screen arbitration at all — the
+     * world-only capability and the rigid yield declaration both leave the
+     * flow (one for the world half, the other for direct placement), so
+     * neither dirties membership, marks occupancy nor re-resolves anything.
+     */
+    private static boolean arbitrationParticipant(InworldElement element) {
+        return !element.worldOnly() && element.avoidanceClass() == AvoidanceClass.standard;
+    }
+
+    private static boolean rigid(InworldElement element) {
+        return element.avoidanceClass() == AvoidanceClass.rigid;
     }
 
     /** The registered elements in registration order. */
@@ -251,28 +279,28 @@ public final class InworldCoordinator {
     public CoordinationResult frame(FrameInput frame) {
         frameCounter++;
         List<ElementRuntime> ordered = orderedRuntimes();
-        // The capability split: world-only elements leave the arbitration
-        // flow entirely — no bitmap, no budget, no negotiation, no
-        // relaxation. They still propose, still get element states and still
-        // drive the visibility tracker, so they stay in the total order for
-        // the committed result.
+        // The capability split: world-only and rigid elements leave the
+        // arbitration flow entirely — no bitmap, no budget, no negotiation,
+        // no relaxation. They still propose, still get element states and
+        // still drive the visibility tracker, so they stay in the total order
+        // for the committed result.
         List<ElementRuntime> arbitrated = new ArrayList<>(ordered.size());
-        List<ElementRuntime> worldOnly = new ArrayList<>(ordered.size());
+        List<ElementRuntime> bypassed = new ArrayList<>(ordered.size());
         for (ElementRuntime runtime : ordered) {
-            if (runtime.element.worldOnly()) {
-                worldOnly.add(runtime);
-            } else {
+            if (arbitrationParticipant(runtime.element)) {
                 arbitrated.add(runtime);
+            } else {
+                bypassed.add(runtime);
             }
         }
         // Arbitration indices are dense over the arbitrated flow, so a
-        // world-only element can never shift another element's arbitration
-        // index; the world-only elements continue after it.
+        // bypassed element can never shift another element's arbitration
+        // index; the bypassed elements continue after it.
         int arbitrationCounter = 0;
         for (ElementRuntime runtime : arbitrated) {
             runtime.frameArbitrationIndex = arbitrationCounter++;
         }
-        for (ElementRuntime runtime : worldOnly) {
+        for (ElementRuntime runtime : bypassed) {
             runtime.frameArbitrationIndex = arbitrationCounter++;
         }
 
@@ -380,11 +408,17 @@ public final class InworldCoordinator {
             }
         }
 
-        // The world-only acceptances: unconditional, every frame, resolve or
-        // not. The grant carries only the world half; a proposal without a
-        // world candidate retracts (state without placement).
-        for (ElementRuntime runtime : worldOnly) {
-            acceptWorldOnly(runtime);
+        // The bypassed acceptances: unconditional, every frame, resolve or
+        // not. A rigid element is placed directly (its first screen
+        // candidate at anchor + declared offset, edge-clamped); a world-only
+        // grant carries only the world half, and a proposal without a world
+        // candidate retracts (state without placement).
+        for (ElementRuntime runtime : bypassed) {
+            if (rigid(runtime.element)) {
+                acceptRigid(runtime, toFloat(workArea));
+            } else {
+                acceptWorldOnly(runtime);
+            }
         }
 
         // Relax + Stabilize: the continuous layer (spring follow, FLIP on
@@ -426,6 +460,16 @@ public final class InworldCoordinator {
                 // The world-only grant has no screen half to animate, clamp
                 // or separate — the world box is committed as proposed.
                 if (runtime.pendingPresent && runtime.target != null) {
+                    placements.add(runtime.target);
+                }
+            } else if (rigid(runtime.element)) {
+                // The rigid grant is its own animation: placed directly every
+                // frame, never relaxed, clamped or separated — the committed
+                // visual is the target rect itself. The retained target is
+                // the linger memory while retracted.
+                if (runtime.pendingPresent && runtime.target != null) {
+                    runtime.lastVisual = runtime.target.screenRect();
+                    runtime.lastTargetRect = runtime.lastVisual;
                     placements.add(runtime.target);
                 }
             } else {
@@ -488,19 +532,38 @@ public final class InworldCoordinator {
         zoneLayout = null;
         for (ElementRuntime runtime : ordered) {
             if (runtime.element.consumesZoneLayout()) {
-                zoneLayout = PreviousFrameLayout.of(zonePlacements(placements));
+                zoneLayout = PreviousFrameLayout.of(zonePlacements(ordered, placements));
                 break;
             }
         }
         return result;
     }
 
-    private static List<PreviousFrameLayout.Placement> zonePlacements(List<InworldPlacement> placements) {
+    /**
+     * The zone snapshot source: the committed grants minus the rects nobody
+     * may score against — world-only grants carry no screen half, and a
+     * rigid element's rect blocks nobody, so it must not appear in anyone's
+     * overlap, leader or adjacency input.
+     */
+    private static List<PreviousFrameLayout.Placement> zonePlacements(
+            List<ElementRuntime> ordered, List<InworldPlacement> placements) {
+        List<String> rigidIds = null;
+        for (ElementRuntime runtime : ordered) {
+            if (rigid(runtime.element)) {
+                if (rigidIds == null) {
+                    rigidIds = new ArrayList<>();
+                }
+                rigidIds.add(runtime.element.id());
+            }
+        }
         List<PreviousFrameLayout.Placement> snapshot = new ArrayList<>(placements.size());
         for (InworldPlacement placement : placements) {
             Rect rect = placement.screenRect().toRect();
             if (rect.width() <= 0 || rect.height() <= 0) {
                 continue; // world-only grants carry no screen half
+            }
+            if (rigidIds != null && rigidIds.contains(placement.elementId())) {
+                continue; // a rigid rect is invisible to everyone else
             }
             snapshot.add(new PreviousFrameLayout.Placement(placement.elementId(), placement.anchor(), rect));
         }
@@ -538,6 +601,58 @@ public final class InworldCoordinator {
                     proposal.variant(),
                     new FloatPos(0, 0),
                     FloatRect.empty,
+                    candidate.world(),
+                    runtime.frameArbitrationIndex,
+                    epochCounter);
+            runtime.pendingPresent = true;
+            return;
+        }
+    }
+
+    // endregion
+
+    // region rigid flow
+
+    /**
+     * The rigid acceptance: the element's first screen candidate, granted
+     * unconditionally every frame — no fitRect, no bitmap, no exclusion, no
+     * nudge, no sticky re-pick, no ladder walk. The rect is the declared
+     * {@code anchor + candidate offset}, edge-clamped into the work area; the
+     * clamp acts on the final rect alone and the declared offset is never
+     * rewritten, so the placement returns to the declared position the
+     * moment the anchor comes back from the edge (no re-pin, no clamp
+     * hysteresis — the offset basis is the fresh proposal, never a stored
+     * clamped one). A retraction (or a proposal without a screen candidate)
+     * retracts: state without placement, the same linger semantics a
+     * retracted anchor gets.
+     * <p>
+     * The grant never enters the round's committed set, never marks the
+     * occupancy bitmap and never feeds the space-budget feedback — a rigid
+     * rect is shared state for nobody else to consume, readable only through
+     * the committed {@code CoordinationResult} (and the element's own
+     * {@code ElementState}).
+     */
+    private void acceptRigid(ElementRuntime runtime, FloatRect workArea) {
+        ElementProposal proposal = runtime.roundZero;
+        runtime.pendingPresent = false;
+        runtime.activeRejection = null;
+        if (proposal.retracted()) {
+            return;
+        }
+        requireLadderRung(runtime, proposal.variant());
+        runtime.currentLevel = proposal.variant().level();
+        FloatPos anchor = Objects.requireNonNull(proposal.anchorScreen(), "anchorScreen");
+        for (PlacementCandidate candidate : proposal.candidates()) {
+            FloatRect screen = candidate.screenRect();
+            if (screen == null) {
+                continue;
+            }
+            FloatRect placed = screen.clampInto(workArea);
+            runtime.target = new InworldPlacement(
+                    runtime.element.id(),
+                    proposal.variant(),
+                    anchor,
+                    placed.translate(-anchor.x(), -anchor.y()),
                     candidate.world(),
                     runtime.frameArbitrationIndex,
                     epochCounter);
@@ -695,6 +810,7 @@ public final class InworldCoordinator {
 
         FloatRect chosenRect = null;
         PlacementCandidate chosen = null;
+        FloatRect stickyOffset = null;
         if (runtime.element.sticky() && runtime.target != null) {
             // the sticky match is offset-from-anchor, not absolute: candidates
             // dock to their anchor (the lattice translates with it), and the
@@ -713,7 +829,17 @@ public final class InworldCoordinator {
                     Fit fit = fitRect(candidate, variant, scope);
                     if (fit.ok()) {
                         chosen = candidate;
-                        chosenRect = fit.rect();
+                        FloatRect held = heldOffset(runtime, anchor, candidate, fit, variant, scope);
+                        if (held != null) {
+                            stickyOffset = held;
+                            chosenRect = held.translate(anchor.x(), anchor.y());
+                        } else {
+                            // the slot stopped fitting as held — the fit rect
+                            // (clamped or nudged) is the new slot, its offset
+                            // derived anew (the one way a sticky slot may
+                            // drift)
+                            chosenRect = fit.rect();
+                        }
                     }
                     break;
                 }
@@ -759,6 +885,7 @@ public final class InworldCoordinator {
             if (released != chosen) {
                 chosen = released;
                 chosenRect = fitRect(chosen, variant, scope).rect();
+                stickyOffset = null; // the release moved the element off its held slot
             }
         }
         if (chosen == null || chosenRect == null) {
@@ -769,11 +896,13 @@ public final class InworldCoordinator {
                 runtime.element.id(),
                 variant,
                 anchor,
-                new FloatRect(
-                        chosenRect.x() - anchor.x(),
-                        chosenRect.y() - anchor.y(),
-                        chosenRect.width(),
-                        chosenRect.height()),
+                stickyOffset != null
+                        ? stickyOffset
+                        : new FloatRect(
+                                chosenRect.x() - anchor.x(),
+                                chosenRect.y() - anchor.y(),
+                                chosenRect.width(),
+                                chosenRect.height()),
                 chosen.world(),
                 runtime.frameArbitrationIndex,
                 scope.epoch);
@@ -800,6 +929,40 @@ public final class InworldCoordinator {
             }
         }
         return Acceptance.accepted(placement);
+    }
+
+    /**
+     * The sticky slot held on its frozen offset — the incumbent offset
+     * re-based on the current anchor — when the slot itself did not move
+     * (the fit neither clamped nor nudged the candidate) and the held rect
+     * still passes the fit's own hard constraints (inside the work area,
+     * clear on the occupancy bitmap). Committing the held offset keeps the
+     * render position exactly {@code frozen offset + live anchor}; deriving
+     * it from the candidate's integer lattice instead would re-phase it by
+     * up to half a pixel per axis on every resolve — an anchor with
+     * fractional drift would repaint the rect a pixel up and down at the
+     * epoch cadence. Null when the held rect no longer stands on its own:
+     * the fit rect, with its re-derived offset, is the slot then (the one
+     * way a sticky slot may drift).
+     */
+    private static @Nullable FloatRect heldOffset(
+            ElementRuntime runtime,
+            FloatPos anchor,
+            PlacementCandidate candidate,
+            Fit fit,
+            InworldVariant variant,
+            RoundScope scope) {
+        if (!rectsAlmostEqual(fit.rect(), candidate.screenRect())) {
+            return null; // the fit moved the slot: its rect is the new slot
+        }
+        FloatRect held = runtime.target.offsetRect().translate(anchor.x(), anchor.y());
+        if (held.areaOutside(scope.workArea) > outOfBoundsEpsilon) {
+            return null; // the held rect sticks out where the lattice fit did not
+        }
+        if (!variant.spacePolicy().occlusionExempt() && !scope.bitmap.isFree(held.toRect())) {
+            return null; // the held rect grazes occupancy the lattice fit cleared
+        }
+        return runtime.target.offsetRect();
     }
 
     /**

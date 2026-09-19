@@ -34,6 +34,7 @@ final class TestElement implements InworldElement {
     final VariantLadder ladder;
     final boolean singleCandidate;
     final boolean worldOnly;
+    final AvoidanceClass avoidanceClass;
 
     FloatPos anchor;
     boolean anchorValid = true;
@@ -55,6 +56,7 @@ final class TestElement implements InworldElement {
             VariantLadder ladder,
             boolean singleCandidate,
             boolean worldOnly,
+            AvoidanceClass avoidanceClass,
             FloatPos anchor) {
         this.id = id;
         this.kind = kind;
@@ -64,6 +66,7 @@ final class TestElement implements InworldElement {
         this.ladder = ladder;
         this.singleCandidate = singleCandidate;
         this.worldOnly = worldOnly;
+        this.avoidanceClass = avoidanceClass;
         this.anchor = anchor;
     }
 
@@ -78,6 +81,7 @@ final class TestElement implements InworldElement {
                 ladder(sizes),
                 false,
                 false,
+                AvoidanceClass.standard,
                 new FloatPos(anchorX, anchorY));
     }
 
@@ -92,6 +96,7 @@ final class TestElement implements InworldElement {
                 ladder(SpacePolicy.active, false, true, size),
                 true,
                 false,
+                AvoidanceClass.standard,
                 new FloatPos(anchorX, anchorY));
     }
 
@@ -122,23 +127,27 @@ final class TestElement implements InworldElement {
     }
 
     TestElement withPriority(int newPriority) {
-        return new TestElement(id, kind, newPriority, sticky, mode, ladder, singleCandidate, worldOnly, anchor);
+        return new TestElement(
+                id, kind, newPriority, sticky, mode, ladder, singleCandidate, worldOnly, avoidanceClass, anchor);
     }
 
     TestElement withSticky() {
-        return new TestElement(id, kind, priority, true, mode, ladder, singleCandidate, worldOnly, anchor);
+        return new TestElement(
+                id, kind, priority, true, mode, ladder, singleCandidate, worldOnly, avoidanceClass, anchor);
     }
 
     TestElement withKind(SpaceKind newKind) {
-        return new TestElement(id, newKind, priority, sticky, mode, ladder, singleCandidate, worldOnly, anchor);
+        return new TestElement(
+                id, newKind, priority, sticky, mode, ladder, singleCandidate, worldOnly, avoidanceClass, anchor);
     }
 
     TestElement withLadder(VariantLadder newLadder) {
-        return new TestElement(id, kind, priority, sticky, mode, newLadder, singleCandidate, worldOnly, anchor);
+        return new TestElement(
+                id, kind, priority, sticky, mode, newLadder, singleCandidate, worldOnly, avoidanceClass, anchor);
     }
 
     TestElement withSingleCandidate() {
-        return new TestElement(id, kind, priority, sticky, mode, ladder, true, worldOnly, anchor);
+        return new TestElement(id, kind, priority, sticky, mode, ladder, true, worldOnly, avoidanceClass, anchor);
     }
 
     /**
@@ -147,7 +156,16 @@ final class TestElement implements InworldElement {
      * never claimed.
      */
     TestElement withWorldOnly() {
-        return new TestElement(id, kind, priority, sticky, mode, ladder, singleCandidate, true, anchor);
+        return new TestElement(id, kind, priority, sticky, mode, ladder, singleCandidate, true, avoidanceClass, anchor);
+    }
+
+    /**
+     * A rigid element: declares the rigid yield class — the coordinator
+     * grants its first screen candidate directly every frame.
+     */
+    TestElement withRigid() {
+        return new TestElement(
+                id, kind, priority, sticky, mode, ladder, singleCandidate, worldOnly, AvoidanceClass.rigid, anchor);
     }
 
     void moveTo(double x, double y) {
@@ -191,6 +209,11 @@ final class TestElement implements InworldElement {
     @Override
     public boolean worldOnly() {
         return worldOnly;
+    }
+
+    @Override
+    public AvoidanceClass avoidanceClass() {
+        return avoidanceClass;
     }
 
     @Override

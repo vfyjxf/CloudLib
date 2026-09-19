@@ -28,6 +28,10 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.coordinator;
  *       screen arbitration (no occupancy, no budget, no negotiation, no
  *       relaxation) — the coordinator accepts its first candidate carrying a
  *       world box unconditionally, and retracts it when it proposes none</li>
+ *   <li>an element declaring {@link AvoidanceClass#rigid} (see
+ *       {@link #avoidanceClass}) opts out of the contention instead: its
+ *       first screen candidate is granted directly every frame, and its rect
+ *       is shared state for nobody else to consume</li>
  * </ul>
  */
 public interface InworldElement {
@@ -83,6 +87,17 @@ public interface InworldElement {
      */
     default boolean worldOnly() {
         return false;
+    }
+
+    /**
+     * The element's yield declaration — how hard it holds its screen rect
+     * against everyone else (see {@link AvoidanceClass}). {@code rigid}
+     * leaves the candidate competition entirely (direct placement every
+     * frame, blocks nobody, is pushed by nobody); {@code standard} is the
+     * full arbitration participation and the default.
+     */
+    default AvoidanceClass avoidanceClass() {
+        return AvoidanceClass.standard;
     }
 
     /**

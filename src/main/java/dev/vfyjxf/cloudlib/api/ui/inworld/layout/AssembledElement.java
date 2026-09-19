@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.layout;
 
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
+import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.AvoidanceClass;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.CoordinationResult;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.ElementMode;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.ElementProposal;
@@ -136,6 +137,11 @@ public final class AssembledElement implements InworldElement {
     @Override
     public boolean worldOnly() {
         return spec.worldOnly();
+    }
+
+    @Override
+    public AvoidanceClass avoidanceClass() {
+        return spec.avoidanceClass();
     }
 
     @Override

@@ -72,3 +72,7 @@
    placement 族是锚点定位的（不得是 dockCursor——dock 候选沿屏幕边扫描，锚点只选边）。
 10. **zone 入场级**（Z2）：`ZoneFacet` 的初始 LodTier 只能是 `full`/`compact`（内容承载级）；
     `icon` 及以下是协调器阶梯的降级结果，`clustered` 是分组层的裁决，都不是合法声明。
+11. **rigid 让避等级**：`rigid` 是屏幕平面的直接放置声明——不得与 worldOnly 组合（worldOnly 已完全
+    绕开屏幕仲裁，没有可放置的屏幕矩形），也不得声明 zone（zone 路径绑定的候选排序 rigid 流程从不
+    执行，声明会被静默丢弃）。rigid 元件每帧以「锚点+声明偏移」直接落位（仅工作区边缘 clamp），
+    其矩形不进 bitmap/不进他人 zone 快照/不作为 blocker，也不被任何分离推动。
