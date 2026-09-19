@@ -18,6 +18,13 @@
  *   <li>{@link OcclusionFade} — the occlusion-fade policy value object
  *       (hysteresis thresholds + frame gate) plus its drive constants and
  *       easing helpers</li>
+ *   <li>{@link OneEuroFilter} — the speed-adaptive low-pass (Casiez CHI 2012,
+ *       plus a cutoff ceiling) for noisy per-frame screen positions</li>
+ *   <li>{@link PixelStabilizer} — the rest/move pixel-space quantizer with
+ *       hysteresis snapping, dwell and an ease-out landing that keeps
+ *       quasi-static panels on a locked integer lattice</li>
+ *   <li>{@link FollowStabilizer} — the facade wiring two 1€ filters into a
+ *       pixel stabilizer: the follow-panel screen-position stabilizer</li>
  * </ul>
  * <p>
  * Two rules hold for the whole package. First, time is always an explicit
