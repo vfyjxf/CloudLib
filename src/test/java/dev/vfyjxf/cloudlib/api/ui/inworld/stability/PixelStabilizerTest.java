@@ -41,32 +41,63 @@ class PixelStabilizerTest {
     }
 
     @Test
-    void slowRampStepsUniformlyAndKeepsTheResidual() {
+    void slowRampCrossesCellsContinuouslyAndKeepsTheResidual() {
+        // 6 px/s stays below every speed gate — the rest phase throughout —
+        // and each lattice crossing is now a continuous sub-pixel glide, not
+        // a whole-pixel teleport: the first crossing still happens when the
+        // input clears 10.75 (frame 8), the cadence stays the input's own
+        // (one cell per 10 frames), no single frame ever moves more than
+        // half a pixel, and no residual is lost
         PixelStabilizer stabilizer = new PixelStabilizer();
-        List<Integer> stepFrames = new ArrayList<>();
+        List<Integer> crossFrames = new ArrayList<>();
         double previousOut = Double.NaN;
+        double maxFrameStep = 0;
         double lastInput = Double.NaN;
         for (int i = 0; i < 300; i++) {
             double x = 10.0 + 0.1 * i;
             lastInput = x;
             PixelStabilizer.Output out = stabilizer.accept(i * dt, x, 20.0);
-            assertTrue(out.x() == Math.rint(out.x()), "rest output must be integer at frame " + i);
-            if (!Double.isNaN(previousOut) && out.x() != previousOut) {
-                assertEquals(1.0, out.x() - previousOut, 0.0, "ramp steps must be single pixels at frame " + i);
-                stepFrames.add(i);
+            if (!Double.isNaN(previousOut)) {
+                double step = Math.abs(out.x() - previousOut);
+                assertTrue(step <= 0.5, "a crossing must glide, not step: " + step + "px at frame " + i);
+                maxFrameStep = Math.max(maxFrameStep, step);
+                if (Math.round(out.x()) != Math.round(previousOut)) crossFrames.add(i);
             }
             previousOut = out.x();
+            assertTrue(Math.abs(out.x() - x) <= 0.75, "trail beyond the band at frame " + i);
             assertEquals(PixelStabilizer.State.rest, stabilizer.state(), "6 px/s is rest, frame " + i);
         }
 
-        assertEquals(8, stepFrames.get(0), "the first step happens when 10 + 0.1i clears 10.75");
-        for (int i = 1; i < stepFrames.size(); i++) {
-            assertEquals(10, stepFrames.get(i) - stepFrames.get(i - 1), "steps must keep a uniform cadence");
+        assertEquals(
+                9,
+                crossFrames.get(0),
+                "the first glide carries the output past the half-cell one frame after"
+                        + " the input clears 10.75 (frame 8)");
+        for (int i = 1; i < crossFrames.size(); i++) {
+            int gap = crossFrames.get(i) - crossFrames.get(i - 1);
+            assertTrue(gap >= 9 && gap <= 11, "crossings must keep the input's cadence: gap " + gap);
         }
-        // 300 frames * 0.1 px = 30 px of input motion, 30 single-pixel steps
-        assertEquals(30, stepFrames.size());
-        assertEquals(40.0, previousOut, 0.0);
-        assertTrue(Math.abs(previousOut - lastInput) <= 1.0, "no residual may be lost");
+        assertTrue(
+                crossFrames.get(crossFrames.size() - 1) - crossFrames.get(0) >= 285
+                        && crossFrames.get(crossFrames.size() - 1) - crossFrames.get(0) <= 296,
+                "30 crossings span ~29 cells at the input's 10-frame cadence");
+        // 300 frames * 0.1 px = 30 px of input motion = 30 cell crossings
+        assertEquals(30, crossFrames.size());
+        assertTrue(maxFrameStep <= 0.5 && maxFrameStep > 0.05, "the glide is real motion, not a teleport");
+
+        // and the residual is never lost: parked at the ramp's end, the
+        // output converges onto the input's own cell, bit-exact (the step
+        // density needs ~0.8 s of quiet to finish the decay)
+        double still = lastInput;
+        double settled = Double.NaN;
+        for (int i = 300; i < 360; i++) {
+            PixelStabilizer.Output out = stabilizer.accept(i * dt, still, 20.0);
+            if (out.x() == Math.rint(out.x()) && stabilizer.state() == PixelStabilizer.State.rest) {
+                settled = out.x();
+                break;
+            }
+        }
+        assertEquals((double) Math.round(still), settled, 0.0, "the parked panel re-locks on its cell");
     }
 
     @Test
@@ -115,18 +146,24 @@ class PixelStabilizerTest {
 
         // the smoothed speed needs 8 freeze frames to decay below 9 px/s
         // (121.8 * 0.7^k < 9 at k = 8), then 5 dwell frames accumulate, so the
-        // landing begins at freeze frame 7 + 5 - 1 = 11
+        // landing begins at freeze frame 7 + 5 - 1 = 11 — unchanged
         assertEquals(11, settleStart, "settle must begin after the 5-frame dwell past the speed decay");
-        assertEquals(19, restResume, "the 120 ms glide needs 8 more frames at 60 fps");
+        // the continuous landing: the settle-entry recenter glides the panel
+        // onto 281 and the snap weight re-forms as the step density decays —
+        // the state re-locks the lattice at freeze frame 30 (~0.5 s; the old
+        // fixed 120 ms ease-out finished 11 frames earlier, frame 19)
+        assertEquals(30, restResume, "rest resumes once the glide converged and the density decayed");
 
-        // the glide: monotone, bounded by [from, target], never overshooting
+        // the landing: monotone, never overshooting the lattice; the last
+        // settle frame may sit a sub-0.1 px click short of the lattice — the
+        // rest transition itself snaps the weight and lands exactly
         double previous = frozen;
         for (double value : settleOutputs) {
             assertTrue(value >= previous - 1.0e-12, "settle must be monotone: " + value + " after " + previous);
             assertTrue(value <= 281.0 + 1.0e-12, "settle must never overshoot the lattice: " + value);
             previous = value;
         }
-        assertTrue(Math.abs(previous - 281.0) < 0.01, "settle must reach the lattice: " + previous);
+        assertTrue(previous > 280.9, "settle must close on the lattice: " + previous);
         assertEquals(281.0, stabilizer.x(), 0.0, "rest resumes exactly on the lattice");
         assertEquals(PixelStabilizer.State.rest, stabilizer.state());
     }
@@ -172,19 +209,33 @@ class PixelStabilizerTest {
     }
 
     @Test
-    void zeroHysteresisFlipsExactlyAtTheHalfCellEdge() {
+    void zeroHysteresisFlipsTheLatchImmediatelyAndTheOutputGlides() {
         // the degenerate config documents what hysteresis is for: with a zero
-        // cushion the band edge is the half-cell itself, so inputs straddling
-        // it flip the lattice every frame
+        // cushion the band edge is the half-cell itself, so the latch flips
+        // every frame an input straddles it — the output now leaves the old
+        // cell's neighborhood immediately (the flip is certified) but glides
+        // across instead of teleporting, and a parked input re-locks exactly
         PixelStabilizer stabilizer = new PixelStabilizer(new PixelStabilizer.Config(0.5, 0.0, 45.0, 9.0, 5, 0.12));
         PixelStabilizer.Output out = stabilizer.accept(0.0, 10.5, 0.0);
         assertEquals(11.0, out.x(), 0.0);
         out = stabilizer.accept(dt, 10.49, 0.0);
-        assertEquals(10.0, out.x(), 0.0, "10.49 is below 10.5 — no cushion, immediate step down");
+        assertTrue(
+                out.x() < 10.9 && out.x() > 10.4,
+                "10.49 flips the latch down — the output leaves 11 at once: " + out.x());
         out = stabilizer.accept(2 * dt, 10.51, 0.0);
-        assertEquals(11.0, out.x(), 0.0, "10.51 is above 10.5 — no cushion, immediate step up");
-        out = stabilizer.accept(3 * dt, 10.2, 0.0);
-        assertEquals(10.0, out.x(), 0.0);
+        assertTrue(out.x() > 10.4 && out.x() < 11.0, "10.51 flips the latch back up: " + out.x());
+        // parked below the boundary, the panel re-locks onto the 10 cell
+        // exactly — the step density needs ~0.8 s of quiet to decay to the
+        // exact-rest deadband
+        double locked = Double.NaN;
+        for (int i = 3; i < 90; i++) {
+            out = stabilizer.accept(i * dt, 10.2, 0.0);
+            if (out.x() == 10.0) {
+                locked = out.x();
+                break;
+            }
+        }
+        assertEquals(10.0, locked, 0.0, "a parked input re-locks its cell bit-exactly");
     }
 
     @Test

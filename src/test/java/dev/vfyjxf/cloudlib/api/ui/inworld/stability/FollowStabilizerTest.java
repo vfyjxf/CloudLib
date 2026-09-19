@@ -14,7 +14,14 @@ class FollowStabilizerTest {
     private static final double dt = 1.0 / 60.0;
 
     @Test
-    void noisySlowDriftRendersAsCleanIntegerSteps() {
+    void noisySlowDriftRendersSmoothAndTracks() {
+        // 3 px/s clean drift under ±0.2 px noise: the continuous deadzone
+        // renders this as sticky lattice motion — sub-threshold wiggle at
+        // most, never a whole-pixel teleport — and the drift axis advances
+        // monotonically at the visible scale (reversals below 0.35 px are
+        // sub-visible blend ripple; the old integer-step contract could
+        // assert zero reversals at any scale only by quantizing the output,
+        // which is exactly what produced the 1 px crossing pops)
         FollowStabilizer stabilizer = new FollowStabilizer();
         LcgNoise driftNoise = new LcgNoise(0xD21AF);
         LcgNoise crossNoise = new LcgNoise(0xC1055);
@@ -29,21 +36,38 @@ class FollowStabilizerTest {
             PixelStabilizer.Output out = stabilizer.accept(i * dt, inX[i], inY);
             outX[i] = out.x();
             outY[i] = out.y();
-            assertTrue(out.x() == Math.rint(out.x()), "x must stay on the lattice, frame " + i + ": " + out.x());
-            assertTrue(out.y() == Math.rint(out.y()), "y must stay on the lattice, frame " + i + ": " + out.y());
             if (i > 0) {
                 double step = outX[i] - outX[i - 1];
-                assertTrue(step == 0.0 || step == 1.0, "no backward or double steps, frame " + i + ": " + step);
+                assertTrue(step >= -0.35, "no visible backward motion, frame " + i + ": " + step);
             }
         }
 
-        assertEquals(0, PerceptualAsserts.reversals(outX), "the drifting axis must never flip direction");
-        assertEquals(0, PerceptualAsserts.reversals(outY), "the static axis must never flip direction");
+        assertEquals(0, reversals(outX, 0.35), "the drifting axis must never visibly flip direction");
+        assertEquals(0, reversals(outY, 0.35), "the static axis must never visibly flip direction");
         assertTrue(PerceptualAsserts.peakToPeak(outY) <= 1.0, "the static axis must sit still");
         assertTrue(
                 Math.abs(outX[outX.length - 1] - inX[inX.length - 1]) <= 2.0,
                 "the lattice must track the drift within filter lag plus one quantum");
-        PerceptualAsserts.assertTracksWithoutJerkWindowed(cleanX, outX, 12, 0.5, "noisy drift");
+        // the drifting axis may trail its input by the snap band and recover
+        // at crossings, and the blend passes a bounded fraction of the anchor
+        // noise — both inside the ±(snapHalf + hysteresis) band, so the honest
+        // windowed slack is the band, not the old quantizer's half-quantum
+        PerceptualAsserts.assertTracksWithoutJerkWindowed(cleanX, outX, 12, 0.75, "noisy drift");
+        PerceptualAsserts.assertTremorSuppressed(inX, outX, "noisy drift's noise floor");
+    }
+
+    /** Direction reversals above a visibility threshold: sign flips between consecutive differences of at least {@code minStep} px. */
+    private static int reversals(double[] samples, double minStep) {
+        int reversals = 0;
+        int previousSign = 0;
+        for (int i = 0; i + 1 < samples.length; i++) {
+            double delta = samples[i + 1] - samples[i];
+            if (Math.abs(delta) < minStep) continue;
+            int sign = delta > 0 ? 1 : -1;
+            if (previousSign != 0 && sign != previousSign) reversals++;
+            previousSign = sign;
+        }
+        return reversals;
     }
 
     @Test
