@@ -90,7 +90,17 @@ import java.util.Optional;
  */
 public final class InworldCoordinator {
 
-    private static final double stickyMatchEpsilonPx = 0.25;
+    /**
+     * The sticky slot match tolerance, in offset space: candidate and
+     * incumbent are both compared as offsets from the anchor (the placement
+     * contract's own storage), so an anchor that moved between resolves
+     * cannot break the match by itself. The tolerance only absorbs the
+     * candidate generator's rounding (integer-pixel lattices drift up to
+     * 1 px per axis) — real lattice steps are {@code >=} the tier clearances
+     * (8 px near), far above it, so a neighbor slot can never match.
+     */
+    private static final double stickySlotEpsilonPx = 2.0;
+
     private static final double discreteRectEpsilonPx = 0.5;
     private static final double outOfBoundsEpsilon = 1.0e-6;
     /**
@@ -686,9 +696,20 @@ public final class InworldCoordinator {
         FloatRect chosenRect = null;
         PlacementCandidate chosen = null;
         if (runtime.element.sticky() && runtime.target != null) {
-            FloatRect incumbent = runtime.target.offsetRect().translate(anchor.x(), anchor.y());
+            // the sticky match is offset-from-anchor, not absolute: candidates
+            // dock to their anchor (the lattice translates with it), and the
+            // incumbent is stored as exactly such an offset — comparing in
+            // offset space means the granted slot survives every anchor motion
+            // between resolves (a walking entity, a swaying camera), and only
+            // a real re-rank cause (the slot stopped fitting, the element
+            // re-registered, the preference itself changed) can move the
+            // element off it. An absolute-rect match would de-pin on every
+            // resolve once the anchor had moved past the epsilon, handing the
+            // pick back to the ranker — a moving anchor would re-argue its
+            // slot at every resolve and visibly hop.
             for (PlacementCandidate candidate : proposal.candidates()) {
-                if (rectsAlmostEqual(candidate.screenRect(), incumbent, stickyMatchEpsilonPx)) {
+                FloatRect candidateOffset = candidate.screenRect().translate(-anchor.x(), -anchor.y());
+                if (rectsAlmostEqual(candidateOffset, runtime.target.offsetRect(), stickySlotEpsilonPx)) {
                     Fit fit = fitRect(candidate, variant, scope);
                     if (fit.ok()) {
                         chosen = candidate;
