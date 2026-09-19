@@ -77,7 +77,9 @@ vec4 guideLineStroke(float centerPx, float arcPx, float totalPx) {
         return vec4(0.0);
     }
 
-    float common = guideLineDash(arcPx) * guideLineEndFade(arcFraction) * window;
+    // `common` is a GLSL reserved word on every driver that checks the
+    // spec's list (macOS rejects it outright), hence `dimmer`
+    float dimmer = guideLineDash(arcPx) * guideLineEndFade(arcFraction) * window;
     vec3 rgb = mix(EdgeColor.rgb, LineColor.rgb, clamp(core, 0.0, 1.0));
-    return vec4(rgb, (core * LineColor.a + edge * EdgeColor.a) * common);
+    return vec4(rgb, (core * LineColor.a + edge * EdgeColor.a) * dimmer);
 }

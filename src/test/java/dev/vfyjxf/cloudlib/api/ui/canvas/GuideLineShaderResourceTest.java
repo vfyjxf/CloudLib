@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,11 +20,122 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * by name — and the vertex attributes its {@code VertexFormat} supplies — has
  * to be declared by the shader's json, or the driver silently hands back a
  * dead uniform and the stroke draws wrong. GLSL itself cannot be compiled
- * headlessly, so this pins the half that can be checked without a context.
+ * headlessly, so this pins the half that can be checked without a context —
+ * including the naming rules a strict driver enforces at compile time.
  */
 class GuideLineShaderResourceTest {
 
     private static final String dir = "/assets/cloudlib/shaders/core/";
+
+    private static final String include = "/assets/cloudlib/shaders/include/guide_line_common.glsl";
+
+    /** The five sources every naming and structure check walks. */
+    private static final List<String> sources = List.of(
+            dir + "guide_line_hud.vsh",
+            dir + "guide_line_hud.fsh",
+            dir + "guide_line_world.vsh",
+            dir + "guide_line_world.fsh",
+            include);
+
+    /**
+     * GLSL 1.50's reserved-for-future-use words, plus the ones later versions
+     * reserve and a strict driver may already refuse. Using one as an
+     * identifier is a compile error, not a warning: a local named {@code
+     * common} took both guide-line shaders down on macOS. Keywords are absent
+     * on purpose — they are legal where they belong, and misusing one is a
+     * syntax error the compiler reports anyway.
+     */
+    private static final Set<String> reservedWords = Set.of(
+            "common",
+            "partition",
+            "active",
+            "asm",
+            "class",
+            "union",
+            "enum",
+            "typedef",
+            "template",
+            "this",
+            "packed",
+            "goto",
+            "inline",
+            "noinline",
+            "volatile",
+            "public",
+            "static",
+            "extern",
+            "external",
+            "interface",
+            "long",
+            "short",
+            "half",
+            "fixed",
+            "unsigned",
+            "superp",
+            "input",
+            "output",
+            "hvec2",
+            "hvec3",
+            "hvec4",
+            "fvec2",
+            "fvec3",
+            "fvec4",
+            "filter",
+            "image1D",
+            "image2D",
+            "image3D",
+            "imageCube",
+            "iimage1D",
+            "iimage2D",
+            "iimage3D",
+            "iimageCube",
+            "uimage1D",
+            "uimage2D",
+            "uimage3D",
+            "uimageCube",
+            "image1DArray",
+            "image2DArray",
+            "iimage1DArray",
+            "iimage2DArray",
+            "uimage1DArray",
+            "uimage2DArray",
+            "image1DShadow",
+            "image2DShadow",
+            "image1DArrayShadow",
+            "image2DArrayShadow",
+            "imageBuffer",
+            "iimageBuffer",
+            "uimageBuffer",
+            "sizeof",
+            "cast",
+            "namespace",
+            "using",
+            "row_major",
+            "sampler3DRect",
+            "shared",
+            "resource",
+            "coherent",
+            "restrict",
+            "readonly",
+            "writeonly",
+            "atomic_uint",
+            "patch",
+            "sample",
+            "precise",
+            "buffer",
+            "demote",
+            "nonprivate",
+            "perprimitive",
+            "perviewport",
+            "any_invocable",
+            "group");
+
+    /**
+     * Every type a declaration or a function definition can start with —
+     * {@code struct} included, so a reserved struct name is caught too.
+     */
+    private static final String types =
+            "(?:void|float|int|bool|uint|struct|vec[234]|ivec[234]|bvec[234]|uvec[234]|mat[234](?:x[234])?)";
 
     /** The uniforms {@link SceneCanvas#guideLine} sets, by name. */
     private static final Set<String> hudUniforms = Set.of(
@@ -92,7 +204,7 @@ class GuideLineShaderResourceTest {
 
     @Test
     void bothShadersShareOneFragmentMathInclude() throws IOException {
-        String include = read("/assets/cloudlib/shaders/include/guide_line_common.glsl");
+        String source = read(include);
         for (String name : Set.of(
                 "LineColor",
                 "EdgeColor",
@@ -106,10 +218,10 @@ class GuideLineShaderResourceTest {
                 "DashPhase",
                 "ArcStart",
                 "ArcEnd")) {
-            assertTrue(include.contains("uniform") && include.contains(name), "the include declares " + name);
+            assertTrue(source.contains("uniform") && source.contains(name), "the include declares " + name);
         }
-        assertTrue(include.contains("vec4 guideLineStroke("), "the shared entry point");
-        assertTrue(include.contains("guideLineDash(") && include.contains("guideLineEndFade("));
+        assertTrue(source.contains("vec4 guideLineStroke("), "the shared entry point");
+        assertTrue(source.contains("guideLineDash(") && source.contains("guideLineEndFade("));
 
         // and both fragment stages import it rather than re-deriving the maths
         assertTrue(read(dir + "guide_line_hud.fsh").contains("#moj_import <cloudlib:guide_line_common.glsl>"));
@@ -117,6 +229,39 @@ class GuideLineShaderResourceTest {
         assertTrue(
                 read(dir + "guide_line_world.vsh").contains("#moj_import <cloudlib:guide_line_common.glsl>"),
                 "the vertex stage widens LineWidth by the outline band, so it reads the style too");
+    }
+
+    /**
+     * No shader declares a reserved word. A driver that checks the spec's list
+     * rejects the whole program, not just the identifier — one local named
+     * {@code common} in the shared include took both guide-line shaders down
+     * on macOS, and the failure only ever shows up in the game log.
+     */
+    @Test
+    void noShaderDeclaresAReservedWord() throws IOException {
+        for (String resource : sources) {
+            for (String name : declaredNames(read(resource))) {
+                assertTrue(!reservedWords.contains(name), resource + " declares the GLSL reserved word '" + name + "'");
+            }
+        }
+    }
+
+    /**
+     * The identifiers a shader source declares: the name after a type (a
+     * uniform, a local, a function definition). Comments and preprocessor lines
+     * are stripped first, so {@code #moj_import} paths and prose never count.
+     */
+    private static Set<String> declaredNames(String source) {
+        String body = source.replaceAll("(?s)/\\*.*?\\*/", " ")
+                .replaceAll("//[^\n]*", " ")
+                .replaceAll("(?m)^\\s*#.*$", " ");
+        Set<String> names = new LinkedHashSet<>();
+        Matcher declarations = Pattern.compile(types + "\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*[(;,=\\[){]")
+                .matcher(body);
+        while (declarations.find()) {
+            names.add(declarations.group(1));
+        }
+        return names;
     }
 
     @Test
