@@ -123,6 +123,22 @@ class ExitAnimationTest {
     }
 
     @Test
+    void spentEnvelopeAndFinishedAgreeAtFloatPrecision() {
+        // the last sliver of a frame rounds the eased progress to exactly 1
+        // (alpha 0) a hair before the raw double comparison crosses the
+        // duration — finished must agree with the envelope, never one frame
+        // later, or a spent corpse lingers a frame at alpha 0
+        for (int ms : new int[] {150, 180, 200, 300}) {
+            ExitAnimation a = ExitAnimation.fade(ms);
+            for (double t = 0; t < a.durationSeconds() + 0.005; t += 0.0005) {
+                boolean spent = a.alphaAt(t) <= 0f;
+                assertEquals(spent, a.finished(t), ms + "ms at t=" + t);
+            }
+            assertTrue(a.finished(a.durationSeconds() + 1.0e-15));
+        }
+    }
+
+    @Test
     void nullKindIsRejectedAndNullEasingDefaultsToLinear() {
         assertThrows(IllegalArgumentException.class, () -> new ExitAnimation(null, 100, null));
         ExitAnimation a = new ExitAnimation(ExitAnimation.Kind.fade, 100, null);

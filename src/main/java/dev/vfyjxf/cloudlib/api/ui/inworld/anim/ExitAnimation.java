@@ -134,9 +134,15 @@ public record ExitAnimation(Kind kind, int durationMs, Easing easing) {
         return durationMs / 1000.0;
     }
 
-    /** Whether {@code elapsedSeconds} (on the driving clock) has reached the end. */
+    /**
+     * Whether {@code elapsedSeconds} (on the driving clock) has reached the
+     * end. Deliberately agrees with the envelope's float rounding: the last
+     * sliver of a frame may round the eased progress to exactly 1 (alpha 0)
+     * a hair before the double comparison crosses the duration — the exit
+     * is over the moment the envelope reads spent, never one frame later.
+     */
     public boolean finished(double elapsedSeconds) {
-        return elapsedSeconds >= durationSeconds();
+        return progress(elapsedSeconds) >= 1f;
     }
 
     /**
@@ -167,8 +173,8 @@ public record ExitAnimation(Kind kind, int durationMs, Easing easing) {
     /** Eased progress with exact endpoints; 1 once the duration has elapsed. */
     private float progress(double elapsedSeconds) {
         double duration = durationSeconds();
+        if (elapsedSeconds >= duration) return 1f; // covers the instant exit (duration 0) from t = 0 on
         if (elapsedSeconds <= 0) return 0f;
-        if (elapsedSeconds >= duration) return 1f;
         return easing.apply(Easing.clamped((float) (elapsedSeconds / duration)));
     }
 }
