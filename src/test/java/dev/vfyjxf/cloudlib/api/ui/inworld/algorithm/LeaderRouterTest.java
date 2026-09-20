@@ -337,14 +337,18 @@ class LeaderRouterTest {
     }
 
     @Test
-    void theFoldAlphaRampsFromZeroAtTheFoldEdgeTowardOneAtTheFullEdge() {
+    void theFoldAlphaRampsFromHalfAtTheFoldEdgeToFullAtTheFullEdge() {
         LeaderRouter router = new LeaderRouter(config);
 
-        assertEquals(0.0, alphaAt(router, 42), 1.0e-9, "the fold segment materialises invisible at 42 px");
-        assertEquals(0.5, alphaAt(router, 63), 1.0e-9, "half the band, half the alpha");
-        assertEquals((83.9 - 42) / 42, alphaAt(router, 83.9), 1.0e-9, "approaching full");
+        // half ink at the fold boundary, full at the full one — the near end
+        // stays legible (dimmer than the full routing, never invisible)
+        assertEquals(0.5, alphaAt(router, 42), 1.0e-9, "the fold segment materialises at half ink at 42 px");
+        assertEquals(0.75, alphaAt(router, 63), 1.0e-9, "halfway across the band");
+        assertEquals(0.5 + 0.5 * ((83.9 - 42) / 42), alphaAt(router, 83.9), 1.0e-9, "approaching full");
         assertEquals(1.0, alphaAt(router, 100), 1.0e-9, "the full tier draws at full alpha");
-        assertEquals(0.0, alphaAt(router, 30), 1.0e-9, "the attach tier has no stroke to fade");
+        // a fresh leader at 30 px is attach (the shared ladder above would
+        // still be one epoch from full — its steps are single-rung)
+        assertEquals(0.0, alphaAt(new LeaderRouter(config), 30), 1.0e-9, "the attach tier has no stroke to fade");
     }
 
     @Test

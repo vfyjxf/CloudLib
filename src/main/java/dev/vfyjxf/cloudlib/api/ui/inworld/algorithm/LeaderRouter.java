@@ -84,8 +84,9 @@ import java.util.Map;
  *       target</em>: no stub, no arrival segment, no gap. A line more than
  *       60° off vertical leaves the anchor along a short vertical run first
  *       (vertical-first, like the full tier's stub). The segment fades in
- *       linearly, alpha 0 at the fold threshold and 1 at the full
- *       threshold.</li>
+ *       linearly, half ink at the fold threshold rising to full at the
+ *       full threshold — never dimmer than half, the near end must stay
+ *       legible.</li>
  *   <li><strong>attach</strong> (d &lt; {@link Config#tierFoldPx}) — no line
  *       at all (empty points, {@link Tier#attach}); the caller carries the
  *       pairing with marks instead, per the finding that connectivity is the
@@ -544,10 +545,15 @@ public final class LeaderRouter {
         return Tier.attach;
     }
 
-    /** The fold tier's fade-in: alpha 0 at the fold boundary, 1 at the full boundary, linear between. */
+    /**
+     * The fold tier's fade-in: half ink at the fold boundary rising linearly
+     * to full at the full boundary — the near end stays legible (merely
+     * dimmer than the full routing) instead of fading to nothing.
+     */
     private double foldAlpha(double distance) {
         double span = config.tierFullPx() - config.tierFoldPx();
-        return Math.max(0.0, Math.min(1.0, (distance - config.tierFoldPx()) / span));
+        double ramp = Math.max(0.0, Math.min(1.0, (distance - config.tierFoldPx()) / span));
+        return 0.5 + 0.5 * ramp;
     }
 
     /**

@@ -52,9 +52,11 @@ public record GuideLineStyle(
         /** A filled arrowhead along the arrival direction — an edge/enemy target. */
         arrow,
         /**
-         * A two-arm corner bracket along the arrival direction — the
-         * attach-tier pairing mark: when the leader is too short to draw at
-         * all, the bracket at the anchor is what keeps it findable.
+         * A two-arm corner bracket along the arrival direction — a
+         * directional target mark. Kept as shader capability; no tier
+         * currently draws it (the attach tier pairs with an
+         * orientation-free dot instead, close distances having no
+         * meaningful direction).
          */
         bracket
     }
