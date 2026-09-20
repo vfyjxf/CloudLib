@@ -861,6 +861,15 @@ public final class SceneCanvas {
      */
     private void drawShaderQuad(float x, float y, float width, float height) {
         RenderSystem.enableBlend();
+        // true src-over on BOTH channels, same as the quad batch: a core
+        // ShaderInstance never parses the json's "blend" block (that belongs
+        // to post-effect shaders), so without an explicit func these quads
+        // blend by whatever state the surrounding pass happened to leave
+        RenderSystem.blendFuncSeparate(
+                GlStateManager.SourceFactor.SRC_ALPHA,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                GlStateManager.SourceFactor.ONE,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         BufferBuilder buffer =
                 Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         Matrix4f matrix = graphics.pose().last().pose();

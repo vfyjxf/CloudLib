@@ -3,14 +3,21 @@
 #moj_import <cloudlib:guide_line_common.glsl>
 
 // The guide-line HUD pass: one quad per stroke, carrying the whole polyline in
-// the Points uniform (64 vec2 samples, in quad-local px, panel end first). The
+// the Points uniform (64 samples, in quad-local px, panel end first). The
 // fragment resolves the distance to the polyline and the arc position itself,
 // so a dash, a gradient and the AA edges cost no geometry at all.
 
 in vec2 texCoord;
 
 uniform vec2 Size;         // the quad's size in px — texCoord × Size is local px
-uniform vec2 Points[64];   // up to 64 samples, quad-local px, panel end first
+
+// Flat x/y pairs, NOT vec2[64]: the json declares this block "float" × 128,
+// which makes Mojang's Uniform upload it through glUniform1fv — filling a vecN
+// array with 1fv is a spec violation a strict driver answers with a silent
+// INVALID_OPERATION (measured on Apple GL: the write is rejected wholesale),
+// leaving every sample at (0,0) and the stroke a degenerate speck at the
+// quad's origin. float[128] matches the upload command exactly.
+uniform float Points[128]; // up to 64 (x, y) samples, quad-local px, panel end first
 uniform int  PointCount;   // how many of them are live
 uniform int  Marker;       // 0 = none, 1 = dot (face/area), 2 = arrow (edge/enemy)
 uniform float MarkerSize;  // the dot's radius / the arrow's length, in px
@@ -44,6 +51,11 @@ vec2 unit(vec2 v) {
     return len > 1.0e-4 ? v / len : vec2(1.0, 0.0);
 }
 
+// sample i of the flat-packed polyline
+vec2 guidePoint(int i) {
+    return vec2(Points[i * 2], Points[i * 2 + 1]);
+}
+
 void main() {
     if (PointCount < 2) {
         discard;
@@ -58,8 +70,8 @@ void main() {
         if (i + 1 >= PointCount) {
             break;
         }
-        vec2 a = Points[i];
-        vec2 b = Points[i + 1];
+        vec2 a = guidePoint(i);
+        vec2 b = guidePoint(i + 1);
         vec2 ab = b - a;
         float len2 = dot(ab, ab);
         float h = len2 > 1.0e-8 ? clamp(dot(p - a, ab) / len2, 0.0, 1.0) : 0.0;
@@ -79,9 +91,10 @@ void main() {
     // the panel-end port tick: a bar square across the stroke, at full alpha
     float tick = 0.0;
     if (PortTick > 0.0) {
-        vec2 dir = unit(Points[1] - Points[0]);
+        vec2 port = guidePoint(0);
+        vec2 dir = unit(guidePoint(1) - port);
         vec2 perp = vec2(-dir.y, dir.x);
-        float d = sdSegment(p, Points[0] - perp * PortTick, Points[0] + perp * PortTick);
+        float d = sdSegment(p, port - perp * PortTick, port + perp * PortTick);
         tick = (1.0 - smoothstep(halfW - aa, halfW + aa, d)) * guideLineWindow(0.0, total);
     }
 
@@ -89,8 +102,8 @@ void main() {
     // edge/enemy one, appearing once the reveal has reached that end
     float mark = 0.0;
     if (Marker > 0 && MarkerSize > 0.0) {
-        vec2 end = Points[PointCount - 1];
-        vec2 dir = unit(end - Points[PointCount - 2]);
+        vec2 end = guidePoint(PointCount - 1);
+        vec2 dir = unit(end - guidePoint(PointCount - 2));
         vec2 perp = vec2(-dir.y, dir.x);
         float d;
         if (Marker == 2) {

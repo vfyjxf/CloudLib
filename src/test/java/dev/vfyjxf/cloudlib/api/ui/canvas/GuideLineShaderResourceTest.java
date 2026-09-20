@@ -185,10 +185,28 @@ class GuideLineShaderResourceTest {
         String json = read(dir + "guide_line_hud.json");
 
         assertEquals(hudUniforms, uniformNames(json), "the HUD json's uniform set");
-        assertEquals(128, uniformCount(json, "Points"), "64 vec2 samples fit one uniform block");
+        assertEquals(128, uniformCount(json, "Points"), "64 samples ride one flat float block");
         assertEquals(2.0, Double.parseDouble(uniformValue(json, "LineWidth")), 1.0e-9, "the default 2 px core");
         assertTrue(json.contains("\"cloudlib:guide_line_hud\""), "self-registered program name");
         assertTrue(json.contains("\"Position\"") && json.contains("\"UV0\""), "the POSITION_TEX attributes");
+    }
+
+    /**
+     * {@code Points} must stay a flat {@code float[128]} on the GLSL side: the
+     * json's "float" × 128 makes Mojang's Uniform upload it through {@code
+     * glUniform1fv}, and declaring it {@code vec2[64]} instead is a spec
+     * violation — a strict driver answers with a silent INVALID_OPERATION and
+     * the whole upload is rejected (measured on Apple GL), leaving every
+     * sample at (0,0) and the stroke degenerate at the quad's origin.
+     */
+    @Test
+    void theHudFragmentDeclaresPointsAsFlatFloats() throws IOException {
+        String fsh = read(dir + "guide_line_hud.fsh");
+        assertTrue(
+                Pattern.compile("uniform\\s+float\\s+Points\\s*\\[\\s*128\\s*\\]")
+                        .matcher(fsh)
+                        .find(),
+                "Points must stay float[128] — the json's float×128 uploads through glUniform1fv, which a strict driver rejects on a vecN array");
     }
 
     @Test
