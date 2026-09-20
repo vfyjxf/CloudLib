@@ -14,7 +14,10 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.zone.VisibilityPolicy;
  * under the {@link VisibilityPolicy#fade} policy eases its alpha toward
  * {@link #occludedAlpha} while occluded (and neither selected nor inspected)
  * and back to 1 otherwise, stepping linearly on frame deltas so the fade
- * completes within {@link #transitionSeconds} without ever snapping.
+ * completes within {@link #transitionSeconds} without ever snapping. Both
+ * helpers carry parameterized forms ({@code target(..., occludedAlpha)} and
+ * {@code step(..., transitionSeconds)}) so a consumer with its own fade
+ * values runs the same policy math at its own constants.
  */
 public record OcclusionFade(double exitThreshold, double enterThreshold, int frames) {
 
@@ -48,6 +51,19 @@ public record OcclusionFade(double exitThreshold, double enterThreshold, int fra
      * @param inspecting whether the inspect presentation holds panels clear
      */
     public static float target(VisibilityPolicy policy, boolean occluded, boolean selected, boolean inspecting) {
+        return target(policy, occluded, selected, inspecting, occludedAlpha);
+    }
+
+    /**
+     * The parameterized form of {@link #target(VisibilityPolicy, boolean, boolean, boolean)}:
+     * the dimmed alpha is the caller's ({@link #occludedAlpha} the shipped
+     * value).
+     *
+     * @param occludedAlpha the alpha a faded panel presents at while
+     *        occluded, in [0, 1]
+     */
+    public static float target(
+            VisibilityPolicy policy, boolean occluded, boolean selected, boolean inspecting, float occludedAlpha) {
         if (policy != VisibilityPolicy.fade || inspecting) return 1f;
         if (!occluded || selected) return 1f;
         return occludedAlpha;
@@ -59,6 +75,21 @@ public record OcclusionFade(double exitThreshold, double enterThreshold, int fra
      * without snapping.
      */
     public static float step(float current, float target, double dtSeconds) {
+        return step(current, target, dtSeconds, transitionSeconds);
+    }
+
+    /**
+     * The parameterized form of {@link #step(float, float, double)}: the
+     * full transition length is the caller's ({@link #transitionSeconds} the
+     * shipped value).
+     *
+     * @param transitionSeconds the full transition length in seconds, both
+     *        directions; must be positive
+     */
+    public static float step(float current, float target, double dtSeconds, double transitionSeconds) {
+        if (!(transitionSeconds > 0.0)) {
+            throw new IllegalArgumentException("transitionSeconds must be positive: " + transitionSeconds);
+        }
         if (current == target) return current;
         double maxStep = Math.max(0.0, dtSeconds) / transitionSeconds;
         double delta = Math.max(-maxStep, Math.min(maxStep, target - current));

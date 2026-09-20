@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld;
 
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.OcclusionFade;
+import dev.vfyjxf.cloudlib.api.ui.inworld.zone.VisibilityPolicy;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
@@ -108,5 +109,29 @@ class OcclusionProbeTest {
         // the full valid band constructs
         new OcclusionFade(0.0, 1.0, 1);
         new OcclusionFade(0.25, 0.55, 12);
+    }
+
+    @Test
+    void theParameterizedTargetHonorsItsOwnDimmedAlpha() {
+        // the same policy math at a caller's alpha: the shipped constant and
+        // the parameter agree on the shape, differ only in the floor
+        assertEquals(
+                OcclusionFade.occludedAlpha, OcclusionFade.target(VisibilityPolicy.fade, true, false, false), 0.0f);
+        assertEquals(0.5f, OcclusionFade.target(VisibilityPolicy.fade, true, false, false, 0.5f), 0.0f);
+        assertEquals(1f, OcclusionFade.target(VisibilityPolicy.fade, true, true, false, 0.5f), "selected holds");
+        assertEquals(1f, OcclusionFade.target(VisibilityPolicy.fade, true, false, true, 0.5f), "inspecting holds");
+        assertEquals(1f, OcclusionFade.target(VisibilityPolicy.hardOcclusion, true, false, false, 0.5f), "fade only");
+    }
+
+    @Test
+    void theParameterizedStepRunsAtItsOwnTransitionLength() {
+        // a 0.2 s step at dt = 0.05 moves a quarter of the scale; a 0.5 s
+        // transition moves a tenth — the shipped form and the parameterized
+        // one agree at the shipped constant
+        assertEquals(OcclusionFade.step(1f, 0f, 0.05), OcclusionFade.step(1f, 0f, 0.05, 0.2), 0.0f);
+        assertEquals(0.9f, OcclusionFade.step(1f, 0f, 0.05, 0.5), 1.0e-6);
+        assertEquals(0.75f, OcclusionFade.step(1f, 0f, 0.05, 0.2), 1.0e-6);
+        assertThrows(IllegalArgumentException.class, () -> OcclusionFade.step(1f, 0f, 0.05, 0.0));
+        assertThrows(IllegalArgumentException.class, () -> OcclusionFade.step(1f, 0f, 0.05, -0.1));
     }
 }
