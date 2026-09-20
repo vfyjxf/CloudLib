@@ -62,7 +62,11 @@ import java.util.Map;
  * <strong>Zero crossings are a hard constraint, not a preference.</strong>
  * After routing, actual-geometry crossings are counted pairwise; every
  * crossing po-leader is re-routed once with the polylines it crosses as
- * additional thin obstacles. Whatever crossings remain are reported in
+ * additional thin obstacles — but only once the crossing has persisted
+ * {@link Config#dwellEpochs} consecutive epochs (the count starts at the
+ * straight baselines, so the dwell the style gate already served carries
+ * over): a crossing that flickers in and out with camera motion buys no
+ * detour. Whatever crossings remain are reported in
  * {@link Route#crossings} — the caller trims (Nimbus's leader budget already
  * does).
  * <p>
@@ -203,6 +207,7 @@ public final class LeaderRouter {
     private final Config config;
     private final Map<String, SwitchGate<Style>> gates = new HashMap<>();
     private final Map<String, Committed> committed = new HashMap<>();
+    private final Map<String, Integer> crossingStreaks = new HashMap<>();
     private long epochClock;
 
     public LeaderRouter(Config config) {
@@ -259,18 +264,19 @@ public final class LeaderRouter {
         }
 
         Map<String, List<Leader>> clusterGroups = groupClusters(leaders, clusters);
-        Map<String, Integer> triggers = countTriggers(leaders, clusterGroups, obstacles, viewport);
+        Triggers triggers = countTriggers(leaders, clusterGroups, obstacles, viewport);
 
         gates.keySet().retainAll(byId.keySet());
         committed.keySet().retainAll(byId.keySet());
+        crossingStreaks.keySet().retainAll(byId.keySet());
 
         List<Working> work = new ArrayList<>(leaders.size());
         for (Leader leader : leaders) {
             String clusterId = clusters.get(leader.id());
             List<Leader> group = clusterId == null ? null : clusterGroups.get(clusterId);
-            work.add(routeOne(leader, group, clusterId, triggers.get(leader.id()), obstacles, viewport));
+            work.add(routeOne(leader, group, clusterId, triggers.counts.get(leader.id()), obstacles, viewport));
         }
-        reduceCrossings(work, clusterGroups, obstacles, viewport);
+        reduceCrossings(work, clusterGroups, obstacles, viewport, triggers.baselineCrossing);
         int[] counts = countCrossings(work, clusterGroups);
         List<Route> routes = new ArrayList<>(work.size());
         for (int i = 0; i < work.size(); i++) {
@@ -284,6 +290,7 @@ public final class LeaderRouter {
     public void reset() {
         gates.clear();
         committed.clear();
+        crossingStreaks.clear();
     }
 
     // region per-leader routing
@@ -624,16 +631,21 @@ public final class LeaderRouter {
     /**
      * Trigger units per leader on the straight baselines: crossings + close
      * parallels + obstacle cuts, one unit per pair/event. Same-cluster pairs
-     * are exempt (they meet at the trunk by design).
+     * are exempt (they meet at the trunk by design). The per-leader
+     * {@code baselineCrossing} flag (a strict crossing pair, proximity
+     * excluded) rides along — the zero-crossing pass counts its dwell from
+     * it, so epochs served before the po upgrade carry over.
      */
-    private Map<String, Integer> countTriggers(
+    private Triggers countTriggers(
             List<Leader> leaders,
             Map<String, List<Leader>> clusterGroups,
             List<FloatRect> obstacles,
             @Nullable FloatRect viewport) {
         Map<String, Integer> counts = new LinkedHashMap<>();
+        Map<String, Boolean> baselineCrossing = new LinkedHashMap<>();
         for (Leader leader : leaders) {
             counts.put(leader.id(), 0);
+            baselineCrossing.put(leader.id(), false);
         }
         for (int i = 0; i < leaders.size(); i++) {
             for (int j = i + 1; j < leaders.size(); j++) {
@@ -648,6 +660,10 @@ public final class LeaderRouter {
                 FloatPos bAnchor = new FloatPos(b.anchorX(), b.anchorY());
                 boolean cross = segmentsCross(aAnchor, aPort, bAnchor, bPort);
                 boolean close = !cross && segmentDistance(aAnchor, aPort, bAnchor, bPort) <= config.proximityPx();
+                if (cross) {
+                    baselineCrossing.put(a.id(), true);
+                    baselineCrossing.put(b.id(), true);
+                }
                 if (cross || close) {
                     counts.merge(a.id(), 1, Integer::sum);
                     counts.merge(b.id(), 1, Integer::sum);
@@ -667,8 +683,11 @@ public final class LeaderRouter {
                 counts.merge(leader.id(), 1, Integer::sum);
             }
         }
-        return counts;
+        return new Triggers(counts, baselineCrossing);
     }
+
+    /** {@link #countTriggers}'s answer: the trigger counts and the strict baseline-crossing flags. */
+    private record Triggers(Map<String, Integer> counts, Map<String, Boolean> baselineCrossing) {}
 
     private static Map<String, List<Leader>> groupClusters(List<Leader> leaders, Map<String, String> clusters) {
         Map<String, List<Leader>> groups = new LinkedHashMap<>();
@@ -724,25 +743,42 @@ public final class LeaderRouter {
      * Every crossing po-leader, in caller order, gets one re-route attempt
      * with the polylines it crosses as additional thin obstacles; a candidate
      * replaces the current route only if it strictly reduces that leader's
-     * crossings against the same set. Remaining crossings are reported, not
-     * hidden.
+     * crossings against the same set. The attempt itself is dwelled: a
+     * leader's crossing must have persisted {@link Config#dwellEpochs}
+     * consecutive epochs — counted from the straight baselines too, so the
+     * dwell the style gate already served carries over — before the
+     * re-route buys anything. A crossing that flickers in and out with
+     * camera motion never reaches the dwell and never churns the commit.
+     * Remaining crossings are reported, not hidden.
      */
     private void reduceCrossings(
             List<Working> work,
             Map<String, List<Leader>> clusterGroups,
             List<FloatRect> obstacles,
-            @Nullable FloatRect viewport) {
+            @Nullable FloatRect viewport,
+            Map<String, Boolean> baselineCrossing) {
         boolean[][] crossing = crossingMatrix(work, clusterGroups);
+        int[] crossings = new int[work.size()];
+        for (int i = 0; i < work.size(); i++) {
+            for (int j = 0; j < work.size(); j++) {
+                if (crossing[i][j]) crossings[i]++;
+            }
+        }
+        // the dwell streak: consecutive epochs this leader crossed another —
+        // on its routed polyline or, before the po upgrade, on its baseline
+        for (int i = 0; i < work.size(); i++) {
+            Working w = work.get(i);
+            boolean crossingNow = crossings[i] > 0 || baselineCrossing.getOrDefault(w.id, false);
+            int streak = crossingNow ? crossingStreaks.getOrDefault(w.id, 0) + 1 : 0;
+            crossingStreaks.put(w.id, streak);
+        }
         for (int i = 0; i < work.size(); i++) {
             Working w = work.get(i);
             if (w.style != Style.poLeader || w.points.size() < 2) {
                 continue;
             }
-            int before = 0;
-            for (int j = 0; j < work.size(); j++) {
-                if (crossing[i][j]) before++;
-            }
-            if (before == 0) {
+            int before = crossings[i];
+            if (before == 0 || crossingStreaks.getOrDefault(w.id, 0) < config.dwellEpochs()) {
                 continue;
             }
             List<FloatRect> thin = new ArrayList<>(obstacles);

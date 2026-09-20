@@ -589,6 +589,35 @@ class LeaderRouterTest {
     }
 
     @Test
+    void aFlickeringCrossingNeverReroutesTheDetour() {
+        // crossing-regression: b's straight line crosses a's committed po
+        // route, but only on the epochs b is present — one epoch on, one off.
+        // A crossing that flickers at that cadence never survives the dwell,
+        // so the zero-crossing pass must not adopt a detour on every return:
+        // a's committed shape stays put through the whole flicker (the wall
+        // holds a in po, so the style gate never enters the picture)
+        List<FloatRect> obstacles = List.of(new FloatRect(190, 30, 20, 40));
+        List<LeaderRouter.Leader> pair = List.of(leader("a", 0, 100, 400, 0), leader("b", 300, 200, 300, -400));
+        List<LeaderRouter.Leader> alone = List.of(leader("a", 0, 100, 400, 0));
+        LeaderRouter router = new LeaderRouter(config);
+
+        router.route(pair, Map.of(), obstacles);
+        List<FloatPos> committed =
+                router.route(alone, Map.of(), obstacles).get(0).points();
+        assertEquals(
+                LeaderRouter.Style.poLeader,
+                router.route(alone, Map.of(), obstacles).get(0).style());
+
+        boolean flickered = false;
+        for (int epoch = 0; epoch < 12; epoch++) {
+            List<LeaderRouter.Route> routes = router.route(epoch % 2 == 0 ? pair : alone, Map.of(), obstacles);
+            flickered |= routes.get(0).crossings() > 0;
+            assertEquals(committed, routes.get(0).points(), "epoch " + epoch + " kept the committed shape");
+        }
+        assertTrue(flickered, "the sequence genuinely flickered through crossings");
+    }
+
+    @Test
     void aStretchedSlideKeepsTheShapeEpochWhileAnAdoptionBumpsIt() {
         // the settle's trigger: within-cell endpoint slides reuse the commit
         // and keep its epoch; a clearly shorter fresh route is adopted and
