@@ -16,6 +16,13 @@ class PixelStabilizerTest {
     private static final double dt = 1.0 / 60.0;
 
     @Test
+    void theConfigAccessorReturnsTheConstructionKnobs() {
+        assertEquals(PixelStabilizer.Config.ofDefaults(), new PixelStabilizer().config());
+        PixelStabilizer.Config config = new PixelStabilizer.Config(0.2, 0.1, 60.0, 12.0, 3, 0.08);
+        assertEquals(config, new PixelStabilizer(config).config());
+    }
+
+    @Test
     void firstFrameSeedsAtTheLatticeRoundingHalfUp() {
         PixelStabilizer stabilizer = new PixelStabilizer();
         PixelStabilizer.Output out = stabilizer.accept(0.0, 10.5, 20.5);

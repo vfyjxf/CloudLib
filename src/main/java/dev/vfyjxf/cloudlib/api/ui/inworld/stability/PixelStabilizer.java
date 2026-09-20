@@ -220,6 +220,11 @@ public final class PixelStabilizer {
         this.config = Objects.requireNonNull(config, "config");
     }
 
+    /** The knob set in force — the construction config, unchanged for life. */
+    public Config config() {
+        return config;
+    }
+
     /**
      * One frame: the float input position {@code (x, y)} at absolute time
      * {@code tSeconds}.
