@@ -785,6 +785,41 @@ class LeaderRouterTest {
     }
 
     @Test
+    void crossingLeadersUnderASlidingAnchorNeverOscillate() {
+        // the in-game regression: several crossing/near leaders, one anchor
+        // panning at 0.5 px/epoch. Three stacked faults made the field churn:
+        // the zero-crossing pass measured its candidate only against the
+        // partners in the epoch's stale crossing row (the alt dodged a but
+        // pierced d, was adopted, and the crossing reappeared on the other
+        // partner next epoch — an every-epoch reroute); a leader whose route
+        // crossed nothing live still re-committed its own identical polyline
+        // off the stale matrix; and any committed detour was undone by the
+        // 20 px switch cost at every 12 px quantization flip, then re-bought
+        // by the same epoch's crossing pass. After the initial settle the
+        // field must hold its topology under a pure pan
+        LeaderRouter router = new LeaderRouter(config);
+        int switches = 0;
+        Map<String, Long> epochs = new HashMap<>();
+        for (int frame = 0; frame < 96; frame++) {
+            // a pans right across eight 12 px cells; c pans at half that; b
+            // and d hold the crossing field — two vertical crossing lines,
+            // one slower crossing line, one parallel-offset line
+            List<LeaderRouter.Leader> leaders = List.of(
+                    leader("a", frame * 0.5, 100, 400, 0),
+                    leader("b", 200, 200, 200, -400),
+                    leader("c", 260 + frame * 0.25, 320, 260, -400),
+                    leader("d", 305, 500, 305, 30));
+            for (LeaderRouter.Route route : router.route(leaders, Map.of(), List.of(), null)) {
+                Long previous = epochs.put(route.id(), route.shapeEpoch());
+                if (previous != null && frame >= 12 && previous != route.shapeEpoch()) {
+                    switches++;
+                }
+            }
+        }
+        assertTrue(switches <= 1, "the settled field flipped topology " + switches + " times under a pure pan");
+    }
+
+    @Test
     void aStretchedSlideKeepsTheShapeEpochWhileAnAdoptionBumpsIt() {
         // the settle's trigger: within-cell endpoint slides reuse the commit
         // and keep its epoch; a clearly shorter fresh route is adopted and

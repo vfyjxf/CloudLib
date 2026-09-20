@@ -52,7 +52,11 @@ import java.util.Map;
  *       {@link Config#switchCostPx} shorter than the currently stretched
  *       committed route, or the committed route has become invalid (an
  *       obstacle now blocks it, or the port's exit axis changed). Equal-ish
- *       alternatives never flap.</li>
+ *       alternatives never flap — and a crossing detour the zero-crossing
+ *       pass bought is exempt from the cost rule entirely for as long as it
+ *       stays valid and needed: its extra length is the crossing it avoids,
+ *       which a shorter route cannot claim. It releases only through the
+ *       pass itself, into a provably crossing-free route (see below).</li>
  *   <li><strong>Exit-side deadzone.</strong> The port's face cannot change
  *       at all until {@link AttachPointResolver}'s 55°/35° band and 48 px
  *       exit deadzone have committed the change — the router inherits the
@@ -60,13 +64,30 @@ import java.util.Map;
  * </ol>
  * <p>
  * <strong>Zero crossings are a hard constraint, not a preference.</strong>
- * After routing, actual-geometry crossings are counted pairwise; every
- * crossing po-leader is re-routed once with the polylines it crosses as
- * additional thin obstacles — but only once the crossing has persisted
- * {@link Config#dwellEpochs} consecutive epochs (the count starts at the
- * straight baselines, so the dwell the style gate already served carries
- * over): a crossing that flickers in and out with camera motion buys no
- * detour. Whatever crossings remain are reported in
+ * After routing, actual-geometry crossings are counted pairwise; a crossing
+ * po-leader is re-routed once with the polylines it crosses as additional
+ * thin obstacles — but the whole pass is built not to oscillate:
+ * <ul>
+ *   <li>the attempt is dwelled: the crossing must have persisted
+ *       {@link Config#dwellEpochs} consecutive epochs (counted from the
+ *       straight baselines, so the dwell the style gate already served
+ *       carries over) — a crossing that flickers in and out with camera
+ *       motion buys no detour;</li>
+ *   <li>the attempt measures its candidate against <em>every</em> other
+ *       live polyline, not just the partners in the epoch's crossing row —
+ *       an alt that dodges one leader by piercing another is not an
+ *       improvement and is not adopted;</li>
+ *   <li>at most one detour commits per epoch — the pass may not cascade
+ *       through the field, re-keying partner after partner off geometry
+ *       that its own earlier adoption invalidated;</li>
+ *   <li>a bought detour is a commitment: the switch-cost rule may not undo
+ *       it (see layer 2 above). It releases only after its need has lapsed
+ *       {@link Config#dwellEpochs} consecutive epochs — no crossing, and no
+ *       baseline crossing either — and only into a fresh route that crosses
+ *       nothing live and still saves the switch cost; until then the leader
+ *       keeps stretching the detour it bought.</li>
+ * </ul>
+ * Whatever crossings remain are reported in
  * {@link Route#crossings} — the caller trims (Nimbus's leader budget already
  * does).
  * <p>
@@ -279,6 +300,10 @@ public final class LeaderRouter {
      *        route merely stretches under a sliding endpoint. The caller
      *        keys its shape-settle animation off it, so the settle plays for
      *        real topology changes and endpoint slides stay unhitched
+     * @param telemetry the epoch's routing debug surface — the trigger
+     *        count that fed the style gate and the decision the router made
+     *        for this leader this epoch. Carried on the route (not a side
+     *        channel) so a recorded trace replays with its decisions intact
      */
     public record Route(
             String id,
@@ -288,12 +313,44 @@ public final class LeaderRouter {
             int crossings,
             long shapeEpoch,
             Tier tier,
-            double alpha) {
+            double alpha,
+            Telemetry telemetry) {
 
         public Route {
             points = List.copyOf(points);
             if (tier == null) {
                 throw new IllegalArgumentException("tier must not be null");
+            }
+            if (telemetry == null) {
+                telemetry = new Telemetry(0, Decision.unchanged);
+            }
+        }
+    }
+
+    /**
+     * What the router did for one leader on one epoch — the trace surface:
+     * a re-routed line can be told apart from a merely stretched one without
+     * diffing the polylines.
+     */
+    public enum Decision {
+        /** No routing machinery ran: a straight, a fold, an attach, a hyper trunk. */
+        unchanged,
+        /** The committed route reused, its joints slid to the exact endpoints. */
+        stretched,
+        /** A fresh route replaced the commit (first route, invalid detour, or a cleared switch cost). */
+        adopted,
+        /** The zero-crossing pass bought a detour around the lines this leader crosses. */
+        rerouted,
+        /** A bought detour released back into a crossing-free direct route. */
+        released
+    }
+
+    /** {@link Route}'s debug surface: the gate's trigger count and the epoch's {@link Decision}. */
+    public record Telemetry(int trigger, Decision decision) {
+
+        public Telemetry {
+            if (decision == null) {
+                decision = Decision.unchanged;
             }
         }
     }
@@ -379,7 +436,16 @@ public final class LeaderRouter {
         List<Route> routes = new ArrayList<>(work.size());
         for (int i = 0; i < work.size(); i++) {
             Working w = work.get(i);
-            routes.add(new Route(w.id, w.style, w.points, w.clusterId, counts[i], w.shapeEpoch, w.tier, w.alpha));
+            routes.add(new Route(
+                    w.id,
+                    w.style,
+                    w.points,
+                    w.clusterId,
+                    counts[i],
+                    w.shapeEpoch,
+                    w.tier,
+                    w.alpha,
+                    new Telemetry(w.trigger, w.decision)));
         }
         return routes;
     }
@@ -410,6 +476,15 @@ public final class LeaderRouter {
          * which is what tells the caller's settle a slide is not a re-route.
          */
         long epoch;
+        /**
+         * True while this commit was bought by the zero-crossing pass: the
+         * switch-cost rule may not undo it (its length is the crossing it
+         * avoids) — only the pass's own release may, into a provably
+         * crossing-free route.
+         */
+        boolean detour;
+        /** Consecutive epochs this detour has not been needed (no routed and no baseline crossing). */
+        int idle;
     }
 
     private static final class Working {
@@ -420,6 +495,8 @@ public final class LeaderRouter {
         long shapeEpoch;
         Tier tier = Tier.full;
         double alpha = 1.0;
+        int trigger;
+        Decision decision = Decision.unchanged;
         final Leader leader;
 
         Working(Leader leader, @Nullable String clusterId, Style style) {
@@ -447,6 +524,7 @@ public final class LeaderRouter {
         FloatPos portPoint = leader.port().point();
         double distance = Math.hypot(portPoint.x() - anchor.x(), portPoint.y() - anchor.y());
         Working working = new Working(leader, group != null && group.size() >= 2 ? clusterId : null, gated);
+        working.trigger = trigger;
         working.tier = tierOf(leader.id(), distance);
         tiers.put(leader.id(), working.tier);
         if (working.tier == Tier.attach) {
@@ -484,7 +562,7 @@ public final class LeaderRouter {
         }
 
         working.style = Style.poLeader;
-        working.points = orthogonalRoute(leader, obstacles, viewport);
+        orthogonalRoute(working, obstacles, viewport);
         Committed commit = committed.get(leader.id());
         working.shapeEpoch = commit != null ? commit.epoch : styleShapeEpoch(Style.poLeader);
         return working;
@@ -612,7 +690,8 @@ public final class LeaderRouter {
     /** {@link #foldRoute}'s answer: the polyline and the border candidate it landed on (−1 = the bare port). */
     private record FoldLine(List<FloatPos> points, int candidate) {}
 
-    private List<FloatPos> orthogonalRoute(Leader leader, List<FloatRect> obstacles, @Nullable FloatRect viewport) {
+    private void orthogonalRoute(Working w, List<FloatRect> obstacles, @Nullable FloatRect viewport) {
+        Leader leader = w.leader;
         FloatPos anchor = new FloatPos(leader.anchorX(), leader.anchorY());
         FloatPos portPoint = leader.port().point();
         String key = reuseKey(leader, obstacles);
@@ -630,7 +709,9 @@ public final class LeaderRouter {
                     stretched, portPoint, obstacles, config.routing().clearancePx(), viewport)) {
                 prior.points = stretched;
                 prior.cost = pathLength(stretched);
-                return stretched;
+                w.points = stretched;
+                w.decision = Decision.stretched;
+                return;
             }
         }
 
@@ -677,12 +758,27 @@ public final class LeaderRouter {
             List<FloatPos> stretched = stretch(prior.points, anchor, leader.port(), prior, viewport);
             boolean priorValid = !LeaderGridRouter.polylineBlocked(
                     stretched, portPoint, obstacles, config.routing().clearancePx(), viewport);
+            if (priorValid && !exitChanged && prior.detour) {
+                // a bought detour is a commitment: its extra length is the
+                // crossing it avoids, which this shorter fresh route cannot
+                // claim — the cost rule has no authority over it. It keeps
+                // stretching until the zero-crossing pass releases it into
+                // a provably crossing-free route (or it turns invalid, which
+                // falls through to the normal rule below)
+                prior.points = stretched;
+                prior.cost = pathLength(stretched);
+                w.points = stretched;
+                w.decision = Decision.stretched;
+                return;
+            }
             double stretchedCost = pathLength(stretched);
             adopt = exitChanged || !priorValid || stretchedCost - pathLength(fresh) >= config.switchCostPx();
             if (!adopt) {
                 prior.points = stretched;
                 prior.cost = stretchedCost;
-                return stretched;
+                w.points = stretched;
+                w.decision = Decision.stretched;
+                return;
             }
         }
         Committed next = new Committed();
@@ -695,7 +791,8 @@ public final class LeaderRouter {
         next.cost = pathLength(fresh);
         next.epoch = ++epochClock;
         committed.put(leader.id(), next);
-        return fresh;
+        w.points = fresh;
+        w.decision = Decision.adopted;
     }
 
     /**
@@ -962,15 +1059,23 @@ public final class LeaderRouter {
     // region zero-crossing pass
 
     /**
-     * Every crossing po-leader, in caller order, gets one re-route attempt
-     * with the polylines it crosses as additional thin obstacles; a candidate
-     * replaces the current route only if it strictly reduces that leader's
-     * crossings against the same set. The attempt itself is dwelled: a
-     * leader's crossing must have persisted {@link Config#dwellEpochs}
-     * consecutive epochs — counted from the straight baselines too, so the
-     * dwell the style gate already served carries over — before the
-     * re-route buys anything. A crossing that flickers in and out with
-     * camera motion never reaches the dwell and never churns the commit.
+     * The zero-crossing pass, built not to oscillate (the class docs list
+     * the four guards). Two phases over the epoch's routed polylines:
+     * <ol>
+     *   <li><strong>Release.</strong> A committed detour whose need has
+     *       lapsed — no routed crossing, no baseline crossing, for
+     *       {@link Config#dwellEpochs} consecutive epochs — may return to a
+     *       fresh route around the plain obstacles, but only one that
+     *       crosses nothing live and saves the switch cost. This is the only
+     *       way out of a bought detour short of invalidation.</li>
+     *   <li><strong>Buy.</strong> A po-leader whose crossing survived the
+     *       dwell gets one re-route attempt with its <em>live</em> crossing
+     *       partners' polylines as additional thin obstacles; the candidate
+     *       must cross strictly fewer of <em>all</em> the epoch's live
+     *       polylines than the current route does — dodging one leader by
+     *       piercing another is not an improvement. At most one buy commits
+     *       per epoch, so the pass cannot cascade through the field.</li>
+     * </ol>
      * Remaining crossings are reported, not hidden.
      */
     private void reduceCrossings(
@@ -994,18 +1099,45 @@ public final class LeaderRouter {
             int streak = crossingNow ? crossingStreaks.getOrDefault(w.id, 0) + 1 : 0;
             crossingStreaks.put(w.id, streak);
         }
+
+        for (int i = 0; i < work.size(); i++) {
+            Working w = work.get(i);
+            Committed prior = committed.get(w.id);
+            if (prior == null || !prior.detour) {
+                continue;
+            }
+            boolean needed = crossings[i] > 0 || baselineCrossing.getOrDefault(w.id, false);
+            prior.idle = needed ? 0 : prior.idle + 1;
+            if (needed || prior.idle < config.dwellEpochs()) {
+                continue;
+            }
+            releaseDetour(w, prior, work, clusterGroups, obstacles, viewport);
+        }
+
+        boolean bought = false;
         for (int i = 0; i < work.size(); i++) {
             Working w = work.get(i);
             if (w.style != Style.poLeader || w.points.size() < 2) {
                 continue;
             }
-            int before = crossings[i];
-            if (before == 0 || crossingStreaks.getOrDefault(w.id, 0) < config.dwellEpochs()) {
+            int before = crossingsAgainstAll(w.points, work, i, clusterGroups);
+            if (before == 0) {
+                continue; // nothing live to dodge — a stale matrix row names ghosts
+            }
+            if (crossingStreaks.getOrDefault(w.id, 0) < config.dwellEpochs()) {
                 continue;
+            }
+            if (bought) {
+                continue; // one buy per epoch: the pass may not cascade
             }
             List<FloatRect> thin = new ArrayList<>(obstacles);
             for (int j = 0; j < work.size(); j++) {
-                if (!crossing[i][j]) continue;
+                if (j == i || sameCluster(w.leader, work.get(j).leader, clusterGroups)) {
+                    continue;
+                }
+                if (work.get(j).points.size() < 2 || !polylinesCross(w.points, work.get(j).points)) {
+                    continue;
+                }
                 for (int s = 0; s + 1 < work.get(j).points.size(); s++) {
                     thin.add(thinRect(
                             work.get(j).points.get(s), work.get(j).points.get(s + 1)));
@@ -1028,24 +1160,94 @@ public final class LeaderRouter {
             if (alt == null) {
                 continue;
             }
-            int after = 0;
-            for (int j = 0; j < work.size(); j++) {
-                if (!crossing[i][j]) continue;
-                if (polylinesCross(alt, work.get(j).points)) {
-                    after++;
-                }
+            int after = crossingsAgainstAll(alt, work, i, clusterGroups);
+            if (after >= before || alt.equals(w.points)) {
+                // no real improvement against everyone — or the same polyline
+                // back: committing it would only churn the settle
+                continue;
             }
-            if (after < before && detourWithinBudget(w.leader, w.points, alt)) {
-                w.points = alt;
-                if (prior != null) {
-                    prior.points = alt;
-                    prior.cost = pathLength(alt);
-                    // the detour is a topology change: the settle must see it
-                    prior.epoch = ++epochClock;
-                    w.shapeEpoch = prior.epoch;
-                }
+            if (!detourWithinBudget(w.leader, w.points, alt)) {
+                continue;
+            }
+            w.points = alt;
+            if (prior != null) {
+                prior.points = alt;
+                prior.cost = pathLength(alt);
+                prior.detour = true;
+                prior.idle = 0;
+                // the detour is a topology change: the settle must see it
+                prior.epoch = ++epochClock;
+                w.shapeEpoch = prior.epoch;
+            }
+            w.decision = Decision.rerouted;
+            bought = true;
+        }
+    }
+
+    /**
+     * The release: back to a fresh route around the plain obstacles, but
+     * only one that crosses nothing live and saves the switch cost — the
+     * guard that keeps a release from re-opening the crossing the detour
+     * was bought for.
+     */
+    private void releaseDetour(
+            Working w,
+            Committed prior,
+            List<Working> work,
+            Map<String, List<Leader>> clusterGroups,
+            List<FloatRect> obstacles,
+            @Nullable FloatRect viewport) {
+        FloatPos anchor = new FloatPos(w.leader.anchorX(), w.leader.anchorY());
+        List<FloatPos> direct = LeaderGridRouter.route(
+                anchor,
+                prior.dirX,
+                prior.dirY,
+                w.leader.port().point(),
+                w.leader.port().normalX(),
+                w.leader.port().normalY(),
+                obstacles,
+                config.routing(),
+                viewport);
+        if (direct == null) {
+            return;
+        }
+        int self = work.indexOf(w);
+        if (crossingsAgainstAll(direct, work, self, clusterGroups) > 0) {
+            return; // the direct route would re-open a crossing — the detour stays
+        }
+        if (pathLength(w.points) - pathLength(direct) < config.switchCostPx()) {
+            return; // not worth the settle
+        }
+        prior.points = direct;
+        prior.cost = pathLength(direct);
+        prior.detour = false;
+        prior.idle = 0;
+        prior.epoch = ++epochClock;
+        w.points = direct;
+        w.shapeEpoch = prior.epoch;
+        w.decision = Decision.released;
+    }
+
+    /**
+     * How many of the epoch's other live polylines {@code points} crosses —
+     * the measure both the buy and the release compare against, so an alt
+     * cannot "improve" by trading one victim for another.
+     */
+    private static int crossingsAgainstAll(
+            List<FloatPos> points, List<Working> work, int self, Map<String, List<Leader>> clusterGroups) {
+        int count = 0;
+        for (int j = 0; j < work.size(); j++) {
+            if (j == self || work.get(j).points.size() < 2) {
+                continue;
+            }
+            if (sameCluster(work.get(self).leader, work.get(j).leader, clusterGroups)) {
+                continue;
+            }
+            if (polylinesCross(points, work.get(j).points)) {
+                count++;
             }
         }
+        return count;
     }
 
     /**
