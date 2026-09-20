@@ -198,7 +198,13 @@ public final class GuideLineSdf {
             double segment = distance(a, b);
             if (walked + segment >= keep) {
                 double k = segment < epsilon ? 0.0 : (keep - walked) / segment;
-                out.add(new FloatPos(a.x() + (b.x() - a.x()) * k, a.y() + (b.y() - a.y()) * k));
+                FloatPos cut = new FloatPos(a.x() + (b.x() - a.x()) * k, a.y() + (b.y() - a.y()) * k);
+                // the cut segment's start survives the cut — dropping it
+                // collapses a straight two-point stroke to a lone point
+                out.add(a);
+                if (distance(a, cut) > epsilon) {
+                    out.add(cut);
+                }
                 return out;
             }
             out.add(a);

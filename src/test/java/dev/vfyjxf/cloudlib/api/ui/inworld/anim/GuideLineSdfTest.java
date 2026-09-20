@@ -100,12 +100,26 @@ class GuideLineSdfTest {
 
         List<FloatPos> trimmed = GuideLineSdf.trimEnd(elbow, 10);
         assertEquals(new FloatPos(100, 90), trimmed.get(trimmed.size() - 1), "10 px short of the far end");
-        assertEquals(2, trimmed.size(), "the surviving corner keeps its vertex");
+        assertEquals(
+                List.of(new FloatPos(0, 0), new FloatPos(100, 0), new FloatPos(100, 90)),
+                trimmed,
+                "the surviving corner keeps its vertex");
         assertEquals(elbow, GuideLineSdf.trimEnd(elbow, 0), "no gap, no change");
         assertEquals(
                 List.of(new FloatPos(0, 0)),
                 GuideLineSdf.trimEnd(elbow, 500),
                 "a gap past the end leaves the start point");
+    }
+
+    @Test
+    void trimEndKeepsTheStartWhenTheCutLandsInTheFirstSegment() {
+        // the straight two-point stroke: the arrival-gap cut always lands in
+        // the first (only) segment — dropping the segment's start collapses
+        // the stroke to a lone point, and a one-point polyline renders nothing
+        List<FloatPos> straight = List.of(new FloatPos(994, 250), new FloatPos(300, 250));
+        assertEquals(List.of(new FloatPos(994, 250), new FloatPos(306, 250)), GuideLineSdf.trimEnd(straight, 6));
+        // a cut at the very start still answers the lone start point
+        assertEquals(List.of(new FloatPos(994, 250)), GuideLineSdf.trimEnd(straight, 694 - 1.0e-12));
     }
 
     @Test
