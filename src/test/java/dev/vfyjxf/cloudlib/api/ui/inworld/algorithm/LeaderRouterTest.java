@@ -454,6 +454,78 @@ class LeaderRouterTest {
     }
 
     @Test
+    void aViewportBoundKeepsEveryRoutedPointOnScreen() {
+        // anchors hugging each screen edge plus walls mid-field: every
+        // emitted point must stay inside the 400×300 gui rect — po routes,
+        // straights and fallback elbows alike
+        FloatRect viewport = new FloatRect(0, 0, 400, 300);
+        List<FloatRect> obstacles = List.of(new FloatRect(150, 150, 100, 170), new FloatRect(60, 60, 60, 60));
+        LeaderRouter router = new LeaderRouter(LeaderRouter.Config.of(1.0, 1));
+        double[] xs = {2, 40, 200, 396};
+        double[] ys = {2, 60, 150, 296};
+        for (double ax : xs) {
+            for (double ay : ys) {
+                LeaderRouter.Route route = router.route(
+                                List.of(leader("a", ax, ay, 30, 30)), Map.of(), obstacles, viewport)
+                        .get(0);
+                assertInside(route.points(), viewport, "anchor (" + ax + ", " + ay + ")");
+            }
+        }
+    }
+
+    @Test
+    void aCommittedRouteLeavingTheViewportIsRerouted() {
+        // epoch one unbounded: the commit dips below the wall onto the y=332
+        // lane — off a 300 px-tall screen; the same epoch bounded must
+        // re-route instead of re-emitting the committed shape
+        LeaderRouter router = new LeaderRouter(LeaderRouter.Config.of(1.0, 1));
+        List<FloatRect> obstacles = List.of(new FloatRect(150, 150, 100, 170));
+        List<LeaderRouter.Leader> leaders = List.of(leader("a", 40, 280, 360, 280));
+        FloatRect viewport = new FloatRect(0, 0, 400, 300);
+
+        LeaderRouter.Route unbounded =
+                router.route(leaders, Map.of(), obstacles).get(0);
+        assertEquals(LeaderRouter.Style.poLeader, unbounded.style());
+        assertTrue(
+                unbounded.points().stream().anyMatch(p -> p.y() > 300),
+                "the unbounded commit dips off-screen: " + unbounded.points());
+
+        LeaderRouter.Route bounded =
+                router.route(leaders, Map.of(), obstacles, viewport).get(0);
+        assertEquals(LeaderRouter.Style.poLeader, bounded.style());
+        assertInside(bounded.points(), viewport, "re-routed");
+    }
+
+    @Test
+    void theElbowFallbackStaysInsideTheViewport() {
+        // the same sealed geometry as anUnroutableAnchorStillDrawsTheElbowFallback,
+        // under a 150×200 viewport the elbow's tail would overshoot — the
+        // ends clamp onto the edge, never emitting an off-screen point
+        FloatRect viewport = new FloatRect(0, 0, 150, 200);
+        List<FloatRect> obstacles = List.of(new FloatRect(-30, -45, 60, 26), new FloatRect(4, 84, 190, 60));
+        LeaderRouter router = new LeaderRouter(config);
+
+        LeaderRouter.Route route = router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles, viewport)
+                .get(0);
+
+        assertEquals(LeaderRouter.Style.poLeader, route.style());
+        assertTrue(route.points().size() >= 2, "never a blank frame");
+        assertInside(route.points(), viewport, "elbow");
+    }
+
+    /** Every vertex of the polyline lies inside the viewport, boundary included. */
+    private static void assertInside(List<FloatPos> points, FloatRect viewport, String what) {
+        for (FloatPos p : points) {
+            assertTrue(
+                    p.x() >= viewport.x() - 1.0e-9
+                            && p.x() <= viewport.right() + 1.0e-9
+                            && p.y() >= viewport.y() - 1.0e-9
+                            && p.y() <= viewport.bottom() + 1.0e-9,
+                    what + " leaves the viewport at " + p);
+        }
+    }
+
+    @Test
     void rejectsInvalidUse() {
         LeaderRouter router = new LeaderRouter(config);
 

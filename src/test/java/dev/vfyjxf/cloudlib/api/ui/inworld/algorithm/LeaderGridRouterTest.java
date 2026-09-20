@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -153,6 +154,85 @@ class LeaderGridRouterTest {
     }
 
     @Test
+    void aDetourBeyondTheScreenEdgeStaysInsideTheViewport() {
+        // the wall fills the lower lane: its inflated bottom edge (332) is
+        // off-screen in a 400×300 gui, so the only legal detour crosses its
+        // top — the unbounded plane would take the shorter dip below and
+        // leave the screen
+        FloatRect viewport = new FloatRect(0, 0, 400, 300);
+        FloatRect wall = new FloatRect(150, 150, 100, 170);
+        List<FloatPos> unbounded = LeaderGridRouter.route(
+                new FloatPos(40, 280), 1, 0, new FloatPos(360, 280), -1, 0, List.of(wall), config);
+        assertNotNull(unbounded);
+        assertTrue(
+                unbounded.stream().anyMatch(p -> p.y() > 300),
+                "the unbounded route dips onto the y=332 lane below the wall — the off-screen regression");
+
+        List<FloatPos> path = LeaderGridRouter.route(
+                new FloatPos(40, 280), 1, 0, new FloatPos(360, 280), -1, 0, List.of(wall), config, viewport);
+
+        assertNotNull(path);
+        assertInside(path, viewport);
+        assertTrue(clearsInflated(path, List.of(wall)), "still clear of the wall");
+        assertEquals(
+                280.0,
+                path.stream().mapToDouble(FloatPos::y).max().orElseThrow(),
+                eps,
+                "the route never dips below the anchor line");
+    }
+
+    @Test
+    void anEdgeAnchorRoutesWithTheStubClampedToTheEdge() {
+        // the stub wants (408,100): the viewport clips it to the x=400 edge
+        // and the route turns there instead of failing; the port's outward
+        // normal pushes both tail ends past the same edge — they clamp too
+        FloatRect viewport = new FloatRect(0, 0, 400, 300);
+        List<FloatPos> path = LeaderGridRouter.route(
+                new FloatPos(392, 100), 1, 0, new FloatPos(398, 150), 1, 0, List.of(), config, viewport);
+
+        assertNotNull(path, "the clipped stub still routes");
+        assertEquals(3, path.size());
+        assertPoint(path.get(0), 392, 100, "start");
+        assertPoint(path.get(1), 400, 100, "the stub end clamps onto the right edge");
+        assertPoint(path.get(2), 400, 150, "the drawn end clamps onto the edge too");
+        assertInside(path, viewport);
+    }
+
+    @Test
+    void anAnchorExactlyOnTheEdgeStillRoutes() {
+        FloatRect viewport = new FloatRect(0, 0, 400, 300);
+        List<FloatPos> path = LeaderGridRouter.route(
+                new FloatPos(400, 100), -1, 0, new FloatPos(200, 150), -1, 0, List.of(), config, viewport);
+
+        assertNotNull(path, "a boundary anchor is inside the closed viewport");
+        assertInside(path, viewport);
+    }
+
+    @Test
+    void aSegmentLeavingTheViewportCountsAsBlocked() {
+        FloatRect viewport = new FloatRect(0, 0, 400, 300);
+        FloatPos port = new FloatPos(360, 150);
+        assertFalse(LeaderGridRouter.polylineBlocked(
+                List.of(new FloatPos(10, 150), port), port, List.of(), config.clearancePx(), viewport));
+        assertTrue(
+                LeaderGridRouter.polylineBlocked(
+                        List.of(new FloatPos(10, 150), new FloatPos(410, 150)),
+                        port,
+                        List.of(),
+                        config.clearancePx(),
+                        viewport),
+                "a polyline exiting the right edge is blocked");
+        assertTrue(
+                LeaderGridRouter.polylineBlocked(
+                        List.of(new FloatPos(10, -5), new FloatPos(200, 150)),
+                        port,
+                        List.of(),
+                        config.clearancePx(),
+                        viewport),
+                "a polyline entering from above the top edge is blocked");
+    }
+
+    @Test
     void theSameInputRoutesToTheSameOutput() {
         FloatRect wall = new FloatRect(140, 20, 20, 120);
         List<FloatPos> one =
@@ -178,5 +258,17 @@ class LeaderGridRouterTest {
     /** No segment of the path crosses any obstacle's clearance-inflated interior. */
     private static boolean clearsInflated(List<FloatPos> path, List<FloatRect> obstacles) {
         return !LeaderGridRouter.polylineBlocked(path, new FloatPos(-1.0e9, -1.0e9), obstacles, config.clearancePx());
+    }
+
+    /** Every vertex of the path lies inside the viewport, boundary included. */
+    private static void assertInside(List<FloatPos> path, FloatRect viewport) {
+        for (FloatPos p : path) {
+            assertTrue(
+                    p.x() >= viewport.x() - eps
+                            && p.x() <= viewport.right() + eps
+                            && p.y() >= viewport.y() - eps
+                            && p.y() <= viewport.bottom() + eps,
+                    "point leaves the viewport: " + p);
+        }
     }
 }
