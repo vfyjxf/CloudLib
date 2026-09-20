@@ -86,6 +86,61 @@ class AttachPointResolverTest {
     }
 
     @Test
+    void oppositeIncumbentEscapesToTheNearestFaceAtOnce() {
+        AttachPointResolver resolver = new AttachPointResolver(config);
+        // commit the right face, then swing the anchor dead-left: 180° off
+        // the incumbent's normal — a backwards-facing port can never stand,
+        // so the committed face switches without waiting out the deadzone
+        AttachPointResolver.Port start = resolver.resolve("p", rect, new FloatPos(500, 150), 1.0 / 60.0);
+        assertEquals(AttachPointResolver.Face.right, start.face());
+
+        AttachPointResolver.Port port = resolver.resolve("p", rect, new FloatPos(0, 150), 1.0 / 60.0);
+        assertEquals(
+                AttachPointResolver.Face.left,
+                port.face(),
+                "the opposite incumbent yields in one resolve — the 48 px deadzone must not trap it");
+
+        // the port point still slides along the perimeter — the escape
+        // changes the committed face, not the no-teleport rule
+        double step = Math.hypot(port.point().x() - 360, port.point().y() - 150);
+        assertTrue(step < AttachPointResolver.perimeter(rect) * 0.2, "no teleport: " + step);
+    }
+
+    @Test
+    void adjacentIncumbentHysteresisIsUnchanged() {
+        // ~50° off the top normal — inside the 55° hold band even though the
+        // right face is already nearer: the escape never reaches it
+        double x = 280 + 300 * Math.cos(Math.toRadians(-40));
+        double y = 150 + 300 * Math.sin(Math.toRadians(-40));
+        assertEquals(
+                AttachPointResolver.Face.top,
+                AttachPointResolver.pickFace(rect, x, y, AttachPointResolver.Face.top, config),
+                "50° ≤ 55° holds the adjacent incumbent");
+        assertEquals(AttachPointResolver.Face.right, AttachPointResolver.nearestFace(rect, x, y));
+
+        // ~85° off the incumbent — adjacent, not opposite: the escape does
+        // not fire, and the 47 px along-edge offset still sits inside the
+        // 48 px deadzone
+        AttachPointResolver.Face held =
+                AttachPointResolver.pickFace(rect, 284, 197, AttachPointResolver.Face.right, config);
+        assertEquals(AttachPointResolver.Face.right, held, "85° off + inside the deadzone still holds");
+    }
+
+    @Test
+    void theOppositeFaceTrapRegresses() {
+        // the exact trap geometry: incumbent right, target dead-left at
+        // center height — 180° off, 0 px along the exit edge. Before the
+        // escape the deadzone held 'right' forever and the leader wrapped
+        // to the wrong corner
+        assertEquals(
+                AttachPointResolver.Face.left,
+                AttachPointResolver.pickFace(rect, 0, 150, AttachPointResolver.Face.right, config));
+        assertEquals(
+                AttachPointResolver.Face.bottom,
+                AttachPointResolver.pickFace(rect, 280, 400, AttachPointResolver.Face.top, config));
+    }
+
+    @Test
     void faceSwitchSlidesAlongThePerimeterWithoutTeleporting() {
         AttachPointResolver resolver = new AttachPointResolver(config);
         // commit the right face first

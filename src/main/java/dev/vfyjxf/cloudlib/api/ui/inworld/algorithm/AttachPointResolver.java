@@ -32,6 +32,10 @@ import java.util.Objects;
  *       (48 px) — near-panel targets cannot chatter the port between faces
  *       they are barely offset from.</li>
  * </ul>
+ * One escape sits outside the hysteresis: an incumbent more than 90° off
+ * the target direction faces <em>away</em> from it, which no port may
+ * legitimately do — the nearest face takes over at once (the wedge and the
+ * deadzone would otherwise trap an opposite incumbent forever).
  * When the face does change — or the panel itself moves/resizes — the port
  * <em>slides along the panel perimeter</em> to its new position over
  * {@link Config#slideSeconds} (160 ms) with an ease-out curve, never
@@ -213,7 +217,11 @@ public final class AttachPointResolver {
      * The face a target attaches at, with the hysteresis applied: no
      * incumbent picks the nearest normal; an incumbent is held inside its
      * hold band, and left only for a candidate inside its enter band whose
-     * along-edge offset clears the exit deadzone. Deterministic.
+     * along-edge offset clears the exit deadzone. One escape sits outside
+     * the hysteresis: an incumbent more than 90° off the target direction
+     * faces away from it — no port legitimately aims backwards — so the
+     * nearest face takes over at once, dead wedge and deadzone
+     * notwithstanding. Deterministic.
      */
     public static Face pickFace(FloatRect rect, double targetX, double targetY, @Nullable Face current, Config config) {
         Face nearest = nearestFace(rect, targetX, targetY);
@@ -222,6 +230,11 @@ public final class AttachPointResolver {
         }
         if (deviationDeg(rect, targetX, targetY, current) <= config.holdDeg()) {
             return current;
+        }
+        if (deviationDeg(rect, targetX, targetY, current) > 90.0) {
+            // the incumbent faces away from the target — no wedge or
+            // deadzone may hold a backwards-facing port
+            return nearest;
         }
         if (deviationDeg(rect, targetX, targetY, nearest) > config.enterDeg()) {
             // neither band qualifies — stability wins over chasing the nearest
