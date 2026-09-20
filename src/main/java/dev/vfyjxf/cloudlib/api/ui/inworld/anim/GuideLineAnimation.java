@@ -37,6 +37,12 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.anim.ExitAnimation.Easing;
  * Hover is a smoothed 0 → 1 weight the renderer scales its alpha and width
  * bonuses by; it eases over {@link Config#hoverSeconds} in both directions
  * and never gates visibility.
+ * <p>
+ * A tier-form swap (the full routing, the fold segment, the attach marks)
+ * opens a cross-fade instead of a pop: the caller passes the leader's form
+ * token and draws the outgoing form at {@code 1 - tierFade} beside the
+ * incoming one at {@code tierFade} — complementary weights over
+ * {@link Config#fadeSeconds}, never two full-ink forms in one frame.
  */
 public final class GuideLineAnimation {
 
@@ -65,6 +71,9 @@ public final class GuideLineAnimation {
      *        {@code dashHoverSpeed} 1; positive
      * @param dashHoverSpeed the flow multiplier while hovered (1.5–2 in the
      *        survey); at least 1
+     * @param fadeSeconds the tier-form cross-fade: when the form token
+     *        changes, the new form ramps in over this long (and the caller
+     *        draws the old one out over the same window); positive
      */
     public record Config(
             double enterSpeedPxPerSec,
@@ -77,7 +86,8 @@ public final class GuideLineAnimation {
             double staggerSeconds,
             double dashPeriodPx,
             double dashCycleSeconds,
-            double dashHoverSpeed) {
+            double dashHoverSpeed,
+            double fadeSeconds) {
 
         public Config {
             requirePositive(enterSpeedPxPerSec, "enterSpeedPxPerSec");
@@ -99,15 +109,45 @@ public final class GuideLineAnimation {
             if (!Double.isFinite(dashHoverSpeed) || dashHoverSpeed < 1) {
                 throw new IllegalArgumentException("dashHoverSpeed must be finite and at least 1: " + dashHoverSpeed);
             }
+            requirePositive(fadeSeconds, "fadeSeconds");
         }
 
         /**
          * The survey defaults: 900 px/s, 120–320 ms enter, 170 ms exit,
          * 250 ms respawn, 125 ms hover, 90 ms yield, 50 ms stagger, an 8 px
-         * dash on a 400 ms cycle flowing 1.75× while hovered.
+         * dash on a 400 ms cycle flowing 1.75× while hovered, and a 170 ms
+         * tier-form cross-fade.
          */
         public static Config ofDefaults() {
-            return new Config(900.0, 0.12, 0.32, 0.17, 0.25, 0.125, 0.09, 0.05, 8.0, 0.4, 1.75);
+            return new Config(900.0, 0.12, 0.32, 0.17, 0.25, 0.125, 0.09, 0.05, 8.0, 0.4, 1.75, 0.17);
+        }
+
+        /** The pre-fade constructor — the cross-fade takes the survey default. */
+        public Config(
+                double enterSpeedPxPerSec,
+                double enterMinSeconds,
+                double enterMaxSeconds,
+                double exitSeconds,
+                double respawnSeconds,
+                double hoverSeconds,
+                double yieldSeconds,
+                double staggerSeconds,
+                double dashPeriodPx,
+                double dashCycleSeconds,
+                double dashHoverSpeed) {
+            this(
+                    enterSpeedPxPerSec,
+                    enterMinSeconds,
+                    enterMaxSeconds,
+                    exitSeconds,
+                    respawnSeconds,
+                    hoverSeconds,
+                    yieldSeconds,
+                    staggerSeconds,
+                    dashPeriodPx,
+                    dashCycleSeconds,
+                    dashHoverSpeed,
+                    0.17);
         }
 
         /** The entry duration for a stroke {@code lengthPx} long, clamped to the configured window. */
@@ -152,6 +192,11 @@ public final class GuideLineAnimation {
      * @param hover the smoothed hover weight in [0, 1]
      * @param morph the settle weight in [0, 1]: 0 holds the previous route,
      *        1 is the current one
+     * @param tierFade the tier-form cross-fade weight in [0, 1]: 0 on the
+     *        frame the form token changed, 1 once the new form has fully
+     *        taken over — the caller draws the outgoing form at
+     *        {@code 1 - tierFade} and the incoming one at {@code tierFade},
+     *        complementary weights that never stack
      * @param dashPhasePx the dash pattern's phase along the arc, in px,
      *        always inside one period — an uniform, never geometry
      */
@@ -162,7 +207,11 @@ public final class GuideLineAnimation {
             double alpha,
             double hover,
             double morph,
+            double tierFade,
             double dashPhasePx) {}
+
+    /** The form-token sentinel: the caller is not tracking tier forms. */
+    private static final long noForm = Long.MIN_VALUE;
 
     private final Config config;
 
@@ -172,10 +221,12 @@ public final class GuideLineAnimation {
     private double alpha;
     private double hover;
     private double morph = 1.0;
+    private double tierFade = 1.0;
     private double sinceGone;
     private double delayLeft;
     private boolean retractToAnchor;
     private long lastGeometry = Long.MIN_VALUE;
+    private long lastForm = noForm;
     private double dashPhase;
 
     public GuideLineAnimation(Config config) {
@@ -191,6 +242,16 @@ public final class GuideLineAnimation {
     }
 
     /**
+     * Drives one frame without tier-form tracking — the cross-fade stays
+     * closed ({@code tierFade} 1).
+     *
+     * @see #advance(boolean, double, long, long, boolean, double)
+     */
+    public Sample advance(boolean present, double lengthPx, long geometryId, boolean hovered, double dtSeconds) {
+        return advance(present, lengthPx, geometryId, noForm, hovered, dtSeconds);
+    }
+
+    /**
      * Drives one frame.
      *
      * @param present whether the leader has geometry this frame (an
@@ -201,11 +262,17 @@ public final class GuideLineAnimation {
      *        an endpoint sliding under a stable commit must not move it (the
      *        caller passes the router's per-leader epoch, not a geometry
      *        hash)
+     * @param formToken a token that changes when the leader's tier form
+     *        changes (the full routing, the fold segment, the attach marks);
+     *        a change opens the cross-fade — the outgoing form keeps drawing
+     *        at {@code 1 - tierFade} while the incoming one ramps in — so a
+     *        form swap never pops. {@link Long#MIN_VALUE} disables tracking
      * @param hovered whether the panel carries the pointer this frame
      * @param dtSeconds the frame's delta; non-negative
      * @return this frame's envelope
      */
-    public Sample advance(boolean present, double lengthPx, long geometryId, boolean hovered, double dtSeconds) {
+    public Sample advance(
+            boolean present, double lengthPx, long geometryId, long formToken, boolean hovered, double dtSeconds) {
         if (!Double.isFinite(dtSeconds) || dtSeconds < 0) {
             throw new IllegalArgumentException("dtSeconds must be finite and non-negative: " + dtSeconds);
         }
@@ -223,6 +290,13 @@ public final class GuideLineAnimation {
         }
         lastGeometry = geometryId;
         morph = Math.min(1.0, morph + (config.yieldSeconds() <= 0 ? 1.0 : dt / config.yieldSeconds()));
+        if (formToken != noForm) {
+            if (lastForm != noForm && formToken != lastForm) {
+                tierFade = 0.0; // the form swapped: cross-fade the old one out
+            }
+            lastForm = formToken;
+        }
+        tierFade = Math.min(1.0, tierFade + (config.fadeSeconds() <= 0 ? 1.0 : dt / config.fadeSeconds()));
 
         if (present) {
             if (sinceGone > 0 && sinceGone <= config.respawnSeconds()) {
@@ -280,7 +354,7 @@ public final class GuideLineAnimation {
         double grown = retractToAnchor ? 1.0 : eased(enter) * (1.0 - exit);
         double arcEnd = Math.max(arcStart, grown);
         boolean visible = phase != Phase.hidden && arcEnd - arcStart > epsilon && alpha > epsilon;
-        return new Sample(visible, arcStart, arcEnd, alpha, hover, morph, dashPhase);
+        return new Sample(visible, arcStart, arcEnd, alpha, hover, morph, tierFade, dashPhase);
     }
 
     /** Back to the never-drawn state (a new scene, a teleport). */
@@ -291,10 +365,12 @@ public final class GuideLineAnimation {
         alpha = 0.0;
         hover = 0.0;
         morph = 1.0;
+        tierFade = 1.0;
         sinceGone = 0.0;
         delayLeft = 0.0;
         retractToAnchor = false;
         lastGeometry = Long.MIN_VALUE;
+        lastForm = noForm;
         dashPhase = 0.0;
     }
 

@@ -239,13 +239,176 @@ class LeaderRouterTest {
     }
 
     @Test
-    void nearTargetWithinToleranceDrawsNoLine() {
+    void nearTargetWithinTheOldToleranceNowFolds() {
         LeaderRouter router = new LeaderRouter(config);
 
         LeaderRouter.Route route =
                 router.route(List.of(leader("a", 0, 0, 50, 30)), Map.of()).get(0);
 
-        assertTrue(route.points().isEmpty(), "within the 80 px leader tolerance there is no line");
+        // 58 px used to be inside the 80 px blank tolerance; the ladder keeps
+        // the pairing: the fold band's one direct segment, both ends touching
+        assertEquals(LeaderRouter.Tier.fold, route.tier());
+        assertEquals(2, route.points().size());
+        assertEquals(new FloatPos(0, 0), route.points().get(0), "the anchor end, exactly");
+        assertEquals(new FloatPos(50, 30), route.points().get(1), "the panel end on the port, no arrival gap");
+    }
+
+    @Test
+    void theTierLadderStepsBothBoundariesWithAnEightPixelSchmittBand() {
+        LeaderRouter router = new LeaderRouter(config);
+
+        assertEquals(LeaderRouter.Tier.full, tierAt(router, 100), "far out: the full routing");
+        assertEquals(LeaderRouter.Tier.full, tierAt(router, 80), "above the falling edge (76) full holds");
+        assertEquals(LeaderRouter.Tier.fold, tierAt(router, 75), "below 76 the fold segment takes over");
+        assertEquals(LeaderRouter.Tier.fold, tierAt(router, 83.9), "below the rising edge (84) fold holds");
+        assertEquals(LeaderRouter.Tier.full, tierAt(router, 84), "at 84 the full routing returns");
+        assertEquals(LeaderRouter.Tier.full, tierAt(router, 76.1), "above 76 full holds again");
+        assertEquals(LeaderRouter.Tier.fold, tierAt(router, 42.5), "down through the fold band");
+        assertEquals(LeaderRouter.Tier.attach, tierAt(router, 41.9), "below 42 the line gives way to the marks");
+        assertEquals(LeaderRouter.Tier.attach, tierAt(router, 49.9), "inside the band (below 50) attach holds");
+        assertEquals(LeaderRouter.Tier.fold, tierAt(router, 50), "at 50 the fold segment returns");
+        assertEquals(LeaderRouter.Tier.attach, tierAt(router, 41.9), "and below 42 it detaches again");
+        assertEquals(
+                LeaderRouter.Tier.attach, tierAt(router, 45), "a boundary jittering inside the band stays attached");
+
+        // a distance oscillating entirely inside the 76–84 hold band never
+        // flips the tier, whichever side it entered from
+        LeaderRouter steady = new LeaderRouter(config);
+        tierAt(steady, 90);
+        for (int i = 0; i < 20; i++) {
+            assertEquals(LeaderRouter.Tier.full, tierAt(steady, i % 2 == 0 ? 77 : 83), "epoch " + i);
+        }
+        LeaderRouter folding = new LeaderRouter(config);
+        tierAt(folding, 60);
+        for (int i = 0; i < 20; i++) {
+            assertEquals(LeaderRouter.Tier.fold, tierAt(folding, i % 2 == 0 ? 77 : 83), "epoch " + i);
+        }
+    }
+
+    @Test
+    void aFreshLeaderEntersAtThePlainTierBoundaries() {
+        assertEquals(LeaderRouter.Tier.attach, tierAt(new LeaderRouter(config), 41));
+        assertEquals(LeaderRouter.Tier.fold, tierAt(new LeaderRouter(config), 42));
+        assertEquals(LeaderRouter.Tier.fold, tierAt(new LeaderRouter(config), 83.9));
+        assertEquals(LeaderRouter.Tier.full, tierAt(new LeaderRouter(config), 84));
+    }
+
+    @Test
+    void theFoldSegmentLandsOnTheNearestOfTheEightBorderCandidates() {
+        // the port is a decoy on the left edge; the fold still picks the
+        // nearest border candidate — the top midpoint — and touches both ends
+        FloatRect rect = new FloatRect(100, 100, 40, 20);
+        LeaderRouter.Leader near = new LeaderRouter.Leader(
+                "a",
+                120,
+                55,
+                new AttachPointResolver.Port(AttachPointResolver.Face.left, new FloatPos(100, 110), -1, 0),
+                rect);
+
+        LeaderRouter.Route route =
+                new LeaderRouter(config).route(List.of(near), Map.of()).get(0);
+
+        assertEquals(LeaderRouter.Tier.fold, route.tier());
+        assertEquals(List.of(new FloatPos(120, 55), new FloatPos(120, 100)), route.points());
+    }
+
+    @Test
+    void aShallowFoldLeavesTheAnchorVerticallyBeforeCuttingDiagonal() {
+        // 78.7° off vertical — past the 60° branch: the anchor end leaves
+        // along a short vertical run (half the vertical gap), then the
+        // diagonal lands on the nearest candidate corner
+        FloatRect rect = new FloatRect(100, 100, 40, 20);
+        LeaderRouter.Leader shallow = new LeaderRouter.Leader(
+                "a",
+                190,
+                90,
+                new AttachPointResolver.Port(AttachPointResolver.Face.right, new FloatPos(140, 110), 1, 0),
+                rect);
+
+        LeaderRouter.Route route =
+                new LeaderRouter(config).route(List.of(shallow), Map.of()).get(0);
+
+        assertEquals(LeaderRouter.Tier.fold, route.tier());
+        List<FloatPos> points = route.points();
+        assertEquals(3, points.size(), "vertical run + diagonal: " + points);
+        assertEquals(points.get(0).x(), points.get(1).x(), 1.0e-9, "the first segment off the anchor is vertical");
+        assertEquals(95, points.get(1).y(), 1.0e-9, "half the 10 px vertical gap");
+        assertEquals(new FloatPos(140, 100), points.get(2), "the diagonal lands on the nearest corner");
+    }
+
+    @Test
+    void theFoldAlphaRampsFromZeroAtTheFoldEdgeTowardOneAtTheFullEdge() {
+        LeaderRouter router = new LeaderRouter(config);
+
+        assertEquals(0.0, alphaAt(router, 42), 1.0e-9, "the fold segment materialises invisible at 42 px");
+        assertEquals(0.5, alphaAt(router, 63), 1.0e-9, "half the band, half the alpha");
+        assertEquals((83.9 - 42) / 42, alphaAt(router, 83.9), 1.0e-9, "approaching full");
+        assertEquals(1.0, alphaAt(router, 100), 1.0e-9, "the full tier draws at full alpha");
+        assertEquals(0.0, alphaAt(router, 30), 1.0e-9, "the attach tier has no stroke to fade");
+    }
+
+    @Test
+    void theAttachTierFlagsTheRouteAndDrawsNoPolyline() {
+        LeaderRouter router = new LeaderRouter(config);
+
+        LeaderRouter.Route route =
+                router.route(List.of(leader("a", 0, 0, 30, 0)), Map.of()).get(0);
+
+        assertEquals(LeaderRouter.Tier.attach, route.tier());
+        assertTrue(route.points().isEmpty(), "the attach tier draws no line — only the caller's marks");
+        assertEquals(0.0, route.alpha(), 1.0e-9);
+    }
+
+    @Test
+    void aBareLabelPointFoldsOntoThePortItself() {
+        LeaderRouter.Route route = new LeaderRouter(config)
+                .route(List.of(leader("a", 0, 0, 60, 0)), Map.of())
+                .get(0);
+
+        assertEquals(LeaderRouter.Tier.fold, route.tier());
+        assertEquals(List.of(new FloatPos(0, 0), new FloatPos(60, 0)), route.points());
+    }
+
+    @Test
+    void aTierFlipBumpsTheShapeEpoch() {
+        LeaderRouter router = new LeaderRouter(config);
+
+        long fold =
+                router.route(List.of(leader("a", 0, 0, 60, 0)), Map.of()).get(0).shapeEpoch();
+        long full = router.route(List.of(leader("a", 0, 0, 100, 0)), Map.of())
+                .get(0)
+                .shapeEpoch();
+
+        assertTrue(fold != full, "the tier change reads as a topology change");
+    }
+
+    @Test
+    void aFoldCandidateFlipBumpsTheShapeEpochWhileSlidesKeepIt() {
+        FloatRect rect = new FloatRect(100, 100, 40, 20);
+        AttachPointResolver.Port port =
+                new AttachPointResolver.Port(AttachPointResolver.Face.top, new FloatPos(120, 100), 0, -1);
+        LeaderRouter router = new LeaderRouter(config);
+
+        long first = router.route(List.of(new LeaderRouter.Leader("a", 120, 55, port, rect)), Map.of())
+                .get(0)
+                .shapeEpoch();
+        long slide = router.route(List.of(new LeaderRouter.Leader("a", 121, 56, port, rect)), Map.of())
+                .get(0)
+                .shapeEpoch();
+        assertEquals(first, slide, "endpoints sliding under the same candidate is not a topology change");
+
+        long flipped = router.route(List.of(new LeaderRouter.Leader("a", 120, 155, port, rect)), Map.of())
+                .get(0)
+                .shapeEpoch();
+        assertTrue(flipped != first, "crossing to another border candidate re-tokens the shape");
+    }
+
+    private static LeaderRouter.Tier tierAt(LeaderRouter router, double d) {
+        return router.route(List.of(leader("a", 0, 0, d, 0)), Map.of()).get(0).tier();
+    }
+
+    private static double alphaAt(LeaderRouter router, double d) {
+        return router.route(List.of(leader("a", 0, 0, d, 0)), Map.of()).get(0).alpha();
     }
 
     @Test

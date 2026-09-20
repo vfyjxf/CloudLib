@@ -210,6 +210,21 @@ class GuideLineShaderResourceTest {
     }
 
     @Test
+    void theHudFragmentDrawsEveryMarkerEnumValue() throws IOException {
+        String fsh = read(dir + "guide_line_hud.fsh");
+
+        // the uniform carries the enum's ordinal, so every value the style
+        // can name must have a branch — a missing one draws the dot fallback
+        for (GuideLineStyle.Marker marker : GuideLineStyle.Marker.values()) {
+            if (marker == GuideLineStyle.Marker.none) continue; // 0 draws nothing, by the > 0 gate
+            assertTrue(
+                    fsh.contains("Marker == " + marker.ordinal()),
+                    "the HUD fragment handles Marker." + marker.name() + " (ordinal " + marker.ordinal() + ")");
+        }
+        assertTrue(fsh.contains("sdSegment"), "the bracket's two L arms reuse the segment SDF");
+    }
+
+    @Test
     void theWorldShaderDeclaresEveryUniformThePassSets() throws IOException {
         String json = read(dir + "guide_line_world.json");
 

@@ -70,13 +70,35 @@ import java.util.Map;
  * {@link Route#crossings} — the caller trims (Nimbus's leader budget already
  * does).
  * <p>
- * <strong>Degeneracies.</strong> A panel whose port lies within
- * {@link Config#leaderTolerancePx} of the anchor draws no line at all (empty
- * points). A leader that never gets close draws one whose final segment is
- * exactly the routing config's {@code lastSegmentPx}, stopping
- * {@code arrivalGapPx} short of the border. When the grid A* finds no path —
- * a sealed-in anchor, an overlapping obstacle field — a simple elbow is
- * drawn instead: never a blank frame.
+ * <strong>Degeneracies — the near-distance tier ladder.</strong> A panel whose
+ * port lies within {@link Config#tierFullPx} of its anchor does not get the
+ * full routing: the frozen geometry of a po route (16 px stub + 20 px arrival
+ * + 6 px gap = 42 px) already fills a short line, so a near leader steps down
+ * a ladder whose rungs keep the pairing legible at every distance:
+ * <ul>
+ *   <li><strong>full</strong> (d ≥ {@link Config#tierFullPx}) — the routing
+ *       above, untouched.</li>
+ *   <li><strong>fold</strong> ({@link Config#tierFoldPx} ≤ d &lt; full) — one
+ *       direct segment from the panel's nearest border candidate (4 edge
+ *       midpoints + 4 corners) to the anchor, <em>both ends touching their
+ *       target</em>: no stub, no arrival segment, no gap. A line more than
+ *       60° off vertical leaves the anchor along a short vertical run first
+ *       (vertical-first, like the full tier's stub). The segment fades in
+ *       linearly, alpha 0 at the fold threshold and 1 at the full
+ *       threshold.</li>
+ *   <li><strong>attach</strong> (d &lt; {@link Config#tierFoldPx}) — no line
+ *       at all (empty points, {@link Tier#attach}); the caller carries the
+ *       pairing with marks instead, per the finding that connectivity is the
+ *       strongest grouping cue and ink without connection is the worst
+ *       combination.</li>
+ * </ul>
+ * Tier changes pass a {@link Config#tierHysteresisPx} Schmitt band (rising at
+ * fold+hysteresis / full, falling at fold / full−hysteresis), so a boundary
+ * that jitters cannot flap the form. A leader that never gets close draws one
+ * whose final segment is exactly the routing config's {@code lastSegmentPx},
+ * stopping {@code arrivalGapPx} short of the border. When the grid A* finds
+ * no path — a sealed-in anchor, an overlapping obstacle field — a simple
+ * elbow is drawn instead: never a blank frame.
  * <p>
  * One {@link #route} call is one decision epoch; determinism holds because
  * everything iterates the caller's leader list in order and the grid search
@@ -93,6 +115,21 @@ public final class LeaderRouter {
     }
 
     /**
+     * The near-distance tier a leader's form ended up in — orthogonal to
+     * {@link Style}: the tier picks the <em>form</em> (full routing, fold
+     * segment, attach marks), the style picks how a full-tier route was
+     * produced. See the class docs for the ladder and its hysteresis.
+     */
+    public enum Tier {
+        /** No line — the caller carries the pairing with panel-edge and anchor marks. */
+        attach,
+        /** One direct segment, both ends touching their target, alpha ramping in with distance. */
+        fold,
+        /** The full orthogonal/straight routing. */
+        full
+    }
+
+    /**
      * The epoch-level knobs; the geometric routing knobs live in the nested
      * {@link LeaderGridRouter.Config}.
      *
@@ -100,8 +137,13 @@ public final class LeaderRouter {
      *        (crossings + proximity pairs + obstacle hits); positive
      * @param dwellEpochs how many consecutive epochs a candidate style must
      *        survive before committing; at least 1
-     * @param leaderTolerancePx anchors closer than this to their port draw no
-     *        leader at all; positive
+     * @param tierFoldPx the attach/fold boundary: port↔anchor distances below
+     *        this draw no line; positive and below {@code tierFullPx}
+     * @param tierFullPx the fold/full boundary: distances at or above this
+     *        route fully
+     * @param tierHysteresisPx the Schmitt band around both tier boundaries —
+     *        a tier change must clear the boundary by this much; non-negative
+     *        and small enough that the rising and falling bands cannot meet
      * @param anchorQuantPx the quantization cell of the po-route reuse key;
      *        positive
      * @param switchCostPx the length a fresh route must save over the
@@ -113,7 +155,9 @@ public final class LeaderRouter {
     public record Config(
             double band,
             int dwellEpochs,
-            double leaderTolerancePx,
+            double tierFoldPx,
+            double tierFullPx,
+            double tierHysteresisPx,
             double anchorQuantPx,
             double switchCostPx,
             double proximityPx,
@@ -126,9 +170,19 @@ public final class LeaderRouter {
             if (dwellEpochs < 1) {
                 throw new IllegalArgumentException("dwellEpochs must be at least 1: " + dwellEpochs);
             }
-            if (!Double.isFinite(leaderTolerancePx) || leaderTolerancePx <= 0) {
+            if (!Double.isFinite(tierFoldPx) || tierFoldPx <= 0) {
+                throw new IllegalArgumentException("tierFoldPx must be finite and positive: " + tierFoldPx);
+            }
+            if (!Double.isFinite(tierFullPx) || tierFullPx <= tierFoldPx) {
+                throw new IllegalArgumentException("tierFullPx must be finite and above tierFoldPx: " + tierFullPx);
+            }
+            if (!Double.isFinite(tierHysteresisPx) || tierHysteresisPx < 0) {
                 throw new IllegalArgumentException(
-                        "leaderTolerancePx must be finite and positive: " + leaderTolerancePx);
+                        "tierHysteresisPx must be finite and non-negative: " + tierHysteresisPx);
+            }
+            if (tierFullPx - tierFoldPx <= 2 * tierHysteresisPx) {
+                throw new IllegalArgumentException(
+                        "the tier bands must stay disjoint: tierFullPx - tierFoldPx > 2 * tierHysteresisPx");
             }
             if (!Double.isFinite(anchorQuantPx) || anchorQuantPx <= 0) {
                 throw new IllegalArgumentException("anchorQuantPx must be finite and positive: " + anchorQuantPx);
@@ -141,9 +195,29 @@ public final class LeaderRouter {
             }
         }
 
-        /** Band/dwell on the survey defaults: {@code 1, 2, 80, 12, 20, 6} + routing defaults. */
+        /**
+         * The survey defaults: {@code 1, 2} on the gate, the 42/84 px tier
+         * ladder with an 8 px Schmitt band (42 px is the po form's frozen
+         * geometry — stub + arrival + gap), {@code 12, 20, 6} + routing
+         * defaults.
+         */
         public static Config of(double band, int dwellEpochs) {
-            return new Config(band, dwellEpochs, 80.0, 12.0, 20.0, 6.0, LeaderGridRouter.Config.ofDefaults());
+            return ofTiered(band, dwellEpochs, 42.0, 84.0, 8.0);
+        }
+
+        /** {@link #of} with the tier ladder's thresholds and Schmitt band. */
+        public static Config ofTiered(
+                double band, int dwellEpochs, double tierFoldPx, double tierFullPx, double tierHysteresisPx) {
+            return new Config(
+                    band,
+                    dwellEpochs,
+                    tierFoldPx,
+                    tierFullPx,
+                    tierHysteresisPx,
+                    12.0,
+                    20.0,
+                    6.0,
+                    LeaderGridRouter.Config.ofDefaults());
         }
     }
 
@@ -151,14 +225,21 @@ public final class LeaderRouter {
      * One leader to route: the feature anchor and the label-side port the
      * {@link AttachPointResolver} resolved. Use {@link #toPoint} when no
      * panel rect is at hand — a bare label point with the arrival normal
-     * inferred from the anchor's side.
+     * inferred from the anchor's side. The {@code panel} rect, when present,
+     * is what the fold tier's border candidates are picked from; without it
+     * the fold segment lands on the port point itself.
      */
-    public record Leader(String id, double anchorX, double anchorY, AttachPointResolver.Port port) {
+    public record Leader(
+            String id, double anchorX, double anchorY, AttachPointResolver.Port port, @Nullable FloatRect panel) {
 
         public Leader {
             if (!Double.isFinite(anchorX) || !Double.isFinite(anchorY)) {
                 throw new IllegalArgumentException("anchor must be finite: (" + anchorX + ", " + anchorY + ")");
             }
+        }
+
+        public Leader(String id, double anchorX, double anchorY, AttachPointResolver.Port port) {
+            this(id, anchorX, anchorY, port, null);
         }
 
         /** A leader whose label end is a bare point; the port normal points toward the anchor's dominant axis. */
@@ -175,30 +256,44 @@ public final class LeaderRouter {
                     id,
                     anchorX,
                     anchorY,
-                    new AttachPointResolver.Port(face, new FloatPos(labelX, labelY), normalX, normalY));
+                    new AttachPointResolver.Port(face, new FloatPos(labelX, labelY), normalX, normalY),
+                    null);
         }
     }
 
     /**
      * One routed leader. {@code points} is the drawn polyline in order —
-     * empty when the leader tolerance suppressed the line. {@code crossings}
-     * counts this polyline's crossings against the epoch's other routed
-     * polylines after the zero-crossing pass; a positive count is the
-     * caller's cue to trim. Cluster members carry their {@code clusterId}
-     * and share the trunk point as their second vertex.
+     * empty when the tier suppressed the line ({@link Tier#attach}).
+     * {@code crossings} counts this polyline's crossings against the epoch's
+     * other routed polylines after the zero-crossing pass; a positive count
+     * is the caller's cue to trim. Cluster members carry their
+     * {@code clusterId} and share the trunk point as their second vertex.
+     * {@code tier} is the near-distance form and {@code alpha} its distance
+     * fade (the fold tier's ramp; 1 for full, 0 for attach).
      *
      * @param shapeEpoch the topology token: it changes only when this
      *        leader's committed route is replaced (a fresh adoption, a
-     *        crossing re-route) or its style flips — never when the same
+     *        crossing re-route), its style flips, or its tier form changes
+     *        (a tier step, a fold candidate flip) — never when the same
      *        route merely stretches under a sliding endpoint. The caller
      *        keys its shape-settle animation off it, so the settle plays for
      *        real topology changes and endpoint slides stay unhitched
      */
     public record Route(
-            String id, Style style, List<FloatPos> points, @Nullable String clusterId, int crossings, long shapeEpoch) {
+            String id,
+            Style style,
+            List<FloatPos> points,
+            @Nullable String clusterId,
+            int crossings,
+            long shapeEpoch,
+            Tier tier,
+            double alpha) {
 
         public Route {
             points = List.copyOf(points);
+            if (tier == null) {
+                throw new IllegalArgumentException("tier must not be null");
+            }
         }
     }
 
@@ -208,6 +303,7 @@ public final class LeaderRouter {
     private final Map<String, SwitchGate<Style>> gates = new HashMap<>();
     private final Map<String, Committed> committed = new HashMap<>();
     private final Map<String, Integer> crossingStreaks = new HashMap<>();
+    private final Map<String, Tier> tiers = new HashMap<>();
     private long epochClock;
 
     public LeaderRouter(Config config) {
@@ -269,6 +365,7 @@ public final class LeaderRouter {
         gates.keySet().retainAll(byId.keySet());
         committed.keySet().retainAll(byId.keySet());
         crossingStreaks.keySet().retainAll(byId.keySet());
+        tiers.keySet().retainAll(byId.keySet());
 
         List<Working> work = new ArrayList<>(leaders.size());
         for (Leader leader : leaders) {
@@ -281,7 +378,7 @@ public final class LeaderRouter {
         List<Route> routes = new ArrayList<>(work.size());
         for (int i = 0; i < work.size(); i++) {
             Working w = work.get(i);
-            routes.add(new Route(w.id, w.style, w.points, w.clusterId, counts[i], w.shapeEpoch));
+            routes.add(new Route(w.id, w.style, w.points, w.clusterId, counts[i], w.shapeEpoch, w.tier, w.alpha));
         }
         return routes;
     }
@@ -291,6 +388,7 @@ public final class LeaderRouter {
         gates.clear();
         committed.clear();
         crossingStreaks.clear();
+        tiers.clear();
     }
 
     // region per-leader routing
@@ -319,6 +417,8 @@ public final class LeaderRouter {
         Style style;
         List<FloatPos> points = List.of();
         long shapeEpoch;
+        Tier tier = Tier.full;
+        double alpha = 1.0;
         final Leader leader;
 
         Working(Leader leader, @Nullable String clusterId, Style style) {
@@ -346,10 +446,22 @@ public final class LeaderRouter {
         FloatPos portPoint = leader.port().point();
         double distance = Math.hypot(portPoint.x() - anchor.x(), portPoint.y() - anchor.y());
         Working working = new Working(leader, group != null && group.size() >= 2 ? clusterId : null, gated);
-        working.shapeEpoch = styleShapeEpoch(gated);
-        if (distance < config.leaderTolerancePx()) {
-            return working; // within tolerance: no line at all
+        working.tier = tierOf(leader.id(), distance);
+        tiers.put(leader.id(), working.tier);
+        if (working.tier == Tier.attach) {
+            working.alpha = 0.0;
+            working.shapeEpoch = attachShapeEpoch;
+            return working; // no line: the caller's marks carry the pairing
         }
+        if (working.tier == Tier.fold) {
+            FoldLine fold = foldRoute(anchor, leader.panel(), portPoint);
+            working.alpha = foldAlpha(distance);
+            working.points = fold.points();
+            working.shapeEpoch = foldShapeEpoch(fold);
+            return working;
+        }
+        working.alpha = 1.0;
+        working.shapeEpoch = styleShapeEpoch(gated);
 
         if (working.clusterId != null) {
             FloatPos trunk = trunkOf(group);
@@ -389,6 +501,110 @@ public final class LeaderRouter {
             case poLeader -> -3L;
         };
     }
+
+    /**
+     * The fold form's shape token: the chosen border candidate and the
+     * one-or-two segment shape both fold into the constant, so a candidate
+     * flip (a discrete jump of the panel end) or a 60° branch flip reads as
+     * a topology change while the endpoints slide freely under it. Candidate
+     * slots 0–8 (0 = the bare-point port fallback, 1–8 the border
+     * candidates) keep the values in {@code [-11, -4]} and {@code [-21, -13]},
+     * clear of the attach token and the style tokens.
+     */
+    private static long foldShapeEpoch(FoldLine fold) {
+        return -(4 + (fold.candidate() + 1) + (fold.points().size() == 3 ? 9 : 0));
+    }
+
+    /** The attach form's shape token — see {@link #foldShapeEpoch}. */
+    private static final long attachShapeEpoch = -22L;
+
+    /**
+     * The epoch's tier under the Schmitt band: rising changes must clear
+     * {@code boundary + hysteresis}, falling ones drop past
+     * {@code boundary - hysteresis} — a distance that jitters around a
+     * boundary cannot flap the form. A leader with no committed tier enters
+     * at the plain boundaries.
+     */
+    private Tier tierOf(String id, double distance) {
+        Tier current = tiers.getOrDefault(id, plainTier(distance));
+        double foldOut = config.tierFoldPx();
+        double foldIn = config.tierFoldPx() + config.tierHysteresisPx();
+        double fullOut = config.tierFullPx() - config.tierHysteresisPx();
+        double fullIn = config.tierFullPx();
+        return switch (current) {
+            case attach -> distance >= foldIn ? Tier.fold : Tier.attach;
+            case fold -> distance >= fullIn ? Tier.full : distance < foldOut ? Tier.attach : Tier.fold;
+            case full -> distance < fullOut ? Tier.fold : Tier.full;
+        };
+    }
+
+    private Tier plainTier(double distance) {
+        if (distance >= config.tierFullPx()) return Tier.full;
+        if (distance >= config.tierFoldPx()) return Tier.fold;
+        return Tier.attach;
+    }
+
+    /** The fold tier's fade-in: alpha 0 at the fold boundary, 1 at the full boundary, linear between. */
+    private double foldAlpha(double distance) {
+        double span = config.tierFullPx() - config.tierFoldPx();
+        return Math.max(0.0, Math.min(1.0, (distance - config.tierFoldPx()) / span));
+    }
+
+    /**
+     * The fold tier's connector, anchor-first: the panel's nearest border
+     * candidate (4 edge midpoints then 4 corners, fixed order, first
+     * strictly-nearest wins) joined to the anchor by one direct segment —
+     * both ends land on their target, no stub, no arrival, no gap. A line
+     * more than 60° off vertical instead leaves the anchor along a short
+     * vertical run (half the vertical gap, the full stub's idiom) before
+     * cutting diagonal, so a shallow pairing never grazes the anchor. A bare
+     * label point (no panel rect) folds onto the port itself.
+     */
+    private static FoldLine foldRoute(FloatPos anchor, @Nullable FloatRect panel, FloatPos port) {
+        FloatPos panelEnd = port;
+        int candidate = -1;
+        if (panel != null) {
+            FloatPos[] border = borderCandidates(panel);
+            double best = Double.POSITIVE_INFINITY;
+            for (int i = 0; i < border.length; i++) {
+                double d = Math.hypot(border[i].x() - anchor.x(), border[i].y() - anchor.y());
+                if (d < best - epsilon) {
+                    best = d;
+                    panelEnd = border[i];
+                    candidate = i;
+                }
+            }
+        }
+        double dx = panelEnd.x() - anchor.x();
+        double dy = panelEnd.y() - anchor.y();
+        double verticalRun = Math.abs(dy) * 0.5;
+        boolean shallow = Math.atan2(Math.abs(dx), Math.abs(dy)) > Math.toRadians(60.0);
+        if (shallow && verticalRun > 0.5) {
+            FloatPos bend = new FloatPos(anchor.x(), anchor.y() + Math.signum(dy) * verticalRun);
+            return new FoldLine(List.of(anchor, bend, panelEnd), candidate);
+        }
+        return new FoldLine(List.of(anchor, panelEnd), candidate);
+    }
+
+    /** The fold tier's border candidates: 4 edge midpoints then 4 corners, clockwise from top. */
+    private static FloatPos[] borderCandidates(FloatRect rect) {
+        double cx = rect.x() + rect.width() * 0.5;
+        double cy = rect.y() + rect.height() * 0.5;
+        double x0 = rect.x(), y0 = rect.y(), x1 = rect.right(), y1 = rect.bottom();
+        return new FloatPos[] {
+            new FloatPos(cx, y0),
+            new FloatPos(x1, cy),
+            new FloatPos(cx, y1),
+            new FloatPos(x0, cy),
+            new FloatPos(x0, y0),
+            new FloatPos(x1, y0),
+            new FloatPos(x1, y1),
+            new FloatPos(x0, y1)
+        };
+    }
+
+    /** {@link #foldRoute}'s answer: the polyline and the border candidate it landed on (−1 = the bare port). */
+    private record FoldLine(List<FloatPos> points, int candidate) {}
 
     private List<FloatPos> orthogonalRoute(Leader leader, List<FloatRect> obstacles, @Nullable FloatRect viewport) {
         FloatPos anchor = new FloatPos(leader.anchorX(), leader.anchorY());

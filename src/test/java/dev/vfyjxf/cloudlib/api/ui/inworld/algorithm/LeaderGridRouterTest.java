@@ -95,7 +95,8 @@ class LeaderGridRouterTest {
 
     /** The po-route fold count the router draws for (0,0) → (100,100), forced po by a baseline-blocking obstacle. */
     private static int bendsUnderPenalty(LeaderGridRouter.Config routing) {
-        LeaderRouter router = new LeaderRouter(new LeaderRouter.Config(1.0, 1, 80.0, 12.0, 20.0, 6.0, routing));
+        LeaderRouter router =
+                new LeaderRouter(new LeaderRouter.Config(1.0, 1, 42.0, 84.0, 8.0, 12.0, 20.0, 6.0, routing));
         FloatRect blocker = new FloatRect(50, 30, 8, 8);
         List<LeaderRouter.Route> routes =
                 router.route(List.of(LeaderRouter.Leader.toPoint("a", 0, 0, 100, 100)), Map.of(), List.of(blocker));

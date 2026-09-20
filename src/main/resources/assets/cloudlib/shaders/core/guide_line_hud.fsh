@@ -19,7 +19,7 @@ uniform vec2 Size;         // the quad's size in px — texCoord × Size is loca
 // quad's origin. float[128] matches the upload command exactly.
 uniform float Points[128]; // up to 64 (x, y) samples, quad-local px, panel end first
 uniform int  PointCount;   // how many of them are live
-uniform int  Marker;       // 0 = none, 1 = dot (face/area), 2 = arrow (edge/enemy)
+uniform int  Marker;       // 0 = none, 1 = dot (face/area), 2 = arrow (edge/enemy), 3 = bracket (attach tier)
 uniform float MarkerSize;  // the dot's radius / the arrow's length, in px
 uniform float PortTick;    // the panel-end tick's half-length in px; 0 = off
 
@@ -99,7 +99,8 @@ void main() {
     }
 
     // the target-end marker: a dot for a face/area target, an arrow for an
-    // edge/enemy one, appearing once the reveal has reached that end
+    // edge/enemy one, a corner bracket for the attach tier — each appearing
+    // once the reveal has reached that end
     float mark = 0.0;
     if (Marker > 0 && MarkerSize > 0.0) {
         vec2 end = guidePoint(PointCount - 1);
@@ -110,7 +111,13 @@ void main() {
             vec2 tip = end + dir * (MarkerSize * 0.55);
             vec2 base = end - dir * (MarkerSize * 0.45);
             d = sdTriangle(p, tip, base + perp * (MarkerSize * 0.42), base - perp * (MarkerSize * 0.42));
-        } else {
+        } else if (Marker == 3) {
+            // the attach tier's pairing mark: two L arms off the anchor —
+            // one reaching toward the panel along the arrival direction,
+            // one perpendicular — a thin bracket in the source hue
+            d = min(sdSegment(p, end, end + dir * MarkerSize),
+                    sdSegment(p, end, end + perp * MarkerSize)) - 0.75;
+        } else if (Marker == 1) {
             d = length(p - end) - MarkerSize;
         }
         mark = (1.0 - smoothstep(-aa, aa, d)) * guideLineWindow(1.0, total);

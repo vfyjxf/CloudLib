@@ -184,6 +184,48 @@ class GuideLineAnimationTest {
     }
 
     @Test
+    void aFormTokenChangeOpensTheTierCrossFade() {
+        GuideLineAnimation animation = new GuideLineAnimation(config);
+        for (int i = 0; i < 60; i++) {
+            animation.advance(true, 400, 7L, 1L, false, frame);
+        }
+        assertEquals(1.0, animation.advance(true, 400, 7L, 1L, false, 0.0).tierFade(), 1.0e-9);
+
+        // the swap frame: the incoming form starts from zero ink
+        GuideLineAnimation.Sample swapped = animation.advance(true, 400, 8L, 2L, false, frame);
+        assertEquals(
+                0.0,
+                swapped.tierFade() - frame / config.fadeSeconds(),
+                1.0e-9,
+                "the swap opens the cross-fade at zero, already advancing");
+
+        GuideLineAnimation.Sample half =
+                animation.advance(true, 400, 8L, 2L, false, config.fadeSeconds() * 0.5 - frame);
+        assertTrue(half.tierFade() > 0.3 && half.tierFade() < 0.7, "cross-fading: " + half.tierFade());
+        GuideLineAnimation.Sample done = animation.advance(true, 400, 8L, 2L, false, config.fadeSeconds());
+        assertEquals(1.0, done.tierFade(), 1.0e-9, "the cross-fade completes inside its window");
+        assertTrue(
+                config.fadeSeconds() >= 0.15 && config.fadeSeconds() <= 0.20,
+                "the cross-fade stays in the 150–200 ms budget");
+    }
+
+    @Test
+    void anUntrackedCallerNeverOpensTheCrossFade() {
+        GuideLineAnimation animation = new GuideLineAnimation(config);
+        for (int i = 0; i < 30; i++) {
+            animation.advance(true, 400, 7L, false, frame);
+        }
+        // the five-argument drive carries no form token: nothing to fade
+        assertEquals(1.0, animation.advance(true, 400, 7L, false, 0.0).tierFade(), 1.0e-9);
+
+        // and the first sighting of a form token is not a swap — a fresh
+        // leader enters through the entry envelope, not a cross-fade
+        GuideLineAnimation fresh = new GuideLineAnimation(config);
+        GuideLineAnimation.Sample first = fresh.advance(true, 400, 7L, 5L, false, frame);
+        assertEquals(1.0, first.tierFade(), 1.0e-9);
+    }
+
+    @Test
     void theStateMachineIsReplayStableAndResettable() {
         List<Double> one = replay();
         List<Double> two = replay();

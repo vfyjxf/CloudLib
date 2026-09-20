@@ -50,7 +50,13 @@ public record GuideLineStyle(
         /** A filled disc — a face/area target. */
         dot,
         /** A filled arrowhead along the arrival direction — an edge/enemy target. */
-        arrow
+        arrow,
+        /**
+         * A two-arm corner bracket along the arrival direction — the
+         * attach-tier pairing mark: when the leader is too short to draw at
+         * all, the bracket at the anchor is what keeps it findable.
+         */
+        bracket
     }
 
     /** How many polyline samples one stroke's uniform block holds. */
