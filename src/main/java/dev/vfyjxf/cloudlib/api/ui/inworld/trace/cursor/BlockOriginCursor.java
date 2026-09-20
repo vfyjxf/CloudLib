@@ -18,7 +18,9 @@ import java.util.Optional;
  * traces: {@link #cornerPos} enumerates a block box's (inflated) corners, and
  * {@link #nearestCorner}/{@link #anchorCorner} pick the corner nearest a
  * target, restricted to the camera-facing half so a back corner never bleeds
- * through the block's own face.
+ * through the block's own face. {@link #screenAnchorCorner} is the screen-side
+ * counterpart with no camera-facing restriction — a screen leader attaches to
+ * the projected outline, not to a world-side pin.
  */
 public final class BlockOriginCursor implements SourceCursor {
 
@@ -79,6 +81,64 @@ public final class BlockOriginCursor implements SourceCursor {
             if (d < bestD) {
                 bestD = d;
                 best = s;
+            }
+        }
+        return best;
+    }
+
+    /** One frame's screen-side corner pick — the hysteresis token carried between frames. */
+    public record ScreenCorner(int index, FloatPos screen) {}
+
+    /**
+     * The corner-switch dead zone in px: a challenger must beat the incumbent
+     * corner's projection by at least this much to take over.
+     */
+    private static final double screenCornerHysteresisPx = 4.0;
+
+    /**
+     * The corner of {@code pos}'s box whose projection lands nearest a screen
+     * point — all eight corners are candidates, the projection itself
+     * dropping the ones the camera cannot place (behind it). The screen-side
+     * counterpart of {@link #anchorCorner}: a screen leader attaches to what
+     * the eye sees of the block on screen, and from an oblique camera the
+     * corner nearest the panel can sit on the camera-back half — the
+     * face-bleed rule that protects world-side pins would exclude it and
+     * detach the leader from the block's projected outline.
+     * <p>
+     * The caller-held {@code incumbent} (last frame's pick) rides a dead-zone
+     * hysteresis: a challenger only takes over when its projection is at
+     * least {@value #screenCornerHysteresisPx} px nearer the target, so two
+     * near-equidistant corners do not flip with camera micro-motion. An
+     * incumbent the camera can no longer project is simply dropped.
+     *
+     * @return this frame's pick, or null when no corner projects at all
+     */
+    public static @Nullable ScreenCorner screenAnchorCorner(
+            BlockPos pos,
+            double inflate,
+            Projection proj,
+            double targetX,
+            double targetY,
+            @Nullable ScreenCorner incumbent) {
+        ScreenCorner best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (int i = 0; i < 8; i++) {
+            FloatPos s = proj.worldToScreen(cornerPos(pos, i, inflate));
+            if (s == null) continue;
+            double d = Math.hypot(s.x() - targetX, s.y() - targetY);
+            if (d < bestDistance) {
+                bestDistance = d;
+                best = new ScreenCorner(i, s);
+            }
+        }
+        if (best == null) return null;
+        if (incumbent != null && incumbent.index() != best.index()) {
+            FloatPos incumbentScreen = proj.worldToScreen(cornerPos(pos, incumbent.index(), inflate));
+            if (incumbentScreen != null) {
+                double incumbentDistance = Math.hypot(incumbentScreen.x() - targetX, incumbentScreen.y() - targetY);
+                if (incumbentDistance - bestDistance < screenCornerHysteresisPx) {
+                    return new ScreenCorner(incumbent.index(), incumbentScreen);
+                }
             }
         }
         return best;
