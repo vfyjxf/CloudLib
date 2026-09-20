@@ -176,6 +176,101 @@ public final class GuideLineSdf {
     }
 
     /**
+     * The orthogonal settle: {@code from} and {@code to} aligned bend-by-bend
+     * — an edit-distance alignment that pairs vertices and pads the shorter
+     * side with duplicates of its neighbours — then interpolated
+     * position-wise. Wherever a segment keeps its axis between the two shapes
+     * (a lane sliding across, a joint riding its run) the intermediate is
+     * axis-aligned too, so an orthogonal route settles through orthogonal
+     * shapes; only a genuinely changed bend count lerps through a diagonal or
+     * two, localized where the bend appears. Unlike the arc-length
+     * {@link #morph}, no intermediate ever cuts a corner: a bend stays a bend
+     * while it slides. {@code t} of 0/1 answers the endpoint verbatim.
+     */
+    public static List<FloatPos> morphOrthogonal(List<FloatPos> from, List<FloatPos> to, double t) {
+        if (from.size() < 2) return List.copyOf(to);
+        if (to.size() < 2) return List.copyOf(from);
+        double k = Math.max(0.0, Math.min(1.0, t));
+        if (k <= 0.0) return List.copyOf(from);
+        if (k >= 1.0) return List.copyOf(to);
+        int n = from.size();
+        int m = to.size();
+        // cost[i][j]: the cheapest alignment of from[i..] with to[j..]; the
+        // pairing cost is squared distance — near matches win, and ties break
+        // match > consume-from > consume-to, fixed, for determinism
+        double[][] cost = new double[n + 1][m + 1];
+        int[][] move = new int[n + 1][m + 1];
+        for (int i = n; i >= 0; i--) {
+            for (int j = m; j >= 0; j--) {
+                if (i == n && j == m) {
+                    cost[i][j] = 0.0;
+                    continue;
+                }
+                double best = Double.POSITIVE_INFINITY;
+                int bestMove = 0;
+                if (i < n && j < m) {
+                    double c = distanceSquared(from.get(i), to.get(j)) + cost[i + 1][j + 1];
+                    if (c < best) {
+                        best = c;
+                        bestMove = 0;
+                    }
+                }
+                if (i < n && j > 0) {
+                    // from[i] pairs with a duplicate of to[j - 1]
+                    double c = distanceSquared(from.get(i), to.get(j - 1)) + cost[i + 1][j];
+                    if (c < best) {
+                        best = c;
+                        bestMove = 1;
+                    }
+                }
+                if (j < m && i > 0) {
+                    // to[j] pairs with a duplicate of from[i - 1]
+                    double c = distanceSquared(from.get(i - 1), to.get(j)) + cost[i][j + 1];
+                    if (c < best) {
+                        best = c;
+                        bestMove = 2;
+                    }
+                }
+                cost[i][j] = best;
+                move[i][j] = bestMove;
+            }
+        }
+        List<FloatPos> out = new ArrayList<>(Math.max(n, m));
+        int i = 0;
+        int j = 0;
+        while (i < n || j < m) {
+            FloatPos a;
+            FloatPos b;
+            switch (move[i][j]) {
+                case 1 -> {
+                    a = from.get(i);
+                    b = to.get(j - 1);
+                    i++;
+                }
+                case 2 -> {
+                    a = from.get(i - 1);
+                    b = to.get(j);
+                    j++;
+                }
+                default -> {
+                    a = from.get(i);
+                    b = to.get(j);
+                    i++;
+                    j++;
+                }
+            }
+            out.add(new FloatPos(a.x() + (b.x() - a.x()) * k, a.y() + (b.y() - a.y()) * k));
+        }
+        return out;
+    }
+
+    private static double distanceSquared(FloatPos a, FloatPos b) {
+        double dx = a.x() - b.x();
+        double dy = a.y() - b.y();
+        return dx * dx + dy * dy;
+    }
+
+    /**
      * The polyline cut back {@code gapPx} from its world end, by arc length —
      * the renderer's alignment with the leader's arrival gap, so the stroke
      * stops short of the target instead of touching it. A gap at or beyond

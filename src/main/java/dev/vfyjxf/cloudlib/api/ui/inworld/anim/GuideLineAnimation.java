@@ -196,8 +196,11 @@ public final class GuideLineAnimation {
      * @param present whether the leader has geometry this frame (an
      *        out-of-tolerance or off-view leader is absent, not hidden)
      * @param lengthPx the routed stroke's length, sizing the entry duration
-     * @param geometryId a token that changes when the route's shape changes —
-     *        an unchanged id keeps the settle closed
+     * @param geometryId a token that changes when the route's committed
+     *        topology changes — an unchanged id keeps the settle closed, so
+     *        an endpoint sliding under a stable commit must not move it (the
+     *        caller passes the router's per-leader epoch, not a geometry
+     *        hash)
      * @param hovered whether the panel carries the pointer this frame
      * @param dtSeconds the frame's delta; non-negative
      * @return this frame's envelope

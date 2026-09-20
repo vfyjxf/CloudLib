@@ -252,7 +252,7 @@ class LeaderRouterTest {
     void anchorMicroJitterReusesTheCommittedInterior() {
         // the lane blocker sits on the 1-fold corridor (making the 2-fold jog
         // cheaper) and the far blocker cuts the straight baseline — the po
-        // route is the two-bend jog whose interior pins to (92, 0) and (92, 100)
+        // route is the two-bend jog whose interior lane pins to x=92
         List<FloatRect> obstacles = List.of(new FloatRect(-10, 60, 20, 20), new FloatRect(60, 20, 20, 20));
         LeaderRouter router = new LeaderRouter(config);
         LeaderRouter.Route first = router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles)
@@ -260,13 +260,17 @@ class LeaderRouterTest {
         assertTrue(first.points().contains(new FloatPos(92, 0)));
         assertTrue(first.points().contains(new FloatPos(92, 100)));
 
-        // a 5 px anchor move stays inside the 12 px quantization cell
+        // a 5 px anchor move stays inside the 12 px quantization cell: the
+        // committed lane x=92 stands still — the head joint rides it to the
+        // exact anchor instead of the old frozen vertex (92, 0)
         LeaderRouter.Route second = router.route(List.of(leader("a", 3, 4, 200, 100)), Map.of(), obstacles)
                 .get(0);
 
         assertEquals(new FloatPos(3, 4), second.points().get(0), "the exact anchor leads the line");
-        assertTrue(second.points().contains(new FloatPos(92, 0)), "the committed interior vertex stands still");
-        assertTrue(second.points().contains(new FloatPos(92, 100)), "the committed interior vertex stands still");
+        assertTrue(second.points().contains(new FloatPos(92, 100)), "the committed lane's far bend stands still");
+        assertEquals(
+                92, second.points().get(1).x(), 1.0e-9, "the head joint rides the committed lane: " + second.points());
+        assertEquals(4, second.points().get(1).y(), 1.0e-9, "…at the exact anchor's height");
     }
 
     @Test
@@ -275,11 +279,17 @@ class LeaderRouterTest {
         LeaderRouter router = new LeaderRouter(config);
         router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles);
 
-        // 10 px down crosses the quantization cell — the fresh route saves
-        // ~16 px of jog, under the 20 px switch cost: the committed interior holds
-        LeaderRouter.Route held = router.route(List.of(leader("a", 0, 10, 200, 100)), Map.of(), obstacles)
+        // 10 px up crosses the quantization cell — the fresh route saves
+        // ~10 px of jog, under the 20 px switch cost, and the stretched lane
+        // still clears the walls: the committed lane holds
+        LeaderRouter.Route held = router.route(List.of(leader("a", 0, -10, 200, 100)), Map.of(), obstacles)
                 .get(0);
-        assertTrue(held.points().contains(new FloatPos(92, 0)), "a 16 px saving does not buy a re-route");
+        long laneVertices = held.points().stream()
+                .filter(p -> Math.abs(p.x() - 92) < 1.0e-9)
+                .count();
+        assertTrue(
+                laneVertices >= 2,
+                "a 10 px saving does not buy a re-route: the committed lane survives — " + held.points());
     }
 
     @Test
@@ -511,6 +521,121 @@ class LeaderRouterTest {
         assertEquals(LeaderRouter.Style.poLeader, route.style());
         assertTrue(route.points().size() >= 2, "never a blank frame");
         assertInside(route.points(), viewport, "elbow");
+    }
+
+    @Test
+    void aSlidingAnchorKeepsTheStretchedRouteOrthogonal() {
+        // camera-pan regression: the committed two-bend jog reuses while the
+        // anchor slides — every joint the stretch re-emits must meet the
+        // frozen interior at a right angle, never as a per-frame diagonal
+        List<FloatRect> obstacles = List.of(new FloatRect(-10, 60, 20, 20), new FloatRect(60, 20, 20, 20));
+        LeaderRouter router = new LeaderRouter(config);
+        router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles);
+
+        for (int frame = 1; frame <= 120; frame++) {
+            double ax = frame * 0.5;
+            double ay = frame * 0.25;
+            List<FloatPos> points = router.route(List.of(leader("a", ax, ay, 200, 100)), Map.of(), obstacles)
+                    .get(0)
+                    .points();
+            assertOrthogonal(points, "frame " + frame);
+        }
+    }
+
+    @Test
+    void aWithinCellAnchorSlideMovesNoVertexFartherThanTheAnchor() {
+        // 0.5 px/frame for 20 frames stays inside the 12 px reuse cell: the
+        // interior lanes stand still and the joints ride them — no vertex may
+        // move farther per frame than the anchor itself does (0.71 px)
+        List<FloatRect> obstacles = List.of(new FloatRect(-10, 60, 20, 20), new FloatRect(60, 20, 20, 20));
+        LeaderRouter router = new LeaderRouter(config);
+        router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles);
+
+        List<FloatPos> previous = null;
+        for (int frame = 1; frame <= 20; frame++) {
+            List<FloatPos> points = router.route(
+                            List.of(leader("a", frame * 0.5, frame * 0.25, 200, 100)), Map.of(), obstacles)
+                    .get(0)
+                    .points();
+            assertOrthogonal(points, "frame " + frame);
+            if (previous != null && previous.size() == points.size()) {
+                for (int i = 0; i < points.size(); i++) {
+                    double move = Math.hypot(
+                            points.get(i).x() - previous.get(i).x(),
+                            points.get(i).y() - previous.get(i).y());
+                    assertTrue(move <= 0.8, "vertex " + i + " jumped " + move + " px at frame " + frame);
+                }
+            }
+            previous = points;
+        }
+    }
+
+    @Test
+    void aSlidingPortKeepsTheStretchedTailOrthogonal() {
+        // the mirrored end: the port point slides along the panel border and
+        // the stretch re-joins the tail — the approach must meet the frozen
+        // interior at a right angle, not as a per-frame diagonal
+        List<FloatRect> obstacles = List.of(new FloatRect(-10, 60, 20, 20), new FloatRect(60, 20, 20, 20));
+        LeaderRouter router = new LeaderRouter(config);
+        router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles);
+
+        for (int frame = 1; frame <= 20; frame++) {
+            double labelY = 100 + frame * 0.4;
+            List<FloatPos> points = router.route(List.of(leader("a", 0, 0, 200, labelY)), Map.of(), obstacles)
+                    .get(0)
+                    .points();
+            assertOrthogonal(points, "frame " + frame);
+        }
+    }
+
+    @Test
+    void aStretchedSlideKeepsTheShapeEpochWhileAnAdoptionBumpsIt() {
+        // the settle's trigger: within-cell endpoint slides reuse the commit
+        // and keep its epoch; a clearly shorter fresh route is adopted and
+        // moves it — the caller keys its morph off exactly this distinction
+        List<FloatRect> obstacles = List.of(new FloatRect(-10, 60, 20, 20), new FloatRect(60, 20, 20, 20));
+        LeaderRouter router = new LeaderRouter(config);
+        long committed = router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles)
+                .get(0)
+                .shapeEpoch();
+        assertTrue(committed > 0, "the po commit carries a real epoch");
+
+        for (int frame = 1; frame <= 10; frame++) {
+            assertEquals(
+                    committed,
+                    router.route(List.of(leader("a", frame * 0.4, frame * 0.2, 200, 100)), Map.of(), obstacles)
+                            .get(0)
+                            .shapeEpoch(),
+                    "frame " + frame + ": a stretch is not a topology change");
+        }
+
+        long adopted = router.route(List.of(leader("a", 0, 25, 200, 100)), Map.of(), obstacles)
+                .get(0)
+                .shapeEpoch();
+        assertTrue(adopted != committed, "a fresh adoption is a topology change");
+    }
+
+    @Test
+    void aStyleFlipBumpsTheShapeEpoch() {
+        // the s→po upgrade (and the crossing re-route that follows it in the
+        // same epoch) changes the drawn topology wholesale — the epoch must
+        // move with it, or the settle would never play for the upgrade
+        LeaderRouter router = new LeaderRouter(config);
+        long straight = router.route(crossingPair(), Map.of()).get(0).shapeEpoch();
+        long orthogonal = router.route(crossingPair(), Map.of()).get(0).shapeEpoch();
+        assertTrue(straight != orthogonal, "the style flip reads as a topology change");
+    }
+
+    /** Every segment of the polyline runs along a screen axis — no diagonal joint anywhere. */
+    private static void assertOrthogonal(List<FloatPos> points, String what) {
+        assertTrue(points.size() >= 2, what + ": no line drawn");
+        for (int i = 0; i + 1 < points.size(); i++) {
+            FloatPos a = points.get(i);
+            FloatPos b = points.get(i + 1);
+            assertTrue(
+                    Math.abs(a.x() - b.x()) < 1.0e-9 || Math.abs(a.y() - b.y()) < 1.0e-9,
+                    what + ": diagonal segment " + a + " → " + b);
+        }
     }
 
     /** Every vertex of the polyline lies inside the viewport, boundary included. */

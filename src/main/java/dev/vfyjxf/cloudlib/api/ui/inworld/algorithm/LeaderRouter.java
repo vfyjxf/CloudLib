@@ -43,9 +43,10 @@ import java.util.Map;
  *   <li><strong>Anchor quantization.</strong> The anchor, port and obstacle
  *       set are quantized to {@link Config#anchorQuantPx} (12 px) into a
  *       reuse key; while the key is unchanged the committed interior
- *       vertices are reused verbatim and only the exact endpoints (and the
- *       two stub-adjacent vertices that keep the frozen directions
- *       axis-aligned) move — no re-route, no flicker.</li>
+ *       <em>lanes</em> are reused verbatim and only the exact endpoints
+ *       move — each re-joined to its frozen lane by a joint that slides
+ *       along the lane, so every stretched segment stays axis-aligned:
+ *       no re-route, no flicker, no per-frame diagonal.</li>
  *   <li><strong>Switch cost.</strong> When the key does change, the fresh
  *       route replaces the committed one only if it is at least
  *       {@link Config#switchCostPx} shorter than the currently stretched
@@ -181,8 +182,16 @@ public final class LeaderRouter {
      * polylines after the zero-crossing pass; a positive count is the
      * caller's cue to trim. Cluster members carry their {@code clusterId}
      * and share the trunk point as their second vertex.
+     *
+     * @param shapeEpoch the topology token: it changes only when this
+     *        leader's committed route is replaced (a fresh adoption, a
+     *        crossing re-route) or its style flips — never when the same
+     *        route merely stretches under a sliding endpoint. The caller
+     *        keys its shape-settle animation off it, so the settle plays for
+     *        real topology changes and endpoint slides stay unhitched
      */
-    public record Route(String id, Style style, List<FloatPos> points, @Nullable String clusterId, int crossings) {
+    public record Route(
+            String id, Style style, List<FloatPos> points, @Nullable String clusterId, int crossings, long shapeEpoch) {
 
         public Route {
             points = List.copyOf(points);
@@ -194,6 +203,7 @@ public final class LeaderRouter {
     private final Config config;
     private final Map<String, SwitchGate<Style>> gates = new HashMap<>();
     private final Map<String, Committed> committed = new HashMap<>();
+    private long epochClock;
 
     public LeaderRouter(Config config) {
         this.config = config;
@@ -261,12 +271,11 @@ public final class LeaderRouter {
             work.add(routeOne(leader, group, clusterId, triggers.get(leader.id()), obstacles, viewport));
         }
         reduceCrossings(work, clusterGroups, obstacles, viewport);
-        List<Route> counts = countCrossings(work, clusterGroups);
+        int[] counts = countCrossings(work, clusterGroups);
         List<Route> routes = new ArrayList<>(work.size());
         for (int i = 0; i < work.size(); i++) {
             Working w = work.get(i);
-            routes.add(new Route(
-                    w.id, w.style, w.points, w.clusterId, counts.get(i).crossings()));
+            routes.add(new Route(w.id, w.style, w.points, w.clusterId, counts[i], w.shapeEpoch));
         }
         return routes;
     }
@@ -289,7 +298,12 @@ public final class LeaderRouter {
 
         double exitY;
         double cost;
-        boolean hasStubVertex;
+        /**
+         * The commit's topology token — bumped on every adoption (fresh
+         * route or crossing re-route); stretches reuse the value untouched,
+         * which is what tells the caller's settle a slide is not a re-route.
+         */
+        long epoch;
     }
 
     private static final class Working {
@@ -297,6 +311,7 @@ public final class LeaderRouter {
         final @Nullable String clusterId;
         Style style;
         List<FloatPos> points = List.of();
+        long shapeEpoch;
         final Leader leader;
 
         Working(Leader leader, @Nullable String clusterId, Style style) {
@@ -324,6 +339,7 @@ public final class LeaderRouter {
         FloatPos portPoint = leader.port().point();
         double distance = Math.hypot(portPoint.x() - anchor.x(), portPoint.y() - anchor.y());
         Working working = new Working(leader, group != null && group.size() >= 2 ? clusterId : null, gated);
+        working.shapeEpoch = styleShapeEpoch(gated);
         if (distance < config.leaderTolerancePx()) {
             return working; // within tolerance: no line at all
         }
@@ -332,6 +348,7 @@ public final class LeaderRouter {
             FloatPos trunk = trunkOf(group);
             working.points = List.of(anchor, trunk, LeaderGridRouter.clamped(drawnEnd(leader), viewport));
             working.style = Style.hyperLeader;
+            working.shapeEpoch = styleShapeEpoch(Style.hyperLeader);
             return working;
         }
 
@@ -348,7 +365,22 @@ public final class LeaderRouter {
 
         working.style = Style.poLeader;
         working.points = orthogonalRoute(leader, obstacles, viewport);
+        Committed commit = committed.get(leader.id());
+        working.shapeEpoch = commit != null ? commit.epoch : styleShapeEpoch(Style.poLeader);
         return working;
+    }
+
+    /**
+     * The shape token of an uncommitted style — negative so no commit epoch
+     * (positive, from {@link #epochClock}) ever collides; the point is only
+     * that a style flip reads as a topology change while a slide does not.
+     */
+    private static long styleShapeEpoch(Style style) {
+        return switch (style) {
+            case sLeader -> -1L;
+            case hyperLeader -> -2L;
+            case poLeader -> -3L;
+        };
     }
 
     private List<FloatPos> orthogonalRoute(Leader leader, List<FloatRect> obstacles, @Nullable FloatRect viewport) {
@@ -432,19 +464,28 @@ public final class LeaderRouter {
         next.exitX = leader.port().normalX();
         next.exitY = leader.port().normalY();
         next.cost = pathLength(fresh);
-        next.hasStubVertex = false;
+        next.epoch = ++epochClock;
         committed.put(leader.id(), next);
         return fresh;
     }
 
     /**
-     * The committed interior with exact endpoints and axis-aligned stub
-     * joints: a stub-end vertex rides the committed stub direction line
-     * through the exact anchor, the approach vertex rides the port normal
-     * line through the exact drawn end, and everything between stands still —
-     * the frozen directions hold while the quantized interior reuses. Fresh
-     * grid routes carry no stub vertex (the merge folds it into the first
-     * run); the first stretch inserts one, later stretches replace it.
+     * The committed interior re-joined to the exact endpoints as a rubber
+     * band: the first committed <em>lane</em> (the run after the stub's bend)
+     * and the last one (the run before the approach's bend) stay frozen while
+     * a head joint rides the anchor's stub-axis line onto the first lane and
+     * a tail joint rides the port-normal line onto the last lane. Every
+     * vertex of the answer is axis-aligned by construction — an endpoint
+     * sliding under a stable reuse key moves its joint <em>along</em> a lane,
+     * never into a per-frame diagonal. The joints may overrun their lane
+     * (a ≤ one quantization cell of back-jog while the key still holds) —
+     * orthogonal and transient, and the blocked test on the stretch still
+     * decides re-routes. A committed shape whose head or tail runs are not
+     * the frozen axes this derives from (a viewport-truncated stub, an
+     * unmerged fold) falls back to the exact elbow rather than risk a
+     * diagonal. Fresh grid routes carry no stub vertex (the merge folds it
+     * into the first run), and neither does the stretch: the lane itself is
+     * what is committed.
      */
     private List<FloatPos> stretch(
             List<FloatPos> points,
@@ -452,37 +493,59 @@ public final class LeaderRouter {
             AttachPointResolver.Port port,
             Committed prior,
             @Nullable FloatRect viewport) {
-        FloatPos end = drawnEnd(port);
+        FloatPos end = LeaderGridRouter.clamped(drawnEnd(port), viewport);
         if (points.size() <= 2) {
-            return List.of(anchor, LeaderGridRouter.clamped(end, viewport));
+            return List.of(anchor, end);
         }
         if (points.size() == 3) {
             return elbowFallback(anchor, new double[] {prior.dirX, prior.dirY}, port, viewport);
         }
-        List<FloatPos> out = new ArrayList<>(points.size() + 1);
+        FloatPos firstBend = points.get(1);
+        FloatPos secondBend = points.get(2);
+        FloatPos lastBend = points.get(points.size() - 2);
+        FloatPos beforeLastBend = points.get(points.size() - 3);
+        if (!runsAlong(points.get(0), firstBend, prior.dirX, prior.dirY)
+                || !runsPerpendicular(firstBend, secondBend, prior.dirX, prior.dirY)
+                || !runsPerpendicular(beforeLastBend, lastBend, port.normalX(), port.normalY())) {
+            return elbowFallback(anchor, new double[] {prior.dirX, prior.dirY}, port, viewport);
+        }
+        List<FloatPos> out = new ArrayList<>(points.size());
         out.add(anchor);
-        out.add(new FloatPos(
-                anchor.x() + prior.dirX * config.routing().stubPx(),
-                anchor.y() + prior.dirY * config.routing().stubPx()));
-        // keep every committed interior vertex — in a merged path the
-        // second-to-last point is a real bend on the arrival line, not the
-        // (already folded) approach vertex
-        int interiorFrom = prior.hasStubVertex ? 2 : 1;
-        for (int i = interiorFrom; i <= points.size() - 2; i++) {
-            FloatPos vertex = points.get(i);
-            if (!near(vertex, out.get(out.size() - 1))) {
-                out.add(vertex);
-            }
+        addIfNotNear(out, jointOnLane(anchor, firstBend, prior.dirX, prior.dirY));
+        // the interior between the two joints — frozen lanes, verbatim
+        for (int i = 2; i <= points.size() - 3; i++) {
+            addIfNotNear(out, points.get(i));
         }
-        FloatPos approach = new FloatPos(
-                end.x() + port.normalX() * config.routing().lastSegmentPx(),
-                end.y() + port.normalY() * config.routing().lastSegmentPx());
-        if (!near(approach, out.get(out.size() - 1))) {
-            out.add(approach);
-        }
-        out.add(end);
-        prior.hasStubVertex = true;
+        addIfNotNear(out, jointOnLane(end, lastBend, port.normalX(), port.normalY()));
+        addIfNotNear(out, end);
         return out;
+    }
+
+    /** Whether the segment a→b runs along the given axis unit (zero length counts). */
+    private static boolean runsAlong(FloatPos a, FloatPos b, double ux, double uy) {
+        return Math.abs(ux) > 0.5 ? Math.abs(a.y() - b.y()) < epsilon : Math.abs(a.x() - b.x()) < epsilon;
+    }
+
+    /** Whether the segment a→b runs along the axis perpendicular to the given axis unit. */
+    private static boolean runsPerpendicular(FloatPos a, FloatPos b, double ux, double uy) {
+        return Math.abs(ux) > 0.5 ? Math.abs(a.x() - b.x()) < epsilon : Math.abs(a.y() - b.y()) < epsilon;
+    }
+
+    /**
+     * The sliding end's joint on the lane through {@code bend}: the lane is
+     * the frozen run that met the bend (perpendicular to the end's axis, so
+     * the bend's lane coordinate survives while the end's own coordinate
+     * slides).
+     */
+    private static FloatPos jointOnLane(FloatPos end, FloatPos bend, double ux, double uy) {
+        return Math.abs(ux) > 0.5 ? new FloatPos(bend.x(), end.y()) : new FloatPos(end.x(), bend.y());
+    }
+
+    private static void addIfNotNear(List<FloatPos> out, FloatPos point) {
+        if (!out.isEmpty() && near(point, out.get(out.size() - 1))) {
+            return;
+        }
+        out.add(point);
     }
 
     /**
@@ -719,6 +782,9 @@ public final class LeaderRouter {
                 if (prior != null) {
                     prior.points = alt;
                     prior.cost = pathLength(alt);
+                    // the detour is a topology change: the settle must see it
+                    prior.epoch = ++epochClock;
+                    w.shapeEpoch = prior.epoch;
                 }
             }
         }
@@ -762,15 +828,13 @@ public final class LeaderRouter {
         return crossing;
     }
 
-    private List<Route> countCrossings(List<Working> work, Map<String, List<Leader>> clusterGroups) {
+    private int[] countCrossings(List<Working> work, Map<String, List<Leader>> clusterGroups) {
         boolean[][] crossing = crossingMatrix(work, clusterGroups);
-        List<Route> counts = new ArrayList<>(work.size());
+        int[] counts = new int[work.size()];
         for (int i = 0; i < work.size(); i++) {
-            int count = 0;
             for (int j = 0; j < work.size(); j++) {
-                if (crossing[i][j]) count++;
+                if (crossing[i][j]) counts[i]++;
             }
-            counts.add(new Route(work.get(i).id, work.get(i).style, work.get(i).points, work.get(i).clusterId, count));
         }
         return counts;
     }

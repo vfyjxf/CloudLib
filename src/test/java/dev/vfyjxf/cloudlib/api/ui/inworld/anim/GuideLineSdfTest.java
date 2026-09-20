@@ -95,6 +95,178 @@ class GuideLineSdfTest {
     }
 
     @Test
+    void theOrthogonalMorphAnswersTheEndpointsVerbatim() {
+        List<FloatPos> from = List.of(new FloatPos(0, 0), new FloatPos(92, 0), new FloatPos(92, 100));
+        List<FloatPos> to =
+                List.of(new FloatPos(0, 0), new FloatPos(48, 0), new FloatPos(48, 40), new FloatPos(140, 40));
+
+        assertEquals(from, GuideLineSdf.morphOrthogonal(from, to, 0.0), "t = 0 is the old shape, unresampled");
+        assertEquals(to, GuideLineSdf.morphOrthogonal(from, to, 1.0), "t = 1 is the new shape, unresampled");
+        assertEquals(from, GuideLineSdf.morphOrthogonal(from, from, 0.5), "an unchanged route is a no-op");
+        // a degenerate side hands the drawing to the other
+        assertEquals(to, GuideLineSdf.morphOrthogonal(List.of(new FloatPos(5, 5)), to, 0.5));
+    }
+
+    @Test
+    void theOrthogonalMorphSlidesALaneWithoutEverGoingDiagonal() {
+        // the classic settle: the middle lane slides x 92 → 48, both ends
+        // pinned — every intermediate is a Z whose middle run stays vertical
+        List<FloatPos> from = List.of(new FloatPos(0, 0), new FloatPos(92, 0), new FloatPos(92, 100));
+        List<FloatPos> to = List.of(new FloatPos(0, 0), new FloatPos(48, 0), new FloatPos(48, 100));
+
+        for (double t : new double[] {0.1, 0.25, 0.5, 0.75, 0.9}) {
+            List<FloatPos> mid = GuideLineSdf.morphOrthogonal(from, to, t);
+            assertEquals(3, mid.size(), "t = " + t + ": a pure lane slide keeps the vertex count");
+            assertEquals(new FloatPos(0, 0), mid.get(0), "t = " + t + ": the pinned end");
+            assertEquals(92 + (48 - 92) * t, mid.get(1).x(), eps, "t = " + t + ": the lane slides");
+            assertEquals(mid.get(1).x(), mid.get(2).x(), eps, "t = " + t + ": the middle run stays vertical");
+            assertEquals(0, mid.get(1).y(), eps);
+            assertEquals(100, mid.get(2).y(), eps);
+        }
+    }
+
+    @Test
+    void theOrthogonalMorphKeepsACornerACornerWhileItSlides() {
+        // where the arc-length morph cuts corners (its resample lands
+        // mid-run — the 150 px first leg puts the corner off every even
+        // sample — so the sample's last segment leaves the axis), the
+        // orthogonal morph keeps every bend a bend: an L sliding sideways
+        // settles through right-angled Ls
+        List<FloatPos> from = List.of(new FloatPos(0, 0), new FloatPos(150, 0), new FloatPos(150, 100));
+        List<FloatPos> to = List.of(new FloatPos(0, 50), new FloatPos(150, 50), new FloatPos(150, 150));
+
+        for (double t : new double[] {0.2, 0.5, 0.8}) {
+            List<FloatPos> mid = GuideLineSdf.morphOrthogonal(from, to, t);
+            assertEquals(3, mid.size(), "t = " + t);
+            assertEquals(0 + 50 * t, mid.get(0).y(), eps, "t = " + t + ": the first run stays horizontal");
+            assertEquals(mid.get(1).y(), mid.get(0).y(), eps, "t = " + t + ": …both ends of it");
+            assertEquals(mid.get(1).x(), mid.get(2).x(), eps, "t = " + t + ": the second run stays vertical");
+            assertEquals(150, mid.get(1).x(), eps, "t = " + t + ": the corner keeps its x");
+
+            List<FloatPos> resampled = GuideLineSdf.morph(from, to, t, 3);
+            assertTrue(
+                    Math.abs(resampled.get(0).y() - resampled.get(1).y()) > eps
+                            || Math.abs(resampled.get(1).x() - resampled.get(2).x()) > eps,
+                    "t = " + t + ": the resample the old settle used cuts the corner — the regression");
+        }
+    }
+
+    @Test
+    void theOrthogonalMorphLocalizesTheDiagonalsOfATopologyChange() {
+        // a route gaining a bend: the alignment pads the shorter side with
+        // duplicates, so the settle grows the new bend in place instead of
+        // lerping the whole line through diagonals
+        List<FloatPos> from = List.of(new FloatPos(0, 0), new FloatPos(92, 0), new FloatPos(92, 100));
+        List<FloatPos> to = List.of(
+                new FloatPos(0, 0),
+                new FloatPos(48, 0),
+                new FloatPos(48, 40),
+                new FloatPos(140, 40),
+                new FloatPos(140, 100));
+
+        for (double t : new double[] {0.25, 0.5, 0.75}) {
+            List<FloatPos> mid = GuideLineSdf.morphOrthogonal(from, to, t);
+            int diagonals = 0;
+            for (int i = 0; i + 1 < mid.size(); i++) {
+                FloatPos a = mid.get(i);
+                FloatPos b = mid.get(i + 1);
+                if (Math.abs(a.x() - b.x()) > eps && Math.abs(a.y() - b.y()) > eps) {
+                    diagonals++;
+                }
+            }
+            assertTrue(
+                    diagonals <= 2,
+                    "t = " + t + ": a topology change settles through at most a couple of diagonals — " + mid);
+        }
+    }
+
+    @Test
+    void anOrthogonalCornerRendersRoundSquareWithNoProtrusionAndContinuousArc() {
+        // mirrors guide_line_hud.fsh's per-segment loop — min distance to the
+        // segments plus the arc position at the closest point. An orthogonal
+        // corner must render as a rounded-square corner: the union of
+        // round-capped segments never pokes past the corner vertex's offset
+        // disc (the miter spike a bevel renderer would show), and the arc
+        // attribution must walk continuously through the corner — a dash or
+        // fade that tears at the bend reads as a broken joint
+        List<FloatPos> elbow = List.of(new FloatPos(0, 0), new FloatPos(150, 0), new FloatPos(150, 100));
+
+        // no protrusion: along the corner's outer bisector the field is the
+        // plain radial distance to the vertex — the level set is a quarter
+        // disc of radius w, strictly inside the miter square
+        for (double d = 0.05; d <= 6.0; d += 0.25) {
+            double t = d / Math.sqrt(2);
+            double dist = distanceField(elbow, 150 + t, -t);
+            assertEquals(d, dist, 1.0e-9, "bisector distance at d = " + d);
+        }
+        // and along the offset walls the field is the perpendicular one
+        for (double y = -5.0; y <= -0.5; y += 0.5) {
+            assertEquals(-y, distanceField(elbow, 149.0, y), 1.0e-9, "below the horizontal run");
+        }
+        for (double x = 151.0; x <= 155.0; x += 0.5) {
+            assertEquals(x - 150, distanceField(elbow, x, 50), 1.0e-9, "right of the vertical run");
+        }
+
+        // arc continuity: walking the centerline across the bend, the arc
+        // position tracks the walked distance with no jump at the corner
+        double previous = Double.NaN;
+        for (double walked = 130; walked <= 170; walked += 0.5) {
+            double x = walked <= 150 ? walked : 150;
+            double y = walked <= 150 ? 0 : walked - 150;
+            double arc = arcAt(elbow, x, y);
+            if (!Double.isNaN(previous)) {
+                double step = Math.abs(arc - previous);
+                assertTrue(step <= 0.5 + 1.0e-9, "arc jumped " + step + " px at walked = " + walked);
+            }
+            previous = arc;
+        }
+    }
+
+    /** The shader's distance field: the minimum distance to the polyline's segments. */
+    private static double distanceField(List<FloatPos> points, double x, double y) {
+        double best = Double.POSITIVE_INFINITY;
+        for (int i = 0; i + 1 < points.size(); i++) {
+            best = Math.min(best, pointSegmentDistance(new FloatPos(x, y), points.get(i), points.get(i + 1)));
+        }
+        return best;
+    }
+
+    /** The distance from p to the segment a→b, round caps included. */
+    private static double pointSegmentDistance(FloatPos p, FloatPos a, FloatPos b) {
+        double h = pointAt(a, b, p);
+        return distance(p, new FloatPos(a.x() + (b.x() - a.x()) * h, a.y() + (b.y() - a.y()) * h));
+    }
+
+    /** The shader's arc attribution: the arc position at the closest point. */
+    private static double arcAt(List<FloatPos> points, double x, double y) {
+        double best = Double.POSITIVE_INFINITY;
+        double bestArc = 0;
+        double walked = 0;
+        for (int i = 0; i + 1 < points.size(); i++) {
+            FloatPos a = points.get(i);
+            FloatPos b = points.get(i + 1);
+            double d = pointSegmentDistance(new FloatPos(x, y), a, b);
+            if (d < best) {
+                best = d;
+                double len = distance(a, b);
+                double h = pointAt(a, b, new FloatPos(x, y));
+                bestArc = walked + len * h;
+            }
+            walked += distance(a, b);
+        }
+        return bestArc;
+    }
+
+    /** The projection parameter of p onto a→b, clamped to [0, 1]. */
+    private static double pointAt(FloatPos a, FloatPos b, FloatPos p) {
+        double dx = b.x() - a.x();
+        double dy = b.y() - a.y();
+        double len2 = dx * dx + dy * dy;
+        if (len2 < eps) return 0;
+        return Math.max(0.0, Math.min(1.0, ((p.x() - a.x()) * dx + (p.y() - a.y()) * dy) / len2));
+    }
+
+    @Test
     void trimEndCutsTheArrivalGapOffTheWorldEnd() {
         List<FloatPos> elbow = List.of(new FloatPos(0, 0), new FloatPos(100, 0), new FloatPos(100, 100));
 
