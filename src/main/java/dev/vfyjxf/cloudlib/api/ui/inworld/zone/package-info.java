@@ -23,6 +23,11 @@
  *       (anchor proximity, overlap, HUD exclusion, attention, out-of-bounds,
  *       leader length, temporal stability, leader crossings, topology
  *       preservation)</li>
+ *   <li>{@link dev.vfyjxf.cloudlib.api.ui.inworld.zone.VisualBalance} — the
+ *       whole-layout visual-balance metric: the nine-grid-weighted panel
+ *       centroid's lateral-weighted L1 offset from the optical center, as a
+ *       normalized score — the composition-level companion to ZoneCost's
+ *       per-candidate terms (Zhang 2025 VME calibration)</li>
  *   <li>The presentation vocabulary:
  *       {@link dev.vfyjxf.cloudlib.api.ui.inworld.zone.VisibilityPolicy},
  *       {@link dev.vfyjxf.cloudlib.api.ui.inworld.zone.LodTier} (ordinal is
