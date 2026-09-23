@@ -6,7 +6,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.zone.VisibilityPolicy;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneCandidates;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneModel;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneWeights;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -50,8 +50,8 @@ import java.util.Objects;
 public record ZoneFacet(
     @Nullable AttentionField attention,
     @Nullable ZoneWeights weights,
-    @Nullable ZoneCandidates.Config candidatesConfig,
-    @Nullable ZoneModel.Config modelConfig,
+    ZoneCandidates.@Nullable Config candidatesConfig,
+    ZoneModel.@Nullable Config modelConfig,
     VisibilityPolicy visibility,
     LodTier initialTier
 ) {

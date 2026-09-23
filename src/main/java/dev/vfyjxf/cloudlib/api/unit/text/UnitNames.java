@@ -1,10 +1,10 @@
 package dev.vfyjxf.cloudlib.api.unit.text;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.unit.Unit;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.Checks;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * Provides display names for units.
  */
-@NotNullByDefault
+@NullMarked
 public interface UnitNames {
 
     /**

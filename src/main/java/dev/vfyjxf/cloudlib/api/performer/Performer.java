@@ -1,7 +1,5 @@
 package dev.vfyjxf.cloudlib.api.performer;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * A performer represents an object that can be used to perform actions.
  *
@@ -14,7 +12,7 @@ public interface Performer<T> {
      * @param <T>       the type of the performer
      * @return an immutable performer
      */
-    static <T> Performer<T> of(@NotNull T performer) {
+    static <T> Performer<T> of(T performer) {
         return () -> performer;
     }
 

@@ -9,7 +9,7 @@ import dev.vfyjxf.cloudlib.api.ui.style.key.StyleKey;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleParseContext;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue;
 import dev.vfyjxf.cloudlib.internal.ui.style.Cascade;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.floating;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A middleware in the floating positioning pipeline.

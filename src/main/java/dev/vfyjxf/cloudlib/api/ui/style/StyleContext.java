@@ -11,7 +11,7 @@ import dev.vfyjxf.cloudlib.internal.ui.style.Cascade;
 import dev.vfyjxf.taffy.style.TaffyStyle;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.factory.Lists;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;

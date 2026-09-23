@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.border;
 
 import dev.vfyjxf.cloudlib.api.ui.style.Edge;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A point selected on a measured frame — where something (a trace link, a

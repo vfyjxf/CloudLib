@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.floating;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Defines where to place the floating element relative to the reference element.

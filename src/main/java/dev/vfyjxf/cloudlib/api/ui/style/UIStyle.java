@@ -8,7 +8,7 @@ import dev.vfyjxf.cloudlib.api.ui.style.key.StyleParseContext;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValue;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleValues;
 import dev.vfyjxf.cloudlib.api.ui.style.key.VarBinding;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;

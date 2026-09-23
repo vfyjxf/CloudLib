@@ -3,16 +3,14 @@ package dev.vfyjxf.cloudlib.api.performer;
 import dev.vfyjxf.cloudlib.util.Checks;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
-import org.jetbrains.annotations.NotNull;
 
 public class PerformerContainer {
 
-    private final MutableMap<Scenario<?>, @NotNull Performer<?>> performers = Maps.mutable.empty();
-    private final MutableMap<CompositeScenario<?>, @NotNull MergeablePerformer<?>> mergeablePerformers = Maps.mutable
-            .empty();
+    private final MutableMap<Scenario<?>, Performer<?>> performers = Maps.mutable.empty();
+    private final MutableMap<CompositeScenario<?>, MergeablePerformer<?>> mergeablePerformers = Maps.mutable.empty();
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public <T> void add(@NotNull Scenario<T> scenario, @NotNull Performer<T> performer) {
+    public <T> void add(Scenario<T> scenario, Performer<T> performer) {
         var existing = performers.get(scenario);
         if (existing == null) {
             performers.put(scenario, performer);
@@ -23,44 +21,39 @@ public class PerformerContainer {
         }
     }
 
-    public boolean has(@NotNull Scenario<?> scenario) {
+    public boolean has(Scenario<?> scenario) {
         return performers.get(scenario) != null;
     }
 
-    public <T> void remove(@NotNull Scenario<T> scenario) {
+    public <T> void remove(Scenario<T> scenario) {
         performers.remove(scenario);
     }
 
     @SuppressWarnings({"unchecked"})
-    public <T> T get(@NotNull Scenario<T> scenario) {
+    public <T> T get(Scenario<T> scenario) {
         return (T) performers.get(scenario).performer();
     }
 
     @SuppressWarnings({"unchecked"})
-    public <T> void add(@NotNull CompositeScenario<T> scenario, @NotNull T performer) {
+    public <T> void add(CompositeScenario<T> scenario, T performer) {
         MergeablePerformer<T> mergeableperformer = (MergeablePerformer<T>) mergeablePerformers
                 .computeIfAbsent(scenario, k -> new SimpleMergeablePerformer<>(scenario));
         mergeableperformer.put(performer);
     }
 
     @SuppressWarnings({"unchecked"})
-    public <T> void add(@NotNull CompositeScenario<T> scenario, @NotNull T performer, int priority) {
+    public <T> void add(CompositeScenario<T> scenario, T performer, int priority) {
         MergeablePerformer<T> mergeableperformer = (MergeablePerformer<T>) mergeablePerformers
                 .computeIfAbsent(scenario, k -> new SimpleMergeablePerformer<>(scenario));
         mergeableperformer.put(performer, priority);
     }
 
-    public <T> void addWeak(@NotNull CompositeScenario<T> scenario, @NotNull T performer, @NotNull Object reference) {
+    public <T> void addWeak(CompositeScenario<T> scenario, T performer, Object reference) {
         addWeak(scenario, performer, PerformerPriorities.normal, reference);
     }
 
     @SuppressWarnings({"unchecked"})
-    public <T> void addWeak(
-        @NotNull CompositeScenario<T> scenario,
-        @NotNull T performer,
-        int priority,
-        @NotNull Object reference
-    ) {
+    public <T> void addWeak(CompositeScenario<T> scenario, T performer, int priority, Object reference) {
         Checks.checkNotNull(scenario, "scenario");
         Checks.checkNotNull(performer, "performer");
         Checks.checkNotNull(reference, "reference");
@@ -69,25 +62,24 @@ public class PerformerContainer {
         mergeableperformer.putWeak(reference, performer, priority);
     }
 
-    public boolean has(@NotNull CompositeScenario<?> scenario) {
+    public boolean has(CompositeScenario<?> scenario) {
         return mergeablePerformers.get(scenario) != null;
     }
 
     @SuppressWarnings({"unchecked"})
-    public <T> void remove(@NotNull CompositeScenario<T> scenario, @NotNull T performer) {
+    public <T> void remove(CompositeScenario<T> scenario, T performer) {
         MergeablePerformer<T> mergeableperformer = (MergeablePerformer<T>) mergeablePerformers.get(scenario);
         if (mergeableperformer != null) {
             mergeableperformer.remove(performer);
         }
     }
 
-    public <T> void remove(@NotNull CompositeScenario<T> scenario) {
+    public <T> void remove(CompositeScenario<T> scenario) {
         mergeablePerformers.remove(scenario);
     }
 
-    @NotNull
     @SuppressWarnings({"unchecked"})
-    public <T> T get(@NotNull CompositeScenario<T> scenario) {
+    public <T> T get(CompositeScenario<T> scenario) {
         return (T) mergeablePerformers.getIfAbsentPut(scenario, new SimpleMergeablePerformer<>(scenario)).performer();
     }
 

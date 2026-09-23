@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.style.key;
 
 import dev.vfyjxf.cloudlib.api.css.ComponentValue;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 

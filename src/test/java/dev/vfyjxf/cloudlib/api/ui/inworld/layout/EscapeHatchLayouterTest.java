@@ -10,7 +10,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.InworldPlacement;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.PlacementCandidate;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.SpaceKind;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.VisibilityTracker;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

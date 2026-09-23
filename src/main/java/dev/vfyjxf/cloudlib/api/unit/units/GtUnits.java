@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.unit.units;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.unit.Ratio;
 import dev.vfyjxf.cloudlib.api.unit.Unit;
 import dev.vfyjxf.cloudlib.api.unit.UnitConverter;
@@ -9,6 +8,7 @@ import dev.vfyjxf.cloudlib.api.unit.UnitRule;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
@@ -23,7 +23,7 @@ import java.util.List;
  * are alternative conventions (144 vs 90 mB per ingot), so never add both packs to
  * one converter; doing so throws {@code RuleConflictException}.
  */
-@NotNullByDefault
+@NullMarked
 public final class GtUnits {
 
     /**

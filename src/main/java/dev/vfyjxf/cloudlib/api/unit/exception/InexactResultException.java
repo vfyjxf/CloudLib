@@ -1,11 +1,11 @@
 package dev.vfyjxf.cloudlib.api.unit.exception;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * Thrown when an exact result was required but the value is not integral.
  */
-@NotNullByDefault
+@NullMarked
 public class InexactResultException extends UnitConversionException {
 
     public InexactResultException(String message) {

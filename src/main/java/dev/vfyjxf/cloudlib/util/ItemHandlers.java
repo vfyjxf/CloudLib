@@ -2,7 +2,7 @@ package dev.vfyjxf.cloudlib.util;
 
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public final class ItemHandlers {
 

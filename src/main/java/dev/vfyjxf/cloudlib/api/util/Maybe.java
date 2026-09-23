@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.util;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.NoSuchElementException;
 import java.util.function.Function;

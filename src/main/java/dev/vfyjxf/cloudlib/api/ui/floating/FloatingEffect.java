@@ -9,7 +9,7 @@ import dev.vfyjxf.cloudlib.api.ui.effect.Effect;
 import dev.vfyjxf.cloudlib.api.ui.layout.LayoutHandler;
 import dev.vfyjxf.cloudlib.api.ui.layout.LayoutScope;
 import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -67,7 +67,7 @@ public final class FloatingEffect implements Effect {
     /**
      * The last computed position result, available for external reading.
      */
-    private @Nullable FloatingPositioning.PositionResult lastResult;
+    private FloatingPositioning.@Nullable PositionResult lastResult;
 
     // endregion
 
@@ -118,7 +118,7 @@ public final class FloatingEffect implements Effect {
     /**
      * @return the last computed position result, or null if not yet computed
      */
-    public @Nullable FloatingPositioning.PositionResult lastResult() {
+    public FloatingPositioning.@Nullable PositionResult lastResult() {
         return lastResult;
     }
 

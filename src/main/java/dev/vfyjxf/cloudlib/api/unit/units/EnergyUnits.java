@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.unit.units;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.unit.Ratio;
 import dev.vfyjxf.cloudlib.api.unit.Unit;
 import dev.vfyjxf.cloudlib.api.unit.UnitConverter;
@@ -10,6 +9,7 @@ import dev.vfyjxf.cloudlib.api.unit.UnitRule;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ import java.util.List;
  * Units of energy. The EU to FE rule is a non-fixed default and can be overridden.
  * This class itself is the family marker type.
  */
-@NotNullByDefault
+@NullMarked
 public final class EnergyUnits {
 
     public static final UnitFamily<EnergyUnits> family = UnitFamily.measure(Namespace.ofMc("energy"));

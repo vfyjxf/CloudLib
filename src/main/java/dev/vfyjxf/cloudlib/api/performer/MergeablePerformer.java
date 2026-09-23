@@ -2,7 +2,6 @@ package dev.vfyjxf.cloudlib.api.performer;
 
 import dev.vfyjxf.cloudlib.util.Checks;
 import org.eclipse.collections.impl.list.mutable.FastList;
-import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
@@ -35,7 +34,7 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
     }
 
     @Override
-    public void remove(@NotNull T performer) {
+    public void remove(T performer) {
         Checks.checkNotNull(performer, "performer");
         performers.removeIf(entry -> entry.performer().equals(performer));
         this.performer = null;
@@ -96,7 +95,7 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
         }
 
         @Override
-        public int compareTo(@NotNull MergeablePerformer.PerformerEntry<T> o) {
+        public int compareTo(MergeablePerformer.PerformerEntry<T> o) {
             return Integer.compare(o.priority, priority);
         }
 

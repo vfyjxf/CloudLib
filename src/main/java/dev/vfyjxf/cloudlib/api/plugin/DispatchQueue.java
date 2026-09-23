@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.plugin;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import dev.vfyjxf.cloudlib.util.Checks;
 import org.eclipse.collections.api.list.MutableList;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.util.concurrent.CompletableFuture;

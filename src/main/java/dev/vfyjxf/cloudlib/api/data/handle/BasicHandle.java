@@ -5,7 +5,7 @@ import dev.vfyjxf.cloudlib.api.event.SimpleEvent;
 import dev.vfyjxf.cloudlib.util.Checks;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;

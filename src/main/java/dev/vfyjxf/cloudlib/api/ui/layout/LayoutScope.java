@@ -4,7 +4,7 @@ import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Size;
 import dev.vfyjxf.taffy.tree.Layout;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Mutable scope for layout decisions.

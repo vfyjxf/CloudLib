@@ -1,9 +1,9 @@
 package dev.vfyjxf.cloudlib.api.unit;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.Checks;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A declarative conversion rule, consumable in bulk via
@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
  * Endpoints are wildcard-typed so mixed rule lists work; the builder re-validates
  * same/cross-family constraints at build time.
  */
-@NotNullByDefault
+@NullMarked
 public record UnitRule(Unit<?> from, Unit<?> to, Ratio ratio, Kind kind, boolean fixed, @Nullable Namespace material) {
 
     public enum Kind {

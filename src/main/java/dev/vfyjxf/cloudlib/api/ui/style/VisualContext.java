@@ -2,7 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.style;
 
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleApply;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

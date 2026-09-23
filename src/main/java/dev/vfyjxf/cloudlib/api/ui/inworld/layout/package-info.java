@@ -25,5 +25,5 @@
  * the table). The 22-class type-catalog mapping lives in
  * {@code docs/inworld-type-catalog-mapping.md}.
  */
-@dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
+@org.jspecify.annotations.NullMarked
 package dev.vfyjxf.cloudlib.api.ui.inworld.layout;

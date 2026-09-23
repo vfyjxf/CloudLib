@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.floating;
 
 import dev.vfyjxf.cloudlib.api.math.Rect;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Supplier;

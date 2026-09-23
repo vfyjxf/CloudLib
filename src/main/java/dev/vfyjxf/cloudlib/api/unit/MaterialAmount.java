@@ -1,8 +1,8 @@
 package dev.vfyjxf.cloudlib.api.unit;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.Checks;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * An amount of a specific material, normalized to the base unit of a matter family.
@@ -10,7 +10,7 @@ import dev.vfyjxf.cloudlib.util.Checks;
  * (1 iron ingot ≡ 144 mB molten iron ≡ 9 iron nuggets), and converted back to
  * any unit as a conversion hub.
  */
-@NotNullByDefault
+@NullMarked
 public final class MaterialAmount {
 
     private final Namespace material;

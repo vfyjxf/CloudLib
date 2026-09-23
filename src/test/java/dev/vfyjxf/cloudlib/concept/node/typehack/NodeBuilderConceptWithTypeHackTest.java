@@ -10,7 +10,6 @@ import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.concept.node.typehack.NodeBuilderConceptWithTypeHackTest.Group;
 import dev.vfyjxf.cloudlib.concept.node.typehack.NodeBuilderConceptWithTypeHackTest.Instance;
 import org.eclipse.collections.api.list.MutableList;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
@@ -68,7 +67,7 @@ public class NodeBuilderConceptWithTypeHackTest {
         private final DataContainer dataContainer = new DataContainer(this);
 
         @Override
-        public @NotNull DataContainer data() {
+        public DataContainer data() {
             return dataContainer;
         }
     }

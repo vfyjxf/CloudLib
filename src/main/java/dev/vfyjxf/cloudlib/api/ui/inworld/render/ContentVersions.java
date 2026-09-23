@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld.render;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;

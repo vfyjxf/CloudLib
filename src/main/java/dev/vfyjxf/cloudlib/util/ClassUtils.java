@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.util;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

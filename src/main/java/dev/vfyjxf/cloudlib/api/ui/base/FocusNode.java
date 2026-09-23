@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A node in the focus tree that manages focus participation for a single widget.

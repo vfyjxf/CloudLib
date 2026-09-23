@@ -1,10 +1,10 @@
 package dev.vfyjxf.cloudlib.api.unit;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.unit.text.QuantityFormatter;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.Checks;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -13,7 +13,7 @@ import java.util.Objects;
  *
  * @param <F> phantom family marker; same-family operations are compile-time enforced
  */
-@NotNullByDefault
+@NullMarked
 public final class Quantity<F> {
 
     public static <F> Quantity<F> of(Ratio value, Unit<F> unit, UnitConverter converter) {

@@ -4,7 +4,7 @@ import dev.vfyjxf.cloudlib.api.math.Insets;
 import dev.vfyjxf.cloudlib.api.ui.style.StyleVar;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Immutable style of a rich text node.

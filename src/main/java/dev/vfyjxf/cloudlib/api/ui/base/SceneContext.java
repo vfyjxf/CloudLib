@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.base;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public final class SceneContext {
 

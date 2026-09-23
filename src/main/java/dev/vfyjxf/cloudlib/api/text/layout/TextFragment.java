@@ -4,7 +4,7 @@ import dev.vfyjxf.cloudlib.api.text.ClickAction;
 import dev.vfyjxf.cloudlib.api.text.HoverAction;
 import dev.vfyjxf.cloudlib.api.text.RichNode;
 import dev.vfyjxf.cloudlib.api.text.RichTextStyle;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * One positioned, styled piece of a laid-out line.

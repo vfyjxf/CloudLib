@@ -1,3 +1,5 @@
+import net.ltgt.gradle.errorprone.CheckSeverity
+
 plugins {
     id 'java-library'
     id 'eclipse'
@@ -7,8 +9,7 @@ plugins {
     id "me.champeau.jmh" version "0.7.2"
     id 'dev.vfyjxf.cloudlib.lang'
     id 'dev.vfyjxf.cloudlib.style'
-//    id("net.ltgt.errorprone") version "4.1.0"
-//    id("net.ltgt.nullaway") version "2.1.0"
+    id "net.ltgt.errorprone" version "4.4.0"
 }
 
 cloudLang {
@@ -27,6 +28,14 @@ static def isJetBrainsRuntime() {
 
 base {
     archivesName = mod_id
+}
+
+// the cloudstyle plugin unpacks its JDT formatter profile into build/cloudstyle at configuration
+// time — a plain file write during configuration, not a task output — so a clean that wiped
+// build/ wholesale would leave spotless reading a profile the clean step had just deleted. The
+// profile survives; everything else under build/ is discarded as before
+tasks.named('clean', Delete) {
+    setDelete(fileTree('build') { exclude 'cloudstyle/**' })
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
@@ -174,6 +183,19 @@ dependencies {
 
     testCompileOnly 'com.google.auto.service:auto-service:1.1.1'
     testAnnotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+
+    // JSpecify is what the sources annotate with, so consumers compiling against this library
+    // need it on their compile classpath; it stays off the runtime classpath.
+    compileOnlyApi 'org.jspecify:jspecify:1.0.1'
+    testCompileOnly 'org.jspecify:jspecify:1.0.1'
+    // JetBrains annotations carry the non-null semantics JSpecify has no equivalent for
+    // (@ApiStatus, @Contract, @Range, @Unmodifiable, @MustBeInvokedByOverriders)
+    compileOnly 'org.jetbrains:annotations:26.1.0'
+    testCompileOnly 'org.jetbrains:annotations:26.1.0'
+
+    // NullAway 0.12.15 is built and tested against Error Prone 2.42.0
+    errorprone 'com.uber.nullaway:nullaway:0.12.15'
+    errorprone 'com.google.errorprone:error_prone_core:2.42.0'
 }
 
 test {
@@ -208,6 +230,23 @@ neoForge.ideSyncTask generateModMetadata
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
     options.release = 21
+}
+
+// NullAway runs as an Error Prone plugin over every source set (main, test). OnlyNullMarked
+// restricts the analysis to code carrying @NullMarked, which keeps Minecraft, NeoForge and
+// third-party boundaries out of it — those carry no JSpecify annotations to reason about.
+// disableAllChecks keeps Error Prone's stock checks off: this wiring is a null-safety pass,
+// and with them on the build fails on 4 pre-existing findings (NoCanIgnoreReturnValueOnClasses,
+// MathRoundIntLong) unrelated to nullability.
+// Stage A records findings at WARN; the level tightens to ERROR once they are cleared.
+tasks.withType(JavaCompile).configureEach {
+    // javac caps diagnostics at 100 by default; the NullAway sweep needs the whole list
+    options.compilerArgs.addAll(['-Xmaxwarns', '2000', '-Xmaxerrs', '2000'])
+    options.errorprone {
+        disableAllChecks = true
+        option("NullAway:OnlyNullMarked", "true")
+        check("NullAway", CheckSeverity.WARN)
+    }
 }
 
 java {

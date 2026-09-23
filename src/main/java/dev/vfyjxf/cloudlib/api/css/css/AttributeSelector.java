@@ -1,7 +1,7 @@
 /* Ported from katana-parser (MIT, (c) 2015 Hackers and Painters) — see LICENSE-katana.txt */
 package dev.vfyjxf.cloudlib.api.css;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An attribute selector: {@code [name]}, {@code [ns|name op "value" i]}.

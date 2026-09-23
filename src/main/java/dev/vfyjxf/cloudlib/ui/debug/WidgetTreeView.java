@@ -12,7 +12,7 @@ import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import dev.vfyjxf.cloudlib.ui.Textures;
 import dev.vfyjxf.taffy.style.TaffyDimension;
 import net.minecraft.client.Minecraft;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Set;

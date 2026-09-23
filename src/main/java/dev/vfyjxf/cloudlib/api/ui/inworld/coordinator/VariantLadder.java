@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld.coordinator;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.EnumMap;
 import java.util.List;

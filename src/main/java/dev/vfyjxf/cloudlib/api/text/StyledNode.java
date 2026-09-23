@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.text;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Decorates a child node with a {@link RichTextStyle} and optional interaction

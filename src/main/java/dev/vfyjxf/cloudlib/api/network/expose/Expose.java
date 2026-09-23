@@ -6,7 +6,7 @@ import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
 import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
 import dev.vfyjxf.cloudlib.api.network.UnaryFlowHandler;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.UnknownNullability;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Consumer;
 
@@ -103,7 +103,7 @@ public non-sealed interface Expose<T> extends ExposeCommon {
      * @return the previous value of this Expose
      * @throws IllegalStateException if the snapshot is {@link Snapshot.None}
      */
-    default @UnknownNullability T previous() throws IllegalStateException {
+    default @Nullable T previous() throws IllegalStateException {
         return snapshot().readValue();
     }
 

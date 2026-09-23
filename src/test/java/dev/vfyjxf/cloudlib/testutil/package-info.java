@@ -6,4 +6,5 @@
  * assertions for screen-space stability. Nothing here may touch Minecraft
  * client singletons.
  */
+@org.jspecify.annotations.NullMarked
 package dev.vfyjxf.cloudlib.testutil;

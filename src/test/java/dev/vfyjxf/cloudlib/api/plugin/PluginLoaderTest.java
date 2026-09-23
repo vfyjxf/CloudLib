@@ -1,15 +1,15 @@
 package dev.vfyjxf.cloudlib.api.plugin;
 
 import com.google.auto.service.AutoService;
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.CloudNamespaces;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
-@NotNullByDefault
+@NullMarked
 public class PluginLoaderTest {
 
     @Test

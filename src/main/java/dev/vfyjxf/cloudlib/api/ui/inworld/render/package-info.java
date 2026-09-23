@@ -24,5 +24,5 @@
  * per-renderer batching contract: geometry accumulates in a batch's emitter
  * and flushes in a single draw.
  */
-@dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
+@org.jspecify.annotations.NullMarked
 package dev.vfyjxf.cloudlib.api.ui.inworld.render;

@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.unit.units;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.unit.Ratio;
 import dev.vfyjxf.cloudlib.api.unit.Unit;
 import dev.vfyjxf.cloudlib.api.unit.UnitConverter;
@@ -10,13 +9,14 @@ import dev.vfyjxf.cloudlib.api.unit.UnitRule;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
 /**
  * Units of fluid matter. This class itself is the family marker type.
  */
-@NotNullByDefault
+@NullMarked
 public final class FluidUnits {
 
     public static final UnitFamily<FluidUnits> family = UnitFamily.matter(Namespace.ofMc("fluid"));

@@ -17,7 +17,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.zone.AttentionField;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.GaussianAttention;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.PreviousFrameLayout;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneCost;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,7 +50,7 @@ public final class AssembledElement implements InworldElement {
     private final VariantLadder ladder;
 
     private LayoutEnvironment environment;
-    private @Nullable InworldLayouter.SpaceReservation reservation;
+    private InworldLayouter.@Nullable SpaceReservation reservation;
     private boolean reservationResolved;
 
     AssembledElement(

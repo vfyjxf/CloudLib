@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.debug;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A single inspected property. Values are pre-formatted as strings

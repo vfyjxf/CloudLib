@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.overlay;
 
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Creates an overlay widget for the current client state, or returns {@code null} to indicate

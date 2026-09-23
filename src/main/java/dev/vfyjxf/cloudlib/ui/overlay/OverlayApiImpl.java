@@ -9,7 +9,7 @@ import net.minecraft.client.renderer.Rect2i;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.impl.collection.mutable.CollectionAdapter;
 import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;

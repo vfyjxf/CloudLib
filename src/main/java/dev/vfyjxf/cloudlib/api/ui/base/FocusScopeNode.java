@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A focus scope that groups focus nodes and remembers the last focused child.

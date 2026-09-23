@@ -54,5 +54,5 @@
  * the facet builds no zone context and runs no zone code path, so
  * populations without zone declarations behave exactly as before.
  */
-@dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
+@org.jspecify.annotations.NullMarked
 package dev.vfyjxf.cloudlib.api.ui.inworld.zone;

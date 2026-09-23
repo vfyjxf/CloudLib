@@ -1,15 +1,15 @@
 package dev.vfyjxf.cloudlib.api.util;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
-@NotNullByDefault
+@NullMarked
 public final class Games {
 
     // region server

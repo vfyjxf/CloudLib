@@ -1,13 +1,13 @@
 package dev.vfyjxf.cloudlib.api.unit;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.unit.exception.NoConversionPathException;
 import dev.vfyjxf.cloudlib.api.unit.exception.RuleConflictException;
 import dev.vfyjxf.cloudlib.api.unit.text.QuantityFormatter;
 import dev.vfyjxf.cloudlib.api.unit.text.UnitNames;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.Checks;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
@@ -43,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * adding both packs to one converter throws {@link RuleConflictException} instead
  * of silently mixing conventions.
  */
-@NotNullByDefault
+@NullMarked
 public final class UnitConverter {
 
     public static Builder builder() {

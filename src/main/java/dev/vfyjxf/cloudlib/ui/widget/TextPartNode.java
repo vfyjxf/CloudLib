@@ -19,7 +19,7 @@ import dev.vfyjxf.taffy.geometry.TaffySize;
 import dev.vfyjxf.taffy.style.AvailableSpace;
 import dev.vfyjxf.taffy.style.TextAlign;
 import net.minecraft.client.gui.Font;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A flowed text part — rich text that is measured and drawn by its own node, so

@@ -16,5 +16,5 @@
  * Third-party avoidance goes through the public exclusion-area API:
  * {@link dev.vfyjxf.cloudlib.api.ui.inworld.space.InworldExclusions#register}.
  */
-@dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
+@org.jspecify.annotations.NullMarked
 package dev.vfyjxf.cloudlib.api.ui.inworld.space;

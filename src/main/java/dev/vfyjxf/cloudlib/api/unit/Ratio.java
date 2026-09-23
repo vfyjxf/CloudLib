@@ -1,8 +1,8 @@
 package dev.vfyjxf.cloudlib.api.unit;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.unit.exception.InexactResultException;
 import dev.vfyjxf.cloudlib.util.Checks;
+import org.jspecify.annotations.NullMarked;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -15,7 +15,7 @@ import java.math.BigInteger;
  * carry {@code exact=false}, and arithmetic propagates it by AND-ing the operands.
  * The flag is not part of equality — an approximate 1/9 equals an exact 1/9.
  */
-@NotNullByDefault
+@NullMarked
 public final class Ratio implements Comparable<Ratio> {
 
     public static final Ratio zero = new Ratio(BigInteger.ZERO, BigInteger.ONE, true);

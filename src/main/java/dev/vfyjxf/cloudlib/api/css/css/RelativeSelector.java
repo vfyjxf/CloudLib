@@ -1,7 +1,7 @@
 /* Ported from katana-parser (MIT, (c) 2015 Hackers and Painters) — see LICENSE-katana.txt */
 package dev.vfyjxf.cloudlib.api.css;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A member of a selector list inside a functional pseudo. {@code combinator} is only non-null for

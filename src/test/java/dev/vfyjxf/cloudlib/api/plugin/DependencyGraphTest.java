@@ -1,8 +1,8 @@
 package dev.vfyjxf.cloudlib.api.plugin;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.CloudNamespaces;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@NotNullByDefault
+@NullMarked
 public class DependencyGraphTest {
 
     @Test

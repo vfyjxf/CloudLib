@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.floating;
 
 import dev.vfyjxf.cloudlib.api.math.Insets;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ import java.util.List;
 public final class AutoPlacementMiddleware implements FloatingMiddleware {
 
     private final boolean crossAxis;
-    private final @Nullable FloatingPlacement.Alignment alignment;
+    private final FloatingPlacement.@Nullable Alignment alignment;
     private final boolean autoAlignment;
     private final @Nullable List<FloatingPlacement> allowedPlacements;
     private final int padding;
@@ -52,7 +52,7 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
      */
     public static AutoPlacementMiddleware create(
         boolean crossAxis,
-        @Nullable FloatingPlacement.Alignment alignment,
+        FloatingPlacement.@Nullable Alignment alignment,
         boolean autoAlignment,
         @Nullable List<FloatingPlacement> allowedPlacements,
         int padding
@@ -62,7 +62,7 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
 
     private AutoPlacementMiddleware(
         boolean crossAxis,
-        @Nullable FloatingPlacement.Alignment alignment,
+        FloatingPlacement.@Nullable Alignment alignment,
         boolean autoAlignment,
         @Nullable List<FloatingPlacement> allowedPlacements,
         int padding

@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.text;
 import dev.vfyjxf.cloudlib.api.ui.tooltip.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Consumer;
 

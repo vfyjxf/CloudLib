@@ -9,7 +9,7 @@ import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import dev.vfyjxf.cloudlib.internal.ui.style.CssEnums;
 import dev.vfyjxf.cloudlib.internal.ui.style.CssTextures;
 import dev.vfyjxf.cloudlib.internal.ui.style.CssValues;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;

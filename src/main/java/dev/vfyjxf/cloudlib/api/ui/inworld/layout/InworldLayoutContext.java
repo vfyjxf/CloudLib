@@ -4,7 +4,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.ElementRejection;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.InworldPlacement;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.InworldVariant;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.SpaceBudget;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 

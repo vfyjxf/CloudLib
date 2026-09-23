@@ -28,7 +28,6 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -84,28 +83,28 @@ public class TestBlockEntity extends BlockEntity {
     public static class Menu extends BasicMenu<TestBlockEntity> {
 
         // region exposes
-        public final Expose<@NotNull Integer> basic = expose(
+        public final Expose<Integer> basic = expose(
             "basic",
             mutableRefOf(primitive()),
             o -> o.basic,
             UnaryFlowHandler.codecOf(ByteBufCodecs.INT)
         );
 
-        public final Expose<@NotNull String> reference = expose(
+        public final Expose<String> reference = expose(
             "reference",
             mutableRefOf(CheckStrategy.equals()),
             o -> o.reference,
             UnaryFlowHandler.codecOf(ByteBufCodecs.STRING_UTF8)
         );
 
-        public final Expose<@NotNull ItemStack> registerEntry = expose(
+        public final Expose<ItemStack> registerEntry = expose(
             "registerEntry",
             mutableRefOf(sameItemStack),
             o -> o.registerEntry,
             UnaryFlowHandler.codecOf(ItemStack.STREAM_CODEC)
         );
 
-        public final ReversedOnly<@NotNull ItemStack, @NotNull ItemStack> selected = reversedOnly(
+        public final ReversedOnly<ItemStack, ItemStack> selected = reversedOnly(
             "selected",
             ItemStack.STREAM_CODEC::encode,
             ItemStack.STREAM_CODEC::decode
@@ -114,7 +113,7 @@ public class TestBlockEntity extends BlockEntity {
             System.out.println("Selected: " + stack);
         });
 
-        public final LayerExpose<@NotNull List<ItemStack>> layerExpose = layerExpose(
+        public final LayerExpose<List<ItemStack>> layerExpose = layerExpose(
             "transform",
             immutableRefOf(provider.transform),
             o -> o.transform,

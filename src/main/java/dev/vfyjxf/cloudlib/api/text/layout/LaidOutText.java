@@ -1,6 +1,6 @@
 package dev.vfyjxf.cloudlib.api.text.layout;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 

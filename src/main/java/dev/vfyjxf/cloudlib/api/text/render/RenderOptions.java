@@ -2,7 +2,7 @@ package dev.vfyjxf.cloudlib.api.text.render;
 
 import dev.vfyjxf.cloudlib.api.text.ThemeColorResolver;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Per-frame rendering context for rich text: defaults that apply when a fragment

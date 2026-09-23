@@ -12,8 +12,8 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.render.Supersampling;
 import dev.vfyjxf.cloudlib.api.ui.inworld.render.WorldUiPanel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 

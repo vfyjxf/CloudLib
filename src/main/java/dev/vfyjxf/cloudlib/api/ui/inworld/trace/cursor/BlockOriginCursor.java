@@ -6,7 +6,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.trace.TraceContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.trace.TraceSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 

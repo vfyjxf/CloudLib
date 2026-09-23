@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.unit.text;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.unit.MaterialAmount;
 import dev.vfyjxf.cloudlib.api.unit.Quantity;
 import dev.vfyjxf.cloudlib.api.unit.Unit;
@@ -8,6 +7,7 @@ import dev.vfyjxf.cloudlib.api.unit.UnitConverter;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.Checks;
 import net.minecraft.network.chat.Component;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * Minecraft adapter rendering quantities as {@link Component}s.
@@ -15,7 +15,7 @@ import net.minecraft.network.chat.Component;
  * {@code unit.<root>.<path>} (e.g. {@code unit.minecraft.tick}).
  * Only load this class game-side.
  */
-@NotNullByDefault
+@NullMarked
 public final class UnitComponents {
 
     /**

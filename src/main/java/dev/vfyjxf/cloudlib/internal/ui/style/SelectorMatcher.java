@@ -9,7 +9,7 @@ import dev.vfyjxf.cloudlib.api.css.PseudoClass;
 import dev.vfyjxf.cloudlib.api.css.RelativeSelector;
 import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.IdentityHashMap;
 import java.util.List;

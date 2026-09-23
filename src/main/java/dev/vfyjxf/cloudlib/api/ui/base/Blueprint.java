@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
 import org.eclipse.collections.api.list.MutableList;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Immutable UI description. Blueprint configures Widget via updateWidget().

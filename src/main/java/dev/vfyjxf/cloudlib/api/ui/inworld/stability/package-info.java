@@ -36,5 +36,5 @@
  * epochs, the continuous tools merely consume whatever dt the frame hands
  * them, and both stay correct when sampling rates change.
  */
-@dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
+@org.jspecify.annotations.NullMarked
 package dev.vfyjxf.cloudlib.api.ui.inworld.stability;

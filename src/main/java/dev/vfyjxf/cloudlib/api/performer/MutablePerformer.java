@@ -1,7 +1,5 @@
 package dev.vfyjxf.cloudlib.api.performer;
 
-import org.jetbrains.annotations.NotNull;
-
 public interface MutablePerformer<T> extends Performer<T> {
 
     static <T> MutablePerformer<T> mutableOf(T performer) {
@@ -15,5 +13,5 @@ public interface MutablePerformer<T> extends Performer<T> {
      */
     void put(T performer);
 
-    void remove(@NotNull T performer);
+    void remove(T performer);
 }

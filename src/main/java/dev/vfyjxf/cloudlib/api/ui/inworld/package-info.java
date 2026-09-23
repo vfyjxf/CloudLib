@@ -16,5 +16,5 @@
  * here is gui-scaled pixels on the screen side and world blocks on the level
  * side.
  */
-@dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
+@org.jspecify.annotations.NullMarked
 package dev.vfyjxf.cloudlib.api.ui.inworld;

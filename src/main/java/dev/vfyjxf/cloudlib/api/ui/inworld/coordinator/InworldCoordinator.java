@@ -14,7 +14,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.stability.Spring2;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.SwitchGate;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.VisibilityTracker;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.PreviousFrameLayout;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;

@@ -17,7 +17,7 @@ import dev.vfyjxf.cloudlib.api.ui.texture.TintedTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.TransformedTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;

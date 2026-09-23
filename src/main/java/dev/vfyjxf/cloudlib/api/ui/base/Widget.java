@@ -44,8 +44,7 @@ import dev.vfyjxf.taffy.tree.TaffyTree;
 import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.UnknownNullability;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -91,7 +90,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
     /**
      * Normally,only root widget doesn't have a parent.
      */
-    @UnknownNullability
+    @Nullable
     CompositeWidget<?> parent;
 
     @Nullable
@@ -322,7 +321,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         this.key = key;
     }
 
-    public final @UnknownNullability CompositeWidget<? extends Widget> parent() {
+    public final @Nullable CompositeWidget<? extends Widget> parent() {
         return parent;
     }
 

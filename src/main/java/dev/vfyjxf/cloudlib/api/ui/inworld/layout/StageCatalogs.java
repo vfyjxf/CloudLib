@@ -14,7 +14,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpaceMask;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneCandidates;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneCost;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneWeights;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

@@ -1,8 +1,8 @@
 package dev.vfyjxf.cloudlib.api.unit;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.Checks;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 
@@ -22,7 +22,7 @@ import java.util.Objects;
  *
  * @param <F> phantom family marker, typically the holder class of the family's constants
  */
-@NotNullByDefault
+@NullMarked
 public final class UnitFamily<F> {
 
     public enum Kind {

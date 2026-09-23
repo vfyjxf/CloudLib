@@ -11,5 +11,5 @@
  * @see dev.vfyjxf.cloudlib.api.ui.effect.UIEffects
  * @see dev.vfyjxf.cloudlib.api.ui.effect.Effect
  */
-@dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
+@org.jspecify.annotations.NullMarked
 package dev.vfyjxf.cloudlib.api.ui.effect;

@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.text;
 
 import net.minecraft.network.chat.ClickEvent;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Consumer;
 

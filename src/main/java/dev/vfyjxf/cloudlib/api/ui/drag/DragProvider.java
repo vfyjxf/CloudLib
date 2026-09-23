@@ -6,7 +6,7 @@ import dev.vfyjxf.cloudlib.api.ui.InputContext;
 import dev.vfyjxf.cloudlib.api.ui.base.Scene;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
-import org.jetbrains.annotations.UnknownNullability;
+import org.jspecify.annotations.Nullable;
 
 public interface DragProvider {
 
@@ -15,7 +15,7 @@ public interface DragProvider {
         DragProvider.class,
         listeners -> new DragProvider() {
             @Override
-            public boolean draggable(@UnknownNullability Scene scene, InputContext input, DragContext dragContext) {
+            public boolean draggable(@Nullable Scene scene, InputContext input, DragContext dragContext) {
                 for (DragProvider listener : listeners) {
                     if (listener.draggable(scene, input, dragContext)) {
                         return true;
@@ -26,7 +26,7 @@ public interface DragProvider {
 
             @Override
             public DraggableElement<?> getDraggableElement(
-                @UnknownNullability Scene scene,
+                @Nullable Scene scene,
                 InputContext input,
                 DragContext dragContext
             ) {
@@ -42,13 +42,13 @@ public interface DragProvider {
     static DragProvider fromWidget(Widget widget) {
         return new DragProvider() {
             @Override
-            public boolean draggable(@UnknownNullability Scene scene, InputContext input, DragContext dragContext) {
+            public boolean draggable(@Nullable Scene scene, InputContext input, DragContext dragContext) {
                 return widget.parent() != null && widget.isMouseOver(input);
             }
 
             @Override
             public DraggableElement<?> getDraggableElement(
-                @UnknownNullability Scene scene,
+                @Nullable Scene scene,
                 InputContext input,
                 DragContext dragContext
             ) {
@@ -58,11 +58,7 @@ public interface DragProvider {
         };
     }
 
-    boolean draggable(@UnknownNullability Scene scene, InputContext input, DragContext dragContext);
+    boolean draggable(@Nullable Scene scene, InputContext input, DragContext dragContext);
 
-    DraggableElement<?> getDraggableElement(
-        @UnknownNullability Scene scene,
-        InputContext input,
-        DragContext dragContext
-    );
+    DraggableElement<?> getDraggableElement(@Nullable Scene scene, InputContext input, DragContext dragContext);
 }

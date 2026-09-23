@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld.layout;
 
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.AvoidanceClass;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 

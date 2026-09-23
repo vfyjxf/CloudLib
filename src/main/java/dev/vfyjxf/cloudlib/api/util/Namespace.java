@@ -2,14 +2,13 @@ package dev.vfyjxf.cloudlib.api.util;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import dev.vfyjxf.cloudlib.api.annotation.FieldNotNullByDefault;
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.util.Checks;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -18,8 +17,7 @@ import java.util.Objects;
  * @see ResourceLocation
  * @see Path
  */
-@NotNullByDefault
-@FieldNotNullByDefault
+@NullMarked
 public final class Namespace implements Comparable<Namespace> {
 
     public static final Codec<Namespace> codec = Codec.STRING.comapFlatMap(str -> {

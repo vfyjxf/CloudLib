@@ -1,7 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld.render;
 
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Per-panel orientation memory for the degenerate-prone {@link QuadBasis}

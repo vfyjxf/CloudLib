@@ -1,15 +1,15 @@
 package dev.vfyjxf.cloudlib.api.unit;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.Checks;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * A concrete unit inside a {@link UnitFamily}.
  *
  * @param <F> phantom family marker, see {@link UnitFamily}
  */
-@NotNullByDefault
+@NullMarked
 public record Unit<F>(UnitFamily<F> family, Namespace id) {
 
     public static <F> Unit<F> of(UnitFamily<F> family, Namespace id) {

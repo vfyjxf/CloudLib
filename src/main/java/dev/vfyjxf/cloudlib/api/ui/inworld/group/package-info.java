@@ -11,5 +11,5 @@
  * <p>
  * Pure logic: no Minecraft types, no clock — headless-testable.
  */
-@dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
+@org.jspecify.annotations.NullMarked
 package dev.vfyjxf.cloudlib.api.ui.inworld.group;

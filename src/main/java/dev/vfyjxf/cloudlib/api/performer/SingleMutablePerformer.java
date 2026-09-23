@@ -1,7 +1,5 @@
 package dev.vfyjxf.cloudlib.api.performer;
 
-import org.jetbrains.annotations.NotNull;
-
 class SingleMutablePerformer<T> implements MutablePerformer<T> {
     private T performer;
 
@@ -15,7 +13,7 @@ class SingleMutablePerformer<T> implements MutablePerformer<T> {
     }
 
     @Override
-    public void remove(@NotNull T performer) {
+    public void remove(T performer) {
         if (this.performer == performer) {
             this.performer = null;
         }

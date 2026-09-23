@@ -1,10 +1,10 @@
 package dev.vfyjxf.cloudlib.api.unit;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.util.Checks;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.ImmutableList;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import java.util.List;
  * A predefined bundle of unit rules plus the family's base unit when applicable,
  * registerable in one call via {@link UnitConverter.Builder#add(UnitPack)}.
  */
-@NotNullByDefault
+@NullMarked
 public record UnitPack(ImmutableList<UnitRule> rules, @Nullable Unit<?> baseUnit) {
 
     public static UnitPack of(ImmutableList<UnitRule> rules) {

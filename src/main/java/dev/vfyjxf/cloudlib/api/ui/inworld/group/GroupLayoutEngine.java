@@ -5,7 +5,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.algorithm.Clusterer;
 import dev.vfyjxf.cloudlib.api.ui.inworld.algorithm.OrbitRing;
 import dev.vfyjxf.cloudlib.api.ui.inworld.algorithm.SlotAssigner;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.RayFan;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;

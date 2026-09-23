@@ -6,7 +6,6 @@ import net.minecraft.server.MinecraftServer;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.testframework.junit.EphemeralTestServerProvider;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -66,36 +65,33 @@ class SnapshotTest {
             Snapshot.copyOf(Integer::intValue, CheckStrategy.primitive()),
             () -> testHolder.number
         );
-        Expose<@NotNull List<String>> copyOfList = new Expose<>(
+        Expose<List<String>> copyOfList = new Expose<>(
             Snapshot.copyOf(ArrayList::new, CheckStrategy.equals()),
             () -> testHolder.copyOfStrings
         );
-        Expose<@NotNull NamedObject> mutableRef = new Expose<>(
+        Expose<NamedObject> mutableRef = new Expose<>(
             Snapshot.mutableRefOf(CheckStrategy.equals()),
             () -> testHolder.name
         );
-        Expose<@NotNull List<String>> immutableRef = new Expose<>(
-            Snapshot.immutableRefOf(testHolder.strings, new Predicate<>() {
-                private List<String> copy = new ArrayList<>(testHolder.strings);
+        Expose<List<String>> immutableRef = new Expose<>(Snapshot.immutableRefOf(testHolder.strings, new Predicate<>() {
+            private List<String> copy = new ArrayList<>(testHolder.strings);
 
-                @Override
-                public boolean test(List<String> strings) {
-                    if (copy.size() != strings.size()) {
-                        // fast fail
+            @Override
+            public boolean test(List<String> strings) {
+                if (copy.size() != strings.size()) {
+                    // fast fail
+                    copy = new ArrayList<>(strings);
+                    return false;
+                }
+                for (int i = 0; i < strings.size(); i++) {
+                    if (!copy.get(i).equals(strings.get(i))) {
                         copy = new ArrayList<>(strings);
                         return false;
                     }
-                    for (int i = 0; i < strings.size(); i++) {
-                        if (!copy.get(i).equals(strings.get(i))) {
-                            copy = new ArrayList<>(strings);
-                            return false;
-                        }
-                    }
-                    return true;
                 }
-            }),
-            () -> testHolder.strings
-        );
+                return true;
+            }
+        }), () -> testHolder.strings);
         copyOfList.changed();
         ThreadLocalRandom random = ThreadLocalRandom.current();
         AtomicBoolean copyOfFlag = new AtomicBoolean(false);

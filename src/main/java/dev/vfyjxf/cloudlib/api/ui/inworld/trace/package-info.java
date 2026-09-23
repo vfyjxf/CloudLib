@@ -14,5 +14,5 @@
  * {@code cursor} holds an optional SPI for resolving geometric attachment
  * points off a source.
  */
-@dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
+@org.jspecify.annotations.NullMarked
 package dev.vfyjxf.cloudlib.api.ui.inworld.trace;

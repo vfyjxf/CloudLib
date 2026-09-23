@@ -3,7 +3,7 @@ package dev.vfyjxf.cloudlib.api.css;
 
 import dev.vfyjxf.cloudlib.api.css.CssTokenizer.Token;
 import dev.vfyjxf.cloudlib.api.css.CssTokenizer.TokenKind;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -807,7 +807,7 @@ public final class CssParser {
             return new AttributeSelector(ns, name, op, value, flag);
         }
 
-        private @Nullable AttributeSelector.Operator attrOperator() {
+        private AttributeSelector.@Nullable Operator attrOperator() {
             Token t = peek();
             if (isDelim(t, '=')) {
                 take();

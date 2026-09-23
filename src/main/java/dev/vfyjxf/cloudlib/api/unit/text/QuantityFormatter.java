@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.unit.text;
 
-import dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault;
 import dev.vfyjxf.cloudlib.api.unit.MaterialAmount;
 import dev.vfyjxf.cloudlib.api.unit.Quantity;
 import dev.vfyjxf.cloudlib.api.unit.Ratio;
@@ -8,7 +7,8 @@ import dev.vfyjxf.cloudlib.api.unit.Unit;
 import dev.vfyjxf.cloudlib.api.unit.UnitConverter;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import dev.vfyjxf.cloudlib.util.Checks;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * Renders quantities as human readable text. All output is exact unless
  * {@link #formatDecimal} is used explicitly.
  */
-@NotNullByDefault
+@NullMarked
 public final class QuantityFormatter {
 
     private final UnitConverter converter;

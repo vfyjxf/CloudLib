@@ -23,5 +23,5 @@
  * ({@link dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.SpaceBudget}) lets
  * elements degrade proactively before ever being rejected.
  */
-@dev.vfyjxf.cloudlib.api.annotation.NotNullByDefault
+@org.jspecify.annotations.NullMarked
 package dev.vfyjxf.cloudlib.api.ui.inworld.coordinator;

@@ -2,7 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld;
 
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Computes where an off-screen or behind-the-camera world target should be

@@ -5,7 +5,7 @@ import dev.vfyjxf.cloudlib.api.math.FloatRect;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.style.Edge;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A screen-space UI frame measured for attachment — the border-measurement

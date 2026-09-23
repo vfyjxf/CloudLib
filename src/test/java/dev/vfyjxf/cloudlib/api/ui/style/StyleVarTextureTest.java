@@ -9,7 +9,7 @@ import dev.vfyjxf.cloudlib.api.ui.texture.RoundedRectTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.TintedTexture;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

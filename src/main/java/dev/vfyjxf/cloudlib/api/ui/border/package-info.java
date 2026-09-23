@@ -13,4 +13,5 @@
  * way. Trace links consume both; measurement itself draws nothing —
  * stroking a border is always opt-in.
  */
+@org.jspecify.annotations.NullMarked
 package dev.vfyjxf.cloudlib.api.ui.border;

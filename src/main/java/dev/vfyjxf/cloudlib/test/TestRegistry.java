@@ -20,8 +20,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.eclipse.collections.api.list.MutableList;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -64,7 +63,7 @@ public final class TestRegistry {
     private static <T extends Block> DeferredBlock<T> block(
         String name,
         Supplier<T> block,
-        @Nullable BiFunction<T, Item.Properties, @NotNull BlockItem> blockItemFactory
+        @Nullable BiFunction<T, Item.Properties, BlockItem> blockItemFactory
     ) {
         DeferredBlock<T> deferredBlock = blocks.register(name, block);
         DeferredItem<BlockItem> deferredItem = items.register(name, () -> {
