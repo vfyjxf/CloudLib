@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.api.lifecycle;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 
 public interface LifecycleReceiver {
@@ -8,13 +10,13 @@ public interface LifecycleReceiver {
         context(state, null, reason);
     }
 
-    <T> void context(LifecycleState<T> state, T value, String reason);
+    <T> void context(LifecycleState<T> state, @Nullable T value, String reason);
 
     default void event(LifecycleState<Void> state, String reason) {
         event(state, null, reason);
     }
 
-    <T> void event(LifecycleState<T> state, T value, String reason);
+    <T> void event(LifecycleState<T> state, @Nullable T value, String reason);
 
     void clear(LifecycleState<?> state, String reason);
 

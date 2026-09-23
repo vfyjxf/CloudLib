@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -497,13 +498,13 @@ class InfoBarWidgetTest {
     }
 
     /** The texture a part paints — themed when the sheet painted it, the code texture otherwise. */
-    private static VisualTexture textureOf(Widget part) {
+    private static @Nullable VisualTexture textureOf(Widget part) {
         return ((WidgetPart) part).texture();
     }
 
-    private static int colorOf(VisualTexture texture) {
+    private static int colorOf(@Nullable VisualTexture texture) {
         assertTrue(texture instanceof ColorTexture, "expected a color texture, got " + texture);
-        return ((ColorTexture) texture).color();
+        return ((ColorTexture) Objects.requireNonNull(texture)).color();
     }
 
     private static Theme theme(String css) {

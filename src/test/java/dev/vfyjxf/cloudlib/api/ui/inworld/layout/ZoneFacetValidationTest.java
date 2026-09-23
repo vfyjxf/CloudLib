@@ -10,6 +10,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneModel;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneWeights;
 import org.junit.jupiter.api.Test;
 
+import java.util.Objects;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -98,9 +99,11 @@ class ZoneFacetValidationTest {
     @Test
     void theInitialTierMustBeFullOrCompact() {
         for (LodTier tier : LodTier.values()) {
+            @SuppressWarnings("NullAway")
             ZoneFacet facet = new ZoneFacet(null, null, null, null, VisibilityPolicy.fade, tier);
             if (tier == LodTier.full || tier == LodTier.compact) {
-                assertSame(tier, ElementSpec.from(InworldProfile.facePanel, "z").withZone(facet).zone().initialTier());
+                ElementSpec zoned = ElementSpec.from(InworldProfile.facePanel, "z").withZone(facet);
+                assertSame(tier, Objects.requireNonNull(zoned.zone()).initialTier());
             } else {
                 assertThrows(
                     IllegalArgumentException.class,
@@ -116,6 +119,7 @@ class ZoneFacetValidationTest {
     // region facet fields
 
     @Test
+    @SuppressWarnings("NullAway")
     void nullKnobsResolveToTheirDefaults() {
         ZoneFacet facet = ZoneFacet.of();
         assertNull(facet.attention());

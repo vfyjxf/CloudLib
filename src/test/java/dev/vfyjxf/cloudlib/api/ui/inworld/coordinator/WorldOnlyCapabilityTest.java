@@ -11,11 +11,13 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.layout.InworldProfile;
 import dev.vfyjxf.cloudlib.api.ui.inworld.layout.LayoutEnvironment;
 import dev.vfyjxf.cloudlib.api.ui.inworld.layout.PipelineAssembler;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.VisibilityTracker;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -75,7 +77,7 @@ class WorldOnlyCapabilityTest {
             assertEquals(WorldAabb.around(200, 64.0, 150, 60, 8.0, 20), grant.world());
             // the screen half is degenerate: no projection was coordinated
             assertEquals(FloatRect.empty, grant.offsetRect());
-            assertNull(result.elementState("bar").visualRect());
+            assertNull(Objects.requireNonNull(result.elementState("bar")).visualRect());
             assertNull(result.elementState("bar").rejection());
         }
         // one propose per frame, round 0 only — the world-only flow has no
@@ -92,7 +94,7 @@ class WorldOnlyCapabilityTest {
         now += dt;
         CoordinationResult retracted = frame(coordinator, now);
         assertNull(retracted.placementOf("bar"));
-        assertNotNull(retracted.elementState("bar").placement());
+        assertNotNull(Objects.requireNonNull(retracted.elementState("bar")).placement());
         assertNull(retracted.elementState("bar").rejection());
         assertEquals(VisibilityTracker.Phase.lingering, retracted.elementState("bar").phase());
         assertEquals(1.0, retracted.elementState("bar").alpha(), 1.0e-9);
@@ -138,7 +140,7 @@ class WorldOnlyCapabilityTest {
 
         CoordinationResult first = frame(coordinator, dt);
         assertNull(first.placementOf("stub"));
-        assertNull(first.elementState("stub").placement());
+        assertNull(Objects.requireNonNull(first.elementState("stub")).placement());
         assertNull(first.elementState("stub").rejection());
         assertEquals(VisibilityTracker.Phase.hidden, first.elementState("stub").phase());
     }
@@ -280,12 +282,15 @@ class WorldOnlyCapabilityTest {
             InworldPlacement grant = squeezed.placementOf("billboard");
             assertNotNull(grant, "an exclusion cannot hide a world-only element");
             assertEquals(expected, grant.world(), "an exclusion cannot move a world-only element");
-            assertNull(squeezed.elementState("billboard").rejection());
+            assertNull(Objects.requireNonNull(squeezed.elementState("billboard")).rejection());
             assertEquals(VisibilityTracker.Phase.visible, squeezed.elementState("billboard").phase());
 
             assertNull(squeezed.placementOf("panel"), "the projecting element must yield to the exclusion");
-            assertNotNull(squeezed.elementState("panel").rejection());
-            assertEquals(RejectionReason.exclusion, squeezed.elementState("panel").rejection().reason());
+            assertNotNull(Objects.requireNonNull(squeezed.elementState("panel")).rejection());
+            assertEquals(
+                RejectionReason.exclusion,
+                Objects.requireNonNull(squeezed.elementState("panel").rejection()).reason()
+            );
         }
     }
 
@@ -323,7 +328,7 @@ class WorldOnlyCapabilityTest {
             }
 
             @Override
-            public void arbitrated(InworldPlacement placement, Feedback feedback) {}
+            public void arbitrated(@Nullable InworldPlacement placement, Feedback feedback) {}
         };
         ElementSpec spec = ElementSpec.from(InworldProfile.dock, "billboard").custom(billboard).withWorldOnly();
         AssembledElement element = PipelineAssembler.create().assemble(spec);
@@ -338,7 +343,7 @@ class WorldOnlyCapabilityTest {
             CoordinationResult result = frame(coordinator, now);
             element.observe(result);
         }
-        InworldPlacement grant = lastResult(coordinator).placementOf("billboard");
+        InworldPlacement grant = Objects.requireNonNull(lastResult(coordinator)).placementOf("billboard");
         assertNotNull(grant);
         assertEquals(box, grant.world());
         assertEquals(FloatRect.empty, grant.offsetRect());
@@ -356,7 +361,7 @@ class WorldOnlyCapabilityTest {
         return state;
     }
 
-    private static CoordinationResult lastResult(InworldCoordinator coordinator) {
+    private static @Nullable CoordinationResult lastResult(InworldCoordinator coordinator) {
         return coordinator.lastResult().orElse(null);
     }
 

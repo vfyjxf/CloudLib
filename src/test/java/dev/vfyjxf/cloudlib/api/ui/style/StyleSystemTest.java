@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -151,16 +152,16 @@ class StyleSystemTest {
     void cssLonghandAfterShorthandWinsItsEdge() {
         Theme t = theme("a { padding: 2px; padding-left: 9px }");
         UIStyle s = t.resolve(new Node("a"));
-        assertEquals(2f, ((LengthPercentage) s.get(Styles.paddingTop).value()).getValue());
-        assertEquals(9f, ((LengthPercentage) s.get(Styles.paddingLeft).value()).getValue());
+        assertEquals(2f, ((LengthPercentage) Objects.requireNonNull(s.get(Styles.paddingTop)).value()).getValue());
+        assertEquals(9f, ((LengthPercentage) Objects.requireNonNull(s.get(Styles.paddingLeft)).value()).getValue());
     }
 
     @Test
     void cssShorthandAfterLonghandWinsAllEdges() {
         Theme t = theme("a { padding-left: 9px; padding: 2px }");
         UIStyle s = t.resolve(new Node("a"));
-        assertEquals(2f, ((LengthPercentage) s.get(Styles.paddingLeft).value()).getValue());
-        assertEquals(2f, ((LengthPercentage) s.get(Styles.paddingTop).value()).getValue());
+        assertEquals(2f, ((LengthPercentage) Objects.requireNonNull(s.get(Styles.paddingLeft)).value()).getValue());
+        assertEquals(2f, ((LengthPercentage) Objects.requireNonNull(s.get(Styles.paddingTop)).value()).getValue());
     }
 
     @Test

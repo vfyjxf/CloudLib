@@ -173,9 +173,11 @@ public final class CssTextures {
                 throw new IllegalArgumentException("no css form for an empty group");
             }
             StringBuilder out = new StringBuilder("group(");
-            for (int i = 0; i < group.layerCount(); i++) {
-                if (i > 0) out.append(", ");
-                out.append(write(group.layer(i)));
+            boolean first = true;
+            for (BatchableTexture layer : group.layers()) {
+                if (!first) out.append(", ");
+                first = false;
+                out.append(write(layer));
             }
             return out.append(')').toString();
         }
@@ -343,7 +345,11 @@ public final class CssTextures {
      */
     private static @Nullable ResourceLocation fileLocation(ComponentValue v) {
         ResourceLocation loc = location(v);
-        if (loc == null) return null;
+        return loc == null ? null : fileLocation(loc);
+    }
+
+    /** The file-backed form of an already-resolved texture location. */
+    private static ResourceLocation fileLocation(ResourceLocation loc) {
         return loc.withPath(p -> "textures/" + p + ".png");
     }
 
@@ -481,7 +487,7 @@ public final class CssTextures {
             Float h = num(args.get(2));
             if (w == null || h == null) return null;
             // explicit dims = a file-backed blit of that region, not an atlas sprite
-            return ImageTexture.of(fileLocation(args.get(0)), w.intValue(), h.intValue());
+            return ImageTexture.of(fileLocation(loc), w.intValue(), h.intValue());
         }
         if (args.size() == 5) {
             Float x = num(args.get(1));
@@ -490,8 +496,7 @@ public final class CssTextures {
             Float h = num(args.get(4));
             if (x == null || y == null || w == null || h == null) return null;
             // five-arg form = the region's UV offset inside the sheet
-            return ImageTexture
-                    .region(fileLocation(args.get(0)), x.intValue(), y.intValue(), w.intValue(), h.intValue());
+            return ImageTexture.region(fileLocation(loc), x.intValue(), y.intValue(), w.intValue(), h.intValue());
         }
         return null;
     }

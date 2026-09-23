@@ -235,17 +235,14 @@ tasks.withType(JavaCompile).configureEach {
 // NullAway runs as an Error Prone plugin over every source set (main, test). OnlyNullMarked
 // restricts the analysis to code carrying @NullMarked, which keeps Minecraft, NeoForge and
 // third-party boundaries out of it — those carry no JSpecify annotations to reason about.
-// disableAllChecks keeps Error Prone's stock checks off: this wiring is a null-safety pass,
-// and with them on the build fails on 4 pre-existing findings (NoCanIgnoreReturnValueOnClasses,
-// MathRoundIntLong) unrelated to nullability.
-// Stage A records findings at WARN; the level tightens to ERROR once they are cleared.
+// disableAllChecks keeps Error Prone's stock checks off: this wiring is a null-safety pass.
 tasks.withType(JavaCompile).configureEach {
-    // javac caps diagnostics at 100 by default; the NullAway sweep needs the whole list
+    // javac caps diagnostics at 100 by default; a NullAway sweep needs the whole list
     options.compilerArgs.addAll(['-Xmaxwarns', '2000', '-Xmaxerrs', '2000'])
     options.errorprone {
         disableAllChecks = true
         option("NullAway:OnlyNullMarked", "true")
-        check("NullAway", CheckSeverity.WARN)
+        check("NullAway", CheckSeverity.ERROR)
     }
 }
 

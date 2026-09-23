@@ -27,7 +27,7 @@ class SnapshotTest {
         private final List<String> strings = new ArrayList<>();
         private final List<String> copyOfStrings = new ArrayList<>();
         // mutable reference
-        private NamedObject name;
+        private NamedObject name = new NamedObject("mutable");
         // readonly value
         private final NamedObject readonlyName = new NamedObject("readonly");
         // illegal value

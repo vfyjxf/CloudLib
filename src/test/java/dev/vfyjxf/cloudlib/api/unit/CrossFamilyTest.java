@@ -7,6 +7,8 @@ import dev.vfyjxf.cloudlib.api.unit.units.ItemUnits;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import org.junit.jupiter.api.Test;
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -57,8 +59,8 @@ class CrossFamilyTest {
             NoConversionPathException.class,
             () -> converter.convert(1, ItemUnits.ingot, FluidUnits.millibucket)
         );
-        assertTrue(e.getMessage().contains("minecraft:item"));
-        assertTrue(e.getMessage().contains("minecraft:fluid"));
+        assertTrue(Objects.requireNonNull(e.getMessage()).contains("minecraft:item"));
+        assertTrue(Objects.requireNonNull(e.getMessage()).contains("minecraft:fluid"));
     }
 
     @Test

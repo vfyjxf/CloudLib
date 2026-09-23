@@ -8,6 +8,7 @@ import org.joml.Matrix4f;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -38,14 +39,14 @@ class ProjectionTest {
     void matrixAccessorsReturnDefensiveCopies() {
         Projection projection = ProjectionSimulator.at(0, 0, 0).lookAt(0, 0, -1).build();
         Vec3 world = new Vec3(1, 2, -8);
-        FloatPos before = projection.worldToScreen(world);
+        FloatPos before = Objects.requireNonNull(projection.worldToScreen(world));
 
         projection.worldToClip().m00(999f);
         projection.clipToWorld().m00(999f);
         projection.worldToView().m00(999f);
         projection.viewToClip().m00(999f);
 
-        GeometryAsserts.assertPosEquals(before, projection.worldToScreen(world), 1.0e-6);
+        GeometryAsserts.assertPosEquals(before, Objects.requireNonNull(projection.worldToScreen(world)), 1.0e-6);
     }
 
     @Test

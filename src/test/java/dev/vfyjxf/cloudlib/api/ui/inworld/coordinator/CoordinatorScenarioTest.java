@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -146,7 +147,7 @@ class CoordinatorScenarioTest {
         coordinator.register(element);
 
         CoordinationResult placed = frame(coordinator, 0);
-        FloatRect placedVisual = placed.elementState("e").visualRect();
+        FloatRect placedVisual = Objects.requireNonNull(placed.elementState("e")).visualRect();
         assertNotNull(placedVisual);
         double now = advance(coordinator, dt, 12); // fully faded in and visible
 
@@ -157,7 +158,7 @@ class CoordinatorScenarioTest {
         assertFalse(retracted.resolved(), "a retraction is not a space event");
         assertEquals(CoordinationResult.RenegotiationCause.none, retracted.cause());
         assertNull(retracted.placementOf("e"), "a retracted element is not presented");
-        CoordinationResult.ElementState state = retracted.elementState("e");
+        CoordinationResult.ElementState state = Objects.requireNonNull(retracted.elementState("e"));
         assertEquals(VisibilityTracker.Phase.lingering, state.phase());
         assertEquals(1.0, state.alpha(), 1.0e-9);
         assertEquals(placedVisual, state.visualRect(), "the rect freezes in place while lingering");
@@ -167,7 +168,7 @@ class CoordinatorScenarioTest {
         now = advance(coordinator, now, 10);
         assertEquals(
             VisibilityTracker.Phase.lingering,
-            coordinator.lastResult().orElseThrow().elementState("e").phase()
+            Objects.requireNonNull(coordinator.lastResult().orElseThrow().elementState("e")).phase()
         );
         now = advance(coordinator, now, 10); // ~0.35s total: past linger (0.25) into fade
         assertEquals(VisibilityTracker.Phase.fading, coordinator.lastResult().orElseThrow().elementState("e").phase());
@@ -184,7 +185,7 @@ class CoordinatorScenarioTest {
         coordinator.register(element);
 
         CoordinationResult placed = frame(coordinator, 0);
-        FloatRect original = placed.placementOf("e").screenRect();
+        FloatRect original = Objects.requireNonNull(placed.placementOf("e")).screenRect();
         double now = advance(coordinator, dt, 12); // fully faded in and visible
 
         element.anchorValid = false;
@@ -196,13 +197,13 @@ class CoordinatorScenarioTest {
 
         assertEquals(CoordinationResult.RenegotiationCause.presentationChanged, recovered.cause());
         assertTrue(recovered.resolved());
-        InworldPlacement placement = recovered.placementOf("e");
+        InworldPlacement placement = Objects.requireNonNull(recovered.placementOf("e"));
         assertNotNull(placement, "recovery re-presents the element");
         assertEquals(placed.placementOf("e").offsetRect().x(), placement.offsetRect().x(), 0.01);
         assertEquals(placed.placementOf("e").offsetRect().y(), placement.offsetRect().y(), 0.01);
         assertEquals(original.x(), placement.screenRect().x(), 0.01);
         assertEquals(original.y(), placement.screenRect().y(), 0.01);
-        CoordinationResult.ElementState state = recovered.elementState("e");
+        CoordinationResult.ElementState state = Objects.requireNonNull(recovered.elementState("e"));
         assertEquals(VisibilityTracker.Phase.visible, state.phase(), "a linger rescue keeps full alpha");
         assertEquals(1.0, state.alpha(), 1.0e-9);
     }
@@ -218,16 +219,23 @@ class CoordinatorScenarioTest {
         element.anchorValid = false;
         now += dt;
         now = advance(coordinator, now, 40); // linger + fade out completely
-        assertEquals(VisibilityTracker.Phase.hidden, coordinator.lastResult().orElseThrow().elementState("e").phase());
+        assertEquals(
+            VisibilityTracker.Phase.hidden,
+            Objects.requireNonNull(coordinator.lastResult().orElseThrow().elementState("e")).phase()
+        );
 
         element.anchorValid = true;
         now += dt;
         CoordinationResult recovered = frame(coordinator, now);
-        InworldPlacement placement = recovered.placementOf("e");
+        InworldPlacement placement = Objects.requireNonNull(recovered.placementOf("e"));
         assertNotNull(placement);
-        assertEquals(placed.placementOf("e").offsetRect().x(), placement.offsetRect().x(), 0.01);
+        assertEquals(
+            Objects.requireNonNull(placed.placementOf("e")).offsetRect().x(),
+            placement.offsetRect().x(),
+            0.01
+        );
         assertEquals(placed.placementOf("e").offsetRect().y(), placement.offsetRect().y(), 0.01);
-        assertEquals(VisibilityTracker.Phase.appearing, recovered.elementState("e").phase());
+        assertEquals(VisibilityTracker.Phase.appearing, Objects.requireNonNull(recovered.elementState("e")).phase());
     }
 
     // endregion
@@ -240,7 +248,7 @@ class CoordinatorScenarioTest {
         TestElement element = TestElement.arbitrated("e", 200, 150, new Size(100, 40), new Size(60, 24)).withSticky();
         coordinator.register(element);
         CoordinationResult first = frame(coordinator, 0);
-        assertEquals(150, first.placementOf("e").screenRect().x(), 0.01);
+        assertEquals(150, Objects.requireNonNull(first.placementOf("e")).screenRect().x(), 0.01);
 
         element.shift(5, 0); // below the 12 px threshold — and it stays there
         double now = 0;
@@ -251,13 +259,15 @@ class CoordinatorScenarioTest {
             assertEquals(CoordinationResult.RenegotiationCause.none, result.cause());
             assertEquals(1, result.epoch());
             // the offset is untouched; the continuous layer carries the drift
-            InworldPlacement placement = result.placementOf("e");
+            InworldPlacement placement = Objects.requireNonNull(result.placementOf("e"));
             assertEquals(first.placementOf("e").offsetRect().x(), placement.offsetRect().x(), 1.0e-9);
             assertEquals(first.placementOf("e").offsetRect().y(), placement.offsetRect().y(), 1.0e-9);
             assertEquals(155, placement.screenRect().x(), 1.0e-9);
         }
         // the spring has converged onto the drifted target
-        assertEquals(155, coordinator.lastResult().orElseThrow().elementState("e").visualRect().x(), 0.5);
+        CoordinationResult.ElementState drifted = Objects
+                .requireNonNull(coordinator.lastResult().orElseThrow().elementState("e"));
+        assertEquals(155, Objects.requireNonNull(drifted.visualRect()).x(), 0.5);
 
         // with nothing else happening, the epoch timer is what eventually fires
         CoordinationResult epochFrame = null;
@@ -279,7 +289,8 @@ class CoordinatorScenarioTest {
         TestElement element = TestElement.arbitrated("e", 200, 150, new Size(100, 40), new Size(60, 24)).withSticky();
         coordinator.register(element);
         CoordinationResult first = frame(coordinator, 0);
-        FloatRect visualAtRest = first.elementState("e").visualRect();
+        CoordinationResult.ElementState rested = Objects.requireNonNull(first.elementState("e"));
+        FloatRect visualAtRest = Objects.requireNonNull(rested.visualRect());
 
         element.shift(60, 0); // well past the 12 px threshold
         double now = dt;
@@ -288,16 +299,19 @@ class CoordinatorScenarioTest {
         assertEquals(CoordinationResult.RenegotiationCause.anchorDisplacement, jumped.cause());
         assertTrue(jumped.resolved());
         // sticky: the same slot, re-anchored
-        InworldPlacement placement = jumped.placementOf("e");
-        assertEquals(first.placementOf("e").offsetRect().x(), placement.offsetRect().x(), 0.01);
+        InworldPlacement placement = Objects.requireNonNull(jumped.placementOf("e"));
+        assertEquals(Objects.requireNonNull(first.placementOf("e")).offsetRect().x(), placement.offsetRect().x(), 0.01);
         assertEquals(210, placement.screenRect().x(), 0.01);
         // the discrete move is a FLIP: the visual starts where it rested
-        FloatRect visual = jumped.elementState("e").visualRect();
+        CoordinationResult.ElementState jumpedState = Objects.requireNonNull(jumped.elementState("e"));
+        FloatRect visual = Objects.requireNonNull(jumpedState.visualRect());
         assertEquals(visualAtRest.x(), visual.x(), 0.01);
         assertEquals(visualAtRest.y(), visual.y(), 0.01);
 
         now = advance(coordinator, now, 30); // 0.5 s: past the 250 ms morph clamp
-        FloatRect settled = coordinator.lastResult().orElseThrow().elementState("e").visualRect();
+        CoordinationResult.ElementState settledState = Objects
+                .requireNonNull(coordinator.lastResult().orElseThrow().elementState("e"));
+        FloatRect settled = Objects.requireNonNull(settledState.visualRect());
         assertEquals(210, settled.x(), 0.5);
         assertEquals(130, settled.y(), 0.5);
     }
@@ -315,7 +329,7 @@ class CoordinatorScenarioTest {
         CoordinationResult rerouted = frame(coordinator, now, cover);
 
         assertEquals(CoordinationResult.RenegotiationCause.exclusionsChanged, rerouted.cause());
-        FloatRect rect = rerouted.placementOf("e").screenRect();
+        FloatRect rect = Objects.requireNonNull(rerouted.placementOf("e")).screenRect();
         assertTrue(rect.intersection(toFloat(cover)).area() == 0, "must not sit on the exclusion: " + rect);
         // the hugging exclusion became a strut: the work area is now
         // 200 px wide and the primary candidate clamps flush against it
@@ -369,17 +383,25 @@ class CoordinatorScenarioTest {
         CoordinationResult result = frame(coordinator, 0);
 
         // the fixed element is granted its contested rect unconditionally
-        assertEquals(new FloatRect(150, 130, 100, 40), result.placementOf("fixed").screenRect());
+        assertEquals(
+            new FloatRect(150, 130, 100, 40),
+            Objects.requireNonNull(result.placementOf("fixed")).screenRect()
+        );
         assertTrue(
-            result.placementOf("normal").screenRect().intersects(result.placementOf("fixed").screenRect()),
+            Objects.requireNonNull(result.placementOf("normal")).screenRect()
+                    .intersects(Objects.requireNonNull(result.placementOf("fixed")).screenRect()),
             "fixed is exempt from avoidance: the overlap stands at commit"
         );
 
         // and relax pushes the pushable visual out of the fixed one over frames
         double now = dt;
         now = advance(coordinator, now, 20);
-        FloatRect normalVisual = coordinator.lastResult().orElseThrow().elementState("normal").visualRect();
-        FloatRect fixedVisual = coordinator.lastResult().orElseThrow().elementState("fixed").visualRect();
+        CoordinationResult.ElementState normalState = Objects
+                .requireNonNull(coordinator.lastResult().orElseThrow().elementState("normal"));
+        CoordinationResult.ElementState fixedState = Objects
+                .requireNonNull(coordinator.lastResult().orElseThrow().elementState("fixed"));
+        FloatRect normalVisual = Objects.requireNonNull(normalState.visualRect());
+        FloatRect fixedVisual = Objects.requireNonNull(fixedState.visualRect());
         assertTrue(
             normalVisual.intersection(fixedVisual).area() == 0,
             "relax must separate the pushable element from the fixed one: " + normalVisual + " vs " + fixedVisual
@@ -421,7 +443,7 @@ class CoordinatorScenarioTest {
 
         // squeezed: full is out of bounds, compact is granted in round 1
         CoordinationResult squeezed = coordinator.frame(InworldCoordinator.FrameInput.of(300, 200, 0, dt, topStrip));
-        assertEquals(1, squeezed.placementOf("e").variant().level());
+        assertEquals(1, Objects.requireNonNull(squeezed.placementOf("e")).variant().level());
 
         double now = 0;
         // the squeeze clears mid-epoch: a re-resolve happens (exclusions
@@ -429,7 +451,11 @@ class CoordinatorScenarioTest {
         now += 6 * dt;
         CoordinationResult cleared = frame(coordinator, now);
         assertEquals(CoordinationResult.RenegotiationCause.exclusionsChanged, cleared.cause());
-        assertEquals(1, cleared.placementOf("e").variant().level(), "no upgrade outside an epoch boundary");
+        assertEquals(
+            1,
+            Objects.requireNonNull(cleared.placementOf("e")).variant().level(),
+            "no upgrade outside an epoch boundary"
+        );
 
         // the next epoch tick climbs one rung back up
         int guard = 0;
@@ -441,7 +467,7 @@ class CoordinatorScenarioTest {
         }
         CoordinationResult upgraded = coordinator.lastResult().orElseThrow();
         assertEquals(CoordinationResult.RenegotiationCause.epochElapsed, upgraded.cause());
-        assertEquals(0, upgraded.placementOf("e").variant().level());
+        assertEquals(0, Objects.requireNonNull(upgraded.placementOf("e")).variant().level());
         assertEquals(160, upgraded.placementOf("e").screenRect().width(), 0.01);
         assertEquals(100, upgraded.placementOf("e").screenRect().height(), 0.01);
     }

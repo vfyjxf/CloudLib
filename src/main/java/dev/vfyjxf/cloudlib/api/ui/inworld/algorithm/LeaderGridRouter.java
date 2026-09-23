@@ -139,7 +139,7 @@ public final class LeaderGridRouter {
      *
      * @see #route(FloatPos, double, double, FloatPos, double, double, List, Config, FloatRect)
      */
-    public static List<FloatPos> route(
+    public static @Nullable List<FloatPos> route(
         FloatPos anchor,
         double dirX,
         double dirY,
@@ -162,7 +162,7 @@ public final class LeaderGridRouter {
      * @return the polyline anchor → … → port+gap, or {@code null} when no
      *         collision-free path exists on this grid
      */
-    public static List<FloatPos> route(
+    public static @Nullable List<FloatPos> route(
         FloatPos anchor,
         double dirX,
         double dirY,
@@ -342,8 +342,8 @@ public final class LeaderGridRouter {
         FloatPos a,
         FloatPos b,
         List<double[]> inflated,
-        List<double[]> exempt,
-        double[] bounds
+        @Nullable List<double[]> exempt,
+        double @Nullable [] bounds
     ) {
         if (outsideBounds(a.x(), a.y(), bounds) || outsideBounds(b.x(), b.y(), bounds)) {
             return true;
@@ -383,7 +383,7 @@ public final class LeaderGridRouter {
         double[] gy,
         boolean[] nodeBlocked,
         List<double[]> inflated,
-        double[] bounds,
+        double @Nullable [] bounds,
         int[] g,
         int[] parent,
         boolean[] closed,
@@ -480,7 +480,7 @@ public final class LeaderGridRouter {
         double[] gx,
         double[] gy,
         List<double[]> inflated,
-        double[] bounds,
+        double @Nullable [] bounds,
         Config config
     ) {
         // an edge with an end off the viewport is off-screen; the rect is
@@ -559,7 +559,7 @@ public final class LeaderGridRouter {
         return ax * by - ay * bx;
     }
 
-    private static boolean pointBlocked(double x, double y, List<double[]> inflated, double[] bounds) {
+    private static boolean pointBlocked(double x, double y, List<double[]> inflated, double @Nullable [] bounds) {
         if (outsideBounds(x, y, bounds)) {
             return true;
         }
@@ -572,12 +572,12 @@ public final class LeaderGridRouter {
     }
 
     /** The viewport rect as a bounds tuple {x0, y0, x1, y1}; null when unbounded. */
-    private static double[] boundsOf(@Nullable FloatRect viewport) {
+    private static double @Nullable [] boundsOf(@Nullable FloatRect viewport) {
         return viewport == null ? null : new double[]{viewport.x(), viewport.y(), viewport.right(), viewport.bottom()};
     }
 
     /** Whether the point lies strictly outside the bounds; the boundary itself is inside. */
-    private static boolean outsideBounds(double x, double y, double[] bounds) {
+    private static boolean outsideBounds(double x, double y, double @Nullable [] bounds) {
         return bounds != null
                 && (x < bounds[0] - epsilon
                         || x > bounds[2] + epsilon
@@ -586,7 +586,7 @@ public final class LeaderGridRouter {
     }
 
     /** Whether every point of the polyline lies inside the bounds. */
-    private static boolean withinBounds(List<FloatPos> points, double[] bounds) {
+    private static boolean withinBounds(List<FloatPos> points, double @Nullable [] bounds) {
         for (FloatPos p : points) {
             if (outsideBounds(p.x(), p.y(), bounds)) {
                 return false;
@@ -600,7 +600,7 @@ public final class LeaderGridRouter {
         return clamped(p, boundsOf(viewport));
     }
 
-    private static FloatPos clamped(FloatPos p, double[] bounds) {
+    private static FloatPos clamped(FloatPos p, double @Nullable [] bounds) {
         if (bounds == null) {
             return p;
         }
@@ -634,7 +634,13 @@ public final class LeaderGridRouter {
         return false;
     }
 
-    private static double[] gridCoords(double a, double b, List<double[]> inflated, double[] bounds, boolean xAxis) {
+    private static double[] gridCoords(
+        double a,
+        double b,
+        List<double[]> inflated,
+        double @Nullable [] bounds,
+        boolean xAxis
+    ) {
         List<Double> coords = new ArrayList<>(inflated.size() * 2 + 4);
         coords.add(a);
         coords.add(b);
@@ -731,7 +737,11 @@ public final class LeaderGridRouter {
      * perpendicular corridor is bounded by obstacles on both sides slides to
      * that corridor's midpoint when the whole polyline stays collision-free.
      */
-    private static List<FloatPos> centerLanes(List<FloatPos> points, List<double[]> inflated, double[] bounds) {
+    private static List<FloatPos> centerLanes(
+        List<FloatPos> points,
+        List<double[]> inflated,
+        double @Nullable [] bounds
+    ) {
         if (points.size() < 5 || inflated.isEmpty()) {
             return points;
         }

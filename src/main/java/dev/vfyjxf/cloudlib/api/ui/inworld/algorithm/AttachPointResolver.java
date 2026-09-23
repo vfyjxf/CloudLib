@@ -176,8 +176,7 @@ public final class AttachPointResolver {
         }
         State state = states.get(id);
         if (state == null) {
-            state = new State();
-            state.face = pickFace(rect, target.x(), target.y(), null, config);
+            state = new State(pickFace(rect, target.x(), target.y(), null, config), rect);
             state.t = faceParam(rect, state.face);
             state.dest = state.t;
             states.put(id, state);
@@ -496,6 +495,11 @@ public final class AttachPointResolver {
         double slideFrom;
         double slideDelta;
         double slideElapsed;
+
+        State(Face face, FloatRect rect) {
+            this.face = face;
+            this.rect = rect;
+        }
     }
 
     private void beginSlide(State state, FloatRect rect, double targetParam) {

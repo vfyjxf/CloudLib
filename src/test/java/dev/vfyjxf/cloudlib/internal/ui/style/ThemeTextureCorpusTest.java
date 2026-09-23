@@ -6,6 +6,7 @@ import dev.vfyjxf.cloudlib.api.css.StyleRule;
 import dev.vfyjxf.cloudlib.api.css.Stylesheet;
 import dev.vfyjxf.cloudlib.api.css.Tokens;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -60,7 +61,7 @@ class ThemeTextureCorpusTest {
         return out;
     }
 
-    private static String functionOf(List<ComponentValue> values) {
+    private static @Nullable String functionOf(List<ComponentValue> values) {
         for (ComponentValue value : values) {
             if (value == ComponentValue.Whitespace.instance) {
                 continue;

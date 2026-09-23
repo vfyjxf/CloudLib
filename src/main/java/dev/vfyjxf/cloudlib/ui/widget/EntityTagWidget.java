@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.world.entity.LivingEntity;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Compact entity tag: a name line with the hp count on the right and a 2px
@@ -17,13 +18,13 @@ public final class EntityTagWidget extends Widget {
     private static final int hpLow = 0xFFE06666;
 
     private final LivingEntity entity;
-    private final String label;
+    private final @Nullable String label;
 
     public EntityTagWidget(LivingEntity entity) {
         this(entity, null);
     }
 
-    public EntityTagWidget(LivingEntity entity, String label) {
+    public EntityTagWidget(LivingEntity entity, @Nullable String label) {
         this.entity = entity;
         this.label = label;
         onMount((scene, context, handle) -> scene.layoutTree().setMeasureFunc(nodeId(), (style, space) -> {

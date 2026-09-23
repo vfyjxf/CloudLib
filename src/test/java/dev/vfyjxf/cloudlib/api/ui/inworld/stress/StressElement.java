@@ -15,6 +15,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.SpaceKind;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.VariantLadder;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.WorldAabb;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpacePolicy;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -118,7 +119,7 @@ final class StressElement implements InworldElement {
         int screenWidth,
         int screenHeight,
         int maxLadderRungs,
-        Motion motionOverride,
+        @Nullable Motion motionOverride,
         double budgetAwareFraction,
         boolean singleAnchor,
         double sizeScale,

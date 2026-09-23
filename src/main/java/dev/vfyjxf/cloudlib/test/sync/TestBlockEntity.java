@@ -48,12 +48,12 @@ public class TestBlockEntity extends BlockEntity {
             new ItemStack(Items.WHITE_WOOL, 20), new ItemStack(Items.RED_WOOL, 30), new ItemStack(Items.GREEN_WOOL, 40),
             new ItemStack(Items.BLUE_WOOL, 50), new ItemStack(Items.YELLOW_WOOL, 60),};
 
-    private ItemStack selected;
+    private ItemStack selected = ItemStack.EMPTY;
     private int basic;
     private String reference = "";
     private ItemStack registerEntry = ItemStack.EMPTY;
     public final ObservableItemHandler transform = new ObservableItemHandler(9);
-    private List<ItemStack> list;
+    private List<ItemStack> list = List.of();
     private long currentTick;
 
     public TestBlockEntity(BlockPos pos, BlockState blockState) {

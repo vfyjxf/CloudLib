@@ -779,6 +779,7 @@ class ZoneCostTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void contextAndSegmentsValidateTheirInputs() {
         assertThrows(NullPointerException.class, () -> ZoneCost.Context.of(null, anchor, screen, attention));
         assertThrows(

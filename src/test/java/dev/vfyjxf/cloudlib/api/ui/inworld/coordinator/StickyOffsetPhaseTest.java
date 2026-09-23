@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -129,7 +130,7 @@ class StickyOffsetPhaseTest {
         // establishes a new offset)
         Rect overRight = new Rect(300, 120, 240, 160);
         CoordinationResult first = frame(coordinator, 0, overRight);
-        FloatRect granted = first.placementOf("e").offsetRect();
+        FloatRect granted = Objects.requireNonNull(first.placementOf("e")).offsetRect();
         assertTrue(granted.x() < 0, "granted the left slot: " + granted);
         assertTrue(granted.x() != Math.floor(granted.x()), "the test needs a fractional granted offset: " + granted);
 
@@ -142,7 +143,7 @@ class StickyOffsetPhaseTest {
             element.moveTo(300.25 + f * 0.31, 200.6 + f * 0.17);
             now += dt;
             CoordinationResult result = frame(coordinator, now);
-            InworldPlacement placement = result.placementOf("e");
+            InworldPlacement placement = Objects.requireNonNull(result.placementOf("e"));
             // the committed offset is bit-identical to the grant: no epoch
             // ever re-derives it from the candidate's integer rect
             assertEquals(granted, placement.offsetRect(), "frame " + f + ": the committed offset re-phased");
@@ -177,15 +178,19 @@ class StickyOffsetPhaseTest {
         coordinator.register(element);
 
         CoordinationResult first = frame(coordinator, 0);
-        FloatRect granted = first.placementOf("e").offsetRect();
-        assertEquals(granted, frame(coordinator, dt).placementOf("e").offsetRect(), "a fitting slot never re-phases");
+        FloatRect granted = Objects.requireNonNull(first.placementOf("e")).offsetRect();
+        assertEquals(
+            granted,
+            Objects.requireNonNull(frame(coordinator, dt).placementOf("e")).offsetRect(),
+            "a fitting slot never re-phases"
+        );
 
         // walk the anchor off the left edge: the clamped fit must produce a
         // different (edge-following) offset, not the frozen one
         element.moveTo(-20, 200);
         CoordinationResult clamped = frame(coordinator, 2 * dt);
         assertTrue(
-            clamped.placementOf("e").offsetRect().x() > granted.x(),
+            Objects.requireNonNull(clamped.placementOf("e")).offsetRect().x() > granted.x(),
             "the clamped slot establishes its own offset: " + clamped.placementOf("e").offsetRect()
         );
         assertEquals(0, clamped.placementOf("e").screenRect().x(), 0.01, "clamped to the work-area edge");

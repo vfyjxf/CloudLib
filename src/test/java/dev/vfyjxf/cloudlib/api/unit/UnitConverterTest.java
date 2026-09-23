@@ -8,6 +8,8 @@ import dev.vfyjxf.cloudlib.api.unit.units.TimeUnits;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import org.junit.jupiter.api.Test;
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -69,8 +71,8 @@ class UnitConverterTest {
             NoConversionPathException.class,
             () -> converter.convert(1, TimeUnits.tick, EnergyUnits.fe)
         );
-        assertTrue(e.getMessage().contains("minecraft:time"));
-        assertTrue(e.getMessage().contains("minecraft:energy"));
+        assertTrue(Objects.requireNonNull(e.getMessage()).contains("minecraft:time"));
+        assertTrue(Objects.requireNonNull(e.getMessage()).contains("minecraft:energy"));
     }
 
     @Test

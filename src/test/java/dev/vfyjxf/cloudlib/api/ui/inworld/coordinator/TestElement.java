@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.FloatRect;
 import dev.vfyjxf.cloudlib.api.math.Size;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpacePolicy;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +39,9 @@ final class TestElement implements InworldElement {
     final List<InworldVariant> usedVariants = new ArrayList<>();
     int proposeCount;
     int lastRound = -1;
+    @Nullable
     SpaceBudget lastBudget;
+    @Nullable
     ElementRejection lastRejectionSeen;
 
     private TestElement(

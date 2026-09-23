@@ -12,8 +12,8 @@ import org.jspecify.annotations.Nullable;
 public class DragContextImpl implements DragContext {
     private final DraggableManager draggableManager;
     private final FloatPos start;
-    private Object content;
-    private DraggableElement<?> draggableElement;
+    private @Nullable Object content;
+    private @Nullable DraggableElement<?> draggableElement;
 
     DragContextImpl(DraggableManager draggableManager) {
         this.draggableManager = draggableManager;

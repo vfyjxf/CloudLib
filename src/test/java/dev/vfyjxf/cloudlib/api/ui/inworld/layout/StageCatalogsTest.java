@@ -9,6 +9,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpaceMask;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -91,8 +92,8 @@ class StageCatalogsTest {
                 .candidates(context(0.0, OrientationFacet.Mode.cameraBillboard));
         assertEquals(8, spread.size());
         for (PlacementCandidate candidate : spread) {
-            double distance = Math
-                    .hypot(candidate.screenRect().centerX() - 200.0, candidate.screenRect().centerY() - 150.0);
+            FloatRect rect = Objects.requireNonNull(candidate.screenRect());
+            double distance = Math.hypot(rect.centerX() - 200.0, rect.centerY() - 150.0);
             assertEquals(108.0, distance, 0.01, "radius = max(width, height) + 8");
         }
     }
@@ -122,8 +123,9 @@ class StageCatalogsTest {
         List<PlacementCandidate> slots = StageCatalogs.requireCandidateStrategy(StageCatalogs.candidatesOrbitRing)
                 .candidates(context(0.0, OrientationFacet.Mode.cameraBillboard));
         assertFalse(slots.isEmpty());
-        assertEquals(60.0, slots.getFirst().screenRect().centerX() - 200.0, 0.01, "base = max/2 + 10");
-        assertEquals(0.0, slots.getFirst().screenRect().centerY() - 150.0, 0.01);
+        FloatRect firstSlot = Objects.requireNonNull(slots.getFirst().screenRect());
+        assertEquals(60.0, firstSlot.centerX() - 200.0, 0.01, "base = max/2 + 10");
+        assertEquals(0.0, firstSlot.centerY() - 150.0, 0.01);
     }
 
     @Test
@@ -135,14 +137,16 @@ class StageCatalogsTest {
                     dockContext(LayoutHarness.unanchored().withAnchor(AnchorFrame.screen(LayoutHarness.pos(388, 15))))
                 );
         assertEquals(2, free.size(), "first-fit slot plus the tail alternative");
-        assertEquals(292.0, free.getFirst().screenRect().x(), 0.01, "margin 8 from the right edge: 400 - 8 - 100");
-        assertEquals(8.0, free.getFirst().screenRect().y(), 0.01, "first-fit at the scanline origin");
+        FloatRect firstSlot = Objects.requireNonNull(free.getFirst().screenRect());
+        assertEquals(292.0, firstSlot.x(), 0.01, "margin 8 from the right edge: 400 - 8 - 100");
+        assertEquals(8.0, firstSlot.y(), 0.01, "first-fit at the scanline origin");
 
         LayoutEnvironment blockedEnv = LayoutHarness.unanchored().withExclusions(List.of(new Rect(0, 0, 400, 40)))
                 .withAnchor(AnchorFrame.screen(LayoutHarness.pos(388, 15)));
         List<PlacementCandidate> blocked = StageCatalogs.requireCandidateStrategy(StageCatalogs.candidatesDockCursor)
                 .candidates(dockContext(blockedEnv));
-        assertEquals(46.0, blocked.getFirst().screenRect().y(), 0.01, "40 + spacing 6 pushes past the strip");
+        FloatRect blockedSlot = Objects.requireNonNull(blocked.getFirst().screenRect());
+        assertEquals(46.0, blockedSlot.y(), 0.01, "40 + spacing 6 pushes past the strip");
     }
 
     private static StageCatalogs.CandidateContext dockContext(LayoutEnvironment environment) {
@@ -170,10 +174,12 @@ class StageCatalogsTest {
         );
         List<PlacementCandidate> right = StageCatalogs.requireCandidateStrategy(StageCatalogs.candidatesExcentricColumn)
                 .candidates(leftFocus);
-        assertTrue(right.getFirst().screenRect().centerX() > 100.0, "focus on the left half → column right");
-        assertEquals(168.0, right.getFirst().screenRect().centerX(), 0.01, "anchor 100 + gap 8 + half of 120");
-        assertEquals(150.0, right.getFirst().screenRect().centerY(), 0.01);
-        assertEquals(176.0, right.get(1).screenRect().centerY(), 0.01, "rows step by height + 4");
+        FloatRect head = Objects.requireNonNull(right.getFirst().screenRect());
+        assertTrue(head.centerX() > 100.0, "focus on the left half → column right");
+        assertEquals(168.0, head.centerX(), 0.01, "anchor 100 + gap 8 + half of 120");
+        assertEquals(150.0, head.centerY(), 0.01);
+        FloatRect second = Objects.requireNonNull(right.get(1).screenRect());
+        assertEquals(176.0, second.centerY(), 0.01, "rows step by height + 4");
     }
 
     // endregion
@@ -190,7 +196,7 @@ class StageCatalogsTest {
         List<PlacementCandidate> surviving = StageCatalogs.requireAvoidStrategy(StageCatalogs.avoidExclusions)
                 .filter(candidates, new StageCatalogs.AvoidContext(Set.of(), true, environment));
         assertEquals(1, surviving.size());
-        assertEquals(100.0, surviving.getFirst().screenRect().centerX(), 0.01);
+        assertEquals(100.0, Objects.requireNonNull(surviving.getFirst().screenRect()).centerX(), 0.01);
     }
 
     @Test
@@ -210,7 +216,7 @@ class StageCatalogsTest {
         List<PlacementCandidate> surviving = StageCatalogs.requireAvoidStrategy(StageCatalogs.avoidExclusionsAndMasks)
                 .filter(candidates, avoidingPanels);
         assertEquals(1, surviving.size());
-        assertEquals(100.0, surviving.getFirst().screenRect().centerX(), 0.01);
+        assertEquals(100.0, Objects.requireNonNull(surviving.getFirst().screenRect()).centerX(), 0.01);
 
         StageCatalogs.AvoidContext avoidingNothing = new StageCatalogs.AvoidContext(Set.of(), false, environment);
         assertEquals(
@@ -231,7 +237,7 @@ class StageCatalogsTest {
             candidates,
             new StageCatalogs.RankContext(LayoutHarness.pos(200, 150), null, false, AlgorithmProfile.nameplate.params())
         );
-        assertEquals(220.0, ranked.getFirst().screenRect().centerX(), 0.01);
+        assertEquals(220.0, Objects.requireNonNull(ranked.getFirst().screenRect()).centerX(), 0.01);
     }
 
     @Test
@@ -249,7 +255,12 @@ class StageCatalogsTest {
                 AlgorithmProfile.nameplate.params()
             )
         );
-        assertEquals(260.0, ranked.getFirst().screenRect().centerX(), 0.01, "the incumbent slot leads");
+        assertEquals(
+            260.0,
+            Objects.requireNonNull(ranked.getFirst().screenRect()).centerX(),
+            0.01,
+            "the incumbent slot leads"
+        );
         ranked = StageCatalogs.requireRankStrategy(StageCatalogs.rankIncumbentFirst).rank(
             candidates,
             new StageCatalogs.RankContext(LayoutHarness.pos(200, 150), null, true, AlgorithmProfile.nameplate.params())

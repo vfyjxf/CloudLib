@@ -97,7 +97,7 @@ public final class StyleLoader extends SimplePreparableReloadListener<StyleLoade
 
         // pass 1 — descriptors: a dir containing theme.json is a theme dir
         Map<ResourceLocation, ThemeDef> themes = new LinkedHashMap<>();
-        Map<String, ResourceLocation> descDirs = new HashMap<>(); // ns + '/' + dir → theme id
+        Map<String, ThemeDef> descDirs = new HashMap<>(); // ns + '/' + dir → theme
 
         Map<ResourceLocation, Resource> files = manager.listResources(
             directory,
@@ -119,8 +119,9 @@ public final class StyleLoader extends SimplePreparableReloadListener<StyleLoade
                 ResourceLocation id = ResourceLocation.fromNamespaceAndPath(file.getNamespace(), dir);
                 ThemeDescriptor descriptor = parseDescriptor(file, read(entry.getValue(), file));
                 int rank = packOrder.indexOf(entry.getValue().sourcePackId());
-                descDirs.put(file.getNamespace() + '/' + dir, id);
-                themes.put(id, new ThemeDef(descriptor, Math.max(rank, 0), new TreeMap<>()));
+                ThemeDef theme = new ThemeDef(descriptor, Math.max(rank, 0), new TreeMap<>());
+                descDirs.put(file.getNamespace() + '/' + dir, theme);
+                themes.put(id, theme);
             } else {
                 cssFiles.add(entry);
             }
@@ -135,9 +136,9 @@ public final class StyleLoader extends SimplePreparableReloadListener<StyleLoade
             int slash = rel.lastIndexOf('/');
             String dir = slash < 0 ? "" : rel.substring(0, slash);
             String name = slash < 0 ? rel : rel.substring(slash + 1);
-            ResourceLocation owner = descDirs.get(file.getNamespace() + '/' + dir);
+            ThemeDef owner = descDirs.get(file.getNamespace() + '/' + dir);
             if (owner != null) {
-                themes.get(owner).cssFiles().put(name, read(entry.getValue(), file));
+                owner.cssFiles().put(name, read(entry.getValue(), file));
             } else {
                 ResourceLocation id = ResourceLocation
                         .fromNamespaceAndPath(file.getNamespace(), rel.substring(0, rel.length() - ".css".length()));

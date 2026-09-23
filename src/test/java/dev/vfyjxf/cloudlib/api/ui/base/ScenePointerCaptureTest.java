@@ -150,6 +150,7 @@ class ScenePointerCaptureTest {
     private static SceneHost testSceneHost() {
         return new SceneHost() {
             @Override
+            @SuppressWarnings("NullAway")
             public Font font() {
                 return null; // headless — no text measure goes through the host
             }

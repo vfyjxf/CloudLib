@@ -23,6 +23,7 @@ final class BasicHandle<T> implements Handle<T> {
     private T value;
     private boolean dirty;
 
+    @SuppressWarnings("NullAway")
     BasicHandle(@Nullable T initial, CheckStrategy<T> strategy) {
         this.strategy = strategy;
         this.value = initial;

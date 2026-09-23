@@ -168,6 +168,7 @@ class HandleTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void diffHandleToleratesNullValue() {
         DiffHandle<TestDiffObservable, String> h = DiffHandle.of(new TestDiffObservable());
         h.load(null); // store null

@@ -3,6 +3,8 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.stability;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import org.junit.jupiter.api.Test;
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -60,12 +62,12 @@ class DisplacementGateTest {
     @Test
     void theHeldPointIsAlwaysAPreviouslySeenPosition() {
         FloatPos live = new FloatPos(50, 50);
-        FloatPos held = gate.observe(live);
+        FloatPos held = Objects.requireNonNull(gate.observe(live));
         for (int i = 0; i < 200; i++) {
             double angle = i * 0.7;
             double radius = (i % 7) * 1.3;
             live = new FloatPos(live.x() + Math.cos(angle) * radius, live.y() + Math.sin(angle) * radius);
-            FloatPos next = gate.observe(live);
+            FloatPos next = Objects.requireNonNull(gate.observe(live));
             // every release lands exactly on the live point; every hold keeps
             // the previous reference — never an invented in-between position
             assertTrue(
@@ -101,6 +103,7 @@ class DisplacementGateTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void configRejectsNull() {
         assertThrows(NullPointerException.class, () -> new DisplacementGate(null));
     }

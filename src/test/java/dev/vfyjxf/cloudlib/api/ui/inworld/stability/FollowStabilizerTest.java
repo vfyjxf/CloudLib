@@ -176,6 +176,7 @@ class FollowStabilizerTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void rejectsInvalidArguments() {
         assertThrows(
             IllegalArgumentException.class,

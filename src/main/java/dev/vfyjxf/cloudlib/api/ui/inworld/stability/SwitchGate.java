@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld.stability;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 
 /**
@@ -89,7 +91,7 @@ public final class SwitchGate<S> {
     private S current;
     private double entryMetric;
     private double referenceMetric;
-    private S pending;
+    private @Nullable S pending;
     private int dwellElapsed;
     private int ticksSinceSwitch;
 

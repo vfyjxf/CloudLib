@@ -35,7 +35,7 @@ class CssTexturesTest {
 
     /** JUnit 5.7 lacks assertInstanceOf — same contract: fail on type mismatch, else cast. */
     @SuppressWarnings("unchecked")
-    private static <T> T cast(Class<T> type, Object value) {
+    private static <T> T cast(Class<T> type, @Nullable Object value) {
         assertNotNull(value, "expected " + type.getSimpleName() + ", got null");
         assertTrue(
             type.isInstance(value),
@@ -63,7 +63,7 @@ class CssTexturesTest {
             CssParser.parse("panel { background: " + declaration + " }")
         );
         UIStyle style = theme.resolve(new Node(), warning -> {});
-        StyleValue<?> value = style.get(Styles.byId("background"));
+        StyleValue<?> value = style.get(Styles.background);
         return value == null ? null : cast(VisualTexture.class, value.value());
     }
 

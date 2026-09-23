@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.base;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -294,6 +295,7 @@ class ReconcilerTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void testKeyWithNullToString() {
         // Edge case where key object might have unusual toString
         Object strangeKey = new Object() {
@@ -358,7 +360,7 @@ class ReconcilerTest {
 
     private static class TestBlueprint implements Blueprint<Widget> {
         private final String name;
-        private Object key;
+        private @Nullable Object key;
 
         TestBlueprint(String name) {
             this.name = name;
@@ -369,7 +371,7 @@ class ReconcilerTest {
         }
 
         @Override
-        public Object key() {
+        public @Nullable Object key() {
             return key;
         }
 
@@ -396,7 +398,7 @@ class ReconcilerTest {
     private static class TestContainerBlueprint implements Blueprint.Group<CompositeWidget<Widget>, Widget> {
         private final String name;
         private final MutableList<Blueprint<Widget>> children = Lists.mutable.empty();
-        private Object key;
+        private @Nullable Object key;
 
         TestContainerBlueprint(String name) {
             this.name = name;
@@ -411,7 +413,7 @@ class ReconcilerTest {
         }
 
         @Override
-        public Object key() {
+        public @Nullable Object key() {
             return key;
         }
 

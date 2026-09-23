@@ -24,11 +24,11 @@ final class PathCache {
      * @return the widget's path from root to leaf (immutable)
      */
     WidgetPath get(Widget widget) {
-        Entry entry = entries.computeIfAbsent(widget, w -> new Entry());
+        Entry entry = entries.get(widget);
 
-        if (entry.epoch != this.epoch) {
-            entry.path = WidgetTree.pathToRoot(widget);
-            entry.epoch = this.epoch;
+        if (entry == null || entry.epoch != this.epoch) {
+            entry = new Entry(this.epoch, WidgetTree.pathToRoot(widget));
+            entries.put(widget, entry);
         }
 
         return entry.path;
@@ -45,7 +45,12 @@ final class PathCache {
     }
 
     private static final class Entry {
-        Object epoch;
-        WidgetPath path;
+        final Object epoch;
+        final WidgetPath path;
+
+        Entry(Object epoch, WidgetPath path) {
+            this.epoch = epoch;
+            this.path = path;
+        }
     }
 }

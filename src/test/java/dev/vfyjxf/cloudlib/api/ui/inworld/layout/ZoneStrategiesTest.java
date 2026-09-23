@@ -15,12 +15,14 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.zone.VisibilityPolicy;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneCandidates;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneCost;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneWeights;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -49,7 +51,10 @@ class ZoneStrategiesTest {
         Set<FloatRect> unique = new LinkedHashSet<>();
         for (PlacementCandidate candidate : candidates) {
             assertNull(candidate.world(), "zone candidates are screen-only");
-            assertTrue(contains(screen, candidate.screenRect()), "every candidate lies inside the safe rect");
+            assertTrue(
+                contains(screen, Objects.requireNonNull(candidate.screenRect())),
+                "every candidate lies inside the safe rect"
+            );
             unique.add(candidate.screenRect());
         }
         assertEquals(candidates.size(), unique.size(), "the lattice is deduplicated");
@@ -63,7 +68,7 @@ class ZoneStrategiesTest {
         assertTrue(corner.size() < 25, "clamping near the edge collapses direction/tier combinations");
         Set<FloatRect> unique = new LinkedHashSet<>();
         for (PlacementCandidate candidate : corner) {
-            assertTrue(contains(screen, candidate.screenRect()));
+            assertTrue(contains(screen, Objects.requireNonNull(candidate.screenRect())));
             unique.add(candidate.screenRect());
         }
         assertEquals(corner.size(), unique.size(), "still deduplicated");
@@ -81,10 +86,11 @@ class ZoneStrategiesTest {
         // near-left: the panel's right edge sits nearPx left of the anchor
         List<PlacementCandidate> defaults = zoneGrid(new Size(60, 20), ZoneFacet.of());
         // with the default 8px near clearance the left-near candidate's right edge is anchor.x - 8
-        assertTrue(
-            defaults.stream().anyMatch(c -> c.screenRect().right() == 192 && c.screenRect().centerY() == 150),
-            "left-near docks at 8px clearance"
-        );
+        assertTrue(defaults.stream().anyMatch(c -> {
+            FloatRect rect = Objects.requireNonNull(c.screenRect());
+            return rect.right() == 192 && rect.centerY() == 150;
+        }), "left-near docks at 8px clearance");
+        @SuppressWarnings("NullAway")
         ZoneFacet configured = new ZoneFacet(
             null,
             null,
@@ -94,10 +100,10 @@ class ZoneStrategiesTest {
             LodTier.full
         );
         List<PlacementCandidate> cleared = zoneGrid(new Size(60, 20), configured);
-        assertTrue(
-            cleared.stream().anyMatch(c -> c.screenRect().right() == 190 && c.screenRect().centerY() == 150),
-            "left-near docks at the facet's 10px clearance"
-        );
+        assertTrue(cleared.stream().anyMatch(c -> {
+            FloatRect rect = Objects.requireNonNull(c.screenRect());
+            return rect.right() == 190 && rect.centerY() == 150;
+        }), "left-near docks at the facet's 10px clearance");
     }
 
     private static List<PlacementCandidate> zoneGrid(Size panel, ZoneFacet facet) {
@@ -253,7 +259,7 @@ class ZoneStrategiesTest {
     private static ZoneCost.Context context(
         ZoneWeights weights,
         Map<String, Rect> placed,
-        Rect previous,
+        @Nullable Rect previous,
         List<ZoneCost.Segment> leaders,
         Set<ZoneCost.Adjacency> leftOf,
         Set<ZoneCost.Adjacency> above
@@ -286,10 +292,10 @@ class ZoneStrategiesTest {
         AssembledElement zone = harness.assemble(zonePanelSpec("z"));
         harness.register(zone);
         CoordinationResult result = harness.frame(LayoutHarness.unanchored(), zone);
-        Rect granted = result.placementOf("z").screenRect().toRect();
+        Rect granted = Objects.requireNonNull(Objects.requireNonNull(result.placementOf("z")).screenRect()).toRect();
         List<Rect> lattice = latticeRects(new FloatPos(32, 255), granted.width(), granted.height());
         assertTrue(lattice.contains(granted), "the grant is one of the zone lattice candidates: " + granted);
-        assertEquals(LodTier.full, result.elementState("z").lodTier());
+        assertEquals(LodTier.full, Objects.requireNonNull(result.elementState("z")).lodTier());
     }
 
     @Test
@@ -304,7 +310,7 @@ class ZoneStrategiesTest {
         CoordinationResult result = harness.frame(LayoutHarness.anchored(LayoutHarness.pos(200, 150)), plain);
         assertEquals(
             FloatRect.around(LayoutHarness.pos(200, 150), 120, 90),
-            result.placementOf("fp").screenRect(),
+            Objects.requireNonNull(result.placementOf("fp")).screenRect(),
             "the default path keeps candidates.single"
         );
     }

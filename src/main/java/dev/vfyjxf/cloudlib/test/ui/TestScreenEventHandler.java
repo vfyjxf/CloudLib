@@ -15,6 +15,7 @@ import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.client.settings.KeyModifier;
 import net.neoforged.neoforgespi.language.ModFileScanData;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.objectweb.asm.Type;
 
@@ -31,7 +32,7 @@ public class TestScreenEventHandler {
         GLFW.GLFW_KEY_R,
         "debug"
     );
-    public static Supplier<Screen> testScreenSupplier;
+    public static @Nullable Supplier<Screen> testScreenSupplier;
 
     static {
         Type annotationType = Type.getType(TestScreen.class);

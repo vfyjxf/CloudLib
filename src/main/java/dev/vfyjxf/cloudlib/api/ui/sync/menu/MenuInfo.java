@@ -25,6 +25,7 @@ import org.eclipse.collections.api.factory.BiMaps;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.ApiStatus;
 
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -99,7 +100,7 @@ public record MenuInfo<M extends BasicMenu<?>, A>(
             if (accessor == null) throw new IllegalStateException("Cannot find accessor for " + typeId);
             // endregion
 
-            return menuFactory.createWithInit(reference.get(), containerId, inv, accessor);
+            return menuFactory.createWithInit(Objects.requireNonNull(reference.get()), containerId, inv, accessor);
         });
         // endregion
         reference.set(menuType);

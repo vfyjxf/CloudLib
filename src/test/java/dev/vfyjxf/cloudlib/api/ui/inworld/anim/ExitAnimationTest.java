@@ -139,6 +139,7 @@ class ExitAnimationTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void nullKindIsRejectedAndNullEasingDefaultsToLinear() {
         assertThrows(IllegalArgumentException.class, () -> new ExitAnimation(null, 100, null));
         ExitAnimation a = new ExitAnimation(ExitAnimation.Kind.fade, 100, null);

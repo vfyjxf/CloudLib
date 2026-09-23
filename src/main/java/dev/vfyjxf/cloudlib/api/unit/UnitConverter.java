@@ -168,7 +168,7 @@ public final class UnitConverter {
                 for (Map.Entry<EdgeKey, RuleDef> entry : edges.entrySet()) {
                     EdgeKey edge = entry.getKey();
                     if (specific != (edge.material() != null)) continue;
-                    if (edge.material() != null && !edge.material().equals(material)) continue;
+                    if (edge.material() != null && (material == null || !edge.material().equals(material))) continue;
                     Unit<?> next;
                     Ratio edgeRatio;
                     if (edge.from().equals(current.unit())) {

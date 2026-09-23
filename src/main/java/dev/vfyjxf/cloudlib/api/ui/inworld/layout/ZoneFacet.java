@@ -62,9 +62,22 @@ public record ZoneFacet(
      */
     public static final double defaultAttentionSigmaPx = 96.0;
 
-    public ZoneFacet {
+    public ZoneFacet(
+        @Nullable AttentionField attention,
+        @Nullable ZoneWeights weights,
+        ZoneCandidates.@Nullable Config candidatesConfig,
+        ZoneModel.@Nullable Config modelConfig,
+        VisibilityPolicy visibility,
+        LodTier initialTier
+    ) {
         Objects.requireNonNull(visibility, "visibility");
         Objects.requireNonNull(initialTier, "initialTier");
+        this.attention = attention;
+        this.weights = weights;
+        this.candidatesConfig = candidatesConfig;
+        this.modelConfig = modelConfig;
+        this.visibility = visibility;
+        this.initialTier = initialTier;
     }
 
     /** A zone facet with every knob at its default. */

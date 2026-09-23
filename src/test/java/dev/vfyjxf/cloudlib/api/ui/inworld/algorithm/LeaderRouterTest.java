@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -138,10 +139,10 @@ class LeaderRouterTest {
         Map<String, LeaderRouter.Route> byId = new HashMap<>();
         routes.forEach(route -> byId.put(route.id(), route));
 
-        assertEquals(LeaderRouter.Style.hyperLeader, byId.get("a").style());
-        assertEquals(LeaderRouter.Style.hyperLeader, byId.get("b").style());
+        assertEquals(LeaderRouter.Style.hyperLeader, Objects.requireNonNull(byId.get("a")).style());
+        assertEquals(LeaderRouter.Style.hyperLeader, Objects.requireNonNull(byId.get("b")).style());
         // c crosses a, so c upgrades immediately (dwell 1); a is hyper regardless
-        assertEquals(LeaderRouter.Style.poLeader, byId.get("c").style());
+        assertEquals(LeaderRouter.Style.poLeader, Objects.requireNonNull(byId.get("c")).style());
     }
 
     @Test

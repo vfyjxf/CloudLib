@@ -196,6 +196,7 @@ class FlipPlannerTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void rejectsInvalidConstructionInputAndTime() {
         assertThrows(IllegalArgumentException.class, () -> new FlipPlanner(0.0, rectA));
         assertThrows(IllegalArgumentException.class, () -> new FlipPlanner(-1.0, rectA));

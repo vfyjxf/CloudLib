@@ -8,6 +8,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -83,7 +85,7 @@ class QuadBasisOrientationTest {
         GeometryAsserts.assertVecEquals(new Vec3(1, 0, 0), first.u().normalize(), 1.0e-3);
         GeometryAsserts.assertVecEquals(new Vec3(1, 0, 0), degenerate.u().normalize(), eps);
         GeometryAsserts.assertVecEquals(new Vec3(1, 0, 0), back.u().normalize(), 1.0e-3);
-        GeometryAsserts.assertVecEquals(new Vec3(1, 0, 0), orientation.lastRight(), eps);
+        GeometryAsserts.assertVecEquals(new Vec3(1, 0, 0), Objects.requireNonNull(orientation.lastRight()), eps);
     }
 
     // endregion

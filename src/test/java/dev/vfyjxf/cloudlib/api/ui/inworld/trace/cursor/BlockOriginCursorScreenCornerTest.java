@@ -6,7 +6,10 @@ import dev.vfyjxf.cloudlib.testutil.GeometryAsserts;
 import dev.vfyjxf.cloudlib.testutil.ProjectionSimulator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
+
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -41,7 +44,7 @@ class BlockOriginCursorScreenCornerTest {
     }
 
     /** The brute-force specification: the nearest projectable corner's screen position. */
-    private static FloatPos nearestProjection(Projection proj, BlockPos pos, double x, double y) {
+    private static @Nullable FloatPos nearestProjection(Projection proj, BlockPos pos, double x, double y) {
         FloatPos best = null;
         double bestD = Double.MAX_VALUE;
         for (FloatPos s : projections(proj, pos)) {
@@ -65,7 +68,8 @@ class BlockOriginCursorScreenCornerTest {
 
         BlockOriginCursor.ScreenCorner pick = BlockOriginCursor.screenAnchorCorner(pos, inflate, proj, tx, ty, null);
         assertNotNull(pick, "the block is fully on screen — a corner must resolve");
-        GeometryAsserts.assertPosEquals(nearestProjection(proj, pos, tx, ty), pick.screen(), 1.0e-4);
+        GeometryAsserts
+                .assertPosEquals(Objects.requireNonNull(nearestProjection(proj, pos, tx, ty)), pick.screen(), 1.0e-4);
 
         // the pick is the box's bottom edge — the projected lower corner the
         // camera-facing rule excludes when the camera looks down from above
@@ -93,16 +97,17 @@ class BlockOriginCursorScreenCornerTest {
         // center: start the target exactly between them, then slide it less
         // than the dead zone toward one side
         FloatPos[] all = projections(proj, pos);
-        BlockOriginCursor.ScreenCorner first = BlockOriginCursor
-                .screenAnchorCorner(pos, inflate, proj, 200, all[0].y(), null);
+        BlockOriginCursor.ScreenCorner first = Objects
+                .requireNonNull(BlockOriginCursor.screenAnchorCorner(pos, inflate, proj, 200, all[0].y(), null));
         int other = first.index() ^ 1; // the mirrored pair differs in the x bit
         double px = all[other].x() - all[first.index()].x();
         double py = all[other].y() - all[first.index()].y();
         double len = Math.hypot(px, py);
         double slide = (hysteresisPx - 2.0) / len; // the challenger wins by 2 px
 
-        BlockOriginCursor.ScreenCorner pick = BlockOriginCursor
-                .screenAnchorCorner(pos, inflate, proj, 200 + px * slide, all[0].y() + py * slide, first);
+        BlockOriginCursor.ScreenCorner pick = Objects.requireNonNull(
+            BlockOriginCursor.screenAnchorCorner(pos, inflate, proj, 200 + px * slide, all[0].y() + py * slide, first)
+        );
         assertEquals(first.index(), pick.index(), "a corner 2 px closer than the incumbent must not take over");
     }
 
@@ -111,16 +116,17 @@ class BlockOriginCursorScreenCornerTest {
         Projection proj = ProjectionSimulator.at(0.5, 0.5, 0).lookAt(0.5, 0.5, -1).screen(400, 240).build();
         BlockPos pos = new BlockPos(0, 0, -6);
         FloatPos[] all = projections(proj, pos);
-        BlockOriginCursor.ScreenCorner first = BlockOriginCursor
-                .screenAnchorCorner(pos, inflate, proj, 200, all[0].y(), null);
+        BlockOriginCursor.ScreenCorner first = Objects
+                .requireNonNull(BlockOriginCursor.screenAnchorCorner(pos, inflate, proj, 200, all[0].y(), null));
         int other = first.index() ^ 1;
         double px = all[other].x() - all[first.index()].x();
         double py = all[other].y() - all[first.index()].y();
         double len = Math.hypot(px, py);
         double slide = (hysteresisPx + 2.0) / len; // the challenger wins by 6 px
 
-        BlockOriginCursor.ScreenCorner pick = BlockOriginCursor
-                .screenAnchorCorner(pos, inflate, proj, 200 + px * slide, all[0].y() + py * slide, first);
+        BlockOriginCursor.ScreenCorner pick = Objects.requireNonNull(
+            BlockOriginCursor.screenAnchorCorner(pos, inflate, proj, 200 + px * slide, all[0].y() + py * slide, first)
+        );
         assertEquals(other, pick.index(), "a corner 6 px closer clears the dead zone");
         GeometryAsserts.assertPosEquals(all[other], pick.screen(), 1.0e-4);
     }
@@ -137,7 +143,8 @@ class BlockOriginCursorScreenCornerTest {
         BlockOriginCursor.ScreenCorner pick = BlockOriginCursor.screenAnchorCorner(pos, inflate, proj, 200, 120, stale);
         assertNotNull(pick);
         assertTrue(pick.index() < 4, "the pick must come from the projectable far face");
-        GeometryAsserts.assertPosEquals(nearestProjection(proj, pos, 200, 120), pick.screen(), 1.0e-4);
+        GeometryAsserts
+                .assertPosEquals(Objects.requireNonNull(nearestProjection(proj, pos, 200, 120)), pick.screen(), 1.0e-4);
     }
 
     @Test

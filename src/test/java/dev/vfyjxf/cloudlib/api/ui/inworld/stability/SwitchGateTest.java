@@ -153,6 +153,7 @@ class SwitchGateTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void rejectsInvalidConstructionAndMetrics() {
         assertThrows(IllegalArgumentException.class, () -> SwitchGate.Config.of(0.0, 1, 0.0, 0));
         assertThrows(IllegalArgumentException.class, () -> SwitchGate.Config.of(-1.0, 1, 0.0, 0));

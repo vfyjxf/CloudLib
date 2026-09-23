@@ -49,7 +49,7 @@ public final class AssembledElement implements InworldElement {
     private final StageCatalogs.RankStrategy rank;
     private final VariantLadder ladder;
 
-    private LayoutEnvironment environment;
+    private @Nullable LayoutEnvironment environment;
     private InworldLayouter.@Nullable SpaceReservation reservation;
     private boolean reservationResolved;
 
@@ -153,7 +153,6 @@ public final class AssembledElement implements InworldElement {
     @Override
     public ElementProposal propose(ProposeContext context) {
         Objects.requireNonNull(context, "context");
-        requireEnvironment();
         InworldLayoutContext layoutContext = new InworldLayoutContext(
             context.epoch(),
             context.round(),
@@ -161,7 +160,7 @@ public final class AssembledElement implements InworldElement {
             context.lastPlacement(),
             context.lastRejection(),
             context.variant(),
-            environment,
+            environment(),
             spec
         );
         if (spec.custom() != null) {
@@ -190,7 +189,7 @@ public final class AssembledElement implements InworldElement {
             context.variant().requestedSize(),
             spec.orientation().mode(),
             inset,
-            environment,
+            environment(),
             spec.profile().algorithm().params(),
             spec.avoidance().avoids(),
             spec.zone()
@@ -199,7 +198,7 @@ public final class AssembledElement implements InworldElement {
         StageCatalogs.AvoidContext avoidContext = new StageCatalogs.AvoidContext(
             spec.avoidance().avoids(),
             spec.avoidance().respectsExclusions(),
-            environment
+            environment()
         );
         List<PlacementCandidate> surviving = avoid.filter(generated, avoidContext);
         // A spec without a zone declaration builds no zone context — its rank
@@ -232,7 +231,7 @@ public final class AssembledElement implements InworldElement {
      * enter element-side scoring.
      */
     private StageCatalogs.RankContext.ZoneInputs zoneInputs(InworldLayoutContext context, FloatPos anchor) {
-        ZoneFacet zone = spec.zone();
+        ZoneFacet zone = Objects.requireNonNull(spec.zone(), "zone");
         LayoutEnvironment env = context.environment();
         PreviousFrameLayout previous = env.previousLayout();
         Map<String, Rect> placed = new LinkedHashMap<>();
@@ -267,16 +266,15 @@ public final class AssembledElement implements InworldElement {
     }
 
     private @Nullable FloatPos resolveAnchor() {
+        LayoutEnvironment env = environment();
         if (spec.anchor() instanceof AnchorFacet.CameraTracked tracked) {
-            return new FloatPos(tracked.u() * environment.screenWidth(), tracked.v() * environment.screenHeight());
+            return new FloatPos(tracked.u() * env.screenWidth(), tracked.v() * env.screenHeight());
         }
         if (spec.anchor() instanceof AnchorFacet.None) {
-            AnchorFrame frame = environment.anchor();
-            return frame != null
-                    ? frame.screen()
-                    : new FloatPos(environment.screenWidth() * 0.5, environment.screenHeight() * 0.5);
+            AnchorFrame frame = env.anchor();
+            return frame != null ? frame.screen() : new FloatPos(env.screenWidth() * 0.5, env.screenHeight() * 0.5);
         }
-        AnchorFrame frame = environment.anchor();
+        AnchorFrame frame = env.anchor();
         return frame == null ? null : frame.screen();
     }
 
@@ -291,7 +289,7 @@ public final class AssembledElement implements InworldElement {
 
     private InworldLayouter.SpaceReservation reservation() {
         resolveReservation();
-        return reservation;
+        return Objects.requireNonNull(reservation, "reservation");
     }
 
     private void resolveReservation() {
@@ -299,8 +297,7 @@ public final class AssembledElement implements InworldElement {
             return;
         }
         if (spec.custom() != null) {
-            requireEnvironment();
-            Rect area = new Rect(0, 0, environment.screenWidth(), environment.screenHeight());
+            Rect area = new Rect(0, 0, environment().screenWidth(), environment().screenHeight());
             InworldLayoutContext context = new InworldLayoutContext(
                 0,
                 0,
@@ -308,7 +305,7 @@ public final class AssembledElement implements InworldElement {
                 null,
                 null,
                 ladder.strongest(),
-                environment,
+                environment(),
                 spec
             );
             reservation = spec.custom().reserve(context);
@@ -331,12 +328,14 @@ public final class AssembledElement implements InworldElement {
         return anchor instanceof AnchorFacet.CameraTracked ? SpaceKind.tracked : SpaceKind.panel;
     }
 
-    private void requireEnvironment() {
-        if (environment == null) {
+    private LayoutEnvironment environment() {
+        LayoutEnvironment frame = environment;
+        if (frame == null) {
             throw new IllegalStateException(
                 "beginFrame must be called before the coordinator drives element " + spec.id()
             );
         }
+        return frame;
     }
 
     // endregion

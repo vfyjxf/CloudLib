@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -147,7 +148,7 @@ class EscapeHatchLayouterTest {
             public ElementProposal propose(InworldLayoutContext ctx) {
                 List<PlacementCandidate> slots = orbit.candidates(
                     new StageCatalogs.CandidateContext(
-                        ctx.environment().anchor().screen(),
+                        Objects.requireNonNull(ctx.environment().anchor()).screen(),
                         ctx.variant().requestedSize(),
                         OrientationFacet.Mode.cameraBillboard,
                         0,

@@ -220,7 +220,7 @@ public final class WidgetTree {
 
     private static final class ViewportHitFrame {
         final Widget widget;
-        final List<? extends Widget> children;
+        final @Nullable List<? extends Widget> children;
         final double parentX;
         final double parentY;
         double localX;
@@ -301,13 +301,14 @@ public final class WidgetTree {
 
     private static final class PredicateHitFrame {
         final Widget widget;
-        final List<? extends Widget> children;
+        final @Nullable List<? extends Widget> children;
         final double parentX;
         final double parentY;
         double localX;
         double localY;
         int childIndex;
         boolean evaluated;
+        @Nullable
         HitTestResult result;
 
         PredicateHitFrame(Widget widget, double parentX, double parentY) {
@@ -405,7 +406,7 @@ public final class WidgetTree {
 
     private static final class ViewportHitAllFrame {
         final Widget widget;
-        final List<? extends Widget> children;
+        final @Nullable List<? extends Widget> children;
         final double parentX;
         final double parentY;
         double localX;
@@ -558,7 +559,7 @@ public final class WidgetTree {
     private static final class Frame {
         final Widget widget;
         final int depth;
-        final List<? extends Widget> children;
+        final @Nullable List<? extends Widget> children;
         int childIndex = -1; // -1 = not yet visited
 
         Frame(Widget widget, int depth) {

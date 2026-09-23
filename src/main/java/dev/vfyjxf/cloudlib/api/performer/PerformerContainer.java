@@ -31,7 +31,10 @@ public class PerformerContainer {
 
     @SuppressWarnings({"unchecked"})
     public <T> T get(Scenario<T> scenario) {
-        return (T) performers.get(scenario).performer();
+        return (T) Checks.checkNotNull(
+            performers.get(scenario),
+            () -> new IllegalArgumentException("no performer for scenario: " + scenario)
+        ).performer();
     }
 
     @SuppressWarnings({"unchecked"})

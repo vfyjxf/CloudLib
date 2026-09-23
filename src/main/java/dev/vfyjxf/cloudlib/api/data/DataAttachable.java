@@ -55,7 +55,7 @@ public interface DataAttachable {
      * @param <T> the type of the value
      * @return the stored value, default value, or null
      */
-    default <T extends @Nullable Object> T get(DataKey<T> key) {
+    default <T extends @Nullable Object> @Nullable T get(DataKey<T> key) {
         return data().get(key);
     }
 

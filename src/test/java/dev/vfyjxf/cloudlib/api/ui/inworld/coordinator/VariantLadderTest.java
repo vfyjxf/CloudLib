@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -48,8 +49,8 @@ class VariantLadderTest {
         for (RejectionReason reason : RejectionReason.values()) {
             assertEquals(1, ladder.degradeSteps(reason), "default steps for " + reason);
         }
-        assertEquals(1, ladder.degrade(ladder.strongest(), RejectionReason.overlap).level());
-        assertEquals(2, ladder.degrade(ladder.variant(1), RejectionReason.exclusion).level());
+        assertEquals(1, Objects.requireNonNull(ladder.degrade(ladder.strongest(), RejectionReason.overlap)).level());
+        assertEquals(2, Objects.requireNonNull(ladder.degrade(ladder.variant(1), RejectionReason.exclusion)).level());
         assertNull(ladder.degrade(ladder.weakest(), RejectionReason.overlap));
     }
 
@@ -67,11 +68,20 @@ class VariantLadderTest {
 
         assertEquals(2, ladder.degradeSteps(RejectionReason.insufficientArea));
         assertEquals(3, ladder.degradeSteps(RejectionReason.outOfBounds));
-        assertEquals(2, ladder.degrade(ladder.strongest(), RejectionReason.insufficientArea).level());
-        assertEquals(3, ladder.degrade(ladder.strongest(), RejectionReason.outOfBounds).level());
+        assertEquals(
+            2,
+            Objects.requireNonNull(ladder.degrade(ladder.strongest(), RejectionReason.insufficientArea)).level()
+        );
+        assertEquals(
+            3,
+            Objects.requireNonNull(ladder.degrade(ladder.strongest(), RejectionReason.outOfBounds)).level()
+        );
         // skips clamp at the weakest rung
-        assertEquals(3, ladder.degrade(ladder.variant(2), RejectionReason.outOfBounds).level());
-        assertEquals(3, ladder.degrade(ladder.variant(2), RejectionReason.insufficientArea).level());
+        assertEquals(3, Objects.requireNonNull(ladder.degrade(ladder.variant(2), RejectionReason.outOfBounds)).level());
+        assertEquals(
+            3,
+            Objects.requireNonNull(ladder.degrade(ladder.variant(2), RejectionReason.insufficientArea)).level()
+        );
         assertNull(ladder.degrade(ladder.variant(3), RejectionReason.insufficientArea));
     }
 
@@ -85,8 +95,8 @@ class VariantLadderTest {
             )
         );
 
-        assertEquals(1, ladder.upgrade(ladder.variant(2)).level());
-        assertEquals(0, ladder.upgrade(ladder.variant(1)).level());
+        assertEquals(1, Objects.requireNonNull(ladder.upgrade(ladder.variant(2))).level());
+        assertEquals(0, Objects.requireNonNull(ladder.upgrade(ladder.variant(1))).level());
         assertNull(ladder.upgrade(ladder.strongest()));
     }
 
@@ -106,7 +116,7 @@ class VariantLadderTest {
             assertNotNull(current);
         }
         for (int i = 0; i < ladder.size() - 1; i++) {
-            current = ladder.upgrade(current);
+            current = ladder.upgrade(Objects.requireNonNull(current));
         }
         assertEquals(ladder.strongest(), current);
     }

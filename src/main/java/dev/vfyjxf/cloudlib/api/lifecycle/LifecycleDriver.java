@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.api.lifecycle;
 
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +66,7 @@ public final class LifecycleDriver {
         return List.copyOf(missing);
     }
 
-    private <T> void context(LifecycleState<T> state, T value, String reason) {
+    private <T> void context(LifecycleState<T> state, @Nullable T value, String reason) {
         require(state);
         if (!state.isContext()) {
             throw new IllegalArgumentException("Lifecycle state is not a context: " + state);
@@ -81,7 +82,7 @@ public final class LifecycleDriver {
         tryRun(reason, false);
     }
 
-    private <T> void event(LifecycleState<T> state, T value, String reason) {
+    private <T> void event(LifecycleState<T> state, @Nullable T value, String reason) {
         require(state);
         if (!state.isEvent()) {
             throw new IllegalArgumentException("Lifecycle state is not an event: " + state);
@@ -183,7 +184,7 @@ public final class LifecycleDriver {
         private Logger logger = LoggerFactory.getLogger(LifecycleDriver.class);
         private Runnable loadAction = () -> {};
         private Runnable unloadAction = () -> {};
-        private Runnable reloadAction;
+        private @Nullable Runnable reloadAction;
 
         private Builder(String name) {
             this.name = Objects.requireNonNull(name, "name");
@@ -233,12 +234,12 @@ public final class LifecycleDriver {
     private final class Receiver implements LifecycleReceiver {
 
         @Override
-        public <T> void context(LifecycleState<T> state, T value, String reason) {
+        public <T> void context(LifecycleState<T> state, @Nullable T value, String reason) {
             LifecycleDriver.this.context(state, value, reason);
         }
 
         @Override
-        public <T> void event(LifecycleState<T> state, T value, String reason) {
+        public <T> void event(LifecycleState<T> state, @Nullable T value, String reason) {
             LifecycleDriver.this.event(state, value, reason);
         }
 

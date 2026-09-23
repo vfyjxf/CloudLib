@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -248,7 +249,7 @@ class ThemeCascadeTest {
         });
         Theme stacked = new Theme(ResourceLocation.fromNamespaceAndPath("test", "stack"), merged);
         var p = prop(styleOf(stacked, n), "padding");
-        assertTrue(p.toString().contains("8"));
+        assertTrue(Objects.requireNonNull(p).toString().contains("8"));
     }
 
     // ------------------------------------------------------------------ var() and custom properties
@@ -294,7 +295,7 @@ class ThemeCascadeTest {
         UIStyle s = styleOf(t, new Node("button"));
         assertNotNull(s.varRaw("--pad"));
         assertEquals("6px", s.varRaw("--pad").text().trim());
-        assertEquals("#35D6D0", s.varRaw("--accent").text().trim());
+        assertEquals("#35D6D0", Objects.requireNonNull(s.varRaw("--accent")).text().trim());
     }
 
     @Test
@@ -317,7 +318,7 @@ class ThemeCascadeTest {
         var p = prop(s, "padding");
         assertNotNull(p);
         assertTrue(p.toString().contains("9")); // the inline binding feeds var()
-        assertEquals("9px", s.varRaw("--pad").text().trim());
+        assertEquals("9px", Objects.requireNonNull(s.varRaw("--pad")).text().trim());
     }
 
     @Test
@@ -327,7 +328,7 @@ class ThemeCascadeTest {
         var p = prop(s, "padding");
         assertNotNull(p);
         assertTrue(p.toString().contains("4"));
-        assertEquals("4px", s.varRaw("--b").text().trim()); // --b resolves to --a's tokens
+        assertEquals("4px", Objects.requireNonNull(s.varRaw("--b")).text().trim()); // --b resolves to --a's tokens
     }
 
     @Test

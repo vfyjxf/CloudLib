@@ -116,6 +116,7 @@ class GazeRankingTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void rejectsInvalidUse() {
         assertThrows(IllegalArgumentException.class, () -> entry("a", -1.0, 0.0, 0, 0));
         assertThrows(IllegalArgumentException.class, () -> entry("a", 0.0, Double.NaN, 0, 0));

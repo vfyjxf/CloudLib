@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.math.Rect;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -101,7 +102,7 @@ class RayFanTest {
         List<Double> candidates = fan.candidateDirections();
         assertEquals(1, candidates.size());
         assertEquals(0.0, candidates.getFirst(), 1e-12);
-        assertEquals(0.0, fan.bestDirection(), 1e-12);
+        assertEquals(0.0, Objects.requireNonNull(fan.bestDirection()), 1e-12);
         assertTrue(fan.isBlocked(Math.PI));
         assertFalse(fan.isBlocked(0));
     }
@@ -123,7 +124,7 @@ class RayFanTest {
         assertEquals(2, candidates.size());
         assertEquals((rightTheta + topMin) / 2, candidates.get(0), 1e-12);
         assertEquals((topMax + twoPi - rightTheta) / 2, candidates.get(1), 1e-12);
-        assertEquals(candidates.getFirst(), fan.bestDirection(), 1e-12);
+        assertEquals(candidates.getFirst(), Objects.requireNonNull(fan.bestDirection()), 1e-12);
     }
 
     @Test

@@ -5,6 +5,7 @@ import dev.vfyjxf.cloudlib.api.math.FloatRect;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -112,10 +113,10 @@ class VisualBalanceTest {
         FloatRect right = new FloatRect(790, 280, 60, 50);
         FloatPos mid = VisualBalance
                 .centroid(List.of(VisualBalance.Panel.opaque(left), VisualBalance.Panel.opaque(right)), W, H);
-        assertEquals((left.centerX() + right.centerX()) / 2, mid.x(), epsilon);
+        assertEquals((left.centerX() + right.centerX()) / 2, Objects.requireNonNull(mid).x(), epsilon);
         FloatPos dragged = VisualBalance
                 .centroid(List.of(new VisualBalance.Panel(left, 1.0), new VisualBalance.Panel(right, 0.25)), W, H);
-        assertTrue(dragged.x() < mid.x(), "the opaque panel's side carries the centroid");
+        assertTrue(Objects.requireNonNull(dragged).x() < mid.x(), "the opaque panel's side carries the centroid");
     }
 
     @Test
@@ -138,6 +139,7 @@ class VisualBalanceTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void invalidInputsThrow() {
         assertThrows(IllegalArgumentException.class, () -> VisualBalance.opticalCenter(0, H));
         assertThrows(IllegalArgumentException.class, () -> VisualBalance.maxOffset(W, -1));

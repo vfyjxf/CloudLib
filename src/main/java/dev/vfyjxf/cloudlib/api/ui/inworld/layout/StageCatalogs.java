@@ -733,8 +733,9 @@ public final class StageCatalogs {
     ) {
         List<PlacementCandidate> surviving = new ArrayList<>(candidates.size());
         outer : for (PlacementCandidate candidate : candidates) {
+            FloatRect screen = Objects.requireNonNull(candidate.screenRect(), "screenRect");
             for (Rect exclusion : context.environment().exclusionRects()) {
-                if (candidate.screenRect().intersects(toFloat(exclusion))) {
+                if (screen.intersects(toFloat(exclusion))) {
                     continue outer;
                 }
             }
@@ -757,7 +758,7 @@ public final class StageCatalogs {
     }
 
     private static boolean blockedByMasks(PlacementCandidate candidate, AvoidContext context) {
-        FloatRect rect = candidate.screenRect();
+        FloatRect rect = Objects.requireNonNull(candidate.screenRect(), "screenRect");
         for (Rect exclusion : context.environment().exclusionRects()) {
             if (rect.intersects(toFloat(exclusion))) {
                 return true;
@@ -798,15 +799,13 @@ public final class StageCatalogs {
     }
 
     private static double cost(PlacementCandidate candidate, RankContext context) {
-        double distance = Math.hypot(
-            candidate.screenRect().centerX() - context.anchor().x(),
-            candidate.screenRect().centerY() - context.anchor().y()
-        );
+        FloatRect screen = Objects.requireNonNull(candidate.screenRect(), "screenRect");
+        double distance = Math.hypot(screen.centerX() - context.anchor().x(), screen.centerY() - context.anchor().y());
         double cost = distance;
         if (context.sticky() && context.incumbentCenter() != null) {
             double incumbentDistance = Math.hypot(
-                candidate.screenRect().centerX() - context.incumbentCenter().x(),
-                candidate.screenRect().centerY() - context.incumbentCenter().y()
+                screen.centerX() - context.incumbentCenter().x(),
+                screen.centerY() - context.incumbentCenter().y()
             );
             cost += context.params().switchPenalty() * Math.min(1.0, incumbentDistance / 64.0);
         }
@@ -820,9 +819,10 @@ public final class StageCatalogs {
         List<PlacementCandidate> ranked = new ArrayList<>(candidates.size());
         List<PlacementCandidate> rest = new ArrayList<>(candidates.size());
         for (PlacementCandidate candidate : candidates) {
+            FloatRect screen = Objects.requireNonNull(candidate.screenRect(), "screenRect");
             double distance = Math.hypot(
-                candidate.screenRect().centerX() - context.incumbentCenter().x(),
-                candidate.screenRect().centerY() - context.incumbentCenter().y()
+                screen.centerX() - context.incumbentCenter().x(),
+                screen.centerY() - context.incumbentCenter().y()
             );
             if (distance <= 0.5) {
                 ranked.add(candidate);
@@ -850,8 +850,8 @@ public final class StageCatalogs {
         List<PlacementCandidate> ranked = new ArrayList<>(candidates);
         ranked.sort(
             (a, b) -> compareCosts(
-                cost.cost(a.screenRect().toRect(), zone.context()),
-                cost.cost(b.screenRect().toRect(), zone.context())
+                cost.cost(Objects.requireNonNull(a.screenRect(), "screenRect").toRect(), zone.context()),
+                cost.cost(Objects.requireNonNull(b.screenRect(), "screenRect").toRect(), zone.context())
             )
         );
         return ranked;

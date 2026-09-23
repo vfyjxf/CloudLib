@@ -8,6 +8,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -79,6 +80,16 @@ public final class CssParser {
             .of("nth-child", "nth-last-child", "nth-of-type", "nth-last-of-type", "nth-col", "nth-last-col");
     /** Functional pseudos taking a comma-separated identifier/word list. */
     private static final Set<String> identArgs = Set.of("lang", "dir", "part", "state", "highlight");
+
+    /** The text a token of a kind that carries one — its decoded value or its raw numeric text. */
+    private static String text(Token t) {
+        return Objects.requireNonNull(t.string());
+    }
+
+    /** The unit of a dimension token. */
+    private static String unit(Token t) {
+        return Objects.requireNonNull(t.unit());
+    }
 
     private static final class Parser {
         /** Source text — selector sub-parsers slice it for An+B reconstruction. */
@@ -283,7 +294,7 @@ public final class CssParser {
                 return null;
             }
             take();
-            String property = name.string().toLowerCase(Locale.ROOT);
+            String property = text(name).toLowerCase(Locale.ROOT);
             skipWhitespace();
             if (!at(TokenKind.colon)) {
                 errorAt(peek(), "expected ':' after property '" + property + "'");
@@ -369,7 +380,7 @@ public final class CssParser {
                     take();
                     List<ComponentValue> args = componentValuesUntil(TokenKind.rightParen);
                     if (at(TokenKind.rightParen)) take();
-                    return new ComponentValue.Function(t.string(), args);
+                    return new ComponentValue.Function(text(t), args);
                 }
                 case leftParen -> {
                     take();
@@ -426,31 +437,31 @@ public final class CssParser {
 
         private ComponentValue tokenToValue(Token t) {
             return switch (t.kind()) {
-                case ident -> new ComponentValue.Ident(t.string());
-                case atKeyword -> new ComponentValue.AtKeyword(t.string());
-                case string, badString -> new ComponentValue.StringValue(t.string());
-                case url, badUrl -> new ComponentValue.UrlValue(t.string());
-                case hash -> new ComponentValue.HashValue(t.string(), t.idFlag());
+                case ident -> new ComponentValue.Ident(text(t));
+                case atKeyword -> new ComponentValue.AtKeyword(text(t));
+                case string, badString -> new ComponentValue.StringValue(text(t));
+                case url, badUrl -> new ComponentValue.UrlValue(text(t));
+                case hash -> new ComponentValue.HashValue(text(t), t.idFlag());
                 case number -> new ComponentValue.NumericValue(
                     t.number(),
                     "",
                     ComponentValue.NumericKind.number,
                     t.integer(),
-                    t.string()
+                    text(t)
                 );
                 case percentage -> new ComponentValue.NumericValue(
                     t.number(),
                     "%",
                     ComponentValue.NumericKind.percentage,
                     t.integer(),
-                    t.string()
+                    text(t)
                 );
                 case dimension -> new ComponentValue.NumericValue(
                     t.number(),
-                    t.unit(),
+                    unit(t),
                     ComponentValue.NumericKind.dimension,
                     t.integer(),
-                    t.string()
+                    text(t)
                 );
                 case unicodeRange -> new ComponentValue.UnicodeRange(t.rangeStart(), t.rangeEnd());
                 case whitespace -> ComponentValue.Whitespace.instance;
@@ -694,7 +705,7 @@ public final class CssParser {
                         error("expected a pseudo name after ':'");
                         return null;
                     }
-                    String name = nameTok.string().toLowerCase(Locale.ROOT);
+                    String name = text(nameTok).toLowerCase(Locale.ROOT);
                     take();
                     // :before/:after/:first-line/:first-letter are elements even single-colon
                     if (legacyPseudoElements.contains(name)) element = true;
@@ -760,7 +771,7 @@ public final class CssParser {
                 recoverToSquare();
                 return null;
             }
-            String name = nameTok.string();
+            String name = text(nameTok);
             take();
             skipWs();
             if (at(TokenKind.rightSquare)) {
@@ -777,7 +788,7 @@ public final class CssParser {
             Token valTok = peek();
             String value;
             if (valTok.kind() == TokenKind.ident || valTok.kind() == TokenKind.string) {
-                value = valTok.string();
+                value = text(valTok);
                 take();
             } else {
                 error("expected an attribute value");
@@ -787,7 +798,7 @@ public final class CssParser {
             skipWs();
             AttributeSelector.MatchFlag flag = null;
             if (peek().kind() == TokenKind.ident) {
-                String f = peek().string();
+                String f = text(peek());
                 if (f.equalsIgnoreCase("i")) flag = AttributeSelector.MatchFlag.insensitive;
                 else if (f.equalsIgnoreCase("s")) flag = AttributeSelector.MatchFlag.sensitive;
                 else {
@@ -1016,7 +1027,7 @@ public final class CssParser {
             return r;
         }
 
-        private static int[] anbChars(String s) {
+        private static int @Nullable [] anbChars(String s) {
             int i = 0;
             int signA = 1;
             if (i < s.length() && (s.charAt(i) == '+' || s.charAt(i) == '-')) {

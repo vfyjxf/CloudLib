@@ -6,6 +6,8 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.SpaceKind;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.VisibilityTracker;
 import org.junit.jupiter.api.Test;
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -53,7 +55,7 @@ class PipelineAssemblerTest {
         AssembledElement element = harness.assemble(ElementSpec.from(InworldProfile.dock, "dock"));
         harness.register(element);
         CoordinationResult result = harness.frame(LayoutHarness.unanchored(), element);
-        assertEquals(388.0, result.placementOf("dock").anchor().x(), 0.01);
+        assertEquals(388.0, Objects.requireNonNull(result.placementOf("dock")).anchor().x(), 0.01);
     }
 
     @Test
@@ -63,6 +65,6 @@ class PipelineAssemblerTest {
         harness.register(element);
         CoordinationResult result = harness.frame(LayoutHarness.unanchored(), element);
         assertNull(result.placementOf("np"));
-        assertEquals(VisibilityTracker.Phase.hidden, result.elementState("np").phase());
+        assertEquals(VisibilityTracker.Phase.hidden, Objects.requireNonNull(result.elementState("np")).phase());
     }
 }

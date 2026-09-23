@@ -8,7 +8,6 @@ import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import org.eclipse.collections.api.list.MutableList;
 
 import java.util.function.Consumer;
 
@@ -175,17 +174,7 @@ public final class Blueprints {
 
     // ==================== Internal Blueprint Classes ====================
 
-    public static class FlexBlueprint<T extends Widget> implements Blueprint.Group<CompositeWidget<T>, T> {
-
-        @Override
-        public MutableList<? extends Blueprint<T>> children() {
-            return null;
-        }
-
-        @Override
-        public CompositeWidget<T> createWidget(Scene scene, SceneContext context) {
-            return null;
-        }
+    public abstract static class FlexBlueprint<T extends Widget> implements Blueprint.Group<CompositeWidget<T>, T> {
 
         @Override
         public void updateWidget(CompositeWidget<T> widget, Scene scene, SceneContext context) {}

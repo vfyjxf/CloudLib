@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Evolutionary clustering (§3.0): each epoch's clustering is scored as
@@ -203,7 +204,7 @@ public final class Clusterer {
                 representative = member.id();
             }
         }
-        return new Cluster(ids, x, y, representative);
+        return new Cluster(ids, x, y, Objects.requireNonNull(representative, "representative"));
     }
 
     private static double[][] distances(List<Member> snapshot) {

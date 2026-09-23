@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.resources.ResourceLocation;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 
@@ -28,7 +29,7 @@ public class CloudLibPlugin implements IModPlugin {
         return screenHelper;
     }
 
-    private static IScreenHelper screenHelper;
+    private static @Nullable IScreenHelper screenHelper;
 
     @Override
     public ResourceLocation getPluginUid() {

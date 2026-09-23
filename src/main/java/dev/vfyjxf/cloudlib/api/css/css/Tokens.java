@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.api.css;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 import java.util.Locale;
 
@@ -20,7 +22,7 @@ public final class Tokens {
     public static final Tokens empty = new Tokens(List.of());
 
     private final List<ComponentValue> values;
-    private String text;
+    private @Nullable String text;
 
     private Tokens(List<ComponentValue> values) {
         this.values = values;

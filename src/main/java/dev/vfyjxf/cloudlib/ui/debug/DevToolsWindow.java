@@ -60,7 +60,7 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
     private boolean draggingWindow;
     private double grabDX;
     private double grabDY;
-    private ResizeCorner.Corner resizingCorner;
+    private ResizeCorner.@Nullable Corner resizingCorner;
     private boolean splitting;
     private boolean dockResizing;
 
@@ -80,7 +80,14 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
             resizeCorners.add(new ResizeCorner(corner));
         }
 
-        tools = createTools();
+        UIStyle base = UIStyle.of(UIStyles.sizeOf(buttonSize, buttonSize), UIStyles.flexShrink(0));
+        pick = createPick(base);
+        highlight = createHighlight(base);
+        Tool refresh = createRefresh(base);
+        dock = createDock(base);
+        zoom = createZoom(base);
+        scale = createScale(base);
+        tools = List.of(pick, highlight, refresh, dock, zoom, scale);
         overflowMenu = new OverflowMenu(tools);
         toolBar = new ToolBar(tools, overflowMenu);
         windowFrame = new WindowFrame();
@@ -279,7 +286,8 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
             return EventDispatch.consumed;
         }
 
-        if (resizingCorner != null && dockLayout.mode() == DockMode.floating) {
+        ResizeCorner.@Nullable Corner corner = resizingCorner;
+        if (corner != null && dockLayout.mode() == DockMode.floating) {
             float left = dockLayout.x();
             float top = dockLayout.y();
             float right = left + dockLayout.width();
@@ -288,7 +296,7 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
             float screenH = host.height();
             float newX = left, newY = top, newW = dockLayout.width(), newH = dockLayout.height();
 
-            switch (resizingCorner) {
+            switch (corner) {
                 case topLeft -> {
                     newX = (float) Math.max(0, Math.min(mx, right - DebugTheme.minWidth));
                     newY = (float) Math.max(0, Math.min(my, bottom - DebugTheme.minHeight));
@@ -357,11 +365,8 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
 
     // region tools
 
-    private List<Tool> createTools() {
-        UIStyle base = UIStyle.of(UIStyles.sizeOf(buttonSize, buttonSize), UIStyles.flexShrink(0));
-        List<Tool> list = new ArrayList<>();
-
-        pick = new Tool(
+    private Tool createPick(UIStyle base) {
+        return new Tool(
             "pick",
             DevToolsTextures.pick,
             () -> overlay.setInspectMode(!overlay.inspectMode()),
@@ -372,8 +377,10 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
                 ((IconButton) pick.overflow).sync();
             }
         );
+    }
 
-        highlight = new Tool(
+    private Tool createHighlight(UIStyle base) {
+        return new Tool(
             "highlight",
             DevToolsTextures.highlight,
             () -> overlay.setHighlightEnabled(!overlay.highlightEnabled()),
@@ -384,13 +391,17 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
                 ((IconButton) highlight.overflow).sync();
             }
         );
+    }
 
-        Tool refresh = new Tool("refresh", DevToolsTextures.refresh, () -> {
+    private Tool createRefresh(UIStyle base) {
+        return new Tool("refresh", DevToolsTextures.refresh, () -> {
             treeView.refresh();
             detailsView.refresh();
         }, null, base, null);
+    }
 
-        dock = new Tool(
+    private Tool createDock(UIStyle base) {
+        return new Tool(
             "dock",
             DevToolsTextures.dockFloat,
             this::toggleDockMenu,
@@ -404,24 +415,20 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
                 ((IconButton) dock.overflow).sync();
             }
         );
+    }
 
-        zoom = new Tool("zoom", overlay::currentZoomLabel, this::toggleZoomMenu, base, () -> {
+    private Tool createZoom(UIStyle base) {
+        return new Tool("zoom", overlay::currentZoomLabel, this::toggleZoomMenu, base, () -> {
             ((TextIconButton) zoom.main).sync();
             ((TextIconButton) zoom.overflow).sync();
         });
+    }
 
-        scale = new Tool("scale", overlay::currentGuiScaleLabel, this::toggleScaleMenu, base, () -> {
+    private Tool createScale(UIStyle base) {
+        return new Tool("scale", overlay::currentGuiScaleLabel, this::toggleScaleMenu, base, () -> {
             ((TextIconButton) scale.main).sync();
             ((TextIconButton) scale.overflow).sync();
         });
-
-        list.add(pick);
-        list.add(highlight);
-        list.add(refresh);
-        list.add(dock);
-        list.add(zoom);
-        list.add(scale);
-        return list;
     }
 
     private void toggleDockMenu() {
@@ -496,10 +503,10 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
 
         private VisualTexture icon;
         private final Runnable action;
-        private final BooleanSupplier toggled;
+        private final @Nullable BooleanSupplier toggled;
         private boolean toggledState;
 
-        IconButton(VisualTexture icon, Runnable action, BooleanSupplier toggled) {
+        IconButton(VisualTexture icon, Runnable action, @Nullable BooleanSupplier toggled) {
             this.icon = icon;
             this.action = action;
             this.toggled = toggled;
@@ -584,14 +591,14 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
         final Widget main;
         final Widget overflow;
         final UIStyle baseStyle;
-        final Runnable update;
+        final @Nullable Runnable update;
         boolean mainHidden;
 
         Tool(
             String id,
             VisualTexture icon,
             Runnable action,
-            BooleanSupplier toggled,
+            @Nullable BooleanSupplier toggled,
             UIStyle baseStyle,
             @Nullable Runnable update
         ) {

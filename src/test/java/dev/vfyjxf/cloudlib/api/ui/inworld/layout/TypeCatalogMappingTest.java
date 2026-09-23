@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -126,9 +127,9 @@ class TypeCatalogMappingTest {
         }
         GroupLayoutEngine.GroupResult arranged = engine
                 .arrange(new GroupLayoutEngine.GroupFrame(200, 150, bubbles, List.of()));
-        assertEquals(0.0, arranged.of("b-0").offsetY(), 1.0e-9);
-        assertEquals(-24.0, arranged.of("b-1").offsetY(), 1.0e-9);
-        assertEquals(-48.0, arranged.of("b-2").offsetY(), 1.0e-9);
+        assertEquals(0.0, Objects.requireNonNull(arranged.of("b-0")).offsetY(), 1.0e-9);
+        assertEquals(-24.0, Objects.requireNonNull(arranged.of("b-1")).offsetY(), 1.0e-9);
+        assertEquals(-48.0, Objects.requireNonNull(arranged.of("b-2")).offsetY(), 1.0e-9);
     }
 
     // endregion
@@ -296,7 +297,9 @@ class TypeCatalogMappingTest {
         public ElementProposal propose(InworldLayoutContext ctx) {
             proposeCount++;
             Size variantSize = ctx.variant().requestedSize();
-            FloatPos anchor = occluded ? new FloatPos(16, 150) : ctx.environment().anchor().screen();
+            FloatPos anchor = occluded
+                    ? new FloatPos(16, 150)
+                    : Objects.requireNonNull(ctx.environment().anchor()).screen();
             return ElementProposal.of(
                 ctx.variant(),
                 anchor,

@@ -84,7 +84,9 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
 
     Lifecycle lifecycle = Lifecycle.created;
 
+    @Nullable
     Scene scene;
+    @Nullable
     SceneContext context;
 
     /**
@@ -116,6 +118,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
 
     protected final StyleContext style = new StyleContext(this);
 
+    @Nullable
     Layout layout;
 
     /**
@@ -302,12 +305,12 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
 
     public final Scene scene() {
         Checks.checkArgument(lifecycle.mounted(), "Widget is not mounted!");
-        return scene;
+        return Checks.checkNotNull(scene, "Widget scene ");
     }
 
     public SceneContext context() {
         Checks.checkArgument(lifecycle.mounted(), "Widget is not mounted!");
-        return context;
+        return Checks.checkNotNull(context, "Widget context ");
     }
 
     public final @Nullable Object key() {
@@ -327,7 +330,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
 
     public final WidgetPath path() {
         Checks.checkArgument(lifecycle.mounted(), "Widget: %s is not mounted!".formatted(this));
-        return this.scene.pathOf(this);
+        return scene().pathOf(this);
     }
 
     public final NodeId nodeId() {
@@ -1369,7 +1372,7 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
 
     public Layout layout() {
         Checks.checkArgument(layout != null, "layout is not applied");
-        return layout;
+        return Checks.checkNotNull(layout, "Widget layout ");
     }
 
     /**

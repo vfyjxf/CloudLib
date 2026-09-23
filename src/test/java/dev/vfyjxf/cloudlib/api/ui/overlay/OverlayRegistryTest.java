@@ -44,6 +44,7 @@ class OverlayRegistryTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void registerRejectsNull() {
         var register = new OverlayRegisterImpl();
 

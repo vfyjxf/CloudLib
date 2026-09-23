@@ -17,6 +17,8 @@ import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 
+import java.util.Objects;
+
 /**
  * A panel's offscreen surface: a {@link TextureTarget} (color + depth) sized
  * at {@code logicalSize × supersample} that content is rasterized into with
@@ -103,6 +105,7 @@ public final class UiSurface implements AutoCloseable {
         float prevFogEnd = RenderSystem.getShaderFogEnd();
 
         if (!ensure(wPx, hPx, supersample)) return;
+        Objects.requireNonNull(target);
         RenderStats.surfaceRendered((long) widthPx * supersample * heightPx * supersample);
 
         var mv = RenderSystem.getModelViewStack();

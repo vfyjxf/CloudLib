@@ -20,6 +20,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 
 /**
  * BlockEntity base holding state in {@link Handle}s, with serialization and sync wired on as
@@ -139,7 +140,7 @@ public abstract class BasicSyncedBlockEntity extends BasicBlockEntity
     }
 
     @Override
-    public AbstractContainerMenu createMenu() {
+    public @Nullable AbstractContainerMenu createMenu() {
         return null;
     }
 }

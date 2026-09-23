@@ -17,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -178,20 +179,24 @@ public final class Theme {
         if (byTag == null) {
             buildIndex();
         }
-        List<IndexedRule> cand = new ArrayList<>(always.size());
-        cand.addAll(always);
-        List<IndexedRule> tagged = byTag.get(node.styleTag().toLowerCase(Locale.ROOT));
+        Map<String, List<IndexedRule>> tagIndex = Objects.requireNonNull(byTag);
+        Map<String, List<IndexedRule>> classIndex = Objects.requireNonNull(byClass);
+        Map<String, List<IndexedRule>> idIndex = Objects.requireNonNull(byId);
+        List<IndexedRule> universal = Objects.requireNonNull(always);
+        List<IndexedRule> cand = new ArrayList<>(universal.size());
+        cand.addAll(universal);
+        List<IndexedRule> tagged = tagIndex.get(node.styleTag().toLowerCase(Locale.ROOT));
         if (tagged != null) {
             cand.addAll(tagged);
         }
         for (String c : node.styleClasses()) {
-            List<IndexedRule> clsRules = byClass.get(c);
+            List<IndexedRule> clsRules = classIndex.get(c);
             if (clsRules != null) {
                 cand.addAll(clsRules);
             }
         }
         if (node.styleId() != null) {
-            List<IndexedRule> idRules = byId.get(node.styleId());
+            List<IndexedRule> idRules = idIndex.get(node.styleId());
             if (idRules != null) {
                 cand.addAll(idRules);
             }

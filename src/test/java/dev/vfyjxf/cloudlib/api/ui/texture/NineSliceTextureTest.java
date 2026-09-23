@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.texture;
 
 import net.minecraft.resources.ResourceLocation;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -215,7 +216,7 @@ class NineSliceTextureTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> T cast(Class<T> type, Object value) {
+    private static <T> T cast(Class<T> type, @Nullable Object value) {
         assertNotNull(value, "expected " + type.getSimpleName() + ", got null");
         assertTrue(
             type.isInstance(value),

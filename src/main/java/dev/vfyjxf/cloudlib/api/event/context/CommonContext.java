@@ -1,21 +1,22 @@
 package dev.vfyjxf.cloudlib.api.event.context;
 
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Cancellable/Interruptible
  */
 public final class CommonContext {
 
-    private final EventChannel<?> channel;
+    private final @Nullable EventChannel<?> channel;
     private boolean cancelled = false;
     private boolean interrupted = false;
 
-    public CommonContext(EventChannel<?> channel) {
+    public CommonContext(@Nullable EventChannel<?> channel) {
         this.channel = channel;
     }
 
-    public EventChannel<?> channel() {
+    public @Nullable EventChannel<?> channel() {
         return channel;
     }
 

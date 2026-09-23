@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.texture;
 
 import net.minecraft.client.gui.GuiGraphics;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Animation interface that produces time-varying values.
@@ -28,6 +29,7 @@ public interface Animation<T> {
     /**
      * Returns the current value.
      */
+    @Nullable
     T value();
 
     /**
@@ -38,7 +40,7 @@ public interface Animation<T> {
      * @param partialTick interpolation factor (0.0 to 1.0)
      * @return the interpolated value
      */
-    default T value(float partialTick) {
+    default @Nullable T value(float partialTick) {
         return value();
     }
 

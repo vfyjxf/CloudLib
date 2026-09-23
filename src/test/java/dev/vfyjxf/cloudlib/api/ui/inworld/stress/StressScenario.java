@@ -6,6 +6,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.CoordinationResult;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.InworldCoordinator;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.InworldPlacement;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stress.StressElement.Motion;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -76,7 +77,7 @@ final class StressScenario {
         int retractEvents,
         int resizeEvents,
         boolean singleAnchor,
-        Motion motionOverride,
+        @Nullable Motion motionOverride,
         double budgetAwareFraction,
         int giantExclusionFrame,
         double sizeScale,

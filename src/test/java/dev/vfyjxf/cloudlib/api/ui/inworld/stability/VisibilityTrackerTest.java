@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.stability;
 
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.VisibilityTracker.Phase;
 import dev.vfyjxf.cloudlib.testutil.FrameReplay;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -162,7 +163,7 @@ class VisibilityTrackerTest {
 
     @Test
     void rewoundAndJumpingTimeSequencesAreSafe() {
-        record At(double time, Boolean present) {}
+        record At(double time, @Nullable Boolean present) {}
 
         VisibilityTracker tracker = tracker(1, 1, 2);
         List<FrameReplay.Step<At>> steps = List.of(
@@ -201,6 +202,7 @@ class VisibilityTrackerTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void rejectsInvalidConfigAndTimes() {
         assertThrows(IllegalArgumentException.class, () -> VisibilityTracker.Config.of(0, 1, 1));
         assertThrows(IllegalArgumentException.class, () -> VisibilityTracker.Config.of(-1, 1, 1));

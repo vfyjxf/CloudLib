@@ -59,6 +59,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         mainContainer.useStyle(UIStyle.of(UIStyles.padding(16), UIStyles.background(Textures.frame)));
 
         // Header
+        statsLabel = LabelWidget.of("Widgets: 0").setColor(0xFF555555);
         var header = createHeader();
         mainContainer.addWidget(header);
 
@@ -71,12 +72,15 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         mainContainer.addWidget(createDivider());
 
         // Container Area
+        containerA = TestContainerWidget.create(4);
+        containerB = TestContainerWidget.create(4);
         var containerArea = createContainerArea();
         mainContainer.addWidget(containerArea);
 
         mainContainer.addWidget(createDivider());
 
         // Status Bar
+        statusLabel = LabelWidget.of("Ready").setColor(0xFF555555);
         var statusBar = createStatusBar();
         mainContainer.addWidget(statusBar);
 
@@ -115,7 +119,6 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
         header.addWidget(SpacerWidget.create());
 
-        statsLabel = LabelWidget.of("Widgets: 0").setColor(0xFF555555);
         statsLabel.useStyle(UIStyle.of(UIStyles.sizeOf(100, 12)));
         header.addWidget(statsLabel);
 
@@ -196,7 +199,6 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         labelA.useStyle(UIStyle.of(UIStyles.heightOf(14)));
         columnA.addWidget(labelA);
 
-        containerA = TestContainerWidget.create(4);
         containerA.useStyle(UIStyle.of(UIStyles.flexGrow(1), UIStyles.padding(8), UIStyles.background(Textures.inset)));
         columnA.addWidget(containerA);
 
@@ -219,7 +221,6 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         labelB.useStyle(UIStyle.of(UIStyles.heightOf(14)));
         columnB.addWidget(labelB);
 
-        containerB = TestContainerWidget.create(4);
         containerB.useStyle(UIStyle.of(UIStyles.flexGrow(1), UIStyles.padding(8), UIStyles.background(Textures.inset)));
         columnB.addWidget(containerB);
 
@@ -233,7 +234,6 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         var statusBar = RowWidget.create(8);
         statusBar.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
-        statusLabel = LabelWidget.of("Ready").setColor(0xFF555555);
         statusLabel.useStyle(UIStyle.of(UIStyles.flexGrow(1)));
         statusBar.addWidget(statusLabel);
 

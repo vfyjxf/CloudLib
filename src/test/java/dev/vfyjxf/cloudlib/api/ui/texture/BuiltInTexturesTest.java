@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.texture;
 
 import net.minecraft.resources.ResourceLocation;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -31,7 +32,7 @@ class BuiltInTexturesTest {
 
     /** JUnit 5.7 lacks assertInstanceOf — same contract: fail on type mismatch, else cast. */
     @SuppressWarnings("unchecked")
-    private static <T> T assertInstanceOf(Class<T> type, Object value, String message) {
+    private static <T> T assertInstanceOf(Class<T> type, @Nullable Object value, String message) {
         assertNotNull(value, message);
         assertTrue(type.isInstance(value), message + ": expected " + type.getSimpleName());
         return (T) value;

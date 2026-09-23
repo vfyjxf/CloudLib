@@ -7,6 +7,7 @@ import dev.vfyjxf.cloudlib.api.css.ComponentValue.NumericValue;
 import dev.vfyjxf.cloudlib.api.css.ComponentValue.StringValue;
 import dev.vfyjxf.cloudlib.api.css.ComponentValue.UrlValue;
 import dev.vfyjxf.cloudlib.api.css.ComponentValue.Whitespace;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ class CssParserTest {
 
     /** JUnit 5.7 lacks assertInstanceOf — same contract: fail on type mismatch, else cast. */
     @SuppressWarnings("unchecked")
-    private static <T> T cast(Class<T> type, Object value) {
+    private static <T> T cast(Class<T> type, @Nullable Object value) {
         assertNotNull(value, "expected " + type.getSimpleName() + ", got null");
         assertTrue(
             type.isInstance(value),

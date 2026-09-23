@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.space;
 
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -215,7 +216,7 @@ public final class OccupancyBitmap {
      * the bounds. A rectangle ending exactly on a cell boundary does not
      * touch the cell beyond it.
      */
-    private CellRange coveredRange(Rect rect) {
+    private @Nullable CellRange coveredRange(Rect rect) {
         if (rect.width() <= 0 || rect.height() <= 0) {
             return null;
         }

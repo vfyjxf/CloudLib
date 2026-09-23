@@ -65,9 +65,10 @@ public sealed interface Snapshot<T> {
     }
 
     /**
-     * @return the value of the snapshot
+     * @return the value of the snapshot, or null while a mutable snapshot has no value yet
      * @throws IllegalStateException if the snapshot is {@link None}
      */
+    @Nullable
     T readValue() throws IllegalStateException;
 
     /**
@@ -265,7 +266,7 @@ public sealed interface Snapshot<T> {
      */
     final class MutableRef<T> implements Snapshot<T> {
         private final CheckStrategy<T> strategy;
-        private T value;
+        private @Nullable T value;
 
         public MutableRef(CheckStrategy<T> strategy) {
             this.strategy = strategy;
@@ -276,16 +277,17 @@ public sealed interface Snapshot<T> {
         }
 
         @Override
-        public T readValue() throws IllegalStateException {
+        public @Nullable T readValue() throws IllegalStateException {
             return value;
         }
 
-        public T value() {
+        public @Nullable T value() {
             return value;
         }
 
         @Override
         public State currentState(T current) {
+            if (value == null) return State.changed;
             var changed = !strategy.matches(value, current);
             return changed ? State.changed : State.unchanged;
         }
@@ -334,7 +336,7 @@ public sealed interface Snapshot<T> {
         private final CheckStrategy<T> strategy;
         private T value;
 
-        public CopyInstance(T initialValue, UnaryOperator<T> copier, CheckStrategy<T> strategy) {
+        public CopyInstance(@Nullable T initialValue, UnaryOperator<T> copier, CheckStrategy<T> strategy) {
             this.copier = copier;
             this.strategy = strategy;
             this.value = copier.apply(initialValue);

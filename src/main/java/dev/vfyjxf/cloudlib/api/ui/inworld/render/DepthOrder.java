@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 
@@ -81,7 +82,7 @@ public final class DepthOrder {
         int clusterId = 0;
         double previous = Double.POSITIVE_INFINITY;
         for (T item : ordered) {
-            double d = distances.get(item);
+            double d = Objects.requireNonNull(distances.get(item));
             if (previous - d >= tieEps) clusterId++;
             cluster.put(item, clusterId);
             previous = d;

@@ -5,6 +5,7 @@ import dev.vfyjxf.cloudlib.api.math.Size;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,8 +39,8 @@ class ArbitrationOrderTest {
         CoordinationResult result = firstFrame(coordinator);
         assertEquals(List.of("world", "panel"), placementIds(result));
 
-        FloatRect worldRect = result.placementOf("world").screenRect();
-        FloatRect panelRect = result.placementOf("panel").screenRect();
+        FloatRect worldRect = Objects.requireNonNull(result.placementOf("world")).screenRect();
+        FloatRect panelRect = Objects.requireNonNull(result.placementOf("panel")).screenRect();
         // the world element keeps the contested primary candidate...
         assertEquals(150, worldRect.x(), 0.01);
         assertEquals(130, worldRect.y(), 0.01);
@@ -71,8 +72,11 @@ class ArbitrationOrderTest {
 
         assertEquals(List.of("high", "low"), ids(coordinator.arbitrationOrderSnapshot()));
         CoordinationResult result = firstFrame(coordinator);
-        assertEquals(150, result.placementOf("high").screenRect().x(), 0.01);
-        assertTrue(result.placementOf("low").screenRect().x() > 150, "low priority must yield the spot");
+        assertEquals(150, Objects.requireNonNull(result.placementOf("high")).screenRect().x(), 0.01);
+        assertTrue(
+            Objects.requireNonNull(result.placementOf("low")).screenRect().x() > 150,
+            "low priority must yield the spot"
+        );
     }
 
     @Test
@@ -85,8 +89,8 @@ class ArbitrationOrderTest {
 
         assertEquals(List.of("sticky", "plain"), ids(coordinator.arbitrationOrderSnapshot()));
         CoordinationResult result = firstFrame(coordinator);
-        assertEquals(150, result.placementOf("sticky").screenRect().x(), 0.01);
-        assertTrue(result.placementOf("plain").screenRect().x() > 150);
+        assertEquals(150, Objects.requireNonNull(result.placementOf("sticky")).screenRect().x(), 0.01);
+        assertTrue(Objects.requireNonNull(result.placementOf("plain")).screenRect().x() > 150);
     }
 
     @Test
@@ -99,8 +103,8 @@ class ArbitrationOrderTest {
 
         assertEquals(List.of("second", "first"), ids(coordinator.arbitrationOrderSnapshot()));
         CoordinationResult result = firstFrame(coordinator);
-        assertEquals(150, result.placementOf("second").screenRect().x(), 0.01);
-        assertTrue(result.placementOf("first").screenRect().x() > 150);
+        assertEquals(150, Objects.requireNonNull(result.placementOf("second")).screenRect().x(), 0.01);
+        assertTrue(Objects.requireNonNull(result.placementOf("first")).screenRect().x() > 150);
     }
 
     @Test

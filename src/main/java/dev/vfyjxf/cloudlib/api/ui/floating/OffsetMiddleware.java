@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.floating;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * FloatingMiddleware that translates the floating element along the specified axes,
  * adding distance (gutter/margin) between the reference and floating elements.
@@ -10,7 +12,7 @@ public final class OffsetMiddleware implements FloatingMiddleware {
 
     private final int mainAxis;
     private final int crossAxis;
-    private final Integer alignmentAxis;
+    private final @Nullable Integer alignmentAxis;
 
     // region factory
 
@@ -47,7 +49,7 @@ public final class OffsetMiddleware implements FloatingMiddleware {
         return new OffsetMiddleware(mainAxis, crossAxis, alignmentAxis);
     }
 
-    private OffsetMiddleware(int mainAxis, int crossAxis, Integer alignmentAxis) {
+    private OffsetMiddleware(int mainAxis, int crossAxis, @Nullable Integer alignmentAxis) {
         this.mainAxis = mainAxis;
         this.crossAxis = crossAxis;
         this.alignmentAxis = alignmentAxis;

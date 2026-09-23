@@ -70,10 +70,17 @@ public class TestScrollScreen extends BasicScreen {
         root.addWidget(createDivider());
 
         // Scroll demo area: two panels side by side
+        verticalState = ScrollState.create(ScrollDirection.vertical).scrollSpeed(12).smooth(true).smoothSpeed(0.35f)
+                .trackTexture(Textures.scrollTrack).thumbTexture(Textures.scrollbarVertical).scrollbarWidth(7);
+        horizontalState = ScrollState.create(ScrollDirection.horizontal).scrollSpeed(15).smooth(true).smoothSpeed(0.3f)
+                .trackTexture(Textures.scrollTrack).thumbTexture(Textures.scrollbarHorizontal).scrollbarWidth(7);
+        verticalContent = TestContainerWidget.create(4);
+        horizontalContent = TestContainerWidget.create(0);
         root.addWidget(createScrollDemoArea());
         root.addWidget(createDivider());
 
         // Status bar
+        statusLabel = LabelWidget.of("Ready — scroll inside the panels").setColor(0xFF555555);
         root.addWidget(createStatusBar());
 
         mainGroup().addWidget(root);
@@ -177,10 +184,6 @@ public class TestScrollScreen extends BasicScreen {
         column.addWidget(label);
 
         // Scrollable container
-        verticalState = ScrollState.create(ScrollDirection.vertical).scrollSpeed(12).smooth(true).smoothSpeed(0.35f)
-                .trackTexture(Textures.scrollTrack).thumbTexture(Textures.scrollbarVertical).scrollbarWidth(7);
-
-        verticalContent = TestContainerWidget.create(4);
         verticalContent.useStyle(
             UIStyle.of(
                 UIStyles.flexGrow(1),
@@ -215,10 +218,6 @@ public class TestScrollScreen extends BasicScreen {
         column.addWidget(label);
 
         // Scrollable container
-        horizontalState = ScrollState.create(ScrollDirection.horizontal).scrollSpeed(15).smooth(true).smoothSpeed(0.3f)
-                .trackTexture(Textures.scrollTrack).thumbTexture(Textures.scrollbarHorizontal).scrollbarWidth(7);
-
-        horizontalContent = TestContainerWidget.create(0);
         horizontalContent.useStyle(
             UIStyle.of(
                 UIStyles.flexGrow(1),
@@ -249,7 +248,6 @@ public class TestScrollScreen extends BasicScreen {
         var bar = RowWidget.create(8);
         bar.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
-        statusLabel = LabelWidget.of("Ready — scroll inside the panels").setColor(0xFF555555);
         statusLabel.useStyle(UIStyle.of(UIStyles.flexGrow(1)));
         bar.addWidget(statusLabel);
 

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -122,7 +123,7 @@ class MovingAnchorStickyTest {
         // the preferred right slot is excluded at birth — the grant lands left
         Rect overRight = new Rect(300, 120, 240, 160);
         CoordinationResult first = frame(coordinator, 0, overRight);
-        FloatRect granted = first.placementOf("e").offsetRect();
+        FloatRect granted = Objects.requireNonNull(first.placementOf("e")).offsetRect();
         assertTrue(granted.x() < 0, "granted the left slot: " + granted);
         double grantedX = granted.x();
 
@@ -135,7 +136,7 @@ class MovingAnchorStickyTest {
             element.moveTo(300 + f * 3.7, 200 + f * 1.9);
             now += dt;
             CoordinationResult result = frame(coordinator, now);
-            FloatRect offset = result.placementOf("e").offsetRect();
+            FloatRect offset = Objects.requireNonNull(result.placementOf("e")).offsetRect();
             assertEquals(
                 grantedX,
                 offset.x(),
@@ -143,8 +144,8 @@ class MovingAnchorStickyTest {
                 "frame " + f + ": the granted slot de-pinned — offset " + offset + " vs granted " + granted
             );
             // and the slot still rides the anchor: the screen rect follows it
-            FloatPos anchor = result.placementOf("e").anchor();
-            FloatRect screen = result.placementOf("e").screenRect();
+            FloatPos anchor = Objects.requireNonNull(result.placementOf("e")).anchor();
+            FloatRect screen = Objects.requireNonNull(result.placementOf("e")).screenRect();
             assertEquals(anchor.x() + grantedX, screen.x(), 2.0, "frame " + f + ": rides the anchor");
         }
     }
@@ -162,11 +163,11 @@ class MovingAnchorStickyTest {
 
         Rect overRight = new Rect(300, 120, 240, 160);
         CoordinationResult first = frame(coordinator, 0, overRight);
-        assertTrue(first.placementOf("e").offsetRect().x() < 0, "granted the left slot");
+        assertTrue(Objects.requireNonNull(first.placementOf("e")).offsetRect().x() < 0, "granted the left slot");
 
         double now = dt;
-        double lastRectX = first.placementOf("e").screenRect().x();
-        double lastOffsetX = first.placementOf("e").offsetRect().x();
+        double lastRectX = Objects.requireNonNull(first.placementOf("e")).screenRect().x();
+        double lastOffsetX = Objects.requireNonNull(first.placementOf("e")).offsetRect().x();
         int slotHops = 0;
         int hopFrame = -1;
         // stop while the anchor is still on-screen: past the edge the slot
@@ -175,7 +176,7 @@ class MovingAnchorStickyTest {
             element.moveTo(300 - f * 4.1, 200);
             now += dt;
             CoordinationResult result = frame(coordinator, now);
-            InworldPlacement placement = result.placementOf("e");
+            InworldPlacement placement = Objects.requireNonNull(result.placementOf("e"));
             double rectX = placement.screenRect().x();
             // clamping re-applies at resolves; between them the retained
             // offset may drift at most the anchor-displacement threshold
@@ -199,7 +200,7 @@ class MovingAnchorStickyTest {
             now += dt;
             CoordinationResult result = frame(coordinator, now);
             assertTrue(
-                Math.abs(result.placementOf("e").offsetRect().x() - settled) <= 2.0,
+                Math.abs(Objects.requireNonNull(result.placementOf("e")).offsetRect().x() - settled) <= 2.0,
                 "frame " + f + ": the re-pinned slot holds"
             );
         }

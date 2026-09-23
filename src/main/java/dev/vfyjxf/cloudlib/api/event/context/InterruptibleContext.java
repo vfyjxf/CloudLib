@@ -1,17 +1,18 @@
 package dev.vfyjxf.cloudlib.api.event.context;
 
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
+import org.jspecify.annotations.Nullable;
 
 public final class InterruptibleContext {
 
-    private final EventChannel<?> channel;
+    private final @Nullable EventChannel<?> channel;
     private boolean interrupted = false;
 
-    public InterruptibleContext(EventChannel<?> channel) {
+    public InterruptibleContext(@Nullable EventChannel<?> channel) {
         this.channel = channel;
     }
 
-    public EventChannel<?> channel() {
+    public @Nullable EventChannel<?> channel() {
         return channel;
     }
 

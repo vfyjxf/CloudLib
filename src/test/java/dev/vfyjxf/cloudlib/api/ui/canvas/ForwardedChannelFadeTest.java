@@ -6,6 +6,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
@@ -28,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class ForwardedChannelFadeTest {
 
-    private static Minecraft priorMinecraft;
+    private static @Nullable Minecraft priorMinecraft;
 
     /** Records nothing and never touches the buffer source — headless there is no font and no GL. */
     private static final class RecordingGraphics extends GuiGraphics {

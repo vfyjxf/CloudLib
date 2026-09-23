@@ -7,6 +7,8 @@ import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.style.Edge;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Objects;
+
 /**
  * A screen-space UI frame measured for attachment — the border-measurement
  * half of the trace API.
@@ -169,8 +171,8 @@ public final class RectBorder {
     public ScreenPort port(BorderPoint point, @Nullable FloatPos toward) {
         return switch (point.kind()) {
             case nearest -> toward == null ? centerPort() : nearestPort(toward);
-            case edge -> port(point.edge(), point.t());
-            case corner -> cornerPort(point.corner());
+            case edge -> port(Objects.requireNonNull(point.edge()), point.t());
+            case corner -> cornerPort(Objects.requireNonNull(point.corner()));
             case center -> centerPort();
         };
     }

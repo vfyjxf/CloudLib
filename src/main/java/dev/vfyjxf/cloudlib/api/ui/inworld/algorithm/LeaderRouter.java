@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Leader-line routing with the standard annotation hierarchy (§3.0):
@@ -444,7 +445,16 @@ public final class LeaderRouter {
         for (Leader leader : leaders) {
             String clusterId = clusters.get(leader.id());
             List<Leader> group = clusterId == null ? null : clusterGroups.get(clusterId);
-            work.add(routeOne(leader, group, clusterId, triggers.counts.get(leader.id()), obstacles, viewport));
+            work.add(
+                routeOne(
+                    leader,
+                    group,
+                    clusterId,
+                    Objects.requireNonNull(triggers.counts.get(leader.id()), "trigger count"),
+                    obstacles,
+                    viewport
+                )
+            );
         }
         reduceCrossings(work, clusterGroups, obstacles, viewport, triggers.baselineCrossing);
         int[] counts = countCrossings(work, clusterGroups);
@@ -503,6 +513,11 @@ public final class LeaderRouter {
         boolean detour;
         /** Consecutive epochs this detour has not been needed (no routed and no baseline crossing). */
         int idle;
+
+        Committed(String key, List<FloatPos> points) {
+            this.key = key;
+            this.points = points;
+        }
     }
 
     private static final class Working {
@@ -562,7 +577,7 @@ public final class LeaderRouter {
         working.shapeEpoch = styleShapeEpoch(gated);
 
         if (working.clusterId != null) {
-            FloatPos trunk = trunkOf(group);
+            FloatPos trunk = trunkOf(Objects.requireNonNull(group, "group"));
             working.points = List.of(anchor, trunk, LeaderGridRouter.clamped(drawnEnd(leader), viewport));
             working.style = Style.hyperLeader;
             working.shapeEpoch = styleShapeEpoch(Style.hyperLeader);
@@ -715,15 +730,18 @@ public final class LeaderRouter {
                 || prior.exitX != leader.port().normalX()
                 || prior.exitY != leader.port().normalY();
 
-        if (!exitChanged && prior.key.equals(key)) {
-            List<FloatPos> stretched = stretch(prior.points, anchor, leader.port(), prior, viewport);
-            if (!LeaderGridRouter
-                    .polylineBlocked(stretched, portPoint, obstacles, config.routing().clearancePx(), viewport)) {
-                prior.points = stretched;
-                prior.cost = pathLength(stretched);
-                w.points = stretched;
-                w.decision = Decision.stretched;
-                return;
+        if (!exitChanged) {
+            prior = Objects.requireNonNull(prior, "prior");
+            if (prior.key.equals(key)) {
+                List<FloatPos> stretched = stretch(prior.points, anchor, leader.port(), prior, viewport);
+                if (!LeaderGridRouter
+                        .polylineBlocked(stretched, portPoint, obstacles, config.routing().clearancePx(), viewport)) {
+                    prior.points = stretched;
+                    prior.cost = pathLength(stretched);
+                    w.points = stretched;
+                    w.decision = Decision.stretched;
+                    return;
+                }
             }
         }
 
@@ -768,6 +786,7 @@ public final class LeaderRouter {
 
         boolean adopt = prior == null;
         if (!adopt) {
+            prior = Objects.requireNonNull(prior, "prior");
             List<FloatPos> stretched = stretch(prior.points, anchor, leader.port(), prior, viewport);
             boolean priorValid = !LeaderGridRouter
                     .polylineBlocked(stretched, portPoint, obstacles, config.routing().clearancePx(), viewport);
@@ -794,9 +813,7 @@ public final class LeaderRouter {
                 return;
             }
         }
-        Committed next = new Committed();
-        next.key = key;
-        next.points = fresh;
+        Committed next = new Committed(key, fresh);
         next.dirX = freshDir[0];
         next.dirY = freshDir[1];
         next.exitX = leader.port().normalX();

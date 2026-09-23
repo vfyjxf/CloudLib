@@ -137,12 +137,14 @@ public final class RichTextLayouter {
             );
         }
 
+        @Nullable
         ClickAction effectiveClick() {
             if (click != null) return click;
             ClickEvent event = style.style().getClickEvent();
             return event != null ? new ClickAction.Vanilla(event) : null;
         }
 
+        @Nullable
         HoverAction effectiveHover() {
             if (hover != null) return hover;
             HoverEvent event = style.style().getHoverEvent();

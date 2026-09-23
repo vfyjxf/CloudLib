@@ -6,6 +6,7 @@ import dev.vfyjxf.taffy.geometry.FloatSize;
 import dev.vfyjxf.taffy.geometry.TaffySize;
 import dev.vfyjxf.taffy.style.AvailableSpace;
 import dev.vfyjxf.taffy.util.MeasureFunc;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Taffy text-measurement adapter: a {@link MeasureFunc} that reports the intrinsic
@@ -34,7 +35,7 @@ public final class RichTextMeasure implements MeasureFunc {
     private int lineSpacing = 0;
     private boolean wrap = true;
 
-    private LaidOutText cachedLayout;
+    private @Nullable LaidOutText cachedLayout;
     private int cachedWidth = Integer.MIN_VALUE;
 
     public RichTextMeasure(RichText text, RichTextLayouter layouter) {

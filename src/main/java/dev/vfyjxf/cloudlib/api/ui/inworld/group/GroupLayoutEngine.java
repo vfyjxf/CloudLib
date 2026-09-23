@@ -290,6 +290,7 @@ public final class GroupLayoutEngine {
         // anchor; when every slot is blocked, that member holds the anchor
         // itself so the group keeps one visible representative.
         boolean forceRepresentative = free.isEmpty();
+        @Nullable
         String representative = nearestTo(
             frame,
             forceRepresentative
@@ -368,7 +369,7 @@ public final class GroupLayoutEngine {
         for (GroupMember member : frame.members()) {
             snapshot.add(new Clusterer.Member(member.id(), member.anchorX(), member.anchorY()));
         }
-        List<Clusterer.Cluster> clusters = new ArrayList<>(clusterer.cluster(snapshot));
+        List<Clusterer.Cluster> clusters = new ArrayList<>(Objects.requireNonNull(clusterer).cluster(snapshot));
 
         // The visible-cap rung: merge the closest clusters until the cap
         // holds — merging absorbs, it never hides.
@@ -537,8 +538,11 @@ public final class GroupLayoutEngine {
         return Integer.parseInt(slotId.substring(slotId.indexOf('i') + 1));
     }
 
-    /** The id nearest ({@code x}, {@code y}); ties keep the earlier canonical index. */
-    private static String nearestTo(GroupFrame frame, List<String> candidates, double x, double y) {
+    /**
+     * The id nearest ({@code x}, {@code y}); ties keep the earlier canonical
+     * index. {@code null} when there is no candidate.
+     */
+    private static @Nullable String nearestTo(GroupFrame frame, List<String> candidates, double x, double y) {
         String best = null;
         double bestDistance = Double.POSITIVE_INFINITY;
         int bestIndex = Integer.MAX_VALUE;
@@ -565,7 +569,7 @@ public final class GroupLayoutEngine {
         }
         x /= memberIds.size();
         y /= memberIds.size();
-        return new Clusterer.Cluster(memberIds, x, y, nearestTo(frame, memberIds, x, y));
+        return new Clusterer.Cluster(memberIds, x, y, Objects.requireNonNull(nearestTo(frame, memberIds, x, y)));
     }
 
     private static double distance(GroupFrame frame, String id, String other) {

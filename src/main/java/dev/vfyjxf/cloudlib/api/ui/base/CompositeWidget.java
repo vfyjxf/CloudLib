@@ -8,6 +8,7 @@ import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Unmodifiable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Comparator;
 
@@ -22,7 +23,7 @@ public class CompositeWidget<T extends Widget> extends Widget {
      * Lazily created sorted children list for rendering.
      * Only created when children have non-zero zIndex values.
      */
-    private MutableList<T> renderOrderChildren;
+    private @Nullable MutableList<T> renderOrderChildren;
 
     /**
      * Flag indicating whether the sorted children list needs to be rebuilt.
@@ -181,8 +182,9 @@ public class CompositeWidget<T extends Widget> extends Widget {
      * @implNote This is only for internal component implementations, and the rendering of some special components does not fully obey this list
      */
     protected MutableList<T> renderOrderChildren() {
-        if (!childrenOrderDirty && renderOrderChildren != null) {
-            return renderOrderChildren;
+        MutableList<T> cached = renderOrderChildren;
+        if (!childrenOrderDirty && cached != null) {
+            return cached;
         }
 
         // Check if any child needs special handling (non-content layer or non-zero zIndex)
@@ -196,16 +198,17 @@ public class CompositeWidget<T extends Widget> extends Widget {
         }
 
         // Create or update the sorted list
-        if (renderOrderChildren == null) {
-            renderOrderChildren = MutableLists.empty();
+        if (cached == null) {
+            cached = MutableLists.empty();
+            renderOrderChildren = cached;
         } else {
-            renderOrderChildren.clear();
+            cached.clear();
         }
 
         // Filter and sort: only include content layer widgets
         for (T child : children) {
             if (child.sceneLayer() == SceneLayer.content) {
-                renderOrderChildren.add(child);
+                cached.add(child);
             } else if (scene != null) {
                 // Ensure non-content layer widgets are added to the correct layer
                 scene.addToLayer(child.sceneLayer(), child);
@@ -213,10 +216,10 @@ public class CompositeWidget<T extends Widget> extends Widget {
         }
 
         if (needsSorting) {
-            renderOrderChildren.sortThis(Comparator.comparingInt(Widget::zIndex));
+            cached.sortThis(Comparator.comparingInt(Widget::zIndex));
         }
         childrenOrderDirty = false;
-        return renderOrderChildren;
+        return cached;
     }
 
     protected static <T extends Widget> boolean needsZIndexSorting(MutableList<T> children) {

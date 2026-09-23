@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -219,7 +220,7 @@ class IconRowWidgetTest {
 
         Theme theme = theme(".slot { background: color(#202020) }");
         cell.applyThemeStyle(theme.resolve(cell));
-        assertEquals(0xFF202020, ((ColorTexture) ((WidgetPart) cell).texture()).color());
+        assertEquals(0xFF202020, ((ColorTexture) Objects.requireNonNull(((WidgetPart) cell).texture())).color());
     }
 
     // endregion

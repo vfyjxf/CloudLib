@@ -1,27 +1,28 @@
 package dev.vfyjxf.cloudlib.api.event.context;
 
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
+import org.jspecify.annotations.Nullable;
 
 public final class BubbleContext {
 
-    private final EventChannel<?> source;
+    private final @Nullable EventChannel<?> source;
 
-    private EventChannel<?> current;
+    private @Nullable EventChannel<?> current;
     private Phase phase = Phase.capture;
 
     private boolean consumed = false;
     private boolean cancelled = false;
     private boolean interrupted = false;
 
-    public BubbleContext(EventChannel<?> source) {
+    public BubbleContext(@Nullable EventChannel<?> source) {
         this.source = source;
     }
 
-    public EventChannel<?> target() {
+    public @Nullable EventChannel<?> target() {
         return source;
     }
 
-    public EventChannel<?> current() {
+    public @Nullable EventChannel<?> current() {
         return current;
     }
 

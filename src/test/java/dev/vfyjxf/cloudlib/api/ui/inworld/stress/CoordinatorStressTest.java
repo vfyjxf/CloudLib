@@ -18,6 +18,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.stress.StressElement.Motion;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -244,9 +245,9 @@ class CoordinatorStressTest {
         for (int frame = 0; frame < 40; frame++) {
             now += dt;
             CoordinationResult result = coordinator.frame(InworldCoordinator.FrameInput.of(400, 300, now, dt));
-            CoordinationResult.ElementState state = result.elementState("glider");
+            CoordinationResult.ElementState state = Objects.requireNonNull(result.elementState("glider"));
             FloatRect visual = state.visualRect();
-            if (lastVisual != null) {
+            if (lastVisual != null && visual != null) {
                 double movement = Math
                         .hypot(visual.centerX() - lastVisual.centerX(), visual.centerY() - lastVisual.centerY());
                 if (movement > maxMovement) {

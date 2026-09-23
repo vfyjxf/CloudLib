@@ -5,6 +5,7 @@ import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -88,7 +89,7 @@ class ProjectionSimulatorTest {
             AssertionError.class,
             () -> ProjectionSimulator.assertRoundTrip(projection, new Vec3(0, 0, 5), 1.0e-3)
         );
-        assertTrue(error.getMessage().contains("behind the camera"));
+        assertTrue(Objects.requireNonNull(error.getMessage()).contains("behind the camera"));
     }
 
     @Test

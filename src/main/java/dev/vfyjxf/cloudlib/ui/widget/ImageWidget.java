@@ -19,7 +19,7 @@ public class ImageWidget extends Widget {
 
     // region state
 
-    private VisualTexture texture;
+    private @Nullable VisualTexture texture;
     private boolean preserveAspectRatio = false;
 
     // endregion
@@ -73,6 +73,10 @@ public class ImageWidget extends Widget {
 
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
+        VisualTexture texture = this.texture;
+        if (texture == null) {
+            return;
+        }
         canvas.texture(texture, 0, 0, width(), height());
     }
 

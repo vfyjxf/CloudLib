@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -47,8 +48,8 @@ class GroupLayoutEngineTest {
         members.set(1, member("m1", 200 + 0.2 * radius, 150));
         GroupLayoutEngine.GroupResult close = engine.arrange(frame(200, 150, members));
         assertEquals(1, close.clusters().size(), "a fresh close pair merges");
-        assertEquals(GroupLayoutEngine.Outcome.placed, close.of("m0").outcome());
-        assertEquals(GroupLayoutEngine.Outcome.aggregated, close.of("m1").outcome());
+        assertEquals(GroupLayoutEngine.Outcome.placed, Objects.requireNonNull(close.of("m0")).outcome());
+        assertEquals(GroupLayoutEngine.Outcome.aggregated, Objects.requireNonNull(close.of("m1")).outcome());
         assertEquals("m0", close.of("m1").aggregatedInto());
 
         // d = 1.2·R: history keeps the cluster together (the jitter band).
@@ -60,8 +61,8 @@ class GroupLayoutEngineTest {
         members.set(1, member("m1", 200 + 3 * radius, 150));
         GroupLayoutEngine.GroupResult far = engine.arrange(frame(200, 150, members));
         assertEquals(2, far.clusters().size(), "a distant pair splits");
-        assertEquals(GroupLayoutEngine.Outcome.placed, far.of("m0").outcome());
-        assertEquals(GroupLayoutEngine.Outcome.placed, far.of("m1").outcome());
+        assertEquals(GroupLayoutEngine.Outcome.placed, Objects.requireNonNull(far.of("m0")).outcome());
+        assertEquals(GroupLayoutEngine.Outcome.placed, Objects.requireNonNull(far.of("m1")).outcome());
 
         // back to d = 1.2·R: the split history keeps them apart.
         members.set(1, member("m1", 200 + 1.2 * radius, 150));
@@ -87,8 +88,8 @@ class GroupLayoutEngineTest {
         GroupLayoutEngine.GroupResult result = engine.arrange(frame(200, 150, members));
         assertEquals(1, result.clusters().size());
         assertEquals("rep", result.clusters().getFirst().representativeId());
-        assertEquals(3, result.of("rep").clusterSize());
-        assertEquals(3, result.of("a").clusterSize());
+        assertEquals(3, Objects.requireNonNull(result.of("rep")).clusterSize());
+        assertEquals(3, Objects.requireNonNull(result.of("a")).clusterSize());
         assertEquals(2, result.aggregatedCount());
         assertEquals(0, result.hiddenCount());
     }
@@ -117,19 +118,19 @@ class GroupLayoutEngineTest {
         assertEquals(0, after.aggregatedCount());
         for (String incumbent : List.of("a", "b", "c")) {
             assertEquals(
-                before.of(incumbent).offsetX(),
-                after.of(incumbent).offsetX(),
+                Objects.requireNonNull(before.of(incumbent)).offsetX(),
+                Objects.requireNonNull(after.of(incumbent)).offsetX(),
                 1.0e-9,
                 incumbent + " keeps its slot x"
             );
             assertEquals(
-                before.of(incumbent).offsetY(),
-                after.of(incumbent).offsetY(),
+                Objects.requireNonNull(before.of(incumbent)).offsetY(),
+                Objects.requireNonNull(after.of(incumbent)).offsetY(),
                 1.0e-9,
                 incumbent + " keeps its slot y"
             );
         }
-        assertEquals(GroupLayoutEngine.Outcome.placed, after.of("d").outcome());
+        assertEquals(GroupLayoutEngine.Outcome.placed, Objects.requireNonNull(after.of("d")).outcome());
     }
 
     @Test
@@ -169,7 +170,11 @@ class GroupLayoutEngineTest {
         GroupLayoutEngine.GroupResult aggregated = engine.arrange(frame(200, 150, four));
         assertEquals(1, aggregated.aggregatedCount(), "the 4th member folds into the representative");
         assertEquals(0, aggregated.hiddenCount());
-        assertEquals(2, aggregated.of("m0").clusterSize(), "the representative's unit counts its aggregatees");
+        assertEquals(
+            2,
+            Objects.requireNonNull(aggregated.of("m0")).clusterSize(),
+            "the representative's unit counts its aggregatees"
+        );
 
         List<GroupLayoutEngine.GroupMember> six = new ArrayList<>();
         for (int i = 0; i < 6; i++) {
@@ -178,7 +183,11 @@ class GroupLayoutEngineTest {
         GroupLayoutEngine.GroupResult hidden = engine.arrange(frame(200, 150, six));
         assertEquals(2, hidden.aggregatedCount());
         assertEquals(1, hidden.hiddenCount(), "beyond the aggregation cap members hide");
-        assertEquals(3, hidden.of("m0").clusterSize(), "both aggregatees hang on the representative's unit");
+        assertEquals(
+            3,
+            Objects.requireNonNull(hidden.of("m0")).clusterSize(),
+            "both aggregatees hang on the representative's unit"
+        );
         assertTrue(
             hidden.outcomes().stream().anyMatch(GroupLayoutEngine.MemberOutcome::linger),
             "hidden members linger"
@@ -217,13 +226,13 @@ class GroupLayoutEngineTest {
             members.add(member("m" + i, 200, 150));
         }
         GroupLayoutEngine.GroupResult result = engine.arrange(frame(200, 150, members));
-        assertEquals(0.0, result.of("m0").offsetY(), 1.0e-9);
-        assertEquals(-24.0, result.of("m1").offsetY(), 1.0e-9);
-        assertEquals(-48.0, result.of("m2").offsetY(), 1.0e-9);
-        assertEquals(-72.0, result.of("m3").offsetY(), 1.0e-9);
-        assertEquals(GroupLayoutEngine.Outcome.aggregated, result.of("m4").outcome());
+        assertEquals(0.0, Objects.requireNonNull(result.of("m0")).offsetY(), 1.0e-9);
+        assertEquals(-24.0, Objects.requireNonNull(result.of("m1")).offsetY(), 1.0e-9);
+        assertEquals(-48.0, Objects.requireNonNull(result.of("m2")).offsetY(), 1.0e-9);
+        assertEquals(-72.0, Objects.requireNonNull(result.of("m3")).offsetY(), 1.0e-9);
+        assertEquals(GroupLayoutEngine.Outcome.aggregated, Objects.requireNonNull(result.of("m4")).outcome());
         assertEquals("m3", result.of("m4").aggregatedInto(), "the last visible member absorbs the overflow");
-        assertEquals(GroupLayoutEngine.Outcome.hidden, result.of("m5").outcome());
+        assertEquals(GroupLayoutEngine.Outcome.hidden, Objects.requireNonNull(result.of("m5")).outcome());
         assertTrue(result.of("m5").linger());
     }
 

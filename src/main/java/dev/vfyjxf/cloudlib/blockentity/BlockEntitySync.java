@@ -25,6 +25,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.connection.ConnectionType;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Consumer;
 
@@ -145,7 +146,7 @@ public final class BlockEntitySync {
      * Serialize the difference stream if anything changed (clearing the dirty flag), else null.
      * Called by {@link BlockEntitySyncBatcher#flush}.
      */
-    byte[] collectDifference(HolderLookup.Provider registries) {
+    byte @Nullable [] collectDifference(HolderLookup.Provider registries) {
         if (!management.anyToClient()) return null;
         return writeBytes(management::writeDifferenceToClient, registries);
     }

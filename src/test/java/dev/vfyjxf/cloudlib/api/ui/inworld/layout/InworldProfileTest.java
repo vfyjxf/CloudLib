@@ -9,6 +9,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.stability.VisibilityTracker;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -67,7 +68,7 @@ class InworldProfileTest {
         assertEquals(0, placement.variant().level());
         assertEquals(10.0, placement.offsetRect().x(), 0.01, "ring-0 slot 0: base radius 60 minus half the width");
         assertEquals(-13.0, placement.offsetRect().y(), 0.01);
-        assertEquals(VisibilityTracker.Phase.appearing, result.elementState("np").phase());
+        assertEquals(VisibilityTracker.Phase.appearing, Objects.requireNonNull(result.elementState("np")).phase());
     }
 
     @Test
@@ -186,7 +187,7 @@ class InworldProfileTest {
         assertNotNull(placed.placementOf("np"));
 
         CoordinationResult retracted = harness.frame(LayoutHarness.unanchored(), element);
-        assertEquals(VisibilityTracker.Phase.lingering, retracted.elementState("np").phase());
+        assertEquals(VisibilityTracker.Phase.lingering, Objects.requireNonNull(retracted.elementState("np")).phase());
         assertNull(retracted.placementOf("np"));
 
         CoordinationResult recovered = harness.frame(LayoutHarness.anchored(LayoutHarness.pos(200, 150)), element);

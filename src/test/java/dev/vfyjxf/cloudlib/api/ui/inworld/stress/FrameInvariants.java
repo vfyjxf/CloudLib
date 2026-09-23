@@ -8,6 +8,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.InworldCoordinator;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.InworldPlacement;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.LayoutSpace;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpacePolicy;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -124,7 +125,7 @@ final class FrameInvariants {
                 // or continuity contract applies to a screen half it never
                 // claimed. What must hold: the world part is present and no
                 // screen visual was invented for it.
-                if (isPresented) {
+                if (placement != null) {
                     if (placement.world() == null) {
                         throw violation(record, "world-only-world-part", id + " presented without a world box");
                     }
@@ -132,7 +133,7 @@ final class FrameInvariants {
                         throw violation(record, "world-only-no-screen-visual", id + " carries a screen visual rect");
                     }
                 }
-            } else if (isPresented) {
+            } else if (placement != null) {
                 SpacePolicy policy = placement.variant().spacePolicy();
                 double margin = resolved ? 0.0 : driftSinceResolve(id, previousResolveAnchors, record);
                 FloatRect rect = placement.screenRect();
@@ -317,7 +318,7 @@ final class FrameInvariants {
         StressScenario.FrameRecord record,
         ElementTrace trace,
         boolean presented,
-        InworldPlacement placement
+        @Nullable InworldPlacement placement
     ) {
         if (!record.strictStatic()) {
             return;
@@ -396,7 +397,7 @@ final class FrameInvariants {
     private void updateTrace(
         ElementTrace trace,
         boolean presented,
-        InworldPlacement placement,
+        @Nullable InworldPlacement placement,
         CoordinationResult.ElementState state,
         double dt
     ) {
@@ -469,7 +470,9 @@ final class FrameInvariants {
     private static final class ElementTrace {
         boolean everTracked;
         boolean lastPresented;
+        @Nullable
         FloatRect lastVisual;
+        @Nullable
         FloatRect lastOffset;
         int lastLevel = -1;
         int framesSinceLevelChange = Integer.MAX_VALUE / 4;

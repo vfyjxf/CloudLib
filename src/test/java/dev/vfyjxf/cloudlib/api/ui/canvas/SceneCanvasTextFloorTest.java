@@ -5,6 +5,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -59,7 +61,7 @@ class SceneCanvasTextFloorTest {
         }
     }
 
-    private static Minecraft prior;
+    private static @Nullable Minecraft prior;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -69,7 +71,7 @@ class SceneCanvasTextFloorTest {
 
     @AfterEach
     void tearDown() throws Exception {
-        setMinecraftInstance(prior);
+        setMinecraftInstance(Objects.requireNonNull(prior));
     }
 
     private static Minecraft dummy() {

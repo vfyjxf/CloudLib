@@ -5,12 +5,14 @@ import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.math.Size;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.CoordinationResult;
 import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.InworldCoordinator;
+import dev.vfyjxf.cloudlib.api.ui.inworld.coordinator.InworldPlacement;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpaceMask;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpacePolicy;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.ZoneCandidates;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -125,7 +127,8 @@ class ZoneAbEquivalenceTest {
         // members, they hold the screen, and the population is larger
         assertEquals(plainIds.length + zoneIds.length, first.placements().size());
         for (int i = 0; i < zoneIds.length; i++) {
-            Rect granted = first.placementOf(zoneIds[i]).screenRect().toRect();
+            InworldPlacement grant = Objects.requireNonNull(first.placementOf(zoneIds[i]));
+            Rect granted = Objects.requireNonNull(grant.screenRect()).toRect();
             List<Rect> lattice = latticeRects(zoneAnchor(i), granted.width(), granted.height());
             assertTrue(lattice.contains(granted), zoneIds[i] + "'s grant is a lattice candidate: " + granted);
         }

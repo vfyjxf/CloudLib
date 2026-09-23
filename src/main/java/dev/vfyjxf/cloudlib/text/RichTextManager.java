@@ -11,6 +11,7 @@ import dev.vfyjxf.cloudlib.api.text.layout.TranslationResolver;
 import dev.vfyjxf.cloudlib.api.text.render.RichTextRenderer;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Client-side holder of the shared rich text services: the
@@ -23,7 +24,7 @@ import org.jetbrains.annotations.ApiStatus;
 @ApiStatus.Internal
 public final class RichTextManager {
 
-    private static RichTextManager instance;
+    private static @Nullable RichTextManager instance;
 
     public static RichTextManager getInstance() {
         if (instance == null) {

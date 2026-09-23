@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -69,7 +70,7 @@ class RigidAvoidanceClassTest {
             rigid.moveTo(200 + i * 2.5, 150 + i * 1.25);
             now += dt;
             CoordinationResult result = frame(coordinator, now);
-            InworldPlacement placement = result.placementOf("rigid");
+            InworldPlacement placement = Objects.requireNonNull(result.placementOf("rigid"));
             assertEquals(
                 rigid.anchor().x() + 40,
                 placement.screenRect().x(),
@@ -84,7 +85,7 @@ class RigidAvoidanceClassTest {
             );
             assertEquals(
                 placement.screenRect(),
-                result.elementState("rigid").visualRect(),
+                Objects.requireNonNull(result.elementState("rigid")).visualRect(),
                 "frame " + i + ": the rigid grant is its own visual — nothing relaxes it"
             );
         }
@@ -124,7 +125,7 @@ class RigidAvoidanceClassTest {
         CoordinationResult back = frame(coordinator, now);
         assertEquals(
             200 - 60,
-            back.placementOf("rigid").screenRect().x(),
+            Objects.requireNonNull(back.placementOf("rigid")).screenRect().x(),
             1.0e-9,
             "the declared offset returns untouched"
         );
@@ -147,7 +148,10 @@ class RigidAvoidanceClassTest {
         now += dt;
         CoordinationResult retracted = frame(coordinator, now);
         assertNull(retracted.placementOf("rigid"), "a retracted rigid element leaves the presented set");
-        assertNotNull(retracted.elementState("rigid").placement(), "the last grant is retained as linger memory");
+        assertNotNull(
+            Objects.requireNonNull(retracted.elementState("rigid")).placement(),
+            "the last grant is retained as linger memory"
+        );
         assertNull(retracted.elementState("rigid").rejection(), "retraction is never a rejection");
 
         rigid.anchorValid = true;
@@ -218,7 +222,7 @@ class RigidAvoidanceClassTest {
         CoordinationResult againstRigid = frame(rigidScene, dt);
         assertEquals(
             lattice.get(0),
-            againstRigid.placementOf("fixed").screenRect(),
+            Objects.requireNonNull(againstRigid.placementOf("fixed")).screenRect(),
             "a rigid rect does not release the coincidence walk"
         );
 
@@ -227,7 +231,7 @@ class RigidAvoidanceClassTest {
         standardScene.register(new FixedLatticeElement("fixed", 5, lattice, false));
         CoordinationResult againstFixed = frame(standardScene, dt);
         assertTrue(
-            lattice.indexOf(againstFixed.placementOf("fixed").screenRect()) > 0,
+            lattice.indexOf(Objects.requireNonNull(againstFixed.placementOf("fixed")).screenRect()) > 0,
             "the standard fixed peer does release the walk: " + againstFixed.placementOf("fixed").screenRect()
         );
     }
@@ -253,12 +257,12 @@ class RigidAvoidanceClassTest {
             CoordinationResult result = frame(coordinator, now);
             assertEquals(
                 new FloatRect(170, 140, 60, 20),
-                result.elementState("rigid").visualRect(),
+                Objects.requireNonNull(result.elementState("rigid")).visualRect(),
                 "frame " + i + ": rigid never moves"
             );
             assertEquals(
                 new FloatRect(170, 140, 60, 20),
-                result.elementState("pushable").visualRect(),
+                Objects.requireNonNull(result.elementState("pushable")).visualRect(),
                 "frame " + i + ": nothing pushes the pushable either — the overlap stands"
             );
         }
@@ -276,7 +280,7 @@ class RigidAvoidanceClassTest {
             now += dt;
             CoordinationResult result = frame(ghostScene, now);
             assertTrue(
-                result.elementState("peer").visualRect().y() >= 160,
+                Objects.requireNonNull(Objects.requireNonNull(result.elementState("peer")).visualRect()).y() >= 160,
                 "frame " + i + ": against the separation-visible ghost the pushable is shoved out: "
                         + result.elementState("peer").visualRect()
             );

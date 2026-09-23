@@ -24,6 +24,7 @@ import dev.vfyjxf.cloudlib.util.ClassUtils;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.list.mutable.FastList;
+import org.jspecify.annotations.Nullable;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
@@ -81,8 +82,10 @@ public final class Events {
     @SafeVarargs
     public static <T> Event<T> createEvent(Function<List<T>, ? extends T> combiner, T... type) {
         Class<T> genericType = ClassUtils.getGenericType(type);
-        Method invokeMethod = ClassUtils.findFunctionalMethod(genericType);
-        Checks.checkArgument(invokeMethod != null, "type must be a functional interface");
+        Method invokeMethod = Checks.checkNotNull(
+            ClassUtils.findFunctionalMethod(genericType),
+            () -> new IllegalArgumentException("type must be a functional interface")
+        );
 
         return new EventImpl<>(genericType, invokeMethod, combiner);
     }
@@ -101,8 +104,10 @@ public final class Events {
         private EventDefinitionImpl(Class<T> type, Function<List<T>, ? extends T> merger) {
             this.type = type;
             this.merger = merger;
-            this.invokeMethod = ClassUtils.findFunctionalMethod(type);
-            assert invokeMethod != null : "Functional interface must have a single abstract method";
+            this.invokeMethod = Checks.checkNotNull(
+                ClassUtils.findFunctionalMethod(type),
+                () -> new IllegalArgumentException("type must be a functional interface")
+            );
             this.global = new EventImpl<>(type, invokeMethod, merger);
         }
 
@@ -133,7 +138,7 @@ public final class Events {
         private final MutableMap<T, BooleanSupplier> listenerLifetimeManage;
         private final Function<List<T>, ? extends T> merger;
         private final FastList<ListenerEntry<T>> listeners = FastList.newList();
-        private T invoker;
+        private @Nullable T invoker;
 
         private EventImpl(Class<T> type, Method invokeMethod, Function<List<T>, ? extends T> merger) {
             this.type = type;
@@ -151,7 +156,9 @@ public final class Events {
         @Override
         public T invoker() {
             checkLifetime();
-            if (invoker == null) update();
+            if (invoker == null) {
+                invoker = merger.apply(listeners.collect(ListenerEntry::listener));
+            }
             return invoker;
         }
 
@@ -211,10 +218,6 @@ public final class Events {
         public void clearListeners() {
             listeners.clear();
             invoker = null;
-        }
-
-        private void update() {
-            invoker = merger.apply(listeners.collect(ListenerEntry::listener));
         }
 
         private void checkLifetime() {

@@ -54,7 +54,7 @@ public final class RepaintGate {
             action.run();
             painted = true;
             versioned = contentVersion != null;
-            if (versioned) version = contentVersion.getAsLong();
+            if (contentVersion != null) version = contentVersion.getAsLong();
             width = panel.width();
             height = panel.height();
             supersample = granted;

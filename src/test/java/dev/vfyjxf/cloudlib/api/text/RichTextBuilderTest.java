@@ -61,8 +61,8 @@ class RichTextBuilderTest {
         RichText text = RichText.builder().text("click me").onClickLast(ClickAction.run(() -> fired.set(true))).build();
 
         StyledNode styled = assertInstanceOf(StyledNode.class, text.children().getFirst());
-        assertInstanceOf(ClickAction.Callback.class, styled.onClick());
-        ((ClickAction.Callback) styled.onClick()).handler().accept(new ClickAction.Context(0, 0, 0));
+        ClickAction.Callback callback = assertInstanceOf(ClickAction.Callback.class, styled.onClick());
+        callback.handler().accept(new ClickAction.Context(0, 0, 0));
         assertTrue(fired.get());
     }
 

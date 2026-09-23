@@ -299,6 +299,7 @@ class PixelStabilizerTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void rejectsInvalidArguments() {
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer.Config(0.0, 0.25, 45.0, 9.0, 5, 0.12));
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer.Config(-0.5, 0.25, 45.0, 9.0, 5, 0.12));

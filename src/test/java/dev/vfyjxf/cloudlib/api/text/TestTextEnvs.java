@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.text.layout.GlyphMeasurer;
 import dev.vfyjxf.cloudlib.api.text.layout.RichTextLayouter;
 import dev.vfyjxf.cloudlib.api.text.layout.TranslationResolver;
 import net.minecraft.network.chat.Style;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -66,7 +67,7 @@ final class TestTextEnvs {
     /**
      * JUnit 5.7 has no {@code assertInstanceOf}; this is a drop-in replacement.
      */
-    static <T> T assertInstanceOf(Class<T> type, Object value) {
+    static <T> T assertInstanceOf(Class<T> type, @Nullable Object value) {
         if (!type.isInstance(value)) {
             throw new AssertionError(
                 "expected instance of " + type.getSimpleName() + " but was "

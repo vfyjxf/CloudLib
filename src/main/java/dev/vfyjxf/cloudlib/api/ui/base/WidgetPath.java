@@ -107,7 +107,7 @@ public final class WidgetPath implements Iterable<Widget> {
         current = leaf;
         for (int i = depth - 1; i >= 0; i--) {
             arr[i] = current;
-            current = current.parent();
+            current = Objects.requireNonNull(current).parent();
         }
 
         return new WidgetPath(arr, depth, false);

@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.api.lifecycle;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 
 public record LifecycleState<T>(String id, Kind kind, Class<T> type) {
@@ -21,7 +23,7 @@ public record LifecycleState<T>(String id, Kind kind, Class<T> type) {
         return kind == Kind.event;
     }
 
-    Object normalizeValue(Object value) {
+    Object normalizeValue(@Nullable Object value) {
         if (type == Void.class) {
             return Unit.instance;
         }

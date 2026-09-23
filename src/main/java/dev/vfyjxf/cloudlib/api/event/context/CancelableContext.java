@@ -1,17 +1,18 @@
 package dev.vfyjxf.cloudlib.api.event.context;
 
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
+import org.jspecify.annotations.Nullable;
 
 public final class CancelableContext {
 
-    private final EventChannel<?> channel;
+    private final @Nullable EventChannel<?> channel;
     private boolean cancelled = false;
 
-    public CancelableContext(EventChannel<?> channel) {
+    public CancelableContext(@Nullable EventChannel<?> channel) {
         this.channel = channel;
     }
 
-    public EventChannel<?> channel() {
+    public @Nullable EventChannel<?> channel() {
         return channel;
     }
 

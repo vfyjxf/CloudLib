@@ -6,6 +6,8 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.stability.VisibilityTracker;
 import dev.vfyjxf.cloudlib.api.ui.inworld.zone.LodTier;
 import org.junit.jupiter.api.Test;
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -74,8 +76,8 @@ class LodTierBridgeTest {
 
         // a free screen: the strongest rung is granted as-is
         CoordinationResult open = coordinator.frame(InworldCoordinator.FrameInput.of(400, 300, 0.0, 1.0 / 60.0));
-        assertSame(ContentTier.full, open.placementOf("e").variant().contentTier());
-        assertSame(LodTier.full, open.elementState("e").lodTier());
+        assertSame(ContentTier.full, Objects.requireNonNull(open.placementOf("e")).variant().contentTier());
+        assertSame(LodTier.full, Objects.requireNonNull(open.elementState("e")).lodTier());
 
         // the interior exclusion leaves only a 24px bottom strip the pip rung
         // fits into (interior, so it never becomes a strut): every bigger
@@ -83,8 +85,8 @@ class LodTierBridgeTest {
         Rect interior = new Rect(8, 8, 384, 264);
         CoordinationResult squeezed = coordinator
                 .frame(InworldCoordinator.FrameInput.of(400, 300, 1.0, 1.0 / 60.0, interior));
-        assertSame(ContentTier.pip, squeezed.placementOf("e").variant().contentTier());
-        assertSame(LodTier.icon, squeezed.elementState("e").lodTier());
+        assertSame(ContentTier.pip, Objects.requireNonNull(squeezed.placementOf("e")).variant().contentTier());
+        assertSame(LodTier.icon, Objects.requireNonNull(squeezed.elementState("e")).lodTier());
     }
 
     @Test
@@ -99,7 +101,7 @@ class LodTierBridgeTest {
         // retained and so is its tier
         element.anchorValid = false;
         CoordinationResult lingering = coordinator.frame(InworldCoordinator.FrameInput.of(400, 300, 1.0, 1.0 / 60.0));
-        assertSame(VisibilityTracker.Phase.lingering, lingering.elementState("e").phase());
+        assertSame(VisibilityTracker.Phase.lingering, Objects.requireNonNull(lingering.elementState("e")).phase());
         assertSame(LodTier.full, lingering.elementState("e").lodTier());
     }
 

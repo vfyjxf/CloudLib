@@ -73,6 +73,9 @@ public class TestFloatingScreen extends BasicScreen {
         root.addWidget(createDivider());
 
         // Demo area with reference + floating
+        referenceBox = BoxWidget.create();
+        floatingLabel = LabelWidget.of("Floating: " + currentPlacement.name()).setColor(0xFF3F3F3F).setShadow(false);
+        activeEffect = FloatingEffect.create(referenceBox, currentPlacement, buildMiddleware());
         root.addWidget(createDemoArea());
         root.addWidget(createDivider());
 
@@ -81,6 +84,7 @@ public class TestFloatingScreen extends BasicScreen {
         root.addWidget(createDivider());
 
         // Status bar
+        statusLabel = LabelWidget.of(buildStatusText()).setColor(0xFF555555);
         root.addWidget(createStatusBar());
 
         mainGroup().addWidget(root);
@@ -180,7 +184,6 @@ public class TestFloatingScreen extends BasicScreen {
         );
 
         // Reference element — a colored box in the center
-        referenceBox = BoxWidget.create();
         referenceBox.useStyle(
             UIStyle.of(
                 UIStyles.sizeOf(80, 32),
@@ -195,11 +198,9 @@ public class TestFloatingScreen extends BasicScreen {
         area.addChild(referenceBox);
 
         // Floating element — a tooltip-like label
-        floatingLabel = LabelWidget.of("Floating: " + currentPlacement.name()).setColor(0xFF3F3F3F).setShadow(false);
         floatingLabel.useStyle(UIStyle.of(UIStyles.padding(4, 8), UIStyles.background(Textures.flat)));
 
         // Apply the floating effect
-        activeEffect = FloatingEffect.create(referenceBox, currentPlacement, buildMiddleware());
         floatingLabel.useEffect(activeEffect);
         area.addChild(floatingLabel);
 
@@ -267,7 +268,6 @@ public class TestFloatingScreen extends BasicScreen {
         var bar = RowWidget.create(8);
         bar.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
-        statusLabel = LabelWidget.of(buildStatusText()).setColor(0xFF555555);
         statusLabel.useStyle(UIStyle.of(UIStyles.flexGrow(1)));
         bar.addWidget(statusLabel);
 

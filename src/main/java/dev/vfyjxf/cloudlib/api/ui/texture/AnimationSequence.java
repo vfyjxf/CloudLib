@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.texture;
 
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import org.eclipse.collections.api.list.MutableList;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.SequencedCollection;
@@ -51,7 +52,7 @@ public class AnimationSequence<T> implements Playable<T> {
         return currentIndex;
     }
 
-    public Playable<T> current() {
+    public @Nullable Playable<T> current() {
         if (animations.isEmpty()) return null;
         return animations.get(currentIndex);
     }
@@ -89,13 +90,13 @@ public class AnimationSequence<T> implements Playable<T> {
     }
 
     @Override
-    public T value() {
+    public @Nullable T value() {
         Playable<T> current = current();
         return current != null ? current.value() : null;
     }
 
     @Override
-    public T value(float partialTick) {
+    public @Nullable T value(float partialTick) {
         Playable<T> current = current();
         return current != null ? current.value(partialTick) : null;
     }

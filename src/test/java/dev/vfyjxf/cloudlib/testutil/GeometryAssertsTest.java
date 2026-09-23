@@ -9,6 +9,8 @@ import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -22,7 +24,7 @@ class GeometryAssertsTest {
             AssertionError.class,
             () -> GeometryAsserts.assertPosEquals(new Pos(3, 4), new Pos(3, 5))
         );
-        assertTrue(error.getMessage().contains("expected Pos[x=3, y=4]"));
+        assertTrue(Objects.requireNonNull(error.getMessage()).contains("expected Pos[x=3, y=4]"));
     }
 
     @Test
@@ -33,8 +35,8 @@ class GeometryAssertsTest {
             AssertionError.class,
             () -> GeometryAsserts.assertPosEquals(new FloatPos(1, 2), new FloatPos(1.25, 2), 0.1)
         );
-        assertTrue(error.getMessage().contains("epsilon=0.1"));
-        assertTrue(error.getMessage().contains("maxDelta=0.25"));
+        assertTrue(Objects.requireNonNull(error.getMessage()).contains("epsilon=0.1"));
+        assertTrue(Objects.requireNonNull(error.getMessage()).contains("maxDelta=0.25"));
     }
 
     @Test
@@ -80,13 +82,13 @@ class GeometryAssertsTest {
             AssertionError.class,
             () -> GeometryAsserts.assertVecEquals(new double[]{1, 2}, new double[]{1, 2.5}, 0.1)
         );
-        assertTrue(mismatch.getMessage().contains("maxDelta=0.5"));
+        assertTrue(Objects.requireNonNull(mismatch.getMessage()).contains("maxDelta=0.5"));
 
         AssertionError length = assertThrows(
             AssertionError.class,
             () -> GeometryAsserts.assertVecEquals(new double[]{1, 2}, new double[]{1, 2, 3}, 0.1)
         );
-        assertTrue(length.getMessage().contains("length mismatch"));
+        assertTrue(Objects.requireNonNull(length.getMessage()).contains("length mismatch"));
     }
 
     @Test

@@ -8,6 +8,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.stability.VisibilityTracker;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -55,7 +56,7 @@ class NegotiationTest {
         assertNotNull(squeezed.lastRejectionSeen);
         assertEquals(RejectionReason.overlap, squeezed.lastRejectionSeen.reason());
         assertEquals("blocker", squeezed.lastRejectionSeen.blockerId());
-        assertNull(result.elementState("squeezed").rejection());
+        assertNull(Objects.requireNonNull(result.elementState("squeezed")).rejection());
     }
 
     @Test
@@ -82,7 +83,7 @@ class NegotiationTest {
         assertNull(squeezed.placementOf("victim"), "an exhausted ladder grants nothing");
 
         // hidden means linger, not vanish: full alpha, frozen rect
-        CoordinationResult.ElementState state = squeezed.elementState("victim");
+        CoordinationResult.ElementState state = Objects.requireNonNull(squeezed.elementState("victim"));
         assertEquals(VisibilityTracker.Phase.lingering, state.phase());
         assertEquals(1.0, state.alpha(), 1.0e-9);
         assertNotNull(state.visualRect());
@@ -97,7 +98,7 @@ class NegotiationTest {
         }
         assertEquals(
             VisibilityTracker.Phase.hidden,
-            coordinator.lastResult().orElseThrow().elementState("victim").phase()
+            Objects.requireNonNull(coordinator.lastResult().orElseThrow().elementState("victim")).phase()
         );
     }
 
@@ -130,7 +131,7 @@ class NegotiationTest {
         // terminal state for every element
         assertEquals(1, squeezed.proposeCount);
         assertNull(result.placementOf("squeezed"));
-        assertNotNull(result.elementState("squeezed").rejection());
+        assertNotNull(Objects.requireNonNull(result.elementState("squeezed")).rejection());
         assertNotNull(result.placementOf("blocker"));
         assertEquals(2, result.elementStates().size());
     }
@@ -152,7 +153,7 @@ class NegotiationTest {
         // never rejected: the very first proposal was already compact
         assertEquals(List.of(1), levels(aware.usedVariants));
         assertNull(aware.lastRejectionSeen);
-        assertNull(proactively.elementState("aware").rejection());
+        assertNull(Objects.requireNonNull(proactively.elementState("aware")).rejection());
 
         // the reactive control: without budget awareness the element learns
         // the same tier the hard way — out-of-bounds rejection first
@@ -161,9 +162,9 @@ class NegotiationTest {
         reactive.register(blind);
         CoordinationResult reactively = reactive.frame(InworldCoordinator.FrameInput.of(300, 200, 0, dt, topStrip));
 
-        assertEquals(1, reactively.placementOf("blind").variant().level());
+        assertEquals(1, Objects.requireNonNull(reactively.placementOf("blind")).variant().level());
         assertEquals(List.of(0, 1), levels(blind.usedVariants));
-        assertEquals(RejectionReason.outOfBounds, blind.lastRejectionSeen.reason());
+        assertEquals(RejectionReason.outOfBounds, Objects.requireNonNull(blind.lastRejectionSeen).reason());
     }
 
     @Test
@@ -179,9 +180,9 @@ class NegotiationTest {
         CoordinationResult result = frame(coordinator, 0);
 
         // occupancy registered: the owner sits where it wants
-        assertEquals(new FloatRect(60, 80, 80, 40), result.placementOf("owner").screenRect());
+        assertEquals(new FloatRect(60, 80, 80, 40), Objects.requireNonNull(result.placementOf("owner")).screenRect());
         // and the arbitrated element had to route around it
-        FloatRect avoiderRect = result.placementOf("avoider").screenRect();
+        FloatRect avoiderRect = Objects.requireNonNull(result.placementOf("avoider")).screenRect();
         assertTrue(
             avoiderRect.intersection(result.placementOf("owner").screenRect()).area() == 0,
             "the arbitrated element must avoid the self-managed rect"
@@ -192,8 +193,8 @@ class NegotiationTest {
         // renegotiation, with the blocker named
         assertNull(result.placementOf("intruder"));
         assertEquals(1, intruder.proposeCount);
-        CoordinationResult.ElementState intruderState = result.elementState("intruder");
-        assertEquals(RejectionReason.overlap, intruderState.rejection().reason());
+        CoordinationResult.ElementState intruderState = Objects.requireNonNull(result.elementState("intruder"));
+        assertEquals(RejectionReason.overlap, Objects.requireNonNull(intruderState.rejection()).reason());
         assertEquals("owner", intruderState.rejection().blockerId());
     }
 
@@ -210,7 +211,8 @@ class NegotiationTest {
         CoordinationResult result = frame(coordinator, 0);
 
         assertNull(result.placementOf("squeezed"));
-        Rect suggestion = result.elementState("squeezed").rejection().suggestedRect();
+        CoordinationResult.ElementState squeezedState = Objects.requireNonNull(result.elementState("squeezed"));
+        Rect suggestion = Objects.requireNonNull(squeezedState.rejection()).suggestedRect();
         assertNotNull(suggestion, "the screen has room above and below the band");
         assertEquals(20, suggestion.width());
         assertEquals(12, suggestion.height());

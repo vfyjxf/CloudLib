@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,8 +33,8 @@ class SlotAssignerTest {
             Map.of()
         );
 
-        assertEquals("s1", result.of("a").slotId());
-        assertEquals("s2", result.of("b").slotId());
+        assertEquals("s1", Objects.requireNonNull(result.of("a")).slotId());
+        assertEquals("s2", Objects.requireNonNull(result.of("b")).slotId());
         assertEquals(0, result.movesUsed());
     }
 
@@ -47,8 +48,8 @@ class SlotAssignerTest {
             Map.of("a", "s2", "b", "s1")
         );
 
-        assertEquals("s2", result.of("a").slotId());
-        assertEquals("s1", result.of("b").slotId());
+        assertEquals("s2", Objects.requireNonNull(result.of("a")).slotId());
+        assertEquals("s1", Objects.requireNonNull(result.of("b")).slotId());
         assertEquals(0, result.movesUsed());
     }
 
@@ -63,8 +64,8 @@ class SlotAssignerTest {
         );
 
         // both want s1; b's gain (150) beats a's (30), and the budget allows one move
-        assertEquals("s2", result.of("a").slotId());
-        assertEquals("s1", result.of("b").slotId());
+        assertEquals("s2", Objects.requireNonNull(result.of("a")).slotId());
+        assertEquals("s1", Objects.requireNonNull(result.of("b")).slotId());
         assertEquals(1, result.movesUsed());
     }
 
@@ -90,7 +91,7 @@ class SlotAssignerTest {
         SlotAssigner.Result result = assigner
                 .assign(List.of(element("a", 0, 0)), List.of(slot("s1", 0, 0), slot("s2", 12, 0)), Map.of("a", "s2"));
 
-        assertEquals("s2", result.of("a").slotId());
+        assertEquals("s2", Objects.requireNonNull(result.of("a")).slotId());
         assertEquals(0, result.movesUsed());
     }
 
@@ -104,12 +105,12 @@ class SlotAssignerTest {
         // the penalty — held
         SlotAssigner.Result moving = withoutDiscount
                 .assign(List.of(element("a", 0, 0)), List.of(slot("s1", 0, 0), slot("s2", 8, 0)), Map.of("a", "s2"));
-        assertEquals("s1", moving.of("a").slotId());
+        assertEquals("s1", Objects.requireNonNull(moving.of("a")).slotId());
 
         SlotAssigner assigner = new SlotAssigner(4, discounted);
         SlotAssigner.Result held = assigner
                 .assign(List.of(element("a", 0, 0)), List.of(slot("s1", 0, 0), slot("s2", 8, 0)), Map.of("a", "s2"));
-        assertEquals("s2", held.of("a").slotId());
+        assertEquals("s2", Objects.requireNonNull(held.of("a")).slotId());
         assertEquals(0, held.movesUsed());
     }
 
@@ -120,7 +121,7 @@ class SlotAssignerTest {
         SlotAssigner.Result result = assigner
                 .assign(List.of(element("a", 0, 0)), List.of(slot("s1", 0, 0), slot("s2", 90, 0)), Map.of("a", "gone"));
 
-        assertEquals("s1", result.of("a").slotId());
+        assertEquals("s1", Objects.requireNonNull(result.of("a")).slotId());
         assertEquals(0, result.movesUsed());
     }
 
@@ -134,10 +135,10 @@ class SlotAssignerTest {
             Map.of()
         );
 
-        assertTrue(result.of("a").assigned());
-        assertTrue(result.of("b").assigned());
-        assertFalse(result.of("c").assigned());
-        assertTrue(Double.isNaN(result.of("c").cost()));
+        assertTrue(Objects.requireNonNull(result.of("a")).assigned());
+        assertTrue(Objects.requireNonNull(result.of("b")).assigned());
+        assertFalse(Objects.requireNonNull(result.of("c")).assigned());
+        assertTrue(Double.isNaN(Objects.requireNonNull(result.of("c")).cost()));
         assertEquals(3, result.assignments().size());
     }
 

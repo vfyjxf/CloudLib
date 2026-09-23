@@ -113,6 +113,7 @@ class MotionFreezeTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void configRejectsInvertedBandAndNonPositiveKnobs() {
         assertThrows(IllegalArgumentException.class, () -> MotionFreeze.Config.of(2.0, 10.0, 0.25, 0.1));
         assertThrows(IllegalArgumentException.class, () -> MotionFreeze.Config.of(10.0, 10.0, 0.25, 0.1));

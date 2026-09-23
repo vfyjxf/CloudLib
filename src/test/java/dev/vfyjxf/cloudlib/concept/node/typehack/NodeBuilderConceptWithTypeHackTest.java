@@ -21,6 +21,7 @@ public class NodeBuilderConceptWithTypeHackTest {
     private static final DataKey<Integer> testType2 = DataKey.create(Namespace.ofMc("test_2"), 42);
 
     @Test
+    @SuppressWarnings("NullAway")
     void build() {
         final var blueprint = new GroupBlueprint<>() {
             @Override

@@ -40,6 +40,7 @@ class PreviousFrameLayoutTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void malformedInputIsRejected() {
         assertThrows(
             IllegalArgumentException.class,

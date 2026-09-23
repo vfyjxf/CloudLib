@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -39,6 +40,7 @@ class CoordinatorModelTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void placementCandidateFactoriesAndValidation() {
         FloatRect rect = new FloatRect(10, 10, 40, 20);
         WorldAabb box = WorldAabb.around(0, 0, 0, 1, 1, 1);
@@ -54,6 +56,7 @@ class CoordinatorModelTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void inworldVariantValidates() {
         Size size = new Size(100, 40);
         InworldVariant variant = new InworldVariant(0, size, ContentTier.full, SpacePolicy.active, true, false, 2000);
@@ -81,6 +84,7 @@ class CoordinatorModelTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void elementProposalContract() {
         InworldVariant variant = TestElement.ladder(new Size(100, 40)).strongest();
         PlacementCandidate candidate = PlacementCandidate.screen(new FloatRect(0, 0, 100, 40));
@@ -88,14 +92,14 @@ class CoordinatorModelTest {
         ElementProposal proposal = ElementProposal.of(variant, new FloatPos(50, 50), candidate);
         assertEquals(variant, proposal.variant());
         assertEquals(1, proposal.candidates().size());
-        assertEquals(50, proposal.anchorScreen().x(), 0);
+        assertEquals(50, Objects.requireNonNull(proposal.anchorScreen()).x(), 0);
         assertTrue(!proposal.retracted());
 
         // the anchor position is copied: mutating the source does not leak in
         FloatPos anchor = new FloatPos(50, 50);
         ElementProposal copied = ElementProposal.of(variant, anchor, candidate);
         anchor.set(999, 999);
-        assertEquals(50, copied.anchorScreen().x(), 0);
+        assertEquals(50, Objects.requireNonNull(copied.anchorScreen()).x(), 0);
 
         ElementProposal retracted = ElementProposal.retract(variant);
         assertTrue(retracted.retracted());
@@ -180,6 +184,7 @@ class CoordinatorModelTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void proposeContextAndRejectionValidate() {
         SpaceBudget budget = new SpaceBudget(new Rect(0, 0, 100, 100), 5000, 0.5);
         InworldVariant variant = TestElement.ladder(new Size(100, 40)).strongest();
@@ -229,7 +234,7 @@ class CoordinatorModelTest {
         assertEquals(1, result.placements().size());
         assertEquals(placement, result.placementOf("e"));
         assertNull(result.placementOf("missing"));
-        assertEquals("e", result.elementState("e").elementId());
+        assertEquals("e", Objects.requireNonNull(result.elementState("e")).elementId());
         assertNull(result.elementState("missing"));
         assertEquals(CoordinationResult.RenegotiationCause.membershipChanged, result.cause());
         assertThrows(
@@ -239,6 +244,7 @@ class CoordinatorModelTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void configAndFrameInputValidate() {
         InworldCoordinator.Config.defaults();
         assertThrows(

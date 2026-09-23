@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.ScreenEdge;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -26,9 +27,9 @@ class DockCursorTest {
     void allocatesSequentiallyFromTheMargin() {
         DockCursor cursor = bottomEdge();
 
-        DockCursor.Slot a = cursor.allocate("a", 100);
-        DockCursor.Slot b = cursor.allocate("b", 200);
-        DockCursor.Slot c = cursor.allocate("c", 50);
+        DockCursor.Slot a = Objects.requireNonNull(cursor.allocate("a", 100));
+        DockCursor.Slot b = Objects.requireNonNull(cursor.allocate("b", 200));
+        DockCursor.Slot c = Objects.requireNonNull(cursor.allocate("c", 50));
 
         assertEquals(10, a.start());
         assertEquals(114, b.start());
@@ -47,7 +48,7 @@ class DockCursorTest {
 
         assertTrue(cursor.release("b"));
 
-        DockCursor.Slot d = cursor.allocate("d", 150);
+        DockCursor.Slot d = Objects.requireNonNull(cursor.allocate("d", 150));
         assertEquals(114, d.start());
         assertEquals(List.of("a", "d", "c"), ids(cursor.slots()));
     }
@@ -96,7 +97,9 @@ class DockCursorTest {
         List<String> remaining = ids(cursor.slots());
         assertEquals(List.of("slot0", "slot2", "slot4", "slot6"), remaining);
         for (int i = 1; i < remaining.size(); i++) {
-            assertTrue(cursor.slot(remaining.get(i - 1)).end() <= cursor.slot(remaining.get(i)).start());
+            DockCursor.Slot previous = Objects.requireNonNull(cursor.slot(remaining.get(i - 1)));
+            DockCursor.Slot next = Objects.requireNonNull(cursor.slot(remaining.get(i)));
+            assertTrue(previous.end() <= next.start());
         }
     }
 
@@ -107,14 +110,14 @@ class DockCursorTest {
         DockCursor.Slot b = cursor.allocate("b", 200);
         cursor.allocate("c", 50);
 
-        DockCursor.Slot shrunk = cursor.resize("b", 120);
+        DockCursor.Slot shrunk = Objects.requireNonNull(cursor.resize("b", 120));
         assertEquals(114, shrunk.start());
         assertEquals(120, shrunk.width());
         assertEquals(234, shrunk.end());
 
         assertNull(cursor.resize("b", 210));
-        assertEquals(120, cursor.slot("b").width());
-        assertEquals(114, cursor.slot("b").start());
+        assertEquals(120, Objects.requireNonNull(cursor.slot("b")).width());
+        assertEquals(114, Objects.requireNonNull(cursor.slot("b")).start());
     }
 
     @Test
@@ -122,7 +125,7 @@ class DockCursorTest {
         DockCursor cursor = bottomEdge();
         cursor.allocate("a", 100);
 
-        DockCursor.Slot grown = cursor.resize("a", 980);
+        DockCursor.Slot grown = Objects.requireNonNull(cursor.resize("a", 980));
         assertEquals(10, grown.start());
         assertEquals(980, grown.width());
         assertEquals(0, cursor.freeLength());

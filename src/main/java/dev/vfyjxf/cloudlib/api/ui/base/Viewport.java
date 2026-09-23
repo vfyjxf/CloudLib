@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Pos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.math.Size;
+import dev.vfyjxf.cloudlib.util.Checks;
 import org.jetbrains.annotations.Contract;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix4f;
@@ -661,7 +662,7 @@ public final class Viewport {
         if (viewMatrix4fCache == null) {
             viewMatrix4f(); // force cache
         }
-        return viewMatrix4fCache;
+        return Checks.checkNotNull(viewMatrix4fCache, "View matrix cache ");
     }
 
     /**

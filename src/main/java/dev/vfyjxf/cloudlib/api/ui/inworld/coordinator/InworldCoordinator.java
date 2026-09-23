@@ -490,8 +490,8 @@ public final class InworldCoordinator {
             } else {
                 boolean wasPresented = runtime.lastPresented;
                 FloatRect unclamped = visuals.get(runtime);
-                FloatRect visual = unclamped;
-                if (runtime.pendingPresent && runtime.target != null && visual != null) {
+                if (runtime.pendingPresent && runtime.target != null && unclamped != null) {
+                    FloatRect visual = unclamped;
                     if (runtime.lastVisual != null) {
                         visual = clampDisplacement(visual, runtime.lastVisual, config.relaxDisplacementClampPx());
                     }
@@ -769,7 +769,7 @@ public final class InworldCoordinator {
                     runtime.activeRejection = null;
                     break;
                 }
-                rejection = acceptance.rejection;
+                rejection = Objects.requireNonNull(acceptance.rejection, "rejection");
                 if (runtime.element.ladder().isWeakest(proposal.variant())) {
                     runtime.activeRejection = rejection;
                     break;
@@ -865,7 +865,8 @@ public final class InworldCoordinator {
             // pick back to the ranker — a moving anchor would re-argue its
             // slot at every resolve and visibly hop.
             for (PlacementCandidate candidate : proposal.candidates()) {
-                FloatRect candidateOffset = candidate.screenRect().translate(-anchor.x(), -anchor.y());
+                FloatRect screen = Objects.requireNonNull(candidate.screenRect(), "screenRect");
+                FloatRect candidateOffset = screen.translate(-anchor.x(), -anchor.y());
                 if (rectsAlmostEqual(candidateOffset, runtime.target.offsetRect(), stickySlotEpsilonPx)) {
                     Fit fit = fitRect(candidate, variant, scope);
                     if (fit.ok()) {
@@ -997,7 +998,7 @@ public final class InworldCoordinator {
         InworldVariant variant,
         RoundScope scope
     ) {
-        if (!rectsAlmostEqual(fit.rect(), candidate.screenRect())) {
+        if (!rectsAlmostEqual(fit.rect(), Objects.requireNonNull(candidate.screenRect(), "screenRect"))) {
             return null; // the fit moved the slot: its rect is the new slot
         }
         FloatRect held = runtime.target.offsetRect().translate(anchor.x(), anchor.y());
@@ -1072,7 +1073,7 @@ public final class InworldCoordinator {
     }
 
     private Fit fitRect(PlacementCandidate candidate, InworldVariant variant, RoundScope scope) {
-        FloatRect rect = candidate.screenRect();
+        FloatRect rect = Objects.requireNonNull(candidate.screenRect(), "screenRect");
         if (variant.allowsClamp()) {
             rect = rect.clampInto(scope.workArea);
         }
@@ -1161,7 +1162,11 @@ public final class InworldCoordinator {
         if (failure == null) {
             return ElementRejection.of(RejectionReason.overlap);
         }
-        return new ElementRejection(failure.reason, failure.blockerId, suggestedRect(variant, scope));
+        return new ElementRejection(
+            Objects.requireNonNull(failure.reason, "reason"),
+            failure.blockerId,
+            suggestedRect(variant, scope)
+        );
     }
 
     private @Nullable Rect suggestedRect(InworldVariant variant, RoundScope scope) {
@@ -1221,8 +1226,8 @@ public final class InworldCoordinator {
                 for (int j = i + 1; j < presented.size(); j++) {
                     ElementRuntime first = presented.get(i);
                     ElementRuntime second = presented.get(j);
-                    FloatRect a = visuals.get(first);
-                    FloatRect b = visuals.get(second);
+                    FloatRect a = Objects.requireNonNull(visuals.get(first), "visual");
+                    FloatRect b = Objects.requireNonNull(visuals.get(second), "visual");
                     if (!a.intersects(b)) {
                         continue;
                     }
@@ -1239,7 +1244,7 @@ public final class InworldCoordinator {
                     } else {
                         continue;
                     }
-                    FloatRect moving = visuals.get(mover);
+                    FloatRect moving = Objects.requireNonNull(visuals.get(mover), "visual");
                     double dx = moving.centerX() - obstacle.centerX();
                     double dy = moving.centerY() - obstacle.centerY();
                     double overlapX = Math.min(moving.right(), obstacle.right()) - Math.max(moving.x(), obstacle.x());
@@ -1490,7 +1495,9 @@ public final class InworldCoordinator {
         boolean lastPresented;
         boolean pendingPresent;
         boolean retractedLastFrame;
+        @Nullable
         ElementRejection activeRejection;
+        @Nullable
         FloatPos anchorAtLastResolve;
         FloatRect lastVisual;
         FloatRect lastTargetRect;
@@ -1499,6 +1506,7 @@ public final class InworldCoordinator {
         SwitchGate<Integer> gate;
         ElementProposal roundZero;
 
+        @SuppressWarnings("NullAway")
         ElementRuntime(InworldElement element, long registrationIndex, Config config) {
             this.element = element;
             this.registrationIndex = registrationIndex;

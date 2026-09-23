@@ -12,6 +12,8 @@ import net.minecraft.resources.ResourceLocation;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -107,7 +109,7 @@ class StyleVarTextureTest {
 
     @Test
     void aComposedTextureWritesItsLayersInOrder() {
-        VisualTexture group = parse("group(color(#FF0000), sdf(#00FF00, 2))");
+        VisualTexture group = Objects.requireNonNull(parse("group(color(#FF0000), sdf(#00FF00, 2))"));
         assertEquals("group(color(#FF0000), sdf(#00FF00, 2, 0, #000000))", surface.write(group));
     }
 }

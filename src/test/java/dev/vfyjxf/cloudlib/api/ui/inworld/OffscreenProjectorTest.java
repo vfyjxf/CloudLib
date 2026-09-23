@@ -5,6 +5,8 @@ import dev.vfyjxf.cloudlib.testutil.ProjectionSimulator;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -29,7 +31,7 @@ class OffscreenProjectorTest {
         assertFalse(result.behind());
         assertNull(result.edgePoint());
         assertNull(result.edge());
-        assertEquals(240, result.screenPos().x(), 0.01);
+        assertEquals(240, Objects.requireNonNull(result.screenPos()).x(), 0.01);
         assertEquals(135, result.screenPos().y(), 0.01);
     }
 
@@ -40,7 +42,7 @@ class OffscreenProjectorTest {
         assertFalse(result.onScreen());
         assertFalse(result.behind());
         assertEquals(ScreenEdge.left, result.edge());
-        assertEquals(8, result.edgePoint().x(), eps);
+        assertEquals(8, Objects.requireNonNull(result.edgePoint()).x(), eps);
         assertTrue(result.edgePoint().y() > 8 && result.edgePoint().y() < 262);
         assertTrue(result.dirX() < 0);
     }
@@ -50,7 +52,7 @@ class OffscreenProjectorTest {
         OffscreenProjector.Result result = projector.project(projection, new Vec3(0, 40, -10));
 
         assertEquals(ScreenEdge.top, result.edge());
-        assertEquals(8, result.edgePoint().y(), eps);
+        assertEquals(8, Objects.requireNonNull(result.edgePoint()).y(), eps);
         assertTrue(result.edgePoint().x() > 8 && result.edgePoint().x() < 472);
     }
 
@@ -203,7 +205,7 @@ class OffscreenProjectorTest {
         OffscreenProjector wideMargin = new OffscreenProjector(60);
         OffscreenProjector.Result result = wideMargin.project(projection, new Vec3(50, 0, -10));
 
-        assertEquals(420, result.edgePoint().x(), eps);
+        assertEquals(420, Objects.requireNonNull(result.edgePoint()).x(), eps);
     }
 
     @Test

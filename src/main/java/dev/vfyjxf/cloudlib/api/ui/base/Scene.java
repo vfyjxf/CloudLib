@@ -64,10 +64,14 @@ public final class Scene {
         this.root = root;
         this.draggableManager = new DraggableManager(root);
         // Ensure root has a FocusScopeNode as the root focus scope
-        if (!(root.focusNode instanceof FocusScopeNode)) {
-            root.setFocusNode(new FocusScopeNode());
+        FocusNode focusNode = root.focusNode;
+        if (focusNode instanceof FocusScopeNode scope) {
+            this.rootScope = scope;
+        } else {
+            FocusScopeNode createdScope = new FocusScopeNode();
+            root.setFocusNode(createdScope);
+            this.rootScope = createdScope;
         }
-        this.rootScope = (FocusScopeNode) root.focusNode;
     }
 
     // region tree
@@ -521,7 +525,7 @@ public final class Scene {
             }
             return WidgetTree.TraversalControl.proceed;
         });
-        context.tick();
+        context().tick();
         tickDebug();
     }
 
@@ -648,14 +652,14 @@ public final class Scene {
     private final ObjectSet<Widget> remountWidgets = new ObjectLinkedOpenHashSet<>();
     private final ObjectSet<Widget> destroyingWidgets = new ObjectLinkedOpenHashSet<>();
     private final ObjectSet<Widget> retainedWidgets = new ObjectLinkedOpenHashSet<>();
-    private SceneContext context;
+    private @Nullable SceneContext context;
 
     // region scene handle
 
     final SceneHandle globalHandle = SceneHandle.create(this);
     private final Object2ObjectOpenHashMap<Widget, SceneHandle> widgetHandles = new Object2ObjectOpenHashMap<>();
 
-    SceneHandle handleOf(Widget widget) {
+    SceneHandle handleOf(@Nullable Widget widget) {
         return widgetHandles.computeIfAbsent(widget, k -> SceneHandle.create(this));
     }
 
@@ -713,7 +717,7 @@ public final class Scene {
             if (!widget.lifecycle.initialized()) {
                 throw new IllegalArgumentException("Widget: " + widget + " is not initialized!");
             }
-            widget.mount(this, this.context, handleOf(widget));
+            widget.mount(this, context, handleOf(widget));
             return TraversalControl.proceed;
         });
         liveScenes.add(this);
@@ -816,7 +820,7 @@ public final class Scene {
             for (Widget created : createdWidgets) {
                 if (created.lifecycle.mounted()) continue;
                 WidgetTree.walkBreadthFirst(created, true, -1, (widget, depth) -> {
-                    widget.mount(this, this.context, handleOf(widget));
+                    widget.mount(this, context(), handleOf(widget));
                     return TraversalControl.proceed;
                 });
             }
@@ -825,7 +829,7 @@ public final class Scene {
         if (!remountWidgets.isEmpty()) {
             for (Widget widget : remountWidgets) {
                 WidgetTree.walkBreadthFirst(widget, true, -1, (w, depth) -> {
-                    w.mount(this, context, handleOf(w));
+                    w.mount(this, context(), handleOf(w));
                     return TraversalControl.proceed;
                 });
             }
@@ -881,6 +885,10 @@ public final class Scene {
         }
     }
 
+    private MutableList<Widget> layerOf(SceneLayer layer) {
+        return Checks.checkNotNull(extraLayers.get(layer), "Widget list of layer ");
+    }
+
     /**
      * Adds a widget to the specified layer.
      * <p>
@@ -895,7 +903,7 @@ public final class Scene {
             throw new IllegalArgumentException("Widget must be mounted to this scene");
         }
         removeFromAllLayers(widget);
-        var layerWidgets = extraLayers.get(layer);
+        var layerWidgets = layerOf(layer);
         if (!layerWidgets.contains(widget)) {
             layerWidgets.add(widget);
             layerWidgets.sortThis(Comparator.comparingInt(Widget::zIndex));
@@ -909,7 +917,7 @@ public final class Scene {
      * @param widget the widget to remove
      */
     public void removeFromLayer(SceneLayer layer, Widget widget) {
-        extraLayers.get(layer).remove(widget);
+        layerOf(layer).remove(widget);
     }
 
     /**
@@ -930,7 +938,7 @@ public final class Scene {
      * @param layer the layer to re-sort
      */
     void resortLayer(SceneLayer layer) {
-        extraLayers.get(layer).sortThis(Comparator.comparingInt(Widget::zIndex));
+        layerOf(layer).sortThis(Comparator.comparingInt(Widget::zIndex));
     }
 
     // endregion
@@ -964,11 +972,11 @@ public final class Scene {
      * @return the context this scene is mounted with.
      */
     public SceneContext context() {
-        return context;
+        return Checks.checkNotNull(context, "Scene context ");
     }
 
-    private boolean debugInputActive() {
-        return debugOverlay != null && debugOverlay.isOpen();
+    private @Nullable DebugOverlayImpl activeDebugOverlay() {
+        return debugOverlay != null && debugOverlay.isOpen() ? debugOverlay : null;
     }
 
     /**
@@ -1097,7 +1105,7 @@ public final class Scene {
      */
     public void renderExtraLayers(SceneCanvas canvas, int mouseX, int mouseY, float partialTick) {
         for (SceneLayer layer : SceneLayer.extraLayers) {
-            var layerWidgets = extraLayers.get(layer);
+            var layerWidgets = layerOf(layer);
             for (int i = 0; i < layerWidgets.size(); i++) {
                 Widget widget = layerWidgets.get(i);
                 if (!isMountedInThisScene(widget) || !widget.shouldRender()) continue;
@@ -1141,9 +1149,9 @@ public final class Scene {
     private int lastClickButton;
     private int clickCount;
     private long lastClickTime;
-    private WidgetPath lastHoveredPath;
+    private @Nullable WidgetPath lastHoveredPath;
 
-    private FloatPos lastClickPos;
+    private @Nullable FloatPos lastClickPos;
 
     /**
      * The synthetic pointer: the most recent position any pointer-input
@@ -1304,7 +1312,8 @@ public final class Scene {
      */
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         recordPointer(mouseX, mouseY);
-        if (debugInputActive() && debugOverlay.mouseClicked(mouseX, mouseY, button)) return true;
+        var overlay = activeDebugOverlay();
+        if (overlay != null && overlay.mouseClicked(mouseX, mouseY, button)) return true;
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             Widget focusable = findFocusable(target, mouseX, mouseY);
@@ -1351,7 +1360,8 @@ public final class Scene {
      */
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         recordPointer(mouseX, mouseY);
-        if (debugInputActive() && debugOverlay.mouseReleased(mouseX, mouseY, button)) return true;
+        var overlay = activeDebugOverlay();
+        if (overlay != null && overlay.mouseReleased(mouseX, mouseY, button)) return true;
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             InputContext input = InputContext.fromMouse(mouseX, mouseY, button);
@@ -1364,11 +1374,12 @@ public final class Scene {
             );
 
             if (currentClickWidget == target && target.isMouseOver(mouseX, mouseY)) {
+                FloatPos clickPos = lastClickPos;
                 boolean isContinuousClick = lastClickedWidget == target
                         && lastClickButton == button
                         && System.currentTimeMillis() - lastClickTime <= doubleClickThreshold
-                        && lastClickPos != null
-                        && Math.sqrt(Math.pow(mouseX - lastClickPos.x(), 2) + Math.pow(mouseY - lastClickPos.y(), 2))
+                        && clickPos != null
+                        && Math.sqrt(Math.pow(mouseX - clickPos.x(), 2) + Math.pow(mouseY - clickPos.y(), 2))
                                 <= doubleClickRadius;
 
                 clickCount = isContinuousClick ? clickCount + 1 : 1;
@@ -1407,7 +1418,8 @@ public final class Scene {
      */
     public void mouseMoved(double mouseX, double mouseY) {
         recordPointer(mouseX, mouseY);
-        if (debugInputActive() && debugOverlay.mouseMoved(mouseX, mouseY)) return;
+        var overlay = activeDebugOverlay();
+        if (overlay != null && overlay.mouseMoved(mouseX, mouseY)) return;
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             target.listeners(InputEvents.onMouseMoved).onMoved(mouseX, mouseY, target.interruptible());
@@ -1427,9 +1439,10 @@ public final class Scene {
                     widget.listeners(InputEvents.onMouseEnter).onEnter(mouseX, mouseY, widget.interruptible());
                 }
             } else {
-                int forkIndex = currentPath.commonAncestorIndex(lastHoveredPath);
-                for (int i = lastHoveredPath.size() - 1; i > forkIndex; i--) {
-                    Widget widget = lastHoveredPath.get(i);
+                WidgetPath previousPath = lastHoveredPath;
+                int forkIndex = currentPath.commonAncestorIndex(previousPath);
+                for (int i = previousPath.size() - 1; i > forkIndex; i--) {
+                    Widget widget = previousPath.get(i);
                     if (!isMountedInThisScene(widget)) continue;
                     widget.hovered = false;
                     widget.markStyleDirty();
@@ -1445,8 +1458,9 @@ public final class Scene {
             }
             lastHoveredPath = isMountedInThisScene(target) ? currentPath : null;
         } else if (lastHoveredPath != null) {
-            for (int i = lastHoveredPath.size() - 1; i >= 0; i--) {
-                Widget widget = lastHoveredPath.get(i);
+            WidgetPath previousPath = lastHoveredPath;
+            for (int i = previousPath.size() - 1; i >= 0; i--) {
+                Widget widget = previousPath.get(i);
                 if (!isMountedInThisScene(widget)) continue;
                 widget.hovered = false;
                 widget.markStyleDirty();
@@ -1471,7 +1485,8 @@ public final class Scene {
      */
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         recordPointer(mouseX, mouseY);
-        if (debugInputActive() && debugOverlay.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
+        var overlay = activeDebugOverlay();
+        if (overlay != null && overlay.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
         // pointer capture: while a press is active, the drag stays with the
         // widget the press hit — no re-hitTest, the same capture rule
         // mouseReleased applies to its click determination. A capture target
@@ -1493,7 +1508,8 @@ public final class Scene {
 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         recordPointer(mouseX, mouseY);
-        if (debugInputActive() && debugOverlay.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) return true;
+        var overlay = activeDebugOverlay();
+        if (overlay != null && overlay.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) return true;
         Widget target = hitTest(mouseX, mouseY);
         if (target != null) {
             var bubble = target.bubble();
@@ -1528,7 +1544,8 @@ public final class Scene {
                 return true;
             }
         }
-        if (debugInputActive() && debugOverlay.keyPressed(keyCode, scanCode, modifiers)) return true;
+        var overlay = activeDebugOverlay();
+        if (overlay != null && overlay.keyPressed(keyCode, scanCode, modifiers)) return true;
         Widget fw = focusingWidget();
         if (fw == null || !fw.lifecycle.mounted()) return false;
         var localMouse = root.sceneToLocal(syntheticPointerX(), syntheticPointerY());
@@ -1554,7 +1571,8 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if (debugInputActive() && debugOverlay.keyReleased(keyCode, scanCode, modifiers)) return true;
+        var overlay = activeDebugOverlay();
+        if (overlay != null && overlay.keyReleased(keyCode, scanCode, modifiers)) return true;
         Widget fw = focusingWidget();
         if (fw == null || !fw.lifecycle.mounted()) return false;
         var localMouse = root.sceneToLocal(syntheticPointerX(), syntheticPointerY());
@@ -1579,7 +1597,8 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean charTyped(char codePoint, int modifiers) {
-        if (debugInputActive() && debugOverlay.charTyped(codePoint, modifiers)) return true;
+        var overlay = activeDebugOverlay();
+        if (overlay != null && overlay.charTyped(codePoint, modifiers)) return true;
         Widget fw = focusingWidget();
         if (fw != null && fw.lifecycle.mounted()) {
             var bubble = fw.bubble();
@@ -1634,7 +1653,7 @@ public final class Scene {
         for (int i = SceneLayer.extraLayers.size() - 1; i >= 0; i--) {
             SceneLayer layer = SceneLayer.extraLayers.get(i);
             if (layer.hitTestMode() == HitTestAction.none) continue;
-            var widgets = extraLayers.get(layer);
+            var widgets = layerOf(layer);
 
             for (int j = widgets.size() - 1; j >= 0; j--) {
                 Widget layerWidget = widgets.get(j);
@@ -1647,7 +1666,7 @@ public final class Scene {
                     hitY = mouseY;
                 } else {
                     var parent = layerWidget.parent();
-                    if (!isMountedInThisScene(parent)) continue;
+                    if (parent == null || !isMountedInThisScene(parent)) continue;
                     FloatPos local = parent.sceneToLocal(mouseX, mouseY);
                     hitX = local.x + parent.viewport().contentOffsetX();
                     hitY = local.y + parent.viewport().contentOffsetY();
@@ -1766,8 +1785,8 @@ public final class Scene {
         FocusNode oldFocus = primaryFocus;
         if (oldFocus == node) return;
 
-        Widget newWidget = node.owner;
-        assert newWidget != null && newWidget.lifecycle.mounted();
+        Widget newWidget = Checks.checkNotNull(node.owner, "Focus node owner ");
+        assert newWidget.lifecycle.mounted();
         WidgetPath newPath = newWidget.path();
 
         if (oldFocus != null && oldFocus.owner != null && oldFocus.owner.lifecycle.mounted()) {

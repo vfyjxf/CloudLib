@@ -11,6 +11,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpaceMask;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpacePolicy;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.SwitchGate;
 import dev.vfyjxf.cloudlib.api.ui.inworld.stability.VisibilityTracker;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -237,6 +238,7 @@ class ElementSpecValidationTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void emptyIdsAreRejected() {
         assertThrows(IllegalArgumentException.class, () -> ElementSpec.from(InworldProfile.nameplate, ""));
         assertThrows(IllegalArgumentException.class, () -> ElementSpec.from(InworldProfile.nameplate, null));
@@ -276,6 +278,6 @@ class ElementSpecValidationTest {
         }
 
         @Override
-        public void arbitrated(InworldPlacement placement, Feedback feedback) {}
+        public void arbitrated(@Nullable InworldPlacement placement, Feedback feedback) {}
     };
 }

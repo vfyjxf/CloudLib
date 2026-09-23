@@ -79,7 +79,9 @@ public class TestLayoutScreen extends BasicScreen {
             UIStyle.of(widthOf(TaffyDimension.percent(1f)), flexGrow(1), minHeight(0), flexWrap(), rowGap(10))
         );
 
+        sliderValueLabel = LabelWidget.of("Value: 50").setColor(0xFF3F3F3F);
         contentRow.addWidget(createControlsPanel());
+        inputEchoLabel = LabelWidget.of("Echo: ").setColor(0xFF555555);
         contentRow.addWidget(createPreviewPanel());
         contentRow.addWidget(createListPanel());
 
@@ -89,6 +91,8 @@ public class TestLayoutScreen extends BasicScreen {
         root.addWidget(createDivider());
         root.addWidget(createColorShowcase());
         root.addWidget(createDivider());
+        statusLabel = LabelWidget.of("Status: Ready").setColor(0xFF555555);
+        clickCountLabel = LabelWidget.of("Clicks: 0").setColor(0xFF555555);
         root.addWidget(createFooter());
 
         mainGroup().addWidget(root);
@@ -200,7 +204,6 @@ public class TestLayoutScreen extends BasicScreen {
         var section = ColumnWidget.create(4);
 
         // Slider value label
-        sliderValueLabel = LabelWidget.of("Value: 50").setColor(0xFF3F3F3F);
         section.addWidget(sliderValueLabel);
 
         // Horizontal slider
@@ -305,7 +308,6 @@ public class TestLayoutScreen extends BasicScreen {
         inputField.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), heightOf(20)));
         content.addWidget(inputField);
 
-        inputEchoLabel = LabelWidget.of("Echo: ").setColor(0xFF555555);
         content.addWidget(inputEchoLabel);
 
         // Multi-line text display
@@ -466,11 +468,9 @@ public class TestLayoutScreen extends BasicScreen {
             UIStyle.of(widthOf(TaffyDimension.percent(1f)), alignItemsCenter(), flexShrink(0), padding(4, 0))
         );
 
-        statusLabel = LabelWidget.of("Status: Ready").setColor(0xFF555555);
         statusLabel.useStyle(UIStyle.of(flexGrow(1)));
         footer.addWidget(statusLabel);
 
-        clickCountLabel = LabelWidget.of("Clicks: 0").setColor(0xFF555555);
         clickCountLabel.useStyle(UIStyle.of(flexShrink(0)));
         footer.addWidget(clickCountLabel);
 

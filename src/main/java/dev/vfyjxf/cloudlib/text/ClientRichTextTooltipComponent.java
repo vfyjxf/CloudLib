@@ -11,6 +11,7 @@ import dev.vfyjxf.cloudlib.util.ScreenUtil;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Client renderer for {@link RichTextTooltipComponent}: lays the document out at
@@ -24,7 +25,7 @@ public final class ClientRichTextTooltipComponent implements ClientTooltipCompon
 
     private final RichTextTooltipComponent component;
     private final ThemeColorResolver themeColors = ThemeColorResolver.ofActiveTheme();
-    private LaidOutText laidOut;
+    private @Nullable LaidOutText laidOut;
 
     public ClientRichTextTooltipComponent(RichTextTooltipComponent component) {
         this.component = component;

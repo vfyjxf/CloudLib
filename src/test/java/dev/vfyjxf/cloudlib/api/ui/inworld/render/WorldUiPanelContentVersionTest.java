@@ -3,6 +3,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.render;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.LongSupplier;
 
@@ -39,7 +40,7 @@ class WorldUiPanelContentVersionTest {
     @Test
     void constantLongIsAConstantVersion() {
         WorldUiPanel panel = new WorldUiPanel(10, 10).contentVersion(9);
-        assertEquals(9, panel.contentVersion().getAsLong());
+        assertEquals(9, Objects.requireNonNull(panel.contentVersion()).getAsLong());
         assertEquals(9, panel.contentVersion().getAsLong());
     }
 
@@ -50,7 +51,7 @@ class WorldUiPanelContentVersionTest {
         AtomicReference<Token> token = new AtomicReference<>(new Token(1, List.of("a")));
         WorldUiPanel panel = new WorldUiPanel(10, 10).contentVersion(token::get);
 
-        long first = panel.contentVersion().getAsLong();
+        long first = Objects.requireNonNull(panel.contentVersion()).getAsLong();
         assertEquals(first, panel.contentVersion().getAsLong(), "unchanged token holds the version");
 
         token.set(new Token(1, List.of("a")));

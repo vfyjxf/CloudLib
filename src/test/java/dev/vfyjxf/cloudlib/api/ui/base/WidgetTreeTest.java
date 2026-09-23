@@ -531,6 +531,7 @@ class WidgetTreeTest {
         }
 
         @Test
+        @SuppressWarnings("NullAway")
         void of_rejectsNull() {
             assertThrows(NullPointerException.class, () -> WidgetPath.of((Widget) null));
             assertThrows(NullPointerException.class, () -> WidgetPath.of(root, null, button1));

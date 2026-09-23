@@ -101,6 +101,7 @@ class EntityPreviewWidgetTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void aPreviewNeedsASupplier() {
         assertThrows(NullPointerException.class, () -> new EntityPreviewWidget(null, 16, 16));
     }

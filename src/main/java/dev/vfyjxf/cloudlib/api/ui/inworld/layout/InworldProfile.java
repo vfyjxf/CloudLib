@@ -7,6 +7,7 @@ import dev.vfyjxf.cloudlib.api.ui.inworld.group.InworldGroup;
 import dev.vfyjxf.cloudlib.api.ui.inworld.group.OrbitAroundAnchor;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpaceMask;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.SpacePolicy;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Set;
 import java.util.function.Supplier;
@@ -164,7 +165,7 @@ public enum InworldProfile {
 
     private final AlgorithmProfile algorithm;
     private final Supplier<ElementFacets> preset;
-    private ElementFacets facets;
+    private @Nullable ElementFacets facets;
 
     InworldProfile(AlgorithmProfile algorithm, Supplier<ElementFacets> preset) {
         this.algorithm = algorithm;
@@ -181,18 +182,20 @@ public enum InworldProfile {
      * this profile's algorithm binding (memoized after the first call).
      */
     public ElementFacets facets() {
-        if (facets == null) {
-            ElementFacets built = preset.get();
-            FacetRules.validate(
-                built.anchor(),
-                built.orientation(),
-                built.spaces(),
-                built.avoidance(),
-                built.group(),
-                algorithm
-            );
-            facets = built;
+        ElementFacets current = facets;
+        if (current != null) {
+            return current;
         }
-        return facets;
+        ElementFacets built = preset.get();
+        FacetRules.validate(
+            built.anchor(),
+            built.orientation(),
+            built.spaces(),
+            built.avoidance(),
+            built.group(),
+            algorithm
+        );
+        facets = built;
+        return built;
     }
 }

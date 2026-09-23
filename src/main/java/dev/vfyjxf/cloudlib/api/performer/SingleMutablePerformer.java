@@ -1,7 +1,10 @@
 package dev.vfyjxf.cloudlib.api.performer;
 
+import dev.vfyjxf.cloudlib.util.Checks;
+import org.jspecify.annotations.Nullable;
+
 class SingleMutablePerformer<T> implements MutablePerformer<T> {
-    private T performer;
+    private @Nullable T performer;
 
     public SingleMutablePerformer(T performer) {
         this.performer = performer;
@@ -21,6 +24,6 @@ class SingleMutablePerformer<T> implements MutablePerformer<T> {
 
     @Override
     public T performer() {
-        return performer;
+        return Checks.checkNotNull(performer, "performer");
     }
 }

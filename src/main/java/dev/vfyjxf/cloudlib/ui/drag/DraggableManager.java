@@ -10,6 +10,7 @@ import dev.vfyjxf.cloudlib.api.ui.drag.DragContext;
 import dev.vfyjxf.cloudlib.api.ui.drag.DragProvider;
 import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 // TODO:Refactor dragging system to blueprint based system.
 @ApiStatus.Internal
@@ -30,7 +31,7 @@ public class DraggableManager {
     /**
      * current drag context.
      */
-    private DragContextImpl currentContext;
+    private @Nullable DragContextImpl currentContext;
 
     private boolean dragging = false;
 
@@ -56,23 +57,24 @@ public class DraggableManager {
         }));
 
         mainGroup.onRender(((canvas, mouseX, mouseY, partialTicks, self, context) -> {
-            if (currentContext == null) return;
-            var start = currentContext.getStart();
+            DragContextImpl activeContext = currentContext;
+            if (activeContext == null) return;
+            var start = activeContext.getStart();
             double deltaX = mouseX - start.x();
             double deltaY = mouseY - start.y();
-            var draggableElement = currentContext.draggingElement();
-            assert draggableElement != null;
+            var draggableElement = activeContext.draggingElement();
+            if (draggableElement == null) return;
             if (!dragging) {
                 var distance = deltaX * deltaX + deltaY * deltaY;
                 if (distance < minDragDistance) return;
                 var input = InputContext.fromMouse(mouseX, mouseY, 0);
-                draggableElement.dragStart(input, currentContext);
-                mainGroup.getPerformer(DragConsumer.scenario).dragStart(draggableElement, currentContext);
+                draggableElement.dragStart(input, activeContext);
+                mainGroup.getPerformer(DragConsumer.scenario).dragStart(draggableElement, activeContext);
                 dragging = true;
             }
-            draggableElement.onDrag(mouseX, mouseY, currentContext);
+            draggableElement.onDrag(mouseX, mouseY, activeContext);
             var dragConsumer = mainGroup.getPerformer(DragConsumer.scenario);
-            dragConsumer.onDrag(draggableElement, currentContext, deltaX, deltaY);
+            dragConsumer.onDrag(draggableElement, activeContext, deltaX, deltaY);
         }));
 
         mainGroup.onMouseReleased(((input, context) -> {
@@ -85,16 +87,17 @@ public class DraggableManager {
     }
 
     public void endDrag(InputContext input) {
-        if (dragging && currentContext != null) {
-            var draggableElement = currentContext.draggingElement();
+        DragContextImpl activeContext = currentContext;
+        if (dragging && activeContext != null) {
+            var draggableElement = activeContext.draggingElement();
             if (draggableElement != null) {
                 DragConsumer dragConsumer = mainGroup.getPerformer(DragConsumer.scenario);
-                FloatPos start = currentContext.getStart();
+                FloatPos start = activeContext.getStart();
                 double deltaX = input.mouseX() - start.x();
                 double deltaY = input.mouseY() - start.y();
-                boolean consumed = dragConsumer.consume(draggableElement, currentContext);
-                draggableElement.dragEnd(input, currentContext, deltaX, deltaY, consumed);
-                dragConsumer.dragEnd(draggableElement, currentContext, deltaX, deltaY);
+                boolean consumed = dragConsumer.consume(draggableElement, activeContext);
+                draggableElement.dragEnd(input, activeContext, deltaX, deltaY, consumed);
+                dragConsumer.dragEnd(draggableElement, activeContext, deltaX, deltaY);
             }
         }
         dragging = false;
@@ -102,10 +105,11 @@ public class DraggableManager {
     }
 
     public void renderDragging(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        if (!dragging) return;
-        var draggableElement = currentContext.draggingElement();
-        assert draggableElement != null;
-        var start = currentContext.getStart();
+        DragContextImpl activeContext = currentContext;
+        if (!dragging || activeContext == null) return;
+        var draggableElement = activeContext.draggingElement();
+        if (draggableElement == null) return;
+        var start = activeContext.getStart();
         var origin = draggableElement.originalBounds();
         double xPadding = mouseX - start.x() + origin.x();
         double yPadding = mouseY - start.y() + origin.y();
@@ -117,7 +121,7 @@ public class DraggableManager {
         graphics.pose().popPose();
     }
 
-    public DragContext currentContext() {
+    public @Nullable DragContext currentContext() {
         return currentContext;
     }
 

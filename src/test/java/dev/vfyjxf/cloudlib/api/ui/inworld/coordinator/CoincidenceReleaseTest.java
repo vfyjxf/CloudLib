@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -153,8 +154,8 @@ class CoincidenceReleaseTest {
         FloatRect firstB = null;
         for (int i = 0; i < 10; i++) {
             CoordinationResult result = frame(coordinator, dt * (i + 1));
-            FloatRect a = result.placementOf("a").screenRect();
-            FloatRect b = result.placementOf("b").screenRect();
+            FloatRect a = Objects.requireNonNull(result.placementOf("a")).screenRect();
+            FloatRect b = Objects.requireNonNull(result.placementOf("b")).screenRect();
             if (i == 0) {
                 firstA = a;
                 firstB = b;
@@ -184,14 +185,16 @@ class CoincidenceReleaseTest {
         b.moveTo(new FloatPos(320, 150), lattice(320, 150));
         CoordinationResult moved = frame(coordinator, 3 * dt);
 
-        FloatRect grant = moved.placementOf("b").screenRect();
-        assertEquals(0, coincidence(moved.placementOf("a"), moved.placementOf("b")), 1.0e-9);
+        InworldPlacement movedA = Objects.requireNonNull(moved.placementOf("a"));
+        InworldPlacement movedB = Objects.requireNonNull(moved.placementOf("b"));
+        FloatRect grant = movedB.screenRect();
+        assertEquals(0, coincidence(movedA, movedB), 1.0e-9);
         assertTrue(
             Math.hypot(grant.centerX() - 320, grant.centerY() - 150) <= 60 + 40,
             "the released element rides its own anchor: grant center " + grant.centerX() + "," + grant.centerY()
                     + " anchor 320,150"
         );
-        assertEquals(preferenceA.get(0), moved.placementOf("a").screenRect());
+        assertEquals(preferenceA.get(0), movedA.screenRect());
     }
 
     @Test
@@ -210,7 +213,7 @@ class CoincidenceReleaseTest {
         List<FloatRect> granted = new ArrayList<>();
         for (String id : new String[]{"a", "b", "c"}) {
             assertNotNull(result.placementOf(id), id + " presented");
-            granted.add(result.placementOf(id).screenRect());
+            granted.add(Objects.requireNonNull(result.placementOf(id)).screenRect());
         }
         for (int i = 0; i < granted.size(); i++) {
             for (int j = i + 1; j < granted.size(); j++) {
@@ -237,6 +240,6 @@ class CoincidenceReleaseTest {
 
         CoordinationResult result = frame(coordinator, dt);
 
-        assertEquals(preference.get(0), result.placementOf("solo").screenRect());
+        assertEquals(preference.get(0), Objects.requireNonNull(result.placementOf("solo")).screenRect());
     }
 }

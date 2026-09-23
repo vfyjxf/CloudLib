@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.performer;
 
 import dev.vfyjxf.cloudlib.util.Checks;
 import org.eclipse.collections.impl.list.mutable.FastList;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
@@ -13,7 +14,7 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
 
     protected final Function<SequencedCollection<T>, T> merger;
     protected final FastList<PerformerEntry<T>> performers = FastList.newList();
-    protected T performer;
+    protected @Nullable T performer;
     private int weakCount = 0;
 
     protected MergeablePerformer(Function<SequencedCollection<T>, T> merger) {
@@ -25,7 +26,7 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
         if (cleaned() || performer == null) {
             updatePerformer();
         }
-        return performer;
+        return Checks.checkNotNull(performer, "performer");
     }
 
     @Override
@@ -36,7 +37,7 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
     @Override
     public void remove(T performer) {
         Checks.checkNotNull(performer, "performer");
-        performers.removeIf(entry -> entry.performer().equals(performer));
+        performers.removeIf(entry -> Objects.equals(entry.performer(), performer));
         this.performer = null;
     }
 
@@ -99,7 +100,7 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
             return Integer.compare(o.priority, priority);
         }
 
-        public abstract T performer();
+        public abstract @Nullable T performer();
     }
 
     protected static final class DirectPerformerEntry<T> extends PerformerEntry<T> {
@@ -127,7 +128,7 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
         }
 
         @Override
-        public T performer() {
+        public @Nullable T performer() {
             if (key.get() == null) {
                 return null;
             }

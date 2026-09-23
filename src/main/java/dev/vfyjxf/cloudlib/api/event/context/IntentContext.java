@@ -1,16 +1,17 @@
 package dev.vfyjxf.cloudlib.api.event.context;
 
 import dev.vfyjxf.cloudlib.api.event.EventChannel;
+import org.jspecify.annotations.Nullable;
 
 public final class IntentContext {
 
-    private final EventChannel<?> source;
+    private final @Nullable EventChannel<?> source;
 
-    public IntentContext(EventChannel<?> source) {
+    public IntentContext(@Nullable EventChannel<?> source) {
         this.source = source;
     }
 
-    public EventChannel<?> source() {
+    public @Nullable EventChannel<?> source() {
         return source;
     }
 }

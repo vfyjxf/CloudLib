@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -110,7 +111,8 @@ class AlgorithmComboTest {
             }
             List<LeaderRouter.Leader> leaders = new ArrayList<>(epoch.size());
             for (Clusterer.Member member : epoch) {
-                SlotAssigner.Slot slot = slotById.get(assignment.of(member.id()).slotId());
+                SlotAssigner.Assignment assigned = Objects.requireNonNull(assignment.of(member.id()));
+                SlotAssigner.Slot slot = Objects.requireNonNull(slotById.get(assigned.slotId()));
                 leaders.add(LeaderRouter.Leader.toPoint(member.id(), member.x(), member.y(), slot.x(), slot.y() - 24));
             }
             List<LeaderRouter.Route> routes = router.route(leaders, clusterMap);

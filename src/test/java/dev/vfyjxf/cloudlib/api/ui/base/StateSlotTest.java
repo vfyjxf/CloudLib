@@ -128,6 +128,7 @@ class StateSlotTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void testUseStateWithNullValue() {
         StateSlot.withContext(context, () -> {
             StateSlot.StateAccessor<String> state = StateSlot.useState((String) null);

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -21,7 +22,7 @@ class GuideLineAnimationTest {
         for (int i = 0; i < 60; i++) {
             sample = animation.advance(true, lengthPx, 7L, false, frame);
         }
-        return sample;
+        return Objects.requireNonNull(sample);
     }
 
     @Test
@@ -67,7 +68,7 @@ class GuideLineAnimationTest {
         for (int i = 0; i < 5; i++) {
             later = animation.advance(true, 400, 1L, false, frame);
         }
-        assertTrue(later.visible(), "and grows once the delay has elapsed");
+        assertTrue(Objects.requireNonNull(later).visible(), "and grows once the delay has elapsed");
     }
 
     @Test
@@ -86,7 +87,8 @@ class GuideLineAnimationTest {
         }
 
         assertTrue(config.exitSeconds() < config.enterSeconds(400), "the exit is the quicker of the two");
-        assertTrue(sample.arcStart() > 0.9, "retracted by the end of the window: " + sample.arcStart());
+        GuideLineAnimation.Sample retracted = Objects.requireNonNull(sample);
+        assertTrue(retracted.arcStart() > 0.9, "retracted by the end of the window: " + retracted.arcStart());
         GuideLineAnimation.Sample gone = animation.advance(false, 400, 1L, false, frame);
         assertFalse(gone.visible());
         assertEquals(GuideLineAnimation.Phase.hidden, animation.phase());
@@ -143,7 +145,8 @@ class GuideLineAnimationTest {
         for (int i = 0; i < 6; i++) {
             growing = animation.advance(true, 400, 1L, false, frame);
         }
-        assertTrue(growing.arcEnd() > 0.0 && growing.arcEnd() < 1.0, "growing again: " + growing.arcEnd());
+        GuideLineAnimation.Sample grown = Objects.requireNonNull(growing);
+        assertTrue(grown.arcEnd() > 0.0 && grown.arcEnd() < 1.0, "growing again: " + grown.arcEnd());
     }
 
     @Test

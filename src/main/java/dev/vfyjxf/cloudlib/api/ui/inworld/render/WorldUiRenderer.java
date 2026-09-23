@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * The in-world UI render pipeline (v2, sorted-translucency variant).
@@ -244,14 +245,15 @@ public final class WorldUiRenderer {
         RenderSystem.applyModelViewMatrix();
         try {
             for (DrawItem item : sequence(cameraPos)) {
-                if (item.panel() == null) {
-                    drawOverlay(item.overlay(), frame);
+                WorldUiPanel panel = item.panel();
+                if (panel == null) {
+                    drawOverlay(Objects.requireNonNull(item.overlay()), frame);
                 } else {
-                    drawPanelQuad(item.panel());
+                    drawPanelQuad(panel);
                     // the panel's own companion lines draw at its slot, not in
                     // a trailing batch — a far panel's lines must not land on
                     // top of a nearer quad either
-                    drawPanelLines(item.panel());
+                    drawPanelLines(panel);
                 }
             }
             drawEmitterLines();
@@ -322,7 +324,7 @@ public final class WorldUiRenderer {
             Supersampling.ProjectedSize proj = Supersampling.projectQuad(
                 worldToView,
                 frame.viewToClip(),
-                bases.get(panel),
+                Objects.requireNonNull(bases.get(panel)),
                 panel.width(),
                 panel.height(),
                 frame.viewportW(),
@@ -368,7 +370,12 @@ public final class WorldUiRenderer {
     private final Map<WorldUiPanel, Integer> lastOrder = new IdentityHashMap<>();
 
     /** One entry of the world pass's far → near sequence: a panel's quad, or a host overlay. */
-    private record DrawItem(WorldUiPanel panel, WorldOverlay overlay, double distance, int sequence) {}
+    private record DrawItem(
+        @Nullable WorldUiPanel panel,
+        @Nullable WorldOverlay overlay,
+        double distance,
+        int sequence
+    ) {}
 
     /**
      * The frame's draw sequence: every visible panel and every registered
