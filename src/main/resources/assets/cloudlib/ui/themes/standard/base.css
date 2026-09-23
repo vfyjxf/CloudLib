@@ -35,6 +35,28 @@
     --slot:       nine-slice("cloudlib:gui/background/slot/base", 4, 18, 18);
     --slot-dark:  nine-slice("cloudlib:gui/background/slot/dark", 4, 18, 18);
 
+    /* ---- info bars ---- */
+    /* A framed channel: 1 px of ring top and bottom around a 5 px trough, so the
+       ink sits on a 5 px line and the outline still reads at a glance. The track is
+       a deep near-black at 72% — it has to sit on the light panels and the dark ones
+       this theme ships, and a translucent ink does both without a second token. The
+       neutral fill is a cool gray: a reading with no verdict, visible without
+       shouting, and the semantic classes below replace it the moment a verdict
+       exists. --bar-frame is a *texture*, not an ink: it strokes the outline, so a
+       bare colour here would fill the whole bar instead of its edge. */
+    --bar-height:  7px;
+    --bar-row-gap: 3px;   /* the air a bar keeps against the text line beside it */
+    --bar-track:   color(#0A0E14B8);
+    --bar-frame:   border-texture(#04060AD9, 1);
+    --bar-fill:    color(#8FA0B2FF);
+    --bar-mark:    color(#F2F6FFFF);
+    --bar-ok:      color(#5FBF6CFF);
+    --bar-warn:    color(#E0A93BFF);
+    --bar-danger:  color(#D8514CFF);
+    --bar-info:    color(#4FA6D8FF);
+    /* a section header's rule */
+    --rule:        color(#A8B0B8FF);
+
     /* ---- buttons ---- */
     --btn:        nine-slice("cloudlib:gui/button/base", 4, 14, 16);
     --btn-hover:  nine-slice("cloudlib:gui/button/hover", 4, 14, 15);
@@ -222,3 +244,32 @@ check           { background: var(--check-off); width: 7px; height: 7px; }
 check:hover     { background: var(--check-off-hover); }
 check:checked   { background: var(--check-on); }
 check:checked:hover { background: var(--check-on-hover); }
+
+/* ---------- info panels ---------- */
+
+info-bar {
+    height: var(--bar-height);
+    margin: var(--bar-row-gap) 0;
+}
+info-bar::part(track)        { background: var(--bar-track); }
+info-bar::part(frame)        { background: var(--bar-frame); }
+info-bar::part(fill)         { background: var(--bar-fill); }
+info-bar::part(mark)         { background: var(--bar-mark); }
+info-bar .ok::part(fill)     { background: var(--bar-ok); }
+info-bar .warn::part(fill)   { background: var(--bar-warn); }
+info-bar .danger::part(fill) { background: var(--bar-danger); }
+info-bar .info::part(fill)   { background: var(--bar-info); }
+
+/* an icon row defaults to bare cells — .slot only reaches a slotBacked(true) row */
+
+section-header {
+    column-gap: var(--gap);
+}
+section-header::part(title) { color: var(--text); font-size: 10px; }
+section-header::part(rule)  { background: var(--rule); height: 1px; }
+
+kv-row {
+    column-gap: var(--gap);
+}
+kv-row::part(label) { color: var(--text-dim); }
+kv-row::part(value) { color: var(--text); }

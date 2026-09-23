@@ -11,11 +11,12 @@ import org.jetbrains.annotations.Nullable;
  * literal prefix otherwise.
  */
 public record AttributeSelector(
-        @Nullable String namespace,
-        String name,
-        @Nullable Operator operator,
-        @Nullable String value,
-        @Nullable MatchFlag flag) {
+    @Nullable String namespace,
+    String name,
+    @Nullable Operator operator,
+    @Nullable String value,
+    @Nullable MatchFlag flag
+) {
 
     /** The match operator, mirroring {@code KatanaSelectorMatchAttribute*}. */
     public enum Operator {

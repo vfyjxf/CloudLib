@@ -15,15 +15,17 @@ class AlgorithmProfileTest {
     @Test
     void theProfileSetIsClosedAndPlanned() {
         assertEquals(
-                List.of(
-                        AlgorithmProfile.nameplate,
-                        AlgorithmProfile.dock,
-                        AlgorithmProfile.facePanel,
-                        AlgorithmProfile.waypoint,
-                        AlgorithmProfile.transientUi,
-                        AlgorithmProfile.excentric,
-                        AlgorithmProfile.orbit),
-                List.of(AlgorithmProfile.values()));
+            List.of(
+                AlgorithmProfile.nameplate,
+                AlgorithmProfile.dock,
+                AlgorithmProfile.facePanel,
+                AlgorithmProfile.waypoint,
+                AlgorithmProfile.transientUi,
+                AlgorithmProfile.excentric,
+                AlgorithmProfile.orbit
+            ),
+            List.of(AlgorithmProfile.values())
+        );
     }
 
     @Test
@@ -93,44 +95,204 @@ class AlgorithmProfileTest {
     @Test
     void paramsRejectInvalidValues() {
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new AlgorithmProfile.Params(
-                        2.0, 0.8, 1.1, 0.4, 2, 20.0, 0.15, 0.6, 120.0, 1.0, 2, 8.0, 0.2, 12.0, 4.0));
+            IllegalArgumentException.class,
+            () -> new AlgorithmProfile.Params(
+                2.0,
+                0.8,
+                1.1,
+                0.4,
+                2,
+                20.0,
+                0.15,
+                0.6,
+                120.0,
+                1.0,
+                2,
+                8.0,
+                0.2,
+                12.0,
+                4.0
+            )
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new AlgorithmProfile.Params(
-                        0.025, 0.8, 1.1, 0.4, -1, 20.0, 0.15, 0.6, 120.0, 1.0, 2, 8.0, 0.2, 12.0, 4.0));
+            IllegalArgumentException.class,
+            () -> new AlgorithmProfile.Params(
+                0.025,
+                0.8,
+                1.1,
+                0.4,
+                -1,
+                20.0,
+                0.15,
+                0.6,
+                120.0,
+                1.0,
+                2,
+                8.0,
+                0.2,
+                12.0,
+                4.0
+            )
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new AlgorithmProfile.Params(
-                        0.025, 0.8, 1.1, 0.4, 2, 20.0, 1.0, 0.6, 120.0, 1.0, 2, 8.0, 0.2, 12.0, 4.0));
+            IllegalArgumentException.class,
+            () -> new AlgorithmProfile.Params(
+                0.025,
+                0.8,
+                1.1,
+                0.4,
+                2,
+                20.0,
+                1.0,
+                0.6,
+                120.0,
+                1.0,
+                2,
+                8.0,
+                0.2,
+                12.0,
+                4.0
+            )
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new AlgorithmProfile.Params(
-                        0.025, 0.8, 1.1, 0.4, 2, 20.0, 0.15, 1.5, 120.0, 1.0, 2, 8.0, 0.2, 12.0, 4.0));
+            IllegalArgumentException.class,
+            () -> new AlgorithmProfile.Params(
+                0.025,
+                0.8,
+                1.1,
+                0.4,
+                2,
+                20.0,
+                0.15,
+                1.5,
+                120.0,
+                1.0,
+                2,
+                8.0,
+                0.2,
+                12.0,
+                4.0
+            )
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new AlgorithmProfile.Params(
-                        0.025, 0.8, 1.1, 0.4, 2, 20.0, 0.15, 0.6, 120.0, 0.0, 2, 8.0, 0.2, 12.0, 4.0));
+            IllegalArgumentException.class,
+            () -> new AlgorithmProfile.Params(
+                0.025,
+                0.8,
+                1.1,
+                0.4,
+                2,
+                20.0,
+                0.15,
+                0.6,
+                120.0,
+                0.0,
+                2,
+                8.0,
+                0.2,
+                12.0,
+                4.0
+            )
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new AlgorithmProfile.Params(
-                        0.025, 0.8, 1.1, 0.4, 2, 20.0, 0.15, 0.6, 120.0, 1.0, 0, 8.0, 0.2, 12.0, 4.0));
+            IllegalArgumentException.class,
+            () -> new AlgorithmProfile.Params(
+                0.025,
+                0.8,
+                1.1,
+                0.4,
+                2,
+                20.0,
+                0.15,
+                0.6,
+                120.0,
+                1.0,
+                0,
+                8.0,
+                0.2,
+                12.0,
+                4.0
+            )
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new AlgorithmProfile.Params(
-                        0.025, 0.8, 1.1, 0.4, 2, 20.0, 0.15, 0.6, 120.0, 1.0, 2, 0, 0.2, 12.0, 4.0));
+            IllegalArgumentException.class,
+            () -> new AlgorithmProfile.Params(
+                0.025,
+                0.8,
+                1.1,
+                0.4,
+                2,
+                20.0,
+                0.15,
+                0.6,
+                120.0,
+                1.0,
+                2,
+                0,
+                0.2,
+                12.0,
+                4.0
+            )
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new AlgorithmProfile.Params(
-                        0.025, 0.8, 1.1, 0.4, 2, 20.0, 0.15, 0.6, 120.0, 1.0, 2, 8.0, 0.0, 12.0, 4.0));
+            IllegalArgumentException.class,
+            () -> new AlgorithmProfile.Params(
+                0.025,
+                0.8,
+                1.1,
+                0.4,
+                2,
+                20.0,
+                0.15,
+                0.6,
+                120.0,
+                1.0,
+                2,
+                8.0,
+                0.0,
+                12.0,
+                4.0
+            )
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new AlgorithmProfile.Params(
-                        0.025, 0.8, 1.1, 0.4, 2, 20.0, 0.15, 0.6, 120.0, 1.0, 2, 8.0, 0.2, -1, 4.0));
+            IllegalArgumentException.class,
+            () -> new AlgorithmProfile.Params(
+                0.025,
+                0.8,
+                1.1,
+                0.4,
+                2,
+                20.0,
+                0.15,
+                0.6,
+                120.0,
+                1.0,
+                2,
+                8.0,
+                0.2,
+                -1,
+                4.0
+            )
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new AlgorithmProfile.Params(
-                        0.025, 0.8, 1.1, 0.4, 2, 20.0, 0.15, 0.6, 120.0, 1.0, 2, 8.0, 0.2, 12.0, -1));
+            IllegalArgumentException.class,
+            () -> new AlgorithmProfile.Params(
+                0.025,
+                0.8,
+                1.1,
+                0.4,
+                2,
+                20.0,
+                0.15,
+                0.6,
+                120.0,
+                1.0,
+                2,
+                8.0,
+                0.2,
+                12.0,
+                -1
+            )
+        );
     }
 }

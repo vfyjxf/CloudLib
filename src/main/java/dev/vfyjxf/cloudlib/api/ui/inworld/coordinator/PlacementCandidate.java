@@ -40,7 +40,9 @@ public record PlacementCandidate(@Nullable WorldAabb world, @Nullable FloatRect 
     /** A world candidate carrying both representations. */
     public static PlacementCandidate dual(WorldAabb world, FloatRect screenRect) {
         return new PlacementCandidate(
-                Objects.requireNonNull(world, "world"), Objects.requireNonNull(screenRect, "screenRect"));
+            Objects.requireNonNull(world, "world"),
+            Objects.requireNonNull(screenRect, "screenRect")
+        );
     }
 
     /**

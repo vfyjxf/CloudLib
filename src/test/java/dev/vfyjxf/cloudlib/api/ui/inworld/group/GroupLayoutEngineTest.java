@@ -25,7 +25,11 @@ class GroupLayoutEngineTest {
     }
 
     private static GroupLayoutEngine.GroupFrame frame(
-            double ax, double ay, List<GroupLayoutEngine.GroupMember> members, Rect... occluders) {
+        double ax,
+        double ay,
+        List<GroupLayoutEngine.GroupMember> members,
+        Rect... occluders
+    ) {
         return new GroupLayoutEngine.GroupFrame(ax, ay, members, List.of(occluders));
     }
 
@@ -95,8 +99,8 @@ class GroupLayoutEngineTest {
 
     @Test
     void orbitAssignmentKeepsIncumbentSlotsWhenAMemberJoins() {
-        GroupLayoutEngine engine =
-                GroupLayoutEngine.of(group, new OrbitAroundAnchor(28.0, 14.0, 44.0, 4, 2, 20.0, 0.15, 8));
+        GroupLayoutEngine engine = GroupLayoutEngine
+                .of(group, new OrbitAroundAnchor(28.0, 14.0, 44.0, 4, 2, 20.0, 0.15, 8));
         List<GroupLayoutEngine.GroupMember> three = new ArrayList<>();
         three.add(member("a", 200, 150));
         three.add(member("b", 200, 150));
@@ -113,23 +117,25 @@ class GroupLayoutEngineTest {
         assertEquals(0, after.aggregatedCount());
         for (String incumbent : List.of("a", "b", "c")) {
             assertEquals(
-                    before.of(incumbent).offsetX(),
-                    after.of(incumbent).offsetX(),
-                    1.0e-9,
-                    incumbent + " keeps its slot x");
+                before.of(incumbent).offsetX(),
+                after.of(incumbent).offsetX(),
+                1.0e-9,
+                incumbent + " keeps its slot x"
+            );
             assertEquals(
-                    before.of(incumbent).offsetY(),
-                    after.of(incumbent).offsetY(),
-                    1.0e-9,
-                    incumbent + " keeps its slot y");
+                before.of(incumbent).offsetY(),
+                after.of(incumbent).offsetY(),
+                1.0e-9,
+                incumbent + " keeps its slot y"
+            );
         }
         assertEquals(GroupLayoutEngine.Outcome.placed, after.of("d").outcome());
     }
 
     @Test
     void orbitSpillsToTheNextRingWhenTheInnerRingFills() {
-        GroupLayoutEngine engine =
-                GroupLayoutEngine.of(group, new OrbitAroundAnchor(28.0, 14.0, 44.0, 4, 2, 20.0, 0.15, 8));
+        GroupLayoutEngine engine = GroupLayoutEngine
+                .of(group, new OrbitAroundAnchor(28.0, 14.0, 44.0, 4, 2, 20.0, 0.15, 8));
         List<GroupLayoutEngine.GroupMember> members = new ArrayList<>();
         for (int i = 0; i < 12; i++) {
             members.add(member("m" + i, 200, 150));
@@ -137,12 +143,12 @@ class GroupLayoutEngineTest {
         GroupLayoutEngine.GroupResult result = engine.arrange(frame(200, 150, members));
         int inner = engineInnerCapacity(28.0, 44.0);
         assertTrue(
-                result.ringsUsed() >= 2,
-                "twelve members expand past the inner ring (rings=" + result.ringsUsed() + ")");
+            result.ringsUsed() >= 2,
+            "twelve members expand past the inner ring (rings=" + result.ringsUsed() + ")"
+        );
         assertTrue(result.ringsUsed() <= 4, "the expansion respects maxRings");
         long placed = result.outcomes().stream()
-                .filter(outcome -> outcome.outcome() == GroupLayoutEngine.Outcome.placed)
-                .count();
+                .filter(outcome -> outcome.outcome() == GroupLayoutEngine.Outcome.placed).count();
         assertTrue(placed >= inner, "at least the inner ring's members are placed");
     }
 
@@ -153,8 +159,8 @@ class GroupLayoutEngineTest {
     @Test
     void capacityExhaustionAggregatesThenHides() {
         // One ring of 3 slots, at most 2 aggregated into the representative.
-        GroupLayoutEngine engine =
-                GroupLayoutEngine.of(group, new OrbitAroundAnchor(28.0, 14.0, 44.0, 1, 0, 20.0, 0.15, 2));
+        GroupLayoutEngine engine = GroupLayoutEngine
+                .of(group, new OrbitAroundAnchor(28.0, 14.0, 44.0, 1, 0, 20.0, 0.15, 2));
 
         List<GroupLayoutEngine.GroupMember> four = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
@@ -174,13 +180,15 @@ class GroupLayoutEngineTest {
         assertEquals(1, hidden.hiddenCount(), "beyond the aggregation cap members hide");
         assertEquals(3, hidden.of("m0").clusterSize(), "both aggregatees hang on the representative's unit");
         assertTrue(
-                hidden.outcomes().stream().anyMatch(GroupLayoutEngine.MemberOutcome::linger), "hidden members linger");
+            hidden.outcomes().stream().anyMatch(GroupLayoutEngine.MemberOutcome::linger),
+            "hidden members linger"
+        );
     }
 
     @Test
     void fullyBlockedAnchorStillShowsOneRepresentative() {
-        GroupLayoutEngine engine =
-                GroupLayoutEngine.of(group, new OrbitAroundAnchor(28.0, 14.0, 44.0, 4, 2, 20.0, 0.15, 8));
+        GroupLayoutEngine engine = GroupLayoutEngine
+                .of(group, new OrbitAroundAnchor(28.0, 14.0, 44.0, 4, 2, 20.0, 0.15, 8));
         List<GroupLayoutEngine.GroupMember> members = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
             members.add(member("m" + i, 200, 150));
@@ -188,8 +196,7 @@ class GroupLayoutEngineTest {
         Rect blocking = new Rect(150, 100, 100, 100);
         GroupLayoutEngine.GroupResult result = engine.arrange(frame(200, 150, members, blocking));
         long placed = result.outcomes().stream()
-                .filter(outcome -> outcome.outcome() == GroupLayoutEngine.Outcome.placed)
-                .count();
+                .filter(outcome -> outcome.outcome() == GroupLayoutEngine.Outcome.placed).count();
         assertEquals(1, placed, "the representative holds the anchor itself");
         assertEquals(2, result.aggregatedCount());
         assertEquals(0, result.hiddenCount());
@@ -203,8 +210,8 @@ class GroupLayoutEngineTest {
 
     @Test
     void columnStacksInOrderWithOverflowAggregation() {
-        GroupLayoutEngine engine =
-                GroupLayoutEngine.of(group, new StackInColumn(StackInColumn.Direction.up, 4.0, 4, 1));
+        GroupLayoutEngine engine = GroupLayoutEngine
+                .of(group, new StackInColumn(StackInColumn.Direction.up, 4.0, 4, 1));
         List<GroupLayoutEngine.GroupMember> members = new ArrayList<>();
         for (int i = 0; i < 6; i++) {
             members.add(member("m" + i, 200, 150));

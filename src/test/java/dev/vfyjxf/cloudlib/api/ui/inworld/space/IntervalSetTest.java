@@ -57,11 +57,9 @@ class IntervalSetTest {
         set.add(3, 3.5);
 
         assertEquals(
-                List.of(
-                        new IntervalSet.Interval(1, 2),
-                        new IntervalSet.Interval(3, 3.5),
-                        new IntervalSet.Interval(5, 6)),
-                set.intervals());
+            List.of(new IntervalSet.Interval(1, 2), new IntervalSet.Interval(3, 3.5), new IntervalSet.Interval(5, 6)),
+            set.intervals()
+        );
     }
 
     @Test
@@ -133,11 +131,9 @@ class IntervalSetTest {
         set.subtract(4.5, 7.5);
 
         assertEquals(
-                List.of(
-                        new IntervalSet.Interval(1, 2),
-                        new IntervalSet.Interval(4, 4.5),
-                        new IntervalSet.Interval(7.5, 8)),
-                set.intervals());
+            List.of(new IntervalSet.Interval(1, 2), new IntervalSet.Interval(4, 4.5), new IntervalSet.Interval(7.5, 8)),
+            set.intervals()
+        );
     }
 
     @Test
@@ -152,8 +148,9 @@ class IntervalSetTest {
         set.add(4, 5);
 
         assertEquals(
-                List.of(new IntervalSet.Interval(0, 1), new IntervalSet.Interval(2, 4), new IntervalSet.Interval(5, 8)),
-                set.complement(0, 8));
+            List.of(new IntervalSet.Interval(0, 1), new IntervalSet.Interval(2, 4), new IntervalSet.Interval(5, 8)),
+            set.complement(0, 8)
+        );
     }
 
     @Test

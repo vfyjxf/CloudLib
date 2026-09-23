@@ -36,8 +36,7 @@ class NegotiationTest {
     @Test
     void rejectedElementDegradesAndIsAcceptedInRoundOne() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement blocker =
-                TestElement.arbitrated("blocker", 200, 140, new Size(100, 40)).withPriority(10);
+        TestElement blocker = TestElement.arbitrated("blocker", 200, 140, new Size(100, 40)).withPriority(10);
         TestElement squeezed = TestElement.arbitrated("squeezed", 200, 175, new Size(100, 40), new Size(60, 24))
                 .withSingleCandidate();
         coordinator.register(blocker);
@@ -50,12 +49,8 @@ class NegotiationTest {
         assertEquals(1, placement.variant().level(), "full overlaps the blocker, compact fits");
         assertEquals(new FloatRect(170, 163, 60, 24), placement.screenRect());
         // the negotiation trail: full rejected, compact proposed in round 1
-        assertEquals(
-                List.of(0, 1),
-                squeezed.ctxVariants.stream().map(InworldVariant::level).toList());
-        assertEquals(
-                List.of(0, 1),
-                squeezed.usedVariants.stream().map(InworldVariant::level).toList());
+        assertEquals(List.of(0, 1), squeezed.ctxVariants.stream().map(InworldVariant::level).toList());
+        assertEquals(List.of(0, 1), squeezed.usedVariants.stream().map(InworldVariant::level).toList());
         assertEquals(2, squeezed.proposeCount);
         assertNotNull(squeezed.lastRejectionSeen);
         assertEquals(RejectionReason.overlap, squeezed.lastRejectionSeen.reason());
@@ -66,26 +61,23 @@ class NegotiationTest {
     @Test
     void ladderExhaustionHidesTheElementWithLinger() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement victim =
-                TestElement.arbitrated("victim", 200, 150, new Size(100, 40), new Size(60, 24), new Size(20, 12));
+        TestElement victim = TestElement
+                .arbitrated("victim", 200, 150, new Size(100, 40), new Size(60, 24), new Size(20, 12));
         coordinator.register(victim);
         frame(coordinator, 0);
         // let the element finish its fade-in so the linger starts from full alpha
         double now = advance(coordinator, dt, 12);
-        assertEquals(
-                0, coordinator.placementOf("victim").orElseThrow().variant().level());
+        assertEquals(0, coordinator.placementOf("victim").orElseThrow().variant().level());
 
         // a full-screen blocker arrives: membership change forces a re-resolve
-        TestElement blocker =
-                TestElement.arbitrated("blocker", 200, 150, new Size(400, 300)).withPriority(10);
+        TestElement blocker = TestElement.arbitrated("blocker", 200, 150, new Size(400, 300)).withPriority(10);
         coordinator.register(blocker);
         now += dt;
         CoordinationResult squeezed = frame(coordinator, now);
 
         // the whole ladder was walked within the renegotiation round: full,
         // compact, icon — all rejected
-        List<Integer> ctxLevels =
-                victim.ctxVariants.stream().map(InworldVariant::level).toList();
+        List<Integer> ctxLevels = victim.ctxVariants.stream().map(InworldVariant::level).toList();
         assertEquals(List.of(0, 1, 2), ctxLevels.subList(ctxLevels.size() - 3, ctxLevels.size()));
         assertNull(squeezed.placementOf("victim"), "an exhausted ladder grants nothing");
 
@@ -104,28 +96,29 @@ class NegotiationTest {
             coordinator.frame(InworldCoordinator.FrameInput.of(width, height, now, dt));
         }
         assertEquals(
-                VisibilityTracker.Phase.hidden,
-                coordinator.lastResult().orElseThrow().elementState("victim").phase());
+            VisibilityTracker.Phase.hidden,
+            coordinator.lastResult().orElseThrow().elementState("victim").phase()
+        );
     }
 
     @Test
     void frameEndsCommittedEvenWithOneRound() {
         InworldCoordinator.Config config = new InworldCoordinator.Config(
-                0.2,
-                1,
-                12,
-                48,
-                24,
-                3,
-                8,
-                0.3,
-                900,
-                30,
-                VisibilityTracker.Config.of(0.15, 0.25, 0.25),
-                SwitchGate.Config.of(16.0, 1, 2.0, 0));
+            0.2,
+            1,
+            12,
+            48,
+            24,
+            3,
+            8,
+            0.3,
+            900,
+            30,
+            VisibilityTracker.Config.of(0.15, 0.25, 0.25),
+            SwitchGate.Config.of(16.0, 1, 2.0, 0)
+        );
         InworldCoordinator coordinator = new InworldCoordinator(config);
-        TestElement blocker =
-                TestElement.arbitrated("blocker", 200, 150, new Size(400, 300)).withPriority(10);
+        TestElement blocker = TestElement.arbitrated("blocker", 200, 150, new Size(400, 300)).withPriority(10);
         TestElement squeezed = TestElement.arbitrated("squeezed", 200, 150, new Size(100, 40), new Size(60, 24))
                 .withSingleCandidate();
         coordinator.register(blocker);
@@ -176,12 +169,9 @@ class NegotiationTest {
     @Test
     void selfManagedElementsRegisterOccupancyAndRejectConflicts() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement owner =
-                TestElement.selfManaged("owner", 100, 100, new Size(80, 40)).withPriority(10);
-        TestElement avoider =
-                TestElement.arbitrated("avoider", 100, 100, new Size(100, 40)).withPriority(5);
-        TestElement intruder =
-                TestElement.selfManaged("intruder", 100, 100, new Size(80, 40)).withPriority(5);
+        TestElement owner = TestElement.selfManaged("owner", 100, 100, new Size(80, 40)).withPriority(10);
+        TestElement avoider = TestElement.arbitrated("avoider", 100, 100, new Size(100, 40)).withPriority(5);
+        TestElement intruder = TestElement.selfManaged("intruder", 100, 100, new Size(80, 40)).withPriority(5);
         coordinator.register(owner);
         coordinator.register(avoider);
         coordinator.register(intruder);
@@ -193,11 +183,9 @@ class NegotiationTest {
         // and the arbitrated element had to route around it
         FloatRect avoiderRect = result.placementOf("avoider").screenRect();
         assertTrue(
-                avoiderRect
-                                .intersection(result.placementOf("owner").screenRect())
-                                .area()
-                        == 0,
-                "the arbitrated element must avoid the self-managed rect");
+            avoiderRect.intersection(result.placementOf("owner").screenRect()).area() == 0,
+            "the arbitrated element must avoid the self-managed rect"
+        );
         assertTrue(avoiderRect.x() > 60);
 
         // while a conflicting self-managed element is rejected — once, no
@@ -212,10 +200,9 @@ class NegotiationTest {
     @Test
     void rejectionsCarryAFreeRectSuggestionWhenSpaceRemains() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement band =
-                TestElement.arbitrated("band", 200, 150, new Size(400, 60)).withPriority(10);
-        TestElement squeezed = TestElement.arbitrated(
-                        "squeezed", 200, 150, new Size(100, 40), new Size(60, 24), new Size(20, 12))
+        TestElement band = TestElement.arbitrated("band", 200, 150, new Size(400, 60)).withPriority(10);
+        TestElement squeezed = TestElement
+                .arbitrated("squeezed", 200, 150, new Size(100, 40), new Size(60, 24), new Size(20, 12))
                 .withSingleCandidate();
         coordinator.register(band);
         coordinator.register(squeezed);

@@ -30,13 +30,14 @@ import java.util.Objects;
  * meaningless — a consumer reads {@link #world()} and ignores the rest.
  */
 public record InworldPlacement(
-        String elementId,
-        InworldVariant variant,
-        FloatPos anchor,
-        FloatRect offsetRect,
-        @Nullable WorldAabb world,
-        int arbitrationIndex,
-        long epoch) {
+    String elementId,
+    InworldVariant variant,
+    FloatPos anchor,
+    FloatRect offsetRect,
+    @Nullable WorldAabb world,
+    int arbitrationIndex,
+    long epoch
+) {
 
     public InworldPlacement {
         Objects.requireNonNull(elementId, "elementId");

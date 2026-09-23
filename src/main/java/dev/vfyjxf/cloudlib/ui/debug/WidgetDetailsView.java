@@ -63,35 +63,33 @@ final class WidgetDetailsView extends WidgetGroup<Widget> {
 
         header = LabelWidget.of("No selection").setColor(DebugTheme.textDim).setShadow(false);
         header.useStyle(
-                UIStyle.of(UIStyles.widthOf(TaffyDimension.percent(1)), UIStyles.heightOf(16), UIStyles.flexShrink(0)));
+            UIStyle.of(UIStyles.widthOf(TaffyDimension.percent(1)), UIStyles.heightOf(16), UIStyles.flexShrink(0))
+        );
         addWidget(header);
 
-        filterField = TextFieldWidget.create()
-                .setPlaceholder("Filter properties")
-                .setTextColor(DebugTheme.text)
+        filterField = TextFieldWidget.create().setPlaceholder("Filter properties").setTextColor(DebugTheme.text)
                 .setPlaceholderColor(DebugTheme.textDim);
         filterField.setBackgroundTexture(Textures.inset);
         filterField.setBorderTexture(new ColorTexture(0x00000000));
         filterField.useStyle(
-                UIStyle.of(UIStyles.widthOf(TaffyDimension.percent(1)), UIStyles.heightOf(18), UIStyles.flexShrink(0)));
+            UIStyle.of(UIStyles.widthOf(TaffyDimension.percent(1)), UIStyles.heightOf(18), UIStyles.flexShrink(0))
+        );
         filterField.onTextChanged(text -> scheduleRebuild());
         addWidget(filterField);
 
-        var listScroll = ScrollState.create(ScrollDirection.vertical)
-                .scrollSpeed(14)
-                .smooth(true)
-                .smoothSpeed(0.4f)
-                .scrollbarWidth(7)
-                .viewportInset(0, 7, 0, 0)
-                .trackTexture(Textures.scrollTrack)
+        var listScroll = ScrollState.create(ScrollDirection.vertical).scrollSpeed(14).smooth(true).smoothSpeed(0.4f)
+                .scrollbarWidth(7).viewportInset(0, 7, 0, 0).trackTexture(Textures.scrollTrack)
                 .thumbTexture(Textures.scrollbarVertical);
         list = new WidgetGroup<>();
-        list.useStyle(UIStyle.of(
+        list.useStyle(
+            UIStyle.of(
                 UIStyles.flexColumn(),
                 UIStyles.widthOf(TaffyDimension.percent(1)),
                 UIStyles.flexGrow(1),
                 UIStyles.minHeight(0),
-                UIStyles.padding(0, 7, 0, 0)));
+                UIStyles.padding(0, 7, 0, 0)
+            )
+        );
         list.useEffect(scrollable(listScroll));
         addWidget(list);
 
@@ -149,15 +147,32 @@ final class WidgetDetailsView extends WidgetGroup<Widget> {
             list.addWidget(new SectionHeader(InspectionProperty.categoryLayout));
             list.addWidget(new BoxModelView(target));
             Pos abs = target.absolutePos();
-            list.addWidget(new PropRow(new InspectionProperty(
-                    "position", abs.x() + ", " + abs.y(), null, InspectionProperty.categoryLayout)));
-            list.addWidget(new PropRow(new InspectionProperty(
-                    "size", target.width() + " × " + target.height(), null, InspectionProperty.categoryLayout)));
+            list.addWidget(
+                new PropRow(
+                    new InspectionProperty(
+                        "position",
+                        abs.x() + ", " + abs.y(),
+                        null,
+                        InspectionProperty.categoryLayout
+                    )
+                )
+            );
+            list.addWidget(
+                new PropRow(
+                    new InspectionProperty(
+                        "size",
+                        target.width() + " × " + target.height(),
+                        null,
+                        InspectionProperty.categoryLayout
+                    )
+                )
+            );
         }
 
         List<String> categories = new ArrayList<>(collector.getCategories().toList());
         categories.sort(
-                Comparator.comparingInt(WidgetDetailsView::categoryRank).thenComparing(Comparator.naturalOrder()));
+            Comparator.comparingInt(WidgetDetailsView::categoryRank).thenComparing(Comparator.naturalOrder())
+        );
 
         for (String category : categories) {
             if (InspectionProperty.categoryLayout.equals(category)) continue;
@@ -233,10 +248,13 @@ final class WidgetDetailsView extends WidgetGroup<Widget> {
 
         SectionHeader(String title) {
             this.title = title;
-            useStyle(UIStyle.of(
+            useStyle(
+                UIStyle.of(
                     UIStyles.widthOf(TaffyDimension.percent(1)),
                     UIStyles.heightOf(DebugTheme.rowHeight),
-                    UIStyles.flexShrink(0)));
+                    UIStyles.flexShrink(0)
+                )
+            );
         }
 
         @Override
@@ -314,11 +332,14 @@ final class WidgetDetailsView extends WidgetGroup<Widget> {
 
         BoxModelView(Widget target) {
             this.target = target;
-            useStyle(UIStyle.of(
+            useStyle(
+                UIStyle.of(
                     UIStyles.widthOf(TaffyDimension.percent(1)),
                     UIStyles.heightOf(height),
                     UIStyles.flexShrink(0),
-                    UIStyles.margin(0, 3, 0, 3)));
+                    UIStyles.margin(0, 3, 0, 3)
+                )
+            );
         }
 
         @Override
@@ -372,7 +393,12 @@ final class WidgetDetailsView extends WidgetGroup<Widget> {
             }
             int tw = font.width(size);
             canvas.drawString(
-                    size, Math.max(3 * b + 1, (w - tw) / 2), (h - font.lineHeight) / 2 + 1, DebugTheme.bmText, false);
+                size,
+                Math.max(3 * b + 1, (w - tw) / 2),
+                (h - font.lineHeight) / 2 + 1,
+                DebugTheme.bmText,
+                false
+            );
         }
 
         private int bandCenter(int bandTop) {
@@ -391,11 +417,12 @@ final class WidgetDetailsView extends WidgetGroup<Widget> {
             int textW = font.width(text);
             if (textW + 2 > DebugTheme.bmBand) return;
             canvas.drawString(
-                    text,
-                    bandLeft + (DebugTheme.bmBand - textW) / 2,
-                    (height() - font.lineHeight) / 2 + 1,
-                    DebugTheme.bmText,
-                    false);
+                text,
+                bandLeft + (DebugTheme.bmBand - textW) / 2,
+                (height() - font.lineHeight) / 2 + 1,
+                DebugTheme.bmText,
+                false
+            );
         }
 
         private static String fmt(float value) {

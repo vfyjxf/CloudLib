@@ -7,7 +7,10 @@ import org.jetbrains.annotations.Nullable;
 public final class FluidHandlers {
 
     public static FluidStack insert(
-            @Nullable IFluidHandler handler, FluidStack stack, IFluidHandler.FluidAction simulate) {
+        @Nullable IFluidHandler handler,
+        FluidStack stack,
+        IFluidHandler.FluidAction simulate
+    ) {
         throw new UnsupportedOperationException("Not implemented");
     }
 

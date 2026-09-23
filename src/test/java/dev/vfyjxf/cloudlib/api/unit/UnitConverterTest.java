@@ -21,10 +21,7 @@ class UnitConverterTest {
 
     @Test
     void convertUsesRuleAndMultiplies() {
-        UnitConverter converter = UnitConverter.builder()
-                .convert(TimeUnits.second, TimeUnits.tick)
-                .by(20)
-                .build();
+        UnitConverter converter = UnitConverter.builder().convert(TimeUnits.second, TimeUnits.tick).by(20).build();
 
         Quantity<TimeUnits> result = converter.convert(2, TimeUnits.second, TimeUnits.tick);
 
@@ -34,10 +31,7 @@ class UnitConverterTest {
 
     @Test
     void rulesApplyInReverseAutomatically() {
-        UnitConverter converter = UnitConverter.builder()
-                .convert(TimeUnits.second, TimeUnits.tick)
-                .by(20)
-                .build();
+        UnitConverter converter = UnitConverter.builder().convert(TimeUnits.second, TimeUnits.tick).by(20).build();
 
         Quantity<TimeUnits> result = converter.convert(40, TimeUnits.tick, TimeUnits.second);
 
@@ -48,20 +42,14 @@ class UnitConverterTest {
     void bfsResolvesMultiHopPaths() {
         UnitConverter converter = UnitConverter.builder().add(TimeUnits.pack()).build();
 
-        assertEquals(
-                Ratio.of(1200),
-                converter.convert(1, TimeUnits.minute, TimeUnits.tick).value());
-        assertEquals(
-                Ratio.of(72000),
-                converter.convert(1, TimeUnits.hour, TimeUnits.tick).value());
+        assertEquals(Ratio.of(1200), converter.convert(1, TimeUnits.minute, TimeUnits.tick).value());
+        assertEquals(Ratio.of(72000), converter.convert(1, TimeUnits.hour, TimeUnits.tick).value());
     }
 
     @Test
     void sameUnitConvertsToItself() {
         UnitConverter converter = UnitConverter.builder().build();
-        assertEquals(
-                Ratio.of(5),
-                converter.convert(5, TimeUnits.tick, TimeUnits.tick).value());
+        assertEquals(Ratio.of(5), converter.convert(5, TimeUnits.tick, TimeUnits.tick).value());
         assertTrue(converter.canConvert(TimeUnits.tick, TimeUnits.tick));
     }
 
@@ -78,7 +66,9 @@ class UnitConverterTest {
         UnitConverter converter = UnitConverter.builder().build();
 
         NoConversionPathException e = assertThrows(
-                NoConversionPathException.class, () -> converter.convert(1, TimeUnits.tick, EnergyUnits.fe));
+            NoConversionPathException.class,
+            () -> converter.convert(1, TimeUnits.tick, EnergyUnits.fe)
+        );
         assertTrue(e.getMessage().contains("minecraft:time"));
         assertTrue(e.getMessage().contains("minecraft:energy"));
     }
@@ -86,10 +76,8 @@ class UnitConverterTest {
     @Test
     void nonPositiveRatioIsRejected() {
         UnitConverter.Builder builder = UnitConverter.builder();
-        assertThrows(IllegalArgumentException.class, () -> builder.convert(TimeUnits.second, TimeUnits.tick)
-                .by(0));
-        assertThrows(IllegalArgumentException.class, () -> builder.convert(TimeUnits.second, TimeUnits.tick)
-                .by(-1));
+        assertThrows(IllegalArgumentException.class, () -> builder.convert(TimeUnits.second, TimeUnits.tick).by(0));
+        assertThrows(IllegalArgumentException.class, () -> builder.convert(TimeUnits.second, TimeUnits.tick).by(-1));
     }
 
     @Test
@@ -103,16 +91,21 @@ class UnitConverterTest {
 
     @Test
     void bridgeEndpointsMustBeCrossFamily() {
-        UnitRule mixed =
-                new UnitRule(TimeUnits.second, TimeUnits.tick, Ratio.of(20), UnitRule.Kind.bridge, false, null);
+        UnitRule mixed = new UnitRule(
+            TimeUnits.second,
+            TimeUnits.tick,
+            Ratio.of(20),
+            UnitRule.Kind.bridge,
+            false,
+            null
+        );
         UnitConverter.Builder builder = UnitConverter.builder();
         assertThrows(IllegalArgumentException.class, () -> builder.rules(mixed));
     }
 
     @Test
     void testLocalFamilyUsesTestClassAsMarker() {
-        UnitConverter converter =
-                UnitConverter.builder().convert(localA, localB).by(3).build();
+        UnitConverter converter = UnitConverter.builder().convert(localA, localB).by(3).build();
 
         assertEquals(Ratio.of(6), converter.convert(2, localA, localB).value());
         assertEquals(UnitFamily.Kind.measure, local.kind());
@@ -120,32 +113,23 @@ class UnitConverterTest {
 
     @Test
     void duplicateRuleConflicts() {
-        UnitConverter.Builder builder =
-                UnitConverter.builder().convert(EnergyUnits.eu, EnergyUnits.fe).by(4);
-        assertThrows(RuleConflictException.class, () -> builder.convert(EnergyUnits.eu, EnergyUnits.fe)
-                .by(4));
+        UnitConverter.Builder builder = UnitConverter.builder().convert(EnergyUnits.eu, EnergyUnits.fe).by(4);
+        assertThrows(RuleConflictException.class, () -> builder.convert(EnergyUnits.eu, EnergyUnits.fe).by(4));
     }
 
     @Test
     void nonFixedRuleCanBeOverridden() {
-        UnitConverter converter = UnitConverter.builder()
-                .add(EnergyUnits.pack())
-                .convert(EnergyUnits.eu, EnergyUnits.fe)
-                .by(8)
-                .build();
+        UnitConverter converter = UnitConverter.builder().add(EnergyUnits.pack())
+                .convert(EnergyUnits.eu, EnergyUnits.fe).by(8).build();
 
-        assertEquals(
-                Ratio.of(8),
-                converter.convert(1, EnergyUnits.eu, EnergyUnits.fe).value());
+        assertEquals(Ratio.of(8), converter.convert(1, EnergyUnits.eu, EnergyUnits.fe).value());
     }
 
     @Test
     void fixedRuleCannotBeOverridden() {
         UnitConverter.Builder builder = UnitConverter.builder().add(TimeUnits.pack());
-        assertThrows(RuleConflictException.class, () -> builder.convert(TimeUnits.second, TimeUnits.tick)
-                .by(10));
-        assertThrows(RuleConflictException.class, () -> builder.convert(TimeUnits.tick, TimeUnits.second)
-                .by(1, 10));
+        assertThrows(RuleConflictException.class, () -> builder.convert(TimeUnits.second, TimeUnits.tick).by(10));
+        assertThrows(RuleConflictException.class, () -> builder.convert(TimeUnits.tick, TimeUnits.second).by(1, 10));
     }
 
     @Test
@@ -166,9 +150,7 @@ class UnitConverterTest {
 
     @Test
     void approximateRuleMarksResultsInexact() {
-        UnitConverter converter = UnitConverter.builder()
-                .convert(EnergyUnits.eu, EnergyUnits.fe)
-                .byApproximate(4)
+        UnitConverter converter = UnitConverter.builder().convert(EnergyUnits.eu, EnergyUnits.fe).byApproximate(4)
                 .build();
 
         Quantity<EnergyUnits> result = converter.convert(2, EnergyUnits.eu, EnergyUnits.fe);
@@ -187,18 +169,14 @@ class UnitConverterTest {
 
     @Test
     void baseUnitRegistration() {
-        UnitConverter converter = UnitConverter.builder()
-                .rules(ItemUnits.rules)
-                .baseUnit(ItemUnits.base)
-                .build();
+        UnitConverter converter = UnitConverter.builder().rules(ItemUnits.rules).baseUnit(ItemUnits.base).build();
 
         assertEquals(ItemUnits.ingot, converter.baseUnit(ItemUnits.family));
 
         UnitConverter.Builder builder = UnitConverter.builder().baseUnit(ItemUnits.ingot);
         assertThrows(RuleConflictException.class, () -> builder.baseUnit(ItemUnits.nugget));
         assertThrows(RuleConflictException.class, () -> builder.baseUnit(ItemUnits.ingot));
-        assertThrows(
-                IllegalArgumentException.class, () -> UnitConverter.builder().baseUnit(TimeUnits.tick));
+        assertThrows(IllegalArgumentException.class, () -> UnitConverter.builder().baseUnit(TimeUnits.tick));
     }
 
     @Test
@@ -206,9 +184,7 @@ class UnitConverterTest {
         UnitConverter converter = UnitConverter.builder().add(ItemUnits.pack()).build();
 
         // rules are registered
-        assertEquals(
-                Ratio.of(9),
-                converter.convert(1, ItemUnits.ingot, ItemUnits.nugget).value());
+        assertEquals(Ratio.of(9), converter.convert(1, ItemUnits.ingot, ItemUnits.nugget).value());
         // base unit is registered too: normalization works without a separate baseUnit call
         MaterialAmount amount = converter.quantity(9, ItemUnits.nugget).toMaterialAmount(Namespace.ofCommon("iron"));
         assertEquals(Ratio.of(1), amount.value());
@@ -219,49 +195,29 @@ class UnitConverterTest {
     void stepModifiersCombineInEitherOrder() {
         Namespace iron = Namespace.ofCommon("iron");
 
-        UnitConverter a = UnitConverter.builder()
-                .convert(EnergyUnits.eu, EnergyUnits.fe)
-                .fixed()
-                .forMaterial(iron)
-                .by(8)
-                .build();
-        UnitConverter b = UnitConverter.builder()
-                .convert(EnergyUnits.eu, EnergyUnits.fe)
-                .forMaterial(iron)
-                .fixed()
-                .by(8)
-                .build();
+        UnitConverter a = UnitConverter.builder().convert(EnergyUnits.eu, EnergyUnits.fe).fixed().forMaterial(iron)
+                .by(8).build();
+        UnitConverter b = UnitConverter.builder().convert(EnergyUnits.eu, EnergyUnits.fe).forMaterial(iron).fixed()
+                .by(8).build();
 
-        assertEquals(
-                Ratio.of(8), a.convert(1, EnergyUnits.eu, EnergyUnits.fe, iron).value());
-        assertEquals(
-                Ratio.of(8), b.convert(1, EnergyUnits.eu, EnergyUnits.fe, iron).value());
+        assertEquals(Ratio.of(8), a.convert(1, EnergyUnits.eu, EnergyUnits.fe, iron).value());
+        assertEquals(Ratio.of(8), b.convert(1, EnergyUnits.eu, EnergyUnits.fe, iron).value());
 
-        UnitConverter.Builder builder = UnitConverter.builder()
-                .convert(EnergyUnits.eu, EnergyUnits.fe)
-                .forMaterial(iron)
-                .fixed()
-                .by(8);
-        assertThrows(RuleConflictException.class, () -> builder.convert(EnergyUnits.eu, EnergyUnits.fe)
-                .forMaterial(iron)
-                .by(10));
+        UnitConverter.Builder builder = UnitConverter.builder().convert(EnergyUnits.eu, EnergyUnits.fe)
+                .forMaterial(iron).fixed().by(8);
+        assertThrows(
+            RuleConflictException.class,
+            () -> builder.convert(EnergyUnits.eu, EnergyUnits.fe).forMaterial(iron).by(10)
+        );
     }
 
     @Test
     void fluentMaterialOverrideWinsOverGeneric() {
         Namespace iron = Namespace.ofCommon("iron");
-        UnitConverter converter = UnitConverter.builder()
-                .add(ItemUnits.pack())
-                .convert(ItemUnits.ingot, ItemUnits.block)
-                .forMaterial(iron)
-                .by(1, 4)
-                .build();
+        UnitConverter converter = UnitConverter.builder().add(ItemUnits.pack())
+                .convert(ItemUnits.ingot, ItemUnits.block).forMaterial(iron).by(1, 4).build();
 
-        assertEquals(
-                Ratio.of(1, 9),
-                converter.convert(1, ItemUnits.ingot, ItemUnits.block).value());
-        assertEquals(
-                Ratio.of(1, 4),
-                converter.convert(1, ItemUnits.ingot, ItemUnits.block, iron).value());
+        assertEquals(Ratio.of(1, 9), converter.convert(1, ItemUnits.ingot, ItemUnits.block).value());
+        assertEquals(Ratio.of(1, 4), converter.convert(1, ItemUnits.ingot, ItemUnits.block, iron).value());
     }
 }

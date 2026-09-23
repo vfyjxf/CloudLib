@@ -22,18 +22,14 @@ import java.util.Objects;
 @FieldNotNullByDefault
 public final class Namespace implements Comparable<Namespace> {
 
-    public static final Codec<Namespace> codec = Codec.STRING
-            .comapFlatMap(
-                    str -> {
-                        Namespace namespace = maybe(str);
-                        if (namespace == null) return DataResult.error(() -> "Invalid namespace: " + str);
-                        else return DataResult.success(namespace);
-                    },
-                    namespace -> namespace.root + ":" + namespace.path)
-            .stable();
+    public static final Codec<Namespace> codec = Codec.STRING.comapFlatMap(str -> {
+        Namespace namespace = maybe(str);
+        if (namespace == null) return DataResult.error(() -> "Invalid namespace: " + str);
+        else return DataResult.success(namespace);
+    }, namespace -> namespace.root + ":" + namespace.path).stable();
 
-    public static final StreamCodec<ByteBuf, Namespace> streamCodec =
-            ByteBufCodecs.STRING_UTF8.map(Namespace::parse, namespace -> namespace.root + ":" + namespace.path);
+    public static final StreamCodec<ByteBuf, Namespace> streamCodec = ByteBufCodecs.STRING_UTF8
+            .map(Namespace::parse, namespace -> namespace.root + ":" + namespace.path);
 
     public static Namespace ofMc(String path) {
         return new Namespace("minecraft", path);

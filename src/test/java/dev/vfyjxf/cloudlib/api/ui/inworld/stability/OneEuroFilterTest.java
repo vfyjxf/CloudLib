@@ -42,8 +42,9 @@ class OneEuroFilterTest {
         double inputStd = std(input);
         double outputStd = std(output);
         assertTrue(
-                outputStd < inputStd / 3.0,
-                "output std " + outputStd + " is not significantly below input " + inputStd);
+            outputStd < inputStd / 3.0,
+            "output std " + outputStd + " is not significantly below input " + inputStd
+        );
     }
 
     @Test
@@ -80,8 +81,9 @@ class OneEuroFilterTest {
         double slowLag = rampTimeLag(5.0);
         double fastLag = rampTimeLag(300.0);
         assertTrue(
-                fastLag < slowLag / 3.0,
-                "a 300 px/s ramp must lag far less in time than a 5 px/s one: " + fastLag + " vs " + slowLag);
+            fastLag < slowLag / 3.0,
+            "a 300 px/s ramp must lag far less in time than a 5 px/s one: " + fastLag + " vs " + slowLag
+        );
         assertTrue(fastLag < 0.05, "the fast lag should be a few milliseconds: " + fastLag);
         assertTrue(slowLag > 0.1, "the slow lag should sit near 1/(2*pi*minCutoff): " + slowLag);
     }
@@ -99,9 +101,9 @@ class OneEuroFilterTest {
         double slowLagSeconds = bestAlignmentLag(slowIn, slowOut) * dt;
         double fastLagSeconds = bestAlignmentLag(fastIn, fastOut) * dt;
         assertTrue(
-                fastLagSeconds < slowLagSeconds / 2.0,
-                "the fast sine must lag far less in time than the slow one: " + fastLagSeconds + " vs "
-                        + slowLagSeconds);
+            fastLagSeconds < slowLagSeconds / 2.0,
+            "the fast sine must lag far less in time than the slow one: " + fastLagSeconds + " vs " + slowLagSeconds
+        );
         assertTrue(fastLagSeconds < 0.1, "the fast sine should track within a few frames: " + fastLagSeconds);
     }
 
@@ -212,7 +214,12 @@ class OneEuroFilterTest {
     }
 
     private static void runSine(
-            OneEuroFilter filter, double amplitude, double frequencyHz, double[] input, double[] output) {
+        OneEuroFilter filter,
+        double amplitude,
+        double frequencyHz,
+        double[] input,
+        double[] output
+    ) {
         double t = 0.0;
         for (int i = 0; i < input.length; i++) {
             input[i] = 100.0 + amplitude * Math.sin(2.0 * Math.PI * frequencyHz * t);

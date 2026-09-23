@@ -241,7 +241,10 @@ Custom properties are real properties, not a parallel api:
 - **Java lens** — `StyleVar<T>` is a mod-held constant: name + parser +
   optional writer + optional fallback. No registration; whoever holds the
   lens can read/write. Builtin codecs cover the common shapes:
-  `StyleVar.color/number/integer/bool/ident/tokens`.
+  `StyleVar.color/number/integer/bool/ident/tokens/texture` — `texture` is
+  the surface slot (`<texture>`, a bare `<color>` promoted to
+  `ColorTexture`), for chrome slots that hold a background or a border
+  rather than an ink.
 - **Reads** — `style().var(MyVars.accent)` (typed, falls back),
   `style().varRaw("--accent")` (resolved tokens).
 - **Writes** — `widget.setVar(var, v)` / `setVar("--x", "4px")` are

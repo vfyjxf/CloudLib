@@ -62,8 +62,8 @@ public final class BlockEntitySync {
     }
 
     public <T> Expose<T> expose(String name, Handle<T> handle, FlowEncoder<T> encoder, FlowDecoder<T> decoder) {
-        Expose<T> expose =
-                management.registerExpose(Expose.create(name, management.nextId(), handle, encoder, decoder));
+        Expose<T> expose = management
+                .registerExpose(Expose.create(name, management.nextId(), handle, encoder, decoder));
         expose.whenReceive(handle::apply);
         handle.onChange(v -> markDirty());
         return expose;
@@ -76,9 +76,13 @@ public final class BlockEntitySync {
     }
 
     public <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> diffLayerExpose(
-            String name, DiffHandle<T, D> handle, FlowHandler<T, E> codec, UnaryFlowHandler<D> diffCodec) {
-        DiffLayerExpose<E, D> layer =
-                management.registerExpose(DiffLayerExpose.create(name, management.nextId(), handle, codec, diffCodec));
+        String name,
+        DiffHandle<T, D> handle,
+        FlowHandler<T, E> codec,
+        UnaryFlowHandler<D> diffCodec
+    ) {
+        DiffLayerExpose<E, D> layer = management
+                .registerExpose(DiffLayerExpose.create(name, management.nextId(), handle, codec, diffCodec));
         handle.onChange(v -> markDirty());
         return layer;
     }
@@ -171,8 +175,9 @@ public final class BlockEntitySync {
         if (!inner.contains(syncKey)) return false;
         byte[] bytes = inner.getByteArray(syncKey);
         if (bytes.length == 0) return false;
-        management.receiveFromServer(new RegistryFriendlyByteBuf(
-                Unpooled.wrappedBuffer(bytes), registryAccess(registries), ConnectionType.OTHER));
+        management.receiveFromServer(
+            new RegistryFriendlyByteBuf(Unpooled.wrappedBuffer(bytes), registryAccess(registries), ConnectionType.OTHER)
+        );
         return true;
     }
 

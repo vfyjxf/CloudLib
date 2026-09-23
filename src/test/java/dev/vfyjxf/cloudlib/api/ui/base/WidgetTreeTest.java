@@ -250,7 +250,9 @@ class WidgetTreeTest {
             });
 
             assertEquals(
-                    List.of("root", "panel1", "button1", "button2", "panel2", "label1", "nested", "deep"), visited);
+                List.of("root", "panel1", "button1", "button2", "panel2", "label1", "nested", "deep"),
+                visited
+            );
         }
 
         @Test
@@ -331,7 +333,9 @@ class WidgetTreeTest {
 
             // Children before parents
             assertEquals(
-                    List.of("button1", "button2", "panel1", "label1", "deep", "nested", "panel2", "root"), visited);
+                List.of("button1", "button2", "panel1", "label1", "deep", "nested", "panel2", "root"),
+                visited
+            );
         }
 
         @Test
@@ -358,7 +362,9 @@ class WidgetTreeTest {
             // Level 2: button1, button2, label1, nested
             // Level 3: deep
             assertEquals(
-                    List.of("root", "panel1", "panel2", "button1", "button2", "label1", "nested", "deep"), visited);
+                List.of("root", "panel1", "panel2", "button1", "button2", "label1", "nested", "deep"),
+                visited
+            );
         }
 
         @Test
@@ -454,16 +460,14 @@ class WidgetTreeTest {
 
         @Test
         void findFirst_findsMatchingWidget() {
-            Widget found =
-                    WidgetTree.findFirst(root, true, -1, w -> w.toString().equals("button2"));
+            Widget found = WidgetTree.findFirst(root, true, -1, w -> w.toString().equals("button2"));
 
             assertEquals(button2, found);
         }
 
         @Test
         void findFirst_returnsNullWhenNotFound() {
-            Widget found =
-                    WidgetTree.findFirst(root, true, -1, w -> w.toString().equals("nonexistent"));
+            Widget found = WidgetTree.findFirst(root, true, -1, w -> w.toString().equals("nonexistent"));
 
             assertNull(found);
         }

@@ -51,8 +51,9 @@ class FocusEnvelopeTest {
         long sounding = brightens.stream().filter(b -> b > 0f).count();
         assertTrue(sounding > 0, "the pulse sounds");
         assertTrue(
-                sounding * frame <= config.pulseSeconds() + frame,
-                "it sounds for one pulse only, then holds silent: " + sounding + " frames");
+            sounding * frame <= config.pulseSeconds() + frame,
+            "it sounds for one pulse only, then holds silent: " + sounding + " frames"
+        );
         int firstSilent = (int) Math.ceil(config.pulseSeconds() / frame) + 1;
         for (int i = firstSilent; i < brightens.size(); i++) {
             assertEquals(0f, brightens.get(i), 1.0e-9f, "no loop back around at frame " + i);
@@ -78,7 +79,9 @@ class FocusEnvelopeTest {
         int gone = alphas.indexOf(0f);
         assertTrue(gone > 0, "the frame reaches zero");
         assertTrue(
-                gone * frame <= config.lossSeconds() + frame, "it is gone within one loss window: " + gone + " frames");
+            gone * frame <= config.lossSeconds() + frame,
+            "it is gone within one loss window: " + gone + " frames"
+        );
         for (int i = gone; i < alphas.size(); i++) {
             assertEquals(0f, alphas.get(i), 1.0e-9f, "and stays gone at frame " + i);
         }
@@ -163,11 +166,13 @@ class FocusEnvelopeTest {
         assertThrows(IllegalArgumentException.class, () -> envelope.advance(true, Double.NaN));
         // the survey windows the defaults stand in for
         assertTrue(
-                config.pulseSeconds() >= 0.12 && config.pulseSeconds() <= 0.20,
-                "the default pulse is in the 120–200 ms window");
+            config.pulseSeconds() >= 0.12 && config.pulseSeconds() <= 0.20,
+            "the default pulse is in the 120–200 ms window"
+        );
         assertTrue(
-                config.lossSeconds() >= 0.08 && config.lossSeconds() <= 0.15,
-                "the default loss is in the 80–150 ms window");
+            config.lossSeconds() >= 0.08 && config.lossSeconds() <= 0.15,
+            "the default loss is in the 80–150 ms window"
+        );
         assertTrue(config.opacityDelta() <= 0.35, "the default delta stays inside the cue budget");
     }
 }

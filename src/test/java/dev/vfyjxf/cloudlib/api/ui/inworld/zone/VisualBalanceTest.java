@@ -67,10 +67,10 @@ class VisualBalanceTest {
     @Test
     void aCenteredPanelScoresAboveACorneredOne() {
         FloatPos optical = VisualBalance.opticalCenter(W, H);
-        double centered =
-                VisualBalance.score(List.of(VisualBalance.Panel.opaque(FloatRect.around(optical, 120, 40))), W, H);
-        double cornered =
-                VisualBalance.score(List.of(VisualBalance.Panel.opaque(new FloatRect(1080, 520, 120, 40))), W, H);
+        double centered = VisualBalance
+                .score(List.of(VisualBalance.Panel.opaque(FloatRect.around(optical, 120, 40))), W, H);
+        double cornered = VisualBalance
+                .score(List.of(VisualBalance.Panel.opaque(new FloatRect(1080, 520, 120, 40))), W, H);
         assertEquals(1.0, centered, epsilon, "a centroid on the optical center is a perfect score");
         assertTrue(cornered < centered, "the cornered panel scores below the centered one: " + cornered);
         assertTrue(cornered < 1.0);
@@ -91,11 +91,13 @@ class VisualBalanceTest {
         // two equal panels mirrored about the screen's vertical midline vs
         // the same pair both sitting in the right third
         List<VisualBalance.Panel> symmetric = List.of(
-                VisualBalance.Panel.opaque(new FloatRect(60, 260, 200, 60)),
-                VisualBalance.Panel.opaque(new FloatRect(W - 260, 260, 200, 60)));
+            VisualBalance.Panel.opaque(new FloatRect(60, 260, 200, 60)),
+            VisualBalance.Panel.opaque(new FloatRect(W - 260, 260, 200, 60))
+        );
         List<VisualBalance.Panel> shifted = List.of(
-                VisualBalance.Panel.opaque(new FloatRect(760, 260, 200, 60)),
-                VisualBalance.Panel.opaque(new FloatRect(W - 260, 260, 200, 60)));
+            VisualBalance.Panel.opaque(new FloatRect(760, 260, 200, 60)),
+            VisualBalance.Panel.opaque(new FloatRect(W - 260, 260, 200, 60))
+        );
         double symmetricScore = VisualBalance.score(symmetric, W, H);
         double shiftedScore = VisualBalance.score(shifted, W, H);
         assertTrue(symmetricScore > shiftedScore, "symmetric " + symmetricScore + " vs shifted " + shiftedScore);
@@ -108,11 +110,11 @@ class VisualBalanceTest {
         // centers sit inside the same nine-grid cell so the grid weights cancel
         FloatRect left = new FloatRect(440, 280, 60, 50);
         FloatRect right = new FloatRect(790, 280, 60, 50);
-        FloatPos mid = VisualBalance.centroid(
-                List.of(VisualBalance.Panel.opaque(left), VisualBalance.Panel.opaque(right)), W, H);
+        FloatPos mid = VisualBalance
+                .centroid(List.of(VisualBalance.Panel.opaque(left), VisualBalance.Panel.opaque(right)), W, H);
         assertEquals((left.centerX() + right.centerX()) / 2, mid.x(), epsilon);
-        FloatPos dragged = VisualBalance.centroid(
-                List.of(new VisualBalance.Panel(left, 1.0), new VisualBalance.Panel(right, 0.25)), W, H);
+        FloatPos dragged = VisualBalance
+                .centroid(List.of(new VisualBalance.Panel(left, 1.0), new VisualBalance.Panel(right, 0.25)), W, H);
         assertTrue(dragged.x() < mid.x(), "the opaque panel's side carries the centroid");
     }
 

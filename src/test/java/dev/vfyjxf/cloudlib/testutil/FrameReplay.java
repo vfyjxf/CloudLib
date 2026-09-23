@@ -69,7 +69,12 @@ public final class FrameReplay<I, O> {
      * input — the shape frame-rate-independence tests usually want.
      */
     public static <S, I, O> FrameReplay<I, O> runUniform(
-            S subject, double dtSeconds, int frameCount, I input, Driver<S, I, O> driver) {
+        S subject,
+        double dtSeconds,
+        int frameCount,
+        I input,
+        Driver<S, I, O> driver
+    ) {
         List<Step<I>> steps = new ArrayList<>(Math.max(0, frameCount));
         for (int i = 0; i < frameCount; i++) {
             steps.add(new Step<>(dtSeconds, input));

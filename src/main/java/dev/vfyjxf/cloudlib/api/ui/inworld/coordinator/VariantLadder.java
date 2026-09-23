@@ -64,7 +64,8 @@ public final class VariantLadder {
             Objects.requireNonNull(entry.getValue(), "steps");
             if (entry.getValue() < 1) {
                 throw new IllegalArgumentException(
-                        "degrade steps must be at least 1 for " + entry.getKey() + ": " + entry.getValue());
+                    "degrade steps must be at least 1 for " + entry.getKey() + ": " + entry.getValue()
+                );
             }
             steps.put(entry.getKey(), entry.getValue());
         }
@@ -77,17 +78,22 @@ public final class VariantLadder {
             InworldVariant variant = variants.get(i);
             if (variant.level() != i) {
                 throw new IllegalArgumentException(
-                        "rung " + i + " must carry level " + i + " but carries " + variant.level());
+                    "rung " + i + " must carry level " + i + " but carries " + variant.level()
+                );
             }
             if (i > 0) {
                 InworldVariant previous = variants.get(i - 1);
                 if (variant.requestedArea() > previous.requestedArea()) {
-                    throw new IllegalArgumentException("requested area must not grow down the ladder: rung " + i
-                            + " has " + variant.requestedArea() + " after " + previous.requestedArea());
+                    throw new IllegalArgumentException(
+                        "requested area must not grow down the ladder: rung " + i + " has " + variant.requestedArea()
+                                + " after " + previous.requestedArea()
+                    );
                 }
                 if (variant.contentTier().ordinal() < previous.contentTier().ordinal()) {
-                    throw new IllegalArgumentException("content tier must not regress down the ladder: rung " + i
-                            + " has " + variant.contentTier() + " after " + previous.contentTier());
+                    throw new IllegalArgumentException(
+                        "content tier must not regress down the ladder: rung " + i + " has " + variant.contentTier()
+                                + " after " + previous.contentTier()
+                    );
                 }
             }
         }

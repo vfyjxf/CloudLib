@@ -16,13 +16,14 @@ import java.util.Objects;
  * @param group the group facet
  */
 public record ElementFacets(
-        AnchorFacet anchor,
-        OrientationFacet orientation,
-        SpaceFacet spaces,
-        AvoidanceFacet avoidance,
-        StabilityFacet stability,
-        DegradeFacet degrade,
-        GroupFacet group) {
+    AnchorFacet anchor,
+    OrientationFacet orientation,
+    SpaceFacet spaces,
+    AvoidanceFacet avoidance,
+    StabilityFacet stability,
+    DegradeFacet degrade,
+    GroupFacet group
+) {
 
     public ElementFacets {
         Objects.requireNonNull(anchor, "anchor");
@@ -44,7 +45,13 @@ public record ElementFacets(
         Objects.requireNonNull(profile, "profile");
         Objects.requireNonNull(facets, "facets");
         FacetRules.validate(
-                facets.anchor, facets.orientation, facets.spaces, facets.avoidance, facets.group, profile.algorithm());
+            facets.anchor,
+            facets.orientation,
+            facets.spaces,
+            facets.avoidance,
+            facets.group,
+            profile.algorithm()
+        );
         return facets;
     }
 }

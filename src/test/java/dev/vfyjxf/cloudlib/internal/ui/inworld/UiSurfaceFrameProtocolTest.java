@@ -78,10 +78,11 @@ class UiSurfaceFrameProtocolTest {
         assertTrue(capture >= 0, "render() must query the framebuffer binding (GL_FRAMEBUFFER_BINDING)");
         assertTrue(ensure >= 0, "render() must run the size pass (ensure)");
         assertTrue(
-                capture < ensure,
-                "the caller's framebuffer binding must be captured BEFORE ensure() —"
-                        + " RenderTarget.resize rebinds framebuffer 0, so a later capture would restore"
-                        + " the default framebuffer over the caller's target on resize frames");
+            capture < ensure,
+            "the caller's framebuffer binding must be captured BEFORE ensure() —"
+                    + " RenderTarget.resize rebinds framebuffer 0, so a later capture would restore"
+                    + " the default framebuffer over the caller's target on resize frames"
+        );
     }
 
     @Test
@@ -92,7 +93,8 @@ class UiSurfaceFrameProtocolTest {
         assertTrue(finallyBlock >= 0, "render() must restore state in a finally block");
         assertTrue(restore > finallyBlock, "the finally block must rebind the framebuffer");
         assertTrue(
-                body.indexOf("prevFbo", restore) > restore,
-                "the finally restore reuses the captured prevFbo local, not a fresh query");
+            body.indexOf("prevFbo", restore) > restore,
+            "the finally restore reuses the captured prevFbo local, not a fresh query"
+        );
     }
 }

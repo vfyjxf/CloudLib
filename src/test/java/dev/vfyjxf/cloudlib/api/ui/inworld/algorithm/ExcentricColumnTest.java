@@ -20,9 +20,10 @@ class ExcentricColumnTest {
 
     private static List<ExcentricColumn.Label> labels() {
         return List.of(
-                new ExcentricColumn.Label("l1", 80, 20),
-                new ExcentricColumn.Label("l2", 120, 24),
-                new ExcentricColumn.Label("l3", 60, 18));
+            new ExcentricColumn.Label("l1", 80, 20),
+            new ExcentricColumn.Label("l2", 120, 24),
+            new ExcentricColumn.Label("l3", 60, 18)
+        );
     }
 
     @Test
@@ -44,10 +45,8 @@ class ExcentricColumnTest {
             assertEquals(616, label.connector().x(), 1.0e-9);
         }
         // no vertical overlap: each label clears the previous one plus the gap
-        assertTrue(
-                placed.get(0).topLeft().y() + 20 + 6 <= placed.get(1).topLeft().y());
-        assertTrue(
-                placed.get(1).topLeft().y() + 24 + 6 <= placed.get(2).topLeft().y());
+        assertTrue(placed.get(0).topLeft().y() + 20 + 6 <= placed.get(1).topLeft().y());
+        assertTrue(placed.get(1).topLeft().y() + 24 + 6 <= placed.get(2).topLeft().y());
         assertEquals(placed.get(1).connector().y(), placed.get(1).topLeft().y() + 12, 1.0e-9);
     }
 
@@ -76,8 +75,7 @@ class ExcentricColumnTest {
         assertEquals(ExcentricColumn.Side.right, after.side());
         assertEquals(716, after.columnX());
         assertEquals(before.labels().size(), after.labels().size());
-        double dy = after.labels().get(0).topLeft().y()
-                - before.labels().get(0).topLeft().y();
+        double dy = after.labels().get(0).topLeft().y() - before.labels().get(0).topLeft().y();
         assertEquals(60, dy, 1.0e-9);
         for (ExcentricColumn.Placed label : after.labels()) {
             assertEquals(716, label.topLeft().x(), 1.0e-9);
@@ -98,12 +96,9 @@ class ExcentricColumnTest {
     void labelsKeepTheCallersOrder() {
         ExcentricColumn column = columner();
 
-        List<ExcentricColumn.Placed> placed =
-                column.layout(new FloatPos(600, 400), labels(), screen).labels();
+        List<ExcentricColumn.Placed> placed = column.layout(new FloatPos(600, 400), labels(), screen).labels();
 
-        assertEquals(
-                List.of("l1", "l2", "l3"),
-                placed.stream().map(ExcentricColumn.Placed::id).toList());
+        assertEquals(List.of("l1", "l2", "l3"), placed.stream().map(ExcentricColumn.Placed::id).toList());
     }
 
     @Test
@@ -112,23 +107,17 @@ class ExcentricColumnTest {
         FloatRect bounds = new FloatRect(0, 0, 1000, 600);
 
         // first layout at the exact center: room ties go right
-        assertEquals(
-                ExcentricColumn.Side.right,
-                column.layout(new FloatPos(500, 300), labels(), bounds).side());
+        assertEquals(ExcentricColumn.Side.right, column.layout(new FloatPos(500, 300), labels(), bounds).side());
 
         // oscillate ±30 px around the center: imbalance swings ±60, inside the band
         for (int i = 0; i < 20; i++) {
             double x = 500 + ((i % 2 == 0) ? 30 : -30);
-            assertEquals(
-                    ExcentricColumn.Side.right,
-                    column.layout(new FloatPos(x, 300), labels(), bounds).side());
+            assertEquals(ExcentricColumn.Side.right, column.layout(new FloatPos(x, 300), labels(), bounds).side());
         }
 
         // a real move across the band commits the flip after the dwell
         column.layout(new FloatPos(800, 300), labels(), bounds);
-        assertEquals(
-                ExcentricColumn.Side.left,
-                column.layout(new FloatPos(800, 300), labels(), bounds).side());
+        assertEquals(ExcentricColumn.Side.left, column.layout(new FloatPos(800, 300), labels(), bounds).side());
     }
 
     @Test
@@ -149,11 +138,13 @@ class ExcentricColumnTest {
         assertThrows(IllegalArgumentException.class, () -> ExcentricColumn.Config.of(16, 6, 0, 2));
         assertThrows(IllegalArgumentException.class, () -> ExcentricColumn.Config.of(16, 6, 100, 0));
         assertThrows(
-                IllegalArgumentException.class,
-                () -> column.layout(new FloatPos(600, 400), List.of(new ExcentricColumn.Label("bad", 0, 10)), screen));
+            IllegalArgumentException.class,
+            () -> column.layout(new FloatPos(600, 400), List.of(new ExcentricColumn.Label("bad", 0, 10)), screen)
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> column.layout(
-                        new FloatPos(600, 400), List.of(new ExcentricColumn.Label("bad", 10, Double.NaN)), screen));
+            IllegalArgumentException.class,
+            () -> column
+                    .layout(new FloatPos(600, 400), List.of(new ExcentricColumn.Label("bad", 10, Double.NaN)), screen)
+        );
     }
 }

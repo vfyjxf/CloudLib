@@ -28,15 +28,15 @@ import java.util.Objects;
  *        before the rest hide
  */
 public record OrbitAroundAnchor(
-        double baseRadius,
-        double radiusStep,
-        double slotArcLength,
-        int maxRings,
-        int recourseBudget,
-        double switchPenalty,
-        double incumbentDiscount,
-        int maxAggregated)
-        implements GroupStrategy {
+    double baseRadius,
+    double radiusStep,
+    double slotArcLength,
+    int maxRings,
+    int recourseBudget,
+    double switchPenalty,
+    double incumbentDiscount,
+    int maxAggregated
+) implements GroupStrategy {
 
     public OrbitAroundAnchor {
         requirePositive("baseRadius", baseRadius);

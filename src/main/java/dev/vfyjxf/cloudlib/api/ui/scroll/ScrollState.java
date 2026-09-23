@@ -391,8 +391,8 @@ public final class ScrollState {
 
     public ScrollState wheelAccelerationMaxMultiplier(float multiplier) {
         this.wheelAccelerationMaxMultiplier = Math.max(1.0f, multiplier);
-        this.wheelAccelerationMultiplier =
-                Math.min(this.wheelAccelerationMultiplier, this.wheelAccelerationMaxMultiplier);
+        this.wheelAccelerationMultiplier = Math
+                .min(this.wheelAccelerationMultiplier, this.wheelAccelerationMaxMultiplier);
         return this;
     }
 
@@ -410,8 +410,7 @@ public final class ScrollState {
      * recipe databases, and layer lists.
      */
     public ScrollState longContentWheelAcceleration() {
-        return wheelAcceleration(true)
-                .wheelAccelerationStep(longContentWheelAccelerationStep)
+        return wheelAcceleration(true).wheelAccelerationStep(longContentWheelAccelerationStep)
                 .wheelAccelerationMaxMultiplier(longContentWheelAccelerationMaxMultiplier)
                 .wheelAccelerationResetMillis(longContentWheelAccelerationResetMillis);
     }
@@ -431,7 +430,9 @@ public final class ScrollState {
     ScrollDelta wheelScrollDelta(double scrollX, double scrollY, long nowMillis) {
         float multiplier = advanceWheelAcceleration(scrollX, scrollY, nowMillis);
         return new ScrollDelta(
-                (float) (-scrollX * scrollSpeed * multiplier), (float) (-scrollY * scrollSpeed * multiplier));
+            (float) (-scrollX * scrollSpeed * multiplier),
+            (float) (-scrollY * scrollSpeed * multiplier)
+        );
     }
 
     float advanceWheelAcceleration(double scrollX, double scrollY, long nowMillis) {
@@ -471,8 +472,8 @@ public final class ScrollState {
 
     private boolean isDirectionReversed(int directionX, int directionY) {
         return (directionX != 0
-                        && wheelAccelerationLastDirectionX != 0
-                        && directionX != wheelAccelerationLastDirectionX)
+                && wheelAccelerationLastDirectionX != 0
+                && directionX != wheelAccelerationLastDirectionX)
                 || (directionY != 0
                         && wheelAccelerationLastDirectionY != 0
                         && directionY != wheelAccelerationLastDirectionY);
@@ -854,13 +855,9 @@ public final class ScrollState {
 
     @Override
     public String toString() {
-        return "ScrollState{" + "direction="
-                + direction + ", scroll=("
-                + scrollX + ", " + scrollY + ")" + ", target=("
-                + targetScrollX + ", " + targetScrollY + ")" + ", content=("
-                + contentWidth + "x" + contentHeight + ")" + ", viewport=("
-                + viewportWidth + "x" + viewportHeight + ")" + ", smooth="
-                + smooth + ", enabled="
+        return "ScrollState{" + "direction=" + direction + ", scroll=(" + scrollX + ", " + scrollY + ")" + ", target=("
+                + targetScrollX + ", " + targetScrollY + ")" + ", content=(" + contentWidth + "x" + contentHeight + ")"
+                + ", viewport=(" + viewportWidth + "x" + viewportHeight + ")" + ", smooth=" + smooth + ", enabled="
                 + enabled + '}';
     }
 }

@@ -116,8 +116,9 @@ public class ProgressTrackerTest {
         // Percentages should be monotonically non-decreasing
         for (int i = 1; i < percentages.size(); i++) {
             assertTrue(
-                    percentages.get(i) >= percentages.get(i - 1),
-                    "Percentages should be non-decreasing: " + percentages);
+                percentages.get(i) >= percentages.get(i - 1),
+                "Percentages should be non-decreasing: " + percentages
+            );
         }
     }
 
@@ -245,15 +246,11 @@ public class ProgressTrackerTest {
         var tracker = new ProgressTracker();
         var phase = tracker.phase(1);
 
-        assertThrows(
-                PluginLoadingException.class,
-                () -> dispatcher.dispatch(
-                        plugin -> {
-                            if (plugin.pluginId().path().equals("a")) {
-                                throw new RuntimeException("fail");
-                            }
-                        },
-                        phase));
+        assertThrows(PluginLoadingException.class, () -> dispatcher.dispatch(plugin -> {
+            if (plugin.pluginId().path().equals("a")) {
+                throw new RuntimeException("fail");
+            }
+        }, phase));
 
         // Should not be 100% because dispatch was aborted
         assertTrue(tracker.percentage() < 100.0f);
@@ -284,22 +281,20 @@ public class ProgressTrackerTest {
         var dispatcher = PluginDispatcher.fromGraph(graph);
         var tracker = new ProgressTracker();
 
-        dispatcher.dispatch(
-                plugin -> {
-                    try {
-                        Thread.sleep(30);
-                    } catch (InterruptedException ignored) {
-                    }
-                },
-                tracker.phase("slow-phase", 1));
+        dispatcher.dispatch(plugin -> {
+            try {
+                Thread.sleep(30);
+            } catch (InterruptedException ignored) {}
+        }, tracker.phase("slow-phase", 1));
 
         var timings = tracker.timings();
         assertEquals(1, timings.size());
         assertEquals("slow-phase", timings.getFirst().name());
         assertTrue(timings.getFirst().complete());
         assertTrue(
-                timings.getFirst().elapsedMs() >= 20,
-                "Expected >= 20ms, got " + timings.getFirst().elapsedMs() + "ms");
+            timings.getFirst().elapsedMs() >= 20,
+            "Expected >= 20ms, got " + timings.getFirst().elapsedMs() + "ms"
+        );
     }
 
     @Test
@@ -309,23 +304,17 @@ public class ProgressTrackerTest {
         var dispatcher = PluginDispatcher.fromGraph(graph);
         var tracker = new ProgressTracker();
 
-        dispatcher.dispatch(
-                plugin -> {
-                    try {
-                        Thread.sleep(20);
-                    } catch (InterruptedException ignored) {
-                    }
-                },
-                tracker.phase("phase-a", 50));
+        dispatcher.dispatch(plugin -> {
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException ignored) {}
+        }, tracker.phase("phase-a", 50));
 
-        dispatcher.dispatch(
-                plugin -> {
-                    try {
-                        Thread.sleep(20);
-                    } catch (InterruptedException ignored) {
-                    }
-                },
-                tracker.phase("phase-b", 50));
+        dispatcher.dispatch(plugin -> {
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException ignored) {}
+        }, tracker.phase("phase-b", 50));
 
         var timings = tracker.timings();
         assertEquals(2, timings.size());

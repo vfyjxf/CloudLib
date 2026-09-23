@@ -67,11 +67,7 @@ public final class VisualBalance {
      * mid-left 13, center 23, mid-right 12, bot-left 6, bot-mid 11,
      * bot-right 6. Weights are the counts normalized by the center's.
      */
-    private static final double[][] nineGridCounts = {
-        {8, 14, 7},
-        {13, 23, 12},
-        {6, 11, 6},
-    };
+    private static final double[][] nineGridCounts = {{8, 14, 7}, {13, 23, 12}, {6, 11, 6},};
 
     private static final double centerCount = nineGridCounts[1][1];
 

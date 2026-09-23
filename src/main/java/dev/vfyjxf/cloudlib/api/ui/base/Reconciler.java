@@ -40,11 +40,12 @@ final class Reconciler {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T extends Widget> T reconcile(
-            Scene scene,
-            SceneContext context,
-            @Nullable T oldWidget,
-            Blueprint<T> newBlueprint,
-            @Nullable CompositeWidget<T> parent) {
+        Scene scene,
+        SceneContext context,
+        @Nullable T oldWidget,
+        Blueprint<T> newBlueprint,
+        @Nullable CompositeWidget<T> parent
+    ) {
         // create if there is no existing widget
         if (oldWidget == null) {
             return mount(newBlueprint, parent, scene, context);
@@ -84,10 +85,11 @@ final class Reconciler {
      * Reconciles the children of a widget with new child blueprints.
      */
     public static <T extends Widget> void reconcileChildren(
-            CompositeWidget<T> parent,
-            List<? extends Blueprint<T>> childrenBlueprints,
-            Scene scene,
-            SceneContext context) {
+        CompositeWidget<T> parent,
+        List<? extends Blueprint<T>> childrenBlueprints,
+        Scene scene,
+        SceneContext context
+    ) {
 
         if (parent.children.isEmpty() && childrenBlueprints.isEmpty()) {
             return;
@@ -119,11 +121,12 @@ final class Reconciler {
      * Full reconciliation algorithm with key matching support.
      */
     private static <T extends Widget> void reconcileChildrenFull(
-            CompositeWidget<T> parent,
-            List<? extends T> oldChildren,
-            List<? extends Blueprint<T>> childrenBlueprints,
-            Scene scene,
-            SceneContext context) {
+        CompositeWidget<T> parent,
+        List<? extends T> oldChildren,
+        List<? extends Blueprint<T>> childrenBlueprints,
+        Scene scene,
+        SceneContext context
+    ) {
         List<T> newChildren = new ArrayList<>(childrenBlueprints.size());
 
         Map<Object, T> keyedOldChildren = null;
@@ -205,7 +208,11 @@ final class Reconciler {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T extends Widget> T mount(
-            Blueprint<T> blueprint, @Nullable CompositeWidget<T> parent, Scene scene, SceneContext context) {
+        Blueprint<T> blueprint,
+        @Nullable CompositeWidget<T> parent,
+        Scene scene,
+        SceneContext context
+    ) {
         T widget = blueprint.createWidget(scene, context);
 
         widget.blueprint = blueprint;

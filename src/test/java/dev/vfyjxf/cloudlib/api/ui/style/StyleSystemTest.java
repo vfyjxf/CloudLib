@@ -139,8 +139,8 @@ class StyleSystemTest {
     void cssShorthandExpandsToLonghands() {
         Theme t = theme("a { padding: 4px }");
         UIStyle s = t.resolve(new Node("a"));
-        for (StyleKey<?> key :
-                List.of(Styles.paddingTop, Styles.paddingRight, Styles.paddingBottom, Styles.paddingLeft)) {
+        for (StyleKey<?> key : List
+                .of(Styles.paddingTop, Styles.paddingRight, Styles.paddingBottom, Styles.paddingLeft)) {
             StyleValue<?> v = s.get(key);
             assertNotNull(v, key.id());
             assertEquals(4f, ((LengthPercentage) v.value()).getValue());
@@ -184,8 +184,9 @@ class StyleSystemTest {
         // the builtin vocabulary is closed — StyleKey offers no accessible ctor
         for (var ctor : StyleKey.class.getDeclaredConstructors()) {
             assertFalse(
-                    Modifier.isPublic(ctor.getModifiers()) || Modifier.isProtected(ctor.getModifiers()),
-                    "StyleKey ctor must not be accessible: " + ctor);
+                Modifier.isPublic(ctor.getModifiers()) || Modifier.isProtected(ctor.getModifiers()),
+                "StyleKey ctor must not be accessible: " + ctor
+            );
         }
     }
 }

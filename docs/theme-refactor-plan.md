@@ -79,6 +79,7 @@ public final class StyleVar<T> {
     static StyleVar<Boolean> bool(String name);
     static StyleVar<String>  ident(String name);
     static StyleVar<Tokens>  tokens(String name);
+    static StyleVar<VisualTexture> texture(String name);   // surface slot: <texture> | <color>
 }
 ```
 

@@ -53,8 +53,7 @@ class WorldOnlyCapabilityTest {
     @Test
     void worldOnlyElementPresentsWithOnlyAWorldPartAndRetractsIntoLinger() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement bar =
-                TestElement.arbitrated("bar", 200, 150, new Size(60, 20)).withWorldOnly();
+        TestElement bar = TestElement.arbitrated("bar", 200, 150, new Size(60, 20)).withWorldOnly();
         TestElement nameplate = TestElement.arbitrated("nameplate", 300, 60, new Size(80, 30));
         coordinator.register(bar);
         coordinator.register(nameplate);
@@ -84,8 +83,7 @@ class WorldOnlyCapabilityTest {
         assertEquals(12, bar.proposeCount);
         assertEquals(0, bar.lastRound);
         // the fade-in completed: presented, at full alpha
-        assertEquals(
-                VisibilityTracker.Phase.visible, lastState(coordinator, "bar").phase());
+        assertEquals(VisibilityTracker.Phase.visible, lastState(coordinator, "bar").phase());
         assertEquals(1.0, lastState(coordinator, "bar").alpha(), 1.0e-9);
 
         // the anchor is gone: retract — state without placement, linger (not
@@ -96,8 +94,7 @@ class WorldOnlyCapabilityTest {
         assertNull(retracted.placementOf("bar"));
         assertNotNull(retracted.elementState("bar").placement());
         assertNull(retracted.elementState("bar").rejection());
-        assertEquals(
-                VisibilityTracker.Phase.lingering, retracted.elementState("bar").phase());
+        assertEquals(VisibilityTracker.Phase.lingering, retracted.elementState("bar").phase());
         assertEquals(1.0, retracted.elementState("bar").alpha(), 1.0e-9);
 
         // linger expires, the element fades out and hides — still a state
@@ -107,8 +104,9 @@ class WorldOnlyCapabilityTest {
         }
         VisibilityTracker.Phase hidden = lastState(coordinator, "bar").phase();
         assertTrue(
-                hidden == VisibilityTracker.Phase.fading || hidden == VisibilityTracker.Phase.hidden,
-                "expected the retracted element to fade out, got " + hidden);
+            hidden == VisibilityTracker.Phase.fading || hidden == VisibilityTracker.Phase.hidden,
+            "expected the retracted element to fade out, got " + hidden
+        );
 
         // the anchor recovers: presented again, fading back in toward visible
         bar.anchorValid = true;
@@ -117,8 +115,7 @@ class WorldOnlyCapabilityTest {
             CoordinationResult recovered = frame(coordinator, now);
             assertNotNull(recovered.placementOf("bar"));
         }
-        assertEquals(
-                VisibilityTracker.Phase.visible, lastState(coordinator, "bar").phase());
+        assertEquals(VisibilityTracker.Phase.visible, lastState(coordinator, "bar").phase());
         assertEquals(1.0, lastState(coordinator, "bar").alpha(), 1.0e-9);
     }
 
@@ -133,7 +130,9 @@ class WorldOnlyCapabilityTest {
             @Override
             public ElementProposal propose(ProposeContext context) {
                 return ElementProposal.worldOnly(
-                        context.variant(), List.of(PlacementCandidate.screen(new FloatRect(10, 10, 60, 20))));
+                    context.variant(),
+                    List.of(PlacementCandidate.screen(new FloatRect(10, 10, 60, 20)))
+                );
             }
         });
 
@@ -153,8 +152,9 @@ class WorldOnlyCapabilityTest {
             @Override
             public ElementProposal propose(ProposeContext context) {
                 return ElementProposal.worldOnly(
-                        context.variant(),
-                        List.of(PlacementCandidate.screen(new FloatRect(0, 0, 60, 20)), PlacementCandidate.world(box)));
+                    context.variant(),
+                    List.of(PlacementCandidate.screen(new FloatRect(0, 0, 60, 20)), PlacementCandidate.world(box))
+                );
             }
         });
 
@@ -186,28 +186,30 @@ class WorldOnlyCapabilityTest {
             assertEquals(b.resolved(), a.resolved(), "resolved diverged at frame " + (i + 1));
             assertEquals(b.epoch(), a.epoch(), "epoch diverged at frame " + (i + 1));
             assertEquals(b.budget(), a.budget(), "budget diverged at frame " + (i + 1));
-            for (String id : new String[] {"panel", "hud", "tracker"}) {
+            for (String id : new String[]{"panel", "hud", "tracker"}) {
                 assertEquals(
-                        b.placementOf(id), a.placementOf(id), "placement of " + id + " diverged at frame " + (i + 1));
+                    b.placementOf(id),
+                    a.placementOf(id),
+                    "placement of " + id + " diverged at frame " + (i + 1)
+                );
                 assertEquals(
-                        b.elementState(id), a.elementState(id), "state of " + id + " diverged at frame " + (i + 1));
+                    b.elementState(id),
+                    a.elementState(id),
+                    "state of " + id + " diverged at frame " + (i + 1)
+                );
             }
         }
     }
 
     private static List<CoordinationResult> runMixedScene(boolean withWorldOnly) {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement panel = TestElement.arbitrated("panel", 120, 80, new Size(100, 40), new Size(60, 24))
-                .withSticky()
+        TestElement panel = TestElement.arbitrated("panel", 120, 80, new Size(100, 40), new Size(60, 24)).withSticky()
                 .withPriority(3);
-        TestElement hud = TestElement.arbitrated("hud", 300, 60, new Size(80, 30))
-                .withKind(SpaceKind.panel)
+        TestElement hud = TestElement.arbitrated("hud", 300, 60, new Size(80, 30)).withKind(SpaceKind.panel)
                 .withPriority(10);
-        TestElement tracker = TestElement.arbitrated("tracker", 200, 220, new Size(90, 30))
-                .withKind(SpaceKind.tracked)
+        TestElement tracker = TestElement.arbitrated("tracker", 200, 220, new Size(90, 30)).withKind(SpaceKind.tracked)
                 .withSticky();
-        TestElement billboard = TestElement.arbitrated("billboard", 120, 80, new Size(100, 40))
-                .withPriority(100)
+        TestElement billboard = TestElement.arbitrated("billboard", 120, 80, new Size(100, 40)).withPriority(100)
                 .withWorldOnly();
         coordinator.register(panel);
         coordinator.register(hud);
@@ -235,8 +237,9 @@ class WorldOnlyCapabilityTest {
             results.add(frame(coordinator, now, exclusion));
             if (billboardLive) {
                 assertNotNull(
-                        results.get(results.size() - 1).placementOf("billboard"),
-                        "the world-only element must present whenever it has a world candidate");
+                    results.get(results.size() - 1).placementOf("billboard"),
+                    "the world-only element must present whenever it has a world candidate"
+                );
             }
         }
         return results;
@@ -249,10 +252,8 @@ class WorldOnlyCapabilityTest {
     @Test
     void exclusionsCoveringTheWouldBeRectNeitherMoveNorHideTheWorldOnlyElement() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement billboard =
-                TestElement.arbitrated("billboard", 200, 150, new Size(60, 40)).withWorldOnly();
-        TestElement panel =
-                TestElement.arbitrated("panel", 200, 150, new Size(60, 40)).withSingleCandidate();
+        TestElement billboard = TestElement.arbitrated("billboard", 200, 150, new Size(60, 40)).withWorldOnly();
+        TestElement panel = TestElement.arbitrated("panel", 200, 150, new Size(60, 40)).withSingleCandidate();
         coordinator.register(billboard);
         coordinator.register(panel);
 
@@ -266,9 +267,7 @@ class WorldOnlyCapabilityTest {
             now += dt;
             frame(coordinator, now);
         }
-        assertEquals(
-                VisibilityTracker.Phase.visible,
-                lastState(coordinator, "billboard").phase());
+        assertEquals(VisibilityTracker.Phase.visible, lastState(coordinator, "billboard").phase());
 
         // a HUD exclusion exactly over the would-be screen rect of both
         // elements: the projecting one must yield (rejection), the world-only
@@ -282,15 +281,11 @@ class WorldOnlyCapabilityTest {
             assertNotNull(grant, "an exclusion cannot hide a world-only element");
             assertEquals(expected, grant.world(), "an exclusion cannot move a world-only element");
             assertNull(squeezed.elementState("billboard").rejection());
-            assertEquals(
-                    VisibilityTracker.Phase.visible,
-                    squeezed.elementState("billboard").phase());
+            assertEquals(VisibilityTracker.Phase.visible, squeezed.elementState("billboard").phase());
 
             assertNull(squeezed.placementOf("panel"), "the projecting element must yield to the exclusion");
             assertNotNull(squeezed.elementState("panel").rejection());
-            assertEquals(
-                    RejectionReason.exclusion,
-                    squeezed.elementState("panel").rejection().reason());
+            assertEquals(RejectionReason.exclusion, squeezed.elementState("panel").rejection().reason());
         }
     }
 
@@ -305,8 +300,8 @@ class WorldOnlyCapabilityTest {
 
             @Override
             public ElementProposal propose(ProposeContext context) {
-                return ElementProposal.worldOnly(
-                        context.variant(), PlacementCandidate.world(WorldAabb.around(0, 64, 0, 10, 8, 10)));
+                return ElementProposal
+                        .worldOnly(context.variant(), PlacementCandidate.world(WorldAabb.around(0, 64, 0, 10, 8, 10)));
             }
         });
         assertThrows(IllegalArgumentException.class, () -> frame(coordinator, dt));
@@ -330,9 +325,7 @@ class WorldOnlyCapabilityTest {
             @Override
             public void arbitrated(InworldPlacement placement, Feedback feedback) {}
         };
-        ElementSpec spec = ElementSpec.from(InworldProfile.dock, "billboard")
-                .custom(billboard)
-                .withWorldOnly();
+        ElementSpec spec = ElementSpec.from(InworldProfile.dock, "billboard").custom(billboard).withWorldOnly();
         AssembledElement element = PipelineAssembler.create().assemble(spec);
         assertTrue(element.worldOnly(), "the assembled element forwards the spec's capability bit");
 

@@ -145,10 +145,13 @@ class ZoneModelTest {
         assertThrows(IllegalArgumentException.class, () -> model(anchor, 20, 80, -1));
         assertThrows(IllegalArgumentException.class, () -> model(anchor, Double.NaN, 80, 30));
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new ZoneModel(new FloatPos(Double.NaN, 0), screen, attention, ZoneModel.Config.defaults()));
-        assertThrows(IllegalArgumentException.class, () -> new ZoneModel(
-                        anchor, screen, attention, ZoneModel.Config.defaults())
-                .regionOf(new FloatPos(Double.NaN, 0)));
+            IllegalArgumentException.class,
+            () -> new ZoneModel(new FloatPos(Double.NaN, 0), screen, attention, ZoneModel.Config.defaults())
+        );
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new ZoneModel(anchor, screen, attention, ZoneModel.Config.defaults())
+                    .regionOf(new FloatPos(Double.NaN, 0))
+        );
     }
 }

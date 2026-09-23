@@ -41,9 +41,7 @@ public interface DragContext {
         FloatPos current = getCurrent();
         int absX = (int) (current.x() - start.x() + original.x());
         int absY = (int) (current.y() - start.y() + original.y());
-        return new Pos(
-                absX - coordinate.absolutePos().x(),
-                absY - coordinate.absolutePos().y());
+        return new Pos(absX - coordinate.absolutePos().x(), absY - coordinate.absolutePos().y());
     }
 
     default Rect draggingBounds() {

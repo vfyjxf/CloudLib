@@ -33,7 +33,13 @@ public record InputContext(InputConstants.Key key, double mouseX, double mouseY,
     }
 
     public static InputContext fromKeyboard(
-            int keyCode, int scanCode, int modifiers, double mouseX, double mouseY, boolean isReleased) {
+        int keyCode,
+        int scanCode,
+        int modifiers,
+        double mouseX,
+        double mouseY,
+        boolean isReleased
+    ) {
         return new InputContext(InputConstants.getKey(keyCode, scanCode), mouseX, mouseY, modifiers, isReleased);
     }
 
@@ -134,9 +140,7 @@ public record InputContext(InputConstants.Key key, double mouseX, double mouseY,
     }
 
     public enum KeyAction {
-        press,
-        release,
-        repeat;
+        press, release, repeat;
 
         public static KeyAction from(int action) {
             return switch (action) {

@@ -19,24 +19,35 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>Standard mode - renders from a standalone texture file using UV coordinates</li>
  *   <li>Atlas sprite mode - renders from GUI sprite atlas using blitSprite</li>
  * </ul>
+ * <p>
+ * {@code textureWidth}/{@code textureHeight} are the sheet's pixel size, needed to
+ * normalize {@code (u,v)}. {@link #region} leaves them at {@code 0}, which resolves
+ * them from the file itself on first draw.
  */
 public record ImageTexture(
-        ResourceLocation location,
-        int u,
-        int v,
-        int width,
-        int height,
-        int textureWidth,
-        int textureHeight,
-        boolean atlasSprite)
-        implements SizedTexture, BatchableTexture {
+    ResourceLocation location,
+    int u,
+    int v,
+    int width,
+    int height,
+    int textureWidth,
+    int textureHeight,
+    boolean atlasSprite
+) implements SizedTexture, BatchableTexture {
     private static final Map<ResourceLocation, SpriteRegion> spriteRegions = new ConcurrentHashMap<>();
 
     /**
      * Creates a standard image texture.
      */
     public ImageTexture(
-            ResourceLocation location, int u, int v, int width, int height, int textureWidth, int textureHeight) {
+        ResourceLocation location,
+        int u,
+        int v,
+        int width,
+        int height,
+        int textureWidth,
+        int textureHeight
+    ) {
         this(location, u, v, width, height, textureWidth, textureHeight, false);
     }
 
@@ -60,8 +71,25 @@ public record ImageTexture(
      * Creates a standard image texture with UV region.
      */
     public static ImageTexture of(
-            ResourceLocation location, int u, int v, int width, int height, int textureWidth, int textureHeight) {
+        ResourceLocation location,
+        int u,
+        int v,
+        int width,
+        int height,
+        int textureWidth,
+        int textureHeight
+    ) {
         return new ImageTexture(location, u, v, width, height, textureWidth, textureHeight, false);
+    }
+
+    /**
+     * Creates a standard image texture for a region of a texture file —
+     * {@code (u,v)} is the region's top-left corner in sheet pixels,
+     * {@code width}/{@code height} its size. The sheet's own size is read from
+     * the file on first draw ({@link TextureFileSize}).
+     */
+    public static ImageTexture region(ResourceLocation location, int u, int v, int width, int height) {
+        return new ImageTexture(location, u, v, width, height, 0, 0, false);
     }
 
     /**
@@ -77,7 +105,14 @@ public record ImageTexture(
      * Note: For atlas sprites, u/v/textureWidth/textureHeight are used only for subTexture calculations.
      */
     public static ImageTexture sprite(
-            ResourceLocation spriteLocation, int u, int v, int width, int height, int textureWidth, int textureHeight) {
+        ResourceLocation spriteLocation,
+        int u,
+        int v,
+        int width,
+        int height,
+        int textureWidth,
+        int textureHeight
+    ) {
         return new ImageTexture(spriteLocation, u, v, width, height, textureWidth, textureHeight, true);
     }
 
@@ -93,8 +128,22 @@ public record ImageTexture(
             TextureAtlasSprite sprite = guiSprites.getSprite(location);
             graphics.blit(x, y, 0, width, height, sprite);
         } else {
-            graphics.blit(location, x, y, width, height, u, v, this.width, this.height, textureWidth, textureHeight);
+            graphics.blit(location, x, y, width, height, u, v, this.width, this.height, sheetWidth(), sheetHeight());
         }
+    }
+
+    // endregion
+
+    // region internal
+
+    /** The sheet's pixel width — the declared one, or the file's when left at {@code 0}. */
+    private int sheetWidth() {
+        return textureWidth > 0 ? textureWidth : TextureFileSize.of(location).width();
+    }
+
+    /** The sheet's pixel height — the declared one, or the file's when left at {@code 0}. */
+    private int sheetHeight() {
+        return textureHeight > 0 ? textureHeight : TextureFileSize.of(location).height();
     }
 
     // endregion
@@ -106,7 +155,15 @@ public record ImageTexture(
      */
     public ImageTexture subTexture(int u, int v, int width, int height) {
         return new ImageTexture(
-                location, this.u + u, this.v + v, width, height, textureWidth, textureHeight, atlasSprite);
+            location,
+            this.u + u,
+            this.v + v,
+            width,
+            height,
+            textureWidth,
+            textureHeight,
+            atlasSprite
+        );
     }
 
     /**
@@ -140,12 +197,22 @@ public record ImageTexture(
             // For atlas sprites, get the actual UV coordinates from the sprite
             SpriteRegion sprite = spriteRegion(location);
             emitter.textured(
-                    sprite.texture(), x, y, w, h, sprite.uMin(), sprite.vMin(), sprite.uMax(), sprite.vMax(), color);
+                sprite.texture(),
+                x,
+                y,
+                w,
+                h,
+                sprite.uMin(),
+                sprite.vMin(),
+                sprite.uMax(),
+                sprite.vMax(),
+                color
+            );
         } else {
-            float u0 = (float) this.u / textureWidth;
-            float v0 = (float) this.v / textureHeight;
-            float u1 = (float) (this.u + width) / textureWidth;
-            float v1 = (float) (this.v + height) / textureHeight;
+            float u0 = (float) this.u / sheetWidth();
+            float v0 = (float) this.v / sheetHeight();
+            float u1 = (float) (this.u + width) / sheetWidth();
+            float v1 = (float) (this.v + height) / sheetHeight();
             emitter.textured(location, x, y, w, h, u0, v0, u1, v1, color);
         }
     }
@@ -160,11 +227,23 @@ public record ImageTexture(
         }
         TextureAtlasSprite sprite = sprites.getSprite(location);
         SpriteRegion region = new SpriteRegion(
-                sprites, sprite.atlasLocation(), sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1());
+            sprites,
+            sprite.atlasLocation(),
+            sprite.getU0(),
+            sprite.getV0(),
+            sprite.getU1(),
+            sprite.getV1()
+        );
         spriteRegions.put(location, region);
         return region;
     }
 
     private record SpriteRegion(
-            GuiSpriteManager owner, ResourceLocation texture, float uMin, float vMin, float uMax, float vMax) {}
+        GuiSpriteManager owner,
+        ResourceLocation texture,
+        float uMin,
+        float vMin,
+        float uMax,
+        float vMax
+    ) {}
 }

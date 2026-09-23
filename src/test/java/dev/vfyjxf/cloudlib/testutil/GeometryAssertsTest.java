@@ -18,8 +18,10 @@ class GeometryAssertsTest {
     void exactPosAssertionPassesOnEqualAndFailsOnDifferent() {
         GeometryAsserts.assertPosEquals(new Pos(3, 4), new Pos(3, 4));
 
-        AssertionError error =
-                assertThrows(AssertionError.class, () -> GeometryAsserts.assertPosEquals(new Pos(3, 4), new Pos(3, 5)));
+        AssertionError error = assertThrows(
+            AssertionError.class,
+            () -> GeometryAsserts.assertPosEquals(new Pos(3, 4), new Pos(3, 5))
+        );
         assertTrue(error.getMessage().contains("expected Pos[x=3, y=4]"));
     }
 
@@ -28,8 +30,9 @@ class GeometryAssertsTest {
         GeometryAsserts.assertPosEquals(new FloatPos(1, 2), new FloatPos(1 + 1.0e-7, 2 - 1.0e-7), 1.0e-6);
 
         AssertionError error = assertThrows(
-                AssertionError.class,
-                () -> GeometryAsserts.assertPosEquals(new FloatPos(1, 2), new FloatPos(1.25, 2), 0.1));
+            AssertionError.class,
+            () -> GeometryAsserts.assertPosEquals(new FloatPos(1, 2), new FloatPos(1.25, 2), 0.1)
+        );
         assertTrue(error.getMessage().contains("epsilon=0.1"));
         assertTrue(error.getMessage().contains("maxDelta=0.25"));
     }
@@ -39,11 +42,13 @@ class GeometryAssertsTest {
         GeometryAsserts.assertVecEquals(new Vec3(1, 2, 3), new Vec3(1, 2 + 1.0e-9, 3), 1.0e-6);
 
         assertThrows(
-                AssertionError.class,
-                () -> GeometryAsserts.assertVecEquals(new Vec3(1, 2, 3), new Vec3(1, 2, 3 + 0.5), 0.1));
+            AssertionError.class,
+            () -> GeometryAsserts.assertVecEquals(new Vec3(1, 2, 3), new Vec3(1, 2, 3 + 0.5), 0.1)
+        );
         assertThrows(
-                AssertionError.class,
-                () -> GeometryAsserts.assertVecEquals(new Vec3(1, 2, 3), new Vec3(1, 2 + 0.5, 3), 0.1));
+            AssertionError.class,
+            () -> GeometryAsserts.assertVecEquals(new Vec3(1, 2, 3), new Vec3(1, 2 + 0.5, 3), 0.1)
+        );
     }
 
     @Test
@@ -51,8 +56,9 @@ class GeometryAssertsTest {
         GeometryAsserts.assertVecEquals(new Vector3f(0.5f, 0, 0), new Vector3f(0.5f, 1.0e-7f, 0), 1.0e-6f);
 
         assertThrows(
-                AssertionError.class,
-                () -> GeometryAsserts.assertVecEquals(new Vector3f(1, 0, 0), new Vector3f(1.5f, 0, 0), 0.1f));
+            AssertionError.class,
+            () -> GeometryAsserts.assertVecEquals(new Vector3f(1, 0, 0), new Vector3f(1.5f, 0, 0), 0.1f)
+        );
     }
 
     @Test
@@ -60,23 +66,26 @@ class GeometryAssertsTest {
         GeometryAsserts.assertVecEquals(new Vector3d(1, 2, 3), new Vector3d(1, 2, 3 + 1.0e-9), 1.0e-6);
 
         assertThrows(
-                AssertionError.class,
-                () -> GeometryAsserts.assertVecEquals(new Vector3d(1, 2, 3), new Vector3d(1, 2.5, 3), 0.1));
+            AssertionError.class,
+            () -> GeometryAsserts.assertVecEquals(new Vector3d(1, 2, 3), new Vector3d(1, 2.5, 3), 0.1)
+        );
     }
 
     @Test
     void componentArrayAssertionChecksLengthAndComponents() {
-        GeometryAsserts.assertVecEquals(new double[] {1, 2}, new double[] {1 + 1.0e-7, 2}, 1.0e-6);
+        GeometryAsserts.assertVecEquals(new double[]{1, 2}, new double[]{1 + 1.0e-7, 2}, 1.0e-6);
         GeometryAsserts.assertVecEquals(new double[0], new double[0], 1.0e-6);
 
         AssertionError mismatch = assertThrows(
-                AssertionError.class,
-                () -> GeometryAsserts.assertVecEquals(new double[] {1, 2}, new double[] {1, 2.5}, 0.1));
+            AssertionError.class,
+            () -> GeometryAsserts.assertVecEquals(new double[]{1, 2}, new double[]{1, 2.5}, 0.1)
+        );
         assertTrue(mismatch.getMessage().contains("maxDelta=0.5"));
 
         AssertionError length = assertThrows(
-                AssertionError.class,
-                () -> GeometryAsserts.assertVecEquals(new double[] {1, 2}, new double[] {1, 2, 3}, 0.1));
+            AssertionError.class,
+            () -> GeometryAsserts.assertVecEquals(new double[]{1, 2}, new double[]{1, 2, 3}, 0.1)
+        );
         assertTrue(length.getMessage().contains("length mismatch"));
     }
 
@@ -85,11 +94,13 @@ class GeometryAssertsTest {
         GeometryAsserts.assertRectEquals(new Rect(1, 2, 3, 4), new Rect(1, 2, 3, 4));
 
         assertThrows(
-                AssertionError.class,
-                () -> GeometryAsserts.assertRectEquals(new Rect(1, 2, 3, 4), new Rect(1, 2, 3, 5)));
+            AssertionError.class,
+            () -> GeometryAsserts.assertRectEquals(new Rect(1, 2, 3, 4), new Rect(1, 2, 3, 5))
+        );
         assertThrows(
-                AssertionError.class,
-                () -> GeometryAsserts.assertRectEquals(new Rect(1, 2, 3, 4), new Rect(0, 2, 3, 4)));
+            AssertionError.class,
+            () -> GeometryAsserts.assertRectEquals(new Rect(1, 2, 3, 4), new Rect(0, 2, 3, 4))
+        );
     }
 
     @Test
@@ -100,10 +111,12 @@ class GeometryAssertsTest {
         GeometryAsserts.assertRectEquals(expected, new FloatRect(10, 20, 30, 40.5), 0.5);
 
         assertThrows(
-                AssertionError.class,
-                () -> GeometryAsserts.assertRectEquals(expected, new FloatRect(10, 20, 30, 40 + 0.2), 0.1));
+            AssertionError.class,
+            () -> GeometryAsserts.assertRectEquals(expected, new FloatRect(10, 20, 30, 40 + 0.2), 0.1)
+        );
         assertThrows(
-                AssertionError.class,
-                () -> GeometryAsserts.assertRectEquals(expected, new FloatRect(10 + 0.2, 20, 30, 40), 0.1));
+            AssertionError.class,
+            () -> GeometryAsserts.assertRectEquals(expected, new FloatRect(10 + 0.2, 20, 30, 40), 0.1)
+        );
     }
 }

@@ -6,8 +6,12 @@ import net.minecraft.client.gui.GuiGraphics;
  * Linear gradient texture using strip-based rendering.
  */
 public record GradientTexture(
-        int colorTopLeft, int colorTopRight, int colorBottomLeft, int colorBottomRight, int segments)
-        implements BatchableTexture {
+    int colorTopLeft,
+    int colorTopRight,
+    int colorBottomLeft,
+    int colorBottomRight,
+    int segments
+) implements BatchableTexture {
 
     public GradientTexture {
         segments = Math.max(1, segments);
@@ -49,11 +53,11 @@ public record GradientTexture(
         boolean isVertical = colorTopLeft == colorTopRight && colorBottomLeft == colorBottomRight;
 
         if (isHorizontal) {
-            emitHorizontal(emitter, x, y, width, height);
+            emitHorizontal(emitter, x, y, width, height, tint);
         } else if (isVertical) {
-            emitVertical(emitter, x, y, width, height);
+            emitVertical(emitter, x, y, width, height, tint);
         } else {
-            emitDiagonal(emitter, x, y, width, height);
+            emitDiagonal(emitter, x, y, width, height, tint);
         }
     }
 
@@ -71,25 +75,25 @@ public record GradientTexture(
 
     // region internal
 
-    private void emitHorizontal(VertexEmitter emitter, float x, float y, float width, float height) {
+    private void emitHorizontal(VertexEmitter emitter, float x, float y, float width, float height, int tint) {
         float segmentWidth = width / segments;
         for (int i = 0; i < segments; i++) {
             float t = (i + 0.5f) / segments;
-            int color = lerpColor(colorTopLeft, colorTopRight, t);
+            int color = VisualTexture.multiply(lerpColor(colorTopLeft, colorTopRight, t), tint);
             emitter.colored(x + i * segmentWidth, y, segmentWidth, height, color);
         }
     }
 
-    private void emitVertical(VertexEmitter emitter, float x, float y, float width, float height) {
+    private void emitVertical(VertexEmitter emitter, float x, float y, float width, float height, int tint) {
         float segmentHeight = height / segments;
         for (int i = 0; i < segments; i++) {
             float t = (i + 0.5f) / segments;
-            int color = lerpColor(colorTopLeft, colorBottomLeft, t);
+            int color = VisualTexture.multiply(lerpColor(colorTopLeft, colorBottomLeft, t), tint);
             emitter.colored(x, y + i * segmentHeight, width, segmentHeight, color);
         }
     }
 
-    private void emitDiagonal(VertexEmitter emitter, float x, float y, float width, float height) {
+    private void emitDiagonal(VertexEmitter emitter, float x, float y, float width, float height, int tint) {
         float segmentHeight = height / segments;
         float segmentWidth = width / segments;
         for (int i = 0; i < segments; i++) {
@@ -98,7 +102,7 @@ public record GradientTexture(
             int rightColor = lerpColor(colorTopRight, colorBottomRight, ty);
             for (int j = 0; j < segments; j++) {
                 float tx = (j + 0.5f) / segments;
-                int color = lerpColor(leftColor, rightColor, tx);
+                int color = VisualTexture.multiply(lerpColor(leftColor, rightColor, tx), tint);
                 emitter.colored(x + j * segmentWidth, y + i * segmentHeight, segmentWidth, segmentHeight, color);
             }
         }
@@ -123,11 +127,12 @@ public record GradientTexture(
                     float tx = (j + 0.5f) / segments;
                     int color = lerpColor(leftColor, rightColor, tx);
                     graphics.fill(
-                            x + (j * width / segments),
-                            y + (i * height / segments),
-                            x + ((j + 1) * width / segments),
-                            y + ((i + 1) * height / segments),
-                            color);
+                        x + (j * width / segments),
+                        y + (i * height / segments),
+                        x + ((j + 1) * width / segments),
+                        y + ((i + 1) * height / segments),
+                        color
+                    );
                 }
             }
         }

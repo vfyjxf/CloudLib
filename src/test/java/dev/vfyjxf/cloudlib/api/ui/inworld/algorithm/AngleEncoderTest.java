@@ -49,8 +49,7 @@ class AngleEncoderTest {
 
         assertTrue(output.active());
         assertEquals(ScreenEdge.right, output.edge());
-        assertEquals(
-                screenWidth / 2 + (screenWidth / 2 - inset), output.position().x(), 1.0e-6);
+        assertEquals(screenWidth / 2 + (screenWidth / 2 - inset), output.position().x(), 1.0e-6);
         assertEquals(screenHeight / 2, output.position().y(), 1.0e-6);
     }
 
@@ -62,8 +61,7 @@ class AngleEncoderTest {
         AngleEncoder.Output output = encoder.update(offscreen(Math.PI), 0.0);
 
         assertEquals(ScreenEdge.left, output.edge());
-        assertEquals(
-                screenWidth / 2 - (screenWidth / 2 - inset), output.position().x(), 1.0e-6);
+        assertEquals(screenWidth / 2 - (screenWidth / 2 - inset), output.position().x(), 1.0e-6);
         assertEquals(screenHeight / 2, output.position().y(), 1.0e-6);
     }
 
@@ -83,10 +81,8 @@ class AngleEncoderTest {
         // continuous position: no step larger than a fraction of the perimeter,
         // so no teleport anywhere — corner crossings included
         for (int i = 1; i < outputs.size(); i++) {
-            double dx = outputs.get(i).position().x()
-                    - outputs.get(i - 1).position().x();
-            double dy = outputs.get(i).position().y()
-                    - outputs.get(i - 1).position().y();
+            double dx = outputs.get(i).position().x() - outputs.get(i - 1).position().x();
+            double dy = outputs.get(i).position().y() - outputs.get(i - 1).position().y();
             double step = Math.sqrt(dx * dx + dy * dy);
             assertTrue(step < 30.0, "teleport of " + step + " px between frames " + (i - 1) + " and " + i);
         }
@@ -109,8 +105,9 @@ class AngleEncoderTest {
             }
         }
         assertEquals(
-                List.of(ScreenEdge.right, ScreenEdge.bottom, ScreenEdge.left, ScreenEdge.top, ScreenEdge.right),
-                sequence);
+            List.of(ScreenEdge.right, ScreenEdge.bottom, ScreenEdge.left, ScreenEdge.top, ScreenEdge.right),
+            sequence
+        );
     }
 
     @Test
@@ -125,8 +122,7 @@ class AngleEncoderTest {
             encoder.update(offscreen(angle), 1.0 / 60.0);
         }
 
-        ScreenEdge settled =
-                encoder.update(offscreen(corner + 0.05), 1.0 / 60.0).edge();
+        ScreenEdge settled = encoder.update(offscreen(corner + 0.05), 1.0 / 60.0).edge();
         for (int i = 0; i < 50; i++) {
             double angle = corner + ((i % 2 == 0) ? 0.05 : -0.05);
             assertEquals(settled, encoder.update(offscreen(angle), 1.0 / 60.0).edge());
@@ -154,8 +150,16 @@ class AngleEncoderTest {
         AngleEncoder encoder = encoder(10, 0.2, 1);
         encoder.snap(0);
 
-        OffscreenProjector.Result onScreen =
-                new OffscreenProjector.Result(true, false, 1, 0, 0, new FloatPos(1500, 540), null, null);
+        OffscreenProjector.Result onScreen = new OffscreenProjector.Result(
+            true,
+            false,
+            1,
+            0,
+            0,
+            new FloatPos(1500, 540),
+            null,
+            null
+        );
         AngleEncoder.Output output = encoder.update(onScreen, 1.0 / 60.0);
 
         assertFalse(output.active());
@@ -169,14 +173,17 @@ class AngleEncoderTest {
         assertThrows(IllegalArgumentException.class, () -> encoder(10, 0, 1));
         assertThrows(IllegalArgumentException.class, () -> encoder(10, 0.2, 0));
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new AngleEncoder(0, 1080, 24, AngleEncoder.Config.of(10, 0.2, 1)));
+            IllegalArgumentException.class,
+            () -> new AngleEncoder(0, 1080, 24, AngleEncoder.Config.of(10, 0.2, 1))
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new AngleEncoder(1920, 0, 24, AngleEncoder.Config.of(10, 0.2, 1)));
+            IllegalArgumentException.class,
+            () -> new AngleEncoder(1920, 0, 24, AngleEncoder.Config.of(10, 0.2, 1))
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new AngleEncoder(1920, 1080, -1, AngleEncoder.Config.of(10, 0.2, 1)));
+            IllegalArgumentException.class,
+            () -> new AngleEncoder(1920, 1080, -1, AngleEncoder.Config.of(10, 0.2, 1))
+        );
         assertThrows(IllegalArgumentException.class, () -> encoder(10, 0.2, 1).snap(Double.NaN));
     }
 }

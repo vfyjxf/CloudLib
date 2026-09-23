@@ -160,10 +160,11 @@ public final class VanillaHudGeometry {
      */
     public static Rect toast(int screenWidth, HudInputs.Toast toast) {
         return new Rect(
-                screenWidth - toast.width(),
-                toast.index() * toastSlotHeight,
-                toast.width(),
-                toast.slotCount() * toastSlotHeight);
+            screenWidth - toast.width(),
+            toast.index() * toastSlotHeight,
+            toast.width(),
+            toast.slotCount() * toastSlotHeight
+        );
     }
 
     /**

@@ -82,8 +82,15 @@ class StickyOffsetPhaseTest {
 
         @Override
         public VariantLadder ladder() {
-            InworldVariant rung =
-                    new InworldVariant(0, size, ContentTier.full, SpacePolicy.active, false, true, 0.75 * 96 * 60);
+            InworldVariant rung = new InworldVariant(
+                0,
+                size,
+                ContentTier.full,
+                SpacePolicy.active,
+                false,
+                true,
+                0.75 * 96 * 60
+            );
             return VariantLadder.of(List.of(rung));
         }
 
@@ -143,9 +150,17 @@ class StickyOffsetPhaseTest {
             // no ±1 px re-rounding anywhere in the chain
             FloatPos anchor = placement.anchor();
             assertEquals(
-                    anchor.x() + granted.x(), placement.screenRect().x(), 1.0e-9, "frame " + f + ": rides the anchor");
+                anchor.x() + granted.x(),
+                placement.screenRect().x(),
+                1.0e-9,
+                "frame " + f + ": rides the anchor"
+            );
             assertEquals(
-                    anchor.y() + granted.y(), placement.screenRect().y(), 1.0e-9, "frame " + f + ": rides the anchor");
+                anchor.y() + granted.y(),
+                placement.screenRect().y(),
+                1.0e-9,
+                "frame " + f + ": rides the anchor"
+            );
         }
         // sanity: the walk really did cross many resolve boundaries
         assertTrue(coordinator.epoch() >= 8, "expected many epochs, saw " + coordinator.epoch());
@@ -170,9 +185,9 @@ class StickyOffsetPhaseTest {
         element.moveTo(-20, 200);
         CoordinationResult clamped = frame(coordinator, 2 * dt);
         assertTrue(
-                clamped.placementOf("e").offsetRect().x() > granted.x(),
-                "the clamped slot establishes its own offset: "
-                        + clamped.placementOf("e").offsetRect());
+            clamped.placementOf("e").offsetRect().x() > granted.x(),
+            "the clamped slot establishes its own offset: " + clamped.placementOf("e").offsetRect()
+        );
         assertEquals(0, clamped.placementOf("e").screenRect().x(), 0.01, "clamped to the work-area edge");
     }
 }

@@ -34,7 +34,8 @@ public final class PairingPulse {
             }
             if (!Double.isFinite(opacityDelta) || opacityDelta <= 0 || opacityDelta > 0.35) {
                 throw new IllegalArgumentException(
-                        "opacityDelta must be finite, positive and at most 0.35: " + opacityDelta);
+                    "opacityDelta must be finite, positive and at most 0.35: " + opacityDelta
+                );
             }
         }
 

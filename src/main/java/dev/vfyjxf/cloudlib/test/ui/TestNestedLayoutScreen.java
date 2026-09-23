@@ -63,9 +63,7 @@ public class TestNestedLayoutScreen extends BasicScreen {
         var wrapper = ColumnWidget.create();
         wrapper.setSpacing(4);
 
-        var label = LabelWidget.of("Case1: w=100%,max=100x100,ar=1")
-                .setColor(0xFF3F3F3F)
-                .setShadow(false);
+        var label = LabelWidget.of("Case1: w=100%,max=100x100,ar=1").setColor(0xFF3F3F3F).setShadow(false);
         label.useStyle(UIStyle.of(sizeOf(200, 12)));
         wrapper.addWidget(label);
 
@@ -79,12 +77,15 @@ public class TestNestedLayoutScreen extends BasicScreen {
 
         // Child: red, width=100%, maxSize(100,100), aspectRatio=1
         var child = new Widget();
-        child.useStyle(UIStyle.of(
+        child.useStyle(
+            UIStyle.of(
                 widthOf(TaffyDimension.percent(1f)),
                 maxWidth(100),
                 maxHeight(100),
                 aspectRatio(1.0f),
-                background(new ColorTexture(0xFFFF0000))));
+                background(new ColorTexture(0xFFFF0000))
+            )
+        );
 
         parent.addWidget(child);
         grandparent.addWidget(parent);
@@ -102,9 +103,7 @@ public class TestNestedLayoutScreen extends BasicScreen {
         var wrapper = ColumnWidget.create();
         wrapper.setSpacing(4);
 
-        var label = LabelWidget.of("Case2: w=100px,ar=1 (no max)")
-                .setColor(0xFF3F3F3F)
-                .setShadow(false);
+        var label = LabelWidget.of("Case2: w=100px,ar=1 (no max)").setColor(0xFF3F3F3F).setShadow(false);
         label.useStyle(UIStyle.of(sizeOf(200, 12)));
         wrapper.addWidget(label);
 

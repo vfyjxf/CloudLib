@@ -36,27 +36,29 @@ import java.util.Objects;
  *        path — zone inputs then resolve empty, never fail
  */
 public record LayoutEnvironment(
-        int screenWidth,
-        int screenHeight,
-        List<Rect> exclusionRects,
-        List<MaskedRect> occupancy,
-        @Nullable AnchorFrame anchor,
-        double nowSeconds,
-        double dtSeconds,
-        @Nullable PreviousFrameLayout previousLayout) {
+    int screenWidth,
+    int screenHeight,
+    List<Rect> exclusionRects,
+    List<MaskedRect> occupancy,
+    @Nullable AnchorFrame anchor,
+    double nowSeconds,
+    double dtSeconds,
+    @Nullable PreviousFrameLayout previousLayout
+) {
 
     /**
      * The pre-zone constructor: an environment without a previous layout —
      * identical to passing a null previous layout.
      */
     public LayoutEnvironment(
-            int screenWidth,
-            int screenHeight,
-            List<Rect> exclusionRects,
-            List<MaskedRect> occupancy,
-            @Nullable AnchorFrame anchor,
-            double nowSeconds,
-            double dtSeconds) {
+        int screenWidth,
+        int screenHeight,
+        List<Rect> exclusionRects,
+        List<MaskedRect> occupancy,
+        @Nullable AnchorFrame anchor,
+        double nowSeconds,
+        double dtSeconds
+    ) {
         this(screenWidth, screenHeight, exclusionRects, occupancy, anchor, nowSeconds, dtSeconds, null);
     }
 
@@ -83,31 +85,71 @@ public record LayoutEnvironment(
     /** The same environment with the anchor resolved. */
     public LayoutEnvironment withAnchor(AnchorFrame anchor) {
         return new LayoutEnvironment(
-                screenWidth, screenHeight, exclusionRects, occupancy, anchor, nowSeconds, dtSeconds, previousLayout);
+            screenWidth,
+            screenHeight,
+            exclusionRects,
+            occupancy,
+            anchor,
+            nowSeconds,
+            dtSeconds,
+            previousLayout
+        );
     }
 
     /** The same environment with the given exclusion rectangles. */
     public LayoutEnvironment withExclusions(List<Rect> rects) {
         return new LayoutEnvironment(
-                screenWidth, screenHeight, rects, occupancy, anchor, nowSeconds, dtSeconds, previousLayout);
+            screenWidth,
+            screenHeight,
+            rects,
+            occupancy,
+            anchor,
+            nowSeconds,
+            dtSeconds,
+            previousLayout
+        );
     }
 
     /** The same environment with the given occupancy snapshot. */
     public LayoutEnvironment withOccupancy(List<MaskedRect> rects) {
         return new LayoutEnvironment(
-                screenWidth, screenHeight, exclusionRects, rects, anchor, nowSeconds, dtSeconds, previousLayout);
+            screenWidth,
+            screenHeight,
+            exclusionRects,
+            rects,
+            anchor,
+            nowSeconds,
+            dtSeconds,
+            previousLayout
+        );
     }
 
     /** The same environment with the previous frame's committed layout (the zone context source). */
     public LayoutEnvironment withPreviousLayout(@Nullable PreviousFrameLayout layout) {
         return new LayoutEnvironment(
-                screenWidth, screenHeight, exclusionRects, occupancy, anchor, nowSeconds, dtSeconds, layout);
+            screenWidth,
+            screenHeight,
+            exclusionRects,
+            occupancy,
+            anchor,
+            nowSeconds,
+            dtSeconds,
+            layout
+        );
     }
 
     /** The same environment advanced on the clock. */
     public LayoutEnvironment at(double nowSeconds, double dtSeconds) {
         return new LayoutEnvironment(
-                screenWidth, screenHeight, exclusionRects, occupancy, anchor, nowSeconds, dtSeconds, previousLayout);
+            screenWidth,
+            screenHeight,
+            exclusionRects,
+            occupancy,
+            anchor,
+            nowSeconds,
+            dtSeconds,
+            previousLayout
+        );
     }
 
     /** One other element's committed rect, tagged with its space layer. */

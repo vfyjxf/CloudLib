@@ -34,7 +34,13 @@ public final class ContainerScan {
      * distance breaks near-ties. Returns null when nothing qualifies.
      */
     public static @Nullable BlockPos nearest(
-            Level level, Entity entity, Vec3 eye, Vec3 dir, double reach, double coneCos) {
+        Level level,
+        Entity entity,
+        Vec3 eye,
+        Vec3 dir,
+        double reach,
+        double coneCos
+    ) {
         BlockPos base = BlockPos.containing(eye);
         int R = (int) Math.ceil(reach) + 1;
         double maxDistSq = (reach + 1.5) * (reach + 1.5);
@@ -73,13 +79,14 @@ public final class ContainerScan {
      */
     public static List<BlockPos> all(Level level, Entity entity, Vec3 eye, Vec3 dir, double reach, double coneCos) {
         return all(
-                level,
-                entity,
-                eye,
-                dir,
-                reach,
-                coneCos,
-                pos -> level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null) != null);
+            level,
+            entity,
+            eye,
+            dir,
+            reach,
+            coneCos,
+            pos -> level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null) != null
+        );
     }
 
     /**
@@ -88,13 +95,14 @@ public final class ContainerScan {
      * eligibility (e.g. "any block section provider contributes").
      */
     public static List<BlockPos> all(
-            Level level,
-            Entity entity,
-            Vec3 eye,
-            Vec3 dir,
-            double reach,
-            double coneCos,
-            Predicate<BlockPos> eligible) {
+        Level level,
+        Entity entity,
+        Vec3 eye,
+        Vec3 dir,
+        double reach,
+        double coneCos,
+        Predicate<BlockPos> eligible
+    ) {
         BlockPos base = BlockPos.containing(eye);
         int R = (int) Math.ceil(reach) + 1;
         double maxDistSq = (reach + 1.5) * (reach + 1.5);
@@ -126,7 +134,14 @@ public final class ContainerScan {
      * wider) cone — the incumbent-hold check that stops cone-edge flicker.
      */
     public static boolean holds(
-            Level level, Entity entity, Vec3 eye, Vec3 dir, BlockPos pos, double reach, double coneCos) {
+        Level level,
+        Entity entity,
+        Vec3 eye,
+        Vec3 dir,
+        BlockPos pos,
+        double reach,
+        double coneCos
+    ) {
         double tx = pos.getX() + 0.5 - eye.x;
         double ty = pos.getY() + 0.5 - eye.y;
         double tz = pos.getZ() + 0.5 - eye.z;
@@ -140,9 +155,17 @@ public final class ContainerScan {
 
     /** The ray to the block centre must not be blocked by a different block first. */
     private static boolean lineOfSight(
-            Level level, Entity entity, Vec3 eye, double tx, double ty, double tz, BlockPos pos) {
+        Level level,
+        Entity entity,
+        Vec3 eye,
+        double tx,
+        double ty,
+        double tz,
+        BlockPos pos
+    ) {
         BlockHitResult los = level.clip(
-                new ClipContext(eye, eye.add(tx, ty, tz), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity));
+            new ClipContext(eye, eye.add(tx, ty, tz), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity)
+        );
         return los.getType() != HitResult.Type.BLOCK || los.getBlockPos().equals(pos);
     }
 }

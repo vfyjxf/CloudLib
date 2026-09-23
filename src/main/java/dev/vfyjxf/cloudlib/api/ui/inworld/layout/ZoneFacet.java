@@ -48,12 +48,13 @@ import java.util.Objects;
  *        default is {@code full}
  */
 public record ZoneFacet(
-        @Nullable AttentionField attention,
-        @Nullable ZoneWeights weights,
-        @Nullable ZoneCandidates.Config candidatesConfig,
-        @Nullable ZoneModel.Config modelConfig,
-        VisibilityPolicy visibility,
-        LodTier initialTier) {
+    @Nullable AttentionField attention,
+    @Nullable ZoneWeights weights,
+    @Nullable ZoneCandidates.Config candidatesConfig,
+    @Nullable ZoneModel.Config modelConfig,
+    VisibilityPolicy visibility,
+    LodTier initialTier
+) {
 
     /**
      * The default spread σ of the screen-center Gaussian used when no

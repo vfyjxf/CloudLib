@@ -36,68 +36,62 @@ import java.util.Optional;
  */
 public enum AlgorithmProfile {
     nameplate(
-            Placement.orbitRing,
-            LeaderStrategy.adaptive,
-            OffscreenStrategy.angleEncoder,
-            true,
-            Params.of(0.025, 0.8, 1.1, 0.4, 2, 20.0, 0.15, 0.6, 120.0, 1.0, 2, 8.0, 0.2, 12.0, 4.0)),
-    dock(
-            Placement.dockCursor,
-            LeaderStrategy.none,
-            OffscreenStrategy.none,
-            false,
-            Params.of(0.1, 0.8, 1.1, 1.0, 1, 30.0, 0.2, 0.5, 80.0, 1.0, 2, 8.0, 0.2, 8.0, 6.0)),
-    facePanel(
-            Placement.anchoredQuad,
-            LeaderStrategy.none,
-            OffscreenStrategy.none,
-            false,
-            Params.of(0.05, 0.8, 1.1, 0.6, 0, 0.0, 0.0, 0.5, 80.0, 1.0, 2, 8.0, 0.2, 6.0, 4.0)),
-    waypoint(
-            Placement.none,
-            LeaderStrategy.none,
-            OffscreenStrategy.angleEncoder,
-            false,
-            Params.of(0.05, 0.8, 1.1, 1.0, 0, 0.0, 0.0, 0.5, 80.0, 1.0, 2, 6.0, 0.15, 6.0, 4.0)),
-    transientUi(
-            Placement.none,
-            LeaderStrategy.none,
-            OffscreenStrategy.none,
-            false,
-            Params.of(0.15, 1.0, 1.0, 1.0, 0, 0.0, 0.0, 0.5, 80.0, 1.0, 2, 8.0, 0.2, 6.0, 4.0)),
-    excentric(
-            Placement.excentricColumn,
-            LeaderStrategy.straightOnly,
-            OffscreenStrategy.none,
-            false,
-            Params.of(0.1, 0.8, 1.1, 1.0, 0, 0.0, 0.0, 0.5, 80.0, 1.0, 2, 8.0, 0.2, 6.0, 4.0)),
-    orbit(
-            Placement.orbitRing,
-            LeaderStrategy.adaptive,
-            OffscreenStrategy.none,
-            true,
-            Params.of(0.025, 0.8, 1.1, 0.4, 2, 20.0, 0.15, 0.6, 120.0, 1.0, 2, 8.0, 0.2, 12.0, 4.0));
+        Placement.orbitRing,
+        LeaderStrategy.adaptive,
+        OffscreenStrategy.angleEncoder,
+        true,
+        Params.of(0.025, 0.8, 1.1, 0.4, 2, 20.0, 0.15, 0.6, 120.0, 1.0, 2, 8.0, 0.2, 12.0, 4.0)
+    ), dock(
+        Placement.dockCursor,
+        LeaderStrategy.none,
+        OffscreenStrategy.none,
+        false,
+        Params.of(0.1, 0.8, 1.1, 1.0, 1, 30.0, 0.2, 0.5, 80.0, 1.0, 2, 8.0, 0.2, 8.0, 6.0)
+    ), facePanel(
+        Placement.anchoredQuad,
+        LeaderStrategy.none,
+        OffscreenStrategy.none,
+        false,
+        Params.of(0.05, 0.8, 1.1, 0.6, 0, 0.0, 0.0, 0.5, 80.0, 1.0, 2, 8.0, 0.2, 6.0, 4.0)
+    ), waypoint(
+        Placement.none,
+        LeaderStrategy.none,
+        OffscreenStrategy.angleEncoder,
+        false,
+        Params.of(0.05, 0.8, 1.1, 1.0, 0, 0.0, 0.0, 0.5, 80.0, 1.0, 2, 6.0, 0.15, 6.0, 4.0)
+    ), transientUi(
+        Placement.none,
+        LeaderStrategy.none,
+        OffscreenStrategy.none,
+        false,
+        Params.of(0.15, 1.0, 1.0, 1.0, 0, 0.0, 0.0, 0.5, 80.0, 1.0, 2, 8.0, 0.2, 6.0, 4.0)
+    ), excentric(
+        Placement.excentricColumn,
+        LeaderStrategy.straightOnly,
+        OffscreenStrategy.none,
+        false,
+        Params.of(0.1, 0.8, 1.1, 1.0, 0, 0.0, 0.0, 0.5, 80.0, 1.0, 2, 8.0, 0.2, 6.0, 4.0)
+    ), orbit(
+        Placement.orbitRing,
+        LeaderStrategy.adaptive,
+        OffscreenStrategy.none,
+        true,
+        Params.of(0.025, 0.8, 1.1, 0.4, 2, 20.0, 0.15, 0.6, 120.0, 1.0, 2, 8.0, 0.2, 12.0, 4.0)
+    );
 
     /** Which discrete placement family the profile binds. */
     public enum Placement {
-        none,
-        dockCursor,
-        orbitRing,
-        anchoredQuad,
-        excentricColumn
+        none, dockCursor, orbitRing, anchoredQuad, excentricColumn
     }
 
     /** Which leader routing family the profile binds. */
     public enum LeaderStrategy {
-        none,
-        straightOnly,
-        adaptive
+        none, straightOnly, adaptive
     }
 
     /** Which off-screen indication family the profile binds. */
     public enum OffscreenStrategy {
-        none,
-        angleEncoder
+        none, angleEncoder
     }
 
     /**
@@ -126,21 +120,22 @@ public enum AlgorithmProfile {
      * @param dockSpacing the DockCursor inter-slot gap in gui pixels
      */
     public record Params(
-            double motionSpeed,
-            double overlapH,
-            double overlapV,
-            double occludedAlphaMult,
-            int recourseBudget,
-            double switchPenalty,
-            double incumbentDiscount,
-            double clusterAlpha,
-            double clusterMergeRadius,
-            double leaderBand,
-            int leaderDwellEpochs,
-            double encoderLambda,
-            double encoderEdgeBand,
-            double dockMargin,
-            double dockSpacing) {
+        double motionSpeed,
+        double overlapH,
+        double overlapV,
+        double occludedAlphaMult,
+        int recourseBudget,
+        double switchPenalty,
+        double incumbentDiscount,
+        double clusterAlpha,
+        double clusterMergeRadius,
+        double leaderBand,
+        int leaderDwellEpochs,
+        double encoderLambda,
+        double encoderEdgeBand,
+        double dockMargin,
+        double dockSpacing
+    ) {
 
         public Params {
             if (!Double.isFinite(motionSpeed) || motionSpeed <= 0 || motionSpeed > 1) {
@@ -169,7 +164,8 @@ public enum AlgorithmProfile {
             }
             if (!Double.isFinite(clusterMergeRadius) || clusterMergeRadius <= 0) {
                 throw new IllegalArgumentException(
-                        "clusterMergeRadius must be finite and positive: " + clusterMergeRadius);
+                    "clusterMergeRadius must be finite and positive: " + clusterMergeRadius
+                );
             }
             if (!Double.isFinite(leaderBand) || leaderBand <= 0) {
                 throw new IllegalArgumentException("leaderBand must be finite and positive: " + leaderBand);
@@ -192,37 +188,39 @@ public enum AlgorithmProfile {
         }
 
         public static Params of(
-                double motionSpeed,
-                double overlapH,
-                double overlapV,
-                double occludedAlphaMult,
-                int recourseBudget,
-                double switchPenalty,
-                double incumbentDiscount,
-                double clusterAlpha,
-                double clusterMergeRadius,
-                double leaderBand,
-                int leaderDwellEpochs,
-                double encoderLambda,
-                double encoderEdgeBand,
-                double dockMargin,
-                double dockSpacing) {
+            double motionSpeed,
+            double overlapH,
+            double overlapV,
+            double occludedAlphaMult,
+            int recourseBudget,
+            double switchPenalty,
+            double incumbentDiscount,
+            double clusterAlpha,
+            double clusterMergeRadius,
+            double leaderBand,
+            int leaderDwellEpochs,
+            double encoderLambda,
+            double encoderEdgeBand,
+            double dockMargin,
+            double dockSpacing
+        ) {
             return new Params(
-                    motionSpeed,
-                    overlapH,
-                    overlapV,
-                    occludedAlphaMult,
-                    recourseBudget,
-                    switchPenalty,
-                    incumbentDiscount,
-                    clusterAlpha,
-                    clusterMergeRadius,
-                    leaderBand,
-                    leaderDwellEpochs,
-                    encoderLambda,
-                    encoderEdgeBand,
-                    dockMargin,
-                    dockSpacing);
+                motionSpeed,
+                overlapH,
+                overlapV,
+                occludedAlphaMult,
+                recourseBudget,
+                switchPenalty,
+                incumbentDiscount,
+                clusterAlpha,
+                clusterMergeRadius,
+                leaderBand,
+                leaderDwellEpochs,
+                encoderLambda,
+                encoderEdgeBand,
+                dockMargin,
+                dockSpacing
+            );
         }
 
         /** {@link SlotAssigner} costs for this profile. */
@@ -253,7 +251,12 @@ public enum AlgorithmProfile {
     private final Params params;
 
     AlgorithmProfile(
-            Placement placement, LeaderStrategy leaders, OffscreenStrategy offscreen, boolean clusters, Params params) {
+        Placement placement,
+        LeaderStrategy leaders,
+        OffscreenStrategy offscreen,
+        boolean clusters,
+        Params params
+    ) {
         this.placement = placement;
         this.leaders = leaders;
         this.offscreen = offscreen;

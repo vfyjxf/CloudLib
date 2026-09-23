@@ -172,10 +172,11 @@ class GuideLineAnimationTest {
 
         GuideLineAnimation.Sample changed = animation.advance(true, 400, 8L, false, frame);
         assertEquals(
-                frame / config.yieldSeconds(),
-                changed.morph(),
-                1.0e-9,
-                "a new shape starts the settle from the old one, on the frame it changes");
+            frame / config.yieldSeconds(),
+            changed.morph(),
+            1.0e-9,
+            "a new shape starts the settle from the old one, on the frame it changes"
+        );
         GuideLineAnimation.Sample half = animation.advance(true, 400, 8L, false, config.yieldSeconds() * 0.5 - frame);
         assertTrue(half.morph() > 0.3 && half.morph() < 0.7, "settling: " + half.morph());
         GuideLineAnimation.Sample settled = animation.advance(true, 400, 8L, false, config.yieldSeconds());
@@ -194,19 +195,21 @@ class GuideLineAnimationTest {
         // the swap frame: the incoming form starts from zero ink
         GuideLineAnimation.Sample swapped = animation.advance(true, 400, 8L, 2L, false, frame);
         assertEquals(
-                0.0,
-                swapped.tierFade() - frame / config.fadeSeconds(),
-                1.0e-9,
-                "the swap opens the cross-fade at zero, already advancing");
+            0.0,
+            swapped.tierFade() - frame / config.fadeSeconds(),
+            1.0e-9,
+            "the swap opens the cross-fade at zero, already advancing"
+        );
 
-        GuideLineAnimation.Sample half =
-                animation.advance(true, 400, 8L, 2L, false, config.fadeSeconds() * 0.5 - frame);
+        GuideLineAnimation.Sample half = animation
+                .advance(true, 400, 8L, 2L, false, config.fadeSeconds() * 0.5 - frame);
         assertTrue(half.tierFade() > 0.3 && half.tierFade() < 0.7, "cross-fading: " + half.tierFade());
         GuideLineAnimation.Sample done = animation.advance(true, 400, 8L, 2L, false, config.fadeSeconds());
         assertEquals(1.0, done.tierFade(), 1.0e-9, "the cross-fade completes inside its window");
         assertTrue(
-                config.fadeSeconds() >= 0.15 && config.fadeSeconds() <= 0.20,
-                "the cross-fade stays in the 150–200 ms budget");
+            config.fadeSeconds() >= 0.15 && config.fadeSeconds() <= 0.20,
+            "the cross-fade stays in the 150–200 ms budget"
+        );
     }
 
     @Test
@@ -266,9 +269,7 @@ class GuideLineAnimationTest {
 
         // a whole cycle advances the pattern by exactly one period — the phase
         // is an uniform, never geometry
-        double after = animation
-                .advance(true, 400, 7L, false, config.dashCycleSeconds())
-                .dashPhasePx();
+        double after = animation.advance(true, 400, 7L, false, config.dashCycleSeconds()).dashPhasePx();
         assertEquals(halfPeriod, after, 1.0e-6);
 
         // and the integration matches the closed form at a constant speed
@@ -279,10 +280,10 @@ class GuideLineAnimationTest {
             integrated = alone.advance(true, 400, 1L, false, step).dashPhasePx();
         }
         assertEquals(
-                GuideLineSdf.dashPhasePx(
-                        config.dashCycleSeconds(), config.dashPeriodPx(), config.dashCycleSeconds(), 1),
-                integrated,
-                1.0e-6);
+            GuideLineSdf.dashPhasePx(config.dashCycleSeconds(), config.dashPeriodPx(), config.dashCycleSeconds(), 1),
+            integrated,
+            1.0e-6
+        );
     }
 
     @Test
@@ -313,32 +314,41 @@ class GuideLineAnimationTest {
     @Test
     void rejectsInvalidTimingsAndDeltas() {
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new GuideLineAnimation.Config(0, 0.12, 0.32, 0.17, 0.25, 0.125, 0.09, 0.05, 8, 0.4, 1.75));
+            IllegalArgumentException.class,
+            () -> new GuideLineAnimation.Config(0, 0.12, 0.32, 0.17, 0.25, 0.125, 0.09, 0.05, 8, 0.4, 1.75)
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new GuideLineAnimation.Config(900, 0.4, 0.3, 0.17, 0.25, 0.125, 0.09, 0.05, 8, 0.4, 1.75));
+            IllegalArgumentException.class,
+            () -> new GuideLineAnimation.Config(900, 0.4, 0.3, 0.17, 0.25, 0.125, 0.09, 0.05, 8, 0.4, 1.75)
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new GuideLineAnimation.Config(900, 0.12, 0.32, 0, 0.25, 0.125, 0.09, 0.05, 8, 0.4, 1.75));
+            IllegalArgumentException.class,
+            () -> new GuideLineAnimation.Config(900, 0.12, 0.32, 0, 0.25, 0.125, 0.09, 0.05, 8, 0.4, 1.75)
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new GuideLineAnimation.Config(900, 0.12, 0.32, 0.17, -1, 0.125, 0.09, 0.05, 8, 0.4, 1.75));
+            IllegalArgumentException.class,
+            () -> new GuideLineAnimation.Config(900, 0.12, 0.32, 0.17, -1, 0.125, 0.09, 0.05, 8, 0.4, 1.75)
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new GuideLineAnimation.Config(900, 0.12, 0.32, 0.17, 0.25, 0, 0.09, 0.05, 8, 0.4, 1.75));
+            IllegalArgumentException.class,
+            () -> new GuideLineAnimation.Config(900, 0.12, 0.32, 0.17, 0.25, 0, 0.09, 0.05, 8, 0.4, 1.75)
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new GuideLineAnimation.Config(900, 0.12, 0.32, 0.17, 0.25, 0.125, -1, 0.05, 8, 0.4, 1.75));
+            IllegalArgumentException.class,
+            () -> new GuideLineAnimation.Config(900, 0.12, 0.32, 0.17, 0.25, 0.125, -1, 0.05, 8, 0.4, 1.75)
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new GuideLineAnimation.Config(900, 0.12, 0.32, 0.17, 0.25, 0.125, 0.09, 0.05, -8, 0.4, 1.75));
+            IllegalArgumentException.class,
+            () -> new GuideLineAnimation.Config(900, 0.12, 0.32, 0.17, 0.25, 0.125, 0.09, 0.05, -8, 0.4, 1.75)
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new GuideLineAnimation.Config(900, 0.12, 0.32, 0.17, 0.25, 0.125, 0.09, 0.05, 8, 0, 1.75));
+            IllegalArgumentException.class,
+            () -> new GuideLineAnimation.Config(900, 0.12, 0.32, 0.17, 0.25, 0.125, 0.09, 0.05, 8, 0, 1.75)
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new GuideLineAnimation.Config(900, 0.12, 0.32, 0.17, 0.25, 0.125, 0.09, 0.05, 8, 0.4, 0.5));
+            IllegalArgumentException.class,
+            () -> new GuideLineAnimation.Config(900, 0.12, 0.32, 0.17, 0.25, 0.125, 0.09, 0.05, 8, 0.4, 0.5)
+        );
 
         GuideLineAnimation animation = new GuideLineAnimation(config);
         assertThrows(IllegalArgumentException.class, () -> animation.advance(true, 100, 1L, false, Double.NaN));

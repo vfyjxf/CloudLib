@@ -115,10 +115,9 @@ class RayFanTest {
         double topMin = Math.atan2(-30, -5) + twoPi;
         double topMax = Math.atan2(-30, 5) + twoPi;
         assertEquals(
-                List.of(
-                        new IntervalSet.Interval(rightTheta, topMin),
-                        new IntervalSet.Interval(topMax, twoPi - rightTheta)),
-                fan.freeArcs());
+            List.of(new IntervalSet.Interval(rightTheta, topMin), new IntervalSet.Interval(topMax, twoPi - rightTheta)),
+            fan.freeArcs()
+        );
 
         List<Double> candidates = fan.candidateDirections();
         assertEquals(2, candidates.size());

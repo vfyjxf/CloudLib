@@ -45,8 +45,9 @@ class RepaintGateTest {
         assertTrue(frame(gate, panel, 2, counter), "the first frame always paints");
         for (int i = 0; i < 10; i++) {
             assertFalse(
-                    frame(gate, panel, 2, counter),
-                    "same version, same size, same supersample — the surface repaint is skipped");
+                frame(gate, panel, 2, counter),
+                "same version, same size, same supersample — the surface repaint is skipped"
+            );
         }
         assertEquals(1, counter.runs, "the painter ran exactly once");
     }

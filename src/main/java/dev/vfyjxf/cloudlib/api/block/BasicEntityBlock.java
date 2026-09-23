@@ -24,9 +24,10 @@ public abstract class BasicEntityBlock<T extends BlockEntity> extends Block impl
     private final DeferredHolder<BlockEntityType<?>, BlockEntityType<T>> entityType;
 
     protected BasicEntityBlock(
-            DeferredHolder<BlockEntityType<?>, BlockEntityType<T>> entityType,
-            @Nullable MenuInfo<?, ?> menuInfo,
-            Properties properties) {
+        DeferredHolder<BlockEntityType<?>, BlockEntityType<T>> entityType,
+        @Nullable MenuInfo<?, ?> menuInfo,
+        Properties properties
+    ) {
         super(properties);
         this.entityType = entityType;
         this.menuInfo = menuInfo;
@@ -47,7 +48,12 @@ public abstract class BasicEntityBlock<T extends BlockEntity> extends Block impl
     @Override
     @SuppressWarnings("unchecked")
     protected InteractionResult useWithoutItem(
-            BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
+        BlockState state,
+        Level level,
+        BlockPos pos,
+        Player player,
+        BlockHitResult hitResult
+    ) {
         if (menuInfo != null) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity != null && blockEntity.getType() == entityType.get()) {
@@ -60,7 +66,12 @@ public abstract class BasicEntityBlock<T extends BlockEntity> extends Block impl
     }
 
     protected boolean shouldOpenMenu(
-            BlockEntity blockEntity, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
+        BlockEntity blockEntity,
+        Level level,
+        BlockPos pos,
+        Player player,
+        BlockHitResult hitResult
+    ) {
         return true;
     }
 }

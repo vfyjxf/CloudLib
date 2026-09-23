@@ -51,8 +51,8 @@ class AttachPointResolverTest {
         double x = 280 + 300 * Math.cos(Math.toRadians(50));
         double y = 150 + 300 * Math.sin(Math.toRadians(50));
 
-        AttachPointResolver.Face face =
-                AttachPointResolver.pickFace(rect, x, y, AttachPointResolver.Face.right, config);
+        AttachPointResolver.Face face = AttachPointResolver
+                .pickFace(rect, x, y, AttachPointResolver.Face.right, config);
 
         assertEquals(AttachPointResolver.Face.right, face, "50° ≤ 55° holds the incumbent");
         assertEquals(AttachPointResolver.Face.bottom, AttachPointResolver.nearestFace(rect, x, y));
@@ -65,8 +65,8 @@ class AttachPointResolverTest {
         double x = 280 + 300 * Math.cos(Math.toRadians(60));
         double y = 150 + 300 * Math.sin(Math.toRadians(60));
 
-        AttachPointResolver.Face face =
-                AttachPointResolver.pickFace(rect, x, y, AttachPointResolver.Face.right, config);
+        AttachPointResolver.Face face = AttachPointResolver
+                .pickFace(rect, x, y, AttachPointResolver.Face.right, config);
 
         assertEquals(AttachPointResolver.Face.bottom, face);
     }
@@ -75,13 +75,13 @@ class AttachPointResolverTest {
     void bandSwitchAloneIsNotEnoughInsideTheExitDeadzone() {
         // 67° off the right normal — past the hold band and inside the enter
         // band — but only 47 px along the right edge from its midpoint
-        AttachPointResolver.Face held =
-                AttachPointResolver.pickFace(rect, 300, 197, AttachPointResolver.Face.right, config);
+        AttachPointResolver.Face held = AttachPointResolver
+                .pickFace(rect, 300, 197, AttachPointResolver.Face.right, config);
         assertEquals(AttachPointResolver.Face.right, held, "47 px ≤ 48 px deadzone holds the face");
 
         // one more pixel of offset and the switch goes through
-        AttachPointResolver.Face switched =
-                AttachPointResolver.pickFace(rect, 300, 199, AttachPointResolver.Face.right, config);
+        AttachPointResolver.Face switched = AttachPointResolver
+                .pickFace(rect, 300, 199, AttachPointResolver.Face.right, config);
         assertEquals(AttachPointResolver.Face.bottom, switched, "49 px > 48 px deadzone allows the switch");
     }
 
@@ -96,9 +96,10 @@ class AttachPointResolverTest {
 
         AttachPointResolver.Port port = resolver.resolve("p", rect, new FloatPos(0, 150), 1.0 / 60.0);
         assertEquals(
-                AttachPointResolver.Face.left,
-                port.face(),
-                "the opposite incumbent yields in one resolve — the 48 px deadzone must not trap it");
+            AttachPointResolver.Face.left,
+            port.face(),
+            "the opposite incumbent yields in one resolve — the 48 px deadzone must not trap it"
+        );
 
         // the port point still slides along the perimeter — the escape
         // changes the committed face, not the no-teleport rule
@@ -113,16 +114,17 @@ class AttachPointResolverTest {
         double x = 280 + 300 * Math.cos(Math.toRadians(-40));
         double y = 150 + 300 * Math.sin(Math.toRadians(-40));
         assertEquals(
-                AttachPointResolver.Face.top,
-                AttachPointResolver.pickFace(rect, x, y, AttachPointResolver.Face.top, config),
-                "50° ≤ 55° holds the adjacent incumbent");
+            AttachPointResolver.Face.top,
+            AttachPointResolver.pickFace(rect, x, y, AttachPointResolver.Face.top, config),
+            "50° ≤ 55° holds the adjacent incumbent"
+        );
         assertEquals(AttachPointResolver.Face.right, AttachPointResolver.nearestFace(rect, x, y));
 
         // ~85° off the incumbent — adjacent, not opposite: the escape does
         // not fire, and the 47 px along-edge offset still sits inside the
         // 48 px deadzone
-        AttachPointResolver.Face held =
-                AttachPointResolver.pickFace(rect, 284, 197, AttachPointResolver.Face.right, config);
+        AttachPointResolver.Face held = AttachPointResolver
+                .pickFace(rect, 284, 197, AttachPointResolver.Face.right, config);
         assertEquals(AttachPointResolver.Face.right, held, "85° off + inside the deadzone still holds");
     }
 
@@ -133,11 +135,13 @@ class AttachPointResolverTest {
         // escape the deadzone held 'right' forever and the leader wrapped
         // to the wrong corner
         assertEquals(
-                AttachPointResolver.Face.left,
-                AttachPointResolver.pickFace(rect, 0, 150, AttachPointResolver.Face.right, config));
+            AttachPointResolver.Face.left,
+            AttachPointResolver.pickFace(rect, 0, 150, AttachPointResolver.Face.right, config)
+        );
         assertEquals(
-                AttachPointResolver.Face.bottom,
-                AttachPointResolver.pickFace(rect, 280, 400, AttachPointResolver.Face.top, config));
+            AttachPointResolver.Face.bottom,
+            AttachPointResolver.pickFace(rect, 280, 400, AttachPointResolver.Face.top, config)
+        );
     }
 
     @Test
@@ -163,8 +167,9 @@ class AttachPointResolverTest {
         }
         for (int i = 1; i < positions.size(); i++) {
             double step = Math.hypot(
-                    positions.get(i).x() - positions.get(i - 1).x(),
-                    positions.get(i).y() - positions.get(i - 1).y());
+                positions.get(i).x() - positions.get(i - 1).x(),
+                positions.get(i).y() - positions.get(i - 1).y()
+            );
             assertTrue(step > 0.0, "the slide advances");
             assertTrue(step < perimeter * 0.2, "no step may teleport: " + step);
         }
@@ -187,9 +192,10 @@ class AttachPointResolverTest {
         double tMid = AttachPointResolver.paramOf(rect, mid.point());
         double tStart = AttachPointResolver.faceParam(rect, AttachPointResolver.Face.right);
         double arc = AttachPointResolver.wrapArc(
-                tStart,
-                AttachPointResolver.faceParam(rect, AttachPointResolver.Face.bottom),
-                AttachPointResolver.perimeter(rect));
+            tStart,
+            AttachPointResolver.faceParam(rect, AttachPointResolver.Face.bottom),
+            AttachPointResolver.perimeter(rect)
+        );
         double traveled = AttachPointResolver.wrapArc(tStart, tMid, AttachPointResolver.perimeter(rect));
         assertEquals(Math.abs(arc) * 0.5, traveled, Math.abs(arc) * 0.05, "half the duration, half the arc");
 
@@ -213,8 +219,7 @@ class AttachPointResolverTest {
         FloatPos previous = after.point();
         for (int i = 0; i < 20; i++) {
             AttachPointResolver.Port port = resolver.resolve("p", moved, new FloatPos(500, 150), 1.0 / 60.0);
-            double glide =
-                    Math.hypot(port.point().x() - previous.x(), port.point().y() - previous.y());
+            double glide = Math.hypot(port.point().x() - previous.x(), port.point().y() - previous.y());
             assertTrue(glide < 30.0, "continuous settle onto the resized rect: " + glide);
             previous = port.point();
         }
@@ -229,41 +234,49 @@ class AttachPointResolverTest {
     @Test
     void restParamPinsToTheMidPortUnlessHovered() {
         // 40° off the right normal — inside the 55° hold band, far off-axis
-        FloatPos offAxis =
-                new FloatPos(280 + 300 * Math.cos(Math.toRadians(40)), 150 + 300 * Math.sin(Math.toRadians(40)));
+        FloatPos offAxis = new FloatPos(
+            280 + 300 * Math.cos(Math.toRadians(40)),
+            150 + 300 * Math.sin(Math.toRadians(40))
+        );
 
         assertEquals(
-                AttachPointResolver.faceParam(rect, AttachPointResolver.Face.right),
-                AttachPointResolver.restParam(rect, AttachPointResolver.Face.right, offAxis, false),
-                eps,
-                "at rest the port never leaves the edge midpoint");
+            AttachPointResolver.faceParam(rect, AttachPointResolver.Face.right),
+            AttachPointResolver.restParam(rect, AttachPointResolver.Face.right, offAxis, false),
+            eps,
+            "at rest the port never leaves the edge midpoint"
+        );
         // hovered: the center→target ray meets the right edge at y≈217, and the
         // 8 px corner margin clamps it to the bottom-right corner's approach
         double hovered = AttachPointResolver.restParam(rect, AttachPointResolver.Face.right, offAxis, true);
         assertPoint(
-                AttachPointResolver.pointAt(rect, hovered),
-                360,
-                192,
-                "the hover rest rides the edge towards the target");
+            AttachPointResolver.pointAt(rect, hovered),
+            360,
+            192,
+            "the hover rest rides the edge towards the target"
+        );
         // a target on the face's own axis meets the edge at its midpoint
         assertEquals(
-                AttachPointResolver.faceParam(rect, AttachPointResolver.Face.right),
-                AttachPointResolver.restParam(rect, AttachPointResolver.Face.right, new FloatPos(500, 150), true),
-                eps);
+            AttachPointResolver.faceParam(rect, AttachPointResolver.Face.right),
+            AttachPointResolver.restParam(rect, AttachPointResolver.Face.right, new FloatPos(500, 150), true),
+            eps
+        );
         // a target on the face's own line leaves the ray parallel to the edge:
         // the fallback is the midpoint, never a division by zero
         assertEquals(
-                AttachPointResolver.faceParam(rect, AttachPointResolver.Face.right),
-                AttachPointResolver.restParam(rect, AttachPointResolver.Face.right, new FloatPos(280, 0), true),
-                eps);
+            AttachPointResolver.faceParam(rect, AttachPointResolver.Face.right),
+            AttachPointResolver.restParam(rect, AttachPointResolver.Face.right, new FloatPos(280, 0), true),
+            eps
+        );
     }
 
     @Test
     void hoverTracksTheTargetAlongTheCommittedEdge() {
         AttachPointResolver resolver = new AttachPointResolver(config);
         // 40° off the right normal: held on the right face, but far down the edge
-        FloatPos target =
-                new FloatPos(280 + 300 * Math.cos(Math.toRadians(40)), 150 + 300 * Math.sin(Math.toRadians(40)));
+        FloatPos target = new FloatPos(
+            280 + 300 * Math.cos(Math.toRadians(40)),
+            150 + 300 * Math.sin(Math.toRadians(40))
+        );
         for (int i = 0; i < 30; i++) {
             AttachPointResolver.Port port = resolver.resolve("p", rect, target, true, 1.0 / 60.0);
             assertEquals(AttachPointResolver.Face.right, port.face(), "hover never leaves the held face");
@@ -279,8 +292,10 @@ class AttachPointResolverTest {
     @Test
     void leavingHoverSlidesThePortBackToTheMidPort() {
         AttachPointResolver resolver = new AttachPointResolver(config);
-        FloatPos target =
-                new FloatPos(280 + 300 * Math.cos(Math.toRadians(40)), 150 + 300 * Math.sin(Math.toRadians(40)));
+        FloatPos target = new FloatPos(
+            280 + 300 * Math.cos(Math.toRadians(40)),
+            150 + 300 * Math.sin(Math.toRadians(40))
+        );
         for (int i = 0; i < 30; i++) {
             resolver.resolve("p", rect, target, true, 1.0 / 60.0);
         }
@@ -289,9 +304,7 @@ class AttachPointResolverTest {
         // the pointer leaves: the port glides back to the layout-stable midpoint
         AttachPointResolver.Port first = resolver.resolve("p", rect, target, false, 1.0 / 60.0);
         assertTrue(first.point().y() < 192.0, "the return starts immediately");
-        assertTrue(
-                first.point().y() > 150.0,
-                "and does not teleport: " + first.point().y());
+        assertTrue(first.point().y() > 150.0, "and does not teleport: " + first.point().y());
         for (int i = 0; i < 30; i++) {
             resolver.resolve("p", rect, target, false, 1.0 / 60.0);
         }
@@ -307,17 +320,19 @@ class AttachPointResolverTest {
         FloatPos nearEdge = new FloatPos(300, 197);
         resolver.resolve("p", rect, new FloatPos(500, 150), 1.0 / 60.0);
         assertEquals(
-                AttachPointResolver.Face.right,
-                resolver.resolve("p", rect, nearEdge, 0.0).face(),
-                "the deadzone holds the face past the angular band");
+            AttachPointResolver.Face.right,
+            resolver.resolve("p", rect, nearEdge, 0.0).face(),
+            "the deadzone holds the face past the angular band"
+        );
 
         // the panel itself lifts 4 px: the same target now sits 51 px along
         // the exit edge — past the deadzone, so the switch commits
         FloatRect lifted = new FloatRect(200, 96, 160, 100);
         assertEquals(
-                AttachPointResolver.Face.bottom,
-                resolver.resolve("p", lifted, nearEdge, 0.0).face(),
-                "once the geometry clears the deadzone the switch commits");
+            AttachPointResolver.Face.bottom,
+            resolver.resolve("p", lifted, nearEdge, 0.0).face(),
+            "once the geometry clears the deadzone the switch commits"
+        );
     }
 
     @Test
@@ -358,13 +373,14 @@ class AttachPointResolverTest {
         double sweep = 0;
         for (int i = 0; i < 60; i++) {
             sweep += 6.0;
-            positions.add(resolver.resolve(
-                            "p",
-                            rect,
-                            new FloatPos(280 + 300 * Math.cos(sweep), 150 + 300 * Math.sin(sweep)),
-                            1.0 / 60.0)
-                    .point()
-                    .copy());
+            positions.add(
+                resolver.resolve(
+                    "p",
+                    rect,
+                    new FloatPos(280 + 300 * Math.cos(sweep), 150 + 300 * Math.sin(sweep)),
+                    1.0 / 60.0
+                ).point().copy()
+            );
         }
         return positions;
     }

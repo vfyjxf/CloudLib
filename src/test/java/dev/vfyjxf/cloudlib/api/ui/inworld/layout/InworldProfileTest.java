@@ -67,8 +67,7 @@ class InworldProfileTest {
         assertEquals(0, placement.variant().level());
         assertEquals(10.0, placement.offsetRect().x(), 0.01, "ring-0 slot 0: base radius 60 minus half the width");
         assertEquals(-13.0, placement.offsetRect().y(), 0.01);
-        assertEquals(
-                VisibilityTracker.Phase.appearing, result.elementState("np").phase());
+        assertEquals(VisibilityTracker.Phase.appearing, result.elementState("np").phase());
     }
 
     @Test
@@ -106,8 +105,8 @@ class InworldProfileTest {
         harness.register(face);
         harness.register(ground);
         harness.register(hologram);
-        CoordinationResult result =
-                harness.frame(LayoutHarness.anchored(LayoutHarness.pos(200, 150)), face, ground, hologram);
+        CoordinationResult result = harness
+                .frame(LayoutHarness.anchored(LayoutHarness.pos(200, 150)), face, ground, hologram);
 
         InworldPlacement facePlacement = result.placementOf("face");
         assertNotNull(facePlacement);
@@ -141,8 +140,8 @@ class InworldProfileTest {
         LayoutHarness harness = new LayoutHarness();
         AssembledElement offscreen = harness.assemble(ElementSpec.from(InworldProfile.waypoint, "wp-out"));
         harness.register(offscreen);
-        LayoutEnvironment environment =
-                LayoutHarness.unanchored().withAnchor(AnchorFrame.screen(new FloatPos(-20, 150)));
+        LayoutEnvironment environment = LayoutHarness.unanchored()
+                .withAnchor(AnchorFrame.screen(new FloatPos(-20, 150)));
         CoordinationResult result = harness.frame(environment, offscreen);
 
         InworldPlacement clamped = result.placementOf("wp-out");
@@ -187,16 +186,16 @@ class InworldProfileTest {
         assertNotNull(placed.placementOf("np"));
 
         CoordinationResult retracted = harness.frame(LayoutHarness.unanchored(), element);
-        assertEquals(
-                VisibilityTracker.Phase.lingering, retracted.elementState("np").phase());
+        assertEquals(VisibilityTracker.Phase.lingering, retracted.elementState("np").phase());
         assertNull(retracted.placementOf("np"));
 
         CoordinationResult recovered = harness.frame(LayoutHarness.anchored(LayoutHarness.pos(200, 150)), element);
         assertNotNull(recovered.placementOf("np"));
         assertEquals(
-                placed.placementOf("np").offsetRect().x(),
-                recovered.placementOf("np").offsetRect().x(),
-                0.01,
-                "recovery returns to the sticky slot");
+            placed.placementOf("np").offsetRect().x(),
+            recovered.placementOf("np").offsetRect().x(),
+            0.01,
+            "recovery returns to the sticky slot"
+        );
     }
 }

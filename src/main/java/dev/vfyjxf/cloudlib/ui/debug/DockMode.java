@@ -4,11 +4,7 @@ package dev.vfyjxf.cloudlib.ui.debug;
  * Placement mode for the DevTools panel.
  */
 enum DockMode {
-    floating,
-    dockRight,
-    dockLeft,
-    dockBottom,
-    dockTop;
+    floating, dockRight, dockLeft, dockBottom, dockTop;
 
     boolean isDocked() {
         return this != floating;

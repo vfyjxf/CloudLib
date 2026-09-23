@@ -50,8 +50,10 @@ class ScenePointerCaptureTest {
         widget.useStyle(UIStyles.positionAbsolute());
         widget.setCoordinateSpace(CoordinateSpace.scene);
         widget.setSceneLayer(SceneLayer.floating);
-        widget.onMount((s, context, handle) ->
-                s.layoutTree().setMeasureFunc(widget.nodeId(), (style, availableSpace) -> new FloatSize(w, h)));
+        widget.onMount(
+            (s, context, handle) -> s.layoutTree()
+                    .setMeasureFunc(widget.nodeId(), (style, availableSpace) -> new FloatSize(w, h))
+        );
         root.addWidget(widget);
         return widget;
     }
@@ -80,7 +82,10 @@ class ScenePointerCaptureTest {
         scene.mouseClicked(20, 15, GLFW.GLFW_MOUSE_BUTTON_LEFT);
         assertTrue(scene.mouseDragged(30, 70, GLFW.GLFW_MOUSE_BUTTON_LEFT, 10, 55), "the drag is dispatched");
         assertEquals(
-                List.of("a@30,70"), drags, "the pressed widget receives the drag, not the widget under the pointer");
+            List.of("a@30,70"),
+            drags,
+            "the pressed widget receives the drag, not the widget under the pointer"
+        );
 
         // release ends the capture (mouseReleased clears the pressed target)
         scene.mouseReleased(30, 70, GLFW.GLFW_MOUSE_BUTTON_LEFT);

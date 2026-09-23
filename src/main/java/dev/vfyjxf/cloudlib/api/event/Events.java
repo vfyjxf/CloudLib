@@ -71,7 +71,9 @@ public final class Events {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> EventDefinition<T> createGeneric(
-            Class<? super T> type, Function<List<? extends T>, ? extends T> merger) {
+        Class<? super T> type,
+        Function<List<? extends T>, ? extends T> merger
+    ) {
         Checks.checkArgument(ClassUtils.isFunctionalInterface(type), "type must be a functional interface");
         return new EventDefinitionImpl<>(type, (Function) merger);
     }
@@ -218,7 +220,7 @@ public final class Events {
         private void checkLifetime() {
             if (!listenerLifetimeManage.isEmpty()) {
                 int size = listeners.size();
-                for (Iterator<ListenerEntry<T>> iterator = listeners.iterator(); iterator.hasNext(); ) {
+                for (Iterator<ListenerEntry<T>> iterator = listeners.iterator(); iterator.hasNext();) {
                     T listener = iterator.next().listener;
                     var manage = listenerLifetimeManage.get(listener);
                     if (manage != null && manage.getAsBoolean()) {
@@ -285,19 +287,18 @@ public final class Events {
     @SuppressWarnings("unchecked")
     private static <T> T makeWrapper(Class<T> interfaceClass, Method method, T listener, AtomicInteger counter) {
         try {
-            return (T) wrapperConstructors
-                    .getIfAbsentPut(interfaceClass, () -> {
-                        try {
-                            byte[] bytes = makeWrapperClass(interfaceClass, method);
-                            MethodHandles.Lookup hiddenLookup = lookup.defineHiddenClass(bytes, true);
-                            return hiddenLookup.findConstructor(
-                                    hiddenLookup.lookupClass(),
-                                    MethodType.methodType(void.class, interfaceClass, AtomicInteger.class));
-                        } catch (Exception e) {
-                            throw new RuntimeException("Failed to create wrapper class", e);
-                        }
-                    })
-                    .invokeWithArguments(listener, counter);
+            return (T) wrapperConstructors.getIfAbsentPut(interfaceClass, () -> {
+                try {
+                    byte[] bytes = makeWrapperClass(interfaceClass, method);
+                    MethodHandles.Lookup hiddenLookup = lookup.defineHiddenClass(bytes, true);
+                    return hiddenLookup.findConstructor(
+                        hiddenLookup.lookupClass(),
+                        MethodType.methodType(void.class, interfaceClass, AtomicInteger.class)
+                    );
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to create wrapper class", e);
+                }
+            }).invokeWithArguments(listener, counter);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -311,23 +312,29 @@ public final class Events {
         ClassWriter cw = new ClassWriter(0);
         FieldVisitor fv;
         MethodVisitor mv;
-        cw.visit(V16, ACC_PUBLIC | ACC_SUPER, typeName, null, "java/lang/Object", new String[] {interfaceName});
+        cw.visit(V16, ACC_PUBLIC | ACC_SUPER, typeName, null, "java/lang/Object", new String[]{interfaceName});
         {
             fv = cw.visitField(ACC_PRIVATE | ACC_FINAL, "delegate", interfaceDesc, null, null);
             fv.visitEnd();
         }
         {
             fv = cw.visitField(
-                    ACC_PRIVATE | ACC_FINAL, "counter", "Ljava/util/concurrent/atomic/AtomicInteger;", null, null);
+                ACC_PRIVATE | ACC_FINAL,
+                "counter",
+                "Ljava/util/concurrent/atomic/AtomicInteger;",
+                null,
+                null
+            );
             fv.visitEnd();
         }
         {
             mv = cw.visitMethod(
-                    ACC_PUBLIC,
-                    "<init>",
-                    "(" + interfaceDesc + "Ljava/util/concurrent/atomic/AtomicInteger;)V",
-                    null,
-                    null);
+                ACC_PUBLIC,
+                "<init>",
+                "(" + interfaceDesc + "Ljava/util/concurrent/atomic/AtomicInteger;)V",
+                null,
+                null
+            );
             mv.visitCode();
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
@@ -347,7 +354,12 @@ public final class Events {
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, typeName, "counter", "Ljava/util/concurrent/atomic/AtomicInteger;");
             mv.visitMethodInsn(
-                    INVOKEVIRTUAL, "java/util/concurrent/atomic/AtomicInteger", "decrementAndGet", "()I", false);
+                INVOKEVIRTUAL,
+                "java/util/concurrent/atomic/AtomicInteger",
+                "decrementAndGet",
+                "()I",
+                false
+            );
             mv.visitInsn(POP);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, typeName, "delegate", interfaceDesc);
@@ -362,7 +374,12 @@ public final class Events {
                 varIndex += type.stackWidth;
             }
             mv.visitMethodInsn(
-                    INVOKEINTERFACE, interfaceName, method.getName(), methodType.toMethodDescriptorString(), true);
+                INVOKEINTERFACE,
+                interfaceName,
+                method.getName(),
+                methodType.toMethodDescriptorString(),
+                true
+            );
             VMStackType type = VMStackType.of(methodType.returnType());
             mv.visitInsn(type.returnOpcode);
             maxStack = Math.max(maxStack, 1 + type.stackWidth);
@@ -378,12 +395,15 @@ public final class Events {
      * <a href="https://gist.github.com/burningtnt/65e1d9bfb2000e69c852335b178692e8">code from</a>
      */
     private enum VMStackType {
-        object(ALOAD, Opcodes.ARETURN, 1),
-        number(Opcodes.ILOAD, Opcodes.IRETURN, 1),
-        floatType(Opcodes.FLOAD, Opcodes.FRETURN, 1),
-        doubleType(Opcodes.DLOAD, Opcodes.DRETURN, 2),
-        longType(Opcodes.LLOAD, Opcodes.LRETURN, 2),
-        voidType(-1, Opcodes.RETURN, 0);
+        object(ALOAD, Opcodes.ARETURN, 1), number(Opcodes.ILOAD, Opcodes.IRETURN, 1), floatType(
+            Opcodes.FLOAD,
+            Opcodes.FRETURN,
+            1
+        ), doubleType(
+            Opcodes.DLOAD,
+            Opcodes.DRETURN,
+            2
+        ), longType(Opcodes.LLOAD, Opcodes.LRETURN, 2), voidType(-1, Opcodes.RETURN, 0);
         private final int loadingOpcode, returnOpcode, stackWidth;
 
         VMStackType(int loadingOpcode, int returnOpcode, int stackWidth) {
@@ -395,21 +415,23 @@ public final class Events {
         public static VMStackType of(Class<?> clazz) {
             if (!clazz.isPrimitive()) {
                 return object;
-            } else if (clazz == int.class
-                    || clazz == short.class
-                    || clazz == char.class
-                    || clazz == byte.class
-                    || clazz == boolean.class) {
-                return number;
-            } else if (clazz == float.class) {
-                return floatType;
-            } else if (clazz == double.class) {
-                return doubleType;
-            } else if (clazz == long.class) {
-                return longType;
-            } else {
-                return voidType;
-            }
+            } else
+                if (clazz == int.class
+                        || clazz == short.class
+                        || clazz == char.class
+                        || clazz == byte.class
+                        || clazz == boolean.class) {
+                            return number;
+                        } else
+                    if (clazz == float.class) {
+                        return floatType;
+                    } else if (clazz == double.class) {
+                        return doubleType;
+                    } else if (clazz == long.class) {
+                        return longType;
+                    } else {
+                        return voidType;
+                    }
         }
     }
 }

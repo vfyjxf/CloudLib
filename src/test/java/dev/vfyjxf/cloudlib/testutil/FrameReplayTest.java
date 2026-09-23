@@ -23,11 +23,11 @@ class FrameReplayTest {
 
     @Test
     void recordsDtInputStartTimesAndOutputsPerFrame() {
-        List<FrameReplay.Step<Double>> steps =
-                List.of(FrameReplay.Step.of(0.5, 2.0), FrameReplay.Step.of(0.25, 4.0), FrameReplay.Step.of(1.0, -1.0));
+        List<FrameReplay.Step<Double>> steps = List
+                .of(FrameReplay.Step.of(0.5, 2.0), FrameReplay.Step.of(0.25, 4.0), FrameReplay.Step.of(1.0, -1.0));
 
-        FrameReplay<Double, Double> replay =
-                FrameReplay.run(new Integrator(), steps, (subject, dt, input) -> subject.step(dt, input));
+        FrameReplay<Double, Double> replay = FrameReplay
+                .run(new Integrator(), steps, (subject, dt, input) -> subject.step(dt, input));
 
         assertEquals(3, replay.frameCount());
         assertEquals(List.of(2.0, 4.0, -1.0), replay.inputs());
@@ -44,21 +44,23 @@ class FrameReplayTest {
 
     @Test
     void uniformRunDrivesAConstantFrameRate() {
-        FrameReplay<Double, Double> replay =
-                FrameReplay.runUniform(new Integrator(), 0.25, 4, 1.0, (subject, dt, input) -> subject.step(dt, input));
+        FrameReplay<Double, Double> replay = FrameReplay
+                .runUniform(new Integrator(), 0.25, 4, 1.0, (subject, dt, input) -> subject.step(dt, input));
 
         assertEquals(List.of(0.25, 0.5, 0.75, 1.0), replay.outputs());
         assertEquals(
-                List.of(0.0, 0.25, 0.5, 0.75),
-                replay.frames().stream().map(FrameReplay.Frame::startTime).toList());
+            List.of(0.0, 0.25, 0.5, 0.75),
+            replay.frames().stream().map(FrameReplay.Frame::startTime).toList()
+        );
     }
 
     @Test
     void sameStepsAlwaysProduceTheSameOutputs() {
         List<FrameReplay.Step<Double>> steps = List.of(
-                FrameReplay.Step.of(1.0 / 60.0, 3.0),
-                FrameReplay.Step.of(1.0 / 30.0, -1.0),
-                FrameReplay.Step.of(0.5, 0.5));
+            FrameReplay.Step.of(1.0 / 60.0, 3.0),
+            FrameReplay.Step.of(1.0 / 30.0, -1.0),
+            FrameReplay.Step.of(0.5, 0.5)
+        );
 
         FrameReplay<Double, Double> first = FrameReplay.run(new Integrator(), steps, (s, dt, in) -> s.step(dt, in));
         FrameReplay<Double, Double> second = FrameReplay.run(new Integrator(), steps, (s, dt, in) -> s.step(dt, in));
@@ -69,8 +71,8 @@ class FrameReplayTest {
 
     @Test
     void emptyScriptProducesAnEmptyReplay() {
-        FrameReplay<Double, Double> replay =
-                FrameReplay.run(new Integrator(), List.of(), (subject, dt, input) -> subject.step(dt, input));
+        FrameReplay<Double, Double> replay = FrameReplay
+                .run(new Integrator(), List.of(), (subject, dt, input) -> subject.step(dt, input));
 
         assertEquals(0, replay.frameCount());
         assertTrue(replay.outputs().isEmpty());
@@ -82,14 +84,16 @@ class FrameReplayTest {
         int[] driven = {0};
 
         assertThrows(
-                IllegalArgumentException.class,
-                () -> FrameReplay.run(
-                        new Object(),
-                        List.of(FrameReplay.Step.of(0.1, 1.0), FrameReplay.Step.of(-0.1, 1.0)),
-                        (subject, dt, input) -> {
-                            driven[0]++;
-                            return input;
-                        }));
+            IllegalArgumentException.class,
+            () -> FrameReplay.run(
+                new Object(),
+                List.of(FrameReplay.Step.of(0.1, 1.0), FrameReplay.Step.of(-0.1, 1.0)),
+                (subject, dt, input) -> {
+                    driven[0]++;
+                    return input;
+                }
+            )
+        );
 
         assertEquals(0, driven[0]);
     }

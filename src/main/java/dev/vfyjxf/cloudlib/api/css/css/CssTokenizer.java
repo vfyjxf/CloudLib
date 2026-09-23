@@ -16,32 +16,7 @@ final class CssTokenizer {
 
     /** All CSS Syntax L3 token kinds. */
     enum TokenKind {
-        ident,
-        function,
-        atKeyword,
-        hash,
-        string,
-        badString,
-        url,
-        badUrl,
-        delim,
-        number,
-        percentage,
-        dimension,
-        whitespace,
-        cdo,
-        cdc,
-        colon,
-        semicolon,
-        comma,
-        leftParen,
-        rightParen,
-        leftSquare,
-        rightSquare,
-        leftCurly,
-        rightCurly,
-        unicodeRange,
-        eof
+        ident, function, atKeyword, hash, string, badString, url, badUrl, delim, number, percentage, dimension, whitespace, cdo, cdc, colon, semicolon, comma, leftParen, rightParen, leftSquare, rightSquare, leftCurly, rightCurly, unicodeRange, eof
     }
 
     /**
@@ -57,20 +32,21 @@ final class CssTokenizer {
      * </ul>
      */
     record Token(
-            TokenKind kind,
-            @Nullable String string,
-            double number,
-            @Nullable String unit,
-            boolean integer,
-            boolean signed,
-            char delim,
-            boolean idFlag,
-            int rangeStart,
-            int rangeEnd,
-            int start,
-            int end,
-            int line,
-            int column) {
+        TokenKind kind,
+        @Nullable String string,
+        double number,
+        @Nullable String unit,
+        boolean integer,
+        boolean signed,
+        char delim,
+        boolean idFlag,
+        int rangeStart,
+        int rangeEnd,
+        int start,
+        int end,
+        int line,
+        int column
+    ) {
 
         static Token bare(TokenKind kind, int start, int end, int line, int column) {
             return new Token(kind, null, 0, null, false, false, '\0', false, 0, 0, start, end, line, column);
@@ -533,7 +509,8 @@ final class CssTokenizer {
         if (isIdentChar(at(pos)) || validEscapeAt(pos)) {
             boolean id = wouldStartIdent(pos);
             String value = consumeName();
-            tokens.add(new Token(
+            tokens.add(
+                new Token(
                     TokenKind.hash,
                     value,
                     0,
@@ -547,7 +524,9 @@ final class CssTokenizer {
                     tokenStart,
                     pos,
                     tokenLine,
-                    tokenColumn));
+                    tokenColumn
+                )
+            );
             return;
         }
         emitDelim('#');
@@ -646,7 +625,8 @@ final class CssTokenizer {
         }
         if (wouldStartIdent(pos)) {
             String unit = consumeName();
-            tokens.add(new Token(
+            tokens.add(
+                new Token(
                     TokenKind.dimension,
                     raw,
                     value,
@@ -660,10 +640,13 @@ final class CssTokenizer {
                     tokenStart,
                     pos,
                     tokenLine,
-                    tokenColumn));
+                    tokenColumn
+                )
+            );
         } else if (at(pos) == '%') {
             advance();
-            tokens.add(new Token(
+            tokens.add(
+                new Token(
                     TokenKind.percentage,
                     raw,
                     value,
@@ -677,9 +660,12 @@ final class CssTokenizer {
                     tokenStart,
                     pos,
                     tokenLine,
-                    tokenColumn));
+                    tokenColumn
+                )
+            );
         } else {
-            tokens.add(new Token(
+            tokens.add(
+                new Token(
                     TokenKind.number,
                     raw,
                     value,
@@ -693,7 +679,9 @@ final class CssTokenizer {
                     tokenStart,
                     pos,
                     tokenLine,
-                    tokenColumn));
+                    tokenColumn
+                )
+            );
         }
     }
 
@@ -763,7 +751,8 @@ final class CssTokenizer {
             }
         }
         String raw = input.substring(tokenStart, pos);
-        tokens.add(new Token(
+        tokens.add(
+            new Token(
                 TokenKind.unicodeRange,
                 raw,
                 0,
@@ -777,7 +766,9 @@ final class CssTokenizer {
                 tokenStart,
                 pos,
                 tokenLine,
-                tokenColumn));
+                tokenColumn
+            )
+        );
     }
     // endregion
 }

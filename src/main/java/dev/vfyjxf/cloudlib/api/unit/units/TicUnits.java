@@ -23,10 +23,11 @@ import java.util.List;
 public final class TicUnits {
 
     public static final ImmutableList<UnitRule> rules = Lists.immutable.of(
-            UnitRule.fixedBridge(ItemUnits.nugget, FluidUnits.millibucket, Ratio.of(10)),
-            UnitRule.fixedBridge(ItemUnits.ingot, FluidUnits.millibucket, Ratio.of(90)),
-            UnitRule.fixedBridge(ItemUnits.block, FluidUnits.millibucket, Ratio.of(810)),
-            UnitRule.fixedBridge(ItemUnits.gem, FluidUnits.millibucket, Ratio.of(100)));
+        UnitRule.fixedBridge(ItemUnits.nugget, FluidUnits.millibucket, Ratio.of(10)),
+        UnitRule.fixedBridge(ItemUnits.ingot, FluidUnits.millibucket, Ratio.of(90)),
+        UnitRule.fixedBridge(ItemUnits.block, FluidUnits.millibucket, Ratio.of(810)),
+        UnitRule.fixedBridge(ItemUnits.gem, FluidUnits.millibucket, Ratio.of(100))
+    );
 
     /**
      * Unmodifiable {@link List} view of {@link #rules}, for consumers working with

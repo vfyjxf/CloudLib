@@ -18,21 +18,23 @@ public non-sealed interface Expose<T> extends ExposeCommon {
     // region factory
 
     static <T> Expose<T> create(
-            String name,
-            short id,
-            Snapshot<T> snapshot,
-            ValueSupplier<T> valueSupplier,
-            UnaryFlowHandler<T> exposeCodec) {
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> valueSupplier,
+        UnaryFlowHandler<T> exposeCodec
+    ) {
         return new StandardExpose<>(name, id, snapshot, valueSupplier, exposeCodec, exposeCodec);
     }
 
     static <T> Expose<T> create(
-            String name,
-            short id,
-            Snapshot<T> snapshot,
-            ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder,
-            FlowDecoder<T> decoder) {
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> valueSupplier,
+        FlowEncoder<T> encoder,
+        FlowDecoder<T> decoder
+    ) {
         return new StandardExpose<>(name, id, snapshot, valueSupplier, encoder, decoder);
     }
 
@@ -47,14 +49,25 @@ public non-sealed interface Expose<T> extends ExposeCommon {
      */
     static <T> Expose<T> create(String name, short id, Handle<T> handle, UnaryFlowHandler<T> exposeCodec) {
         return new StandardExpose<>(
-                name, id, Snapshot.HandleSnapshot.of(handle), handle::get, exposeCodec, exposeCodec);
+            name,
+            id,
+            Snapshot.HandleSnapshot.of(handle),
+            handle::get,
+            exposeCodec,
+            exposeCodec
+        );
     }
 
     /**
      * Create an Expose backed by a {@link Handle}. See {@link #create(String, short, Handle, UnaryFlowHandler)}.
      */
     static <T> Expose<T> create(
-            String name, short id, Handle<T> handle, FlowEncoder<T> encoder, FlowDecoder<T> decoder) {
+        String name,
+        short id,
+        Handle<T> handle,
+        FlowEncoder<T> encoder,
+        FlowDecoder<T> decoder
+    ) {
         return new StandardExpose<>(name, id, Snapshot.HandleSnapshot.of(handle), handle::get, encoder, decoder);
     }
 
@@ -103,8 +116,9 @@ public non-sealed interface Expose<T> extends ExposeCommon {
             case illegal -> {
                 boolean readonly = snapshot instanceof Snapshot.Readonly;
                 throw new IllegalStateException(
-                        "Illegally modifity a " + (readonly ? "readonly" : "immutable reference") + " snapshot(id:"
-                                + id() + " name:" + name() + ")");
+                    "Illegally modifity a " + (readonly ? "readonly" : "immutable reference") + " snapshot(id:" + id()
+                            + " name:" + name() + ")"
+                );
             }
         };
     }

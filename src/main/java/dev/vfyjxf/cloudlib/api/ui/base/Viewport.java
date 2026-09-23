@@ -749,8 +749,11 @@ public final class Viewport {
         double maxY = Math.max(Math.max(tl.y, tr.y), Math.max(bl.y, br.y));
 
         return new Rect(
-                (int) Math.floor(minX), (int) Math.floor(minY),
-                (int) Math.ceil(maxX - minX), (int) Math.ceil(maxY - minY));
+            (int) Math.floor(minX),
+            (int) Math.floor(minY),
+            (int) Math.ceil(maxX - minX),
+            (int) Math.ceil(maxY - minY)
+        );
     }
 
     /**
@@ -759,9 +762,7 @@ public final class Viewport {
      * @see #localRectToParentBounds(int, int, int, int)
      */
     public Rect localRectToParentBounds(Rect localRect) {
-        return localRectToParentBounds(
-                localRect.x(), localRect.y(),
-                localRect.width(), localRect.height());
+        return localRectToParentBounds(localRect.x(), localRect.y(), localRect.width(), localRect.height());
     }
 
     /**
@@ -779,8 +780,11 @@ public final class Viewport {
         double maxY = Math.max(Math.max(tl.y, tr.y), Math.max(bl.y, br.y));
 
         return new Rect(
-                (int) Math.floor(minX), (int) Math.floor(minY),
-                (int) Math.ceil(maxX - minX), (int) Math.ceil(maxY - minY));
+            (int) Math.floor(minX),
+            (int) Math.floor(minY),
+            (int) Math.ceil(maxX - minX),
+            (int) Math.ceil(maxY - minY)
+        );
     }
 
     /**
@@ -888,7 +892,12 @@ public final class Viewport {
      */
     @Contract("_,_,_,_,_ -> this")
     public Viewport adjustTranslateForPivot(
-            int translateIndex, double localX, double localY, double parentX, double parentY) {
+        int translateIndex,
+        double localX,
+        double localY,
+        double parentX,
+        double parentY
+    ) {
         float ox = (float) (originX * viewportWidth);
         float oy = (float) (originY * viewportHeight);
 
@@ -934,7 +943,13 @@ public final class Viewport {
      */
     @Contract("_,_,_,_,_,_ -> this")
     public Viewport zoomAt(
-            int scaleIndex, int translateIndex, double factorX, double factorY, double parentX, double parentY) {
+        int scaleIndex,
+        int translateIndex,
+        double factorX,
+        double factorY,
+        double parentX,
+        double parentY
+    ) {
         FloatPos localPt = parentToLocal(parentX, parentY);
 
         ViewportTransform.Scale s = (ViewportTransform.Scale) pipelineGet(scaleIndex);
@@ -1216,12 +1231,8 @@ public final class Viewport {
 
     @Override
     public String toString() {
-        return "Viewport{" + "layout="
-                + layout + ", contentOffset=("
-                + contentOffsetX + ", " + contentOffsetY + ")" + ", userTransforms="
-                + transforms + ", viewport="
-                + viewportWidth + "x" + viewportHeight + ", content="
-                + contentWidth + "x" + contentHeight + ", origin=("
-                + originX + ", " + originY + ")" + '}';
+        return "Viewport{" + "layout=" + layout + ", contentOffset=(" + contentOffsetX + ", " + contentOffsetY + ")"
+                + ", userTransforms=" + transforms + ", viewport=" + viewportWidth + "x" + viewportHeight + ", content="
+                + contentWidth + "x" + contentHeight + ", origin=(" + originX + ", " + originY + ")" + '}';
     }
 }

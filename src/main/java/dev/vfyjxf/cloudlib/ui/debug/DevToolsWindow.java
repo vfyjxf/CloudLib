@@ -176,28 +176,37 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
         float w = dockLayout.width();
         float h = dockLayout.height();
 
-        windowFrame.useStyle(UIStyle.of(
+        windowFrame.useStyle(
+            UIStyle.of(
                 UIStyles.positionAbsolute(),
                 UIStyles.insetLeft(x),
                 UIStyles.insetTop(y),
                 UIStyles.sizeOf(w, h),
                 UIStyles.flexColumn(),
-                UIStyles.padding(10)));
+                UIStyles.padding(10)
+            )
+        );
 
-        treeView.useStyle(UIStyle.of(
+        treeView.useStyle(
+            UIStyle.of(
                 UIStyles.widthOf(TaffyDimension.percent(1f)),
                 UIStyles.heightOf(TaffyDimension.percent(treeRatio)),
                 UIStyles.minHeight(0),
                 UIStyles.flexShrink(0),
-                UIStyles.flexColumn()));
+                UIStyles.flexColumn()
+            )
+        );
 
-        detailsView.useStyle(UIStyle.of(
+        detailsView.useStyle(
+            UIStyle.of(
                 UIStyles.widthOf(TaffyDimension.percent(1f)),
                 UIStyles.flexGrow(1),
                 UIStyles.minHeight(0),
                 UIStyles.flexColumn(),
                 UIStyles.padding(4, 0, 0, 0),
-                UIStyles.rowGap(2)));
+                UIStyles.rowGap(2)
+            )
+        );
 
         for (ResizeCorner corner : resizeCorners) {
             corner.setVisible(dockLayout.mode() == DockMode.floating);
@@ -314,12 +323,15 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
             if (total > 0) {
                 float ratio = (float) (my - treeView.absolutePos().y()) / total;
                 treeRatio = Math.max(0.15f, Math.min(0.85f, ratio));
-                treeView.useStyle(UIStyle.of(
+                treeView.useStyle(
+                    UIStyle.of(
                         UIStyles.widthOf(TaffyDimension.percent(1f)),
                         UIStyles.heightOf(TaffyDimension.percent(treeRatio)),
                         UIStyles.minHeight(0),
                         UIStyles.flexShrink(0),
-                        UIStyles.flexColumn()));
+                        UIStyles.flexColumn()
+                    )
+                );
             }
             context.consume();
             return EventDispatch.consumed;
@@ -350,51 +362,48 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
         List<Tool> list = new ArrayList<>();
 
         pick = new Tool(
-                "pick",
-                DevToolsTextures.pick,
-                () -> overlay.setInspectMode(!overlay.inspectMode()),
-                () -> overlay.inspectMode(),
-                base,
-                () -> {
-                    ((IconButton) pick.main).sync();
-                    ((IconButton) pick.overflow).sync();
-                });
+            "pick",
+            DevToolsTextures.pick,
+            () -> overlay.setInspectMode(!overlay.inspectMode()),
+            () -> overlay.inspectMode(),
+            base,
+            () -> {
+                ((IconButton) pick.main).sync();
+                ((IconButton) pick.overflow).sync();
+            }
+        );
 
         highlight = new Tool(
-                "highlight",
-                DevToolsTextures.highlight,
-                () -> overlay.setHighlightEnabled(!overlay.highlightEnabled()),
-                () -> overlay.highlightEnabled(),
-                base,
-                () -> {
-                    ((IconButton) highlight.main).sync();
-                    ((IconButton) highlight.overflow).sync();
-                });
+            "highlight",
+            DevToolsTextures.highlight,
+            () -> overlay.setHighlightEnabled(!overlay.highlightEnabled()),
+            () -> overlay.highlightEnabled(),
+            base,
+            () -> {
+                ((IconButton) highlight.main).sync();
+                ((IconButton) highlight.overflow).sync();
+            }
+        );
 
-        Tool refresh = new Tool(
-                "refresh",
-                DevToolsTextures.refresh,
-                () -> {
-                    treeView.refresh();
-                    detailsView.refresh();
-                },
-                null,
-                base,
-                null);
+        Tool refresh = new Tool("refresh", DevToolsTextures.refresh, () -> {
+            treeView.refresh();
+            detailsView.refresh();
+        }, null, base, null);
 
         dock = new Tool(
-                "dock",
-                DevToolsTextures.dockFloat,
-                this::toggleDockMenu,
-                () -> dockMenu != null && dockMenu.visible(),
-                base,
-                () -> {
-                    VisualTexture icon = modeTexture(dockLayout.mode());
-                    ((IconButton) dock.main).setIcon(icon);
-                    ((IconButton) dock.overflow).setIcon(icon);
-                    ((IconButton) dock.main).sync();
-                    ((IconButton) dock.overflow).sync();
-                });
+            "dock",
+            DevToolsTextures.dockFloat,
+            this::toggleDockMenu,
+            () -> dockMenu != null && dockMenu.visible(),
+            base,
+            () -> {
+                VisualTexture icon = modeTexture(dockLayout.mode());
+                ((IconButton) dock.main).setIcon(icon);
+                ((IconButton) dock.overflow).setIcon(icon);
+                ((IconButton) dock.main).sync();
+                ((IconButton) dock.overflow).sync();
+            }
+        );
 
         zoom = new Tool("zoom", overlay::currentZoomLabel, this::toggleZoomMenu, base, () -> {
             ((TextIconButton) zoom.main).sync();
@@ -420,7 +429,8 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
         closeAllMenus();
         if (willOpen) {
             Pos p = dock.main.absolutePos();
-            dockMenu.useStyle(UIStyle.of(
+            dockMenu.useStyle(
+                UIStyle.of(
                     UIStyles.positionAbsolute(),
                     UIStyles.insetLeft(p.x()),
                     UIStyles.insetTop(p.y() + buttonSize),
@@ -428,7 +438,9 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
                     UIStyles.flexColumn(),
                     UIStyles.alignItemsCenter(),
                     UIStyles.padding(2, 0),
-                    UIStyles.rowGap(2)));
+                    UIStyles.rowGap(2)
+                )
+            );
             dockMenu.setVisible(true);
         }
     }
@@ -438,14 +450,17 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
         closeAllMenus();
         if (willOpen) {
             Pos p = scale.main.absolutePos();
-            scaleMenu.useStyle(UIStyle.of(
+            scaleMenu.useStyle(
+                UIStyle.of(
                     UIStyles.positionAbsolute(),
                     UIStyles.insetLeft(p.x()),
                     UIStyles.insetTop(p.y() + buttonSize),
                     UIStyles.sizeOf(54, 120),
                     UIStyles.flexColumn(),
                     UIStyles.padding(2, 2),
-                    UIStyles.rowGap(2)));
+                    UIStyles.rowGap(2)
+                )
+            );
             scaleMenu.setVisible(true);
         }
     }
@@ -455,14 +470,17 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
         closeAllMenus();
         if (willOpen) {
             Pos p = zoom.main.absolutePos();
-            zoomMenu.useStyle(UIStyle.of(
+            zoomMenu.useStyle(
+                UIStyle.of(
                     UIStyles.positionAbsolute(),
                     UIStyles.insetLeft(p.x()),
                     UIStyles.insetTop(p.y() + buttonSize),
                     UIStyles.sizeOf(54, 134),
                     UIStyles.flexColumn(),
                     UIStyles.padding(2, 2),
-                    UIStyles.rowGap(2)));
+                    UIStyles.rowGap(2)
+                )
+            );
             zoomMenu.setVisible(true);
         }
     }
@@ -516,9 +534,7 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
             }
             int color = toggledState ? DebugTheme.iconActive : hovered ? DebugTheme.iconHover : DebugTheme.icon;
             if (icon == DevToolsTextures.close && hovered) color = DebugTheme.iconCloseHover;
-            canvas.color(color)
-                    .texture(icon, iconPad, iconPad, iconSize, iconSize)
-                    .resetColor();
+            canvas.color(color).texture(icon, iconPad, iconPad, iconSize, iconSize).resetColor();
         }
     }
 
@@ -572,12 +588,13 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
         boolean mainHidden;
 
         Tool(
-                String id,
-                VisualTexture icon,
-                Runnable action,
-                BooleanSupplier toggled,
-                UIStyle baseStyle,
-                @Nullable Runnable update) {
+            String id,
+            VisualTexture icon,
+            Runnable action,
+            BooleanSupplier toggled,
+            UIStyle baseStyle,
+            @Nullable Runnable update
+        ) {
             this.id = id;
             this.baseStyle = baseStyle;
             this.update = update;
@@ -634,13 +651,16 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
             this.tools = tools;
             this.overflowMenu = overflowMenu;
 
-            useStyle(UIStyle.of(
+            useStyle(
+                UIStyle.of(
                     UIStyles.widthOf(TaffyDimension.percent(1f)),
                     UIStyles.heightOf(DebugTheme.titleBarHeight),
                     UIStyles.flexShrink(0),
                     UIStyles.flexRow(),
                     UIStyles.alignItemsCenter(),
-                    UIStyles.padding(0, 4)));
+                    UIStyles.padding(0, 4)
+                )
+            );
             setTickable(true);
 
             for (Tool tool : tools) {
@@ -772,14 +792,17 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
 
         private void applyStyle() {
             int h = itemCount * buttonSize + Math.max(0, itemCount - 1) * 2 + 4;
-            useStyle(UIStyle.of(
+            useStyle(
+                UIStyle.of(
                     UIStyles.positionAbsolute(),
                     UIStyles.insetLeft(pos.x()),
                     UIStyles.insetTop(pos.y() + buttonSize),
                     UIStyles.sizeOf(buttonSize + 4, h),
                     UIStyles.flexColumn(),
                     UIStyles.padding(2, 0),
-                    UIStyles.rowGap(2)));
+                    UIStyles.rowGap(2)
+                )
+            );
         }
 
         @Override
@@ -797,11 +820,14 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
             addWidget(toolBar);
 
             WidgetGroup<Widget> body = new WidgetGroup<>();
-            body.useStyle(UIStyle.of(
+            body.useStyle(
+                UIStyle.of(
                     UIStyles.widthOf(TaffyDimension.percent(1f)),
                     UIStyles.flexGrow(1),
                     UIStyles.minHeight(0),
-                    UIStyles.flexColumn()));
+                    UIStyles.flexColumn()
+                )
+            );
             body.addWidget(treeView);
             body.addWidget(splitter);
             body.addWidget(detailsView);
@@ -859,10 +885,13 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
         private boolean hovered;
 
         Splitter() {
-            useStyle(UIStyle.of(
+            useStyle(
+                UIStyle.of(
                     UIStyles.widthOf(TaffyDimension.percent(1f)),
                     UIStyles.heightOf(DebugTheme.splitterHeight),
-                    UIStyles.flexShrink(0)));
+                    UIStyles.flexShrink(0)
+                )
+            );
             onMouseClicked((input, context) -> {
                 splitting = true;
                 context.consume();
@@ -890,10 +919,7 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
     private final class ResizeCorner extends Widget {
 
         enum Corner {
-            topLeft,
-            topRight,
-            bottomLeft,
-            bottomRight
+            topLeft, topRight, bottomLeft, bottomRight
         }
 
         private final Corner corner;
@@ -906,40 +932,39 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
                 context.consume();
                 return EventDispatch.consumed;
             });
-            onMouseEnter((mouseX, mouseY, context) -> CursorHelper.set(
-                    switch (corner) {
-                        case topLeft, bottomRight -> CursorHelper.nwse;
-                        case topRight, bottomLeft -> CursorHelper.nesw;
-                    }));
+            onMouseEnter((mouseX, mouseY, context) -> CursorHelper.set(switch (corner) {
+                case topLeft, bottomRight -> CursorHelper.nwse;
+                case topRight, bottomLeft -> CursorHelper.nesw;
+            }));
             onMouseLeave((mouseX, mouseY, context) -> CursorHelper.reset());
         }
 
         private UIStyle cornerStyle() {
             return switch (corner) {
-                case topLeft ->
-                    UIStyle.of(
-                            UIStyles.positionAbsolute(),
-                            UIStyles.insetTop(0),
-                            UIStyles.insetLeft(0),
-                            UIStyles.sizeOf(handleSize, handleSize));
-                case topRight ->
-                    UIStyle.of(
-                            UIStyles.positionAbsolute(),
-                            UIStyles.insetTop(0),
-                            UIStyles.insetRight(0),
-                            UIStyles.sizeOf(handleSize, handleSize));
-                case bottomLeft ->
-                    UIStyle.of(
-                            UIStyles.positionAbsolute(),
-                            UIStyles.insetBottom(0),
-                            UIStyles.insetLeft(0),
-                            UIStyles.sizeOf(handleSize, handleSize));
-                case bottomRight ->
-                    UIStyle.of(
-                            UIStyles.positionAbsolute(),
-                            UIStyles.insetBottom(0),
-                            UIStyles.insetRight(0),
-                            UIStyles.sizeOf(handleSize, handleSize));
+                case topLeft -> UIStyle.of(
+                    UIStyles.positionAbsolute(),
+                    UIStyles.insetTop(0),
+                    UIStyles.insetLeft(0),
+                    UIStyles.sizeOf(handleSize, handleSize)
+                );
+                case topRight -> UIStyle.of(
+                    UIStyles.positionAbsolute(),
+                    UIStyles.insetTop(0),
+                    UIStyles.insetRight(0),
+                    UIStyles.sizeOf(handleSize, handleSize)
+                );
+                case bottomLeft -> UIStyle.of(
+                    UIStyles.positionAbsolute(),
+                    UIStyles.insetBottom(0),
+                    UIStyles.insetLeft(0),
+                    UIStyles.sizeOf(handleSize, handleSize)
+                );
+                case bottomRight -> UIStyle.of(
+                    UIStyles.positionAbsolute(),
+                    UIStyles.insetBottom(0),
+                    UIStyles.insetRight(0),
+                    UIStyles.sizeOf(handleSize, handleSize)
+                );
             };
         }
 
@@ -958,49 +983,48 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
                 context.consume();
                 return EventDispatch.consumed;
             });
-            onMouseEnter((mouseX, mouseY, context) -> CursorHelper.set(
-                    switch (dockLayout.mode()) {
-                        case dockLeft, dockRight -> CursorHelper.hresize;
-                        case dockTop, dockBottom -> CursorHelper.vresize;
-                        default -> CursorHelper.arrow;
-                    }));
+            onMouseEnter((mouseX, mouseY, context) -> CursorHelper.set(switch (dockLayout.mode()) {
+                case dockLeft, dockRight -> CursorHelper.hresize;
+                case dockTop, dockBottom -> CursorHelper.vresize;
+                default -> CursorHelper.arrow;
+            }));
             onMouseLeave((mouseX, mouseY, context) -> CursorHelper.reset());
         }
 
         private UIStyle handleStyle() {
             return switch (dockLayout.mode()) {
-                case dockRight ->
-                    UIStyle.of(
-                            UIStyles.positionAbsolute(),
-                            UIStyles.insetLeft(0),
-                            UIStyles.insetTop(0),
-                            UIStyles.insetBottom(0),
-                            UIStyles.widthOf(4),
-                            UIStyles.heightOf(TaffyDimension.percent(1f)));
-                case dockLeft ->
-                    UIStyle.of(
-                            UIStyles.positionAbsolute(),
-                            UIStyles.insetRight(0),
-                            UIStyles.insetTop(0),
-                            UIStyles.insetBottom(0),
-                            UIStyles.widthOf(4),
-                            UIStyles.heightOf(TaffyDimension.percent(1f)));
-                case dockBottom ->
-                    UIStyle.of(
-                            UIStyles.positionAbsolute(),
-                            UIStyles.insetLeft(0),
-                            UIStyles.insetRight(0),
-                            UIStyles.insetTop(0),
-                            UIStyles.widthOf(TaffyDimension.percent(1f)),
-                            UIStyles.heightOf(4));
-                case dockTop ->
-                    UIStyle.of(
-                            UIStyles.positionAbsolute(),
-                            UIStyles.insetLeft(0),
-                            UIStyles.insetRight(0),
-                            UIStyles.insetBottom(0),
-                            UIStyles.widthOf(TaffyDimension.percent(1f)),
-                            UIStyles.heightOf(4));
+                case dockRight -> UIStyle.of(
+                    UIStyles.positionAbsolute(),
+                    UIStyles.insetLeft(0),
+                    UIStyles.insetTop(0),
+                    UIStyles.insetBottom(0),
+                    UIStyles.widthOf(4),
+                    UIStyles.heightOf(TaffyDimension.percent(1f))
+                );
+                case dockLeft -> UIStyle.of(
+                    UIStyles.positionAbsolute(),
+                    UIStyles.insetRight(0),
+                    UIStyles.insetTop(0),
+                    UIStyles.insetBottom(0),
+                    UIStyles.widthOf(4),
+                    UIStyles.heightOf(TaffyDimension.percent(1f))
+                );
+                case dockBottom -> UIStyle.of(
+                    UIStyles.positionAbsolute(),
+                    UIStyles.insetLeft(0),
+                    UIStyles.insetRight(0),
+                    UIStyles.insetTop(0),
+                    UIStyles.widthOf(TaffyDimension.percent(1f)),
+                    UIStyles.heightOf(4)
+                );
+                case dockTop -> UIStyle.of(
+                    UIStyles.positionAbsolute(),
+                    UIStyles.insetLeft(0),
+                    UIStyles.insetRight(0),
+                    UIStyles.insetBottom(0),
+                    UIStyles.widthOf(TaffyDimension.percent(1f)),
+                    UIStyles.heightOf(4)
+                );
                 default -> UIStyle.of(UIStyles.positionAbsolute(), UIStyles.sizeOf(0, 0));
             };
         }
@@ -1019,13 +1043,16 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
                 btn.useStyle(UIStyle.of(UIStyles.sizeOf(buttonSize, buttonSize), UIStyles.flexShrink(0)));
                 addWidget(btn);
             }
-            useStyle(UIStyle.of(
+            useStyle(
+                UIStyle.of(
                     UIStyles.positionAbsolute(),
                     UIStyles.sizeOf(26, 112),
                     UIStyles.flexColumn(),
                     UIStyles.alignItemsCenter(),
                     UIStyles.padding(2, 0),
-                    UIStyles.rowGap(2)));
+                    UIStyles.rowGap(2)
+                )
+            );
         }
 
         @Override
@@ -1048,16 +1075,24 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
                 btn.setTextColor(DebugTheme.text);
                 btn.setTextShadow(false);
                 btn.setColors(DebugTheme.windowBg, DebugTheme.buttonHoverBg, DebugTheme.rowSelectedBg);
-                btn.useStyle(UIStyle.of(
-                        UIStyles.widthOf(TaffyDimension.percent(1f)), UIStyles.heightOf(20), UIStyles.flexShrink(0)));
+                btn.useStyle(
+                    UIStyle.of(
+                        UIStyles.widthOf(TaffyDimension.percent(1f)),
+                        UIStyles.heightOf(20),
+                        UIStyles.flexShrink(0)
+                    )
+                );
                 addWidget(btn);
             }
-            useStyle(UIStyle.of(
+            useStyle(
+                UIStyle.of(
                     UIStyles.positionAbsolute(),
                     UIStyles.sizeOf(54, 120),
                     UIStyles.flexColumn(),
                     UIStyles.padding(2, 2),
-                    UIStyles.rowGap(2)));
+                    UIStyles.rowGap(2)
+                )
+            );
         }
 
         @Override
@@ -1079,16 +1114,24 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
                 btn.setTextColor(DebugTheme.text);
                 btn.setTextShadow(false);
                 btn.setColors(DebugTheme.windowBg, DebugTheme.buttonHoverBg, DebugTheme.rowSelectedBg);
-                btn.useStyle(UIStyle.of(
-                        UIStyles.widthOf(TaffyDimension.percent(1f)), UIStyles.heightOf(20), UIStyles.flexShrink(0)));
+                btn.useStyle(
+                    UIStyle.of(
+                        UIStyles.widthOf(TaffyDimension.percent(1f)),
+                        UIStyles.heightOf(20),
+                        UIStyles.flexShrink(0)
+                    )
+                );
                 addWidget(btn);
             }
-            useStyle(UIStyle.of(
+            useStyle(
+                UIStyle.of(
                     UIStyles.positionAbsolute(),
                     UIStyles.sizeOf(54, 134),
                     UIStyles.flexColumn(),
                     UIStyles.padding(2, 2),
-                    UIStyles.rowGap(2)));
+                    UIStyles.rowGap(2)
+                )
+            );
         }
 
         @Override

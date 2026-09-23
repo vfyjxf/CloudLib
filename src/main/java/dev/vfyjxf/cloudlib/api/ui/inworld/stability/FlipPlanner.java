@@ -52,17 +52,24 @@ public final class FlipPlanner {
 
     /** A planner resting on {@code placedRect}, with an explicit duration clamp. */
     public FlipPlanner(
-            double speedPixelsPerSecond, FloatRect placedRect, double minDurationSeconds, double maxDurationSeconds) {
+        double speedPixelsPerSecond,
+        FloatRect placedRect,
+        double minDurationSeconds,
+        double maxDurationSeconds
+    ) {
         if (!Double.isFinite(speedPixelsPerSecond) || speedPixelsPerSecond <= 0.0) {
             throw new IllegalArgumentException(
-                    "speedPixelsPerSecond must be finite and positive: " + speedPixelsPerSecond);
+                "speedPixelsPerSecond must be finite and positive: " + speedPixelsPerSecond
+            );
         }
         if (!Double.isFinite(minDurationSeconds)
                 || minDurationSeconds <= 0.0
                 || !Double.isFinite(maxDurationSeconds)
                 || maxDurationSeconds < minDurationSeconds) {
-            throw new IllegalArgumentException("duration clamp must satisfy 0 < minDuration <= maxDuration: "
-                    + minDurationSeconds + ".." + maxDurationSeconds);
+            throw new IllegalArgumentException(
+                "duration clamp must satisfy 0 < minDuration <= maxDuration: " + minDurationSeconds + ".."
+                        + maxDurationSeconds
+            );
         }
         this.speedPixelsPerSecond = speedPixelsPerSecond;
         this.minDurationSeconds = minDurationSeconds;
@@ -94,8 +101,11 @@ public final class FlipPlanner {
         }
         this.origin = from;
         this.originTimeSeconds = nowSeconds;
-        this.durationSeconds =
-                clamp(travelDistance(from, newTarget) / speedPixelsPerSecond, minDurationSeconds, maxDurationSeconds);
+        this.durationSeconds = clamp(
+            travelDistance(from, newTarget) / speedPixelsPerSecond,
+            minDurationSeconds,
+            maxDurationSeconds
+        );
         this.target = newTarget;
         return this;
     }
@@ -143,10 +153,11 @@ public final class FlipPlanner {
         }
         double progress = clamp01((nowSeconds - originTimeSeconds) / durationSeconds);
         return new FloatRect(
-                origin.x() + (target.x() - origin.x()) * progress,
-                origin.y() + (target.y() - origin.y()) * progress,
-                origin.width() + (target.width() - origin.width()) * progress,
-                origin.height() + (target.height() - origin.height()) * progress);
+            origin.x() + (target.x() - origin.x()) * progress,
+            origin.y() + (target.y() - origin.y()) * progress,
+            origin.width() + (target.width() - origin.width()) * progress,
+            origin.height() + (target.height() - origin.height()) * progress
+        );
     }
 
     public boolean isAnimating(double nowSeconds) {

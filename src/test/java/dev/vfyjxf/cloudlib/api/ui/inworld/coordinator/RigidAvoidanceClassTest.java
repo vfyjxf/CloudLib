@@ -71,13 +71,22 @@ class RigidAvoidanceClassTest {
             CoordinationResult result = frame(coordinator, now);
             InworldPlacement placement = result.placementOf("rigid");
             assertEquals(
-                    rigid.anchor().x() + 40, placement.screenRect().x(), 1.0e-9, "frame " + i + ": rides the anchor");
+                rigid.anchor().x() + 40,
+                placement.screenRect().x(),
+                1.0e-9,
+                "frame " + i + ": rides the anchor"
+            );
             assertEquals(
-                    rigid.anchor().y() + 20, placement.screenRect().y(), 1.0e-9, "frame " + i + ": rides the anchor");
+                rigid.anchor().y() + 20,
+                placement.screenRect().y(),
+                1.0e-9,
+                "frame " + i + ": rides the anchor"
+            );
             assertEquals(
-                    placement.screenRect(),
-                    result.elementState("rigid").visualRect(),
-                    "frame " + i + ": the rigid grant is its own visual — nothing relaxes it");
+                placement.screenRect(),
+                result.elementState("rigid").visualRect(),
+                "frame " + i + ": the rigid grant is its own visual — nothing relaxes it"
+            );
         }
     }
 
@@ -100,7 +109,11 @@ class RigidAvoidanceClassTest {
             CoordinationResult clamped = frame(coordinator, now);
             assertNotNull(clamped.placementOf("rigid"), "frame " + i + ": the clamp never rejects");
             assertEquals(
-                    0, clamped.placementOf("rigid").screenRect().x(), 1.0e-9, "frame " + i + ": pinned at the edge");
+                0,
+                clamped.placementOf("rigid").screenRect().x(),
+                1.0e-9,
+                "frame " + i + ": pinned at the edge"
+            );
         }
 
         // back from the edge: the rect returns to exactly anchor + declared
@@ -110,7 +123,11 @@ class RigidAvoidanceClassTest {
         now += dt;
         CoordinationResult back = frame(coordinator, now);
         assertEquals(
-                200 - 60, back.placementOf("rigid").screenRect().x(), 1.0e-9, "the declared offset returns untouched");
+            200 - 60,
+            back.placementOf("rigid").screenRect().x(),
+            1.0e-9,
+            "the declared offset returns untouched"
+        );
     }
 
     @Test
@@ -156,8 +173,9 @@ class RigidAvoidanceClassTest {
         InworldPlacement grant = coordinator.lastResult().orElseThrow().placementOf("hud");
         assertNotNull(grant, "the spec-driven rigid element presents");
         assertTrue(
-                grant.screenRect().x() >= 0 && grant.screenRect().right() <= width,
-                "the grant is edge-clamped into the screen: " + grant.screenRect());
+            grant.screenRect().x() >= 0 && grant.screenRect().right() <= width,
+            "the grant is edge-clamped into the screen: " + grant.screenRect()
+        );
     }
 
     // endregion
@@ -170,12 +188,9 @@ class RigidAvoidanceClassTest {
         // already holds must still be granted — the rigid rect marked no
         // cell of the bitmap
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement rigid = TestElement.arbitrated("rigid", 200, 150, new Size(60, 20))
-                .withRigid()
-                .withSingleCandidate()
-                .withPriority(100);
-        TestElement standard = TestElement.arbitrated("standard", 200, 150, new Size(60, 20))
-                .withSingleCandidate()
+        TestElement rigid = TestElement.arbitrated("rigid", 200, 150, new Size(60, 20)).withRigid()
+                .withSingleCandidate().withPriority(100);
+        TestElement standard = TestElement.arbitrated("standard", 200, 150, new Size(60, 20)).withSingleCandidate()
                 .withPriority(0);
         coordinator.register(rigid);
         coordinator.register(standard);
@@ -184,10 +199,9 @@ class RigidAvoidanceClassTest {
         assertNotNull(result.placementOf("rigid"));
         assertNotNull(result.placementOf("standard"), "the standard element overlaps the rigid rect freely");
         assertTrue(
-                result.placementOf("rigid")
-                        .screenRect()
-                        .intersects(result.placementOf("standard").screenRect()),
-                "both grants hold the same rect");
+            result.placementOf("rigid").screenRect().intersects(result.placementOf("standard").screenRect()),
+            "both grants hold the same rect"
+        );
     }
 
     @Test
@@ -196,25 +210,26 @@ class RigidAvoidanceClassTest {
         // on a rigid element's rect keeps the slot — a rigid rect is not a
         // non-pushable blocker, so the ordered release never walks. The same
         // stack against a fixed standard peer would force the walk.
-        List<FloatRect> lattice = List.of(
-                new FloatRect(160, 135, 80, 30), new FloatRect(248, 135, 80, 30), new FloatRect(72, 135, 80, 30));
+        List<FloatRect> lattice = List
+                .of(new FloatRect(160, 135, 80, 30), new FloatRect(248, 135, 80, 30), new FloatRect(72, 135, 80, 30));
         InworldCoordinator rigidScene = InworldCoordinator.withDefaults();
         rigidScene.register(new FixedLatticeElement("holder", 10, lattice, true));
         rigidScene.register(new FixedLatticeElement("fixed", 5, lattice, false));
         CoordinationResult againstRigid = frame(rigidScene, dt);
         assertEquals(
-                lattice.get(0),
-                againstRigid.placementOf("fixed").screenRect(),
-                "a rigid rect does not release the coincidence walk");
+            lattice.get(0),
+            againstRigid.placementOf("fixed").screenRect(),
+            "a rigid rect does not release the coincidence walk"
+        );
 
         InworldCoordinator standardScene = InworldCoordinator.withDefaults();
         standardScene.register(new FixedLatticeElement("holder", 10, lattice, false));
         standardScene.register(new FixedLatticeElement("fixed", 5, lattice, false));
         CoordinationResult againstFixed = frame(standardScene, dt);
         assertTrue(
-                lattice.indexOf(againstFixed.placementOf("fixed").screenRect()) > 0,
-                "the standard fixed peer does release the walk: "
-                        + againstFixed.placementOf("fixed").screenRect());
+            lattice.indexOf(againstFixed.placementOf("fixed").screenRect()) > 0,
+            "the standard fixed peer does release the walk: " + againstFixed.placementOf("fixed").screenRect()
+        );
     }
 
     @Test
@@ -226,12 +241,9 @@ class RigidAvoidanceClassTest {
         // either, but that the separation layer does see — the pushable
         // element is shoved out: the contrast proves the test can see a push.
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement rigid = TestElement.arbitrated("rigid", 200, 150, new Size(60, 20))
-                .withRigid()
-                .withSingleCandidate()
-                .withPriority(100);
-        TestElement pushable = TestElement.arbitrated("pushable", 200, 150, new Size(60, 20))
-                .withSingleCandidate()
+        TestElement rigid = TestElement.arbitrated("rigid", 200, 150, new Size(60, 20)).withRigid()
+                .withSingleCandidate().withPriority(100);
+        TestElement pushable = TestElement.arbitrated("pushable", 200, 150, new Size(60, 20)).withSingleCandidate()
                 .withPriority(0);
         coordinator.register(rigid);
         coordinator.register(pushable);
@@ -240,22 +252,22 @@ class RigidAvoidanceClassTest {
             now += dt;
             CoordinationResult result = frame(coordinator, now);
             assertEquals(
-                    new FloatRect(170, 140, 60, 20),
-                    result.elementState("rigid").visualRect(),
-                    "frame " + i + ": rigid never moves");
+                new FloatRect(170, 140, 60, 20),
+                result.elementState("rigid").visualRect(),
+                "frame " + i + ": rigid never moves"
+            );
             assertEquals(
-                    new FloatRect(170, 140, 60, 20),
-                    result.elementState("pushable").visualRect(),
-                    "frame " + i + ": nothing pushes the pushable either — the overlap stands");
+                new FloatRect(170, 140, 60, 20),
+                result.elementState("pushable").visualRect(),
+                "frame " + i + ": nothing pushes the pushable either — the overlap stands"
+            );
         }
 
         InworldCoordinator ghostScene = InworldCoordinator.withDefaults();
         TestElement ghost = TestElement.arbitrated("ghost", 200, 150, new Size(60, 20))
-                .withLadder(TestElement.ladder(SpacePolicy.ghost, false, true, new Size(60, 20)))
-                .withSingleCandidate()
+                .withLadder(TestElement.ladder(SpacePolicy.ghost, false, true, new Size(60, 20))).withSingleCandidate()
                 .withPriority(100);
-        TestElement pushablePeer = TestElement.arbitrated("peer", 200, 150, new Size(60, 20))
-                .withSingleCandidate()
+        TestElement pushablePeer = TestElement.arbitrated("peer", 200, 150, new Size(60, 20)).withSingleCandidate()
                 .withPriority(0);
         ghostScene.register(ghost);
         ghostScene.register(pushablePeer);
@@ -264,9 +276,10 @@ class RigidAvoidanceClassTest {
             now += dt;
             CoordinationResult result = frame(ghostScene, now);
             assertTrue(
-                    result.elementState("peer").visualRect().y() >= 160,
-                    "frame " + i + ": against the separation-visible ghost the pushable is shoved out: "
-                            + result.elementState("peer").visualRect());
+                result.elementState("peer").visualRect().y() >= 160,
+                "frame " + i + ": against the separation-visible ghost the pushable is shoved out: "
+                        + result.elementState("peer").visualRect()
+            );
         }
     }
 
@@ -276,8 +289,7 @@ class RigidAvoidanceClassTest {
         // snapshot: a rigid rect must never appear in it, so a zone-scoring
         // element's overlap term sees standard neighbors only
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement rigid = TestElement.arbitrated("rigid", 200, 150, new Size(60, 20))
-                .withRigid()
+        TestElement rigid = TestElement.arbitrated("rigid", 200, 150, new Size(60, 20)).withRigid()
                 .withSingleCandidate();
         TestElement standard = TestElement.arbitrated("standard", 300, 60, new Size(80, 30));
         TestElement consumer = TestElement.arbitrated("consumer", 200, 220, new Size(90, 30));
@@ -313,25 +325,27 @@ class RigidAvoidanceClassTest {
             assertEquals(b.resolved(), a.resolved(), "resolved diverged at frame " + (i + 1));
             assertEquals(b.epoch(), a.epoch(), "epoch diverged at frame " + (i + 1));
             assertEquals(b.budget(), a.budget(), "budget diverged at frame " + (i + 1));
-            for (String id : new String[] {"panel", "tracker"}) {
+            for (String id : new String[]{"panel", "tracker"}) {
                 assertEquals(
-                        b.placementOf(id), a.placementOf(id), "placement of " + id + " diverged at frame " + (i + 1));
+                    b.placementOf(id),
+                    a.placementOf(id),
+                    "placement of " + id + " diverged at frame " + (i + 1)
+                );
                 assertEquals(
-                        b.elementState(id), a.elementState(id), "state of " + id + " diverged at frame " + (i + 1));
+                    b.elementState(id),
+                    a.elementState(id),
+                    "state of " + id + " diverged at frame " + (i + 1)
+                );
             }
         }
     }
 
     private static List<CoordinationResult> runMixedScene(boolean withRigidElement) {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement panel = TestElement.arbitrated("panel", 120, 80, new Size(100, 40), new Size(60, 24))
+        TestElement panel = TestElement.arbitrated("panel", 120, 80, new Size(100, 40), new Size(60, 24)).withSticky();
+        TestElement tracker = TestElement.arbitrated("tracker", 200, 220, new Size(90, 30)).withKind(SpaceKind.tracked)
                 .withSticky();
-        TestElement tracker = TestElement.arbitrated("tracker", 200, 220, new Size(90, 30))
-                .withKind(SpaceKind.tracked)
-                .withSticky();
-        TestElement rigid = TestElement.arbitrated("rigid", 120, 80, new Size(100, 40))
-                .withRigid()
-                .withPriority(100)
+        TestElement rigid = TestElement.arbitrated("rigid", 120, 80, new Size(100, 40)).withRigid().withPriority(100)
                 .withSingleCandidate();
         coordinator.register(panel);
         coordinator.register(tracker);
@@ -354,8 +368,9 @@ class RigidAvoidanceClassTest {
             results.add(frame(coordinator, now));
             if (withRigidElement && i >= 10 && i < 22) {
                 assertNotNull(
-                        results.get(results.size() - 1).placementOf("rigid"),
-                        "the rigid element presents whenever it has a screen candidate");
+                    results.get(results.size() - 1).placementOf("rigid"),
+                    "the rigid element presents whenever it has a screen candidate"
+                );
             }
         }
         return results;
@@ -427,10 +442,20 @@ class RigidAvoidanceClassTest {
                 return ElementProposal.retract(context.variant());
             }
             List<PlacementCandidate> candidates = new ArrayList<>(2);
-            candidates.add(PlacementCandidate.screen(FloatRect.around(
-                    new FloatPos(anchor.x() + dockX, anchor.y() + dockY), size.width(), size.height())));
-            candidates.add(PlacementCandidate.screen(FloatRect.around(
-                    new FloatPos(anchor.x() - dockX - 60, anchor.y() - dockY - 60), size.width(), size.height())));
+            candidates.add(
+                PlacementCandidate.screen(
+                    FloatRect.around(new FloatPos(anchor.x() + dockX, anchor.y() + dockY), size.width(), size.height())
+                )
+            );
+            candidates.add(
+                PlacementCandidate.screen(
+                    FloatRect.around(
+                        new FloatPos(anchor.x() - dockX - 60, anchor.y() - dockY - 60),
+                        size.width(),
+                        size.height()
+                    )
+                )
+            );
             return ElementProposal.of(context.variant(), anchor, candidates);
         }
     }

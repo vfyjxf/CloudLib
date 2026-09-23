@@ -122,14 +122,15 @@ public final class AvoidRectsMiddleware implements FloatingMiddleware {
         if (obs == null || obs.isEmpty()) return Result.done();
 
         FloatPos escaped = escapeObstacles(
-                state.x(),
-                state.y(),
-                state.floatingRect().width(),
-                state.floatingRect().height(),
-                obs,
-                padding,
-                maxPush,
-                state.boundary());
+            state.x(),
+            state.y(),
+            state.floatingRect().width(),
+            state.floatingRect().height(),
+            obs,
+            padding,
+            maxPush,
+            state.boundary()
+        );
 
         state.setX(escaped.x());
         state.setY(escaped.y());
@@ -154,13 +155,25 @@ public final class AvoidRectsMiddleware implements FloatingMiddleware {
      * @return the escaped position
      */
     public static FloatPos escapeObstacles(
-            double x, double y, int width, int height, List<Rect> obstacles, int padding, int maxPush, Rect boundary) {
+        double x,
+        double y,
+        int width,
+        int height,
+        List<Rect> obstacles,
+        int padding,
+        int maxPush,
+        Rect boundary
+    ) {
         double budget = maxPush;
         for (int pass = 0; pass < 3 && budget > 0; pass++) {
             boolean moved = false;
             for (Rect ob : obstacles) {
                 Rect pad = new Rect(
-                        ob.x() - padding, ob.y() - padding, ob.width() + padding * 2, ob.height() + padding * 2);
+                    ob.x() - padding,
+                    ob.y() - padding,
+                    ob.width() + padding * 2,
+                    ob.height() + padding * 2
+                );
                 Rect cur = new Rect((int) Math.round(x), (int) Math.round(y), width, height);
                 Rect in = cur.intersection(pad);
                 if (in.width() <= 0 || in.height() <= 0) continue;

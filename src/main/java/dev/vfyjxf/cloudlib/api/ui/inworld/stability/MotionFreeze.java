@@ -42,7 +42,11 @@ public final class MotionFreeze {
      *        estimate; must be positive
      */
     public record Config(
-            double enterSpeedPxPerSec, double releaseSpeedPxPerSec, double settleSeconds, double speedHalfLifeSeconds) {
+        double enterSpeedPxPerSec,
+        double releaseSpeedPxPerSec,
+        double settleSeconds,
+        double speedHalfLifeSeconds
+    ) {
 
         public Config {
             requireFinitePositive("enterSpeedPxPerSec", enterSpeedPxPerSec);
@@ -50,16 +54,19 @@ public final class MotionFreeze {
             requireFinitePositive("settleSeconds", settleSeconds);
             requireFinitePositive("speedHalfLifeSeconds", speedHalfLifeSeconds);
             if (releaseSpeedPxPerSec >= enterSpeedPxPerSec) {
-                throw new IllegalArgumentException("releaseSpeedPxPerSec must be strictly below enterSpeedPxPerSec: "
-                        + releaseSpeedPxPerSec + " >= " + enterSpeedPxPerSec);
+                throw new IllegalArgumentException(
+                    "releaseSpeedPxPerSec must be strictly below enterSpeedPxPerSec: " + releaseSpeedPxPerSec + " >= "
+                            + enterSpeedPxPerSec
+                );
             }
         }
 
         public static Config of(
-                double enterSpeedPxPerSec,
-                double releaseSpeedPxPerSec,
-                double settleSeconds,
-                double speedHalfLifeSeconds) {
+            double enterSpeedPxPerSec,
+            double releaseSpeedPxPerSec,
+            double settleSeconds,
+            double speedHalfLifeSeconds
+        ) {
             return new Config(enterSpeedPxPerSec, releaseSpeedPxPerSec, settleSeconds, speedHalfLifeSeconds);
         }
 

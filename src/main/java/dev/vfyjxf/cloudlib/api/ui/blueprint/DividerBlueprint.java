@@ -116,10 +116,7 @@ public final class DividerBlueprint implements Blueprint<DividerWidget> {
 
     @Override
     public void updateWidget(DividerWidget widget, Scene scene, SceneContext context) {
-        widget.setOrientation(orientation)
-                .setThickness(thickness)
-                .setTexture(texture)
-                .useStyle(style);
+        widget.setOrientation(orientation).setThickness(thickness).setTexture(texture).useStyle(style);
     }
 
     // endregion

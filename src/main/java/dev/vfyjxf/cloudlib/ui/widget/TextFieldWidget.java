@@ -12,6 +12,7 @@ import dev.vfyjxf.cloudlib.ui.Textures;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -41,6 +42,9 @@ public class TextFieldWidget extends Widget {
 
     // region textures
 
+    /** {@code cursor-color} — the caret ink a theme may declare. */
+    static final String propCursorColor = "cursor-color";
+
     private VisualTexture backgroundTexture = Textures.inset;
     private VisualTexture borderTexture = new ColorTexture(0x00000000);
 
@@ -65,6 +69,8 @@ public class TextFieldWidget extends Widget {
 
     private TextFieldWidget() {
         setFocusable(true);
+        // tick() drives the cursor blink.
+        setTickable(true);
 
         onMount((scene, context, handle) -> {
             scene.layoutTree().setMeasureFunc(nodeId(), (style, availableSpace) -> {
@@ -119,8 +125,7 @@ public class TextFieldWidget extends Widget {
                 cursorPos = 0;
             } else if (keyCode == InputConstants.KEY_END) {
                 cursorPos = text.length();
-            } else if ((keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER)
-                    && onEnterPressed != null) { // Enter
+            } else if (isEnter(keyCode) && onEnterPressed != null) {
                 onEnterPressed.accept(text);
             }
             return EventDispatch.consumed;
@@ -143,6 +148,11 @@ public class TextFieldWidget extends Widget {
         if (onTextChanged != null) {
             onTextChanged.accept(text);
         }
+    }
+
+    /** Enter, on the main block or the numpad. */
+    private static boolean isEnter(int keyCode) {
+        return keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER;
     }
 
     // endregion
@@ -182,8 +192,26 @@ public class TextFieldWidget extends Widget {
     }
 
     public TextFieldWidget setEditable(boolean editable) {
-        this.editable = editable;
+        if (this.editable != editable) {
+            this.editable = editable;
+            markStyleDirty();
+        }
         return this;
+    }
+
+    /**
+     * A field nobody can type into is the disabled one: {@link #editable()} is
+     * part of the selector surface, so a read-only field reports
+     * {@code :disabled} rather than claiming to be enabled.
+     */
+    @Override
+    public Set<String> styleStates() {
+        Set<String> states = super.styleStates();
+        if (!editable) {
+            states.remove("enabled");
+            states.add("disabled");
+        }
+        return states;
     }
 
     public TextFieldWidget onTextChanged(@Nullable Consumer<String> callback) {
@@ -256,8 +284,17 @@ public class TextFieldWidget extends Widget {
         if (focused() && editable && (cursorBlinkTime / 10) % 2 == 0) {
             String beforeCursor = text.substring(0, cursorPos);
             int cursorX = padding + font.width(beforeCursor);
-            canvas.fill(cursorX, textY - 1, 1, font.lineHeight + 2, 0xFF000000 | cursorColor);
+            canvas.fill(cursorX, textY - 1, 1, font.lineHeight + 2, caretColor());
         }
+    }
+
+    /**
+     * The caret's ink — a theme's {@code cursor-color} when it declares one,
+     * else the code colour at full alpha.
+     */
+    int caretColor() {
+        Integer themed = style().visualContext().getProperty(propCursorColor, Integer.class);
+        return themed != null ? themed : 0xFF000000 | cursorColor;
     }
 
     // endregion
@@ -268,7 +305,11 @@ public class TextFieldWidget extends Widget {
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
         collector.addWithDefault(
-                "text", text.isEmpty() ? "(empty)" : truncate(text, 20), "(empty)", InspectionProperty.categoryData);
+            "text",
+            text.isEmpty() ? "(empty)" : truncate(text, 20),
+            "(empty)",
+            InspectionProperty.categoryData
+        );
         collector.addWithDefault("textLength", text.length(), 0, InspectionProperty.categoryData);
         collector.addWithDefault("cursorPos", cursorPos, 0, InspectionProperty.categoryData);
         collector.addWithDefault("maxLength", maxLength, 256, InspectionProperty.categoryData);

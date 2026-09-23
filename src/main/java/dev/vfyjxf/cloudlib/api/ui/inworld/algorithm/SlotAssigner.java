@@ -185,7 +185,11 @@ public final class SlotAssigner {
     private record Move(String elementId, Slot target, double gain) {}
 
     private @Nullable Move bestImprovement(
-            List<Element> elements, List<Slot> slots, Map<String, Slot> assignment, Map<String, String> incumbents) {
+        List<Element> elements,
+        List<Slot> slots,
+        Map<String, Slot> assignment,
+        Map<String, String> incumbents
+    ) {
         Move best = null;
         for (Element element : elements) {
             Slot current = assignment.get(element.id());

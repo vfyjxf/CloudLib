@@ -28,13 +28,14 @@ import java.util.Objects;
  *        {@link RejectionReason#insufficientArea}
  */
 public record InworldVariant(
-        int level,
-        Size requestedSize,
-        ContentTier contentTier,
-        SpacePolicy spacePolicy,
-        boolean allowsNudge,
-        boolean allowsClamp,
-        double minComfortableArea) {
+    int level,
+    Size requestedSize,
+    ContentTier contentTier,
+    SpacePolicy spacePolicy,
+    boolean allowsNudge,
+    boolean allowsClamp,
+    double minComfortableArea
+) {
 
     public InworldVariant {
         Objects.requireNonNull(requestedSize, "requestedSize");
@@ -48,7 +49,8 @@ public record InworldVariant(
         }
         if (!Double.isFinite(minComfortableArea) || minComfortableArea < 0) {
             throw new IllegalArgumentException(
-                    "minComfortableArea must be finite and non-negative: " + minComfortableArea);
+                "minComfortableArea must be finite and non-negative: " + minComfortableArea
+            );
         }
     }
 

@@ -401,6 +401,19 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
     void unmount() {
         // TODO:Blueprint support!
         var scene = this.scene;
+        if (scene == null) {
+            // never mounted: queued as created under a mounted parent and unmounted
+            // before the flush reached it, or attached below a detached subtree — no
+            // taffy node, no layer seat, no click group exists, so only the links are
+            // left to release. The lifecycle still moves to unmounted: the unmount
+            // walk queues every visited widget for destruction, and destroy refuses
+            // anything that never passed through here.
+            this.context = null;
+            this.parent = null;
+            listeners(WidgetEvent.onUnmount).onUnmount();
+            lifecycle = Lifecycle.unmounted;
+            return;
+        }
         if (parent != null) {
             scene.tree.removeChild(parent.nodeId(), nodeId);
         }
@@ -440,6 +453,9 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
 
     public Widget onTick(WidgetEvent.OnTick listener) {
         events().register(WidgetEvent.onTick, listener);
+        // Registering a tick listener implies the widget needs ticking —
+        // the scene only ticks widgets flagged as tickable.
+        setTickable(true);
         return this;
     }
 
@@ -1770,7 +1786,11 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         collector.addWithDefault("hasFocus", hasFocus(), false, InspectionProperty.categoryState);
         collector.addWithDefault("focusable", focusable(), false, InspectionProperty.categoryState);
         collector.addWithDefault(
-                "focusScope", focusNode instanceof FocusScopeNode, false, InspectionProperty.categoryState);
+            "focusScope",
+            focusNode instanceof FocusScopeNode,
+            false,
+            InspectionProperty.categoryState
+        );
         collector.addWithDefault("hovered", hovered, false, InspectionProperty.categoryState);
         collector.addWithDefault("draggable", draggable, false, InspectionProperty.categoryState);
         collector.addWithDefault("dragging", dragging, false, InspectionProperty.categoryState);
@@ -1787,7 +1807,8 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         style.collectStyleInspection(styleCollector);
         for (var prop : styleCollector.getAll()) {
             collector.addProperty(
-                    new InspectionProperty(prop.name(), prop.value(), prop.defaultValue(), "style-" + prop.category()));
+                new InspectionProperty(prop.name(), prop.value(), prop.defaultValue(), "style-" + prop.category())
+            );
         }
     }
 

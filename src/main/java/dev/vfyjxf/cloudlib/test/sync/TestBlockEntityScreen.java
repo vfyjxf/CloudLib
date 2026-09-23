@@ -70,11 +70,12 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
         WidgetGroup<Widget> chips = Widgets.row(JustifyContent.FLEX_START, AlignItems.FLEX_START);
         chips.useStyle(columnGap(2));
         List<ItemStack> options = List.of(
-                Items.APPLE.getDefaultInstance(),
-                Items.DIAMOND.getDefaultInstance(),
-                Items.EMERALD.getDefaultInstance(),
-                Items.ENDER_PEARL.getDefaultInstance(),
-                Items.NETHERITE_SCRAP.getDefaultInstance());
+            Items.APPLE.getDefaultInstance(),
+            Items.DIAMOND.getDefaultInstance(),
+            Items.EMERALD.getDefaultInstance(),
+            Items.ENDER_PEARL.getDefaultInstance(),
+            Items.NETHERITE_SCRAP.getDefaultInstance()
+        );
         ThreadLocalRandom random = ThreadLocalRandom.current();
         var lastSent = TextWidget.of("--").setColor(0xFF35D6D0);
         for (int i = 0; i < options.size(); i++) {
@@ -82,8 +83,7 @@ public class TestBlockEntityScreen extends BasicMenuScreen<TestBlockEntity.Menu>
             chips.addWidget(ChipWidget.of(String.valueOf(i + 1), () -> {
                 ItemStack sent = stack.copyWithCount(random.nextInt(1, 64));
                 menu.selected.sendToServer(sent);
-                lastSent.setText(
-                        "sent " + sent.getCount() + "x " + sent.getHoverName().getString());
+                lastSent.setText("sent " + sent.getCount() + "x " + sent.getHoverName().getString());
             }));
         }
         panel.addChild(chips);

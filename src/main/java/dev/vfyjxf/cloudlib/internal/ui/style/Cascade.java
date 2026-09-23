@@ -153,8 +153,7 @@ public final class Cascade {
                 Map<String, ResolvedDecl> parentResolved = resolve(parent);
                 for (Map.Entry<String, ResolvedDecl> e : parentResolved.entrySet()) {
                     var key = Styles.byId(e.getKey());
-                    boolean inheritable =
-                            (key != null && key.inherited()) || e.getKey().startsWith("--");
+                    boolean inheritable = (key != null && key.inherited()) || e.getKey().startsWith("--");
                     if (inheritable && !local.containsKey(e.getKey())) {
                         local.put(e.getKey(), e.getValue());
                     }
@@ -192,8 +191,9 @@ public final class Cascade {
                     continue;
                 }
                 out.put(
-                        e.getKey(),
-                        new ResolvedDecl(decl.declaration(), substitute(decl.value(), env, varCache), true));
+                    e.getKey(),
+                    new ResolvedDecl(decl.declaration(), substitute(decl.value(), env, varCache), true)
+                );
             }
             return out;
         }
@@ -208,9 +208,10 @@ public final class Cascade {
      * Unresolvable vars drop the declaration (empty result) unless a fallback exists.
      */
     private static List<ComponentValue> substitute(
-            List<ComponentValue> values,
-            Function<String, @Nullable List<ComponentValue>> env,
-            Map<String, List<ComponentValue>> varCache) {
+        List<ComponentValue> values,
+        Function<String, @Nullable List<ComponentValue>> env,
+        Map<String, List<ComponentValue>> varCache
+    ) {
         if (!containsVar(values)) {
             return values; // fast path — no var() anywhere, skip the copy
         }
@@ -228,14 +229,10 @@ public final class Cascade {
         if (!containsVar(value.values())) {
             return value;
         }
-        List<ComponentValue> out = substituteList(
-                value.values(),
-                name -> {
-                    Tokens t = env.get(name);
-                    return t == null ? null : t.values();
-                },
-                new HashMap<>(),
-                new HashSet<>());
+        List<ComponentValue> out = substituteList(value.values(), name -> {
+            Tokens t = env.get(name);
+            return t == null ? null : t.values();
+        }, new HashMap<>(), new HashSet<>());
         return out == null ? value : Tokens.of(out);
     }
 
@@ -261,10 +258,11 @@ public final class Cascade {
      * @return the substituted list, or null when an unresolved var() poisons the value
      */
     private static @Nullable List<ComponentValue> substituteList(
-            List<ComponentValue> values,
-            Function<String, @Nullable List<ComponentValue>> env,
-            Map<String, List<ComponentValue>> varCache,
-            Set<String> inFlight) {
+        List<ComponentValue> values,
+        Function<String, @Nullable List<ComponentValue>> env,
+        Map<String, List<ComponentValue>> varCache,
+        Set<String> inFlight
+    ) {
         List<ComponentValue> out = new ArrayList<>(values.size());
         for (ComponentValue v : values) {
             if (v instanceof ComponentValue.Function fn) {
@@ -297,14 +295,13 @@ public final class Cascade {
     }
 
     private static @Nullable List<ComponentValue> expandVar(
-            ComponentValue.Function var,
-            Function<String, @Nullable List<ComponentValue>> env,
-            Map<String, List<ComponentValue>> varCache,
-            Set<String> inFlight) {
+        ComponentValue.Function var,
+        Function<String, @Nullable List<ComponentValue>> env,
+        Map<String, List<ComponentValue>> varCache,
+        Set<String> inFlight
+    ) {
         List<ComponentValue> args = var.args();
-        if (args.isEmpty()
-                || !(args.get(0) instanceof ComponentValue.Ident name)
-                || !name.value().startsWith("--")) {
+        if (args.isEmpty() || !(args.get(0) instanceof ComponentValue.Ident name) || !name.value().startsWith("--")) {
             return null;
         }
         String varName = name.value();

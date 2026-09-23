@@ -77,7 +77,12 @@ public final class Projection {
      * @param screenH     gui-scaled screen height
      */
     public static Projection capture(
-            Matrix4f worldToView, Matrix4f viewToClip, Vec3 cameraPos, int screenW, int screenH) {
+        Matrix4f worldToView,
+        Matrix4f viewToClip,
+        Vec3 cameraPos,
+        int screenW,
+        int screenH
+    ) {
         return new Projection(worldToView, viewToClip, cameraPos, screenW, screenH);
     }
 

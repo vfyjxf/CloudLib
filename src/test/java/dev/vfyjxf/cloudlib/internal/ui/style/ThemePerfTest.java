@@ -159,11 +159,7 @@ class ThemePerfTest {
         // 50-tag theme × 1000-node tree — wide margin; catches pathological blowups
         StringBuilder css = new StringBuilder(":root { --c: #FFF }\n");
         for (int i = 0; i < 50; i++) {
-            css.append("tag")
-                    .append(i)
-                    .append(" { color: var(--c); padding: ")
-                    .append(i % 8 + 1)
-                    .append("px }\n");
+            css.append("tag").append(i).append(" { color: var(--c); padding: ").append(i % 8 + 1).append("px }\n");
         }
         css.append("button:hovered { margin: 2px }");
         Theme t = theme(css.toString());
@@ -179,9 +175,10 @@ class ThemePerfTest {
             ctx.resolve(n);
         }
         long elapsedMs = (System.nanoTime() - start) / 1_000_000;
-        System.out.println("[theme-perf] 1000-node resolve: " + elapsedMs + "ms ("
-                + Probe.tagCalls.get() + " tag lookups, "
-                + Probe.stateCalls.get() + " state snapshots)");
+        System.out.println(
+            "[theme-perf] 1000-node resolve: " + elapsedMs + "ms (" + Probe.tagCalls.get() + " tag lookups, "
+                    + Probe.stateCalls.get() + " state snapshots)"
+        );
         // hugely generous bound — just guards quadratic blowups
         assertTrue(elapsedMs < 10_000, "resolve took " + elapsedMs + "ms for 1000 nodes");
     }
@@ -193,20 +190,16 @@ class ThemePerfTest {
     @Test
     void profilingWorkload() {
         Assumptions.assumeTrue(
-                Boolean.getBoolean("cloudlib.theme.profile"),
-                "profiling workload — enable with -Dcloudlib.theme.profile=1");
+            Boolean.getBoolean("cloudlib.theme.profile"),
+            "profiling workload — enable with -Dcloudlib.theme.profile=1"
+        );
         StringBuilder css = new StringBuilder(":root { --c: #FFF; --pad: 4px }\n");
         for (int i = 0; i < 50; i++) {
-            css.append("tag")
-                    .append(i)
-                    .append(" { color: var(--c); padding: var(--pad); margin: ")
-                    .append(i % 4 + 1)
+            css.append("tag").append(i).append(" { color: var(--c); padding: var(--pad); margin: ").append(i % 4 + 1)
                     .append("px }\n");
         }
-        css.append("button:hovered { margin: 2px }")
-                .append("panel .slot { gap: 3px }")
-                .append("panel > button { z-index: 1 }")
-                .append("*:nth-child(2n) { flex-grow: 1 }");
+        css.append("button:hovered { margin: 2px }").append("panel .slot { gap: 3px }")
+                .append("panel > button { z-index: 1 }").append("*:nth-child(2n) { flex-grow: 1 }");
         Theme t = theme(css.toString());
         // realistic tree: 40 containers × 25 children = 1040 nodes
         Probe root = new Probe("panel");

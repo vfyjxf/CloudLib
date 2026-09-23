@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.canvas;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
@@ -26,6 +27,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11;
 
@@ -48,6 +50,11 @@ public final class SceneCanvas {
 
     private final GuiGraphics graphics;
     private final GuiGraphics forwardedGraphics;
+    /**
+     * The forwarded channel's own batch source — see {@link ForwardedBufferSource} for why a fade
+     * cannot drain through the canvas's source.
+     */
+    private final ForwardedBufferSource forwardedSource;
     private final ClipStack clipStack = new ClipStack();
     private boolean forwardedActive = false;
     private boolean forwardedLayered = false;
@@ -98,7 +105,8 @@ public final class SceneCanvas {
 
     private SceneCanvas(GuiGraphics graphics) {
         this.graphics = graphics;
-        this.forwardedGraphics = new GuiGraphics(Minecraft.getInstance(), graphics.bufferSource());
+        this.forwardedSource = ForwardedBufferSource.shared();
+        this.forwardedGraphics = new GuiGraphics(Minecraft.getInstance(), forwardedSource);
     }
 
     /**
@@ -133,19 +141,20 @@ public final class SceneCanvas {
          * Vertices are stored in order: bottom-left, bottom-right, top-right, top-left.
          */
         private record TexturedQuad(
-                float x0,
-                float y0,
-                float x1,
-                float y1,
-                float x2,
-                float y2,
-                float x3,
-                float y3,
-                float u0,
-                float v0,
-                float u1,
-                float v1,
-                int color) {}
+            float x0,
+            float y0,
+            float x1,
+            float y1,
+            float x2,
+            float y2,
+            float x3,
+            float y3,
+            float u0,
+            float v0,
+            float u1,
+            float v1,
+            int color
+        ) {}
 
         /**
          * Stores a colored quad with pre-transformed vertex positions
@@ -153,18 +162,19 @@ public final class SceneCanvas {
          * Vertices are stored in order: bottom-left, bottom-right, top-right, top-left.
          */
         private record ColoredQuad(
-                float x0,
-                float y0,
-                float x1,
-                float y1,
-                float x2,
-                float y2,
-                float x3,
-                float y3,
-                int c0,
-                int c1,
-                int c2,
-                int c3) {
+            float x0,
+            float y0,
+            float x1,
+            float y1,
+            float x2,
+            float y2,
+            float x3,
+            float y3,
+            int c0,
+            int c1,
+            int c2,
+            int c3
+        ) {
             /**
              * Uniform-colour convenience.
              */
@@ -200,20 +210,21 @@ public final class SceneCanvas {
         final List<BatchCommand> commands = new ArrayList<>();
 
         void addTextured(
-                ResourceLocation texture,
-                float x0,
-                float y0,
-                float x1,
-                float y1,
-                float x2,
-                float y2,
-                float x3,
-                float y3,
-                float u0,
-                float v0,
-                float u1,
-                float v1,
-                int color) {
+            ResourceLocation texture,
+            float x0,
+            float y0,
+            float x1,
+            float y1,
+            float x2,
+            float y2,
+            float x3,
+            float y3,
+            float u0,
+            float v0,
+            float u1,
+            float v1,
+            int color
+        ) {
             var quad = new TexturedQuad(x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, color);
             if (!commands.isEmpty()) {
                 var last = commands.get(commands.size() - 1);
@@ -232,18 +243,19 @@ public final class SceneCanvas {
         }
 
         void addColoredGradient(
-                float x0,
-                float y0,
-                float x1,
-                float y1,
-                float x2,
-                float y2,
-                float x3,
-                float y3,
-                int c0,
-                int c1,
-                int c2,
-                int c3) {
+            float x0,
+            float y0,
+            float x1,
+            float y1,
+            float x2,
+            float y2,
+            float x3,
+            float y3,
+            int c0,
+            int c1,
+            int c2,
+            int c3
+        ) {
             addColoredQuad(new ColoredQuad(x0, y0, x1, y1, x2, y2, x3, y3, c0, c1, c2, c3));
         }
 
@@ -272,16 +284,17 @@ public final class SceneCanvas {
     private final BatchableTexture.VertexEmitter batchEmitter = new BatchableTexture.VertexEmitter() {
         @Override
         public void textured(
-                ResourceLocation texture,
-                float x,
-                float y,
-                float width,
-                float height,
-                float u0,
-                float v0,
-                float u1,
-                float v1,
-                int color) {
+            ResourceLocation texture,
+            float x,
+            float y,
+            float width,
+            float height,
+            float u0,
+            float v0,
+            float u1,
+            float v1,
+            int color
+        ) {
             if (width <= 0 || height <= 0) {
                 return;
             }
@@ -404,13 +417,14 @@ public final class SceneCanvas {
                 // uses (ONE, ZERO) alpha which would overwrite the target's
                 // coverage; an offscreen UI surface must accumulate it
                 RenderSystem.blendFuncSeparate(
-                        GlStateManager.SourceFactor.SRC_ALPHA,
-                        GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
-                        GlStateManager.SourceFactor.ONE,
-                        GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+                    GlStateManager.SourceFactor.SRC_ALPHA,
+                    GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                    GlStateManager.SourceFactor.ONE,
+                    GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA
+                );
 
-                BufferBuilder buffer =
-                        Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+                BufferBuilder buffer = Tesselator.getInstance()
+                        .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
                 for (var quad : tb.quads) {
                     int c = quad.color;
@@ -419,18 +433,10 @@ public final class SceneCanvas {
                     float g = ((c >> 8) & 0xFF) / 255f;
                     float b = (c & 0xFF) / 255f;
 
-                    buffer.addVertex(matrix, quad.x0, quad.y0, 0)
-                            .setUv(quad.u0, quad.v1)
-                            .setColor(r, g, b, a);
-                    buffer.addVertex(matrix, quad.x1, quad.y1, 0)
-                            .setUv(quad.u1, quad.v1)
-                            .setColor(r, g, b, a);
-                    buffer.addVertex(matrix, quad.x2, quad.y2, 0)
-                            .setUv(quad.u1, quad.v0)
-                            .setColor(r, g, b, a);
-                    buffer.addVertex(matrix, quad.x3, quad.y3, 0)
-                            .setUv(quad.u0, quad.v0)
-                            .setColor(r, g, b, a);
+                    buffer.addVertex(matrix, quad.x0, quad.y0, 0).setUv(quad.u0, quad.v1).setColor(r, g, b, a);
+                    buffer.addVertex(matrix, quad.x1, quad.y1, 0).setUv(quad.u1, quad.v1).setColor(r, g, b, a);
+                    buffer.addVertex(matrix, quad.x2, quad.y2, 0).setUv(quad.u1, quad.v0).setColor(r, g, b, a);
+                    buffer.addVertex(matrix, quad.x3, quad.y3, 0).setUv(quad.u0, quad.v0).setColor(r, g, b, a);
                 }
 
                 MeshData meshData = buffer.build();
@@ -439,13 +445,14 @@ public final class SceneCanvas {
                 RenderSystem.setShader(GameRenderer::getPositionColorShader);
                 RenderSystem.enableBlend();
                 RenderSystem.blendFuncSeparate(
-                        GlStateManager.SourceFactor.SRC_ALPHA,
-                        GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
-                        GlStateManager.SourceFactor.ONE,
-                        GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+                    GlStateManager.SourceFactor.SRC_ALPHA,
+                    GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                    GlStateManager.SourceFactor.ONE,
+                    GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA
+                );
 
-                BufferBuilder buffer =
-                        Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+                BufferBuilder buffer = Tesselator.getInstance()
+                        .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
                 for (var quad : cb.quads) {
                     addColorVertex(buffer, matrix, quad.x0, quad.y0, quad.c0);
@@ -580,7 +587,7 @@ public final class SceneCanvas {
     // region texture
 
     public SceneCanvas texture(VisualTexture texture, int x, int y, int width, int height) {
-        if (width <= 0 || height <= 0) {
+        if (width <= 0 || height <= 0 || texture.isEmpty()) {
             return this;
         }
         flushForwardedDraw();
@@ -611,7 +618,16 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas quad(
-            ResourceLocation texture, int x, int y, int width, int height, float u0, float v0, float u1, float v1) {
+        ResourceLocation texture,
+        int x,
+        int y,
+        int width,
+        int height,
+        float u0,
+        float v0,
+        float u1,
+        float v1
+    ) {
         if (width <= 0 || height <= 0) {
             return this;
         }
@@ -621,17 +637,18 @@ public final class SceneCanvas {
     }
 
     public SceneCanvas quad(
-            ResourceLocation texture,
-            int x,
-            int y,
-            int width,
-            int height,
-            int u,
-            int v,
-            int regionWidth,
-            int regionHeight,
-            int textureWidth,
-            int textureHeight) {
+        ResourceLocation texture,
+        int x,
+        int y,
+        int width,
+        int height,
+        int u,
+        int v,
+        int regionWidth,
+        int regionHeight,
+        int textureWidth,
+        int textureHeight
+    ) {
         float u0 = (float) u / textureWidth;
         float v0 = (float) v / textureHeight;
         float u1 = (float) (u + regionWidth) / textureWidth;
@@ -652,44 +669,47 @@ public final class SceneCanvas {
         }
         flushForwardedDraw();
         batchEmitter.textured(
-                sprite.atlasLocation(),
-                x,
-                y,
-                width,
-                height,
-                sprite.getU0(),
-                sprite.getV0(),
-                sprite.getU1(),
-                sprite.getV1(),
-                currentColor);
+            sprite.atlasLocation(),
+            x,
+            y,
+            width,
+            height,
+            sprite.getU0(),
+            sprite.getV0(),
+            sprite.getU1(),
+            sprite.getV1(),
+            currentColor
+        );
         return this;
     }
 
     public SceneCanvas blit(
-            ResourceLocation texture,
-            int x,
-            int y,
-            int width,
-            int height,
-            int u,
-            int v,
-            int regionWidth,
-            int regionHeight,
-            int textureWidth,
-            int textureHeight) {
+        ResourceLocation texture,
+        int x,
+        int y,
+        int width,
+        int height,
+        int u,
+        int v,
+        int regionWidth,
+        int regionHeight,
+        int textureWidth,
+        int textureHeight
+    ) {
         return quad(texture, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
     }
 
     public SceneCanvas blit(
-            ResourceLocation texture,
-            int x,
-            int y,
-            int u,
-            int v,
-            int width,
-            int height,
-            int textureWidth,
-            int textureHeight) {
+        ResourceLocation texture,
+        int x,
+        int y,
+        int u,
+        int v,
+        int width,
+        int height,
+        int textureWidth,
+        int textureHeight
+    ) {
         return quad(texture, x, y, width, height, u, v, width, height, textureWidth, textureHeight);
     }
 
@@ -724,7 +744,15 @@ public final class SceneCanvas {
      * @param colorBR bottom-right color (ARGB)
      */
     public SceneCanvas fillGradient(
-            int x, int y, int width, int height, int colorTL, int colorTR, int colorBL, int colorBR) {
+        int x,
+        int y,
+        int width,
+        int height,
+        int colorTL,
+        int colorTR,
+        int colorBL,
+        int colorBR
+    ) {
         flushForwardedDraw();
         // Transform corners: bottom-left, bottom-right, top-right, top-left
         float[] bl = transformPointLocal(x, y + height);
@@ -732,18 +760,19 @@ public final class SceneCanvas {
         float[] tr = transformPointLocal(x + width, y);
         float[] tl = transformPointLocal(x, y);
         batchState.addColoredGradient(
-                bl[0],
-                bl[1],
-                br[0],
-                br[1],
-                tr[0],
-                tr[1],
-                tl[0],
-                tl[1],
-                tint(colorBL),
-                tint(colorBR),
-                tint(colorTR),
-                tint(colorTL));
+            bl[0],
+            bl[1],
+            br[0],
+            br[1],
+            tr[0],
+            tr[1],
+            tl[0],
+            tl[1],
+            tint(colorBL),
+            tint(colorBR),
+            tint(colorTR),
+            tint(colorTL)
+        );
         return this;
     }
 
@@ -815,18 +844,19 @@ public final class SceneCanvas {
      * direction is accepted.
      */
     public SceneCanvas coloredQuad(
-            float x0,
-            float y0,
-            float x1,
-            float y1,
-            float x2,
-            float y2,
-            float x3,
-            float y3,
-            int c0,
-            int c1,
-            int c2,
-            int c3) {
+        float x0,
+        float y0,
+        float x1,
+        float y1,
+        float x2,
+        float y2,
+        float x3,
+        float y3,
+        int c0,
+        int c1,
+        int c2,
+        int c3
+    ) {
         flushForwardedDraw();
         float[] v0 = transformPointLocal(x0, y0);
         float[] v1 = transformPointLocal(x1, y1);
@@ -844,10 +874,34 @@ public final class SceneCanvas {
                 - v0[0] * v3[1];
         if (shoelace > 0) {
             batchState.addColoredGradient(
-                    v0[0], v0[1], v3[0], v3[1], v2[0], v2[1], v1[0], v1[1], tint(c0), tint(c3), tint(c2), tint(c1));
+                v0[0],
+                v0[1],
+                v3[0],
+                v3[1],
+                v2[0],
+                v2[1],
+                v1[0],
+                v1[1],
+                tint(c0),
+                tint(c3),
+                tint(c2),
+                tint(c1)
+            );
         } else {
             batchState.addColoredGradient(
-                    v0[0], v0[1], v1[0], v1[1], v2[0], v2[1], v3[0], v3[1], tint(c0), tint(c1), tint(c2), tint(c3));
+                v0[0],
+                v0[1],
+                v1[0],
+                v1[1],
+                v2[0],
+                v2[1],
+                v3[0],
+                v3[1],
+                tint(c0),
+                tint(c1),
+                tint(c2),
+                tint(c3)
+            );
         }
         return this;
     }
@@ -866,12 +920,13 @@ public final class SceneCanvas {
         // to post-effect shaders), so without an explicit func these quads
         // blend by whatever state the surrounding pass happened to leave
         RenderSystem.blendFuncSeparate(
-                GlStateManager.SourceFactor.SRC_ALPHA,
-                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
-                GlStateManager.SourceFactor.ONE,
-                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-        BufferBuilder buffer =
-                Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+            GlStateManager.SourceFactor.SRC_ALPHA,
+            GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+            GlStateManager.SourceFactor.ONE,
+            GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA
+        );
+        BufferBuilder buffer = Tesselator.getInstance()
+                .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         Matrix4f matrix = graphics.pose().last().pose();
         buffer.addVertex(matrix, x, y + height, 0).setUv(0, 1);
         buffer.addVertex(matrix, x + width, y + height, 0).setUv(1, 1);
@@ -913,12 +968,12 @@ public final class SceneCanvas {
      */
     @SuppressWarnings("DataFlowIssue")
     private static void setColorUniform(ShaderInstance shader, String name, int argb) {
-        shader.getUniform(name)
-                .set(
-                        ((argb >> 16) & 0xFF) / 255f,
-                        ((argb >> 8) & 0xFF) / 255f,
-                        (argb & 0xFF) / 255f,
-                        ((argb >> 24) & 0xFF) / 255f);
+        shader.getUniform(name).set(
+            ((argb >> 16) & 0xFF) / 255f,
+            ((argb >> 8) & 0xFF) / 255f,
+            (argb & 0xFF) / 255f,
+            ((argb >> 24) & 0xFF) / 255f
+        );
     }
 
     // region rounded rectangle
@@ -934,15 +989,16 @@ public final class SceneCanvas {
      * Draws a filled rounded rectangle with per-corner radii.
      */
     public SceneCanvas roundedRect(
-            int x,
-            int y,
-            int width,
-            int height,
-            float radiusTL,
-            float radiusTR,
-            float radiusBR,
-            float radiusBL,
-            int color) {
+        int x,
+        int y,
+        int width,
+        int height,
+        float radiusTL,
+        float radiusTR,
+        float radiusBR,
+        float radiusBL,
+        int color
+    ) {
         return roundedRect(x, y, width, height, radiusTL, radiusTR, radiusBR, radiusBL, color, 0, 0);
     }
 
@@ -954,7 +1010,15 @@ public final class SceneCanvas {
      * @param borderColor border colour (ARGB)
      */
     public SceneCanvas roundedRect(
-            int x, int y, int width, int height, float radius, int fillColor, float borderWidth, int borderColor) {
+        int x,
+        int y,
+        int width,
+        int height,
+        float radius,
+        int fillColor,
+        float borderWidth,
+        int borderColor
+    ) {
         return roundedRect(x, y, width, height, radius, radius, radius, radius, fillColor, borderWidth, borderColor);
     }
 
@@ -964,19 +1028,32 @@ public final class SceneCanvas {
      * delegate here. Not batchable.
      */
     public SceneCanvas roundedRect(
-            int x,
-            int y,
-            int width,
-            int height,
-            float radiusTL,
-            float radiusTR,
-            float radiusBR,
-            float radiusBL,
-            int fillColor,
-            float borderWidth,
-            int borderColor) {
+        int x,
+        int y,
+        int width,
+        int height,
+        float radiusTL,
+        float radiusTR,
+        float radiusBR,
+        float radiusBL,
+        int fillColor,
+        float borderWidth,
+        int borderColor
+    ) {
         return roundedRectTextured(
-                x, y, width, height, radiusTL, radiusTR, radiusBR, radiusBL, fillColor, borderWidth, borderColor, null);
+            x,
+            y,
+            width,
+            height,
+            radiusTL,
+            radiusTR,
+            radiusBR,
+            radiusBL,
+            fillColor,
+            borderWidth,
+            borderColor,
+            null
+        );
     }
 
     /**
@@ -986,17 +1063,30 @@ public final class SceneCanvas {
      * @param texture texture to bind (or {@code null} for colour-only)
      */
     public SceneCanvas roundedRectTextured(
-            int x,
-            int y,
-            int width,
-            int height,
-            float radius,
-            int fillColor,
-            float borderWidth,
-            int borderColor,
-            @Nullable ResourceLocation texture) {
+        int x,
+        int y,
+        int width,
+        int height,
+        float radius,
+        int fillColor,
+        float borderWidth,
+        int borderColor,
+        @Nullable ResourceLocation texture
+    ) {
         return roundedRectTextured(
-                x, y, width, height, radius, radius, radius, radius, fillColor, borderWidth, borderColor, texture);
+            x,
+            y,
+            width,
+            height,
+            radius,
+            radius,
+            radius,
+            radius,
+            fillColor,
+            borderWidth,
+            borderColor,
+            texture
+        );
     }
 
     /**
@@ -1004,18 +1094,19 @@ public final class SceneCanvas {
      */
     @SuppressWarnings("DataFlowIssue")
     public SceneCanvas roundedRectTextured(
-            int x,
-            int y,
-            int width,
-            int height,
-            float radiusTL,
-            float radiusTR,
-            float radiusBR,
-            float radiusBL,
-            int fillColor,
-            float borderWidth,
-            int borderColor,
-            @Nullable ResourceLocation texture) {
+        int x,
+        int y,
+        int width,
+        int height,
+        float radiusTL,
+        float radiusTR,
+        float radiusBR,
+        float radiusBL,
+        int fillColor,
+        float borderWidth,
+        int borderColor,
+        @Nullable ResourceLocation texture
+    ) {
         ShaderInstance shader = CloudShaders.roundedRect();
         if (shader == null) return this;
 
@@ -1053,7 +1144,13 @@ public final class SceneCanvas {
      * Draws a circle with optional border.
      */
     public SceneCanvas circle(
-            float centerX, float centerY, float radius, int fillColor, float borderWidth, int borderColor) {
+        float centerX,
+        float centerY,
+        float radius,
+        int fillColor,
+        float borderWidth,
+        int borderColor
+    ) {
         return ellipse(centerX - radius, centerY - radius, radius * 2, radius * 2, fillColor, borderWidth, borderColor);
     }
 
@@ -1068,7 +1165,14 @@ public final class SceneCanvas {
      * Draws an ellipse with optional border and optional texture.
      */
     public SceneCanvas ellipse(
-            float x, float y, float width, float height, int fillColor, float borderWidth, int borderColor) {
+        float x,
+        float y,
+        float width,
+        float height,
+        int fillColor,
+        float borderWidth,
+        int borderColor
+    ) {
         return ellipseTextured(x, y, width, height, fillColor, borderWidth, borderColor, null);
     }
 
@@ -1077,14 +1181,15 @@ public final class SceneCanvas {
      */
     @SuppressWarnings("DataFlowIssue")
     public SceneCanvas ellipseTextured(
-            float x,
-            float y,
-            float width,
-            float height,
-            int fillColor,
-            float borderWidth,
-            int borderColor,
-            @Nullable ResourceLocation texture) {
+        float x,
+        float y,
+        float width,
+        float height,
+        int fillColor,
+        float borderWidth,
+        int borderColor,
+        @Nullable ResourceLocation texture
+    ) {
         ShaderInstance shader = CloudShaders.circle();
         if (shader == null) return this;
 
@@ -1123,7 +1228,15 @@ public final class SceneCanvas {
      * @param color     stroke colour (ARGB)
      */
     public SceneCanvas bezierQuadratic(
-            float x0, float y0, float cx, float cy, float x1, float y1, float lineWidth, int color) {
+        float x0,
+        float y0,
+        float cx,
+        float cy,
+        float x1,
+        float y1,
+        float lineWidth,
+        int color
+    ) {
         return bezierInternal(0, x0, y0, cx, cy, x1, y1, x1, y1, lineWidth, color, color, 0, 0);
     }
 
@@ -1134,16 +1247,17 @@ public final class SceneCanvas {
      * {@link #bezierCubic(float, float, float, float, float, float, float, float, float, int, int, float, int)}.
      */
     public SceneCanvas bezierCubic(
-            float x0,
-            float y0,
-            float cx0,
-            float cy0,
-            float cx1,
-            float cy1,
-            float x1,
-            float y1,
-            float lineWidth,
-            int color) {
+        float x0,
+        float y0,
+        float cx0,
+        float cy0,
+        float cx1,
+        float cy1,
+        float x1,
+        float y1,
+        float lineWidth,
+        int color
+    ) {
         return bezierInternal(1, x0, y0, cx0, cy0, cx1, cy1, x1, y1, lineWidth, color, color, 0, 0);
     }
 
@@ -1159,21 +1273,36 @@ public final class SceneCanvas {
      * @param glowColor  glow colour (ARGB)
      */
     public SceneCanvas bezierCubic(
-            float x0,
-            float y0,
-            float cx0,
-            float cy0,
-            float cx1,
-            float cy1,
-            float x1,
-            float y1,
-            float lineWidth,
-            int colorStart,
-            int colorEnd,
-            float glowWidth,
-            int glowColor) {
+        float x0,
+        float y0,
+        float cx0,
+        float cy0,
+        float cx1,
+        float cy1,
+        float x1,
+        float y1,
+        float lineWidth,
+        int colorStart,
+        int colorEnd,
+        float glowWidth,
+        int glowColor
+    ) {
         return bezierInternal(
-                1, x0, y0, cx0, cy0, cx1, cy1, x1, y1, lineWidth, colorStart, colorEnd, glowWidth, glowColor);
+            1,
+            x0,
+            y0,
+            cx0,
+            cy0,
+            cx1,
+            cy1,
+            x1,
+            y1,
+            lineWidth,
+            colorStart,
+            colorEnd,
+            glowWidth,
+            glowColor
+        );
     }
 
     /**
@@ -1181,31 +1310,33 @@ public final class SceneCanvas {
      * tangent computation. Useful for node-graph connection wires.
      */
     public SceneCanvas horizontalSpline(
-            float x0,
-            float y0,
-            float x1,
-            float y1,
-            float lineWidth,
-            int colorStart,
-            int colorEnd,
-            float glowWidth,
-            int glowColor) {
+        float x0,
+        float y0,
+        float x1,
+        float y1,
+        float lineWidth,
+        int colorStart,
+        int colorEnd,
+        float glowWidth,
+        int glowColor
+    ) {
         float dx = Math.abs(x1 - x0);
         float tangent = Math.max(dx * 0.5f, 30f);
         return bezierCubic(
-                x0,
-                y0,
-                x0 + tangent,
-                y0,
-                x1 - tangent,
-                y1,
-                x1,
-                y1,
-                lineWidth,
-                colorStart,
-                colorEnd,
-                glowWidth,
-                glowColor);
+            x0,
+            y0,
+            x0 + tangent,
+            y0,
+            x1 - tangent,
+            y1,
+            x1,
+            y1,
+            lineWidth,
+            colorStart,
+            colorEnd,
+            glowWidth,
+            glowColor
+        );
     }
 
     /**
@@ -1215,20 +1346,21 @@ public final class SceneCanvas {
      */
     @SuppressWarnings("DataFlowIssue")
     private SceneCanvas bezierInternal(
-            int curveType,
-            float ax,
-            float ay,
-            float bx,
-            float by,
-            float cx,
-            float cy,
-            float dx,
-            float dy,
-            float lineWidth,
-            int colorStart,
-            int colorEnd,
-            float glowWidth,
-            int glowColor) {
+        int curveType,
+        float ax,
+        float ay,
+        float bx,
+        float by,
+        float cx,
+        float cy,
+        float dx,
+        float dy,
+        float lineWidth,
+        int colorStart,
+        int colorEnd,
+        float glowWidth,
+        int glowColor
+    ) {
         ShaderInstance shader = CloudShaders.bezierCurve();
         if (shader == null) return this;
 
@@ -1338,7 +1470,15 @@ public final class SceneCanvas {
      * @param shadowColor shadow colour (ARGB)
      */
     public SceneCanvas shadow(
-            int x, int y, int width, int height, float radius, float spread, float softness, int shadowColor) {
+        int x,
+        int y,
+        int width,
+        int height,
+        float radius,
+        float spread,
+        float softness,
+        int shadowColor
+    ) {
         return shadow(x, y, width, height, radius, radius, radius, radius, spread, softness, shadowColor);
     }
 
@@ -1347,17 +1487,18 @@ public final class SceneCanvas {
      */
     @SuppressWarnings("DataFlowIssue")
     public SceneCanvas shadow(
-            int x,
-            int y,
-            int width,
-            int height,
-            float radiusTL,
-            float radiusTR,
-            float radiusBR,
-            float radiusBL,
-            float spread,
-            float softness,
-            int shadowColor) {
+        int x,
+        int y,
+        int width,
+        int height,
+        float radiusTL,
+        float radiusTR,
+        float radiusBR,
+        float radiusBL,
+        float spread,
+        float softness,
+        int shadowColor
+    ) {
         ShaderInstance shader = CloudShaders.shadow();
         if (shader == null) return this;
 
@@ -1510,16 +1651,17 @@ public final class SceneCanvas {
             int tinted = multiplyColor(color, tint.getAsInt());
             if (belowTextAlphaFloor(tinted)) return; // Font.adjustColor would render it opaque
             font.drawInBatch(
-                    text,
-                    x,
-                    y,
-                    tinted,
-                    dropShadow,
-                    graphics.pose().last().pose(),
-                    graphics.bufferSource(),
-                    Font.DisplayMode.NORMAL,
-                    0,
-                    15728880);
+                text,
+                x,
+                y,
+                tinted,
+                dropShadow,
+                graphics.pose().last().pose(),
+                graphics.bufferSource(),
+                Font.DisplayMode.NORMAL,
+                0,
+                15728880
+            );
         }
 
         public void drawStringClipped(String text, int x, int y, int maxWidth, int color, boolean dropShadow) {
@@ -1543,16 +1685,17 @@ public final class SceneCanvas {
             int tinted = multiplyColor(color, tint.getAsInt());
             if (belowTextAlphaFloor(tinted)) return; // Font.adjustColor would render it opaque
             font.drawInBatch(
-                    text,
-                    x,
-                    y,
-                    tinted,
-                    dropShadow,
-                    graphics.pose().last().pose(),
-                    graphics.bufferSource(),
-                    Font.DisplayMode.NORMAL,
-                    0,
-                    15728880);
+                text,
+                x,
+                y,
+                tinted,
+                dropShadow,
+                graphics.pose().last().pose(),
+                graphics.bufferSource(),
+                Font.DisplayMode.NORMAL,
+                0,
+                15728880
+            );
         }
 
         private String clipText(String text, int maxWidth) {
@@ -1576,9 +1719,32 @@ public final class SceneCanvas {
 
     private static final float zIncrement = 1f;
 
+    /**
+     * Draws an item stack's true 3D model — the path that renders a block as its
+     * GUI-isometric icon.
+     * <p>
+     * A block model is lit by whatever ambient the shader lights carry, not by
+     * anything this draw sets: vanilla {@code GuiGraphics.renderItem} only swaps
+     * the flat-item lights in and back out around 2D models, and a flat item's
+     * billboard path is the one that cares. The canvas's ambient is the gui
+     * 3D-item lighting — every surface installs it ({@code UiSurface}), as does
+     * the vanilla GUI pass — so install it here rather than trusting the pass the
+     * canvas happens to be painting in: an icon drawn into a canvas opened inside
+     * the level would otherwise be shaded by the sun.
+     * <p>
+     * The forwarded segment closes with the draw: the icon's tint is the subtree
+     * tint the canvas held at this call, and leaving the segment open would let a
+     * later, differently tinted draw drain under it.
+     */
     public SceneCanvas renderItem(ItemStack stack, int x, int y) {
         RenderStats.itemRendered();
-        layeredGraphics().renderItem(stack, x, y);
+        Lighting.setupFor3DItems();
+        try {
+            layeredGraphics().renderItem(stack, x, y);
+        } finally {
+            flushForwardedDraw();
+            Lighting.setupFor3DItems();
+        }
         return this;
     }
 
@@ -1593,8 +1759,7 @@ public final class SceneCanvas {
     public SceneCanvas renderItemIcon(ItemStack stack, int x, int y) {
         if (stack.isEmpty()) return this;
         RenderStats.itemRendered();
-        var model =
-                Minecraft.getInstance().getItemRenderer().getItemModelShaper().getItemModel(stack);
+        var model = Minecraft.getInstance().getItemRenderer().getItemModelShaper().getItemModel(stack);
         TextureAtlasSprite sprite = model.getParticleIcon(ModelData.EMPTY);
         // the canvas's own textured batch — unlike the forwarded GuiGraphics
         // blit this is proven to rasterize inside offscreen panel targets
@@ -1738,9 +1903,7 @@ public final class SceneCanvas {
             Matrix4f pose = graphics.pose().last().pose();
             Vector4f min = pose.transform(new Vector4f(clip.x(), clip.y(), 0, 1));
             Vector4f max = pose.transform(new Vector4f(clip.right(), clip.bottom(), 0, 1));
-            graphics.enableScissor(
-                    Math.round(min.x()), Math.round(min.y()),
-                    Math.round(max.x()), Math.round(max.y()));
+            graphics.enableScissor(Math.round(min.x()), Math.round(min.y()), Math.round(max.x()), Math.round(max.y()));
         }
     }
 
@@ -1799,31 +1962,75 @@ public final class SceneCanvas {
         }
         syncForwardedGraphicsPose();
         forwardedClipApplied = applyForwardedScissor();
+        // the subtree tint the batched paths multiply into every quad; a forwarded draw cannot be tinted
+        // per-vertex, so the shader color carries it: the rgb as the tint's own channels and the alpha as the
+        // tint's alpha — which is what makes a 3D block icon or a preview fade with the panel instead of
+        // popping out opaque. The alpha alone is the fade; a tint whose rgb were pre-multiplied by it would
+        // darken the model instead of fading it (see ForwardedBufferSource)
+        int tint = currentColor;
+        float[] channels = forwardedShaderColor(tint);
+        forwardedSource.fade(channels[3], layered && !preserveDepth);
+        RenderSystem.setShaderColor(channels[0], channels[1], channels[2], channels[3]);
         forwardedLayered = layered;
         forwardedActive = true;
         return forwardedGraphics;
+    }
+
+    /**
+     * The tint a forwarded segment hands the shader color, as its four channels: the tint's own rgb
+     * and its alpha, never the rgb pre-multiplied by that alpha. The alpha is the fade — the shader
+     * composes it into the fragment, which is what makes a 3D block icon or a preview fade with the
+     * panel instead of popping out opaque — while scaling the rgb by it as well would darken the
+     * geometry toward black over the same envelope instead of letting the backdrop through.
+     */
+    static float[] forwardedShaderColor(int argb) {
+        return new float[]{(argb >>> 16 & 0xFF) / 255f, (argb >>> 8 & 0xFF) / 255f, (argb & 0xFF) / 255f,
+                (argb >>> 24) / 255f};
     }
 
     private void flushForwardedDraw() {
         if (!forwardedActive) {
             return;
         }
+        forwardedActive = false;
+        boolean layered = forwardedLayered;
+        forwardedLayered = false;
         try {
-            forwardedGraphics.flush();
+            drainForwardedDraw();
         } finally {
             if (forwardedClipApplied) {
                 forwardedGraphics.disableScissor();
             }
             forwardedClipApplied = false;
-            forwardedActive = false;
+            // the tint never outlives its segment: everything drawn after this flush is untinted again
+            RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+            forwardedSource.fade(1f, false);
         }
-        if (forwardedLayered) {
+        if (layered) {
             if (!preserveDepth) {
                 RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
             }
             zOffset += zIncrement;
         }
-        forwardedLayered = false;
+    }
+
+    /**
+     * Drains the forwarded channel's own source under the segment's fade. An empty segment touches
+     * no GL state at all — vanilla code inside a forwarded draw flushes on its own
+     * ({@code GuiGraphics.renderItem}, the inventory-entity draw) and a segment that drew nothing
+     * leaves nothing to drain, so the depth toggle vanilla's {@code flush} performs would be a
+     * state change for no pixels.
+     */
+    private void drainForwardedDraw() {
+        if (forwardedSource.isEmpty()) {
+            return;
+        }
+        RenderSystem.disableDepthTest();
+        try {
+            forwardedSource.endBatch();
+        } finally {
+            RenderSystem.enableDepthTest();
+        }
     }
 
     private void syncForwardedGraphicsPose() {
@@ -1926,13 +2133,13 @@ public final class SceneCanvas {
         Matrix4f matrix = graphics.pose().last().pose();
         transformTemp.set(px, py, 0, 1);
         matrix.transform(transformTemp);
-        return new float[] {transformTemp.x, transformTemp.y};
+        return new float[]{transformTemp.x, transformTemp.y};
     }
 
     public float[] transformPointLocal(float x, float y) {
         transformTemp.set(x, y, 0, 1);
         localTransform().transform(transformTemp);
-        return new float[] {transformTemp.x, transformTemp.y};
+        return new float[]{transformTemp.x, transformTemp.y};
     }
 
     // endregion
@@ -1976,8 +2183,12 @@ public final class SceneCanvas {
         double minY = Math.min(Math.min(tl.y, tr.y), Math.min(bl.y, br.y));
         double maxX = Math.max(Math.max(tl.x, tr.x), Math.max(bl.x, br.x));
         double maxY = Math.max(Math.max(tl.y, tr.y), Math.max(bl.y, br.y));
-        return new Rect((int) Math.floor(minX), (int) Math.floor(minY), (int) Math.ceil(maxX - minX), (int)
-                Math.ceil(maxY - minY));
+        return new Rect(
+            (int) Math.floor(minX),
+            (int) Math.floor(minY),
+            (int) Math.ceil(maxX - minX),
+            (int) Math.ceil(maxY - minY)
+        );
     }
 
     /**
@@ -2027,17 +2238,34 @@ public final class SceneCanvas {
 
     // region clipping
 
+    /**
+     * Pushes a clip region given in the current local (transformed) space.
+     * The clip stack stores scene-space rects — the region is converted with
+     * the current transform, so callers always pass local coordinates.
+     */
     public SceneCanvas pushClip(int x, int y, int width, int height) {
         // Flush pending text + batch under the current clip before changing it
         flushBatch();
-        clipStack.push(x, y, width, height);
+        clipStack.push(localRectToScene(x, y, width, height));
         return this;
     }
 
     public SceneCanvas pushClip(Rect rect) {
-        flushBatch();
-        clipStack.push(rect);
-        return this;
+        return pushClip(rect.x(), rect.y(), rect.width(), rect.height());
+    }
+
+    /**
+     * Converts a rect from the current local space to scene space (AABB of
+     * the transformed corners).
+     */
+    private Rect localRectToScene(int x, int y, int width, int height) {
+        Vector3f tl = currentTransform.transformPosition(x, y, 0, new Vector3f());
+        Vector3f br = currentTransform.transformPosition(x + width, y + height, 0, new Vector3f());
+        int left = (int) Math.floor(Math.min(tl.x, br.x));
+        int top = (int) Math.floor(Math.min(tl.y, br.y));
+        int right = (int) Math.ceil(Math.max(tl.x, br.x));
+        int bottom = (int) Math.ceil(Math.max(tl.y, br.y));
+        return new Rect(left, top, right - left, bottom - top);
     }
 
     public SceneCanvas popClip() {

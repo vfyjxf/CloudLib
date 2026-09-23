@@ -48,14 +48,13 @@ public final class PipelineAssembler {
         if (spec.zone() != null) {
             return StageCatalogs.requireCandidateStrategy(StageCatalogs.candidatesZoneGrid);
         }
-        String name =
-                switch (spec.profile().algorithm().placement()) {
-                    case none -> StageCatalogs.candidatesSingle;
-                    case dockCursor -> StageCatalogs.candidatesDockCursor;
-                    case orbitRing -> StageCatalogs.candidatesOrbitRing;
-                    case anchoredQuad -> StageCatalogs.candidatesSingle;
-                    case excentricColumn -> StageCatalogs.candidatesExcentricColumn;
-                };
+        String name = switch (spec.profile().algorithm().placement()) {
+            case none -> StageCatalogs.candidatesSingle;
+            case dockCursor -> StageCatalogs.candidatesDockCursor;
+            case orbitRing -> StageCatalogs.candidatesOrbitRing;
+            case anchoredQuad -> StageCatalogs.candidatesSingle;
+            case excentricColumn -> StageCatalogs.candidatesExcentricColumn;
+        };
         return StageCatalogs.requireCandidateStrategy(name);
     }
 
@@ -71,6 +70,7 @@ public final class PipelineAssembler {
 
     private static StageCatalogs.RankStrategy resolveRank(ElementSpec spec) {
         return StageCatalogs.requireRankStrategy(
-                spec.zone() != null ? StageCatalogs.rankZoneCost : StageCatalogs.rankWeightedLinear);
+            spec.zone() != null ? StageCatalogs.rankZoneCost : StageCatalogs.rankWeightedLinear
+        );
     }
 }

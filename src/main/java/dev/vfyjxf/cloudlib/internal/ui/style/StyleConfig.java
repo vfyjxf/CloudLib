@@ -30,13 +30,13 @@ public final class StyleConfig {
         builder.push("ui");
         {
             uiThemes = builder.comment(
-                            "Active ui themes, lowest priority first — e.g. [\"cloudlib:standard\", \"mypack:dark\"].",
-                            "Empty = follow the packs' recommended defaults (theme.json \"default\": true).")
-                    .defineList("ui_themes", List.of(), () -> "", o -> o instanceof String);
+                "Active ui themes, lowest priority first — e.g. [\"cloudlib:standard\", \"mypack:dark\"].",
+                "Empty = follow the packs' recommended defaults (theme.json \"default\": true)."
+            ).defineList("ui_themes", List.of(), () -> "", o -> o instanceof String);
             uiThemeWatch = builder.comment(
-                            "Watch development resource roots for theme changes and reload automatically.",
-                            "Only effective outside production.")
-                    .define("ui_theme_watch", true);
+                "Watch development resource roots for theme changes and reload automatically.",
+                "Only effective outside production."
+            ).define("ui_theme_watch", true);
         }
         builder.pop();
         spec = builder.build();

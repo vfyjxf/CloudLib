@@ -65,8 +65,9 @@ class PiecewiseAttentionTest {
         // x in [224.5, 271.5], inner boundary at 240 → 15.5 samples below? just assert between the levels
         double cost = straddled.cost(new Rect(224, 125, 48, 20));
         assertTrue(
-                cost > PiecewiseAttention.mediumValue && cost < PiecewiseAttention.highValue,
-                "expected a strict mix, got " + cost);
+            cost > PiecewiseAttention.mediumValue && cost < PiecewiseAttention.highValue,
+            "expected a strict mix, got " + cost
+        );
     }
 
     @Test

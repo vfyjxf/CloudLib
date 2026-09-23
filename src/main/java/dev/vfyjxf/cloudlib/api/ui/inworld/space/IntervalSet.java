@@ -60,7 +60,9 @@ public final class IntervalSet {
                 pending = existing;
             } else {
                 pending = new Interval(
-                        Math.min(pending.start(), existing.start()), Math.max(pending.end(), existing.end()));
+                    Math.min(pending.start(), existing.start()),
+                    Math.max(pending.end(), existing.end())
+                );
             }
         }
         merged.add(pending);

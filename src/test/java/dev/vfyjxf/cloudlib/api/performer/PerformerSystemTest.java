@@ -10,14 +10,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class PerformerSystemTest {
 
     private static final CompositeScenario<TestPerformer> chainedScenario = new CompositeScenario<>(
-            Namespace.of("test", "mergeable"), TestPerformer.class, performers -> new TestPerformer() {
-                @Override
-                public void test() {
-                    for (TestPerformer performer : performers) {
-                        performer.test();
-                    }
+        Namespace.of("test", "mergeable"),
+        TestPerformer.class,
+        performers -> new TestPerformer() {
+            @Override
+            public void test() {
+                for (TestPerformer performer : performers) {
+                    performer.test();
                 }
-            });
+            }
+        }
+    );
     private MergeablePerformer<TestPerformer> mergeablePerformer;
 
     @BeforeEach

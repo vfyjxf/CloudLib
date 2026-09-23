@@ -75,13 +75,14 @@ public final class FloatingState {
     // region constructor
 
     public FloatingState(
-            double x,
-            double y,
-            FloatingPlacement initialPlacement,
-            FloatingPlacement placement,
-            Rect referenceRect,
-            Rect floatingRect,
-            Rect boundary) {
+        double x,
+        double y,
+        FloatingPlacement initialPlacement,
+        FloatingPlacement placement,
+        Rect referenceRect,
+        Rect floatingRect,
+        Rect boundary
+    ) {
         this.x = x;
         this.y = y;
         this.initialPlacement = initialPlacement;
@@ -206,11 +207,11 @@ public final class FloatingState {
         double boundBottom = boundary.bottom() - padding;
 
         return new Insets(
-                (int) Math.round(boundTop - floatTop), // top overflow (positive = overflowing)
-                (int) Math.round(floatRight - boundRight), // right overflow
-                (int) Math.round(floatBottom - boundBottom), // bottom overflow
-                (int) Math.round(boundLeft - floatLeft) // left overflow
-                );
+            (int) Math.round(boundTop - floatTop), // top overflow (positive = overflowing)
+            (int) Math.round(floatRight - boundRight), // right overflow
+            (int) Math.round(floatBottom - boundBottom), // bottom overflow
+            (int) Math.round(boundLeft - floatLeft) // left overflow
+        );
     }
 
     /**

@@ -49,8 +49,8 @@ public interface WidgetEvent {
 
     // endregion
 
-    EventDefinition<OnPositionChanged> onPositionChanged =
-            Events.define(OnPositionChanged.class, listeners -> (position, context) -> {
+    EventDefinition<OnPositionChanged> onPositionChanged = Events
+            .define(OnPositionChanged.class, listeners -> (position, context) -> {
                 for (var listener : listeners) {
                     listener.onPositionChanged(position, context);
                     if (context.interrupted()) return;
@@ -66,16 +66,16 @@ public interface WidgetEvent {
 
     // region render
 
-    EventDefinition<OnRender> onRender =
-            Events.define(OnRender.class, listeners -> (canvas, mouseX, mouseY, partialTicks, self, context) -> {
+    EventDefinition<OnRender> onRender = Events
+            .define(OnRender.class, listeners -> (canvas, mouseX, mouseY, partialTicks, self, context) -> {
                 for (var listener : listeners) {
                     listener.onRender(canvas, mouseX, mouseY, partialTicks, self, context);
                     if (context.interrupted()) return;
                 }
             });
 
-    EventDefinition<OnRenderPost> onRenderPost =
-            Events.define(OnRenderPost.class, listeners -> (canvas, mouseX, mouseY, partialTicks, self, context) -> {
+    EventDefinition<OnRenderPost> onRenderPost = Events
+            .define(OnRenderPost.class, listeners -> (canvas, mouseX, mouseY, partialTicks, self, context) -> {
                 for (var listener : listeners) {
                     listener.onRender(canvas, mouseX, mouseY, partialTicks, self, context);
                     if (context.interrupted()) return;
@@ -85,8 +85,8 @@ public interface WidgetEvent {
     /**
      * Call when mouse over the widget
      */
-    EventDefinition<OnOverlayRender> onOverlayRender =
-            Events.define(OnOverlayRender.class, listeners -> (canvas, mouseX, mouseY, partialTicks, context) -> {
+    EventDefinition<OnOverlayRender> onOverlayRender = Events
+            .define(OnOverlayRender.class, listeners -> (canvas, mouseX, mouseY, partialTicks, context) -> {
                 for (var listener : listeners) {
                     listener.onRender(canvas, mouseX, mouseY, partialTicks, context);
                     if (context.interrupted()) return;
@@ -96,8 +96,8 @@ public interface WidgetEvent {
     /**
      * Call after tooltip render
      */
-    EventDefinition<OnOverlayRenderPost> onOverlayRenderPost =
-            Events.define(OnOverlayRenderPost.class, listeners -> (canvas, mouseX, mouseY, partialTicks, context) -> {
+    EventDefinition<OnOverlayRenderPost> onOverlayRenderPost = Events
+            .define(OnOverlayRenderPost.class, listeners -> (canvas, mouseX, mouseY, partialTicks, context) -> {
                 for (var listener : listeners) {
                     listener.onRender(canvas, mouseX, mouseY, partialTicks, context);
                     if (context.interrupted()) return;
@@ -197,16 +197,16 @@ public interface WidgetEvent {
         }
     });
 
-    EventDefinition<OnChildAddedPost> onChildAddedPost =
-            Events.define(OnChildAddedPost.class, listeners -> (widget, context) -> {
+    EventDefinition<OnChildAddedPost> onChildAddedPost = Events
+            .define(OnChildAddedPost.class, listeners -> (widget, context) -> {
                 for (var listener : listeners) {
                     listener.onChildAdded(widget, context);
                     if (context.interrupted()) return;
                 }
             });
 
-    EventDefinition<OnChildRemoved> onChildRemoved =
-            Events.define(OnChildRemoved.class, listeners -> (widget, context) -> {
+    EventDefinition<OnChildRemoved> onChildRemoved = Events
+            .define(OnChildRemoved.class, listeners -> (widget, context) -> {
                 for (var listener : listeners) {
                     listener.onChildRemoved(widget, context);
                     if (context.interrupted()) return;
@@ -232,8 +232,8 @@ public interface WidgetEvent {
      * <p>
      * For widget itself to use
      */
-    EventDefinition<OnWidgetDragStart> onWidgetDragStart =
-            Events.define(OnWidgetDragStart.class, listeners -> (input, dragContext, eventContext) -> {
+    EventDefinition<OnWidgetDragStart> onWidgetDragStart = Events
+            .define(OnWidgetDragStart.class, listeners -> (input, dragContext, eventContext) -> {
                 for (var listener : listeners) {
                     listener.onDragStart(input, dragContext, eventContext);
                     if (eventContext.interrupted()) return;
@@ -245,8 +245,8 @@ public interface WidgetEvent {
      * <p>
      * For widget itself to use
      */
-    EventDefinition<OnWidgetDrag> onWidgetDrag =
-            Events.define(OnWidgetDrag.class, listeners -> (input, deltaX, deltaY, dragContext, eventContext) -> {
+    EventDefinition<OnWidgetDrag> onWidgetDrag = Events
+            .define(OnWidgetDrag.class, listeners -> (input, deltaX, deltaY, dragContext, eventContext) -> {
                 for (var listener : listeners) {
                     listener.onDrag(input, deltaX, deltaY, dragContext, eventContext);
                     if (eventContext.interrupted()) return;
@@ -258,8 +258,8 @@ public interface WidgetEvent {
      * <p>
      * For widget itself to use
      */
-    EventDefinition<OnWidgetDragEnd> onWidgetDragEnd =
-            Events.define(OnWidgetDragEnd.class, listeners -> (input, dragContext, eventContext) -> {
+    EventDefinition<OnWidgetDragEnd> onWidgetDragEnd = Events
+            .define(OnWidgetDragEnd.class, listeners -> (input, dragContext, eventContext) -> {
                 for (var listener : listeners) {
                     listener.onDragEnd(input, dragContext, eventContext);
                     if (eventContext.interrupted()) return;
@@ -271,8 +271,8 @@ public interface WidgetEvent {
      * <p>
      * For {@link DragConsumer} to use
      */
-    EventDefinition<OnDragStart> onDragStart =
-            Events.define(OnDragStart.class, listeners -> (toDrag, input, dragContext, eventContext) -> {
+    EventDefinition<OnDragStart> onDragStart = Events
+            .define(OnDragStart.class, listeners -> (toDrag, input, dragContext, eventContext) -> {
                 for (var listener : listeners) {
                     listener.onDragStart(toDrag, input, dragContext, eventContext);
                     if (eventContext.interrupted()) return;
@@ -284,8 +284,8 @@ public interface WidgetEvent {
      * <p>
      * For {@link DragConsumer} to use
      */
-    EventDefinition<OnDrag> onDrag =
-            Events.define(OnDrag.class, listeners -> (dragging, input, deltaX, deltaY, dragContext, eventContext) -> {
+    EventDefinition<OnDrag> onDrag = Events
+            .define(OnDrag.class, listeners -> (dragging, input, deltaX, deltaY, dragContext, eventContext) -> {
                 for (var listener : listeners) {
                     listener.onDrag(dragging, input, deltaX, deltaY, dragContext, eventContext);
                     if (eventContext.interrupted()) return;
@@ -297,8 +297,8 @@ public interface WidgetEvent {
      * <p>
      * For {@link DragConsumer} to use
      */
-    EventDefinition<OnDragEnd> onDragEnd =
-            Events.define(OnDragEnd.class, listeners -> (dragging, input, dragContext, eventContext) -> {
+    EventDefinition<OnDragEnd> onDragEnd = Events
+            .define(OnDragEnd.class, listeners -> (dragging, input, dragContext, eventContext) -> {
                 for (var listener : listeners) {
                     listener.onDragEnd(dragging, input, dragContext, eventContext);
                     if (eventContext.interrupted()) return;
@@ -346,18 +346,25 @@ public interface WidgetEvent {
     @FunctionalInterface
     interface OnRender extends WidgetEvent {
         void onRender(
-                SceneCanvas canvas, int mouseX, int mouseY, float partialTicks, Widget self, CommonContext context);
+            SceneCanvas canvas,
+            int mouseX,
+            int mouseY,
+            float partialTicks,
+            Widget self,
+            CommonContext context
+        );
     }
 
     @FunctionalInterface
     interface OnRenderPost extends WidgetEvent {
         void onRender(
-                SceneCanvas canvas,
-                int mouseX,
-                int mouseY,
-                float partialTicks,
-                Widget self,
-                InterruptibleContext context);
+            SceneCanvas canvas,
+            int mouseX,
+            int mouseY,
+            float partialTicks,
+            Widget self,
+            InterruptibleContext context
+        );
     }
 
     @FunctionalInterface
@@ -466,7 +473,12 @@ public interface WidgetEvent {
     @FunctionalInterface
     interface OnWidgetDrag extends WidgetEvent {
         void onDrag(
-                InputContext input, int deltaX, int deltaY, DragContext dragContext, InterruptibleContext eventContext);
+            InputContext input,
+            int deltaX,
+            int deltaY,
+            DragContext dragContext,
+            InterruptibleContext eventContext
+        );
     }
 
     @FunctionalInterface
@@ -482,12 +494,13 @@ public interface WidgetEvent {
     @FunctionalInterface
     interface OnDrag extends WidgetEvent {
         void onDrag(
-                Widget dragging,
-                InputContext input,
-                int deltaX,
-                int deltaY,
-                DragContext dragContext,
-                InterruptibleContext eventContext);
+            Widget dragging,
+            InputContext input,
+            int deltaX,
+            int deltaY,
+            DragContext dragContext,
+            InterruptibleContext eventContext
+        );
     }
 
     @FunctionalInterface

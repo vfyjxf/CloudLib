@@ -28,20 +28,21 @@ package dev.vfyjxf.cloudlib.api.ui.canvas;
  * @param arcEnd the drawn arc's end fraction
  */
 public record GuideLineStyle(
-        float lineWidth,
-        float edgeWidth,
-        int lineColor,
-        int edgeColor,
-        float fadeFraction,
-        float fadeAlpha,
-        float dashPeriodPx,
-        float dashDuty,
-        float dashPhasePx,
-        Marker marker,
-        float markerSize,
-        float portTick,
-        float arcStart,
-        float arcEnd) {
+    float lineWidth,
+    float edgeWidth,
+    int lineColor,
+    int edgeColor,
+    float fadeFraction,
+    float fadeAlpha,
+    float dashPeriodPx,
+    float dashDuty,
+    float dashPhasePx,
+    Marker marker,
+    float markerSize,
+    float portTick,
+    float arcStart,
+    float arcEnd
+) {
 
     /** The target-end marker: shape reads as the target's class, colour as its state. */
     public enum Marker {
@@ -86,32 +87,34 @@ public record GuideLineStyle(
      * ({@link #at}) and the reveal's arc window ({@link #withArc}).
      */
     public static GuideLineStyle of(
-            float lineWidth,
-            float edgeWidth,
-            int lineColor,
-            int edgeColor,
-            float fadeFraction,
-            float fadeAlpha,
-            float dashPeriodPx,
-            float dashDuty,
-            Marker marker,
-            float markerSize,
-            float portTick) {
+        float lineWidth,
+        float edgeWidth,
+        int lineColor,
+        int edgeColor,
+        float fadeFraction,
+        float fadeAlpha,
+        float dashPeriodPx,
+        float dashDuty,
+        Marker marker,
+        float markerSize,
+        float portTick
+    ) {
         return new GuideLineStyle(
-                lineWidth,
-                edgeWidth,
-                lineColor,
-                edgeColor,
-                fadeFraction,
-                fadeAlpha,
-                dashPeriodPx,
-                dashDuty,
-                0f,
-                marker,
-                markerSize,
-                portTick,
-                0f,
-                1f);
+            lineWidth,
+            edgeWidth,
+            lineColor,
+            edgeColor,
+            fadeFraction,
+            fadeAlpha,
+            dashPeriodPx,
+            dashDuty,
+            0f,
+            marker,
+            markerSize,
+            portTick,
+            0f,
+            1f
+        );
     }
 
     /**
@@ -120,46 +123,49 @@ public record GuideLineStyle(
      * target class, the ants' phase).
      */
     public GuideLineStyle at(
-            float lineWidth,
-            int lineColor,
-            int edgeColor,
-            float dashPeriodPx,
-            float dashPhasePx,
-            Marker marker,
-            float markerSize) {
+        float lineWidth,
+        int lineColor,
+        int edgeColor,
+        float dashPeriodPx,
+        float dashPhasePx,
+        Marker marker,
+        float markerSize
+    ) {
         return new GuideLineStyle(
-                lineWidth,
-                edgeWidth,
-                lineColor,
-                edgeColor,
-                fadeFraction,
-                fadeAlpha,
-                dashPeriodPx,
-                dashDuty,
-                dashPhasePx,
-                marker,
-                markerSize,
-                portTick,
-                arcStart,
-                arcEnd);
+            lineWidth,
+            edgeWidth,
+            lineColor,
+            edgeColor,
+            fadeFraction,
+            fadeAlpha,
+            dashPeriodPx,
+            dashDuty,
+            dashPhasePx,
+            marker,
+            markerSize,
+            portTick,
+            arcStart,
+            arcEnd
+        );
     }
 
     /** The same stroke with the entry/exit reveal's arc window applied. */
     public GuideLineStyle withArc(float arcStart, float arcEnd) {
         return new GuideLineStyle(
-                lineWidth,
-                edgeWidth,
-                lineColor,
-                edgeColor,
-                fadeFraction,
-                fadeAlpha,
-                dashPeriodPx,
-                dashDuty,
-                dashPhasePx,
-                marker,
-                markerSize,
-                portTick,
-                arcStart,
-                arcEnd);
+            lineWidth,
+            edgeWidth,
+            lineColor,
+            edgeColor,
+            fadeFraction,
+            fadeAlpha,
+            dashPeriodPx,
+            dashDuty,
+            dashPhasePx,
+            marker,
+            markerSize,
+            portTick,
+            arcStart,
+            arcEnd
+        );
     }
 }

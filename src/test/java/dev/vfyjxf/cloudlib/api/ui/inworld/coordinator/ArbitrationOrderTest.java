@@ -27,8 +27,7 @@ class ArbitrationOrderTest {
     @Test
     void worldAnchoredClaimsSpaceBeforeHigherPriorityPanels() {
         TestElement world = TestElement.arbitrated("world", 200, 150, new Size(100, 40));
-        TestElement panel =
-                TestElement.arbitrated("panel", 200, 150, new Size(100, 50)).withKind(SpaceKind.panel);
+        TestElement panel = TestElement.arbitrated("panel", 200, 150, new Size(100, 50)).withKind(SpaceKind.panel);
         panel = panel.withPriority(100); // registered first AND higher priority — kind still wins
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
         coordinator.register(panel);
@@ -52,10 +51,8 @@ class ArbitrationOrderTest {
     @Test
     void trackedSortsBetweenWorldAndPanel() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement panel =
-                TestElement.arbitrated("panel", 200, 150, new Size(80, 30)).withKind(SpaceKind.panel);
-        TestElement tracked =
-                TestElement.arbitrated("tracked", 200, 150, new Size(80, 30)).withKind(SpaceKind.tracked);
+        TestElement panel = TestElement.arbitrated("panel", 200, 150, new Size(80, 30)).withKind(SpaceKind.panel);
+        TestElement tracked = TestElement.arbitrated("tracked", 200, 150, new Size(80, 30)).withKind(SpaceKind.tracked);
         TestElement world = TestElement.arbitrated("world", 200, 150, new Size(80, 30));
         coordinator.register(panel);
         coordinator.register(tracked);
@@ -68,8 +65,7 @@ class ArbitrationOrderTest {
     void priorityBreaksTiesDescending() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
         TestElement low = TestElement.arbitrated("low", 200, 150, new Size(100, 40));
-        TestElement high =
-                TestElement.arbitrated("high", 200, 150, new Size(100, 40)).withPriority(10);
+        TestElement high = TestElement.arbitrated("high", 200, 150, new Size(100, 40)).withPriority(10);
         coordinator.register(low);
         coordinator.register(high);
 
@@ -83,8 +79,7 @@ class ArbitrationOrderTest {
     void stickyBreaksPriorityTiesEvenWhenRegisteredLater() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
         TestElement plain = TestElement.arbitrated("plain", 200, 150, new Size(100, 40));
-        TestElement sticky =
-                TestElement.arbitrated("sticky", 200, 150, new Size(100, 40)).withSticky();
+        TestElement sticky = TestElement.arbitrated("sticky", 200, 150, new Size(100, 40)).withSticky();
         coordinator.register(plain);
         coordinator.register(sticky);
 
@@ -111,15 +106,12 @@ class ArbitrationOrderTest {
     @Test
     void orderStaysStableAcrossFrames() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
+        coordinator.register(TestElement.arbitrated("a", 100, 100, new Size(60, 20)).withKind(SpaceKind.panel));
+        coordinator.register(TestElement.arbitrated("b", 120, 210, new Size(60, 20)).withSticky());
         coordinator.register(
-                TestElement.arbitrated("a", 100, 100, new Size(60, 20)).withKind(SpaceKind.panel));
-        coordinator.register(
-                TestElement.arbitrated("b", 120, 210, new Size(60, 20)).withSticky());
-        coordinator.register(TestElement.arbitrated("c", 300, 80, new Size(60, 20))
-                .withKind(SpaceKind.tracked)
-                .withPriority(3));
-        coordinator.register(
-                TestElement.arbitrated("d", 300, 200, new Size(60, 20)).withPriority(1));
+            TestElement.arbitrated("c", 300, 80, new Size(60, 20)).withKind(SpaceKind.tracked).withPriority(3)
+        );
+        coordinator.register(TestElement.arbitrated("d", 300, 200, new Size(60, 20)).withPriority(1));
 
         double now = 0;
         List<String> first = ids(coordinator.arbitrationOrderSnapshot());

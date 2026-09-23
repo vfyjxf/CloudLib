@@ -91,8 +91,7 @@ public final class Themes {
         if (m != null) {
             return m;
         }
-        List<Theme> layers =
-                activeIds.stream().map(themes::get).filter(Objects::nonNull).toList();
+        List<Theme> layers = activeIds.stream().map(themes::get).filter(Objects::nonNull).toList();
         if (layers.isEmpty()) {
             return null;
         }

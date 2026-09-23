@@ -176,10 +176,10 @@ class Spring2Test {
 
     private static double[] replaySpring(double dtSeconds, int frames) {
         Spring2 spring = new Spring2(6.0, 0.0, 0.0);
-        FrameReplay<Double, double[]> replay =
-                FrameReplay.runUniform(spring, dtSeconds, frames, 40.0, (subject, frameDt, target) -> {
+        FrameReplay<Double, double[]> replay = FrameReplay
+                .runUniform(spring, dtSeconds, frames, 40.0, (subject, frameDt, target) -> {
                     subject.step(target, -20.0, frameDt);
-                    return new double[] {subject.x(), subject.y(), subject.velocityX(), subject.velocityY()};
+                    return new double[]{subject.x(), subject.y(), subject.velocityX(), subject.velocityY()};
                 });
         return replay.lastOutput();
     }

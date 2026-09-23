@@ -153,7 +153,10 @@ public final class Ratio implements Comparable<Ratio> {
     public Ratio multiply(Ratio other) {
         Checks.checkNotNull(other, "other");
         return create(
-                numerator.multiply(other.numerator), denominator.multiply(other.denominator), exact && other.exact);
+            numerator.multiply(other.numerator),
+            denominator.multiply(other.denominator),
+            exact && other.exact
+        );
     }
 
     public Ratio multiply(long value) {
@@ -164,7 +167,10 @@ public final class Ratio implements Comparable<Ratio> {
         Checks.checkNotNull(other, "other");
         if (other.isZero()) throw new IllegalArgumentException("can't divide by zero");
         return create(
-                numerator.multiply(other.denominator), denominator.multiply(other.numerator), exact && other.exact);
+            numerator.multiply(other.denominator),
+            denominator.multiply(other.numerator),
+            exact && other.exact
+        );
     }
 
     public Ratio divide(long value) {
@@ -180,17 +186,19 @@ public final class Ratio implements Comparable<Ratio> {
     public Ratio add(Ratio other) {
         Checks.checkNotNull(other, "other");
         return create(
-                numerator.multiply(other.denominator).add(other.numerator.multiply(denominator)),
-                denominator.multiply(other.denominator),
-                exact && other.exact);
+            numerator.multiply(other.denominator).add(other.numerator.multiply(denominator)),
+            denominator.multiply(other.denominator),
+            exact && other.exact
+        );
     }
 
     public Ratio subtract(Ratio other) {
         Checks.checkNotNull(other, "other");
         return create(
-                numerator.multiply(other.denominator).subtract(other.numerator.multiply(denominator)),
-                denominator.multiply(other.denominator),
-                exact && other.exact);
+            numerator.multiply(other.denominator).subtract(other.numerator.multiply(denominator)),
+            denominator.multiply(other.denominator),
+            exact && other.exact
+        );
     }
 
     public Ratio negate() {

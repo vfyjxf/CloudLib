@@ -46,8 +46,8 @@ public final class VanillaHudSampler {
     /** Vanilla {@code Toast#width()} — every vanilla toast sprite is 160 px wide. */
     private static final int toastWidth = 160;
 
-    private static final ResourceLocation samplerLayerId =
-            ResourceLocation.fromNamespaceAndPath(Constants.modId, "hud_exclusion_sampler");
+    private static final ResourceLocation samplerLayerId = ResourceLocation
+            .fromNamespaceAndPath(Constants.modId, "hud_exclusion_sampler");
 
     private final List<HudInputs.BossBar> bossBars = new CopyOnWriteArrayList<>();
     private volatile int leftHeight = 39;
@@ -85,12 +85,9 @@ public final class VanillaHudSampler {
     public HudInputs sample() {
         Minecraft minecraft = Minecraft.getInstance();
         Gui gui = minecraft.gui;
-        HudInputs.Builder builder = HudInputs.builder(
-                        minecraft.getWindow().getGuiScaledWidth(),
-                        minecraft.getWindow().getGuiScaledHeight())
-                .leftHeight(leftHeight)
-                .rightHeight(rightHeight)
-                .demo(minecraft.isDemo())
+        HudInputs.Builder builder = HudInputs
+                .builder(minecraft.getWindow().getGuiScaledWidth(), minecraft.getWindow().getGuiScaledHeight())
+                .leftHeight(leftHeight).rightHeight(rightHeight).demo(minecraft.isDemo())
                 .bossBars(List.copyOf(bossBars));
         LocalPlayer player = minecraft.player;
         if (gui != null && player != null && minecraft.gameMode != null) {
@@ -144,7 +141,7 @@ public final class VanillaHudSampler {
     private static List<HudInputs.Toast> sampleToasts(Minecraft minecraft) {
         BitSet occupiedSlots = minecraft.getToasts().occupiedSlots;
         List<HudInputs.Toast> toasts = new ArrayList<>();
-        for (int slot = occupiedSlots.nextSetBit(0); slot >= 0; ) {
+        for (int slot = occupiedSlots.nextSetBit(0); slot >= 0;) {
             int runLength = 1;
             while (occupiedSlots.get(slot + runLength)) {
                 runLength++;

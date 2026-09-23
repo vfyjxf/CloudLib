@@ -46,26 +46,28 @@ public final class OffscreenProjector {
      * inside that rectangle.
      */
     public record Result(
-            boolean onScreen,
-            boolean behind,
-            double dirX,
-            double dirY,
-            double angle,
-            @Nullable FloatPos screenPos,
-            @Nullable FloatPos edgePoint,
-            @Nullable ScreenEdge edge) {
+        boolean onScreen,
+        boolean behind,
+        double dirX,
+        double dirY,
+        double angle,
+        @Nullable FloatPos screenPos,
+        @Nullable FloatPos edgePoint,
+        @Nullable ScreenEdge edge
+    ) {
 
         static Result onScreen(double dirX, double dirY, FloatPos screenPos) {
             return new Result(true, false, dirX, dirY, Math.atan2(dirY, dirX), screenPos, null, null);
         }
 
         static Result offScreen(
-                boolean behind,
-                double dirX,
-                double dirY,
-                @Nullable FloatPos screenPos,
-                FloatPos edgePoint,
-                ScreenEdge edge) {
+            boolean behind,
+            double dirX,
+            double dirY,
+            @Nullable FloatPos screenPos,
+            FloatPos edgePoint,
+            ScreenEdge edge
+        ) {
             return new Result(false, behind, dirX, dirY, Math.atan2(dirY, dirX), screenPos, edgePoint, edge);
         }
     }

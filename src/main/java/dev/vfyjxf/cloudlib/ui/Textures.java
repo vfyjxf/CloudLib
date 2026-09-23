@@ -195,8 +195,8 @@ public final class Textures {
     }
 
     private static NineSliceTexture bg(String name, int w, int h, int left, int right, int top, int bottom) {
-        return NineSliceTexture.of(
-                Locations.ofMod("textures/gui/background/" + name + ".png"), w, h, left, right, top, bottom);
+        return NineSliceTexture
+                .of(Locations.ofMod("textures/gui/background/" + name + ".png"), w, h, left, right, top, bottom);
     }
 
     private static NineSliceTexture sb(String name, int w, int h, int border) {
@@ -204,8 +204,8 @@ public final class Textures {
     }
 
     private static NineSliceTexture sb(String name, int w, int h, int left, int right, int top, int bottom) {
-        return NineSliceTexture.of(
-                Locations.ofMod("textures/gui/scrollbar/" + name + ".png"), w, h, left, right, top, bottom);
+        return NineSliceTexture
+                .of(Locations.ofMod("textures/gui/scrollbar/" + name + ".png"), w, h, left, right, top, bottom);
     }
 
     private static NineSliceTexture ns(String name, int w, int h, int border) {

@@ -109,17 +109,15 @@ public final class DispatchQueue<T extends ModPlugin> {
         CompletableFuture<?>[] futures = new CompletableFuture[batch.size()];
         batch.forEachWithIndex((task, index) -> {
             var progress = tracker != null ? tracker.phase(weight) : DispatchProgress.empty();
-            futures[index] = CompletableFuture.runAsync(
-                    () -> {
-                        try {
-                            dispatchTask(task, index, progress, logger);
-                        } catch (PluginLoadingException e) {
-                            synchronized (failures) {
-                                failures.addAll(e.failures());
-                            }
-                        }
-                    },
-                    executor);
+            futures[index] = CompletableFuture.runAsync(() -> {
+                try {
+                    dispatchTask(task, index, progress, logger);
+                } catch (PluginLoadingException e) {
+                    synchronized (failures) {
+                        failures.addAll(e.failures());
+                    }
+                }
+            }, executor);
         });
 
         CompletableFuture.allOf(futures).join();

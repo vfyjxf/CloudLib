@@ -44,13 +44,14 @@ public final class CssEnums {
 
     /** Declaration values without whitespace tokens. */
     public static List<ComponentValue> flat(List<ComponentValue> values) {
-        return values.stream()
-                .filter(c -> c != ComponentValue.Whitespace.instance)
-                .toList();
+        return values.stream().filter(c -> c != ComponentValue.Whitespace.instance).toList();
     }
 
     public static @Nullable <E extends Enum<E>> E enumValue(
-            @Nullable ComponentValue v, Class<E> type, Map<String, E> aliases) {
+        @Nullable ComponentValue v,
+        Class<E> type,
+        Map<String, E> aliases
+    ) {
         if (v instanceof ComponentValue.Ident id) {
             E hit = aliases.get(id.value().toLowerCase(Locale.ROOT));
             if (hit != null) {
@@ -81,81 +82,118 @@ public final class CssEnums {
     // region tables
 
     public static final Map<String, TaffyDisplay> display = Map.of(
-            "block", TaffyDisplay.BLOCK,
-            "flex", TaffyDisplay.FLEX,
-            "grid", TaffyDisplay.GRID,
-            "none", TaffyDisplay.NONE);
+        "block",
+        TaffyDisplay.BLOCK,
+        "flex",
+        TaffyDisplay.FLEX,
+        "grid",
+        TaffyDisplay.GRID,
+        "none",
+        TaffyDisplay.NONE
+    );
 
-    public static final Map<String, TaffyPosition> position =
-            Map.of("relative", TaffyPosition.RELATIVE, "absolute", TaffyPosition.ABSOLUTE);
+    public static final Map<String, TaffyPosition> position = Map
+            .of("relative", TaffyPosition.RELATIVE, "absolute", TaffyPosition.ABSOLUTE);
 
     public static final Map<String, Overflow> overflow = Map.of(
-            "visible", Overflow.VISIBLE,
-            "clip", Overflow.CLIP,
-            "hidden", Overflow.HIDDEN,
-            "scroll", Overflow.SCROLL);
+        "visible",
+        Overflow.VISIBLE,
+        "clip",
+        Overflow.CLIP,
+        "hidden",
+        Overflow.HIDDEN,
+        "scroll",
+        Overflow.SCROLL
+    );
 
-    public static final Map<String, BoxSizing> boxSizing =
-            Map.of("border-box", BoxSizing.BORDER_BOX, "content-box", BoxSizing.CONTENT_BOX);
+    public static final Map<String, BoxSizing> boxSizing = Map
+            .of("border-box", BoxSizing.BORDER_BOX, "content-box", BoxSizing.CONTENT_BOX);
 
     public static final Map<String, FlexDirection> flexDirection = Map.of(
-            "row", FlexDirection.ROW,
-            "row-reverse", FlexDirection.ROW_REVERSE,
-            "column", FlexDirection.COLUMN,
-            "column-reverse", FlexDirection.COLUMN_REVERSE);
+        "row",
+        FlexDirection.ROW,
+        "row-reverse",
+        FlexDirection.ROW_REVERSE,
+        "column",
+        FlexDirection.COLUMN,
+        "column-reverse",
+        FlexDirection.COLUMN_REVERSE
+    );
 
     public static final Map<String, FlexWrap> flexWrap = Map.of(
-            "nowrap", FlexWrap.NO_WRAP,
-            "no-wrap", FlexWrap.NO_WRAP,
-            "wrap", FlexWrap.WRAP,
-            "wrap-reverse", FlexWrap.WRAP_REVERSE);
+        "nowrap",
+        FlexWrap.NO_WRAP,
+        "no-wrap",
+        FlexWrap.NO_WRAP,
+        "wrap",
+        FlexWrap.WRAP,
+        "wrap-reverse",
+        FlexWrap.WRAP_REVERSE
+    );
 
     public static final Map<String, AlignItems> alignItems = Map.ofEntries(
-            Map.entry("flex-start", AlignItems.FLEX_START),
-            Map.entry("start", AlignItems.FLEX_START),
-            Map.entry("flex-end", AlignItems.FLEX_END),
-            Map.entry("end", AlignItems.FLEX_END),
-            Map.entry("center", AlignItems.CENTER),
-            Map.entry("baseline", AlignItems.BASELINE),
-            Map.entry("stretch", AlignItems.STRETCH));
+        Map.entry("flex-start", AlignItems.FLEX_START),
+        Map.entry("start", AlignItems.FLEX_START),
+        Map.entry("flex-end", AlignItems.FLEX_END),
+        Map.entry("end", AlignItems.FLEX_END),
+        Map.entry("center", AlignItems.CENTER),
+        Map.entry("baseline", AlignItems.BASELINE),
+        Map.entry("stretch", AlignItems.STRETCH)
+    );
 
     public static final Map<String, AlignContent> alignContent = Map.ofEntries(
-            Map.entry("flex-start", AlignContent.FLEX_START),
-            Map.entry("start", AlignContent.FLEX_START),
-            Map.entry("flex-end", AlignContent.FLEX_END),
-            Map.entry("end", AlignContent.FLEX_END),
-            Map.entry("center", AlignContent.CENTER),
-            Map.entry("stretch", AlignContent.STRETCH),
-            Map.entry("space-between", AlignContent.SPACE_BETWEEN),
-            Map.entry("space-around", AlignContent.SPACE_AROUND),
-            Map.entry("space-evenly", AlignContent.SPACE_EVENLY));
+        Map.entry("flex-start", AlignContent.FLEX_START),
+        Map.entry("start", AlignContent.FLEX_START),
+        Map.entry("flex-end", AlignContent.FLEX_END),
+        Map.entry("end", AlignContent.FLEX_END),
+        Map.entry("center", AlignContent.CENTER),
+        Map.entry("stretch", AlignContent.STRETCH),
+        Map.entry("space-between", AlignContent.SPACE_BETWEEN),
+        Map.entry("space-around", AlignContent.SPACE_AROUND),
+        Map.entry("space-evenly", AlignContent.SPACE_EVENLY)
+    );
 
     public static final Map<String, JustifyContent> justifyContent = Map.ofEntries(
-            Map.entry("flex-start", JustifyContent.FLEX_START),
-            Map.entry("start", JustifyContent.FLEX_START),
-            Map.entry("flex-end", JustifyContent.FLEX_END),
-            Map.entry("end", JustifyContent.FLEX_END),
-            Map.entry("center", JustifyContent.CENTER),
-            Map.entry("stretch", JustifyContent.STRETCH),
-            Map.entry("space-between", JustifyContent.SPACE_BETWEEN),
-            Map.entry("space-around", JustifyContent.SPACE_AROUND),
-            Map.entry("space-evenly", JustifyContent.SPACE_EVENLY));
+        Map.entry("flex-start", JustifyContent.FLEX_START),
+        Map.entry("start", JustifyContent.FLEX_START),
+        Map.entry("flex-end", JustifyContent.FLEX_END),
+        Map.entry("end", JustifyContent.FLEX_END),
+        Map.entry("center", JustifyContent.CENTER),
+        Map.entry("stretch", JustifyContent.STRETCH),
+        Map.entry("space-between", JustifyContent.SPACE_BETWEEN),
+        Map.entry("space-around", JustifyContent.SPACE_AROUND),
+        Map.entry("space-evenly", JustifyContent.SPACE_EVENLY)
+    );
 
     public static final Map<String, TextAlign> textAlign = Map.of(
-            "auto", TextAlign.AUTO,
-            "left", TextAlign.LEFT,
-            "right", TextAlign.RIGHT,
-            "center", TextAlign.CENTER,
-            "justify", TextAlign.JUSTIFY,
-            "justify-all", TextAlign.JUSTIFY_ALL,
-            "start", TextAlign.START,
-            "end", TextAlign.END);
+        "auto",
+        TextAlign.AUTO,
+        "left",
+        TextAlign.LEFT,
+        "right",
+        TextAlign.RIGHT,
+        "center",
+        TextAlign.CENTER,
+        "justify",
+        TextAlign.JUSTIFY,
+        "justify-all",
+        TextAlign.JUSTIFY_ALL,
+        "start",
+        TextAlign.START,
+        "end",
+        TextAlign.END
+    );
 
     public static final Map<String, TaffyDirection> direction = Map.of(
-            "inherit", TaffyDirection.INHERIT,
-            "ltr", TaffyDirection.LTR,
-            "rtl", TaffyDirection.RTL,
-            "default", TaffyDirection.DEFAULT);
+        "inherit",
+        TaffyDirection.INHERIT,
+        "ltr",
+        TaffyDirection.LTR,
+        "rtl",
+        TaffyDirection.RTL,
+        "default",
+        TaffyDirection.DEFAULT
+    );
 
     // endregion
 

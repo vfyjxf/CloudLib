@@ -100,16 +100,16 @@ public final class StyleApplies {
     // region composite visual setters
 
     /** Visual border: patches only the color, keeping current thickness. */
-    public static final StyleApply<Integer> borderColor =
-            (ctx, v) -> ctx.visualContext().border(ctx.visualContext().borderWidth(), v);
+    public static final StyleApply<Integer> borderColor = (ctx, v) -> ctx.visualContext()
+            .border(ctx.visualContext().borderWidth(), v);
 
     /** Visual border: patches only the thickness, keeping current color. */
-    public static final StyleApply<Float> borderWidth =
-            (ctx, v) -> ctx.visualContext().border(v, ctx.visualContext().borderColor());
+    public static final StyleApply<Float> borderWidth = (ctx, v) -> ctx.visualContext()
+            .border(v, ctx.visualContext().borderColor());
 
     /** Drop shadow → {@link VisualContext#setShadow}. */
-    public static final StyleApply<Shadow> shadow =
-            (ctx, v) -> ctx.visualContext().setShadow(v.offsetX(), v.offsetY(), v.blurRadius(), v.color());
+    public static final StyleApply<Shadow> shadow = (ctx, v) -> ctx.visualContext()
+            .setShadow(v.offsetX(), v.offsetY(), v.blurRadius(), v.color());
 
     /** Scene layer → stored on the context (read by scene compositing). */
     public static final StyleApply<SceneLayer> sceneLayer = (ctx, v) -> {};

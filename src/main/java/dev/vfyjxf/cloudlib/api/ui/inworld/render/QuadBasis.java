@@ -32,16 +32,20 @@ public record QuadBasis(Vec3 origin, Vec3 u, Vec3 v) {
      * panel center on the face; {@code pixelsPerBlock} sets the world scale.
      */
     public static QuadBasis face(
-            BlockPos pos, Direction face, double u, double v, double pixelsPerBlock, int wPx, int hPx) {
+        BlockPos pos,
+        Direction face,
+        double u,
+        double v,
+        double pixelsPerBlock,
+        int wPx,
+        int hPx
+    ) {
         double s = 1.0 / pixelsPerBlock;
         Vec3 n = Vec3.atLowerCornerOf(face.getNormal());
         Vec3 uAxis = faceUAxis(face);
         Vec3 vAxis = faceVAxis(face);
 
-        Vec3 facePoint = Vec3.atCenterOf(pos)
-                .add(n.scale(0.5))
-                .add(uAxis.scale(u - 0.5))
-                .add(vAxis.scale(v - 0.5))
+        Vec3 facePoint = Vec3.atCenterOf(pos).add(n.scale(0.5)).add(uAxis.scale(u - 0.5)).add(vAxis.scale(v - 0.5))
                 .add(n.scale(0.001 + s));
 
         Vec3 uu = uAxis.scale(s);
@@ -85,7 +89,13 @@ public record QuadBasis(Vec3 origin, Vec3 u, Vec3 v) {
      * screen-down.
      */
     public static QuadBasis cameraBillboard(
-            Vec3 center, Vec3 cameraRight, Vec3 cameraDown, double pixelsPerBlock, int wPx, int hPx) {
+        Vec3 center,
+        Vec3 cameraRight,
+        Vec3 cameraDown,
+        double pixelsPerBlock,
+        int wPx,
+        int hPx
+    ) {
         return axes(center, cameraRight, cameraDown, pixelsPerBlock, wPx, hPx);
     }
 
@@ -95,9 +105,20 @@ public record QuadBasis(Vec3 origin, Vec3 u, Vec3 v) {
      * no {@code Camera} instance.
      */
     public static QuadBasis cameraBillboard(
-            Vec3 center, Projection projection, double pixelsPerBlock, int wPx, int hPx) {
+        Vec3 center,
+        Projection projection,
+        double pixelsPerBlock,
+        int wPx,
+        int hPx
+    ) {
         return cameraBillboard(
-                center, projection.cameraRight(), projection.cameraUp().scale(-1), pixelsPerBlock, wPx, hPx);
+            center,
+            projection.cameraRight(),
+            projection.cameraUp().scale(-1),
+            pixelsPerBlock,
+            wPx,
+            hPx
+        );
     }
 
     /**
@@ -111,7 +132,13 @@ public record QuadBasis(Vec3 origin, Vec3 u, Vec3 v) {
      * instead of flipping, or {@code null} for a deterministic default.
      */
     public static QuadBasis yawBillboard(
-            Vec3 center, Vec3 observerPos, @Nullable Vec3 fallbackRight, double pixelsPerBlock, int wPx, int hPx) {
+        Vec3 center,
+        Vec3 observerPos,
+        @Nullable Vec3 fallbackRight,
+        double pixelsPerBlock,
+        int wPx,
+        int hPx
+    ) {
         Vec3 toPanel = horizontal(center.subtract(observerPos));
         Vec3 right = toPanel.lengthSqr() < degenerateEpsilon
                 ? horizontalFallback(fallbackRight)
@@ -141,7 +168,13 @@ public record QuadBasis(Vec3 origin, Vec3 u, Vec3 v) {
      * orientation, or {@code null} for a deterministic default.
      */
     public static QuadBasis groundParallel(
-            Vec3 center, Vec3 observerFacing, @Nullable Vec3 fallbackRight, double pixelsPerBlock, int wPx, int hPx) {
+        Vec3 center,
+        Vec3 observerFacing,
+        @Nullable Vec3 fallbackRight,
+        double pixelsPerBlock,
+        int wPx,
+        int hPx
+    ) {
         return groundParallelOnPlane(center, observerFacing, worldUp, fallbackRight, pixelsPerBlock, wPx, hPx);
     }
 
@@ -162,13 +195,14 @@ public record QuadBasis(Vec3 origin, Vec3 u, Vec3 v) {
      * (almost) parallel to {@code planeNormal}.
      */
     public static QuadBasis groundParallelOnPlane(
-            Vec3 center,
-            Vec3 observerFacing,
-            Vec3 planeNormal,
-            @Nullable Vec3 fallbackRight,
-            double pixelsPerBlock,
-            int wPx,
-            int hPx) {
+        Vec3 center,
+        Vec3 observerFacing,
+        Vec3 planeNormal,
+        @Nullable Vec3 fallbackRight,
+        double pixelsPerBlock,
+        int wPx,
+        int hPx
+    ) {
         Vec3 normal = planeNormal.normalize();
         Vec3 right = observerFacing.cross(normal);
         if (right.lengthSqr() < degenerateEpsilon) {
@@ -185,7 +219,13 @@ public record QuadBasis(Vec3 origin, Vec3 u, Vec3 v) {
      * in-plane default right axis is used in the degenerate case.
      */
     public static QuadBasis groundParallelOnPlane(
-            Vec3 center, Vec3 observerFacing, Vec3 planeNormal, double pixelsPerBlock, int wPx, int hPx) {
+        Vec3 center,
+        Vec3 observerFacing,
+        Vec3 planeNormal,
+        double pixelsPerBlock,
+        int wPx,
+        int hPx
+    ) {
         return groundParallelOnPlane(center, observerFacing, planeNormal, null, pixelsPerBlock, wPx, hPx);
     }
 
@@ -307,11 +347,11 @@ public record QuadBasis(Vec3 origin, Vec3 u, Vec3 v) {
         Vec3 u = basis.u.normalize();
         Vec3 v = basis.v.normalize();
         Vec3 n = u.cross(v);
-        Matrix3f frame = new Matrix3f()
-                .set(
-                        new Vector3f((float) u.x, (float) u.y, (float) u.z),
-                        new Vector3f((float) v.x, (float) v.y, (float) v.z),
-                        new Vector3f((float) n.x, (float) n.y, (float) n.z));
+        Matrix3f frame = new Matrix3f().set(
+            new Vector3f((float) u.x, (float) u.y, (float) u.z),
+            new Vector3f((float) v.x, (float) v.y, (float) v.z),
+            new Vector3f((float) n.x, (float) n.y, (float) n.z)
+        );
         return frame.getNormalizedRotation(new Quaternionf());
     }
 
@@ -350,7 +390,8 @@ public record QuadBasis(Vec3 origin, Vec3 u, Vec3 v) {
     public static double pixelsPerBlockAtDepth(double pixelsPerBlockAtReference, double referenceDepth, double depth) {
         if (pixelsPerBlockAtReference <= 0) {
             throw new IllegalArgumentException(
-                    "pixelsPerBlockAtReference must be positive: " + pixelsPerBlockAtReference);
+                "pixelsPerBlockAtReference must be positive: " + pixelsPerBlockAtReference
+            );
         }
         if (referenceDepth <= 0) {
             throw new IllegalArgumentException("referenceDepth must be positive: " + referenceDepth);

@@ -106,7 +106,8 @@ public final class OneEuroFilter {
         requirePositive(maxCutoff, "maxCutoff");
         if (maxCutoff < minCutoff) {
             throw new IllegalArgumentException(
-                    "maxCutoff must be at least minCutoff: " + maxCutoff + " < " + minCutoff);
+                "maxCutoff must be at least minCutoff: " + maxCutoff + " < " + minCutoff
+            );
         }
         this.minCutoff = minCutoff;
         this.beta = beta;

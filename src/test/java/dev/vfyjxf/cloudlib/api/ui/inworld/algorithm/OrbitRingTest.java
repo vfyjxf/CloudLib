@@ -101,9 +101,7 @@ class OrbitRingTest {
         for (int i = 1; i < free.size(); i++) {
             int previous = free.get(i - 1).ring();
             int current = free.get(i).ring();
-            assertTrue(previous < current
-                    || (previous == current
-                            && free.get(i - 1).index() < free.get(i).index()));
+            assertTrue(previous < current || (previous == current && free.get(i - 1).index() < free.get(i).index()));
         }
     }
 

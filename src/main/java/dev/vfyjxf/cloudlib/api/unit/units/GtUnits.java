@@ -32,19 +32,20 @@ public final class GtUnits {
     public static final Unit<FluidUnits> liter = Unit.of(FluidUnits.family, Namespace.ofMc("liter"));
 
     public static final ImmutableList<UnitRule> rules = Lists.immutable.of(
-            UnitRule.fixedRule(liter, FluidUnits.millibucket, Ratio.of(1)),
-            UnitRule.fixedBridge(ItemUnits.nugget, FluidUnits.millibucket, Ratio.of(16)),
-            UnitRule.fixedBridge(ItemUnits.ingot, FluidUnits.millibucket, Ratio.of(144)),
-            UnitRule.fixedBridge(ItemUnits.block, FluidUnits.millibucket, Ratio.of(1296)),
-            UnitRule.fixedBridge(ItemUnits.dust, FluidUnits.millibucket, Ratio.of(144)),
-            UnitRule.fixedBridge(ItemUnits.smallDust, FluidUnits.millibucket, Ratio.of(36)),
-            UnitRule.fixedBridge(ItemUnits.tinyDust, FluidUnits.millibucket, Ratio.of(16)),
-            UnitRule.fixedBridge(ItemUnits.plate, FluidUnits.millibucket, Ratio.of(144)),
-            UnitRule.fixedBridge(ItemUnits.rod, FluidUnits.millibucket, Ratio.of(72)),
-            UnitRule.fixedBridge(ItemUnits.gear, FluidUnits.millibucket, Ratio.of(576)),
-            UnitRule.matter(ItemUnits.plate, ItemUnits.ingot, Ratio.of(1)),
-            UnitRule.matter(ItemUnits.rod, ItemUnits.ingot, Ratio.of(1, 2)),
-            UnitRule.matter(ItemUnits.gear, ItemUnits.ingot, Ratio.of(4)));
+        UnitRule.fixedRule(liter, FluidUnits.millibucket, Ratio.of(1)),
+        UnitRule.fixedBridge(ItemUnits.nugget, FluidUnits.millibucket, Ratio.of(16)),
+        UnitRule.fixedBridge(ItemUnits.ingot, FluidUnits.millibucket, Ratio.of(144)),
+        UnitRule.fixedBridge(ItemUnits.block, FluidUnits.millibucket, Ratio.of(1296)),
+        UnitRule.fixedBridge(ItemUnits.dust, FluidUnits.millibucket, Ratio.of(144)),
+        UnitRule.fixedBridge(ItemUnits.smallDust, FluidUnits.millibucket, Ratio.of(36)),
+        UnitRule.fixedBridge(ItemUnits.tinyDust, FluidUnits.millibucket, Ratio.of(16)),
+        UnitRule.fixedBridge(ItemUnits.plate, FluidUnits.millibucket, Ratio.of(144)),
+        UnitRule.fixedBridge(ItemUnits.rod, FluidUnits.millibucket, Ratio.of(72)),
+        UnitRule.fixedBridge(ItemUnits.gear, FluidUnits.millibucket, Ratio.of(576)),
+        UnitRule.matter(ItemUnits.plate, ItemUnits.ingot, Ratio.of(1)),
+        UnitRule.matter(ItemUnits.rod, ItemUnits.ingot, Ratio.of(1, 2)),
+        UnitRule.matter(ItemUnits.gear, ItemUnits.ingot, Ratio.of(4))
+    );
 
     /**
      * Unmodifiable {@link List} view of {@link #rules}, for consumers working with

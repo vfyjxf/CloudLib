@@ -42,9 +42,10 @@ public final class GuideLineUniforms {
     public static void color(ShaderInstance shader, String name, int argb) {
         Uniform uniform = shader.getUniform(name);
         uniform.set(
-                ((argb >> 16) & 0xFF) / 255f,
-                ((argb >> 8) & 0xFF) / 255f,
-                (argb & 0xFF) / 255f,
-                ((argb >>> 24) & 0xFF) / 255f);
+            ((argb >> 16) & 0xFF) / 255f,
+            ((argb >> 8) & 0xFF) / 255f,
+            (argb & 0xFF) / 255f,
+            ((argb >>> 24) & 0xFF) / 255f
+        );
     }
 }

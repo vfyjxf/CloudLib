@@ -30,8 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class WorldUiRendererCacheProtocolTest {
 
-    private static final String sourceRel =
-            "src/main/java/dev/vfyjxf/cloudlib/api/ui/inworld/render/WorldUiRenderer.java";
+    private static final String sourceRel = "src/main/java/dev/vfyjxf/cloudlib/api/ui/inworld/render/WorldUiRenderer.java";
 
     private static String source() throws IOException {
         Path path = sourceFile();
@@ -79,9 +78,10 @@ class WorldUiRendererCacheProtocolTest {
         int surfaceRender = body.indexOf("renderSurface(");
         assertTrue(gate >= 0, "renderSurfaces must route repaints through the panel's RepaintGate");
         assertTrue(
-                surfaceRender > gate,
-                "the renderSurface call must sit inside the gate's render action"
-                        + " (the runnable), not run unconditionally");
+            surfaceRender > gate,
+            "the renderSurface call must sit inside the gate's render action"
+                    + " (the runnable), not run unconditionally"
+        );
     }
 
     @Test

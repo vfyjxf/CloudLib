@@ -26,13 +26,14 @@ import java.util.Objects;
  * @param budget the space feedback for the next frame's collect phase
  */
 public record CoordinationResult(
-        long frame,
-        long epoch,
-        boolean resolved,
-        RenegotiationCause cause,
-        List<InworldPlacement> placements,
-        List<ElementState> elementStates,
-        SpaceBudget budget) {
+    long frame,
+    long epoch,
+    boolean resolved,
+    RenegotiationCause cause,
+    List<InworldPlacement> placements,
+    List<ElementState> elementStates,
+    SpaceBudget budget
+) {
 
     public CoordinationResult {
         placements = List.copyOf(placements);
@@ -95,12 +96,13 @@ public record CoordinationResult(
      *        frame; {@code null} when presented or retracted
      */
     public record ElementState(
-            String elementId,
-            VisibilityTracker.Phase phase,
-            double alpha,
-            @Nullable InworldPlacement placement,
-            @Nullable FloatRect visualRect,
-            @Nullable ElementRejection rejection) {
+        String elementId,
+        VisibilityTracker.Phase phase,
+        double alpha,
+        @Nullable InworldPlacement placement,
+        @Nullable FloatRect visualRect,
+        @Nullable ElementRejection rejection
+    ) {
 
         public ElementState {
             Objects.requireNonNull(elementId, "elementId");
@@ -133,9 +135,7 @@ public record CoordinationResult(
          * so it reports the tier it is fading out from.
          */
         public LodTier lodTier() {
-            return placement == null
-                    ? LodTier.hidden
-                    : lodTierOf(placement.variant().contentTier());
+            return placement == null ? LodTier.hidden : lodTierOf(placement.variant().contentTier());
         }
 
         /** The content-tier side of the {@link #lodTier()} bridge. */

@@ -37,19 +37,21 @@ class LeaderTraceTest {
     @Test
     void aFrameRoundTripsThroughTheLine() {
         LeaderTrace.Frame frame = new LeaderTrace.Frame(
-                7,
-                List.of(
-                        new LeaderRouter.Leader(
-                                "panel/1",
-                                12.5,
-                                -3.25,
-                                new AttachPointResolver.Port(
-                                        AttachPointResolver.Face.left, new FloatPos(400, 0), -1.0, 0.0),
-                                new FloatRect(394, -40, 180, 96)),
-                        LeaderRouter.Leader.toPoint("b", 0, 0, 100, 100)),
-                Map.of("b", "cluster"),
-                List.of(new FloatRect(600, 210, 40, 80)),
-                new FloatRect(0, 0, 1280, 720));
+            7,
+            List.of(
+                new LeaderRouter.Leader(
+                    "panel/1",
+                    12.5,
+                    -3.25,
+                    new AttachPointResolver.Port(AttachPointResolver.Face.left, new FloatPos(400, 0), -1.0, 0.0),
+                    new FloatRect(394, -40, 180, 96)
+                ),
+                LeaderRouter.Leader.toPoint("b", 0, 0, 100, 100)
+            ),
+            Map.of("b", "cluster"),
+            List.of(new FloatRect(600, 210, 40, 80)),
+            new FloatRect(0, 0, 1280, 720)
+        );
 
         String line = LeaderTrace.encode(frame, null);
         assertEquals(frame, LeaderTrace.decodeFrame(line), "the frame survives the line");
@@ -62,7 +64,12 @@ class LeaderTraceTest {
     @Test
     void aRecordingLineCarriesItsRoutes() {
         LeaderTrace.Frame frame = new LeaderTrace.Frame(
-                1, List.of(LeaderRouter.Leader.toPoint("a", 0, 0, 300, 100)), Map.of(), List.of(), null);
+            1,
+            List.of(LeaderRouter.Leader.toPoint("a", 0, 0, 300, 100)),
+            Map.of(),
+            List.of(),
+            null
+        );
         LeaderRouter router = new LeaderRouter(config);
         List<LeaderRouter.Route> routes = router.route(frame.leaders(), Map.of(), List.of(), null);
 
@@ -78,8 +85,7 @@ class LeaderTraceTest {
         assertThrows(IllegalArgumentException.class, () -> LeaderTrace.decodeFrame("{\"leaders\": 3}"));
         String noLeaders = "{\"frame\":0}";
         assertThrows(IllegalArgumentException.class, () -> LeaderTrace.decodeFrame(noLeaders));
-        String badPos =
-                "{\"leaders\":[{\"id\":\"a\",\"anchor\":[1],\"port\":{\"point\":[0,0],\"face\":\"left\",\"normal\":[1,0]}}]}";
+        String badPos = "{\"leaders\":[{\"id\":\"a\",\"anchor\":[1],\"port\":{\"point\":[0,0],\"face\":\"left\",\"normal\":[1,0]}}]}";
         assertThrows(IllegalArgumentException.class, () -> LeaderTrace.decodeFrame(badPos));
     }
 

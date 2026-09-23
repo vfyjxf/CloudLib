@@ -76,18 +76,20 @@ class PixelStabilizerTest {
         }
 
         assertEquals(
-                9,
-                crossFrames.get(0),
-                "the first glide carries the output past the half-cell one frame after"
-                        + " the input clears 10.75 (frame 8)");
+            9,
+            crossFrames.get(0),
+            "the first glide carries the output past the half-cell one frame after"
+                    + " the input clears 10.75 (frame 8)"
+        );
         for (int i = 1; i < crossFrames.size(); i++) {
             int gap = crossFrames.get(i) - crossFrames.get(i - 1);
             assertTrue(gap >= 9 && gap <= 11, "crossings must keep the input's cadence: gap " + gap);
         }
         assertTrue(
-                crossFrames.get(crossFrames.size() - 1) - crossFrames.get(0) >= 285
-                        && crossFrames.get(crossFrames.size() - 1) - crossFrames.get(0) <= 296,
-                "30 crossings span ~29 cells at the input's 10-frame cadence");
+            crossFrames.get(crossFrames.size() - 1) - crossFrames.get(0) >= 285
+                    && crossFrames.get(crossFrames.size() - 1) - crossFrames.get(0) <= 296,
+            "30 crossings span ~29 cells at the input's 10-frame cadence"
+        );
         // 300 frames * 0.1 px = 30 px of input motion = 30 cell crossings
         assertEquals(30, crossFrames.size());
         assertTrue(maxFrameStep <= 0.5 && maxFrameStep > 0.05, "the glide is real motion, not a teleport");
@@ -227,8 +229,9 @@ class PixelStabilizerTest {
         assertEquals(11.0, out.x(), 0.0);
         out = stabilizer.accept(dt, 10.49, 0.0);
         assertTrue(
-                out.x() < 10.9 && out.x() > 10.4,
-                "10.49 flips the latch down — the output leaves 11 at once: " + out.x());
+            out.x() < 10.9 && out.x() > 10.4,
+            "10.49 flips the latch down — the output leaves 11 at once: " + out.x()
+        );
         out = stabilizer.accept(2 * dt, 10.51, 0.0);
         assertTrue(out.x() > 10.4 && out.x() < 11.0, "10.51 flips the latch back up: " + out.x());
         // parked below the boundary, the panel re-locks onto the 10 cell
@@ -300,26 +303,33 @@ class PixelStabilizerTest {
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer.Config(0.0, 0.25, 45.0, 9.0, 5, 0.12));
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer.Config(-0.5, 0.25, 45.0, 9.0, 5, 0.12));
         assertThrows(
-                IllegalArgumentException.class, () -> new PixelStabilizer.Config(Double.NaN, 0.25, 45.0, 9.0, 5, 0.12));
+            IllegalArgumentException.class,
+            () -> new PixelStabilizer.Config(Double.NaN, 0.25, 45.0, 9.0, 5, 0.12)
+        );
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer.Config(0.5, -0.01, 45.0, 9.0, 5, 0.12));
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer.Config(0.5, 0.5, 45.0, 9.0, 5, 0.12));
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer.Config(0.7, 0.4, 45.0, 9.0, 5, 0.12));
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer.Config(0.5, 0.25, 0.0, 9.0, 5, 0.12));
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new PixelStabilizer.Config(0.5, 0.25, Double.POSITIVE_INFINITY, 9.0, 5, 0.12));
+            IllegalArgumentException.class,
+            () -> new PixelStabilizer.Config(0.5, 0.25, Double.POSITIVE_INFINITY, 9.0, 5, 0.12)
+        );
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer.Config(0.5, 0.25, 45.0, -1.0, 5, 0.12));
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer.Config(0.5, 0.25, 9.0, 9.0, 5, 0.12));
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer.Config(0.5, 0.25, 20.0, 45.0, 5, 0.12));
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer.Config(0.5, 0.25, 45.0, 9.0, 0, 0.12));
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer.Config(0.5, 0.25, 45.0, 9.0, 5, -0.01));
         assertThrows(
-                IllegalArgumentException.class, () -> new PixelStabilizer.Config(0.5, 0.25, 45.0, 9.0, 5, Double.NaN));
+            IllegalArgumentException.class,
+            () -> new PixelStabilizer.Config(0.5, 0.25, 45.0, 9.0, 5, Double.NaN)
+        );
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer().accept(Double.NaN, 0.0, 0.0));
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer().accept(0.0, Double.NaN, 0.0));
         assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer().accept(0.0, 0.0, Double.NaN));
-        assertThrows(IllegalArgumentException.class, () -> new PixelStabilizer()
-                .snapBypass(0.0, Double.POSITIVE_INFINITY, 0.0));
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new PixelStabilizer().snapBypass(0.0, Double.POSITIVE_INFINITY, 0.0)
+        );
         assertThrows(NullPointerException.class, () -> new PixelStabilizer(null));
     }
 }

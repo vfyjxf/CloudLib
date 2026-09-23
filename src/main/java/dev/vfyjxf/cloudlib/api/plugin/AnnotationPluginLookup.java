@@ -45,7 +45,9 @@ public final class AnnotationPluginLookup<T extends ModPlugin> implements Plugin
      * Creates a lookup that scans for a custom annotation.
      */
     public static <T extends ModPlugin> AnnotationPluginLookup<T> of(
-            Class<T> pluginClass, Class<? extends Annotation> annotation) {
+        Class<T> pluginClass,
+        Class<? extends Annotation> annotation
+    ) {
         Checks.checkNotNull(pluginClass, "pluginClass");
         Checks.checkNotNull(annotation, "annotation");
         return new AnnotationPluginLookup<>(pluginClass, annotation);

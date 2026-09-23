@@ -49,19 +49,15 @@ class CoordinatorScenarioTest {
     private static List<String> runScriptedScene() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
         TestElement nameplate = TestElement.arbitrated("nameplate", 120, 80, new Size(100, 40), new Size(60, 24))
-                .withSticky()
-                .withPriority(3);
+                .withSticky().withPriority(3);
         TestElement hud = TestElement.arbitrated("hud", 300, 60, new Size(80, 30), new Size(40, 20))
-                .withKind(SpaceKind.panel)
-                .withPriority(10);
+                .withKind(SpaceKind.panel).withPriority(10);
         TestElement tracker = TestElement.arbitrated("tracker", 200, 220, new Size(90, 30), new Size(50, 18))
-                .withSticky()
-                .withKind(SpaceKind.tracked);
+                .withSticky().withKind(SpaceKind.tracked);
         TestElement fixedPanel = TestElement.arbitrated("fixedPanel", 250, 150, new Size(40, 40))
                 .withLadder(TestElement.ladder(SpacePolicy.fixed, false, true, new Size(40, 40)));
         TestElement ghostMark = TestElement.arbitrated("ghostMark", 200, 150, new Size(30, 30))
-                .withLadder(TestElement.ladder(SpacePolicy.ghost, false, true, new Size(30, 30)))
-                .withPriority(1);
+                .withLadder(TestElement.ladder(SpacePolicy.ghost, false, true, new Size(30, 30))).withPriority(1);
 
         coordinator.register(nameplate);
         coordinator.register(hud);
@@ -98,10 +94,14 @@ class CoordinatorScenarioTest {
     }
 
     private static double step(
-            InworldCoordinator coordinator, List<String> snapshots, double now, List<Rect> exclusions) {
+        InworldCoordinator coordinator,
+        List<String> snapshots,
+        double now,
+        List<Rect> exclusions
+    ) {
         double next = now + dt;
-        CoordinationResult result =
-                coordinator.frame(InworldCoordinator.FrameInput.of(width, height, next, dt, exclusions));
+        CoordinationResult result = coordinator
+                .frame(InworldCoordinator.FrameInput.of(width, height, next, dt, exclusions));
         snapshots.add(describe(result));
         return next;
     }
@@ -114,24 +114,21 @@ class CoordinatorScenarioTest {
         StringBuilder text = new StringBuilder("f" + result.frame() + "e" + result.epoch() + "c" + result.cause());
         for (CoordinationResult.ElementState state : result.elementStates()) {
             text.append(' ').append(state.elementId()).append(':');
+            text.append(state.placement() == null ? "-" : state.placement().variant().level());
             text.append(
-                    state.placement() == null
-                            ? "-"
-                            : state.placement().variant().level());
-            text.append(
-                    state.visualRect() == null
-                            ? "-"
-                            : String.format(
-                                    "(%.2f,%.2f,%.0fx%.0f)",
-                                    state.visualRect().x(),
-                                    state.visualRect().y(),
-                                    state.visualRect().width(),
-                                    state.visualRect().height()));
+                state.visualRect() == null
+                        ? "-"
+                        : String.format(
+                            "(%.2f,%.2f,%.0fx%.0f)",
+                            state.visualRect().x(),
+                            state.visualRect().y(),
+                            state.visualRect().width(),
+                            state.visualRect().height()
+                        )
+            );
             text.append('/').append(state.phase()).append('/').append(String.format("%.3f", state.alpha()));
             if (state.rejection() != null) {
-                text.append("/rej:")
-                        .append(state.rejection().reason())
-                        .append(':')
+                text.append("/rej:").append(state.rejection().reason()).append(':')
                         .append(state.rejection().blockerId());
             }
         }
@@ -145,8 +142,7 @@ class CoordinatorScenarioTest {
     @Test
     void invalidAnchorLingersInsteadOfVanishing() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement element = TestElement.arbitrated("e", 200, 150, new Size(100, 40), new Size(60, 24))
-                .withSticky();
+        TestElement element = TestElement.arbitrated("e", 200, 150, new Size(100, 40), new Size(60, 24)).withSticky();
         coordinator.register(element);
 
         CoordinationResult placed = frame(coordinator, 0);
@@ -170,15 +166,13 @@ class CoordinatorScenarioTest {
         // still lingering well past the epoch, then fading, then gone
         now = advance(coordinator, now, 10);
         assertEquals(
-                VisibilityTracker.Phase.lingering,
-                coordinator.lastResult().orElseThrow().elementState("e").phase());
+            VisibilityTracker.Phase.lingering,
+            coordinator.lastResult().orElseThrow().elementState("e").phase()
+        );
         now = advance(coordinator, now, 10); // ~0.35s total: past linger (0.25) into fade
-        assertEquals(
-                VisibilityTracker.Phase.fading,
-                coordinator.lastResult().orElseThrow().elementState("e").phase());
+        assertEquals(VisibilityTracker.Phase.fading, coordinator.lastResult().orElseThrow().elementState("e").phase());
         now = advance(coordinator, now, 16); // ~0.6s: past fade (0.25)
-        CoordinationResult.ElementState gone =
-                coordinator.lastResult().orElseThrow().elementState("e");
+        CoordinationResult.ElementState gone = coordinator.lastResult().orElseThrow().elementState("e");
         assertEquals(VisibilityTracker.Phase.hidden, gone.phase());
         assertEquals(0.0, gone.alpha(), 1.0e-9);
     }
@@ -186,8 +180,7 @@ class CoordinatorScenarioTest {
     @Test
     void recoveredAnchorReturnsToItsStickyPosition() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement element = TestElement.arbitrated("e", 200, 150, new Size(100, 40), new Size(60, 24))
-                .withSticky();
+        TestElement element = TestElement.arbitrated("e", 200, 150, new Size(100, 40), new Size(60, 24)).withSticky();
         coordinator.register(element);
 
         CoordinationResult placed = frame(coordinator, 0);
@@ -205,10 +198,8 @@ class CoordinatorScenarioTest {
         assertTrue(recovered.resolved());
         InworldPlacement placement = recovered.placementOf("e");
         assertNotNull(placement, "recovery re-presents the element");
-        assertEquals(
-                placed.placementOf("e").offsetRect().x(), placement.offsetRect().x(), 0.01);
-        assertEquals(
-                placed.placementOf("e").offsetRect().y(), placement.offsetRect().y(), 0.01);
+        assertEquals(placed.placementOf("e").offsetRect().x(), placement.offsetRect().x(), 0.01);
+        assertEquals(placed.placementOf("e").offsetRect().y(), placement.offsetRect().y(), 0.01);
         assertEquals(original.x(), placement.screenRect().x(), 0.01);
         assertEquals(original.y(), placement.screenRect().y(), 0.01);
         CoordinationResult.ElementState state = recovered.elementState("e");
@@ -219,8 +210,7 @@ class CoordinatorScenarioTest {
     @Test
     void recoveryFromFullyHiddenAlsoRestoresTheStickyPosition() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement element = TestElement.arbitrated("e", 200, 150, new Size(100, 40), new Size(60, 24))
-                .withSticky();
+        TestElement element = TestElement.arbitrated("e", 200, 150, new Size(100, 40), new Size(60, 24)).withSticky();
         coordinator.register(element);
         CoordinationResult placed = frame(coordinator, 0);
         double now = advance(coordinator, dt, 12); // fully faded in and visible
@@ -228,21 +218,16 @@ class CoordinatorScenarioTest {
         element.anchorValid = false;
         now += dt;
         now = advance(coordinator, now, 40); // linger + fade out completely
-        assertEquals(
-                VisibilityTracker.Phase.hidden,
-                coordinator.lastResult().orElseThrow().elementState("e").phase());
+        assertEquals(VisibilityTracker.Phase.hidden, coordinator.lastResult().orElseThrow().elementState("e").phase());
 
         element.anchorValid = true;
         now += dt;
         CoordinationResult recovered = frame(coordinator, now);
         InworldPlacement placement = recovered.placementOf("e");
         assertNotNull(placement);
-        assertEquals(
-                placed.placementOf("e").offsetRect().x(), placement.offsetRect().x(), 0.01);
-        assertEquals(
-                placed.placementOf("e").offsetRect().y(), placement.offsetRect().y(), 0.01);
-        assertEquals(
-                VisibilityTracker.Phase.appearing, recovered.elementState("e").phase());
+        assertEquals(placed.placementOf("e").offsetRect().x(), placement.offsetRect().x(), 0.01);
+        assertEquals(placed.placementOf("e").offsetRect().y(), placement.offsetRect().y(), 0.01);
+        assertEquals(VisibilityTracker.Phase.appearing, recovered.elementState("e").phase());
     }
 
     // endregion
@@ -252,8 +237,7 @@ class CoordinatorScenarioTest {
     @Test
     void subThresholdAnchorDriftDoesNotTriggerAResolve() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement element = TestElement.arbitrated("e", 200, 150, new Size(100, 40), new Size(60, 24))
-                .withSticky();
+        TestElement element = TestElement.arbitrated("e", 200, 150, new Size(100, 40), new Size(60, 24)).withSticky();
         coordinator.register(element);
         CoordinationResult first = frame(coordinator, 0);
         assertEquals(150, first.placementOf("e").screenRect().x(), 0.01);
@@ -268,26 +252,12 @@ class CoordinatorScenarioTest {
             assertEquals(1, result.epoch());
             // the offset is untouched; the continuous layer carries the drift
             InworldPlacement placement = result.placementOf("e");
-            assertEquals(
-                    first.placementOf("e").offsetRect().x(),
-                    placement.offsetRect().x(),
-                    1.0e-9);
-            assertEquals(
-                    first.placementOf("e").offsetRect().y(),
-                    placement.offsetRect().y(),
-                    1.0e-9);
+            assertEquals(first.placementOf("e").offsetRect().x(), placement.offsetRect().x(), 1.0e-9);
+            assertEquals(first.placementOf("e").offsetRect().y(), placement.offsetRect().y(), 1.0e-9);
             assertEquals(155, placement.screenRect().x(), 1.0e-9);
         }
         // the spring has converged onto the drifted target
-        assertEquals(
-                155,
-                coordinator
-                        .lastResult()
-                        .orElseThrow()
-                        .elementState("e")
-                        .visualRect()
-                        .x(),
-                0.5);
+        assertEquals(155, coordinator.lastResult().orElseThrow().elementState("e").visualRect().x(), 0.5);
 
         // with nothing else happening, the epoch timer is what eventually fires
         CoordinationResult epochFrame = null;
@@ -306,8 +276,7 @@ class CoordinatorScenarioTest {
     @Test
     void anchorJumpTriggersResolveAndFlipsInsteadOfTeleporting() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement element = TestElement.arbitrated("e", 200, 150, new Size(100, 40), new Size(60, 24))
-                .withSticky();
+        TestElement element = TestElement.arbitrated("e", 200, 150, new Size(100, 40), new Size(60, 24)).withSticky();
         coordinator.register(element);
         CoordinationResult first = frame(coordinator, 0);
         FloatRect visualAtRest = first.elementState("e").visualRect();
@@ -320,8 +289,7 @@ class CoordinatorScenarioTest {
         assertTrue(jumped.resolved());
         // sticky: the same slot, re-anchored
         InworldPlacement placement = jumped.placementOf("e");
-        assertEquals(
-                first.placementOf("e").offsetRect().x(), placement.offsetRect().x(), 0.01);
+        assertEquals(first.placementOf("e").offsetRect().x(), placement.offsetRect().x(), 0.01);
         assertEquals(210, placement.screenRect().x(), 0.01);
         // the discrete move is a FLIP: the visual starts where it rested
         FloatRect visual = jumped.elementState("e").visualRect();
@@ -329,8 +297,7 @@ class CoordinatorScenarioTest {
         assertEquals(visualAtRest.y(), visual.y(), 0.01);
 
         now = advance(coordinator, now, 30); // 0.5 s: past the 250 ms morph clamp
-        FloatRect settled =
-                coordinator.lastResult().orElseThrow().elementState("e").visualRect();
+        FloatRect settled = coordinator.lastResult().orElseThrow().elementState("e").visualRect();
         assertEquals(210, settled.x(), 0.5);
         assertEquals(130, settled.y(), 0.5);
     }
@@ -341,8 +308,7 @@ class CoordinatorScenarioTest {
         TestElement element = TestElement.arbitrated("e", 200, 150, new Size(100, 40), new Size(60, 24));
         coordinator.register(element);
         frame(coordinator, 0);
-        assertEquals(
-                150, coordinator.placementOf("e").orElseThrow().screenRect().x(), 0.01);
+        assertEquals(150, coordinator.placementOf("e").orElseThrow().screenRect().x(), 0.01);
 
         Rect cover = new Rect(200, 100, 200, 100);
         double now = dt;
@@ -364,8 +330,9 @@ class CoordinatorScenarioTest {
         coordinator.register(first);
         frame(coordinator, 0);
         assertEquals(
-                CoordinationResult.RenegotiationCause.membershipChanged,
-                coordinator.lastResult().orElseThrow().cause());
+            CoordinationResult.RenegotiationCause.membershipChanged,
+            coordinator.lastResult().orElseThrow().cause()
+        );
 
         double now = dt;
         now = advance(coordinator, now, 3);
@@ -392,8 +359,7 @@ class CoordinatorScenarioTest {
     @Test
     void fixedPolicyIsExemptButStillOccupies() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        TestElement normal =
-                TestElement.arbitrated("normal", 200, 150, new Size(100, 40)).withPriority(10);
+        TestElement normal = TestElement.arbitrated("normal", 200, 150, new Size(100, 40)).withPriority(10);
         TestElement fixedElement = TestElement.arbitrated("fixed", 200, 150, new Size(100, 40))
                 .withKind(SpaceKind.panel)
                 .withLadder(TestElement.ladder(SpacePolicy.fixed, false, true, new Size(100, 40)));
@@ -403,24 +369,21 @@ class CoordinatorScenarioTest {
         CoordinationResult result = frame(coordinator, 0);
 
         // the fixed element is granted its contested rect unconditionally
-        assertEquals(
-                new FloatRect(150, 130, 100, 40), result.placementOf("fixed").screenRect());
+        assertEquals(new FloatRect(150, 130, 100, 40), result.placementOf("fixed").screenRect());
         assertTrue(
-                result.placementOf("normal")
-                        .screenRect()
-                        .intersects(result.placementOf("fixed").screenRect()),
-                "fixed is exempt from avoidance: the overlap stands at commit");
+            result.placementOf("normal").screenRect().intersects(result.placementOf("fixed").screenRect()),
+            "fixed is exempt from avoidance: the overlap stands at commit"
+        );
 
         // and relax pushes the pushable visual out of the fixed one over frames
         double now = dt;
         now = advance(coordinator, now, 20);
-        FloatRect normalVisual =
-                coordinator.lastResult().orElseThrow().elementState("normal").visualRect();
-        FloatRect fixedVisual =
-                coordinator.lastResult().orElseThrow().elementState("fixed").visualRect();
+        FloatRect normalVisual = coordinator.lastResult().orElseThrow().elementState("normal").visualRect();
+        FloatRect fixedVisual = coordinator.lastResult().orElseThrow().elementState("fixed").visualRect();
         assertTrue(
-                normalVisual.intersection(fixedVisual).area() == 0,
-                "relax must separate the pushable element from the fixed one: " + normalVisual + " vs " + fixedVisual);
+            normalVisual.intersection(fixedVisual).area() == 0,
+            "relax must separate the pushable element from the fixed one: " + normalVisual + " vs " + fixedVisual
+        );
         assertEquals(new FloatRect(150, 130, 100, 40), fixedVisual, "the fixed rect itself never moves");
     }
 
@@ -428,8 +391,7 @@ class CoordinatorScenarioTest {
     void ghostPolicyIsInvisibleToArbitration() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
         TestElement ghost = TestElement.arbitrated("ghost", 200, 150, new Size(30, 30))
-                .withLadder(TestElement.ladder(SpacePolicy.ghost, false, true, new Size(30, 30)))
-                .withPriority(10);
+                .withLadder(TestElement.ladder(SpacePolicy.ghost, false, true, new Size(30, 30))).withPriority(10);
         TestElement solid = TestElement.arbitrated("solid", 200, 150, new Size(100, 40));
         coordinator.register(ghost);
         coordinator.register(solid);
@@ -439,13 +401,12 @@ class CoordinatorScenarioTest {
         assertNotNull(result.placementOf("ghost"), "ghosts still get their placement");
         assertNotNull(result.placementOf("solid"));
         assertEquals(
-                150,
-                result.placementOf("solid").screenRect().x(),
-                0.01,
-                "the ghost occupies nothing: the solid element takes the spot");
-        assertTrue(result.placementOf("solid")
-                .screenRect()
-                .intersects(result.placementOf("ghost").screenRect()));
+            150,
+            result.placementOf("solid").screenRect().x(),
+            0.01,
+            "the ghost occupies nothing: the solid element takes the spot"
+        );
+        assertTrue(result.placementOf("solid").screenRect().intersects(result.placementOf("ghost").screenRect()));
     }
 
     @Test
@@ -473,13 +434,7 @@ class CoordinatorScenarioTest {
         // the next epoch tick climbs one rung back up
         int guard = 0;
         while (coordinator.lastResult().orElseThrow().placementOf("e") == null
-                || coordinator
-                                .lastResult()
-                                .orElseThrow()
-                                .placementOf("e")
-                                .variant()
-                                .level()
-                        != 0) {
+                || coordinator.lastResult().orElseThrow().placementOf("e").variant().level() != 0) {
             assertTrue(guard++ < 120, "the upgrade must happen within a couple of epochs");
             now += dt;
             frame(coordinator, now);

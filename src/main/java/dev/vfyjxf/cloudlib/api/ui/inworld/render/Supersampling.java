@@ -67,20 +67,21 @@ public final class Supersampling {
      *     supersample decision instead
      */
     public static @Nullable ProjectedSize projectQuad(
-            Matrix4f worldToView,
-            Matrix4f viewToClip,
-            QuadBasis basis,
-            int wPx,
-            int hPx,
-            int viewportW,
-            int viewportH) {
+        Matrix4f worldToView,
+        Matrix4f viewToClip,
+        QuadBasis basis,
+        int wPx,
+        int hPx,
+        int viewportW,
+        int viewportH
+    ) {
         Matrix4f worldToClip = new Matrix4f(viewToClip).mul(worldToView);
         Vec3[] corners = quadCorners(basis, wPx, hPx);
         double minX = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY;
         double minY = Double.POSITIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
         for (Vec3 corner : corners) {
-            Vector4f clip =
-                    worldToClip.transform(new Vector4f((float) corner.x, (float) corner.y, (float) corner.z, 1f));
+            Vector4f clip = worldToClip
+                    .transform(new Vector4f((float) corner.x, (float) corner.y, (float) corner.z, 1f));
             if (clip.w <= 1.0e-6f) return null;
             float ndcX = clip.x / clip.w;
             float ndcY = clip.y / clip.w;
@@ -96,12 +97,8 @@ public final class Supersampling {
 
     private static Vec3[] quadCorners(QuadBasis basis, int wPx, int hPx) {
         Vec3 o = basis.origin();
-        return new Vec3[] {
-            o,
-            o.add(basis.u().scale(wPx)),
-            o.add(basis.v().scale(hPx)),
-            o.add(basis.u().scale(wPx)).add(basis.v().scale(hPx))
-        };
+        return new Vec3[]{o, o.add(basis.u().scale(wPx)), o.add(basis.v().scale(hPx)),
+                o.add(basis.u().scale(wPx)).add(basis.v().scale(hPx))};
     }
 
     /**
@@ -147,8 +144,7 @@ public final class Supersampling {
         Integer[] order = new Integer[n];
         for (int i = 0; i < n; i++) order[i] = i;
         Arrays.sort(order, (a, b) -> {
-            int byArea =
-                    Double.compare(requests.get(b).screenArea(), requests.get(a).screenArea());
+            int byArea = Double.compare(requests.get(b).screenArea(), requests.get(a).screenArea());
             return byArea != 0 ? byArea : Integer.compare(a, b);
         });
         long used = 0;

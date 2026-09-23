@@ -185,39 +185,82 @@ warning and drop the declaration (never crash).
 ```css
 background: nine-slice("cloudlib:gui/panel/dark", 3);
 background: nine-slice("cloudlib:gui/panel/dark", 3 5 3 5);   /* t r b l */
+background: nine-slice("cloudlib:gui/panel/dark", 3, 18, 18); /* border, cell w/h */
 background: sprite("cloudlib:gui/button/base");               /* gui-sprite atlas */
+background: sprite("cloudlib:gui/sheet", 16, 16);             /* the file, drawn 16x16 */
+background: sprite("cloudlib:gui/sheet", 4, 8, 16, 16);       /* region of the file */
 background: tiled("cloudlib:gui/checker", 16px 16px);
-background: linear-gradient(#0000, #000C);                    /* vertical default */
+background: linear-gradient(#0000, #000C);                    /* horizontal default */
+background: linear-gradient(#0000, #000C, vertical);          /* optional axis */
 background: color(#D80A0E12);
-background: border-texture("cloudlib:gui/frame/dark", 3, #0008);
+background: border-texture(#0008, 3);                         /* color, then thickness */
+background: sdf(#35D6D0, 4, 1, #FFFFFF80);                    /* rounded rect + stroke */
+background: rect(#35D6D0, 4 4 0 0);                           /* alias; bl br tr tl */
+background: group(built-in(ui-ore:RECT), color(#00000060));   /* layers, first at the bottom */
 ```
 
-  Function name → `TextureFactory` registry entry — mods register factories
-  for custom `VisualTexture` types.
+  Any texture function may be followed by the modifier chain
+  `scale(<n>|<w>,<h>)`, `translate(<x>,<y>)`, `color(#hex)` — the modifiers merge
+  into one transform (scaled about the drawn rect's center) plus one tint. The
+  declaration is the function plus its modifiers: a stray token where a modifier
+  belongs invalidates the declaration, while an unknown modifier name is ignored
+  (forward compatibility with newer themes).
 
-- **strings** — `"..."`/`'...'` for sounds, fonts.
-- **fonts** — `font: "ns:id"` / `font-family: ...` (vanilla font registry ids).
-- **sounds** — `sound-click`, `sound-hover`, … → `VisualContext` custom props.
+  File-backed functions take the **short id** — `nine-slice("cloudlib:gui/panel/dark")`
+  loads `cloudlib:textures/gui/panel/dark.png`; the `textures/` prefix and the
+  `.png` suffix are supplied by the parser. Only the one-argument `sprite(<id>)`
+  reads the gui-sprite atlas; `sprite(<id>, w, h)` and `sprite(<id>, x, y, w, h)`
+  blit the file, the five-argument form reading the sheet's own size.
+
+  The function table is **fixed** (`CssTextures`): `nine-slice`, `sprite`, `tiled`,
+  `color`, `linear-gradient`, `border-texture`, `sdf`/`rect`, `group`, `built-in`,
+  `empty`/`none` — the bare keywords `none`/`empty` and their zero-argument
+  function forms all draw nothing, and a `group(...)` whose every layer is
+  undrawable is invalid. `built-in(<ns:NAME>)` resolves the sprites ported from
+  LDLib2 — `ore:`, `mc:`, `gdp:` (LDLib2's `ui-ore`/`ui-mc`/`ui-gdp` ids work too),
+  see `BuiltInTextures`. Mods extend the vocabulary with `--*` custom properties,
+  not with factories.
+
+  Wrap mode: `nine-slice(...)` keeps `NineSliceTexture`'s historical tiling — the
+  edges and the center repeat (`Wrap.repeat`). `built-in(...)` sprites carry the
+  mode LDLib2 declares for them, `Wrap.stretch` (its `CLAMP` default) for every
+  sprite but the four `mc:SCROLLER_*` ones, which repeat.
+
+- **strings** — `"..."`/`'...'` for resource ids (texture locations, fonts).
+- **fonts** — `font: "ns:id"` (vanilla font registry id), `font-size` in ui units.
+- **sounds** — no vocabulary yet: `sound-click: "..."` has no key, so it is warned
+  and dropped like any unknown non-`--` name.
 
 ### 3.4 Property mapping — `UIStyles` vocabulary is the contract
 
 The themable set = exactly what `StyleProperty`/`VisualProperty` can apply.
-CSS names map 1:1 to the existing property classes; names taffy lacks
-(`float`, `vertical-align`, `line-height`, `font-size` …) are rejected with a
+CSS names map 1:1 to the existing property classes; a name with no key — web
+properties we have not modelled (`float`, `vertical-align`, `line-height`,
+`background-image`, `font-family`, `text-decoration` …) — is rejected with a
 warning.
 
 | CSS property | target |
 |---|---|
-| `display`, `position`, `inset`/`top/right/bottom/left`, `overflow`, `box-sizing`, `direction`, `aspect-ratio`, `scrollbar-width` | taffy layout style — **themable** (theme can hide chrome via `display:none`), but values restricted to the enum sets above |
-| `padding*`, `margin*`, `gap`/`row-gap`/`column-gap`, `width`/`height`/`min-*`/`max-*`, `flex`/`flex-*`, `align-*`, `justify-*`, `grid-*`, `text-align` | taffy layout style |
-| `background`, `background-color`, `background-image`, `icon`, `border-width`, `border-color`, `box-shadow`, `opacity`, `z-index` | `VisualContext` |
-| `color`, `font`/`font-family`, `font-weight`, `font-style`, `text-decoration` | `VisualContext` text props |
+| `display`, `position`, `inset-top`/`inset-right`/`inset-bottom`/`inset-left` (the `top`/`left` aliases), `overflow-x`/`overflow-y`, `box-sizing`, `direction`, `aspect-ratio`, `scrollbar-width`, `item-is-table`, `item-is-replaced` | taffy layout style — **themable** (theme can hide chrome via `display:none`), but values restricted to the enum sets above |
+| `padding*`, `margin*`, `row-gap`/`column-gap`, `width`/`height`/`min-*`/`max-*`, `flex-grow`/`flex-shrink`/`flex-basis`, `align-*`, `justify-*`, `text-align`, `grid-auto-flow`, `grid-*-start`/`grid-*-end` | taffy layout style |
+| shorthands: `padding`, `margin`, `inset`, `border`/`border-width` (1-4 values), `padding-all`, `margin-all`, `padding-horizontal`/`-vertical`, `margin-horizontal`/`-vertical`, `inset-horizontal`/`-vertical`, `size`, `min-size`, `max-size`, `gap` (`<row> <column>`), `gap-all`, `overflow` (1-2 values), `flex`, `flex-flow`, `grid-row`/`grid-column` (`<start> / <end>`) | expand into the longhands above when declarations are collected |
+| `grid-template-*`, `grid-auto-rows`/`grid-auto-columns` | java-dsl-only keys — the css side warns and drops them |
+| `background` (a texture function or a bare `<color>`, wrapped in `ColorTexture`), `background-color`, `icon`, `border-texture`, `border-color`, `border-thickness`, `box-shadow`, `z-index`, `base-`/`hover-`/`pressed-`/`mark-`/`unmark-background`, `hover-`/`focus-`/`slot-overlay`, `arrow`, `collapse-icon`, `expand-icon` | `VisualContext` — texture values go through `CssTextures`, the rest are stored as visual custom properties a widget reads back |
+| `color`, `font`, `font-size`, `cursor-color`, `accent`, `text-dim`, `slot`, `slot-hot`, `text-shadow` | `VisualContext` text/surface props |
+| `slider-track-size`, `slider-handle-size`, `scroller-view-margin` | widget metrics — a `px` length or a bare number in ui units |
+| `opacity`, `scene-layer`, `scrollbar-style(track, thumb[, width[, minThumb]])` | `StyleScope.custom` — stored on the context, driving no subsystem until a consumer claims it |
+| `transition`, `transform` | raw token streams (`Tokens`) on the context |
 | `--*` custom properties | `UIStyle.vars()` → `StyleContext.vars()` — raw token streams, `var()`-resolved; read via `StyleVar<T>` |
 | anything else unknown | warned + dropped (closed vocabulary — unknown non-`--` names are never keys) |
 
-Inheritance: only `color`, `font-family`, `font-weight`, `font-style`,
-`text-decoration`, `text-align`, `direction` inherit (web's inherited set,
-minus things taffy doesn't have) — plus every `--*`, which always inherits.
+Aliases: `text-color`/`textcolor` → `color`, `zindex` → `z-index`, `shadow` →
+`box-shadow`, `top` → `inset-top`, `left` → `inset-left`. There is no physical
+`right`/`bottom` alias — use `inset-right`/`inset-bottom` or the `inset`
+shorthand.
+
+Inheritance: only `color`, `text-shadow`, `font`, `font-size`, `accent`,
+`text-dim`, `slot`, `slot-hot`, `text-align`, `direction` inherit — plus every
+`--*`, which always inherits.
 
 ## 4. Widget model (landed)
 
@@ -267,14 +310,17 @@ styles — the inline-style rule.
   Each mounted `Scene` subscribes on mount and unsubscribes on destroy;
   the listener calls `refreshTheme()` — re-resolving the tree while
   honoring per-scene theme overrides.
-- **Dev loop**: `/cloudlib reload` (client command) reloads themes by hand;
-  `/cloudlib themes` lists the registry + active stack. `StyleWatcher`
+- **Dev loop**: `/cloudlib reload` (client command) reloads themes by hand —
+  the only `/cloudlib` subcommand; the registry and the active stack are read
+  from java through `Themes.themeIds()` / `Themes.activeIds()`. `StyleWatcher`
   (dev only, `ui_theme_watch` config) watches exploded mod roots, classpath
   resource dirs and directory resource packs for `*.css`/`theme.json`
   changes, debounces ~300ms, and reloads on the client thread.
 - Parse errors log `theme:file:line:col` and never kill the game.
 
-## 6. Stock themes (CalculatorCirrus port)
+## 6. Stock themes
+
+### CalculatorCirrus assets (ported)
 
 From `directed-graph-calculator`, generic OreUI-style assets →
 `assets/cloudlib/textures/gui/`:
@@ -295,11 +341,56 @@ From `directed-graph-calculator`, generic OreUI-style assets →
 | `icon/arrow_*`, `icon/middle/*`, `icon/small/*` | `gui/icon/*` | generic icons |
 | `icon/calc/**` (calculator/db/sort/tree…) | — skip — | mod-specific |
 
-- `cloudlib:standard` — OreUI pixel theme on the ported assets.
-- `cloudlib:hacker` — `HackerTheme` constants re-expressed in CSS; the
-  in-world chrome tags (`inworld-panel`, `hint-chip`, `leader-line`,
-  `presence-pip`) become the dogfooding surface. `HackerTheme` constants stay
-  as deprecated delegates during migration.
+- `cloudlib:standard` — OreUI pixel theme on the ported assets; it is the only
+  theme carrying `"default": true`, so it is the active stack's last resort.
+- `cloudlib:hacker` does **not** exist in the tree: there is no `hacker.css` and
+  no `HackerTheme` type, and the in-world chrome widgets are not tagged yet —
+  that is §9's open item, not a shipped theme.
+
+### LDLib2 oreui themes (native rewrite)
+
+Two themes are natively rewritten from LDLib2 —
+[github.com/Low-Drag-MC/LDLib2](https://github.com/Low-Drag-MC/LDLib2),
+**LGPL-3.0**. The palette, the geometry and the sprite choices are upstream's;
+the LDLib2 property vocabulary and the Shadow-DOM selectors are not — each
+stylesheet carries its provenance header. Both are sprite-based and draw
+LDLib2's `built-in(...)` tables, whose sprites are byte-identical
+copies — see `assets/cloudlib/textures/gui/oreui/README.md`.
+
+Both share one skeleton: a `:root` token block (palette inks, surface ramp
+and metrics — `--*` variables hold whole texture values, since a texture
+function cannot read a `var()`) plus the same control vocabulary — `panel`;
+`button` with `:hover`/`:pressed`/`:disabled`; `toggle` with `:checked`;
+`slider` with `::part(track)`, `::part(fill)` and `::part(handle)` (and the
+handle's `:hover`/`:pressed`); `progress-bar` with `::part(track)`/`::part(fill)`;
+`text-field`; `label, text`; `divider`; `.slot`; and the info-panel block —
+`info-bar` with `::part(track)`/`::part(frame)`/`::part(fill)`/`::part(mark)`
+plus the four semantic segment classes (`info-bar .ok::part(fill)`, `.warn`,
+`.danger`, `.info`, fed by the `--bar-ok/--bar-warn/--bar-danger/--bar-info`
+tokens), `section-header` with `::part(title)`/`::part(rule)`, and `kv-row` with
+`::part(label)`/`::part(value)` — 39 rules per sheet, pinned by
+`OreuiThemeCorpusTest`. The compound widgets are painted through its `::part`
+hooks, so the slider fill is a part of its own next to the track and the handle.
+<p>
+The bar is one framed channel across all three shipped themes: a 5px trough
+inside a 1px ring, on `--bar-height: 7px`. The trough is a translucent near-black
+(`--bar-track`) that reads on light and dark panels alike, the ring is the one
+bar slot that is a *texture* rather than an ink — `--bar-frame:
+border-texture(<ink>, 1)`, because a colour would fill the channel instead of
+outlining it — and the widget keeps its fills and markers out of the ring's
+1px (`InfoBarWidget.frameThickness`). Two readings inside one bar are separated
+by `InfoBarWidget.segmentGap` px of the channel, and `--bar-row-gap` is the air
+a bar keeps against the text line beside it.
+
+| theme id | name | surface |
+|---|---|---|
+| `cloudlib:mc` | Minecraft | vanilla widget chrome (`ui-mc`) |
+| `cloudlib:ore` | Ore UI | flat green buttons, thin borders |
+
+**Activation** — neither sets `"default": true`, so they are opt-in: list
+the ids in `ui_themes` in `config/cloudlib-themes.toml`, lowest priority first
+(e.g. `["cloudlib:ore"]`); an empty list keeps the packs' `default` themes with
+`cloudlib:standard` as the final fallback. `/cloudlib reload` re-reads the stack.
 
 ## 7. Extensibility
 
@@ -322,8 +413,9 @@ From `directed-graph-calculator`, generic OreUI-style assets →
   constructible; `Styles.*`/`BuiltinKeys` are the only keys. Mods needing new
   css-visible data use `--*` + `StyleVar`, exactly like the web.
 - Texture value functions (`nine-slice`, `sprite`, `tiled`, `color`,
-  `linear-gradient`, `border-texture`…) are a fixed builtin table in
-  `CssTextures`.
+  `linear-gradient`, `border-texture`, `sdf`/`rect`, `group`, `built-in`,
+  `empty`/`none` + the `scale`/`translate`/`color` modifier chain) are a fixed
+  builtin table in `CssTextures`.
 
 ## 8. Quality bar (parser port acceptance)
 
@@ -347,7 +439,13 @@ From `directed-graph-calculator`, generic OreUI-style assets →
 3. ✅ **Widget model** — `Widget implements Themeable`, tag/class/id/attr/state
    setters, code-style provenance replay, `::part` hook, state-refresh wiring
    (hover/focus/active).
-4. ✅ **Stock assets** — 104 Cirrus textures in, `standard.css` + `hacker.css`
-   dogfood-tested (every tag resolves ≥1 property).
-5. 🔲 **Runtime dogfood** — `HackerTheme` constants deprecated in favor of
-   `hacker.css`; in-world chrome widgets tagged (`inworld-panel` etc).
+4. ✅ **Stock assets** — 124 Cirrus textures in (`textures/gui/`, plus the 6
+   LDLib2 oreui sheets), `themes/standard/base.css` dogfood-tested (every tag
+   resolves ≥1 property); the two shipped LDLib2 oreui themes (`ore`, `mc`)
+   natively rewritten on top of
+   it, each on the same skeleton — a `:root` token block plus the shared control
+   vocabulary and its `::part` parts (the slider fill among them) — pinned by
+   `OreuiThemeCorpusTest`.
+5. 🔲 **Runtime dogfood** — the planned `cloudlib:hacker` theme (the in-world
+   chrome tags — `inworld-panel`, `hint-chip`, `leader-line`, `presence-pip` —
+   as its dogfooding surface) is not in the tree yet.

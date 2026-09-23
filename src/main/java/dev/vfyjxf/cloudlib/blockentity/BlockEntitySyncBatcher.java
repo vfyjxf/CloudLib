@@ -18,8 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class BlockEntitySyncBatcher {
 
-    private static final ConcurrentHashMap<ResourceKey<Level>, BlockEntitySyncBatcher> batchers =
-            new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<ResourceKey<Level>, BlockEntitySyncBatcher> batchers = new ConcurrentHashMap<>();
 
     private final Set<BlockEntitySync> dirty = ConcurrentHashMap.newKeySet();
 

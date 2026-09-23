@@ -16,10 +16,5 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.coordinator;
  * </ul>
  */
 public enum ContentTier {
-    full,
-    compact,
-    labelOnly,
-    iconOnly,
-    pip,
-    directionalOnly
+    full, compact, labelOnly, iconOnly, pip, directionalOnly
 }

@@ -118,8 +118,7 @@ public final class UnitConverter {
         Checks.checkNotNull(material, "material");
         Unit<?> base = baseUnits.get(unit.family());
         if (base == null) {
-            throw new IllegalStateException(
-                    "No base unit registered for family " + unit.family().id());
+            throw new IllegalStateException("No base unit registered for family " + unit.family().id());
         }
         Ratio baseValue = convert(value, unit, base, material).value();
         return new MaterialAmount(material, baseValue, base, this);
@@ -165,7 +164,7 @@ public final class UnitConverter {
         while (!queue.isEmpty()) {
             SearchNode current = queue.poll();
             // material-specific edges first, then generic ones
-            for (boolean specific : new boolean[] {true, false}) {
+            for (boolean specific : new boolean[]{true, false}) {
                 for (Map.Entry<EdgeKey, RuleDef> entry : edges.entrySet()) {
                     EdgeKey edge = entry.getKey();
                     if (specific != (edge.material() != null)) continue;
@@ -242,21 +241,24 @@ public final class UnitConverter {
         public <F> Builder baseUnit(Unit<F> matterUnit) {
             Checks.checkNotNull(matterUnit, "matterUnit");
             Checks.checkArgument(
-                    matterUnit.family().isMatter(),
-                    "Base unit must belong to a matter family: %s",
-                    matterUnit.family().id());
+                matterUnit.family().isMatter(),
+                "Base unit must belong to a matter family: %s",
+                matterUnit.family().id()
+            );
             Unit<?> existing = baseUnits.putIfAbsent(matterUnit.family(), matterUnit);
             if (existing != null) {
                 throw new RuleConflictException(
-                        "Base unit of family " + matterUnit.family().id() + " already registered: " + existing.id());
+                    "Base unit of family " + matterUnit.family().id() + " already registered: " + existing.id()
+                );
             }
             return this;
         }
 
         public UnitConverter build() {
             return new UnitConverter(
-                    Collections.unmodifiableMap(new LinkedHashMap<>(edges)),
-                    Collections.unmodifiableMap(new LinkedHashMap<>(baseUnits)));
+                Collections.unmodifiableMap(new LinkedHashMap<>(edges)),
+                Collections.unmodifiableMap(new LinkedHashMap<>(baseUnits))
+            );
         }
 
         /**
@@ -328,19 +330,21 @@ public final class UnitConverter {
         private Builder putRule(Unit<?> from, Unit<?> to, Ratio ratio, boolean fixed, @Nullable Namespace material) {
             checkPositive(ratio);
             Checks.checkArgument(
-                    from.family().equals(to.family()),
-                    "Rule endpoints must be in the same family: %s vs %s",
-                    from.family().id(),
-                    to.family().id());
+                from.family().equals(to.family()),
+                "Rule endpoints must be in the same family: %s vs %s",
+                from.family().id(),
+                to.family().id()
+            );
             return put(new EdgeKey(from, to, material), new RuleDef(ratio, fixed));
         }
 
         private Builder putBridge(Unit<?> from, Unit<?> to, Ratio ratio, boolean fixed, @Nullable Namespace material) {
             checkPositive(ratio);
             Checks.checkArgument(
-                    !from.family().equals(to.family()),
-                    "Bridge endpoints must be in different families: %s",
-                    from.family().id());
+                !from.family().equals(to.family()),
+                "Bridge endpoints must be in different families: %s",
+                from.family().id()
+            );
             return put(new EdgeKey(from, to, material), new RuleDef(ratio, fixed));
         }
 
@@ -349,11 +353,13 @@ public final class UnitConverter {
             if (existing != null) {
                 if (existing.fixed()) {
                     throw new RuleConflictException(
-                            "Fixed rule " + key.from() + " -> " + key.to() + " can't be overridden");
+                        "Fixed rule " + key.from() + " -> " + key.to() + " can't be overridden"
+                    );
                 }
                 if (existing.ratio().equals(def.ratio())) {
                     throw new RuleConflictException(
-                            "Duplicate rule " + key.from() + " -> " + key.to() + " with ratio " + def.ratio());
+                        "Duplicate rule " + key.from() + " -> " + key.to() + " with ratio " + def.ratio()
+                    );
                 }
                 edges.put(key, def);
                 return this;
@@ -363,11 +369,13 @@ public final class UnitConverter {
             if (existingReverse != null) {
                 if (existingReverse.fixed()) {
                     throw new RuleConflictException(
-                            "Fixed rule " + reverse.from() + " -> " + reverse.to() + " can't be overridden");
+                        "Fixed rule " + reverse.from() + " -> " + reverse.to() + " can't be overridden"
+                    );
                 }
                 if (existingReverse.ratio().equals(def.ratio().inverse())) {
                     throw new RuleConflictException(
-                            "Duplicate rule " + key.from() + " -> " + key.to() + " (already defined in reverse)");
+                        "Duplicate rule " + key.from() + " -> " + key.to() + " (already defined in reverse)"
+                    );
                 }
                 edges.remove(reverse);
             }

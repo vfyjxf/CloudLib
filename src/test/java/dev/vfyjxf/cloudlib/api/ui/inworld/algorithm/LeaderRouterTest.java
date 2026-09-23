@@ -47,15 +47,9 @@ class LeaderRouterTest {
     void crossingUpgradesToOrthogonalAfterTheDwell() {
         LeaderRouter router = new LeaderRouter(config);
 
-        assertEquals(
-                LeaderRouter.Style.sLeader,
-                router.route(crossingPair(), Map.of()).get(0).style());
-        assertEquals(
-                LeaderRouter.Style.poLeader,
-                router.route(crossingPair(), Map.of()).get(0).style());
-        assertEquals(
-                LeaderRouter.Style.poLeader,
-                router.route(crossingPair(), Map.of()).get(0).style());
+        assertEquals(LeaderRouter.Style.sLeader, router.route(crossingPair(), Map.of()).get(0).style());
+        assertEquals(LeaderRouter.Style.poLeader, router.route(crossingPair(), Map.of()).get(0).style());
+        assertEquals(LeaderRouter.Style.poLeader, router.route(crossingPair(), Map.of()).get(0).style());
     }
 
     @Test
@@ -86,16 +80,10 @@ class LeaderRouterTest {
 
         router.route(crossingPair(), Map.of());
         router.route(crossingPair(), Map.of());
-        assertEquals(
-                LeaderRouter.Style.poLeader,
-                router.route(crossingPair(), Map.of()).get(0).style());
+        assertEquals(LeaderRouter.Style.poLeader, router.route(crossingPair(), Map.of()).get(0).style());
 
-        assertEquals(
-                LeaderRouter.Style.poLeader,
-                router.route(parallelPair(), Map.of()).get(0).style());
-        assertEquals(
-                LeaderRouter.Style.sLeader,
-                router.route(parallelPair(), Map.of()).get(0).style());
+        assertEquals(LeaderRouter.Style.poLeader, router.route(parallelPair(), Map.of()).get(0).style());
+        assertEquals(LeaderRouter.Style.sLeader, router.route(parallelPair(), Map.of()).get(0).style());
     }
 
     @Test
@@ -105,31 +93,25 @@ class LeaderRouterTest {
         // alternating crossing / free: the dwell never accumulates, no upgrade
         for (int i = 0; i < 30; i++) {
             List<LeaderRouter.Leader> leaders = (i % 2 == 0) ? crossingPair() : parallelPair();
-            assertEquals(
-                    LeaderRouter.Style.sLeader,
-                    router.route(leaders, Map.of()).get(0).style());
+            assertEquals(LeaderRouter.Style.sLeader, router.route(leaders, Map.of()).get(0).style());
         }
 
         // now commit the upgrade...
         router.route(crossingPair(), Map.of());
-        assertEquals(
-                LeaderRouter.Style.poLeader,
-                router.route(crossingPair(), Map.of()).get(0).style());
+        assertEquals(LeaderRouter.Style.poLeader, router.route(crossingPair(), Map.of()).get(0).style());
 
         // ...and the same jitter cannot downgrade it either
         for (int i = 0; i < 30; i++) {
             List<LeaderRouter.Leader> leaders = (i % 2 == 0) ? parallelPair() : crossingPair();
-            assertEquals(
-                    LeaderRouter.Style.poLeader,
-                    router.route(leaders, Map.of()).get(0).style());
+            assertEquals(LeaderRouter.Style.poLeader, router.route(leaders, Map.of()).get(0).style());
         }
     }
 
     @Test
     void clustersShareATrunkHyperleader() {
         LeaderRouter router = new LeaderRouter(config);
-        List<LeaderRouter.Leader> leaders =
-                List.of(leader("a", 0, 0, 200, -50), leader("b", 10, 10, 200, 0), leader("c", 20, 0, 200, 50));
+        List<LeaderRouter.Leader> leaders = List
+                .of(leader("a", 0, 0, 200, -50), leader("b", 10, 10, 200, 0), leader("c", 20, 0, 200, 50));
         Map<String, String> clusters = Map.of("a", "g1", "b", "g1", "c", "g1");
 
         List<LeaderRouter.Route> routes = router.route(leaders, clusters);
@@ -148,8 +130,8 @@ class LeaderRouterTest {
     void sameClusterPairsAreExemptFromCrossingDetection() {
         LeaderRouter router = new LeaderRouter(LeaderRouter.Config.of(1.0, 1));
         // a and b cross each other but share a cluster; c crosses a and is alone
-        List<LeaderRouter.Leader> leaders =
-                List.of(leader("a", 0, 0, 100, 100), leader("b", 100, 0, 0, 100), leader("c", 50, -50, 50, 150));
+        List<LeaderRouter.Leader> leaders = List
+                .of(leader("a", 0, 0, 100, 100), leader("b", 100, 0, 0, 100), leader("c", 50, -50, 50, 150));
         Map<String, String> clusters = Map.of("a", "g1", "b", "g1");
 
         List<LeaderRouter.Route> routes = router.route(leaders, clusters);
@@ -166,8 +148,7 @@ class LeaderRouterTest {
     void singletonClusterIdsDoNotBecomeHyperleaders() {
         LeaderRouter router = new LeaderRouter(config);
 
-        LeaderRouter.Route route =
-                router.route(parallelPair(), Map.of("a", "lonely")).get(0);
+        LeaderRouter.Route route = router.route(parallelPair(), Map.of("a", "lonely")).get(0);
 
         assertEquals(LeaderRouter.Style.sLeader, route.style());
         assertNull(route.clusterId());
@@ -180,9 +161,7 @@ class LeaderRouterTest {
         router.route(crossingPair(), Map.of());
         router.reset();
 
-        assertEquals(
-                LeaderRouter.Style.sLeader,
-                router.route(crossingPair(), Map.of()).get(0).style());
+        assertEquals(LeaderRouter.Style.sLeader, router.route(crossingPair(), Map.of()).get(0).style());
     }
 
     @Test
@@ -193,15 +172,12 @@ class LeaderRouterTest {
 
         // a alone crosses nothing; its po commit still holds for the dwell
         assertEquals(
-                LeaderRouter.Style.poLeader,
-                router.route(List.of(leader("a", 0, 0, 100, 100)), Map.of())
-                        .get(0)
-                        .style());
+            LeaderRouter.Style.poLeader,
+            router.route(List.of(leader("a", 0, 0, 100, 100)), Map.of()).get(0).style()
+        );
 
         // b re-enters with no memory of its old po commit
-        assertEquals(
-                LeaderRouter.Style.sLeader,
-                router.route(crossingPair(), Map.of()).get(1).style());
+        assertEquals(LeaderRouter.Style.sLeader, router.route(crossingPair(), Map.of()).get(1).style());
     }
 
     @Test
@@ -210,12 +186,9 @@ class LeaderRouterTest {
         // two vertical straights 4 px apart — dense parallels read as chaotic
         List<LeaderRouter.Leader> pair = List.of(leader("a", 0, 0, 0, 200), leader("b", 4, 0, 4, 200));
 
-        assertEquals(
-                LeaderRouter.Style.sLeader, router.route(pair, Map.of()).get(0).style());
-        assertEquals(
-                LeaderRouter.Style.poLeader, router.route(pair, Map.of()).get(0).style());
-        assertEquals(
-                LeaderRouter.Style.poLeader, router.route(pair, Map.of()).get(0).style());
+        assertEquals(LeaderRouter.Style.sLeader, router.route(pair, Map.of()).get(0).style());
+        assertEquals(LeaderRouter.Style.poLeader, router.route(pair, Map.of()).get(0).style());
+        assertEquals(LeaderRouter.Style.poLeader, router.route(pair, Map.of()).get(0).style());
     }
 
     @Test
@@ -224,26 +197,22 @@ class LeaderRouterTest {
         // the wall sits right on the straight baseline
         List<FloatRect> obstacles = List.of(new FloatRect(90, 40, 20, 20));
 
-        LeaderRouter.Route route = router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles)
-                .get(0);
+        LeaderRouter.Route route = router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles).get(0);
 
         assertEquals(LeaderRouter.Style.poLeader, route.style(), "a leader may not cross a panel — hard override");
         assertTrue(route.points().size() >= 3);
         assertFalse(
-                LeaderGridRouter.polylineBlocked(
-                        route.points(),
-                        new FloatPos(200, 100),
-                        obstacles,
-                        config.routing().clearancePx()),
-                "the drawn polyline clears the wall");
+            LeaderGridRouter
+                    .polylineBlocked(route.points(), new FloatPos(200, 100), obstacles, config.routing().clearancePx()),
+            "the drawn polyline clears the wall"
+        );
     }
 
     @Test
     void nearTargetWithinTheOldToleranceNowFolds() {
         LeaderRouter router = new LeaderRouter(config);
 
-        LeaderRouter.Route route =
-                router.route(List.of(leader("a", 0, 0, 50, 30)), Map.of()).get(0);
+        LeaderRouter.Route route = router.route(List.of(leader("a", 0, 0, 50, 30)), Map.of()).get(0);
 
         // 58 px used to be inside the 80 px blank tolerance; the ladder keeps
         // the pairing: the fold band's one direct segment, both ends touching
@@ -269,7 +238,10 @@ class LeaderRouterTest {
         assertEquals(LeaderRouter.Tier.fold, tierAt(router, 50), "at 50 the fold segment returns");
         assertEquals(LeaderRouter.Tier.attach, tierAt(router, 41.9), "and below 42 it detaches again");
         assertEquals(
-                LeaderRouter.Tier.attach, tierAt(router, 45), "a boundary jittering inside the band stays attached");
+            LeaderRouter.Tier.attach,
+            tierAt(router, 45),
+            "a boundary jittering inside the band stays attached"
+        );
 
         // a distance oscillating entirely inside the 76–84 hold band never
         // flips the tier, whichever side it entered from
@@ -299,14 +271,14 @@ class LeaderRouterTest {
         // nearest border candidate — the top midpoint — and touches both ends
         FloatRect rect = new FloatRect(100, 100, 40, 20);
         LeaderRouter.Leader near = new LeaderRouter.Leader(
-                "a",
-                120,
-                55,
-                new AttachPointResolver.Port(AttachPointResolver.Face.left, new FloatPos(100, 110), -1, 0),
-                rect);
+            "a",
+            120,
+            55,
+            new AttachPointResolver.Port(AttachPointResolver.Face.left, new FloatPos(100, 110), -1, 0),
+            rect
+        );
 
-        LeaderRouter.Route route =
-                new LeaderRouter(config).route(List.of(near), Map.of()).get(0);
+        LeaderRouter.Route route = new LeaderRouter(config).route(List.of(near), Map.of()).get(0);
 
         assertEquals(LeaderRouter.Tier.fold, route.tier());
         assertEquals(List.of(new FloatPos(120, 55), new FloatPos(120, 100)), route.points());
@@ -319,14 +291,14 @@ class LeaderRouterTest {
         // diagonal lands on the nearest candidate corner
         FloatRect rect = new FloatRect(100, 100, 40, 20);
         LeaderRouter.Leader shallow = new LeaderRouter.Leader(
-                "a",
-                190,
-                90,
-                new AttachPointResolver.Port(AttachPointResolver.Face.right, new FloatPos(140, 110), 1, 0),
-                rect);
+            "a",
+            190,
+            90,
+            new AttachPointResolver.Port(AttachPointResolver.Face.right, new FloatPos(140, 110), 1, 0),
+            rect
+        );
 
-        LeaderRouter.Route route =
-                new LeaderRouter(config).route(List.of(shallow), Map.of()).get(0);
+        LeaderRouter.Route route = new LeaderRouter(config).route(List.of(shallow), Map.of()).get(0);
 
         assertEquals(LeaderRouter.Tier.fold, route.tier());
         List<FloatPos> points = route.points();
@@ -355,8 +327,7 @@ class LeaderRouterTest {
     void theAttachTierFlagsTheRouteAndDrawsNoPolyline() {
         LeaderRouter router = new LeaderRouter(config);
 
-        LeaderRouter.Route route =
-                router.route(List.of(leader("a", 0, 0, 30, 0)), Map.of()).get(0);
+        LeaderRouter.Route route = router.route(List.of(leader("a", 0, 0, 30, 0)), Map.of()).get(0);
 
         assertEquals(LeaderRouter.Tier.attach, route.tier());
         assertTrue(route.points().isEmpty(), "the attach tier draws no line — only the caller's marks");
@@ -365,9 +336,7 @@ class LeaderRouterTest {
 
     @Test
     void aBareLabelPointFoldsOntoThePortItself() {
-        LeaderRouter.Route route = new LeaderRouter(config)
-                .route(List.of(leader("a", 0, 0, 60, 0)), Map.of())
-                .get(0);
+        LeaderRouter.Route route = new LeaderRouter(config).route(List.of(leader("a", 0, 0, 60, 0)), Map.of()).get(0);
 
         assertEquals(LeaderRouter.Tier.fold, route.tier());
         assertEquals(List.of(new FloatPos(0, 0), new FloatPos(60, 0)), route.points());
@@ -377,11 +346,8 @@ class LeaderRouterTest {
     void aTierFlipBumpsTheShapeEpoch() {
         LeaderRouter router = new LeaderRouter(config);
 
-        long fold =
-                router.route(List.of(leader("a", 0, 0, 60, 0)), Map.of()).get(0).shapeEpoch();
-        long full = router.route(List.of(leader("a", 0, 0, 100, 0)), Map.of())
-                .get(0)
-                .shapeEpoch();
+        long fold = router.route(List.of(leader("a", 0, 0, 60, 0)), Map.of()).get(0).shapeEpoch();
+        long full = router.route(List.of(leader("a", 0, 0, 100, 0)), Map.of()).get(0).shapeEpoch();
 
         assertTrue(fold != full, "the tier change reads as a topology change");
     }
@@ -389,20 +355,21 @@ class LeaderRouterTest {
     @Test
     void aFoldCandidateFlipBumpsTheShapeEpochWhileSlidesKeepIt() {
         FloatRect rect = new FloatRect(100, 100, 40, 20);
-        AttachPointResolver.Port port =
-                new AttachPointResolver.Port(AttachPointResolver.Face.top, new FloatPos(120, 100), 0, -1);
+        AttachPointResolver.Port port = new AttachPointResolver.Port(
+            AttachPointResolver.Face.top,
+            new FloatPos(120, 100),
+            0,
+            -1
+        );
         LeaderRouter router = new LeaderRouter(config);
 
-        long first = router.route(List.of(new LeaderRouter.Leader("a", 120, 55, port, rect)), Map.of())
-                .get(0)
+        long first = router.route(List.of(new LeaderRouter.Leader("a", 120, 55, port, rect)), Map.of()).get(0)
                 .shapeEpoch();
-        long slide = router.route(List.of(new LeaderRouter.Leader("a", 121, 56, port, rect)), Map.of())
-                .get(0)
+        long slide = router.route(List.of(new LeaderRouter.Leader("a", 121, 56, port, rect)), Map.of()).get(0)
                 .shapeEpoch();
         assertEquals(first, slide, "endpoints sliding under the same candidate is not a topology change");
 
-        long flipped = router.route(List.of(new LeaderRouter.Leader("a", 120, 155, port, rect)), Map.of())
-                .get(0)
+        long flipped = router.route(List.of(new LeaderRouter.Leader("a", 120, 155, port, rect)), Map.of()).get(0)
                 .shapeEpoch();
         assertTrue(flipped != first, "crossing to another border candidate re-tokens the shape");
     }
@@ -422,21 +389,23 @@ class LeaderRouterTest {
         // route is the two-bend jog whose interior lane pins to x=92
         List<FloatRect> obstacles = List.of(new FloatRect(-10, 60, 20, 20), new FloatRect(60, 20, 20, 20));
         LeaderRouter router = new LeaderRouter(config);
-        LeaderRouter.Route first = router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles)
-                .get(0);
+        LeaderRouter.Route first = router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles).get(0);
         assertTrue(first.points().contains(new FloatPos(92, 0)));
         assertTrue(first.points().contains(new FloatPos(92, 100)));
 
         // a 5 px anchor move stays inside the 12 px quantization cell: the
         // committed lane x=92 stands still — the head joint rides it to the
         // exact anchor instead of the old frozen vertex (92, 0)
-        LeaderRouter.Route second = router.route(List.of(leader("a", 3, 4, 200, 100)), Map.of(), obstacles)
-                .get(0);
+        LeaderRouter.Route second = router.route(List.of(leader("a", 3, 4, 200, 100)), Map.of(), obstacles).get(0);
 
         assertEquals(new FloatPos(3, 4), second.points().get(0), "the exact anchor leads the line");
         assertTrue(second.points().contains(new FloatPos(92, 100)), "the committed lane's far bend stands still");
         assertEquals(
-                92, second.points().get(1).x(), 1.0e-9, "the head joint rides the committed lane: " + second.points());
+            92,
+            second.points().get(1).x(),
+            1.0e-9,
+            "the head joint rides the committed lane: " + second.points()
+        );
         assertEquals(4, second.points().get(1).y(), 1.0e-9, "…at the exact anchor's height");
     }
 
@@ -449,14 +418,12 @@ class LeaderRouterTest {
         // 10 px up crosses the quantization cell — the fresh route saves
         // ~10 px of jog, under the 20 px switch cost, and the stretched lane
         // still clears the walls: the committed lane holds
-        LeaderRouter.Route held = router.route(List.of(leader("a", 0, -10, 200, 100)), Map.of(), obstacles)
-                .get(0);
-        long laneVertices = held.points().stream()
-                .filter(p -> Math.abs(p.x() - 92) < 1.0e-9)
-                .count();
+        LeaderRouter.Route held = router.route(List.of(leader("a", 0, -10, 200, 100)), Map.of(), obstacles).get(0);
+        long laneVertices = held.points().stream().filter(p -> Math.abs(p.x() - 92) < 1.0e-9).count();
         assertTrue(
-                laneVertices >= 2,
-                "a 10 px saving does not buy a re-route: the committed lane survives — " + held.points());
+            laneVertices >= 2,
+            "a 10 px saving does not buy a re-route: the committed lane survives — " + held.points()
+        );
     }
 
     @Test
@@ -466,8 +433,7 @@ class LeaderRouterTest {
         router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles);
 
         // 25 px down: the fresh route saves ~45 px — past the 20 px switch cost
-        LeaderRouter.Route adopted = router.route(List.of(leader("a", 0, 25, 200, 100)), Map.of(), obstacles)
-                .get(0);
+        LeaderRouter.Route adopted = router.route(List.of(leader("a", 0, 25, 200, 100)), Map.of(), obstacles).get(0);
         assertFalse(adopted.points().contains(new FloatPos(92, 0)), "the jog re-routed to the new anchor height");
         assertTrue(adopted.points().contains(new FloatPos(48, 100)));
     }
@@ -480,8 +446,7 @@ class LeaderRouterTest {
         List<FloatRect> obstacles = List.of(new FloatRect(-30, -45, 60, 26), new FloatRect(4, 84, 190, 60));
         LeaderRouter router = new LeaderRouter(config);
 
-        LeaderRouter.Route route = router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles)
-                .get(0);
+        LeaderRouter.Route route = router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles).get(0);
 
         assertEquals(LeaderRouter.Style.poLeader, route.style());
         assertTrue(route.points().size() >= 2, "never a blank frame");
@@ -502,8 +467,9 @@ class LeaderRouterTest {
         int total = routes.stream().mapToInt(LeaderRouter.Route::crossings).sum();
         assertEquals(0, total, "the pass reroutes one of the pair until the crossing is gone");
         assertTrue(
-                routes.get(0).points().size() >= 5 || routes.get(1).points().size() >= 5,
-                "one of the pair detoured around the other's lane");
+            routes.get(0).points().size() >= 5 || routes.get(1).points().size() >= 5,
+            "one of the pair detoured around the other's lane"
+        );
     }
 
     @Test
@@ -547,29 +513,27 @@ class LeaderRouterTest {
         // above-baseline anchor and a below-baseline port, a taller one in a
         // longer run, a wall right off the anchor, and a wall near the port
         List<Object[]> geometries = List.of(
-                new Object[] {leader("a", 0, 0, 200, 100), new FloatRect(90, 40, 20, 20)},
-                new Object[] {leader("b", 0, 0, 300, 100), new FloatRect(140, 20, 20, 40)},
-                new Object[] {leader("c", 0, 0, 200, 100), new FloatRect(40, 20, 20, 20)},
-                new Object[] {leader("d", 0, 0, 300, 60), new FloatRect(150, 30, 20, 20)});
+            new Object[]{leader("a", 0, 0, 200, 100), new FloatRect(90, 40, 20, 20)},
+            new Object[]{leader("b", 0, 0, 300, 100), new FloatRect(140, 20, 20, 40)},
+            new Object[]{leader("c", 0, 0, 200, 100), new FloatRect(40, 20, 20, 20)},
+            new Object[]{leader("d", 0, 0, 300, 60), new FloatRect(150, 30, 20, 20)}
+        );
 
         for (Object[] geometry : geometries) {
             LeaderRouter.Leader one = (LeaderRouter.Leader) geometry[0];
             List<FloatRect> walls = List.of((FloatRect) geometry[1]);
-            LeaderRouter.Route route = new LeaderRouter(config)
-                    .route(List.of(one), Map.of(), walls)
-                    .get(0);
+            LeaderRouter.Route route = new LeaderRouter(config).route(List.of(one), Map.of(), walls).get(0);
 
             assertEquals(LeaderRouter.Style.poLeader, route.style(), one.id() + " upgrades off the blocked baseline");
             assertTrue(
-                    route.points().size() - 2 <= 2,
-                    one.id() + " folds at most twice: " + (route.points().size() - 2));
+                route.points().size() - 2 <= 2,
+                one.id() + " folds at most twice: " + (route.points().size() - 2)
+            );
             assertFalse(
-                    LeaderGridRouter.polylineBlocked(
-                            route.points(),
-                            one.port().point(),
-                            walls,
-                            config.routing().clearancePx()),
-                    one.id() + " clears the wall");
+                LeaderGridRouter
+                        .polylineBlocked(route.points(), one.port().point(), walls, config.routing().clearancePx()),
+                one.id() + " clears the wall"
+            );
         }
     }
 
@@ -577,17 +541,19 @@ class LeaderRouterTest {
     void aRoutedEpochLeavesNoCrossings() {
         LeaderRouter router = new LeaderRouter(config);
         List<LeaderRouter.Leader> leaders = List.of(
-                leader("a", 0, 100, 400, 0), // inverts against b — their baselines cross
-                leader("b", 200, 200, 200, -400),
-                leader("c", 0, 500, 400, 700)); // far from both, shares no lane
+            leader("a", 0, 100, 400, 0), // inverts against b — their baselines cross
+            leader("b", 200, 200, 200, -400),
+            leader("c", 0, 500, 400, 700)
+        ); // far from both, shares no lane
 
         router.route(leaders, Map.of());
         List<LeaderRouter.Route> routes = router.route(leaders, Map.of());
 
         assertEquals(
-                0,
-                routes.stream().mapToInt(LeaderRouter.Route::crossings).sum(),
-                "every crossing is routed away — the constraint is hard, not a preference");
+            0,
+            routes.stream().mapToInt(LeaderRouter.Route::crossings).sum(),
+            "every crossing is routed away — the constraint is hard, not a preference"
+        );
     }
 
     @Test
@@ -597,17 +563,21 @@ class LeaderRouterTest {
         // never re-join a stale one across the panel
         List<FloatRect> walls = List.of(new FloatRect(48, 12, 24, 88));
         LeaderRouter.Leader left = new LeaderRouter.Leader(
-                "a", 0, 0, new AttachPointResolver.Port(AttachPointResolver.Face.left, new FloatPos(200, 50), -1, 0));
+            "a",
+            0,
+            0,
+            new AttachPointResolver.Port(AttachPointResolver.Face.left, new FloatPos(200, 50), -1, 0)
+        );
         LeaderRouter.Leader bottom = new LeaderRouter.Leader(
-                "a",
-                0,
-                0,
-                new AttachPointResolver.Port(AttachPointResolver.Face.bottom, new FloatPos(150, 200), 0, -1));
+            "a",
+            0,
+            0,
+            new AttachPointResolver.Port(AttachPointResolver.Face.bottom, new FloatPos(150, 200), 0, -1)
+        );
 
         LeaderRouter router = new LeaderRouter(config);
         router.route(List.of(left), Map.of(), walls);
-        List<FloatPos> path =
-                router.route(List.of(bottom), Map.of(), walls).get(0).points();
+        List<FloatPos> path = router.route(List.of(bottom), Map.of(), walls).get(0).points();
 
         FloatPos end = path.get(path.size() - 1);
         FloatPos approach = path.get(path.size() - 2);
@@ -642,9 +612,8 @@ class LeaderRouterTest {
         double[] ys = {2, 60, 150, 296};
         for (double ax : xs) {
             for (double ay : ys) {
-                LeaderRouter.Route route = router.route(
-                                List.of(leader("a", ax, ay, 30, 30)), Map.of(), obstacles, viewport)
-                        .get(0);
+                LeaderRouter.Route route = router
+                        .route(List.of(leader("a", ax, ay, 30, 30)), Map.of(), obstacles, viewport).get(0);
                 assertInside(route.points(), viewport, "anchor (" + ax + ", " + ay + ")");
             }
         }
@@ -660,15 +629,14 @@ class LeaderRouterTest {
         List<LeaderRouter.Leader> leaders = List.of(leader("a", 40, 280, 360, 280));
         FloatRect viewport = new FloatRect(0, 0, 400, 300);
 
-        LeaderRouter.Route unbounded =
-                router.route(leaders, Map.of(), obstacles).get(0);
+        LeaderRouter.Route unbounded = router.route(leaders, Map.of(), obstacles).get(0);
         assertEquals(LeaderRouter.Style.poLeader, unbounded.style());
         assertTrue(
-                unbounded.points().stream().anyMatch(p -> p.y() > 300),
-                "the unbounded commit dips off-screen: " + unbounded.points());
+            unbounded.points().stream().anyMatch(p -> p.y() > 300),
+            "the unbounded commit dips off-screen: " + unbounded.points()
+        );
 
-        LeaderRouter.Route bounded =
-                router.route(leaders, Map.of(), obstacles, viewport).get(0);
+        LeaderRouter.Route bounded = router.route(leaders, Map.of(), obstacles, viewport).get(0);
         assertEquals(LeaderRouter.Style.poLeader, bounded.style());
         assertInside(bounded.points(), viewport, "re-routed");
     }
@@ -702,8 +670,7 @@ class LeaderRouterTest {
         for (int frame = 1; frame <= 120; frame++) {
             double ax = frame * 0.5;
             double ay = frame * 0.25;
-            List<FloatPos> points = router.route(List.of(leader("a", ax, ay, 200, 100)), Map.of(), obstacles)
-                    .get(0)
+            List<FloatPos> points = router.route(List.of(leader("a", ax, ay, 200, 100)), Map.of(), obstacles).get(0)
                     .points();
             assertOrthogonal(points, "frame " + frame);
         }
@@ -720,16 +687,14 @@ class LeaderRouterTest {
 
         List<FloatPos> previous = null;
         for (int frame = 1; frame <= 20; frame++) {
-            List<FloatPos> points = router.route(
-                            List.of(leader("a", frame * 0.5, frame * 0.25, 200, 100)), Map.of(), obstacles)
-                    .get(0)
+            List<FloatPos> points = router
+                    .route(List.of(leader("a", frame * 0.5, frame * 0.25, 200, 100)), Map.of(), obstacles).get(0)
                     .points();
             assertOrthogonal(points, "frame " + frame);
             if (previous != null && previous.size() == points.size()) {
                 for (int i = 0; i < points.size(); i++) {
-                    double move = Math.hypot(
-                            points.get(i).x() - previous.get(i).x(),
-                            points.get(i).y() - previous.get(i).y());
+                    double move = Math
+                            .hypot(points.get(i).x() - previous.get(i).x(), points.get(i).y() - previous.get(i).y());
                     assertTrue(move <= 0.8, "vertex " + i + " jumped " + move + " px at frame " + frame);
                 }
             }
@@ -748,8 +713,7 @@ class LeaderRouterTest {
 
         for (int frame = 1; frame <= 20; frame++) {
             double labelY = 100 + frame * 0.4;
-            List<FloatPos> points = router.route(List.of(leader("a", 0, 0, 200, labelY)), Map.of(), obstacles)
-                    .get(0)
+            List<FloatPos> points = router.route(List.of(leader("a", 0, 0, 200, labelY)), Map.of(), obstacles).get(0)
                     .points();
             assertOrthogonal(points, "frame " + frame);
         }
@@ -769,11 +733,8 @@ class LeaderRouterTest {
         LeaderRouter router = new LeaderRouter(config);
 
         router.route(pair, Map.of(), obstacles);
-        List<FloatPos> committed =
-                router.route(alone, Map.of(), obstacles).get(0).points();
-        assertEquals(
-                LeaderRouter.Style.poLeader,
-                router.route(alone, Map.of(), obstacles).get(0).style());
+        List<FloatPos> committed = router.route(alone, Map.of(), obstacles).get(0).points();
+        assertEquals(LeaderRouter.Style.poLeader, router.route(alone, Map.of(), obstacles).get(0).style());
 
         boolean flickered = false;
         for (int epoch = 0; epoch < 12; epoch++) {
@@ -805,10 +766,11 @@ class LeaderRouterTest {
             // and d hold the crossing field — two vertical crossing lines,
             // one slower crossing line, one parallel-offset line
             List<LeaderRouter.Leader> leaders = List.of(
-                    leader("a", frame * 0.5, 100, 400, 0),
-                    leader("b", 200, 200, 200, -400),
-                    leader("c", 260 + frame * 0.25, 320, 260, -400),
-                    leader("d", 305, 500, 305, 30));
+                leader("a", frame * 0.5, 100, 400, 0),
+                leader("b", 200, 200, 200, -400),
+                leader("c", 260 + frame * 0.25, 320, 260, -400),
+                leader("d", 305, 500, 305, 30)
+            );
             for (LeaderRouter.Route route : router.route(leaders, Map.of(), List.of(), null)) {
                 Long previous = epochs.put(route.id(), route.shapeEpoch());
                 if (previous != null && frame >= 12 && previous != route.shapeEpoch()) {
@@ -826,23 +788,19 @@ class LeaderRouterTest {
         // moves it — the caller keys its morph off exactly this distinction
         List<FloatRect> obstacles = List.of(new FloatRect(-10, 60, 20, 20), new FloatRect(60, 20, 20, 20));
         LeaderRouter router = new LeaderRouter(config);
-        long committed = router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles)
-                .get(0)
-                .shapeEpoch();
+        long committed = router.route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles).get(0).shapeEpoch();
         assertTrue(committed > 0, "the po commit carries a real epoch");
 
         for (int frame = 1; frame <= 10; frame++) {
             assertEquals(
-                    committed,
-                    router.route(List.of(leader("a", frame * 0.4, frame * 0.2, 200, 100)), Map.of(), obstacles)
-                            .get(0)
-                            .shapeEpoch(),
-                    "frame " + frame + ": a stretch is not a topology change");
+                committed,
+                router.route(List.of(leader("a", frame * 0.4, frame * 0.2, 200, 100)), Map.of(), obstacles).get(0)
+                        .shapeEpoch(),
+                "frame " + frame + ": a stretch is not a topology change"
+            );
         }
 
-        long adopted = router.route(List.of(leader("a", 0, 25, 200, 100)), Map.of(), obstacles)
-                .get(0)
-                .shapeEpoch();
+        long adopted = router.route(List.of(leader("a", 0, 25, 200, 100)), Map.of(), obstacles).get(0).shapeEpoch();
         assertTrue(adopted != committed, "a fresh adoption is a topology change");
     }
 
@@ -864,8 +822,9 @@ class LeaderRouterTest {
             FloatPos a = points.get(i);
             FloatPos b = points.get(i + 1);
             assertTrue(
-                    Math.abs(a.x() - b.x()) < 1.0e-9 || Math.abs(a.y() - b.y()) < 1.0e-9,
-                    what + ": diagonal segment " + a + " → " + b);
+                Math.abs(a.x() - b.x()) < 1.0e-9 || Math.abs(a.y() - b.y()) < 1.0e-9,
+                what + ": diagonal segment " + a + " → " + b
+            );
         }
     }
 
@@ -873,11 +832,12 @@ class LeaderRouterTest {
     private static void assertInside(List<FloatPos> points, FloatRect viewport, String what) {
         for (FloatPos p : points) {
             assertTrue(
-                    p.x() >= viewport.x() - 1.0e-9
-                            && p.x() <= viewport.right() + 1.0e-9
-                            && p.y() >= viewport.y() - 1.0e-9
-                            && p.y() <= viewport.bottom() + 1.0e-9,
-                    what + " leaves the viewport at " + p);
+                p.x() >= viewport.x() - 1.0e-9
+                        && p.x() <= viewport.right() + 1.0e-9
+                        && p.y() >= viewport.y() - 1.0e-9
+                        && p.y() <= viewport.bottom() + 1.0e-9,
+                what + " leaves the viewport at " + p
+            );
         }
     }
 
@@ -888,7 +848,8 @@ class LeaderRouterTest {
         assertThrows(IllegalArgumentException.class, () -> LeaderRouter.Config.of(0, 1));
         assertThrows(IllegalArgumentException.class, () -> LeaderRouter.Config.of(1, 0));
         assertThrows(
-                IllegalArgumentException.class,
-                () -> router.route(List.of(leader("a", 0, 0, 1, 1), leader("a", 1, 1, 2, 2)), Map.of()));
+            IllegalArgumentException.class,
+            () -> router.route(List.of(leader("a", 0, 0, 1, 1), leader("a", 1, 1, 2, 2)), Map.of())
+        );
     }
 }

@@ -67,7 +67,10 @@ public abstract class BasicBlockEntity extends BlockEntity {
     // The super/default implementation forwards to #loadAdditional.
     @Override
     public void onDataPacket(
-            Connection connection, ClientboundBlockEntityDataPacket packet, HolderLookup.Provider registries) {
+        Connection connection,
+        ClientboundBlockEntityDataPacket packet,
+        HolderLookup.Provider registries
+    ) {
         CompoundTag tag = packet.getTag();
         if (!tag.isEmpty()) {
             readUpdateData(tag, registries);

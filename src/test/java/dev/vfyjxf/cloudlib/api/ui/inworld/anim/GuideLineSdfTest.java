@@ -89,16 +89,16 @@ class GuideLineSdfTest {
         assertEquals(new FloatPos(50, 25), GuideLineSdf.morph(from, to, 0.5, 3).get(1), "the midpoint of the slide");
         // a vertex-count mismatch is what the resample is for
         assertEquals(
-                4,
-                GuideLineSdf.morph(from, List.of(new FloatPos(0, 0), new FloatPos(50, 40), to.get(1)), 0.5, 4)
-                        .size());
+            4,
+            GuideLineSdf.morph(from, List.of(new FloatPos(0, 0), new FloatPos(50, 40), to.get(1)), 0.5, 4).size()
+        );
     }
 
     @Test
     void theOrthogonalMorphAnswersTheEndpointsVerbatim() {
         List<FloatPos> from = List.of(new FloatPos(0, 0), new FloatPos(92, 0), new FloatPos(92, 100));
-        List<FloatPos> to =
-                List.of(new FloatPos(0, 0), new FloatPos(48, 0), new FloatPos(48, 40), new FloatPos(140, 40));
+        List<FloatPos> to = List
+                .of(new FloatPos(0, 0), new FloatPos(48, 0), new FloatPos(48, 40), new FloatPos(140, 40));
 
         assertEquals(from, GuideLineSdf.morphOrthogonal(from, to, 0.0), "t = 0 is the old shape, unresampled");
         assertEquals(to, GuideLineSdf.morphOrthogonal(from, to, 1.0), "t = 1 is the new shape, unresampled");
@@ -114,7 +114,7 @@ class GuideLineSdfTest {
         List<FloatPos> from = List.of(new FloatPos(0, 0), new FloatPos(92, 0), new FloatPos(92, 100));
         List<FloatPos> to = List.of(new FloatPos(0, 0), new FloatPos(48, 0), new FloatPos(48, 100));
 
-        for (double t : new double[] {0.1, 0.25, 0.5, 0.75, 0.9}) {
+        for (double t : new double[]{0.1, 0.25, 0.5, 0.75, 0.9}) {
             List<FloatPos> mid = GuideLineSdf.morphOrthogonal(from, to, t);
             assertEquals(3, mid.size(), "t = " + t + ": a pure lane slide keeps the vertex count");
             assertEquals(new FloatPos(0, 0), mid.get(0), "t = " + t + ": the pinned end");
@@ -135,7 +135,7 @@ class GuideLineSdfTest {
         List<FloatPos> from = List.of(new FloatPos(0, 0), new FloatPos(150, 0), new FloatPos(150, 100));
         List<FloatPos> to = List.of(new FloatPos(0, 50), new FloatPos(150, 50), new FloatPos(150, 150));
 
-        for (double t : new double[] {0.2, 0.5, 0.8}) {
+        for (double t : new double[]{0.2, 0.5, 0.8}) {
             List<FloatPos> mid = GuideLineSdf.morphOrthogonal(from, to, t);
             assertEquals(3, mid.size(), "t = " + t);
             assertEquals(0 + 50 * t, mid.get(0).y(), eps, "t = " + t + ": the first run stays horizontal");
@@ -145,9 +145,10 @@ class GuideLineSdfTest {
 
             List<FloatPos> resampled = GuideLineSdf.morph(from, to, t, 3);
             assertTrue(
-                    Math.abs(resampled.get(0).y() - resampled.get(1).y()) > eps
-                            || Math.abs(resampled.get(1).x() - resampled.get(2).x()) > eps,
-                    "t = " + t + ": the resample the old settle used cuts the corner — the regression");
+                Math.abs(resampled.get(0).y() - resampled.get(1).y()) > eps
+                        || Math.abs(resampled.get(1).x() - resampled.get(2).x()) > eps,
+                "t = " + t + ": the resample the old settle used cuts the corner — the regression"
+            );
         }
     }
 
@@ -158,13 +159,14 @@ class GuideLineSdfTest {
         // lerping the whole line through diagonals
         List<FloatPos> from = List.of(new FloatPos(0, 0), new FloatPos(92, 0), new FloatPos(92, 100));
         List<FloatPos> to = List.of(
-                new FloatPos(0, 0),
-                new FloatPos(48, 0),
-                new FloatPos(48, 40),
-                new FloatPos(140, 40),
-                new FloatPos(140, 100));
+            new FloatPos(0, 0),
+            new FloatPos(48, 0),
+            new FloatPos(48, 40),
+            new FloatPos(140, 40),
+            new FloatPos(140, 100)
+        );
 
-        for (double t : new double[] {0.25, 0.5, 0.75}) {
+        for (double t : new double[]{0.25, 0.5, 0.75}) {
             List<FloatPos> mid = GuideLineSdf.morphOrthogonal(from, to, t);
             int diagonals = 0;
             for (int i = 0; i + 1 < mid.size(); i++) {
@@ -175,8 +177,9 @@ class GuideLineSdfTest {
                 }
             }
             assertTrue(
-                    diagonals <= 2,
-                    "t = " + t + ": a topology change settles through at most a couple of diagonals — " + mid);
+                diagonals <= 2,
+                "t = " + t + ": a topology change settles through at most a couple of diagonals — " + mid
+            );
         }
     }
 
@@ -273,14 +276,16 @@ class GuideLineSdfTest {
         List<FloatPos> trimmed = GuideLineSdf.trimEnd(elbow, 10);
         assertEquals(new FloatPos(100, 90), trimmed.get(trimmed.size() - 1), "10 px short of the far end");
         assertEquals(
-                List.of(new FloatPos(0, 0), new FloatPos(100, 0), new FloatPos(100, 90)),
-                trimmed,
-                "the surviving corner keeps its vertex");
+            List.of(new FloatPos(0, 0), new FloatPos(100, 0), new FloatPos(100, 90)),
+            trimmed,
+            "the surviving corner keeps its vertex"
+        );
         assertEquals(elbow, GuideLineSdf.trimEnd(elbow, 0), "no gap, no change");
         assertEquals(
-                List.of(new FloatPos(0, 0)),
-                GuideLineSdf.trimEnd(elbow, 500),
-                "a gap past the end leaves the start point");
+            List.of(new FloatPos(0, 0)),
+            GuideLineSdf.trimEnd(elbow, 500),
+            "a gap past the end leaves the start point"
+        );
     }
 
     @Test

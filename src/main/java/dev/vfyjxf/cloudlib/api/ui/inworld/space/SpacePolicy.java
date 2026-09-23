@@ -12,10 +12,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.space;
  * </ul>
  */
 public enum SpacePolicy {
-    active,
-    passive,
-    fixed,
-    ghost;
+    active, passive, fixed, ghost;
 
     /** Whether this element displaces others when it resolves overlaps. */
     public boolean pushesOthers() {

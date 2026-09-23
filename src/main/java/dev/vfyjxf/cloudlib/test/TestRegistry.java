@@ -33,21 +33,26 @@ public final class TestRegistry {
 
     public static final DeferredBlock<TestBlock> testBlock = block("test_block", TestBlock::new, BlockItem::new);
 
-    public static final DeferredBlock<SyncedTestBlock> testSyncedBlock =
-            block("test_synced_block", SyncedTestBlock::new, BlockItem::new);
+    public static final DeferredBlock<SyncedTestBlock> testSyncedBlock = block(
+        "test_synced_block",
+        SyncedTestBlock::new,
+        BlockItem::new
+    );
 
-    private static final DeferredRegister<BlockEntityType<?>> blockEntities =
-            DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, Constants.modId);
+    private static final DeferredRegister<BlockEntityType<?>> blockEntities = DeferredRegister
+            .create(Registries.BLOCK_ENTITY_TYPE, Constants.modId);
 
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TestBlockEntity>> testBlockEntity =
-            blockEntities.register(
-                    "test_block_entity", () -> BlockEntityType.Builder.of(TestBlockEntity::new, testBlock.get())
-                            .build(null));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TestBlockEntity>> testBlockEntity = blockEntities
+            .register(
+                "test_block_entity",
+                () -> BlockEntityType.Builder.of(TestBlockEntity::new, testBlock.get()).build(null)
+            );
 
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SyncedTestBlockEntity>>
-            testSyncedBlockEntity = blockEntities.register("test_synced_block_entity", () -> BlockEntityType.Builder.of(
-                    SyncedTestBlockEntity::new, testSyncedBlock.get())
-            .build(null));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SyncedTestBlockEntity>> testSyncedBlockEntity = blockEntities
+            .register(
+                "test_synced_block_entity",
+                () -> BlockEntityType.Builder.of(SyncedTestBlockEntity::new, testSyncedBlock.get()).build(null)
+            );
 
     public static void register(IEventBus modBus) {
         blocks.register(modBus);
@@ -57,9 +62,10 @@ public final class TestRegistry {
     }
 
     private static <T extends Block> DeferredBlock<T> block(
-            String name,
-            Supplier<T> block,
-            @Nullable BiFunction<T, Item.Properties, @NotNull BlockItem> blockItemFactory) {
+        String name,
+        Supplier<T> block,
+        @Nullable BiFunction<T, Item.Properties, @NotNull BlockItem> blockItemFactory
+    ) {
         DeferredBlock<T> deferredBlock = blocks.register(name, block);
         DeferredItem<BlockItem> deferredItem = items.register(name, () -> {
             if (blockItemFactory == null) {
@@ -73,19 +79,19 @@ public final class TestRegistry {
     }
 
     private static class CreativeTabValues {
-        public static final DeferredRegister<CreativeModeTab> creativeModeTabs =
-                DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Constants.modId);
+        public static final DeferredRegister<CreativeModeTab> creativeModeTabs = DeferredRegister
+                .create(Registries.CREATIVE_MODE_TAB, Constants.modId);
         public static final MutableList<DeferredItem<?>> creativeTagItems = MutableLists.empty();
-        public static final DeferredHolder<CreativeModeTab, CreativeModeTab> creativeTab =
-                creativeModeTabs.register("conduit_tab", () -> CreativeModeTab.builder()
-                        .title(Component.literal("Debug Entries"))
-                        .icon(() -> Blocks.DARK_OAK_DOOR.asItem().getDefaultInstance())
-                        .displayItems((parameters, output) -> {
-                            for (DeferredItem<?> creativeTagItem : creativeTagItems) {
-                                output.accept(creativeTagItem.get());
-                            }
-                        })
-                        .build());
+        public static final DeferredHolder<CreativeModeTab, CreativeModeTab> creativeTab = creativeModeTabs.register(
+            "conduit_tab",
+            () -> CreativeModeTab.builder().title(Component.literal("Debug Entries"))
+                    .icon(() -> Blocks.DARK_OAK_DOOR.asItem().getDefaultInstance())
+                    .displayItems((parameters, output) -> {
+                        for (DeferredItem<?> creativeTagItem : creativeTagItems) {
+                            output.accept(creativeTagItem.get());
+                        }
+                    }).build()
+        );
     }
 
     private TestRegistry() {}

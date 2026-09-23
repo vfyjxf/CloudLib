@@ -15,8 +15,7 @@ public class DividerWidget extends Widget {
     // region types
 
     public enum Orientation {
-        horizontal,
-        vertical
+        horizontal, vertical
     }
 
     // endregion
@@ -107,7 +106,11 @@ public class DividerWidget extends Widget {
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
         collector.addWithDefault(
-                "orientation", orientation.name(), Orientation.horizontal.name(), InspectionProperty.categoryVisual);
+            "orientation",
+            orientation.name(),
+            Orientation.horizontal.name(),
+            InspectionProperty.categoryVisual
+        );
         collector.addWithDefault("thickness", thickness, 1, InspectionProperty.categoryVisual);
     }
 

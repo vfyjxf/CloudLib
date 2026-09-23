@@ -96,8 +96,7 @@ class DockCursorTest {
         List<String> remaining = ids(cursor.slots());
         assertEquals(List.of("slot0", "slot2", "slot4", "slot6"), remaining);
         for (int i = 1; i < remaining.size(); i++) {
-            assertTrue(cursor.slot(remaining.get(i - 1)).end()
-                    <= cursor.slot(remaining.get(i)).start());
+            assertTrue(cursor.slot(remaining.get(i - 1)).end() <= cursor.slot(remaining.get(i)).start());
         }
     }
 

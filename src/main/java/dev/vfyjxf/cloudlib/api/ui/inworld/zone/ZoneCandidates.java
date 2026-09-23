@@ -39,22 +39,12 @@ public final class ZoneCandidates {
      * by the tier's clearance on <em>both</em> axes.
      */
     public enum Direction {
-        top,
-        topLeft,
-        topRight,
-        left,
-        right,
-        bottom,
-        bottomLeft,
-        bottomRight
+        top, topLeft, topRight, left, right, bottom, bottomLeft, bottomRight
     }
 
     /** The distance tier of a candidate; {@link #anchor} is the in-place tier. */
     public enum Tier {
-        anchor,
-        near,
-        medium,
-        far
+        anchor, near, medium, far
     }
 
     /**
@@ -72,8 +62,9 @@ public final class ZoneCandidates {
             requirePositive("mediumPx", mediumPx);
             requirePositive("farPx", farPx);
             if (!(nearPx < mediumPx && mediumPx < farPx)) {
-                throw new IllegalArgumentException("clearances must satisfy nearPx < mediumPx < farPx: " + nearPx + ", "
-                        + mediumPx + ", " + farPx);
+                throw new IllegalArgumentException(
+                    "clearances must satisfy nearPx < mediumPx < farPx: " + nearPx + ", " + mediumPx + ", " + farPx
+                );
             }
         }
 
@@ -107,7 +98,8 @@ public final class ZoneCandidates {
             Objects.requireNonNull(rect, "rect");
             if ((direction == null) != (tier == Tier.anchor)) {
                 throw new IllegalArgumentException(
-                        "direction must be null exactly on the anchor tier: " + direction + ", " + tier);
+                    "direction must be null exactly on the anchor tier: " + direction + ", " + tier
+                );
             }
         }
     }
@@ -146,12 +138,18 @@ public final class ZoneCandidates {
         if (fits) {
             addCandidate(candidates, seen, null, Tier.anchor, centered(anchor, panel), safeRect);
             for (Direction direction : Direction.values()) {
-                for (Tier tier : new Tier[] {Tier.near, Tier.medium, Tier.far}) {
+                for (Tier tier : new Tier[]{Tier.near, Tier.medium, Tier.far}) {
                     double clearance = tier == Tier.near
                             ? config.nearPx()
                             : tier == Tier.medium ? config.mediumPx() : config.farPx();
                     addCandidate(
-                            candidates, seen, direction, tier, docked(anchor, panel, direction, clearance), safeRect);
+                        candidates,
+                        seen,
+                        direction,
+                        tier,
+                        docked(anchor, panel, direction, clearance),
+                        safeRect
+                    );
                 }
             }
         }
@@ -164,12 +162,13 @@ public final class ZoneCandidates {
     }
 
     private static void addCandidate(
-            List<Candidate> candidates,
-            Set<Rect> seen,
-            @Nullable Direction direction,
-            Tier tier,
-            Rect rect,
-            Rect safeRect) {
+        List<Candidate> candidates,
+        Set<Rect> seen,
+        @Nullable Direction direction,
+        Tier tier,
+        Rect rect,
+        Rect safeRect
+    ) {
         Rect clamped = clampInto(rect, safeRect);
         if (clamped == null) {
             return;
@@ -181,10 +180,11 @@ public final class ZoneCandidates {
 
     private static Rect centered(FloatPos anchor, Size panel) {
         return new Rect(
-                (int) Math.round(anchor.x() - panel.width() * 0.5),
-                (int) Math.round(anchor.y() - panel.height() * 0.5),
-                panel.width(),
-                panel.height());
+            (int) Math.round(anchor.x() - panel.width() * 0.5),
+            (int) Math.round(anchor.y() - panel.height() * 0.5),
+            panel.width(),
+            panel.height()
+        );
     }
 
     private static Rect docked(FloatPos anchor, Size panel, Direction direction, double clearance) {

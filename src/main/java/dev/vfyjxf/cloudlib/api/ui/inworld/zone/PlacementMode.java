@@ -19,11 +19,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.zone;
  * </ul>
  */
 public enum PlacementMode {
-    worldAttached,
-    worldFloating,
-    screenAnchored,
-    screenDisplaced,
-    screenEdge;
+    worldAttached, worldFloating, screenAnchored, screenDisplaced, screenEdge;
 
     private static final PlacementMode[] ladder = values();
 

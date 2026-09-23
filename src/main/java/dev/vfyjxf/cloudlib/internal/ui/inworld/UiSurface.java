@@ -75,13 +75,14 @@ public final class UiSurface implements AutoCloseable {
      *     pass 0 when unknown
      */
     public void render(
-            int wPx,
-            int hPx,
-            int supersample,
-            double projectedW,
-            double projectedH,
-            WorldUiPanel.Painter painter,
-            float partialTick) {
+        int wPx,
+        int hPx,
+        int supersample,
+        double projectedW,
+        double projectedH,
+        WorldUiPanel.Painter painter,
+        float partialTick
+    ) {
         RenderSystem.assertOnRenderThread();
         // Capture the caller's render state BEFORE the size pass: a resize
         // inside ensure() ends with RenderTarget's unconditional
@@ -125,7 +126,9 @@ public final class UiSurface implements AutoCloseable {
             // gui 3D-item lighting they would get inside an inventory surface
             Lighting.setupFor3DItems();
             RenderSystem.setProjectionMatrix(
-                    new Matrix4f().setOrtho(0, wPx, hPx, 0, 1000, 21000), VertexSorting.ORTHOGRAPHIC_Z);
+                new Matrix4f().setOrtho(0, wPx, hPx, 0, 1000, 21000),
+                VertexSorting.ORTHOGRAPHIC_Z
+            );
 
             GuiGraphics graphics = new GuiGraphics(mc, new PoseStack(), buffers);
             SceneCanvas canvas = SceneCanvas.create(graphics);
@@ -141,8 +144,8 @@ public final class UiSurface implements AutoCloseable {
             // unless the chain is stale after a (re)allocation, in which
             // case it is rebuilt this frame whatever the magnification
             // (see MipmapChain)
-            boolean quadMinifies =
-                    Supersampling.needsMipmap(widthPx * supersample, heightPx * supersample, projectedW, projectedH);
+            boolean quadMinifies = Supersampling
+                    .needsMipmap(widthPx * supersample, heightPx * supersample, projectedW, projectedH);
             if (mips.shouldGenerate(quadMinifies)) {
                 RenderSystem.bindTexture(target.getColorTextureId());
                 GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
@@ -150,8 +153,8 @@ public final class UiSurface implements AutoCloseable {
                 mips.generated();
                 // the chain is complete again — put mipmap filtering back so
                 // the world pass samples a filtered chain, not bare level 0
-                GlStateManager._texParameter(
-                        GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
+                GlStateManager
+                        ._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
             }
         } finally {
             GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, prevFbo);
@@ -201,9 +204,10 @@ public final class UiSurface implements AutoCloseable {
         // can't take a mipmapped enum — set the filters directly.
         GlStateManager._bindTexture(target.getColorTextureId());
         GlStateManager._texParameter(
-                GL11.GL_TEXTURE_2D,
-                GL11.GL_TEXTURE_MIN_FILTER,
-                mips.minFilter() == MipmapChain.MinFilter.linear ? GL11.GL_LINEAR : GL11.GL_LINEAR_MIPMAP_LINEAR);
+            GL11.GL_TEXTURE_2D,
+            GL11.GL_TEXTURE_MIN_FILTER,
+            mips.minFilter() == MipmapChain.MinFilter.linear ? GL11.GL_LINEAR : GL11.GL_LINEAR_MIPMAP_LINEAR
+        );
         GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         return true;
     }

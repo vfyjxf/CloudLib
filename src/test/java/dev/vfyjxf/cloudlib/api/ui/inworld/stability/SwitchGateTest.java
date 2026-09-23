@@ -170,7 +170,8 @@ class SwitchGateTest {
         assertThrows(NullPointerException.class, () -> new SwitchGate<>(SwitchGate.Config.of(10, 1, 0, 0), null, 0.0));
         assertThrows(NullPointerException.class, () -> gate.propose(null, 1.0));
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new SwitchGate<>(SwitchGate.Config.of(10, 1, 0, 0), "s", Double.NaN));
+            IllegalArgumentException.class,
+            () -> new SwitchGate<>(SwitchGate.Config.of(10, 1, 0, 0), "s", Double.NaN)
+        );
     }
 }

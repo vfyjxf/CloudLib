@@ -34,8 +34,7 @@ public record LifecycleState<T>(String id, Kind kind, Class<T> type) {
     }
 
     public enum Kind {
-        context,
-        event
+        context, event
     }
 
     enum Unit {

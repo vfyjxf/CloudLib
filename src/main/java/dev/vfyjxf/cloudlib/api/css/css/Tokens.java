@@ -108,8 +108,7 @@ public final class Tokens {
                 out.append('"');
             }
             case ComponentValue.HashValue h -> out.append('#').append(h.value());
-            case ComponentValue.UrlValue u ->
-                out.append("url(").append(u.value()).append(')');
+            case ComponentValue.UrlValue u -> out.append("url(").append(u.value()).append(')');
             case ComponentValue.UnicodeRange r -> {
                 out.append("U+").append(Integer.toHexString(r.start()).toUpperCase(Locale.ROOT));
                 if (r.end() != r.start()) {
@@ -118,21 +117,19 @@ public final class Tokens {
             }
             case ComponentValue.Delim d -> out.append(d.value());
             case ComponentValue.Block b -> {
-                out.append(
-                        switch (b.kind()) {
-                            case curly -> '{';
-                            case square -> '[';
-                            case paren -> '(';
-                        });
+                out.append(switch (b.kind()) {
+                    case curly -> '{';
+                    case square -> '[';
+                    case paren -> '(';
+                });
                 for (ComponentValue inner : b.values()) {
                     append(out, inner);
                 }
-                out.append(
-                        switch (b.kind()) {
-                            case curly -> '}';
-                            case square -> ']';
-                            case paren -> ')';
-                        });
+                out.append(switch (b.kind()) {
+                    case curly -> '}';
+                    case square -> ']';
+                    case paren -> ')';
+                });
             }
             case ComponentValue.Whitespace w -> out.append(' ');
             case ComponentValue.Cdo c -> out.append("<!--");

@@ -17,63 +17,60 @@ import java.util.function.Consumer;
 public interface ReversedExpose<T, S, R> extends Expose<T>, Reversed<S, R> {
 
     static <T, S, R> ReversedExpose<T, S, R> create(
-            String name,
-            short id,
-            Snapshot<T> snapshot,
-            ValueSupplier<T> supplier,
-            FlowEncoder<T> encoder,
-            FlowDecoder<T> decoder,
-            FlowEncoder<S> reverseEncoder,
-            FlowDecoder<R> reverseDecoder) {
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> supplier,
+        FlowEncoder<T> encoder,
+        FlowDecoder<T> decoder,
+        FlowEncoder<S> reverseEncoder,
+        FlowDecoder<R> reverseDecoder
+    ) {
         return new StandardReversedExpose<>(
-                name, id,
-                snapshot, supplier,
-                encoder, decoder,
-                reverseEncoder, reverseDecoder);
+            name,
+            id,
+            snapshot,
+            supplier,
+            encoder,
+            decoder,
+            reverseEncoder,
+            reverseDecoder
+        );
     }
 
     static <T, S, R> ReversedExpose<T, S, R> create(
-            String name,
-            short id,
-            Snapshot<T> snapshot,
-            ValueSupplier<T> supplier,
-            UnaryFlowHandler<T> codec,
-            FlowEncoder<S> reverseEncoder,
-            FlowDecoder<R> reverseDecoder) {
-        return new StandardReversedExpose<>(
-                name, id,
-                snapshot, supplier,
-                codec, codec,
-                reverseEncoder, reverseDecoder);
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> supplier,
+        UnaryFlowHandler<T> codec,
+        FlowEncoder<S> reverseEncoder,
+        FlowDecoder<R> reverseDecoder
+    ) {
+        return new StandardReversedExpose<>(name, id, snapshot, supplier, codec, codec, reverseEncoder, reverseDecoder);
     }
 
     static <T, S, R> ReversedExpose<T, S, R> create(
-            String name,
-            short id,
-            Snapshot<T> snapshot,
-            ValueSupplier<T> supplier,
-            FlowEncoder<T> encoder,
-            FlowDecoder<T> decoder,
-            FlowHandler<S, R> reverseCodec) {
-        return new StandardReversedExpose<>(
-                name, id,
-                snapshot, supplier,
-                encoder, decoder,
-                reverseCodec, reverseCodec);
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> supplier,
+        FlowEncoder<T> encoder,
+        FlowDecoder<T> decoder,
+        FlowHandler<S, R> reverseCodec
+    ) {
+        return new StandardReversedExpose<>(name, id, snapshot, supplier, encoder, decoder, reverseCodec, reverseCodec);
     }
 
     static <T, S, R> ReversedExpose<T, S, R> create(
-            String name,
-            short id,
-            Snapshot<T> snapshot,
-            ValueSupplier<T> supplier,
-            UnaryFlowHandler<T> codec,
-            FlowHandler<S, R> reverseCodec) {
-        return new StandardReversedExpose<>(
-                name, id,
-                snapshot, supplier,
-                codec, codec,
-                reverseCodec, reverseCodec);
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> supplier,
+        UnaryFlowHandler<T> codec,
+        FlowHandler<S, R> reverseCodec
+    ) {
+        return new StandardReversedExpose<>(name, id, snapshot, supplier, codec, codec, reverseCodec, reverseCodec);
     }
 
     @Override

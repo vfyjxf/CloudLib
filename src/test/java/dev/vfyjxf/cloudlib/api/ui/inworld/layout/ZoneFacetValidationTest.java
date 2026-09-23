@@ -37,18 +37,20 @@ class ZoneFacetValidationTest {
         // and anchor (position) are otherwise zone-legal
         assertThrows(IllegalArgumentException.class, () -> zoneSpec(InworldProfile.transientUi));
         // flipping the policy to passive legalizes the same declaration
-        assertDoesNotThrow(() -> ElementSpec.from(InworldProfile.transientUi, "z")
-                .withSpaces(new SpaceFacet(Set.of(SpaceMask.worldAnchored), SpacePolicy.passive, 0))
-                .withZone(ZoneFacet.of()));
+        assertDoesNotThrow(
+            () -> ElementSpec.from(InworldProfile.transientUi, "z")
+                    .withSpaces(new SpaceFacet(Set.of(SpaceMask.worldAnchored), SpacePolicy.passive, 0))
+                    .withZone(ZoneFacet.of())
+        );
     }
 
     @Test
     void aWorldOnlyElementCannotDeclareZone() {
-        assertThrows(IllegalArgumentException.class, () -> ElementSpec.from(InworldProfile.nameplate, "z")
-                .withWorldOnly()
-                .withZone(ZoneFacet.of()));
-        assertThrows(IllegalArgumentException.class, () -> zoneSpec(InworldProfile.nameplate)
-                .withWorldOnly());
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> ElementSpec.from(InworldProfile.nameplate, "z").withWorldOnly().withZone(ZoneFacet.of())
+        );
+        assertThrows(IllegalArgumentException.class, () -> zoneSpec(InworldProfile.nameplate).withWorldOnly());
     }
 
     // endregion
@@ -73,11 +75,12 @@ class ZoneFacetValidationTest {
         // the same camera-tracked element on an anchor-positioned family
         // (facePanel's anchoredQuad) declares zone freely — the family is the
         // profile's binding, so the fix is picking the anchored profile
-        assertDoesNotThrow(() -> ElementSpec.from(InworldProfile.facePanel, "z")
-                .withSpaces(new SpaceFacet(Set.of(SpaceMask.screenPanel), SpacePolicy.passive, 1))
-                .withDegrade(DegradeFacet.of(SpacePolicy.passive, false, true, new Size(60, 20), new Size(40, 16)))
-                .withAnchor(AnchorFacet.cameraTracked(0.1, 0.9))
-                .withZone(ZoneFacet.of()));
+        assertDoesNotThrow(
+            () -> ElementSpec.from(InworldProfile.facePanel, "z")
+                    .withSpaces(new SpaceFacet(Set.of(SpaceMask.screenPanel), SpacePolicy.passive, 1))
+                    .withDegrade(DegradeFacet.of(SpacePolicy.passive, false, true, new Size(60, 20), new Size(40, 16)))
+                    .withAnchor(AnchorFacet.cameraTracked(0.1, 0.9)).withZone(ZoneFacet.of())
+        );
     }
 
     @Test
@@ -97,17 +100,13 @@ class ZoneFacetValidationTest {
         for (LodTier tier : LodTier.values()) {
             ZoneFacet facet = new ZoneFacet(null, null, null, null, VisibilityPolicy.fade, tier);
             if (tier == LodTier.full || tier == LodTier.compact) {
-                assertSame(
-                        tier,
-                        ElementSpec.from(InworldProfile.facePanel, "z")
-                                .withZone(facet)
-                                .zone()
-                                .initialTier());
+                assertSame(tier, ElementSpec.from(InworldProfile.facePanel, "z").withZone(facet).zone().initialTier());
             } else {
                 assertThrows(
-                        IllegalArgumentException.class,
-                        () -> ElementSpec.from(InworldProfile.facePanel, "z").withZone(facet),
-                        tier + " is a degrade outcome, not a declaration");
+                    IllegalArgumentException.class,
+                    () -> ElementSpec.from(InworldProfile.facePanel, "z").withZone(facet),
+                    tier + " is a degrade outcome, not a declaration"
+                );
             }
         }
     }
@@ -128,7 +127,9 @@ class ZoneFacetValidationTest {
 
         assertThrows(NullPointerException.class, () -> new ZoneFacet(null, null, null, null, null, LodTier.full));
         assertThrows(
-                NullPointerException.class, () -> new ZoneFacet(null, null, null, null, VisibilityPolicy.fade, null));
+            NullPointerException.class,
+            () -> new ZoneFacet(null, null, null, null, VisibilityPolicy.fade, null)
+        );
     }
 
     @Test

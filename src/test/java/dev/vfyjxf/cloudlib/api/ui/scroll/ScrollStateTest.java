@@ -36,10 +36,7 @@ class ScrollStateTest {
 
     @Test
     void wheelAccelerationScalesRepeatedWheelInputUntilCapped() {
-        ScrollState state = ScrollState.create()
-                .scrollSpeed(10)
-                .wheelAcceleration(true)
-                .wheelAccelerationStep(0.5f)
+        ScrollState state = ScrollState.create().scrollSpeed(10).wheelAcceleration(true).wheelAccelerationStep(0.5f)
                 .wheelAccelerationMaxMultiplier(2.0f);
 
         assertEquals(-10.0f, state.wheelScrollDelta(0, 1, 1_000).y(), 0.001f);
@@ -51,10 +48,7 @@ class ScrollStateTest {
 
     @Test
     void wheelAccelerationResetsAfterIdleOrDirectionChange() {
-        ScrollState state = ScrollState.create()
-                .scrollSpeed(10)
-                .wheelAcceleration(true)
-                .wheelAccelerationStep(0.5f)
+        ScrollState state = ScrollState.create().scrollSpeed(10).wheelAcceleration(true).wheelAccelerationStep(0.5f)
                 .wheelAccelerationResetMillis(100);
 
         state.wheelScrollDelta(0, 1, 1_000);
@@ -67,9 +61,7 @@ class ScrollStateTest {
 
     @Test
     void scrollConfigurationClampsInvalidAccelerationValues() {
-        ScrollState state = ScrollState.create()
-                .wheelAccelerationStep(-1.0f)
-                .wheelAccelerationMaxMultiplier(0.25f)
+        ScrollState state = ScrollState.create().wheelAccelerationStep(-1.0f).wheelAccelerationMaxMultiplier(0.25f)
                 .wheelAccelerationResetMillis(-1L);
 
         assertEquals(0.0f, state.wheelAccelerationStep(), 0.001f);
@@ -95,11 +87,8 @@ class ScrollStateTest {
 
     @Test
     void autoScrollDeltaUsesDeadZoneSpeedAndMaxSpeed() {
-        ScrollState state = ScrollState.create()
-                .middleMouseAutoScroll(true)
-                .autoScrollDeadZone(5.0f)
-                .autoScrollSpeed(2.0f)
-                .autoScrollMaxSpeed(12.0f);
+        ScrollState state = ScrollState.create().middleMouseAutoScroll(true).autoScrollDeadZone(5.0f)
+                .autoScrollSpeed(2.0f).autoScrollMaxSpeed(12.0f);
 
         assertTrue(state.middleMouseAutoScroll());
         assertEquals(0.0f, state.autoScrollDelta(5), 0.001f);
@@ -110,9 +99,7 @@ class ScrollStateTest {
 
     @Test
     void autoScrollConfigurationClampsNegativeValues() {
-        ScrollState state = ScrollState.create()
-                .autoScrollDeadZone(-1.0f)
-                .autoScrollSpeed(-2.0f)
+        ScrollState state = ScrollState.create().autoScrollDeadZone(-1.0f).autoScrollSpeed(-2.0f)
                 .autoScrollMaxSpeed(-3.0f);
 
         assertEquals(0.0f, state.autoScrollDeadZone(), 0.001f);

@@ -33,11 +33,7 @@ final class StressElement implements InworldElement {
 
     /** The anchor motion modes the generator mixes. */
     enum Motion {
-        staticAnchor,
-        linearDrift,
-        orbit,
-        teleport,
-        jitter
+        staticAnchor, linearDrift, orbit, teleport, jitter
     }
 
     private static final ContentTier[] degradeTiers = ContentTier.values();
@@ -69,24 +65,25 @@ final class StressElement implements InworldElement {
     boolean anchorValid = true;
 
     private StressElement(
-            String id,
-            SpaceKind kind,
-            int priority,
-            boolean sticky,
-            ElementMode mode,
-            VariantLadder ladder,
-            boolean singleCandidate,
-            boolean budgetAware,
-            boolean worldOnly,
-            Motion motion,
-            FloatPos base,
-            double velocityX,
-            double velocityY,
-            double orbitRadius,
-            double orbitOmega,
-            double orbitPhase,
-            double teleportInterval,
-            double jitterAmplitude) {
+        String id,
+        SpaceKind kind,
+        int priority,
+        boolean sticky,
+        ElementMode mode,
+        VariantLadder ladder,
+        boolean singleCandidate,
+        boolean budgetAware,
+        boolean worldOnly,
+        Motion motion,
+        FloatPos base,
+        double velocityX,
+        double velocityY,
+        double orbitRadius,
+        double orbitOmega,
+        double orbitPhase,
+        double teleportInterval,
+        double jitterAmplitude
+    ) {
         this.id = id;
         this.kind = kind;
         this.priority = priority;
@@ -116,18 +113,21 @@ final class StressElement implements InworldElement {
      * when the fraction is positive — existing specs' streams stay identical.
      */
     static StressElement generate(
-            String id,
-            Random rnd,
-            int screenWidth,
-            int screenHeight,
-            int maxLadderRungs,
-            Motion motionOverride,
-            double budgetAwareFraction,
-            boolean singleAnchor,
-            double sizeScale,
-            double worldOnlyFraction) {
-        FloatPos base =
-                new FloatPos(16 + rnd.nextDouble() * (screenWidth - 32), 16 + rnd.nextDouble() * (screenHeight - 32));
+        String id,
+        Random rnd,
+        int screenWidth,
+        int screenHeight,
+        int maxLadderRungs,
+        Motion motionOverride,
+        double budgetAwareFraction,
+        boolean singleAnchor,
+        double sizeScale,
+        double worldOnlyFraction
+    ) {
+        FloatPos base = new FloatPos(
+            16 + rnd.nextDouble() * (screenWidth - 32),
+            16 + rnd.nextDouble() * (screenHeight - 32)
+        );
         if (singleAnchor) {
             base = new FloatPos(screenWidth * 0.5, screenHeight * 0.5);
         }
@@ -166,24 +166,25 @@ final class StressElement implements InworldElement {
             default -> {}
         }
         return new StressElement(
-                id,
-                kind,
-                priority,
-                sticky,
-                mode,
-                ladder,
-                singleCandidate,
-                budgetAware,
-                worldOnly,
-                motion,
-                base,
-                velocityX,
-                velocityY,
-                orbitRadius,
-                orbitOmega,
-                orbitPhase,
-                teleportInterval,
-                jitterAmplitude);
+            id,
+            kind,
+            priority,
+            sticky,
+            mode,
+            ladder,
+            singleCandidate,
+            budgetAware,
+            worldOnly,
+            motion,
+            base,
+            velocityX,
+            velocityY,
+            orbitRadius,
+            orbitOmega,
+            orbitPhase,
+            teleportInterval,
+            jitterAmplitude
+        );
     }
 
     private static int clampSize(int value) {
@@ -240,27 +241,33 @@ final class StressElement implements InworldElement {
                     break;
                 }
             }
-            variants.add(new InworldVariant(
+            variants.add(
+                new InworldVariant(
                     level,
                     new Size(w, h),
                     degradeTiers[Math.min(level, degradeTiers.length - 1)],
                     policy,
                     allowsNudge,
                     allowsClamp,
-                    tierComfortFactor * w * h));
+                    tierComfortFactor * w * h
+                )
+            );
             width = (int) (width * 0.6);
             height = (int) (height * 0.65);
             level++;
         }
         if (variants.isEmpty()) {
-            variants.add(new InworldVariant(
+            variants.add(
+                new InworldVariant(
                     0,
                     new Size(24, 14),
                     ContentTier.full,
                     policy,
                     allowsNudge,
                     allowsClamp,
-                    tierComfortFactor * 24 * 14));
+                    tierComfortFactor * 24 * 14
+                )
+            );
         }
         return VariantLadder.of(variants);
     }
@@ -274,21 +281,25 @@ final class StressElement implements InworldElement {
             case orbit -> {
                 double angle = orbitOmega * nowSeconds + orbitPhase;
                 anchor = new FloatPos(
-                        base.x() + orbitRadius * Math.cos(angle), base.y() + orbitRadius * Math.sin(angle));
+                    base.x() + orbitRadius * Math.cos(angle),
+                    base.y() + orbitRadius * Math.sin(angle)
+                );
             }
             case teleport -> {
                 teleportTimer += dtSeconds;
                 if (teleportTimer >= teleportInterval) {
                     teleportTimer = 0;
                     home = new FloatPos(
-                            16 + rnd.nextDouble() * (screenWidth - 32), 16 + rnd.nextDouble() * (screenHeight - 32));
+                        16 + rnd.nextDouble() * (screenWidth - 32),
+                        16 + rnd.nextDouble() * (screenHeight - 32)
+                    );
                 }
                 anchor = home;
             }
-            case jitter ->
-                anchor = new FloatPos(
-                        base.x() + (rnd.nextDouble() * 2 - 1) * jitterAmplitude,
-                        base.y() + (rnd.nextDouble() * 2 - 1) * jitterAmplitude);
+            case jitter -> anchor = new FloatPos(
+                base.x() + (rnd.nextDouble() * 2 - 1) * jitterAmplitude,
+                base.y() + (rnd.nextDouble() * 2 - 1) * jitterAmplitude
+            );
         }
     }
 
@@ -343,9 +354,12 @@ final class StressElement implements InworldElement {
             // screen candidates; the coordinator grants it unconditionally
             Size size = variant.requestedSize();
             return ElementProposal.worldOnly(
-                    context.variant(),
-                    List.of(PlacementCandidate.world(
-                            WorldAabb.around(anchor.x(), 64.0, anchor.y(), size.width(), 8.0, size.height()))));
+                context.variant(),
+                List.of(
+                    PlacementCandidate
+                            .world(WorldAabb.around(anchor.x(), 64.0, anchor.y(), size.width(), 8.0, size.height()))
+                )
+            );
         }
         if (budgetAware && context.round() == 0 && context.budget().capacityFor(variant.requestedArea()) == 0) {
             InworldVariant degraded = ladder.degrade(variant, RejectionReason.insufficientArea);
@@ -355,21 +369,19 @@ final class StressElement implements InworldElement {
         }
         Size size = variant.requestedSize();
         double[][] offsets = singleCandidate
-                ? new double[][] {{0, 0}}
-                : new double[][] {
-                    {0, 0},
-                    {size.width() + 8, 0},
-                    {-(size.width() + 8), 0},
-                    {0, size.height() + 8},
-                    {0, -(size.height() + 8)},
-                };
+                ? new double[][]{{0, 0}}
+                : new double[][]{{0, 0}, {size.width() + 8, 0}, {-(size.width() + 8), 0}, {0, size.height() + 8},
+                        {0, -(size.height() + 8)},};
         List<PlacementCandidate> candidates = new ArrayList<>(offsets.length);
         for (double[] offset : offsets) {
             double centerX = anchor.x() + offset[0];
             double centerY = anchor.y() + offset[1];
-            candidates.add(PlacementCandidate.dual(
+            candidates.add(
+                PlacementCandidate.dual(
                     WorldAabb.around(centerX, 64.0, centerY, size.width(), 8.0, size.height()),
-                    FloatRect.around(new FloatPos(centerX, centerY), size.width(), size.height())));
+                    FloatRect.around(new FloatPos(centerX, centerY), size.width(), size.height())
+                )
+            );
         }
         return ElementProposal.of(variant, anchor, candidates);
     }

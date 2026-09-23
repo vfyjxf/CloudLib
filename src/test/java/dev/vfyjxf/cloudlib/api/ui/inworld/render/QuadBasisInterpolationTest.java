@@ -14,10 +14,10 @@ class QuadBasisInterpolationTest {
 
     // two yaw-billboard-like standing panels: same origin region, right axis
     // rotated 90° about world up (east → north)
-    private final QuadBasis east =
-            QuadBasis.axes(new Vec3(0, 0, 0), new Vec3(1, 0, 0), new Vec3(0, -1, 0), 100, 80, 40);
-    private final QuadBasis north =
-            QuadBasis.axes(new Vec3(4, 6, 2), new Vec3(0, 0, -1), new Vec3(0, -1, 0), 100, 80, 40);
+    private final QuadBasis east = QuadBasis
+            .axes(new Vec3(0, 0, 0), new Vec3(1, 0, 0), new Vec3(0, -1, 0), 100, 80, 40);
+    private final QuadBasis north = QuadBasis
+            .axes(new Vec3(4, 6, 2), new Vec3(0, 0, -1), new Vec3(0, -1, 0), 100, 80, 40);
 
     @Test
     void endpointsReturnTheInputsExactly() {
@@ -74,13 +74,12 @@ class QuadBasisInterpolationTest {
 
     @Test
     void antipodalAxesStayFinite() {
-        QuadBasis flipped =
-                QuadBasis.of(new Vec3(4, 6, 2), east.u().scale(-1), east.v().scale(-1));
+        QuadBasis flipped = QuadBasis.of(new Vec3(4, 6, 2), east.u().scale(-1), east.v().scale(-1));
 
         QuadBasis slerped = QuadBasis.slerp(east, flipped, 0.5);
         QuadBasis nlerped = QuadBasis.nlerp(east, flipped, 0.5);
 
-        for (QuadBasis basis : new QuadBasis[] {slerped, nlerped}) {
+        for (QuadBasis basis : new QuadBasis[]{slerped, nlerped}) {
             assertTrue(Double.isFinite(basis.u().x + basis.u().y + basis.u().z));
             assertTrue(Double.isFinite(basis.v().x + basis.v().y + basis.v().z));
             assertEquals(1, basis.u().normalize().length(), eps);

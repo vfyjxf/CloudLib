@@ -41,7 +41,8 @@ public final class FocusBubble {
             }
             if (!Double.isFinite(collapseRadius) || collapseRadius <= expandRadius) {
                 throw new IllegalArgumentException(
-                        "collapseRadius must be finite and greater than expandRadius: " + collapseRadius);
+                    "collapseRadius must be finite and greater than expandRadius: " + collapseRadius
+                );
             }
         }
 

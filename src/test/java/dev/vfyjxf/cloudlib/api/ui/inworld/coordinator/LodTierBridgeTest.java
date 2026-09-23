@@ -35,8 +35,9 @@ class LodTierBridgeTest {
             LodTier weaker = CoordinationResult.ElementState.lodTierOf(order[i]);
             LodTier stronger = CoordinationResult.ElementState.lodTierOf(order[i - 1]);
             assertTrue(
-                    stronger.ordinal() <= weaker.ordinal(),
-                    "the bridge must not invert the degrade order: " + stronger + " → " + weaker);
+                stronger.ordinal() <= weaker.ordinal(),
+                "the bridge must not invert the degrade order: " + stronger + " → " + weaker
+            );
         }
     }
 
@@ -46,8 +47,14 @@ class LodTierBridgeTest {
 
     @Test
     void aStateWithoutPlacementIsHidden() {
-        CoordinationResult.ElementState state =
-                new CoordinationResult.ElementState("e", VisibilityTracker.Phase.hidden, 0.0, null, null, null);
+        CoordinationResult.ElementState state = new CoordinationResult.ElementState(
+            "e",
+            VisibilityTracker.Phase.hidden,
+            0.0,
+            null,
+            null,
+            null
+        );
         assertSame(LodTier.hidden, state.lodTier());
     }
 
@@ -58,10 +65,10 @@ class LodTierBridgeTest {
         // 48×24 pip) fits in the remaining bottom strip, so the ladder walks
         // from the 120×40 full rung down to it, and the state's LOD tier
         // follows the granted rung
-        TestElement element = TestElement.arbitrated("e", 24, 284, new Size(120, 40))
-                .withLadder(TestElement.ladder(
-                        new Size(120, 40), new Size(100, 36), new Size(80, 32), new Size(64, 28), new Size(48, 24)))
-                .withSingleCandidate();
+        TestElement element = TestElement.arbitrated("e", 24, 284, new Size(120, 40)).withLadder(
+            TestElement
+                    .ladder(new Size(120, 40), new Size(100, 36), new Size(80, 32), new Size(64, 28), new Size(48, 24))
+        ).withSingleCandidate();
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
         coordinator.register(element);
 
@@ -74,8 +81,8 @@ class LodTierBridgeTest {
         // fits into (interior, so it never becomes a strut): every bigger
         // rung overlaps it and degrades away
         Rect interior = new Rect(8, 8, 384, 264);
-        CoordinationResult squeezed =
-                coordinator.frame(InworldCoordinator.FrameInput.of(400, 300, 1.0, 1.0 / 60.0, interior));
+        CoordinationResult squeezed = coordinator
+                .frame(InworldCoordinator.FrameInput.of(400, 300, 1.0, 1.0 / 60.0, interior));
         assertSame(ContentTier.pip, squeezed.placementOf("e").variant().contentTier());
         assertSame(LodTier.icon, squeezed.elementState("e").lodTier());
     }
@@ -83,8 +90,7 @@ class LodTierBridgeTest {
     @Test
     void aLingeringElementReportsTheTierItFadesOutFrom() {
         TestElement element = TestElement.arbitrated("e", 24, 284, new Size(120, 40))
-                .withLadder(TestElement.ladder(new Size(120, 40), new Size(100, 36)))
-                .withSingleCandidate();
+                .withLadder(TestElement.ladder(new Size(120, 40), new Size(100, 36))).withSingleCandidate();
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
         coordinator.register(element);
         coordinator.frame(InworldCoordinator.FrameInput.of(400, 300, 0.0, 1.0 / 60.0));
@@ -93,8 +99,7 @@ class LodTierBridgeTest {
         // retained and so is its tier
         element.anchorValid = false;
         CoordinationResult lingering = coordinator.frame(InworldCoordinator.FrameInput.of(400, 300, 1.0, 1.0 / 60.0));
-        assertSame(
-                VisibilityTracker.Phase.lingering, lingering.elementState("e").phase());
+        assertSame(VisibilityTracker.Phase.lingering, lingering.elementState("e").phase());
         assertSame(LodTier.full, lingering.elementState("e").lodTier());
     }
 

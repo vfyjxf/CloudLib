@@ -59,20 +59,25 @@ class CoordinatorModelTest {
         InworldVariant variant = new InworldVariant(0, size, ContentTier.full, SpacePolicy.active, true, false, 2000);
         assertEquals(4000, variant.requestedArea(), 0);
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new InworldVariant(-1, size, ContentTier.full, SpacePolicy.active, true, true, 1));
+            IllegalArgumentException.class,
+            () -> new InworldVariant(-1, size, ContentTier.full, SpacePolicy.active, true, true, 1)
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new InworldVariant(0, new Size(0, 10), ContentTier.full, SpacePolicy.active, true, true, 1));
+            IllegalArgumentException.class,
+            () -> new InworldVariant(0, new Size(0, 10), ContentTier.full, SpacePolicy.active, true, true, 1)
+        );
         assertThrows(
-                NullPointerException.class,
-                () -> new InworldVariant(0, null, ContentTier.full, SpacePolicy.active, true, true, 1));
+            NullPointerException.class,
+            () -> new InworldVariant(0, null, ContentTier.full, SpacePolicy.active, true, true, 1)
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new InworldVariant(0, size, ContentTier.full, SpacePolicy.active, true, true, -1));
+            IllegalArgumentException.class,
+            () -> new InworldVariant(0, size, ContentTier.full, SpacePolicy.active, true, true, -1)
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new InworldVariant(0, size, ContentTier.full, SpacePolicy.active, true, true, Double.NaN));
+            IllegalArgumentException.class,
+            () -> new InworldVariant(0, size, ContentTier.full, SpacePolicy.active, true, true, Double.NaN)
+        );
     }
 
     @Test
@@ -98,13 +103,17 @@ class CoordinatorModelTest {
         assertTrue(retracted.candidates().isEmpty());
 
         assertThrows(
-                NullPointerException.class, () -> new ElementProposal(variant, null, List.of(candidate), false, false));
+            NullPointerException.class,
+            () -> new ElementProposal(variant, null, List.of(candidate), false, false)
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new ElementProposal(variant, new FloatPos(0, 0), List.of(candidate), true, false));
+            IllegalArgumentException.class,
+            () -> new ElementProposal(variant, new FloatPos(0, 0), List.of(candidate), true, false)
+        );
         assertThrows(
-                NullPointerException.class,
-                () -> new ElementProposal(null, new FloatPos(0, 0), List.of(), false, false));
+            NullPointerException.class,
+            () -> new ElementProposal(null, new FloatPos(0, 0), List.of(), false, false)
+        );
     }
 
     @Test
@@ -134,7 +143,14 @@ class CoordinatorModelTest {
     void placementStoresOffsetRelativeToAnchor() {
         InworldVariant variant = TestElement.ladder(new Size(100, 40)).strongest();
         InworldPlacement placement = new InworldPlacement(
-                "e", variant, new FloatPos(200, 150), new FloatRect(-50, -20, 100, 40), null, 3, 7);
+            "e",
+            variant,
+            new FloatPos(200, 150),
+            new FloatRect(-50, -20, 100, 40),
+            null,
+            3,
+            7
+        );
 
         assertEquals(150, placement.screenRect().x(), 0);
         assertEquals(130, placement.screenRect().y(), 0);
@@ -146,13 +162,21 @@ class CoordinatorModelTest {
 
         // the anchor is copied at construction
         FloatPos anchor = new FloatPos(200, 150);
-        InworldPlacement copied =
-                new InworldPlacement("e", variant, anchor, new FloatRect(-50, -20, 100, 40), null, 0, 0);
+        InworldPlacement copied = new InworldPlacement(
+            "e",
+            variant,
+            anchor,
+            new FloatRect(-50, -20, 100, 40),
+            null,
+            0,
+            0
+        );
         anchor.set(0, 0);
         assertEquals(200, copied.anchor().x(), 0);
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new InworldPlacement("e", variant, new FloatPos(0, 0), new FloatRect(0, 0, 10, 10), null, -1, 0));
+            IllegalArgumentException.class,
+            () -> new InworldPlacement("e", variant, new FloatPos(0, 0), new FloatRect(0, 0, 10, 10), null, -1, 0)
+        );
     }
 
     @Test
@@ -177,20 +201,29 @@ class CoordinatorModelTest {
     @Test
     void coordinationResultCopiesItsLists() {
         InworldVariant variant = TestElement.ladder(new Size(100, 40)).strongest();
-        InworldPlacement placement =
-                new InworldPlacement("e", variant, new FloatPos(0, 0), new FloatRect(0, 0, 100, 40), null, 0, 0);
+        InworldPlacement placement = new InworldPlacement(
+            "e",
+            variant,
+            new FloatPos(0, 0),
+            new FloatRect(0, 0, 100, 40),
+            null,
+            0,
+            0
+        );
         List<InworldPlacement> placements = new ArrayList<>(List.of(placement));
         SpaceBudget budget = new SpaceBudget(new Rect(0, 0, 100, 100), 5000, 0.5);
 
         CoordinationResult result = new CoordinationResult(
-                1,
-                1,
-                true,
-                CoordinationResult.RenegotiationCause.membershipChanged,
-                placements,
-                List.of(new CoordinationResult.ElementState(
-                        "e", VisibilityTracker.Phase.visible, 1.0, placement, null, null)),
-                budget);
+            1,
+            1,
+            true,
+            CoordinationResult.RenegotiationCause.membershipChanged,
+            placements,
+            List.of(
+                new CoordinationResult.ElementState("e", VisibilityTracker.Phase.visible, 1.0, placement, null, null)
+            ),
+            budget
+        );
 
         placements.clear();
         assertEquals(1, result.placements().size());
@@ -200,52 +233,72 @@ class CoordinatorModelTest {
         assertNull(result.elementState("missing"));
         assertEquals(CoordinationResult.RenegotiationCause.membershipChanged, result.cause());
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new CoordinationResult.ElementState("e", VisibilityTracker.Phase.visible, 1.5, null, null, null));
+            IllegalArgumentException.class,
+            () -> new CoordinationResult.ElementState("e", VisibilityTracker.Phase.visible, 1.5, null, null, null)
+        );
     }
 
     @Test
     void configAndFrameInputValidate() {
         InworldCoordinator.Config.defaults();
         assertThrows(
-                NullPointerException.class,
-                () -> new InworldCoordinator.Config(
-                        0.2, 2, 12, 48, 24, 3, 8, 0.3, 900, 30, null, new SwitchGate.Config(16, 1, 2, 0)));
+            NullPointerException.class,
+            () -> new InworldCoordinator.Config(
+                0.2,
+                2,
+                12,
+                48,
+                24,
+                3,
+                8,
+                0.3,
+                900,
+                30,
+                null,
+                new SwitchGate.Config(16, 1, 2, 0)
+            )
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new InworldCoordinator.Config(
-                        0.2,
-                        3,
-                        12,
-                        48,
-                        24,
-                        3,
-                        8,
-                        0.3,
-                        900,
-                        30,
-                        VisibilityTracker.Config.of(0.1, 0.1, 0.1),
-                        new SwitchGate.Config(16, 1, 2, 0)));
+            IllegalArgumentException.class,
+            () -> new InworldCoordinator.Config(
+                0.2,
+                3,
+                12,
+                48,
+                24,
+                3,
+                8,
+                0.3,
+                900,
+                30,
+                VisibilityTracker.Config.of(0.1, 0.1, 0.1),
+                new SwitchGate.Config(16, 1, 2, 0)
+            )
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new InworldCoordinator.Config(
-                        -1,
-                        2,
-                        12,
-                        48,
-                        24,
-                        3,
-                        8,
-                        0.3,
-                        900,
-                        30,
-                        VisibilityTracker.Config.of(0.1, 0.1, 0.1),
-                        new SwitchGate.Config(16, 1, 2, 0)));
+            IllegalArgumentException.class,
+            () -> new InworldCoordinator.Config(
+                -1,
+                2,
+                12,
+                48,
+                24,
+                3,
+                8,
+                0.3,
+                900,
+                30,
+                VisibilityTracker.Config.of(0.1, 0.1, 0.1),
+                new SwitchGate.Config(16, 1, 2, 0)
+            )
+        );
 
         InworldCoordinator.FrameInput.of(100, 100, 0, 0.016, new Rect(0, 0, 10, 10));
         assertThrows(IllegalArgumentException.class, () -> InworldCoordinator.FrameInput.of(0, 100, 0, 0.016));
         assertThrows(
-                IllegalArgumentException.class, () -> InworldCoordinator.FrameInput.of(100, 100, Double.NaN, 0.016));
+            IllegalArgumentException.class,
+            () -> InworldCoordinator.FrameInput.of(100, 100, Double.NaN, 0.016)
+        );
         assertEquals(0.0, InworldCoordinator.FrameInput.of(100, 100, 0, -1).dtSeconds(), 0.0);
         assertThrows(IllegalArgumentException.class, () -> InworldCoordinator.FrameInput.of(100, 100, 0, Double.NaN));
     }

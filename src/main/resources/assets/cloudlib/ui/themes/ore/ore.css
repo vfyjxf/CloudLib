@@ -1,0 +1,182 @@
+/*
+ * cloudlib:ore — the stock OreUI chrome: light flat buttons, thin borders, compact controls.
+ *
+ * The chrome is sprite work: the panel frame, buttons, switch, slots and
+ * slider handle are oreui sheet regions, so the palette below carries the
+ * inks the sheet's css names rather than a full colour ramp.
+ *
+ * Rewritten as CloudLib-native css from the LDLib2 oreui Ore UI theme
+ * (github.com/Low-Drag-MC/LDLib2, LGPL-3.0): the palette and the geometry are
+ * upstream's, the LDLib2 property vocabulary is not.
+ */
+
+:root {
+    /* palette — the theme's source tokens. The inks feed the rules below; the
+       surface ramp is what the component textures are mixed from, and a texture
+       function cannot read a var(), so those carry their numbers inline. */
+    --accent:        #c6a06a;
+    --accent-hover:  #d9bd92;
+    --accent-press:  #a8874b;
+    --bg:            #191919;
+    --surface:       #2b2b2b;
+    --raised:        #444444;
+    --hovered:       #555555;
+    --sunken:        #1f1f1f;
+    --ink:           #ffffff;
+    --ink-dim:       #dddddd;
+    --ink-faint:     #666666;
+    --border:        #444444;
+    --border-strong: #666666;
+
+    /* surfaces */
+    --panel:         built-in(ui-ore:BORDER_7);
+    --input:         built-in(ui-ore:RECT2);
+    --slot-bg:       built-in(ui-ore:SLOT_LIGHT);
+    --slot-overlay:  color(#ffffff26);
+
+    /* button */
+    --btn:           built-in(ui-ore:BTN_DEFAULT);
+    --btn-hover:     built-in(ui-ore:BTN_PRESSED);
+    --btn-pressed:   built-in(ui-ore:BTN_PRESSED) color(#dddddd);
+    --btn-disabled:  built-in(ui-ore:BTN_DISABLED);
+    --btn-ink:       #222222;
+
+    /* toggle */
+    --toggle:          built-in(ui-ore:SWITCH_OFF);
+    --toggle-hover:    built-in(ui-ore:SWITCH_OFF) color(#dddddd);
+    --toggle-on:       built-in(ui-ore:SWITCH_ON);
+    --toggle-on-hover: built-in(ui-ore:SWITCH_ON) color(#dddddd);
+    --toggle-disabled: built-in(ui-ore:SWITCH_OFF) color(#999999);
+
+    /* slider */
+    --slider-track:          built-in(ui-ore:RECT2);
+    --slider-fill:           color(#c6a06a);
+    --slider-handle:         built-in(ui-ore:BTN_DEFAULT_SMALL);
+    --slider-handle-hover:   built-in(ui-ore:BTN_PRESSED_SMALL);
+    --slider-handle-pressed: built-in(ui-ore:BTN_PRESSED_SMALL) color(#dddddd);
+
+    /* info bars — the tokens the health, fluid and progress bars all read
+       (progress-bar::part(track|fill) reads the same pair). A framed channel, the
+       same shape the standard sheet draws: 1 px of ring around a 5 px trough, a deep
+       near-black track under a restrained neutral fill, and the semantic fills the
+       widget code never names, only selects by class:
+       info-bar .danger::part(fill). --bar-frame is a texture, not an ink — a bare
+       colour there would fill the whole bar instead of its edge. */
+    --bar-track:   color(#0B0F14BF);
+    --bar-frame:   border-texture(#05070ACF, 1);
+    --bar-fill:    color(#9AA0A6FF);
+    --bar-mark:    color(#F5F7FAFF);
+    --bar-ok:      color(#5EB86BFF);
+    --bar-warn:    color(#D9A23CFF);
+    --bar-danger:  color(#CE514BFF);
+    --bar-info:    color(#4F97CCFF);
+
+    /* metrics */
+    --pad:            5px;
+    --field-pad:      3px 2px;
+    --btn-pad:        2px 2px 4px;
+    --control-height: 16px;
+    --toggle-width:   25px;
+    --toggle-height:  14px;
+    --toggle-pad:     0px;
+    --bar-height:     7px;
+    --bar-row-gap:    3px;
+    --track-size:     3px;
+    --handle-size:    5px;
+}
+
+/* ---------- chrome ---------- */
+
+panel {
+    background: var(--panel);
+    color: var(--ink);
+    padding: var(--pad);
+}
+
+button {
+    background: var(--btn);
+    color: var(--btn-ink);
+    height: var(--control-height);
+    padding: var(--btn-pad);
+}
+button:hover    { background: var(--btn-hover); }
+button:pressed  { background: var(--btn-pressed); }
+button:disabled { background: var(--btn-disabled); color: var(--ink-faint); }
+
+toggle {
+    background: var(--toggle);
+    width: var(--toggle-width);
+    height: var(--toggle-height);
+    padding: var(--toggle-pad);
+}
+toggle:hover          { background: var(--toggle-hover); }
+toggle:checked        { background: var(--toggle-on); }
+toggle:checked:hover  { background: var(--toggle-on-hover); }
+toggle:disabled       { background: var(--toggle-disabled); }
+
+slider {
+    slider-track-size: var(--track-size);
+    slider-handle-size: var(--handle-size);
+}
+slider::part(track)           { background: var(--slider-track); }
+slider::part(fill)            { background: var(--slider-fill); }
+slider::part(handle)          { background: var(--slider-handle); }
+slider::part(handle):hover    { background: var(--slider-handle-hover); }
+slider::part(handle):pressed  { background: var(--slider-handle-pressed); }
+
+progress-bar {
+    height: var(--bar-height);
+}
+progress-bar::part(track)  { background: var(--bar-track); }
+progress-bar::part(fill)   { background: var(--bar-fill); }
+
+text-field {
+    background: var(--input);
+    color: var(--ink);
+    cursor-color: var(--ink);
+    padding: var(--field-pad);
+}
+
+label, text {
+    color: var(--ink);
+    text-shadow: false;
+}
+
+divider {
+    background: var(--border);
+    height: 1px;
+}
+
+.slot {
+    background: var(--slot-bg);
+    hover-overlay: var(--slot-overlay);
+}
+
+/* ---------- info panels ---------- */
+
+info-bar {
+    height: var(--bar-height);
+    margin: var(--bar-row-gap) 0;
+}
+info-bar::part(track)        { background: var(--bar-track); }
+info-bar::part(frame)        { background: var(--bar-frame); }
+info-bar::part(fill)         { background: var(--bar-fill); }
+info-bar::part(mark)         { background: var(--bar-mark); }
+info-bar .ok::part(fill)     { background: var(--bar-ok); }
+info-bar .warn::part(fill)   { background: var(--bar-warn); }
+info-bar .danger::part(fill) { background: var(--bar-danger); }
+info-bar .info::part(fill)   { background: var(--bar-info); }
+
+/* an icon row defaults to bare cells — .slot only reaches a slotBacked(true) row */
+
+section-header {
+    column-gap: var(--pad);
+}
+section-header::part(title) { color: var(--accent); }
+section-header::part(rule)  { background: var(--border); height: 1px; }
+
+kv-row {
+    column-gap: var(--pad);
+}
+kv-row::part(label) { color: var(--ink-dim); }
+kv-row::part(value) { color: var(--ink); }

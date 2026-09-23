@@ -22,12 +22,13 @@ class ClustererTest {
     void twoTightGroupsClusterSeparatelyWithRepresentatives() {
         Clusterer clusterer = new Clusterer(Clusterer.Config.of(0.7, 100));
         List<Clusterer.Member> snapshot = List.of(
-                member("a", 0, 0),
-                member("b", 25, 0),
-                member("c", 0, 25),
-                member("d", 500, 10),
-                member("e", 525, 10),
-                member("f", 500, 35));
+            member("a", 0, 0),
+            member("b", 25, 0),
+            member("c", 0, 25),
+            member("d", 500, 10),
+            member("e", 525, 10),
+            member("f", 500, 35)
+        );
 
         List<Clusterer.Cluster> clusters = clusterer.cluster(snapshot);
 
@@ -63,15 +64,17 @@ class ClustererTest {
 
         // stretch the pair to 120 (merge zone was d < 2R − R/α ≈ 143): still merged
         assertEquals(
-                List.of(List.of("a", "b")),
-                structure(clusterer.cluster(List.of(member("a", 0, 0), member("b", 120, 0)))));
+            List.of(List.of("a", "b")),
+            structure(clusterer.cluster(List.of(member("a", 0, 0), member("b", 120, 0))))
+        );
 
         // and wobble it back and forth — the structure must not flip
         for (int i = 0; i < 12; i++) {
             double x = (i % 2 == 0) ? 60 : 110;
             assertEquals(
-                    List.of(List.of("a", "b")),
-                    structure(clusterer.cluster(List.of(member("a", 0, 0), member("b", x, 0)))));
+                List.of(List.of("a", "b")),
+                structure(clusterer.cluster(List.of(member("a", 0, 0), member("b", x, 0))))
+            );
         }
     }
 
@@ -109,16 +112,18 @@ class ClustererTest {
 
         // without history the pair at 130 no longer earns its merge
         assertEquals(
-                List.of(List.of("a"), List.of("b")),
-                structure(clusterer.cluster(List.of(member("a", 0, 0), member("b", 130, 0)))));
+            List.of(List.of("a"), List.of("b")),
+            structure(clusterer.cluster(List.of(member("a", 0, 0), member("b", 130, 0))))
+        );
     }
 
     @Test
     void theSameSequenceYieldsTheSameClusters() {
         List<List<Clusterer.Member>> epochs = List.of(
-                List.of(member("a", 0, 0), member("b", 30, 5), member("c", 400, 0), member("d", 420, 8)),
-                List.of(member("a", 5, 0), member("b", 35, 3), member("c", 405, 2), member("d", 415, 12)),
-                List.of(member("a", 8, 2), member("b", 60, 4), member("c", 402, 0), member("d", 430, 6)));
+            List.of(member("a", 0, 0), member("b", 30, 5), member("c", 400, 0), member("d", 420, 8)),
+            List.of(member("a", 5, 0), member("b", 35, 3), member("c", 405, 2), member("d", 415, 12)),
+            List.of(member("a", 8, 2), member("b", 60, 4), member("c", 402, 0), member("d", 430, 6))
+        );
 
         Clusterer first = new Clusterer(Clusterer.Config.of(0.6, 100));
         Clusterer second = new Clusterer(Clusterer.Config.of(0.6, 100));
@@ -136,7 +141,9 @@ class ClustererTest {
         assertThrows(IllegalArgumentException.class, () -> Clusterer.Config.of(1.1, 100));
         assertThrows(IllegalArgumentException.class, () -> Clusterer.Config.of(0.7, 0));
         assertThrows(
-                IllegalArgumentException.class, () -> clusterer.cluster(List.of(member("a", 0, 0), member("a", 1, 1))));
+            IllegalArgumentException.class,
+            () -> clusterer.cluster(List.of(member("a", 0, 0), member("a", 1, 1)))
+        );
         assertThrows(IllegalArgumentException.class, () -> clusterer.cluster(List.of(member("a", Double.NaN, 0))));
     }
 
@@ -147,8 +154,7 @@ class ClustererTest {
         for (int epoch = 0; epoch < 5; epoch++) {
             List<Clusterer.Cluster> clusters = clusterer.cluster(List.of(member("a", 0, 0), member("b", 1000, 0)));
             assertEquals(2, clusters.size());
-            assertTrue(clusters.get(0).memberIds().size() == 1
-                    && clusters.get(1).memberIds().size() == 1);
+            assertTrue(clusters.get(0).memberIds().size() == 1 && clusters.get(1).memberIds().size() == 1);
         }
     }
 }

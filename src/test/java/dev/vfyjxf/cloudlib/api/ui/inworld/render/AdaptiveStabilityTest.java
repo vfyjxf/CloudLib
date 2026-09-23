@@ -39,12 +39,15 @@ class AdaptiveStabilityTest {
             int stabilized = stable.observe(desired);
             List<Supersampling.Request> requests = new ArrayList<>();
             for (PanelChain chain : all) {
-                requests.add(new Supersampling.Request(
+                requests.add(
+                    new Supersampling.Request(
                         chain.seed.logicalWidth(),
                         chain.seed.logicalHeight(),
                         chain == this ? stabilized : chain.lastStable,
                         chain.seed.floor(),
-                        chain.seed.screenArea()));
+                        chain.seed.screenArea()
+                    )
+                );
             }
             int grantedRaw = Supersampling.allocate(requests, budget)[all.indexOf(this)];
             int granted = grant.observe(grantedRaw);
@@ -91,10 +94,11 @@ class AdaptiveStabilityTest {
             assertTrue(granted >= 2 && granted <= Supersampling.maxSupersample);
         }
         assertEquals(
-                1,
-                panel.switches,
-                "the initial allocation only — short-run noise, degenerate frames and"
-                        + " rounding flaps never resize the surface");
+            1,
+            panel.switches,
+            "the initial allocation only — short-run noise, degenerate frames and"
+                    + " rounding flaps never resize the surface"
+        );
         assertTrue(panel.applied == 3 || panel.applied == 4, "held on whichever side the first frame sampled");
     }
 

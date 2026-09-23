@@ -18,11 +18,15 @@ import java.util.function.Consumer;
 public record MenuSyncDownstreamPacket(int containerId, byte[] syncData) implements ClientboundPayload {
 
     public static final ClientPayloadInfo<MenuSyncDownstreamPacket> info = CloudlibPayloads.createClientInfo(
-            StreamCodec.ofMember(MenuSyncDownstreamPacket::write, MenuSyncDownstreamPacket::decode),
-            "menu_sync_downstream");
+        StreamCodec.ofMember(MenuSyncDownstreamPacket::write, MenuSyncDownstreamPacket::decode),
+        "menu_sync_downstream"
+    );
 
     public MenuSyncDownstreamPacket(
-            int containerId, Consumer<RegistryFriendlyByteBuf> writer, RegistryAccess registryAccess) {
+        int containerId,
+        Consumer<RegistryFriendlyByteBuf> writer,
+        RegistryAccess registryAccess
+    ) {
         this(containerId, writeData(writer, registryAccess));
     }
 
@@ -54,12 +58,16 @@ public record MenuSyncDownstreamPacket(int containerId, byte[] syncData) impleme
     public void handle(IPayloadContext context, Player player) {
         if (player.containerMenu instanceof BasicMenu<?> menu && menu.containerId == containerId) {
             var buffer = new RegistryFriendlyByteBuf(
-                    Unpooled.wrappedBuffer(syncData), player.registryAccess(), ConnectionType.OTHER);
+                Unpooled.wrappedBuffer(syncData),
+                player.registryAccess(),
+                ConnectionType.OTHER
+            );
             menu.receiveFromServer(buffer);
         } else {
             CloudlibPayloads.log.warn(
-                    "A MenuSyncDownstreamPacket received, but the menu {} is not a BasicMenu or the menu id is not match, this is a bug, please report it to the developer.",
-                    player.containerMenu);
+                "A MenuSyncDownstreamPacket received, but the menu {} is not a BasicMenu or the menu id is not match, this is a bug, please report it to the developer.",
+                player.containerMenu
+            );
         }
     }
 }

@@ -51,15 +51,17 @@ class InworldGroupTest {
 
     @Test
     void duplicateMemberIdsAreRejected() {
-        GroupLayoutEngine engine =
-                GroupLayoutEngine.of(new InworldGroup("nimbus", "riders", "cart-1"), NoGrouping.instance);
+        GroupLayoutEngine engine = GroupLayoutEngine
+                .of(new InworldGroup("nimbus", "riders", "cart-1"), NoGrouping.instance);
         GroupLayoutEngine.GroupFrame frame = new GroupLayoutEngine.GroupFrame(
-                100,
-                100,
-                List.of(
-                        new GroupLayoutEngine.GroupMember("a", 100, 100, 20, 20),
-                        new GroupLayoutEngine.GroupMember("a", 110, 100, 20, 20)),
-                List.of());
+            100,
+            100,
+            List.of(
+                new GroupLayoutEngine.GroupMember("a", 100, 100, 20, 20),
+                new GroupLayoutEngine.GroupMember("a", 110, 100, 20, 20)
+            ),
+            List.of()
+        );
         assertThrows(IllegalArgumentException.class, () -> engine.arrange(frame));
     }
 }

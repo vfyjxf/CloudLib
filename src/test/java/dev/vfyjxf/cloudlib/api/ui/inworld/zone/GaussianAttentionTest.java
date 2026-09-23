@@ -53,9 +53,15 @@ class GaussianAttentionTest {
     @Test
     void costIsSymmetricAroundTheOrigin() {
         assertEquals(
-                field.cost(new Rect(240 + 60, 135, 40, 40)), field.cost(new Rect(240 - 100, 135, 40, 40)), 1.0e-12);
+            field.cost(new Rect(240 + 60, 135, 40, 40)),
+            field.cost(new Rect(240 - 100, 135, 40, 40)),
+            1.0e-12
+        );
         assertEquals(
-                field.cost(new Rect(240, 135 + 60, 40, 40)), field.cost(new Rect(240, 135 - 100, 40, 40)), 1.0e-12);
+            field.cost(new Rect(240, 135 + 60, 40, 40)),
+            field.cost(new Rect(240, 135 - 100, 40, 40)),
+            1.0e-12
+        );
     }
 
     @Test

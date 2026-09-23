@@ -63,15 +63,16 @@ class EscapeHatchLayouterTest {
             if (occluded) {
                 FloatPos sidebar = new FloatPos(12, 150);
                 return ElementProposal.of(
-                        ctx.variant(),
-                        sidebar,
-                        PlacementCandidate.screen(
-                                FloatRect.around(sidebar, variantSize.width(), variantSize.height())));
+                    ctx.variant(),
+                    sidebar,
+                    PlacementCandidate.screen(FloatRect.around(sidebar, variantSize.width(), variantSize.height()))
+                );
             }
             return ElementProposal.of(
-                    ctx.variant(),
-                    anchor,
-                    PlacementCandidate.screen(FloatRect.around(anchor, variantSize.width(), variantSize.height())));
+                ctx.variant(),
+                anchor,
+                PlacementCandidate.screen(FloatRect.around(anchor, variantSize.width(), variantSize.height()))
+            );
         }
 
         @Override
@@ -85,9 +86,9 @@ class EscapeHatchLayouterTest {
     void customLayouterDrivesTheWholeElementSide() {
         LayoutHarness harness = new LayoutHarness();
         SidebarLayouter layouter = new SidebarLayouter();
-        AssembledElement element = harness.assemble(ElementSpec.from(InworldProfile.follow, "sidebar")
-                .withAnchor(AnchorFacet.entity("cow"))
-                .custom(layouter));
+        AssembledElement element = harness.assemble(
+            ElementSpec.from(InworldProfile.follow, "sidebar").withAnchor(AnchorFacet.entity("cow")).custom(layouter)
+        );
         harness.register(element);
 
         assertEquals(0, layouter.reserveCount, "reserve waits for the first frame's environment");
@@ -101,24 +102,23 @@ class EscapeHatchLayouterTest {
         assertEquals(200.0, placement.anchor().x(), 0.01);
         assertEquals(-70.0, placement.offsetRect().x(), 0.01, "the custom candidate centers on the anchor");
         assertEquals(0, placement.variant().level(), "variant-sized candidates grant the strongest rung");
-        assertEquals(
-                VisibilityTracker.Phase.appearing, layouter.feedbacks.getFirst().phase());
+        assertEquals(VisibilityTracker.Phase.appearing, layouter.feedbacks.getFirst().phase());
         assertEquals(SpaceKind.world, element.spaceKind());
         assertEquals(7, element.priority(), "the reserve declaration overrides the facet priority");
         assertTrue(element.sticky());
 
         // The occlusion transfer: the same spec, the layouter's own decision.
         layouter.occluded = true;
-        CoordinationResult transferred = harness.frame(
-                LayoutHarness.anchored(LayoutHarness.pos(200, 150)).at(1.0 / 60.0, 1.0 / 60.0), element);
+        CoordinationResult transferred = harness
+                .frame(LayoutHarness.anchored(LayoutHarness.pos(200, 150)).at(1.0 / 60.0, 1.0 / 60.0), element);
         InworldPlacement sidebar = transferred.placementOf("sidebar");
         assertNotNull(sidebar);
         assertEquals(12.0, sidebar.anchor().x(), 0.01, "the proposal re-anchored to the sidebar");
 
         // Retraction through the layouter's own choice.
         layouter.proposeRetract = true;
-        CoordinationResult retracted = harness.frame(
-                LayoutHarness.anchored(LayoutHarness.pos(200, 150)).at(2.0 / 60.0, 1.0 / 60.0), element);
+        CoordinationResult retracted = harness
+                .frame(LayoutHarness.anchored(LayoutHarness.pos(200, 150)).at(2.0 / 60.0, 1.0 / 60.0), element);
         assertNull(retracted.placementOf("sidebar"));
         assertEquals(3, layouter.arbitratedCount);
     }
@@ -134,8 +134,8 @@ class EscapeHatchLayouterTest {
 
     @Test
     void customLayouterMayComposeCatalogStrategies() {
-        StageCatalogs.CandidateStrategy orbit =
-                StageCatalogs.requireCandidateStrategy(StageCatalogs.candidatesOrbitRing);
+        StageCatalogs.CandidateStrategy orbit = StageCatalogs
+                .requireCandidateStrategy(StageCatalogs.candidatesOrbitRing);
         InworldLayouter composing = new InworldLayouter() {
 
             @Override
@@ -145,25 +145,27 @@ class EscapeHatchLayouterTest {
 
             @Override
             public ElementProposal propose(InworldLayoutContext ctx) {
-                List<PlacementCandidate> slots = orbit.candidates(new StageCatalogs.CandidateContext(
+                List<PlacementCandidate> slots = orbit.candidates(
+                    new StageCatalogs.CandidateContext(
                         ctx.environment().anchor().screen(),
                         ctx.variant().requestedSize(),
                         OrientationFacet.Mode.cameraBillboard,
                         0,
                         ctx.environment(),
                         ctx.spec().profile().algorithm().params(),
-                        ctx.spec().avoidance().avoids()));
-                return ElementProposal.of(
-                        ctx.variant(), ctx.environment().anchor().screen(), slots);
+                        ctx.spec().avoidance().avoids()
+                    )
+                );
+                return ElementProposal.of(ctx.variant(), ctx.environment().anchor().screen(), slots);
             }
 
             @Override
             public void arbitrated(@Nullable InworldPlacement placement, Feedback feedback) {}
         };
         LayoutHarness harness = new LayoutHarness();
-        AssembledElement element = harness.assemble(ElementSpec.from(InworldProfile.follow, "composed")
-                .withAnchor(AnchorFacet.entity("cow"))
-                .custom(composing));
+        AssembledElement element = harness.assemble(
+            ElementSpec.from(InworldProfile.follow, "composed").withAnchor(AnchorFacet.entity("cow")).custom(composing)
+        );
         harness.register(element);
         CoordinationResult result = harness.frame(LayoutHarness.anchored(LayoutHarness.pos(200, 150)), element);
         InworldPlacement placement = result.placementOf("composed");

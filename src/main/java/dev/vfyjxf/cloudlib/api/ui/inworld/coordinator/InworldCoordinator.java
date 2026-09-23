@@ -304,8 +304,8 @@ public final class InworldCoordinator {
             runtime.frameArbitrationIndex = arbitrationCounter++;
         }
 
-        LayoutSpace space =
-                LayoutSpace.of(frame.screenWidth(), frame.screenHeight()).withStruts(frame.exclusionRects());
+        LayoutSpace space = LayoutSpace.of(frame.screenWidth(), frame.screenHeight())
+                .withStruts(frame.exclusionRects());
         Rect workArea = space.workArea();
 
         // Renegotiate judgment, pre-collect half: membership, exclusions, epoch.
@@ -326,11 +326,18 @@ public final class InworldCoordinator {
         // the world-only flow has no rounds.
         for (ElementRuntime runtime : ordered) {
             ProposeContext context = new ProposeContext(
-                    epochCounter, 0, budget, runtime.target, runtime.activeRejection, ladderVariant(runtime));
+                epochCounter,
+                0,
+                budget,
+                runtime.target,
+                runtime.activeRejection,
+                ladderVariant(runtime)
+            );
             runtime.roundZero = runtime.element.propose(context);
             if (runtime.roundZero.worldOnly() && !runtime.element.worldOnly()) {
                 throw new IllegalArgumentException(
-                        "element " + runtime.element.id() + " is not world-only but proposed a world-only proposal");
+                    "element " + runtime.element.id() + " is not world-only but proposed a world-only proposal"
+                );
             }
         }
 
@@ -379,8 +386,11 @@ public final class InworldCoordinator {
         boolean resolveNow = cause != CoordinationResult.RenegotiationCause.none;
 
         // SpaceBuild: the round-local occupancy bitmap seeded with exclusions.
-        OccupancyBitmap bitmap =
-                new OccupancyBitmap(frame.screenWidth(), frame.screenHeight(), config.occupancyCellSize());
+        OccupancyBitmap bitmap = new OccupancyBitmap(
+            frame.screenWidth(),
+            frame.screenHeight(),
+            config.occupancyCellSize()
+        );
         bitmap.markAll(frame.exclusionRects());
 
         // Resolve: the discrete layer.
@@ -394,14 +404,16 @@ public final class InworldCoordinator {
             for (ElementRuntime runtime : arbitrated) {
                 if (runtime.roundZero.anchorScreen() != null) {
                     runtime.anchorAtLastResolve = new FloatPos(
-                            runtime.roundZero.anchorScreen().x(),
-                            runtime.roundZero.anchorScreen().y());
+                        runtime.roundZero.anchorScreen().x(),
+                        runtime.roundZero.anchorScreen().y()
+                    );
                 }
             }
         } else {
             for (ElementRuntime runtime : arbitrated) {
-                runtime.pendingPresent =
-                        !runtime.roundZero.retracted() && runtime.lastPresented && runtime.target != null;
+                runtime.pendingPresent = !runtime.roundZero.retracted()
+                        && runtime.lastPresented
+                        && runtime.target != null;
                 if (runtime.roundZero.retracted()) {
                     runtime.activeRejection = null;
                 }
@@ -446,7 +458,10 @@ public final class InworldCoordinator {
             } else {
                 runtime.spring.step(targetRect.centerX(), targetRect.centerY(), frame.dtSeconds());
                 visual = FloatRect.around(
-                        new FloatPos(runtime.spring.x(), runtime.spring.y()), targetRect.width(), targetRect.height());
+                    new FloatPos(runtime.spring.x(), runtime.spring.y()),
+                    targetRect.width(),
+                    targetRect.height()
+                );
             }
             visuals.put(runtime, visual);
         }
@@ -487,13 +502,14 @@ public final class InworldCoordinator {
                     runtime.lastVisual = visual;
                     runtime.lastTargetRect = runtime.target.offsetRect().translate(anchor.x(), anchor.y());
                     runtime.target = new InworldPlacement(
-                            runtime.element.id(),
-                            runtime.target.variant(),
-                            anchor,
-                            runtime.target.offsetRect(),
-                            runtime.target.world(),
-                            runtime.frameArbitrationIndex,
-                            runtime.target.epoch());
+                        runtime.element.id(),
+                        runtime.target.variant(),
+                        anchor,
+                        runtime.target.offsetRect(),
+                        runtime.target.world(),
+                        runtime.frameArbitrationIndex,
+                        runtime.target.epoch()
+                    );
                     placements.add(runtime.target);
                 } else if (wasPresented && runtime.target != null && runtime.lastVisual != null) {
                     // The element just left the presented set. Commit its pending
@@ -513,17 +529,27 @@ public final class InworldCoordinator {
                 runtime.visibility.setPresent(runtime.pendingPresent, frame.nowSeconds());
                 runtime.lastPresented = runtime.pendingPresent;
             }
-            elementStates.add(new CoordinationResult.ElementState(
+            elementStates.add(
+                new CoordinationResult.ElementState(
                     runtime.element.id(),
                     runtime.visibility.phase(frame.nowSeconds()),
                     runtime.visibility.alpha(frame.nowSeconds()),
                     runtime.target,
                     runtime.lastVisual,
-                    runtime.pendingPresent ? null : runtime.activeRejection));
+                    runtime.pendingPresent ? null : runtime.activeRejection
+                )
+            );
         }
 
         CoordinationResult result = new CoordinationResult(
-                frameCounter, epochCounter, resolveNow, cause, placements, elementStates, budget);
+            frameCounter,
+            epochCounter,
+            resolveNow,
+            cause,
+            placements,
+            elementStates,
+            budget
+        );
         lastResult = result;
         // The zone snapshot (post-commit): the previous frame the zone ranker
         // scores against. Computed only when a registered element consumes
@@ -546,7 +572,9 @@ public final class InworldCoordinator {
      * overlap, leader or adjacency input.
      */
     private static List<PreviousFrameLayout.Placement> zonePlacements(
-            List<ElementRuntime> ordered, List<InworldPlacement> placements) {
+        List<ElementRuntime> ordered,
+        List<InworldPlacement> placements
+    ) {
         List<String> rigidIds = null;
         for (ElementRuntime runtime : ordered) {
             if (rigid(runtime.element)) {
@@ -597,13 +625,14 @@ public final class InworldCoordinator {
                 continue;
             }
             runtime.target = new InworldPlacement(
-                    runtime.element.id(),
-                    proposal.variant(),
-                    new FloatPos(0, 0),
-                    FloatRect.empty,
-                    candidate.world(),
-                    runtime.frameArbitrationIndex,
-                    epochCounter);
+                runtime.element.id(),
+                proposal.variant(),
+                new FloatPos(0, 0),
+                FloatRect.empty,
+                candidate.world(),
+                runtime.frameArbitrationIndex,
+                epochCounter
+            );
             runtime.pendingPresent = true;
             return;
         }
@@ -649,13 +678,14 @@ public final class InworldCoordinator {
             }
             FloatRect placed = screen.clampInto(workArea);
             runtime.target = new InworldPlacement(
-                    runtime.element.id(),
-                    proposal.variant(),
-                    anchor,
-                    placed.translate(-anchor.x(), -anchor.y()),
-                    candidate.world(),
-                    runtime.frameArbitrationIndex,
-                    epochCounter);
+                runtime.element.id(),
+                proposal.variant(),
+                anchor,
+                placed.translate(-anchor.x(), -anchor.y()),
+                candidate.world(),
+                runtime.frameArbitrationIndex,
+                epochCounter
+            );
             runtime.pendingPresent = true;
             return;
         }
@@ -713,8 +743,14 @@ public final class InworldCoordinator {
                     runtime.activeRejection = rejection;
                     break;
                 }
-                ProposeContext context =
-                        new ProposeContext(scope.epoch, 1, budget, runtime.target, rejection, degraded);
+                ProposeContext context = new ProposeContext(
+                    scope.epoch,
+                    1,
+                    budget,
+                    runtime.target,
+                    rejection,
+                    degraded
+                );
                 ElementProposal proposal = runtime.element.propose(context);
                 if (proposal.retracted()) {
                     runtime.activeRejection = null;
@@ -756,7 +792,11 @@ public final class InworldCoordinator {
      * element that is already hidden re-earns its place through the ladder.
      */
     private Acceptance tryKeepIncumbent(
-            ElementRuntime runtime, ElementProposal proposal, RoundScope scope, Acceptance rejected) {
+        ElementRuntime runtime,
+        ElementProposal proposal,
+        RoundScope scope,
+        Acceptance rejected
+    ) {
         if (!runtime.lastPresented || runtime.target == null) {
             return rejected;
         }
@@ -767,14 +807,17 @@ public final class InworldCoordinator {
         if (!incumbentStillFits(runtime.target.offsetRect().translate(anchor.x(), anchor.y()), runtime, scope)) {
             return rejected;
         }
-        return Acceptance.accepted(new InworldPlacement(
+        return Acceptance.accepted(
+            new InworldPlacement(
                 runtime.element.id(),
                 runtime.target.variant(),
                 anchor,
                 runtime.target.offsetRect(),
                 runtime.target.world(),
                 runtime.frameArbitrationIndex,
-                scope.epoch));
+                scope.epoch
+            )
+        );
     }
 
     private void commit(ElementRuntime runtime, InworldPlacement placement, RoundScope scope) {
@@ -785,13 +828,11 @@ public final class InworldCoordinator {
         if (placement.variant().spacePolicy() != SpacePolicy.ghost) {
             scope.bitmap.mark(placement.screenRect().toRect());
         }
-        scope.committed.add(Committed.of(
-                runtime.element.id(),
-                placement.screenRect(),
-                placement.variant().spacePolicy().pushable()));
+        scope.committed.add(
+            Committed.of(runtime.element.id(), placement.screenRect(), placement.variant().spacePolicy().pushable())
+        );
         if (runtime.gate == null) {
-            runtime.gate =
-                    new SwitchGate<>(config.switchGate(), placement.variant().level(), 0.0);
+            runtime.gate = new SwitchGate<>(config.switchGate(), placement.variant().level(), 0.0);
         }
     }
 
@@ -893,19 +934,21 @@ public final class InworldCoordinator {
         }
 
         InworldPlacement placement = new InworldPlacement(
-                runtime.element.id(),
-                variant,
-                anchor,
-                stickyOffset != null
-                        ? stickyOffset
-                        : new FloatRect(
-                                chosenRect.x() - anchor.x(),
-                                chosenRect.y() - anchor.y(),
-                                chosenRect.width(),
-                                chosenRect.height()),
-                chosen.world(),
-                runtime.frameArbitrationIndex,
-                scope.epoch);
+            runtime.element.id(),
+            variant,
+            anchor,
+            stickyOffset != null
+                    ? stickyOffset
+                    : new FloatRect(
+                        chosenRect.x() - anchor.x(),
+                        chosenRect.y() - anchor.y(),
+                        chosenRect.width(),
+                        chosenRect.height()
+                    ),
+            chosen.world(),
+            runtime.frameArbitrationIndex,
+            scope.epoch
+        );
 
         // Stabilize (discrete half): the tier switch goes through the gate.
         if (runtime.gate != null && variant.level() != runtime.gate.current()) {
@@ -915,13 +958,14 @@ public final class InworldCoordinator {
                 FloatRect incumbent = runtime.target.offsetRect().translate(anchor.x(), anchor.y());
                 if (incumbentStillFits(incumbent, runtime, scope)) {
                     InworldPlacement kept = new InworldPlacement(
-                            runtime.element.id(),
-                            runtime.target.variant(),
-                            anchor,
-                            runtime.target.offsetRect(),
-                            runtime.target.world(),
-                            runtime.frameArbitrationIndex,
-                            runtime.target.epoch());
+                        runtime.element.id(),
+                        runtime.target.variant(),
+                        anchor,
+                        runtime.target.offsetRect(),
+                        runtime.target.world(),
+                        runtime.frameArbitrationIndex,
+                        runtime.target.epoch()
+                    );
                     return Acceptance.accepted(kept);
                 }
                 // survival overrides stability: reset the gate at the forced level
@@ -946,12 +990,13 @@ public final class InworldCoordinator {
      * way a sticky slot may drift).
      */
     private static @Nullable FloatRect heldOffset(
-            ElementRuntime runtime,
-            FloatPos anchor,
-            PlacementCandidate candidate,
-            Fit fit,
-            InworldVariant variant,
-            RoundScope scope) {
+        ElementRuntime runtime,
+        FloatPos anchor,
+        PlacementCandidate candidate,
+        Fit fit,
+        InworldVariant variant,
+        RoundScope scope
+    ) {
         if (!rectsAlmostEqual(fit.rect(), candidate.screenRect())) {
             return null; // the fit moved the slot: its rect is the new slot
         }
@@ -975,10 +1020,8 @@ public final class InworldCoordinator {
             if (committed.pushable()) {
                 continue; // the continuous layer separates pushable pairs
             }
-            double ix = Math.min(rect.right(), committed.rect().right())
-                    - Math.max(rect.x(), committed.rect().x());
-            double iy = Math.min(rect.bottom(), committed.rect().bottom())
-                    - Math.max(rect.y(), committed.rect().y());
+            double ix = Math.min(rect.right(), committed.rect().right()) - Math.max(rect.x(), committed.rect().x());
+            double iy = Math.min(rect.bottom(), committed.rect().bottom()) - Math.max(rect.y(), committed.rect().y());
             if (ix <= 0 || iy <= 0) {
                 continue;
             }
@@ -1000,11 +1043,12 @@ public final class InworldCoordinator {
      * preferred one stands).
      */
     private PlacementCandidate releaseCoincidence(
-            ElementProposal proposal,
-            InworldVariant variant,
-            RoundScope scope,
-            PlacementCandidate preferred,
-            FloatRect preferredRect) {
+        ElementProposal proposal,
+        InworldVariant variant,
+        RoundScope scope,
+        PlacementCandidate preferred,
+        FloatRect preferredRect
+    ) {
         if (variant.spacePolicy() != SpacePolicy.fixed) {
             return preferred;
         }
@@ -1069,13 +1113,14 @@ public final class InworldCoordinator {
     }
 
     private @Nullable FloatRect nudge(
-            FloatRect rect, FloatRect blocker, double maxShift, FloatRect bounds, InworldVariant variant) {
-        double[][] shifts = {
-            {blocker.right() - rect.x(), 0},
-            {-(rect.right() - blocker.x()), 0},
-            {0, blocker.bottom() - rect.y()},
-            {0, -(rect.bottom() - blocker.y())},
-        };
+        FloatRect rect,
+        FloatRect blocker,
+        double maxShift,
+        FloatRect bounds,
+        InworldVariant variant
+    ) {
+        double[][] shifts = {{blocker.right() - rect.x(), 0}, {-(rect.right() - blocker.x()), 0},
+                {0, blocker.bottom() - rect.y()}, {0, -(rect.bottom() - blocker.y())},};
         FloatRect best = null;
         double bestLength = Double.POSITIVE_INFINITY;
         for (double[] shift : shifts) {
@@ -1132,8 +1177,9 @@ public final class InworldCoordinator {
             index.occupy(exclusion.move(new Pos(-workArea.x(), -workArea.y())));
         }
         Rect inserted = index.insert(
-                (int) Math.max(1, Math.round(variant.requestedSize().width())),
-                (int) Math.max(1, Math.round(variant.requestedSize().height())));
+            (int) Math.max(1, Math.round(variant.requestedSize().width())),
+            (int) Math.max(1, Math.round(variant.requestedSize().height()))
+        );
         return inserted == null ? null : inserted.move(new Pos(workArea.x(), workArea.y()));
     }
 
@@ -1150,11 +1196,11 @@ public final class InworldCoordinator {
 
     private double switchMetric(ElementRuntime runtime, FloatPos anchor, FloatRect candidateRect) {
         FloatRect incumbent = runtime.target.offsetRect().translate(anchor.x(), anchor.y());
-        double centerDistance = Math.hypot(
-                candidateRect.centerX() - incumbent.centerX(), candidateRect.centerY() - incumbent.centerY());
-        double sizeChange =
-                Math.hypot(candidateRect.width() - incumbent.width(), candidateRect.height() - incumbent.height())
-                        * 0.5;
+        double centerDistance = Math
+                .hypot(candidateRect.centerX() - incumbent.centerX(), candidateRect.centerY() - incumbent.centerY());
+        double sizeChange = Math
+                .hypot(candidateRect.width() - incumbent.width(), candidateRect.height() - incumbent.height())
+                * 0.5;
         return centerDistance + sizeChange;
     }
 
@@ -1180,8 +1226,7 @@ public final class InworldCoordinator {
                     if (!a.intersects(b)) {
                         continue;
                     }
-                    boolean secondPushable =
-                            second.target.variant().spacePolicy().pushable();
+                    boolean secondPushable = second.target.variant().spacePolicy().pushable();
                     boolean firstPushable = first.target.variant().spacePolicy().pushable();
                     ElementRuntime mover;
                     FloatRect obstacle;
@@ -1253,8 +1298,9 @@ public final class InworldCoordinator {
      * element proposes none, e.g. while retracted).
      */
     private FloatRect layoutTargetRect(ElementRuntime runtime) {
-        FloatPos anchor =
-                runtime.roundZero.anchorScreen() != null ? runtime.roundZero.anchorScreen() : runtime.target.anchor();
+        FloatPos anchor = runtime.roundZero.anchorScreen() != null
+                ? runtime.roundZero.anchorScreen()
+                : runtime.target.anchor();
         return runtime.target.offsetRect().translate(anchor.x(), anchor.y());
     }
 
@@ -1285,8 +1331,7 @@ public final class InworldCoordinator {
     /** The total arbitration order: spaceKind, priority desc, sticky, registration. */
     private Comparator<ElementRuntime> arbitrationComparator() {
         return (a, b) -> {
-            int byKind = Integer.compare(
-                    a.element.spaceKind().ordinal(), b.element.spaceKind().ordinal());
+            int byKind = Integer.compare(a.element.spaceKind().ordinal(), b.element.spaceKind().ordinal());
             if (byKind != 0) {
                 return byKind;
             }
@@ -1316,14 +1361,19 @@ public final class InworldCoordinator {
     private void requireLadderRung(ElementRuntime runtime, InworldVariant variant) {
         VariantLadder ladder = runtime.element.ladder();
         if (variant.level() < 0 || variant.level() >= ladder.size()) {
-            throw new IllegalArgumentException("element " + runtime.element.id() + " proposed variant level "
-                    + variant.level() + " outside its ladder [0, " + ladder.size() + ")");
+            throw new IllegalArgumentException(
+                "element " + runtime.element.id() + " proposed variant level " + variant.level()
+                        + " outside its ladder [0, " + ladder.size() + ")"
+            );
         }
     }
 
     private SpaceBudget smoothedBudget(FrameInput frame, Rect workArea, List<ElementRuntime> ordered) {
-        OccupancyBitmap bitmap =
-                new OccupancyBitmap(frame.screenWidth(), frame.screenHeight(), config.occupancyCellSize());
+        OccupancyBitmap bitmap = new OccupancyBitmap(
+            frame.screenWidth(),
+            frame.screenHeight(),
+            config.occupancyCellSize()
+        );
         bitmap.markAll(frame.exclusionRects());
         for (ElementRuntime runtime : ordered) {
             if (runtime.target != null && runtime.target.variant().spacePolicy() != SpacePolicy.ghost) {
@@ -1334,7 +1384,11 @@ public final class InworldCoordinator {
         double fraction = Double.isNaN(smoothedFreeFraction)
                 ? raw.freeFraction()
                 : Smoothing.dampHalfLife(
-                        smoothedFreeFraction, raw.freeFraction(), config.budgetHalfLifeSeconds(), frame.dtSeconds());
+                    smoothedFreeFraction,
+                    raw.freeFraction(),
+                    config.budgetHalfLifeSeconds(),
+                    frame.dtSeconds()
+                );
         smoothedFreeFraction = fraction;
         return new SpaceBudget(workArea, raw.workAreaArea() * fraction, fraction);
     }
@@ -1345,10 +1399,8 @@ public final class InworldCoordinator {
         }
         List<Rect> left = new ArrayList<>(a);
         List<Rect> right = new ArrayList<>(b);
-        Comparator<Rect> order = Comparator.comparingInt(Rect::y)
-                .thenComparingInt(Rect::x)
-                .thenComparingInt(Rect::width)
-                .thenComparingInt(Rect::height);
+        Comparator<Rect> order = Comparator.comparingInt(Rect::y).thenComparingInt(Rect::x)
+                .thenComparingInt(Rect::width).thenComparingInt(Rect::height);
         left.sort(order);
         right.sort(order);
         return left.equals(right);
@@ -1378,7 +1430,12 @@ public final class InworldCoordinator {
     // region internal types
 
     private record RoundScope(
-            OccupancyBitmap bitmap, FloatRect workArea, List<Rect> exclusions, long epoch, List<Committed> committed) {
+        OccupancyBitmap bitmap,
+        FloatRect workArea,
+        List<Rect> exclusions,
+        long epoch,
+        List<Committed> committed
+    ) {
 
         RoundScope(OccupancyBitmap bitmap, FloatRect workArea, List<Rect> exclusions, long epoch) {
             this(bitmap, workArea, exclusions, epoch, new ArrayList<>());
@@ -1477,18 +1534,19 @@ public final class InworldCoordinator {
      * @param switchGate the discrete tier-switch gate configuration
      */
     public record Config(
-            double epochSeconds,
-            int maxRounds,
-            double anchorDisplacementThresholdPx,
-            double maxNudgePx,
-            double relaxDisplacementClampPx,
-            int relaxIterations,
-            int occupancyCellSize,
-            double budgetHalfLifeSeconds,
-            double flipSpeedPixelsPerSecond,
-            double springOmega,
-            VisibilityTracker.Config visibility,
-            SwitchGate.Config switchGate) {
+        double epochSeconds,
+        int maxRounds,
+        double anchorDisplacementThresholdPx,
+        double maxNudgePx,
+        double relaxDisplacementClampPx,
+        int relaxIterations,
+        int occupancyCellSize,
+        double budgetHalfLifeSeconds,
+        double flipSpeedPixelsPerSecond,
+        double springOmega,
+        VisibilityTracker.Config visibility,
+        SwitchGate.Config switchGate
+    ) {
 
         public Config {
             requirePositive("epochSeconds", epochSeconds);
@@ -1513,18 +1571,19 @@ public final class InworldCoordinator {
 
         public static Config defaults() {
             return new Config(
-                    0.2,
-                    2,
-                    12.0,
-                    48.0,
-                    24.0,
-                    3,
-                    8,
-                    0.3,
-                    900.0,
-                    30.0,
-                    VisibilityTracker.Config.of(0.15, 0.25, 0.25),
-                    SwitchGate.Config.of(16.0, 1, 2.0, 0));
+                0.2,
+                2,
+                12.0,
+                48.0,
+                24.0,
+                3,
+                8,
+                0.3,
+                900.0,
+                30.0,
+                VisibilityTracker.Config.of(0.15, 0.25, 0.25),
+                SwitchGate.Config.of(16.0, 1, 2.0, 0)
+            );
         }
 
         private static void requirePositive(String name, double value) {
@@ -1556,7 +1615,12 @@ public final class InworldCoordinator {
      *        not rejected
      */
     public record FrameInput(
-            int screenWidth, int screenHeight, List<Rect> exclusionRects, double nowSeconds, double dtSeconds) {
+        int screenWidth,
+        int screenHeight,
+        List<Rect> exclusionRects,
+        double nowSeconds,
+        double dtSeconds
+    ) {
 
         public FrameInput {
             if (screenWidth <= 0 || screenHeight <= 0) {
@@ -1574,13 +1638,23 @@ public final class InworldCoordinator {
 
         /** A frame input with the given exclusion rectangles. */
         public static FrameInput of(
-                int screenWidth, int screenHeight, double nowSeconds, double dtSeconds, Rect... exclusions) {
+            int screenWidth,
+            int screenHeight,
+            double nowSeconds,
+            double dtSeconds,
+            Rect... exclusions
+        ) {
             return of(screenWidth, screenHeight, nowSeconds, dtSeconds, List.of(exclusions));
         }
 
         /** A frame input with the given exclusion rectangles. */
         public static FrameInput of(
-                int screenWidth, int screenHeight, double nowSeconds, double dtSeconds, List<Rect> exclusions) {
+            int screenWidth,
+            int screenHeight,
+            double nowSeconds,
+            double dtSeconds,
+            List<Rect> exclusions
+        ) {
             return new FrameInput(screenWidth, screenHeight, exclusions, nowSeconds, dtSeconds);
         }
     }

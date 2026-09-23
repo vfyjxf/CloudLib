@@ -94,7 +94,11 @@ public final class HideMiddleware implements FloatingMiddleware {
                 Rect floating = state.floatingRect();
                 // Use the floating element's actual position
                 Rect floatingActual = new Rect(
-                        (int) Math.round(state.x()), (int) Math.round(state.y()), floating.width(), floating.height());
+                    (int) Math.round(state.x()),
+                    (int) Math.round(state.y()),
+                    floating.width(),
+                    floating.height()
+                );
                 Insets floatOverflow = computeReferenceOverflow(floatingActual, boundary);
                 Insets offsets = computeSideOffsets(floatOverflow, floatingActual);
                 boolean escaped = isAnySideFullyClipped(offsets);
@@ -119,10 +123,11 @@ public final class HideMiddleware implements FloatingMiddleware {
 
     private static Insets computeSideOffsets(Insets overflow, Rect rect) {
         return new Insets(
-                overflow.top() - rect.height(),
-                overflow.right() - rect.width(),
-                overflow.bottom() - rect.height(),
-                overflow.left() - rect.width());
+            overflow.top() - rect.height(),
+            overflow.right() - rect.width(),
+            overflow.bottom() - rect.height(),
+            overflow.left() - rect.width()
+        );
     }
 
     private static boolean isAnySideFullyClipped(Insets offsets) {

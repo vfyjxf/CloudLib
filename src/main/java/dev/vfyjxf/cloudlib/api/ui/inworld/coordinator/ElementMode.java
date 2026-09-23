@@ -15,6 +15,5 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.coordinator;
  * </ul>
  */
 public enum ElementMode {
-    arbitrated,
-    selfManaged
+    arbitrated, selfManaged
 }

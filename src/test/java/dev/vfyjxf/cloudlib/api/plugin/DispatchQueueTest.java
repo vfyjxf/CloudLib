@@ -53,21 +53,20 @@ public class DispatchQueueTest {
                 threadNames.add(Thread.currentThread().getName());
                 try {
                     Thread.sleep(50);
-                } catch (InterruptedException ignored) {
-                }
+                } catch (InterruptedException ignored) {}
             });
             queue.enqueue(plugin -> {
                 threadNames.add(Thread.currentThread().getName());
                 try {
                     Thread.sleep(50);
-                } catch (InterruptedException ignored) {
-                }
+                } catch (InterruptedException ignored) {}
             });
             queue.execute();
 
             assertTrue(
-                    threadNames.size() >= 2,
-                    "Expected parallel task execution, but only " + threadNames.size() + " threads were used");
+                threadNames.size() >= 2,
+                "Expected parallel task execution, but only " + threadNames.size() + " threads were used"
+            );
         } finally {
             executor.shutdown();
         }
@@ -121,11 +120,8 @@ public class DispatchQueueTest {
         var dispatcher = PluginDispatcher.create(MutableLists.of(a));
         var counter = new AtomicInteger(0);
 
-        dispatcher
-                .createQueue()
-                .enqueue(plugin -> counter.incrementAndGet())
-                .enqueue(plugin -> counter.incrementAndGet())
-                .execute();
+        dispatcher.createQueue().enqueue(plugin -> counter.incrementAndGet())
+                .enqueue(plugin -> counter.incrementAndGet()).execute();
 
         assertEquals(2, counter.get());
     }
@@ -225,8 +221,9 @@ public class DispatchQueueTest {
                 allTasksActive.countDown();
                 try {
                     assertTrue(
-                            allTasksActive.await(5, TimeUnit.SECONDS),
-                            "Task 1 timed out: not all tasks running concurrently");
+                        allTasksActive.await(5, TimeUnit.SECONDS),
+                        "Task 1 timed out: not all tasks running concurrently"
+                    );
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -235,8 +232,9 @@ public class DispatchQueueTest {
                 allTasksActive.countDown();
                 try {
                     assertTrue(
-                            allTasksActive.await(5, TimeUnit.SECONDS),
-                            "Task 2 timed out: not all tasks running concurrently");
+                        allTasksActive.await(5, TimeUnit.SECONDS),
+                        "Task 2 timed out: not all tasks running concurrently"
+                    );
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -245,8 +243,9 @@ public class DispatchQueueTest {
                 allTasksActive.countDown();
                 try {
                     assertTrue(
-                            allTasksActive.await(5, TimeUnit.SECONDS),
-                            "Task 3 timed out: not all tasks running concurrently");
+                        allTasksActive.await(5, TimeUnit.SECONDS),
+                        "Task 3 timed out: not all tasks running concurrently"
+                    );
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }

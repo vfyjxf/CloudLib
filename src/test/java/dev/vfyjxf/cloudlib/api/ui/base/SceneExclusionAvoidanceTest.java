@@ -129,8 +129,10 @@ class SceneExclusionAvoidanceTest {
         overlay.useStyle(UIStyles.positionAbsolute());
         overlay.setCoordinateSpace(CoordinateSpace.scene);
         overlay.setSceneLayer(SceneLayer.floating);
-        overlay.onMount((s, context, handle) ->
-                s.layoutTree().setMeasureFunc(overlay.nodeId(), (style, availableSpace) -> new FloatSize(120, 50)));
+        overlay.onMount(
+            (s, context, handle) -> s.layoutTree()
+                    .setMeasureFunc(overlay.nodeId(), (style, availableSpace) -> new FloatSize(120, 50))
+        );
         root.addWidget(overlay);
 
         // a chat-like column hugging the left edge only — a full-height column

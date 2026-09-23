@@ -79,7 +79,11 @@ final class ThemeEngine {
 
     /** Parses one resolved declaration into longhand values (key or shorthand). */
     private static @Nullable List<StyleValue<?>> parseDecl(
-            String name, List<ComponentValue> tokens, StyleParseContext parseCtx, Consumer<String> warn) {
+        String name,
+        List<ComponentValue> tokens,
+        StyleParseContext parseCtx,
+        Consumer<String> warn
+    ) {
         // css-wide keywords resolve upstream in the cascade; a lone `inherit`
         // token reaching here means "inherit" — drop it (parent fill already ran)
         if (tokens.size() == 1
@@ -102,7 +106,12 @@ final class ThemeEngine {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static @Nullable StyleValue<?> parseValue(
-            StyleKey key, List<ComponentValue> tokens, StyleParseContext parseCtx, Consumer<String> warn, String name) {
+        StyleKey key,
+        List<ComponentValue> tokens,
+        StyleParseContext parseCtx,
+        Consumer<String> warn,
+        String name
+    ) {
         try {
             Object parsed = key.parser().parse(tokens, parseCtx);
             if (parsed == null) {
@@ -117,11 +126,12 @@ final class ThemeEngine {
     }
 
     private static @Nullable List<StyleValue<?>> expand(
-            Shorthand shorthand,
-            List<ComponentValue> tokens,
-            StyleParseContext parseCtx,
-            Consumer<String> warn,
-            String name) {
+        Shorthand shorthand,
+        List<ComponentValue> tokens,
+        StyleParseContext parseCtx,
+        Consumer<String> warn,
+        String name
+    ) {
         try {
             List<StyleValue<?>> expanded = shorthand.expand(tokens, parseCtx);
             if (expanded == null) {

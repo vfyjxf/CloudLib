@@ -34,8 +34,9 @@ class EntityContainerPayloadsTest {
 
     private static RegistryFriendlyByteBuf buffer() {
         return new RegistryFriendlyByteBuf(
-                new FriendlyByteBuf(Unpooled.buffer()),
-                RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY));
+            new FriendlyByteBuf(Unpooled.buffer()),
+            RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY)
+        );
     }
 
     // region codecs
@@ -52,12 +53,11 @@ class EntityContainerPayloadsTest {
     @Test
     void contentsRoundTripStacksAndCounts() {
         RegistryFriendlyByteBuf buf = buffer();
-        List<ItemStack> stacks =
-                List.of(new ItemStack(Items.APPLE, 12), ItemStack.EMPTY, new ItemStack(Items.DIAMOND_SWORD));
+        List<ItemStack> stacks = List
+                .of(new ItemStack(Items.APPLE, 12), ItemStack.EMPTY, new ItemStack(Items.DIAMOND_SWORD));
         EntityContainerContentsPayload original = new EntityContainerContentsPayload(42, stacks);
         EntityContainerContentsPayload.info.streamCodec().encode(buf, original);
-        EntityContainerContentsPayload decoded =
-                EntityContainerContentsPayload.info.streamCodec().decode(buf);
+        EntityContainerContentsPayload decoded = EntityContainerContentsPayload.info.streamCodec().decode(buf);
 
         assertEquals(42, decoded.entityId());
         assertEquals(3, decoded.stacks().size());

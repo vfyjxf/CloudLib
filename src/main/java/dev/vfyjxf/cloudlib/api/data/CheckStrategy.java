@@ -101,8 +101,8 @@ public interface CheckStrategy<T> {
     /**
      * matches {@link FluidStack#getFluid()} and {@link FluidStack#getAmount()}
      */
-    CheckStrategy<FluidStack> sameFluidAndAmount =
-            (a, b) -> FluidStack.isSameFluid(a, b) && a.getAmount() == b.getAmount();
+    CheckStrategy<FluidStack> sameFluidAndAmount = (a, b) -> FluidStack.isSameFluid(a, b)
+            && a.getAmount() == b.getAmount();
 
     /**
      * matches {@link FluidStack#getFluid()} and {@link FluidStack#getComponents()}

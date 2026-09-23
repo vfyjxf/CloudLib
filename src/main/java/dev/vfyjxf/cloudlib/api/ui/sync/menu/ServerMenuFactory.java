@@ -10,13 +10,13 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import java.util.function.Supplier;
 
 public record ServerMenuFactory<M extends AbstractContainerMenu, A, P>(
-        Supplier<Component> displayName,
-        ServerMenuFactoryDelegate<M, A> menuFactory,
-        MenuProviderType<P> providerType,
-        P provider,
-        boolean resetOnClose,
-        Class<A> accessorType)
-        implements MenuProvider {
+    Supplier<Component> displayName,
+    ServerMenuFactoryDelegate<M, A> menuFactory,
+    MenuProviderType<P> providerType,
+    P provider,
+    boolean resetOnClose,
+    Class<A> accessorType
+) implements MenuProvider {
 
     public static final Supplier<Component> emptyName = Component::empty;
 
@@ -33,8 +33,9 @@ public record ServerMenuFactory<M extends AbstractContainerMenu, A, P>(
     public M createMenu(int containerId, Inventory inventory, Player player) {
         A accessor = providerType.findAccessor(provider, accessorType);
         if (accessor == null) {
-            throw new IllegalStateException("Cannot find accessor for "
-                    + MenuInfo.providerTypes.inverse().get(providerType));
+            throw new IllegalStateException(
+                "Cannot find accessor for " + MenuInfo.providerTypes.inverse().get(providerType)
+            );
         }
         return menuFactory.create(containerId, inventory, accessor);
     }

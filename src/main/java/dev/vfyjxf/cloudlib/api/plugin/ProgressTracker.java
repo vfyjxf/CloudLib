@@ -169,12 +169,14 @@ public final class ProgressTracker {
                 cumulativeWeight += phase.weight;
                 int pct = tw > 0 ? Math.round(cumulativeWeight / tw * 100f) : 0;
                 logger.info(
-                        "{}",
-                        String.format(
-                                "  [%3d%%] %-" + maxNameLen + "s  %" + msWidth + "dms",
-                                pct,
-                                nameOf(i),
-                                phase.elapsedMs()));
+                    "{}",
+                    String.format(
+                        "  [%3d%%] %-" + maxNameLen + "s  %" + msWidth + "dms",
+                        pct,
+                        nameOf(i),
+                        phase.elapsedMs()
+                    )
+                );
             }
 
             // footer

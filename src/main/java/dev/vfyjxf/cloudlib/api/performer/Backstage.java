@@ -40,12 +40,19 @@ public interface Backstage {
     }
 
     default <T> void addWeakPerformer(
-            @NotNull CompositeScenario<T> scenario, @NotNull T performer, @NotNull Object reference) {
+        @NotNull CompositeScenario<T> scenario,
+        @NotNull T performer,
+        @NotNull Object reference
+    ) {
         performers().addWeak(scenario, performer, reference);
     }
 
     default <T> void addWeakPerformer(
-            @NotNull CompositeScenario<T> scenario, @NotNull T performer, int priority, @NotNull Object reference) {
+        @NotNull CompositeScenario<T> scenario,
+        @NotNull T performer,
+        int priority,
+        @NotNull Object reference
+    ) {
         performers().addWeak(scenario, performer, priority, reference);
     }
 

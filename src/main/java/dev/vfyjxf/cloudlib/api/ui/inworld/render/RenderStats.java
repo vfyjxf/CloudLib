@@ -42,7 +42,7 @@ public final class RenderStats {
         texelBudgetUsed,
         /** World panel quad draws ({@code WorldUiRenderer.drawPanelQuad}). */
         quadDraws,
-        /** Line mesh draws ({@code WorldUiRenderer.drawLines}). */
+        /** Line mesh draws — the world pass's per-panel companion lines and the emitters batch. */
         lineDraws,
         /** Item renders ({@code SceneCanvas.renderItem}/{@code renderItemIcon}). */
         itemRenders,

@@ -74,16 +74,15 @@ class LayoutSpaceTest {
 
     @Test
     void emptyStrutsAreIgnored() {
-        LayoutSpace space =
-                LayoutSpace.of(200, 100).withStruts(List.of(new Rect(0, 0, 0, 100), new Rect(0, 0, 200, 0)));
+        LayoutSpace space = LayoutSpace.of(200, 100)
+                .withStruts(List.of(new Rect(0, 0, 0, 100), new Rect(0, 0, 200, 0)));
 
         assertEquals(Insets.zero, space.strutInsets());
     }
 
     @Test
     void safeInsetsAndStrutsCompose() {
-        LayoutSpace space = LayoutSpace.of(200, 100)
-                .withSafeInsets(Insets.symmetric(10, 5))
+        LayoutSpace space = LayoutSpace.of(200, 100).withSafeInsets(Insets.symmetric(10, 5))
                 .withStruts(List.of(new Rect(5, 10, 40, 80), new Rect(0, 10, 10, 80)));
 
         // The wide strut claims the left edge (40 px past the safe area's left
@@ -116,8 +115,7 @@ class LayoutSpaceTest {
         assertEquals(List.of(), original.struts());
         assertEquals(List.of(new Rect(0, 0, 200, 10)), strutted.struts());
         assertEquals(List.of(new Rect(0, 0, 200, 10)), strutted.struts());
-        assertRectEquals(
-                new Rect(0, 0, 200, 100), resized.withViewport(200, 100).viewport());
+        assertRectEquals(new Rect(0, 0, 200, 100), resized.withViewport(200, 100).viewport());
     }
 
     @Test

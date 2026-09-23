@@ -144,12 +144,13 @@ public final class PixelStabilizer {
      *        degenerates to the pure latch (instant crossings, instant rest)
      */
     public record Config(
-            double snapHalf,
-            double hysteresis,
-            double moveVelocity,
-            double restVelocity,
-            int dwellFrames,
-            double settleSeconds) {
+        double snapHalf,
+        double hysteresis,
+        double moveVelocity,
+        double restVelocity,
+        int dwellFrames,
+        double settleSeconds
+    ) {
 
         /** The survey-synthesis defaults: {@code 0.5, 0.25, 45, 9, 5, 0.12}. */
         public static Config ofDefaults() {
@@ -165,8 +166,9 @@ public final class PixelStabilizer {
             }
             if (snapHalf + hysteresis >= 1.0) {
                 throw new IllegalArgumentException(
-                        "snapHalf + hysteresis must stay below 1 so adjacent hysteresis bands overlap: "
-                                + (snapHalf + hysteresis));
+                    "snapHalf + hysteresis must stay below 1 so adjacent hysteresis bands overlap: "
+                            + (snapHalf + hysteresis)
+                );
             }
             if (!Double.isFinite(moveVelocity) || moveVelocity <= 0.0) {
                 throw new IllegalArgumentException("moveVelocity must be finite and positive: " + moveVelocity);
@@ -176,7 +178,8 @@ public final class PixelStabilizer {
             }
             if (moveVelocity <= restVelocity) {
                 throw new IllegalArgumentException(
-                        "moveVelocity must be strictly above restVelocity: " + moveVelocity + " <= " + restVelocity);
+                    "moveVelocity must be strictly above restVelocity: " + moveVelocity + " <= " + restVelocity
+                );
             }
             if (dwellFrames < 1) {
                 throw new IllegalArgumentException("dwellFrames must be at least 1: " + dwellFrames);
@@ -279,8 +282,8 @@ public final class PixelStabilizer {
         density += (densityTarget - density) * (dt / (densityRiseFactor * config.settleSeconds() + dt));
         if (density < densityZero) density = 0.0;
 
-        double arm =
-                Math.max(0.0, 1.0 - (tSeconds - tLastLatchStep) / (glideArmFactor * config.settleSeconds() + 1.0e-9));
+        double arm = Math
+                .max(0.0, 1.0 - (tSeconds - tLastLatchStep) / (glideArmFactor * config.settleSeconds() + 1.0e-9));
         updateCorrection(arm, dt, x, y);
 
         if (state == State.settle && arm <= 0.0 && density <= 0.1) {

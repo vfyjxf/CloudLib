@@ -44,15 +44,16 @@ public final class PerceptualAsserts {
      */
     public static void assertTracksWithoutJerk(double[] input, double[] output, String context) {
         assertTrue(
-                input.length == output.length && input.length >= 2,
-                context + ": traces must align and have 2+ samples");
+            input.length == output.length && input.length >= 2,
+            context + ": traces must align and have 2+ samples"
+        );
         for (int i = 0; i + 1 < input.length; i++) {
             double outStep = Math.abs(output[i + 1] - output[i]);
             double inStep = Math.abs(input[i + 1] - input[i]);
             assertTrue(
-                    outStep <= inStep + 0.5,
-                    context + ": output moved " + outStep + " px at frame " + i + " while input moved " + inStep
-                            + " px");
+                outStep <= inStep + 0.5,
+                context + ": output moved " + outStep + " px at frame " + i + " while input moved " + inStep + " px"
+            );
         }
     }
 
@@ -67,17 +68,24 @@ public final class PerceptualAsserts {
      * eye judges.
      */
     public static void assertTracksWithoutJerkWindowed(
-            double[] input, double[] output, int windowFrames, double tolerancePx, String context) {
+        double[] input,
+        double[] output,
+        int windowFrames,
+        double tolerancePx,
+        String context
+    ) {
         assertTrue(
-                input.length == output.length && input.length > windowFrames,
-                context + ": traces must align and be longer than the window");
+            input.length == output.length && input.length > windowFrames,
+            context + ": traces must align and be longer than the window"
+        );
         for (int i = 0; i + windowFrames < input.length; i++) {
             double outStep = Math.abs(output[i + windowFrames] - output[i]);
             double inStep = Math.abs(input[i + windowFrames] - input[i]);
             assertTrue(
-                    outStep <= inStep + tolerancePx,
-                    context + ": output moved " + outStep + " px over the window at frame " + i + " while input moved "
-                            + inStep + " px");
+                outStep <= inStep + tolerancePx,
+                context + ": output moved " + outStep + " px over the window at frame " + i + " while input moved "
+                        + inStep + " px"
+            );
         }
     }
 
@@ -95,8 +103,9 @@ public final class PerceptualAsserts {
         double inEnergy = highFrequencyEnergy(input);
         double outEnergy = highFrequencyEnergy(output);
         assertTrue(
-                outEnergy <= ratio * inEnergy,
-                context + ": output high-frequency energy " + outEnergy + " exceeds " + ratio + " * input " + inEnergy);
+            outEnergy <= ratio * inEnergy,
+            context + ": output high-frequency energy " + outEnergy + " exceeds " + ratio + " * input " + inEnergy
+        );
     }
 
     /** Peak-to-peak excursion: max minus min. */
@@ -158,9 +167,10 @@ public final class PerceptualAsserts {
     private static void assertPeakToPeakAtMost(double[] samples, double limit, String context) {
         double excursion = peakToPeak(samples);
         assertTrue(
-                excursion <= limit,
-                context + ": static peak-to-peak " + excursion + " exceeds " + limit + " px over "
-                        + Arrays.toString(truncate(samples)));
+            excursion <= limit,
+            context + ": static peak-to-peak " + excursion + " exceeds " + limit + " px over "
+                    + Arrays.toString(truncate(samples))
+        );
     }
 
     private static double[] truncate(double[] samples) {

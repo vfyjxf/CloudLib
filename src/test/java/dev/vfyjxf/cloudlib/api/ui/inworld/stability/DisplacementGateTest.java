@@ -69,8 +69,9 @@ class DisplacementGateTest {
             // every release lands exactly on the live point; every hold keeps
             // the previous reference — never an invented in-between position
             assertTrue(
-                    next.equals(live) || next.equals(held),
-                    "held " + next + " must be the live " + live + " or the previous reference " + held);
+                next.equals(live) || next.equals(held),
+                "held " + next + " must be the live " + live + " or the previous reference " + held
+            );
             held = next;
         }
     }

@@ -51,20 +51,22 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
      * @param padding           the padding for overflow detection
      */
     public static AutoPlacementMiddleware create(
-            boolean crossAxis,
-            @Nullable FloatingPlacement.Alignment alignment,
-            boolean autoAlignment,
-            @Nullable List<FloatingPlacement> allowedPlacements,
-            int padding) {
+        boolean crossAxis,
+        @Nullable FloatingPlacement.Alignment alignment,
+        boolean autoAlignment,
+        @Nullable List<FloatingPlacement> allowedPlacements,
+        int padding
+    ) {
         return new AutoPlacementMiddleware(crossAxis, alignment, autoAlignment, allowedPlacements, padding);
     }
 
     private AutoPlacementMiddleware(
-            boolean crossAxis,
-            @Nullable FloatingPlacement.Alignment alignment,
-            boolean autoAlignment,
-            @Nullable List<FloatingPlacement> allowedPlacements,
-            int padding) {
+        boolean crossAxis,
+        @Nullable FloatingPlacement.Alignment alignment,
+        boolean autoAlignment,
+        @Nullable List<FloatingPlacement> allowedPlacements,
+        int padding
+    ) {
         this.crossAxis = crossAxis;
         this.alignment = alignment;
         this.autoAlignment = autoAlignment;
@@ -104,12 +106,11 @@ public final class AutoPlacementMiddleware implements FloatingMiddleware {
         // Detect overflow at this placement
         Insets overflow = state.detectOverflow(padding);
         FloatingPlacement.Side side = placement.side();
-        int[] alignmentOverflow =
-                FloatingPositioning.alignmentSides(overflow, placement, state.referenceRect(), state.floatingRect());
+        int[] alignmentOverflow = FloatingPositioning
+                .alignmentSides(overflow, placement, state.referenceRect(), state.floatingRect());
 
-        int[] currentOverflows = {
-            FloatingPositioning.getSide(overflow, side), alignmentOverflow[0], alignmentOverflow[1]
-        };
+        int[] currentOverflows = {FloatingPositioning.getSide(overflow, side), alignmentOverflow[0],
+                alignmentOverflow[1]};
 
         @SuppressWarnings("unchecked")
         List<OverflowEntry> allOverflows = state.getData(name(), "overflows");

@@ -96,11 +96,12 @@ class CoincidenceReleaseTest {
         double h = 30;
         double gap = 8;
         return List.of(
-                new FloatRect(cx - w / 2, cy - h / 2, w, h),
-                new FloatRect(cx + gap, cy - h / 2, w, h),
-                new FloatRect(cx - w - gap, cy - h / 2, w, h),
-                new FloatRect(cx - w / 2, cy + gap, w, h),
-                new FloatRect(cx - w / 2, cy - h - gap, w, h));
+            new FloatRect(cx - w / 2, cy - h / 2, w, h),
+            new FloatRect(cx + gap, cy - h / 2, w, h),
+            new FloatRect(cx - w - gap, cy - h / 2, w, h),
+            new FloatRect(cx - w / 2, cy + gap, w, h),
+            new FloatRect(cx - w / 2, cy - h - gap, w, h)
+        );
     }
 
     private static double coincidence(InworldPlacement a, InworldPlacement b) {
@@ -134,8 +135,9 @@ class CoincidenceReleaseTest {
         assertTrue(coincidence(a, b) < 0.5, "the pair separated, intersection fraction=" + coincidence(a, b));
         assertEquals(preference.get(0), a.screenRect(), "the earlier element keeps the contested slot");
         assertTrue(
-                preference.indexOf(b.screenRect()) > 0,
-                "the later element holds one of its own non-coinciding candidates: " + b.screenRect());
+            preference.indexOf(b.screenRect()) > 0,
+            "the later element holds one of its own non-coinciding candidates: " + b.screenRect()
+        );
     }
 
     @Test
@@ -185,9 +187,10 @@ class CoincidenceReleaseTest {
         FloatRect grant = moved.placementOf("b").screenRect();
         assertEquals(0, coincidence(moved.placementOf("a"), moved.placementOf("b")), 1.0e-9);
         assertTrue(
-                Math.hypot(grant.centerX() - 320, grant.centerY() - 150) <= 60 + 40,
-                "the released element rides its own anchor: grant center " + grant.centerX() + "," + grant.centerY()
-                        + " anchor 320,150");
+            Math.hypot(grant.centerX() - 320, grant.centerY() - 150) <= 60 + 40,
+            "the released element rides its own anchor: grant center " + grant.centerX() + "," + grant.centerY()
+                    + " anchor 320,150"
+        );
         assertEquals(preferenceA.get(0), moved.placementOf("a").screenRect());
     }
 
@@ -205,7 +208,7 @@ class CoincidenceReleaseTest {
         CoordinationResult result = frame(coordinator, dt);
 
         List<FloatRect> granted = new ArrayList<>();
-        for (String id : new String[] {"a", "b", "c"}) {
+        for (String id : new String[]{"a", "b", "c"}) {
             assertNotNull(result.placementOf(id), id + " presented");
             granted.add(result.placementOf(id).screenRect());
         }
@@ -215,11 +218,13 @@ class CoincidenceReleaseTest {
                 FloatRect y = granted.get(j);
                 double ix = Math.min(x.right(), y.right()) - Math.max(x.x(), y.x());
                 double iy = Math.min(x.bottom(), y.bottom()) - Math.max(x.y(), y.y());
-                double fraction =
-                        ix <= 0 || iy <= 0 ? 0 : ix * iy / Math.min(x.width() * x.height(), y.width() * y.height());
+                double fraction = ix <= 0 || iy <= 0
+                        ? 0
+                        : ix * iy / Math.min(x.width() * x.height(), y.width() * y.height());
                 assertTrue(
-                        fraction < 0.5,
-                        "elements " + i + " and " + j + " do not stack: " + x + " vs " + y + " fraction=" + fraction);
+                    fraction < 0.5,
+                    "elements " + i + " and " + j + " do not stack: " + x + " vs " + y + " fraction=" + fraction
+                );
             }
         }
     }

@@ -5,9 +5,7 @@ import dev.vfyjxf.cloudlib.api.util.Namespace;
 public record PluginDependency(Namespace pluginId, Order order, Constraint constraint) {
 
     public enum Order {
-        before,
-        after,
-        none
+        before, after, none
     }
 
     public enum Constraint {

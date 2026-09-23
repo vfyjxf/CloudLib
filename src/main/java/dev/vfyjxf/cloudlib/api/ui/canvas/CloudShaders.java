@@ -36,24 +36,33 @@ public final class CloudShaders {
     public static void onRegisterShaders(RegisterShadersEvent event) throws IOException {
         var provider = event.getResourceProvider();
         event.registerShader(
-                new ShaderInstance(provider, Locations.ofMod("rounded_rect"), DefaultVertexFormat.POSITION_TEX),
-                s -> roundedRect = s);
+            new ShaderInstance(provider, Locations.ofMod("rounded_rect"), DefaultVertexFormat.POSITION_TEX),
+            s -> roundedRect = s
+        );
         event.registerShader(
-                new ShaderInstance(provider, Locations.ofMod("circle"), DefaultVertexFormat.POSITION_TEX),
-                s -> circle = s);
+            new ShaderInstance(provider, Locations.ofMod("circle"), DefaultVertexFormat.POSITION_TEX),
+            s -> circle = s
+        );
         event.registerShader(
-                new ShaderInstance(provider, Locations.ofMod("bezier_curve"), DefaultVertexFormat.POSITION_TEX),
-                s -> bezierCurve = s);
+            new ShaderInstance(provider, Locations.ofMod("bezier_curve"), DefaultVertexFormat.POSITION_TEX),
+            s -> bezierCurve = s
+        );
         event.registerShader(
-                new ShaderInstance(provider, Locations.ofMod("shadow"), DefaultVertexFormat.POSITION_TEX),
-                s -> shadow = s);
+            new ShaderInstance(provider, Locations.ofMod("shadow"), DefaultVertexFormat.POSITION_TEX),
+            s -> shadow = s
+        );
         event.registerShader(
-                new ShaderInstance(provider, Locations.ofMod("guide_line_hud"), DefaultVertexFormat.POSITION_TEX),
-                s -> guideLineHud = s);
+            new ShaderInstance(provider, Locations.ofMod("guide_line_hud"), DefaultVertexFormat.POSITION_TEX),
+            s -> guideLineHud = s
+        );
         event.registerShader(
-                new ShaderInstance(
-                        provider, Locations.ofMod("guide_line_world"), DefaultVertexFormat.POSITION_COLOR_NORMAL),
-                s -> guideLineWorld = s);
+            new ShaderInstance(
+                provider,
+                Locations.ofMod("guide_line_world"),
+                DefaultVertexFormat.POSITION_COLOR_NORMAL
+            ),
+            s -> guideLineWorld = s
+        );
         logger.info("Registered CloudLib SDF shaders");
     }
 

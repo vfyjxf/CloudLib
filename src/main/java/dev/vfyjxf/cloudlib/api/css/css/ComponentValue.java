@@ -42,7 +42,8 @@ public sealed interface ComponentValue {
      * @param raw the exact source text of the numeric part (not including the unit)
      */
     record NumericValue(double value, String unit, NumericKind kind, boolean integer, String raw)
-            implements ComponentValue {
+            implements
+                ComponentValue {
 
         /** True for a {@code <dimension-token>}. */
         public boolean isDimension() {
@@ -51,9 +52,7 @@ public sealed interface ComponentValue {
     }
 
     enum NumericKind {
-        number,
-        percentage,
-        dimension
+        number, percentage, dimension
     }
 
     /** A {@code <string-token>} (or a recovered {@code <bad-string-token>}): content, unquoted. */
@@ -87,9 +86,7 @@ public sealed interface ComponentValue {
     }
 
     enum BlockKind {
-        curly,
-        square,
-        paren
+        curly, square, paren
     }
 
     /** A {@code <whitespace-token>}: any run of spaces, tabs and newlines, folded into one. */

@@ -32,9 +32,7 @@ class AlgorithmComboTest {
 
     /** The nameplate crowd: four pairs of nameplates, each pair tight, pairs far apart. */
     private static List<Clusterer.Member> crowd(double jitterSeed) {
-        double[][] groups = {
-            {700, 380}, {1150, 350}, {620, 700}, {1300, 720},
-        };
+        double[][] groups = {{700, 380}, {1150, 350}, {620, 700}, {1300, 720},};
         List<Clusterer.Member> members = new ArrayList<>();
         int id = 0;
         for (double[] group : groups) {
@@ -58,7 +56,9 @@ class AlgorithmComboTest {
         AlgorithmProfile profile = AlgorithmProfile.nameplate;
         OrbitRing ring = new OrbitRing(60, 40, 30, 4);
         SlotAssigner assigner = new SlotAssigner(
-                profile.params().recourseBudget(), profile.params().slotAssignerCosts());
+            profile.params().recourseBudget(),
+            profile.params().slotAssignerCosts()
+        );
         Clusterer clusterer = new Clusterer(profile.params().clustererConfig());
         LeaderRouter router = new LeaderRouter(profile.params().leaderRouterConfig());
 
@@ -74,8 +74,13 @@ class AlgorithmComboTest {
             List<OrbitRing.Slot> candidates = ring.freeSlots(fan, epoch.size());
             List<SlotAssigner.Slot> slots = new ArrayList<>(candidates.size());
             for (OrbitRing.Slot slot : candidates) {
-                slots.add(new SlotAssigner.Slot(
-                        "r" + slot.ring() + "i" + slot.index(), anchorX + slot.offsetX(), anchorY + slot.offsetY()));
+                slots.add(
+                    new SlotAssigner.Slot(
+                        "r" + slot.ring() + "i" + slot.index(),
+                        anchorX + slot.offsetX(),
+                        anchorY + slot.offsetY()
+                    )
+                );
             }
 
             List<SlotAssigner.Element> elements = new ArrayList<>(epoch.size());
@@ -116,22 +121,18 @@ class AlgorithmComboTest {
     }
 
     private static String snapshot(
-            SlotAssigner.Result assignment, List<Clusterer.Cluster> clusters, List<LeaderRouter.Route> routes) {
+        SlotAssigner.Result assignment,
+        List<Clusterer.Cluster> clusters,
+        List<LeaderRouter.Route> routes
+    ) {
         StringBuilder text = new StringBuilder();
         for (SlotAssigner.Assignment single : assignment.assignments()) {
-            text.append(single.elementId())
-                    .append("->")
-                    .append(single.slotId())
-                    .append("(")
-                    .append(String.format("%.3f", single.cost()))
-                    .append(") ");
+            text.append(single.elementId()).append("->").append(single.slotId()).append("(")
+                    .append(String.format("%.3f", single.cost())).append(") ");
         }
         text.append("| ");
         for (Clusterer.Cluster cluster : clusters) {
-            text.append(cluster.memberIds())
-                    .append("*")
-                    .append(cluster.representative())
-                    .append(" ");
+            text.append(cluster.memberIds()).append("*").append(cluster.representative()).append(" ");
         }
         text.append("| ");
         for (LeaderRouter.Route route : routes) {
@@ -171,10 +172,11 @@ class AlgorithmComboTest {
         List<String> runs = new ArrayList<>();
         for (int run = 0; run < 2; run++) {
             DockCursor cursor = new DockCursor(
-                    ScreenEdge.bottom,
-                    1920,
-                    profile.params().dockMargin(),
-                    profile.params().dockSpacing());
+                ScreenEdge.bottom,
+                1920,
+                profile.params().dockMargin(),
+                profile.params().dockSpacing()
+            );
             StringBuilder text = new StringBuilder();
             for (int i = 0; i < 6; i++) {
                 DockCursor.Slot slot = cursor.allocate("w" + i, 120 + 10 * i);
@@ -184,20 +186,19 @@ class AlgorithmComboTest {
             cursor.release("w3");
             cursor.compact();
             for (DockCursor.Slot slot : cursor.slots()) {
-                text.append(slot.id())
-                        .append("@")
-                        .append(String.format("%.1f", slot.start()))
-                        .append(" ");
+                text.append(slot.id()).append("@").append(String.format("%.1f", slot.start())).append(" ");
             }
             runs.add(text.toString());
         }
         assertEquals(runs.get(0), runs.get(1));
         // order preserved: the survivors keep their relative order after compaction
-        assertTrue(runs.get(0).startsWith("w0@")
-                && runs.get(0).contains("w2@")
-                && runs.get(0).contains("w4@")
-                && runs.get(0).contains("w5@")
-                && !runs.get(0).contains("w1@"));
+        assertTrue(
+            runs.get(0).startsWith("w0@")
+                    && runs.get(0).contains("w2@")
+                    && runs.get(0).contains("w4@")
+                    && runs.get(0).contains("w5@")
+                    && !runs.get(0).contains("w1@")
+        );
         int w0 = runs.get(0).indexOf("w0@");
         int w2 = runs.get(0).indexOf("w2@");
         int w4 = runs.get(0).indexOf("w4@");
@@ -218,8 +219,16 @@ class AlgorithmComboTest {
             double angle = 2 * Math.PI * k / 720;
             double dx = Math.cos(angle);
             double dy = Math.sin(angle);
-            OffscreenProjector.Result result =
-                    new OffscreenProjector.Result(false, false, dx, dy, angle, null, null, null);
+            OffscreenProjector.Result result = new OffscreenProjector.Result(
+                false,
+                false,
+                dx,
+                dy,
+                angle,
+                null,
+                null,
+                null
+            );
             AngleEncoder.Output output = encoder.update(result, 1.0 / 60.0);
 
             if (previous != null) {
@@ -233,7 +242,8 @@ class AlgorithmComboTest {
             }
         }
         assertEquals(
-                List.of(ScreenEdge.right, ScreenEdge.bottom, ScreenEdge.left, ScreenEdge.top, ScreenEdge.right),
-                sequence);
+            List.of(ScreenEdge.right, ScreenEdge.bottom, ScreenEdge.left, ScreenEdge.top, ScreenEdge.right),
+            sequence
+        );
     }
 }

@@ -97,9 +97,10 @@ class PixelStabilizerContinuousDeadzoneTest {
             Sample b = samples.get(i);
             double added = Math.abs((b.out - a.out) - (b.in - a.in));
             assertTrue(
-                    added <= 0.5,
-                    "frame " + i + ": the output moved " + added + "px beyond its own input — a lattice step or a"
-                            + " state-switch pop (the pre-fix artifacts reach 0.85px)");
+                added <= 0.5,
+                "frame " + i + ": the output moved " + added + "px beyond its own input — a lattice step or a"
+                        + " state-switch pop (the pre-fix artifacts reach 0.85px)"
+            );
         }
     }
 
@@ -126,9 +127,10 @@ class PixelStabilizerContinuousDeadzoneTest {
             assertTrue(mean <= 0.5, "bin [" + bins[b][0] + "," + bins[b][1] + ") mean deviation " + mean + "px > 0.5");
             if (!Double.isNaN(previousMean)) {
                 assertTrue(
-                        mean <= previousMean + 0.03,
-                        "deviation must shrink (or hold) as speed rises: bin [" + bins[b][0] + "," + bins[b][1]
-                                + ") mean " + mean + "px after " + previousMean + "px — switch-induced error");
+                    mean <= previousMean + 0.03,
+                    "deviation must shrink (or hold) as speed rises: bin [" + bins[b][0] + "," + bins[b][1] + ") mean "
+                            + mean + "px after " + previousMean + "px — switch-induced error"
+                );
             }
             previousMean = mean;
         }
@@ -152,13 +154,16 @@ class PixelStabilizerContinuousDeadzoneTest {
             maxFrameStep = Math.max(maxFrameStep, step);
         }
         assertTrue(
-                maxFrameStep <= 0.5,
-                "the drift crossed the band with a " + maxFrameStep + "px single-frame step at frame " + worst
-                        + " — sub-pixel continuous sliding is the contract (the pre-fix pop is 1.0px)");
+            maxFrameStep <= 0.5,
+            "the drift crossed the band with a " + maxFrameStep + "px single-frame step at frame " + worst
+                    + " — sub-pixel continuous sliding is the contract (the pre-fix pop is 1.0px)"
+        );
         // and the output still keeps station: bounded trail, same end station as the input
         for (Sample s : samples) {
             assertTrue(
-                    Math.abs(s.out - s.in) <= 0.75, "frame " + s.t + ": trail " + (s.out - s.in) + " beyond the band");
+                Math.abs(s.out - s.in) <= 0.75,
+                "frame " + s.t + ": trail " + (s.out - s.in) + " beyond the band"
+            );
         }
         assertTrue(Math.abs(samples.get(samples.size() - 1).out - samples.get(samples.size() - 1).in) <= 0.75);
     }

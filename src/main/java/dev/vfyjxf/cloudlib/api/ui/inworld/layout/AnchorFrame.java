@@ -42,6 +42,9 @@ public record AnchorFrame(FloatPos screen, @Nullable WorldAabb world, @Nullable 
     /** A world anchor frame with an on-screen extent. */
     public static AnchorFrame dual(FloatPos screen, WorldAabb world, Size projectedSize) {
         return new AnchorFrame(
-                screen, Objects.requireNonNull(world, "world"), Objects.requireNonNull(projectedSize, "projectedSize"));
+            screen,
+            Objects.requireNonNull(world, "world"),
+            Objects.requireNonNull(projectedSize, "projectedSize")
+        );
     }
 }

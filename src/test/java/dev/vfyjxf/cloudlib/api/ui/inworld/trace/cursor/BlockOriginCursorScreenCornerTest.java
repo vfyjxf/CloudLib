@@ -59,10 +59,7 @@ class BlockOriginCursorScreenCornerTest {
     void obliqueCameraPanelBelowAttachesToTheProjectedLowerCorner() {
         // the camera looks down at the block steeply from above and the side;
         // the panel hangs below the block's projection
-        Projection proj = ProjectionSimulator.at(4, 76, 4)
-                .lookAt(0.5, 64.5, 0.5)
-                .screen(480, 270)
-                .build();
+        Projection proj = ProjectionSimulator.at(4, 76, 4).lookAt(0.5, 64.5, 0.5).screen(480, 270).build();
         BlockPos pos = new BlockPos(0, 64, 0);
         double tx = 240, ty = 250;
 
@@ -83,52 +80,47 @@ class BlockOriginCursorScreenCornerTest {
         assertNotNull(cameraFacing);
         assertTrue(cameraFacing.y() < pick.screen().y(), "the camera-facing pick sits higher on screen");
         assertTrue(
-                distance(cameraFacing, tx, ty) > distance(pick.screen(), tx, ty),
-                "the camera-facing pick is farther from the panel than the nearest corner");
+            distance(cameraFacing, tx, ty) > distance(pick.screen(), tx, ty),
+            "the camera-facing pick is farther from the panel than the nearest corner"
+        );
     }
 
     @Test
     void deadZoneHoldsTheIncumbentAgainstASlightlyCloserCorner() {
-        Projection proj = ProjectionSimulator.at(0.5, 0.5, 0)
-                .lookAt(0.5, 0.5, -1)
-                .screen(400, 240)
-                .build();
+        Projection proj = ProjectionSimulator.at(0.5, 0.5, 0).lookAt(0.5, 0.5, -1).screen(400, 240).build();
         BlockPos pos = new BlockPos(0, 0, -6);
         // the straight-on camera mirrors one corner pair around the screen
         // center: start the target exactly between them, then slide it less
         // than the dead zone toward one side
         FloatPos[] all = projections(proj, pos);
-        BlockOriginCursor.ScreenCorner first =
-                BlockOriginCursor.screenAnchorCorner(pos, inflate, proj, 200, all[0].y(), null);
+        BlockOriginCursor.ScreenCorner first = BlockOriginCursor
+                .screenAnchorCorner(pos, inflate, proj, 200, all[0].y(), null);
         int other = first.index() ^ 1; // the mirrored pair differs in the x bit
         double px = all[other].x() - all[first.index()].x();
         double py = all[other].y() - all[first.index()].y();
         double len = Math.hypot(px, py);
         double slide = (hysteresisPx - 2.0) / len; // the challenger wins by 2 px
 
-        BlockOriginCursor.ScreenCorner pick = BlockOriginCursor.screenAnchorCorner(
-                pos, inflate, proj, 200 + px * slide, all[0].y() + py * slide, first);
+        BlockOriginCursor.ScreenCorner pick = BlockOriginCursor
+                .screenAnchorCorner(pos, inflate, proj, 200 + px * slide, all[0].y() + py * slide, first);
         assertEquals(first.index(), pick.index(), "a corner 2 px closer than the incumbent must not take over");
     }
 
     @Test
     void beyondTheDeadZoneTheCloserCornerTakesOver() {
-        Projection proj = ProjectionSimulator.at(0.5, 0.5, 0)
-                .lookAt(0.5, 0.5, -1)
-                .screen(400, 240)
-                .build();
+        Projection proj = ProjectionSimulator.at(0.5, 0.5, 0).lookAt(0.5, 0.5, -1).screen(400, 240).build();
         BlockPos pos = new BlockPos(0, 0, -6);
         FloatPos[] all = projections(proj, pos);
-        BlockOriginCursor.ScreenCorner first =
-                BlockOriginCursor.screenAnchorCorner(pos, inflate, proj, 200, all[0].y(), null);
+        BlockOriginCursor.ScreenCorner first = BlockOriginCursor
+                .screenAnchorCorner(pos, inflate, proj, 200, all[0].y(), null);
         int other = first.index() ^ 1;
         double px = all[other].x() - all[first.index()].x();
         double py = all[other].y() - all[first.index()].y();
         double len = Math.hypot(px, py);
         double slide = (hysteresisPx + 2.0) / len; // the challenger wins by 6 px
 
-        BlockOriginCursor.ScreenCorner pick = BlockOriginCursor.screenAnchorCorner(
-                pos, inflate, proj, 200 + px * slide, all[0].y() + py * slide, first);
+        BlockOriginCursor.ScreenCorner pick = BlockOriginCursor
+                .screenAnchorCorner(pos, inflate, proj, 200 + px * slide, all[0].y() + py * slide, first);
         assertEquals(other, pick.index(), "a corner 6 px closer clears the dead zone");
         GeometryAsserts.assertPosEquals(all[other], pick.screen(), 1.0e-4);
     }
@@ -138,10 +130,7 @@ class BlockOriginCursorScreenCornerTest {
         // the camera sits inside the block's near face's half-space: the near
         // corners are behind it, only the far face projects — an incumbent
         // that went behind cannot be held
-        Projection proj = ProjectionSimulator.at(0.5, 0.5, -5.6)
-                .lookAt(0.5, 0.5, -6.6)
-                .screen(400, 240)
-                .build();
+        Projection proj = ProjectionSimulator.at(0.5, 0.5, -5.6).lookAt(0.5, 0.5, -6.6).screen(400, 240).build();
         BlockPos pos = new BlockPos(0, 0, -6);
         BlockOriginCursor.ScreenCorner stale = new BlockOriginCursor.ScreenCorner(5, new FloatPos(30, 30));
 
@@ -154,11 +143,18 @@ class BlockOriginCursorScreenCornerTest {
     @Test
     void noProjectableCornerReturnsNull() {
         // the camera looks away from the block: every corner is behind it
-        Projection proj =
-                ProjectionSimulator.at(0, 0, 0).lookAt(0, 0, 1).screen(400, 240).build();
+        Projection proj = ProjectionSimulator.at(0, 0, 0).lookAt(0, 0, 1).screen(400, 240).build();
         BlockPos pos = new BlockPos(0, 0, -6);
         assertNull(BlockOriginCursor.screenAnchorCorner(pos, inflate, proj, 200, 120, null));
-        assertNull(BlockOriginCursor.screenAnchorCorner(
-                pos, inflate, proj, 200, 120, new BlockOriginCursor.ScreenCorner(0, new FloatPos(30, 30))));
+        assertNull(
+            BlockOriginCursor.screenAnchorCorner(
+                pos,
+                inflate,
+                proj,
+                200,
+                120,
+                new BlockOriginCursor.ScreenCorner(0, new FloatPos(30, 30))
+            )
+        );
     }
 }

@@ -19,6 +19,7 @@ import java.util.function.Supplier;
  *   <li>{@link NineSliceTexture} - Nine-slice textures</li>
  *   <li>{@link SpriteTexture} - Sprite textures</li>
  *   <li>{@link FrameAnimation} - Frame animations</li>
+ *   <li>{@link TintedTexture} / {@link TransformedTexture} - the css modifier chain</li>
  *  </ul>
  * </p>
  */
@@ -96,6 +97,26 @@ public interface VisualTexture {
             texture.render(graphics, x, y, width, height);
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         };
+    }
+
+    /**
+     * Multiplies two ARGB colors per channel — how a tint composes with a texture's
+     * own color, matching {@code SceneCanvas.multiplyColor}. {@code -1} (opaque white)
+     * is the identity tint, so an untinted draw stays untouched.
+     */
+    static int multiply(int argb, int tint) {
+        if (tint == -1) {
+            return argb;
+        }
+        int a = channel(((argb >>> 24) & 0xFF) * ((tint >>> 24) & 0xFF));
+        int r = channel(((argb >>> 16) & 0xFF) * ((tint >>> 16) & 0xFF));
+        int g = channel(((argb >>> 8) & 0xFF) * ((tint >>> 8) & 0xFF));
+        int b = channel((argb & 0xFF) * (tint & 0xFF));
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    private static int channel(int product) {
+        return (product + 127) / 255;
     }
 
     /**

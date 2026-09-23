@@ -20,17 +20,9 @@ class MaterialAmountTest {
     private static final Unit<MaterialAmountTest> gasUnit = Unit.of(gasFamily, Namespace.ofMc("gas_unit"));
 
     private UnitConverter converter() {
-        return UnitConverter.builder()
-                .add(ItemUnits.pack())
-                .add(FluidUnits.pack())
-                .baseUnit(gasUnit)
-                .convert(ItemUnits.ingot, FluidUnits.millibucket)
-                .forMaterial(iron)
-                .by(144)
-                .convert(ItemUnits.ingot, gasUnit)
-                .forMaterial(iron)
-                .by(2)
-                .build();
+        return UnitConverter.builder().add(ItemUnits.pack()).add(FluidUnits.pack()).baseUnit(gasUnit)
+                .convert(ItemUnits.ingot, FluidUnits.millibucket).forMaterial(iron).by(144)
+                .convert(ItemUnits.ingot, gasUnit).forMaterial(iron).by(2).build();
     }
 
     @Test
@@ -67,8 +59,7 @@ class MaterialAmountTest {
 
     @Test
     void missingBridgeThrows() {
-        UnitConverter converter =
-                UnitConverter.builder().add(ItemUnits.pack()).baseUnit(gasUnit).build();
+        UnitConverter converter = UnitConverter.builder().add(ItemUnits.pack()).baseUnit(gasUnit).build();
         MaterialAmount ingot = converter.materialAmount(1, ItemUnits.ingot, iron);
         MaterialAmount gas = converter.materialAmount(2, gasUnit, iron);
 
@@ -77,12 +68,12 @@ class MaterialAmountTest {
 
     @Test
     void missingBaseUnitThrowsNamingFamily() {
-        UnitConverter converter =
-                UnitConverter.builder().rules(FluidUnits.rules).build();
+        UnitConverter converter = UnitConverter.builder().rules(FluidUnits.rules).build();
 
         IllegalStateException e = assertThrows(
-                IllegalStateException.class,
-                () -> converter.quantity(1, FluidUnits.millibucket).toMaterialAmount(iron));
+            IllegalStateException.class,
+            () -> converter.quantity(1, FluidUnits.millibucket).toMaterialAmount(iron)
+        );
         assertTrue(e.getMessage().contains("minecraft:fluid"));
     }
 
@@ -98,39 +89,26 @@ class MaterialAmountTest {
 
     @Test
     void materialSpecificOverrideAppliesDuringNormalization() {
-        UnitConverter converter = UnitConverter.builder()
-                .add(ItemUnits.pack())
-                .convert(ItemUnits.ingot, ItemUnits.block)
-                .forMaterial(iron)
-                .by(1, 4)
-                .build();
+        UnitConverter converter = UnitConverter.builder().add(ItemUnits.pack())
+                .convert(ItemUnits.ingot, ItemUnits.block).forMaterial(iron).by(1, 4).build();
 
-        assertEquals(
-                Ratio.of(4), converter.materialAmount(1, ItemUnits.block, iron).value());
-        assertEquals(
-                Ratio.of(9),
-                converter.materialAmount(1, ItemUnits.block, copper).value());
+        assertEquals(Ratio.of(4), converter.materialAmount(1, ItemUnits.block, iron).value());
+        assertEquals(Ratio.of(9), converter.materialAmount(1, ItemUnits.block, copper).value());
     }
 
     @Test
     void inexactnessPropagatesIntoMaterialAmount() {
-        UnitConverter converter = UnitConverter.builder()
-                .add(ItemUnits.pack())
-                .add(FluidUnits.pack())
-                .convert(ItemUnits.ingot, FluidUnits.millibucket)
-                .forMaterial(iron)
-                .byApproximate(144)
-                .build();
+        UnitConverter converter = UnitConverter.builder().add(ItemUnits.pack()).add(FluidUnits.pack())
+                .convert(ItemUnits.ingot, FluidUnits.millibucket).forMaterial(iron).byApproximate(144).build();
 
         MaterialAmount molten = converter.materialAmount(144, FluidUnits.millibucket, iron);
         assertTrue(molten.isExact());
 
         MaterialAmount back = converter.materialAmount(
-                converter
-                        .convert(144, FluidUnits.millibucket, ItemUnits.ingot, iron)
-                        .value(),
-                ItemUnits.ingot,
-                iron);
+            converter.convert(144, FluidUnits.millibucket, ItemUnits.ingot, iron).value(),
+            ItemUnits.ingot,
+            iron
+        );
         assertFalse(back.isExact());
     }
 }

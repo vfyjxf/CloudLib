@@ -142,13 +142,11 @@ public final class PluginDispatcher<T extends ModPlugin> {
         CompletableFuture<Void> chain = CompletableFuture.completedFuture(null);
         for (var level : graph.levels()) {
             var plugins = level.plugins();
-            chain = chain.thenComposeAsync(
-                    ignored -> {
-                        CompletableFuture<?>[] futures = new CompletableFuture[plugins.size()];
-                        plugins.forEachWithIndex((plugin, index) -> futures[index] = asyncEvent.apply(plugin));
-                        return CompletableFuture.allOf(futures);
-                    },
-                    executor);
+            chain = chain.thenComposeAsync(ignored -> {
+                CompletableFuture<?>[] futures = new CompletableFuture[plugins.size()];
+                plugins.forEachWithIndex((plugin, index) -> futures[index] = asyncEvent.apply(plugin));
+                return CompletableFuture.allOf(futures);
+            }, executor);
         }
         return chain;
     }
@@ -173,11 +171,7 @@ public final class PluginDispatcher<T extends ModPlugin> {
         int total = plugins.size();
 
         for (var level : graph.levels()) {
-            logger.debug(
-                    "{}: level {} ({} plugins)",
-                    eventName,
-                    level.depth(),
-                    level.plugins().size());
+            logger.debug("{}: level {} ({} plugins)", eventName, level.depth(), level.plugins().size());
             dispatchLevel(level, event, progress, completed, total);
         }
 
@@ -215,12 +209,12 @@ public final class PluginDispatcher<T extends ModPlugin> {
     // region internal
 
     private void dispatchLevel(
-            DependencyGraph.LoadingLevel<T> level,
-            Consumer<T> event,
-            DispatchProgress progress,
-            AtomicInteger completed,
-            int total)
-            throws PluginLoadingException {
+        DependencyGraph.LoadingLevel<T> level,
+        Consumer<T> event,
+        DispatchProgress progress,
+        AtomicInteger completed,
+        int total
+    ) throws PluginLoadingException {
         var plugins = level.plugins();
 
         if (plugins.size() == 1) {
@@ -230,7 +224,8 @@ public final class PluginDispatcher<T extends ModPlugin> {
                 progress.advance(plugin.pluginId(), completed.incrementAndGet(), total);
             } catch (Exception e) {
                 throw new PluginLoadingException(
-                        MutableLists.of(new PluginLoadingException.Failure(plugin.pluginId(), e)));
+                    MutableLists.of(new PluginLoadingException.Failure(plugin.pluginId(), e))
+                );
             }
             return;
         }
@@ -239,18 +234,16 @@ public final class PluginDispatcher<T extends ModPlugin> {
         CompletableFuture<?>[] futures = new CompletableFuture[plugins.size()];
         for (int index = 0; index < plugins.size(); index++) {
             T plugin = plugins.get(index);
-            futures[index] = CompletableFuture.runAsync(
-                    () -> {
-                        try {
-                            event.accept(plugin);
-                            progress.advance(plugin.pluginId(), completed.incrementAndGet(), total);
-                        } catch (Exception e) {
-                            synchronized (failures) {
-                                failures.add(new PluginLoadingException.Failure(plugin.pluginId(), e));
-                            }
-                        }
-                    },
-                    executor);
+            futures[index] = CompletableFuture.runAsync(() -> {
+                try {
+                    event.accept(plugin);
+                    progress.advance(plugin.pluginId(), completed.incrementAndGet(), total);
+                } catch (Exception e) {
+                    synchronized (failures) {
+                        failures.add(new PluginLoadingException.Failure(plugin.pluginId(), e));
+                    }
+                }
+            }, executor);
         }
 
         CompletableFuture.allOf(futures).join();

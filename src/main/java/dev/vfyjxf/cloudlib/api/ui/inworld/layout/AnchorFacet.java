@@ -19,11 +19,7 @@ public sealed interface AnchorFacet {
 
     /** The anchor kinds and their validation-relevant families. */
     enum Kind {
-        entity,
-        blockFace,
-        position,
-        cameraTracked,
-        none
+        entity, blockFace, position, cameraTracked, none
     }
 
     /** This anchor's kind. */
@@ -177,12 +173,7 @@ public sealed interface AnchorFacet {
 
     /** The six outward block-face normals. */
     enum Normal {
-        north(0, 0, -1),
-        south(0, 0, 1),
-        west(-1, 0, 0),
-        east(1, 0, 0),
-        up(0, 1, 0),
-        down(0, -1, 0);
+        north(0, 0, -1), south(0, 0, 1), west(-1, 0, 0), east(1, 0, 0), up(0, 1, 0), down(0, -1, 0);
 
         private final double dx;
         private final double dy;

@@ -20,6 +20,7 @@ public class ToggleWidget extends Widget {
     // region state
 
     private boolean toggled = false;
+    private boolean pressed = false;
     private @Nullable Consumer<Boolean> onToggle;
 
     // endregion
@@ -47,6 +48,18 @@ public class ToggleWidget extends Widget {
             toggle();
             return EventDispatch.consumed;
         });
+
+        onMouseClicked((input, context) -> {
+            setPressed(true);
+            return EventDispatch.pass;
+        });
+
+        onMouseReleased((input, context) -> {
+            setPressed(false);
+            return EventDispatch.pass;
+        });
+
+        onMouseLeave((mouseX, mouseY, context) -> setPressed(false));
     }
 
     // endregion
@@ -67,6 +80,18 @@ public class ToggleWidget extends Widget {
             }
         }
         return this;
+    }
+
+    private void setPressed(boolean pressed) {
+        if (this.pressed == pressed) {
+            return;
+        }
+        this.pressed = pressed;
+        if (pressed) {
+            addStyleState("pressed");
+        } else {
+            removeStyleState("pressed");
+        }
     }
 
     public ToggleWidget toggle() {
@@ -127,6 +152,7 @@ public class ToggleWidget extends Widget {
     public void collectInspectionInfo(InspectionInfoCollector collector) {
         super.collectInspectionInfo(collector);
         collector.addWithDefault("toggled", toggled, false, InspectionProperty.categoryState);
+        collector.addWithDefault("pressed", pressed, false, InspectionProperty.categoryState);
     }
 
     // endregion

@@ -40,8 +40,8 @@ class ZoneAbEquivalenceTest {
     private static final int frames = 16; // spans the first epoch re-resolve
 
     private static final String[] plainIds = {"np1", "np2", "np3"};
-    private static final FloatPos[] plainAnchors = {new FloatPos(120, 80), new FloatPos(300, 90), new FloatPos(210, 170)
-    };
+    private static final FloatPos[] plainAnchors = {new FloatPos(120, 80), new FloatPos(300, 90),
+            new FloatPos(210, 170)};
     private static final String[] zoneIds = {"z1", "z2"};
 
     /** One coordinator plus its assembled population, driven frame by frame. */
@@ -72,15 +72,15 @@ class ZoneAbEquivalenceTest {
             // as before (no previous layout), the zone ones with the
             // coordinator's previous-frame snapshot attached
             for (int i = 0; i < plain.length; i++) {
-                plain[i].beginFrame(LayoutEnvironment.of(width, height)
-                        .at(now, dt)
-                        .withAnchor(AnchorFrame.screen(plainAnchors[i])));
+                plain[i].beginFrame(
+                    LayoutEnvironment.of(width, height).at(now, dt).withAnchor(AnchorFrame.screen(plainAnchors[i]))
+                );
             }
             for (int i = 0; i < zone.length && zone[i] != null; i++) {
-                zone[i].beginFrame(LayoutEnvironment.of(width, height)
-                        .at(now, dt)
-                        .withAnchor(AnchorFrame.screen(zoneAnchor(i)))
-                        .withPreviousLayout(coordinator.previousZoneLayout().orElse(null)));
+                zone[i].beginFrame(
+                    LayoutEnvironment.of(width, height).at(now, dt).withAnchor(AnchorFrame.screen(zoneAnchor(i)))
+                            .withPreviousLayout(coordinator.previousZoneLayout().orElse(null))
+                );
             }
             CoordinationResult result = coordinator.frame(InworldCoordinator.FrameInput.of(width, height, now, dt));
             for (int i = 0; i < plain.length; i++) {
@@ -135,26 +135,20 @@ class ZoneAbEquivalenceTest {
         assertTrue(mixed.coordinator.previousZoneLayout().isPresent());
         for (String id : plainIds) {
             assertTrue(
-                    mixed.coordinator
-                            .previousZoneLayout()
-                            .orElseThrow()
-                            .placements()
-                            .containsKey(id),
-                    "the snapshot covers the whole committed layout, zone-less elements included: " + id);
+                mixed.coordinator.previousZoneLayout().orElseThrow().placements().containsKey(id),
+                "the snapshot covers the whole committed layout, zone-less elements included: " + id
+            );
         }
         for (String id : zoneIds) {
-            assertTrue(mixed.coordinator
-                    .previousZoneLayout()
-                    .orElseThrow()
-                    .placements()
-                    .containsKey(id));
+            assertTrue(mixed.coordinator.previousZoneLayout().orElseThrow().placements().containsKey(id));
         }
 
         Run baseline = new Run(false);
         baseline.frame();
         assertTrue(
-                baseline.coordinator.previousZoneLayout().isEmpty(),
-                "a population without zone consumers computes no snapshot");
+            baseline.coordinator.previousZoneLayout().isEmpty(),
+            "a population without zone consumers computes no snapshot"
+        );
     }
 
     // region population
@@ -182,8 +176,7 @@ class ZoneAbEquivalenceTest {
     /** The lattice rects for the safe rect this test drives (screen-sized). */
     private static List<Rect> latticeRects(FloatPos anchor, int w, int h) {
         return ZoneCandidates.generate(anchor, new Size(w, h), new Rect(0, 0, width, height)).stream()
-                .map(ZoneCandidates.Candidate::rect)
-                .toList();
+                .map(ZoneCandidates.Candidate::rect).toList();
     }
 
     // endregion

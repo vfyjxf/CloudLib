@@ -64,17 +64,19 @@ public final class StyleLoader extends SimplePreparableReloadListener<StyleLoade
 
     /** One theme's collected sources. */
     record ThemeDef(
-            @Nullable ThemeDescriptor descriptor,
-            int packRank,
-            Map<String, String> cssFiles /* file name → source text */) {}
+        @Nullable ThemeDescriptor descriptor,
+        int packRank,
+        Map<String, String> cssFiles /* file name → source text */
+    ) {}
 
     /** Parsed {@code theme.json}. {@code css == null} means "every direct-child css, sorted". */
     record ThemeDescriptor(
-            @Nullable String name,
-            @Nullable String description,
-            @Nullable List<String> css,
-            List<ResourceLocation> extendz,
-            boolean isDefault) {}
+        @Nullable String name,
+        @Nullable String description,
+        @Nullable List<String> css,
+        List<ResourceLocation> extendz,
+        boolean isDefault
+    ) {}
 
     /** Theme ids this loader installed last reload — stale ones get unregistered. */
     private final List<ResourceLocation> loadedIds = new ArrayList<>();
@@ -98,8 +100,9 @@ public final class StyleLoader extends SimplePreparableReloadListener<StyleLoade
         Map<String, ResourceLocation> descDirs = new HashMap<>(); // ns + '/' + dir → theme id
 
         Map<ResourceLocation, Resource> files = manager.listResources(
-                directory,
-                path -> path.getPath().endsWith(".css") || path.getPath().endsWith("theme.json"));
+            directory,
+            path -> path.getPath().endsWith(".css") || path.getPath().endsWith("theme.json")
+        );
 
         List<Map.Entry<ResourceLocation, Resource>> cssFiles = new ArrayList<>();
         for (Map.Entry<ResourceLocation, Resource> entry : files.entrySet()) {
@@ -136,8 +139,8 @@ public final class StyleLoader extends SimplePreparableReloadListener<StyleLoade
             if (owner != null) {
                 themes.get(owner).cssFiles().put(name, read(entry.getValue(), file));
             } else {
-                ResourceLocation id = ResourceLocation.fromNamespaceAndPath(
-                        file.getNamespace(), rel.substring(0, rel.length() - ".css".length()));
+                ResourceLocation id = ResourceLocation
+                        .fromNamespaceAndPath(file.getNamespace(), rel.substring(0, rel.length() - ".css".length()));
                 if (themes.containsKey(id)) {
                     logger.warn("{}: theme id {} already claimed by a theme directory — skipping", file, id);
                     continue;
@@ -149,10 +152,8 @@ public final class StyleLoader extends SimplePreparableReloadListener<StyleLoade
 
         // defaults: descriptor-flagged themes in pack-priority order
         themes.entrySet().stream()
-                .filter(e -> e.getValue().descriptor() != null
-                        && e.getValue().descriptor().isDefault())
-                .sorted(Comparator.comparingInt(e -> e.getValue().packRank()))
-                .forEach(e -> defaults.add(e.getKey()));
+                .filter(e -> e.getValue().descriptor() != null && e.getValue().descriptor().isDefault())
+                .sorted(Comparator.comparingInt(e -> e.getValue().packRank())).forEach(e -> defaults.add(e.getKey()));
 
         return new Prepared(themes, defaults);
     }
@@ -180,8 +181,7 @@ public final class StyleLoader extends SimplePreparableReloadListener<StyleLoade
         try {
             var json = JsonParser.parseString(text).getAsJsonObject();
             String name = json.has("name") ? json.get("name").getAsString() : null;
-            String description =
-                    json.has("description") ? json.get("description").getAsString() : null;
+            String description = json.has("description") ? json.get("description").getAsString() : null;
             List<String> css = null;
             if (json.has("css")) {
                 css = new ArrayList<>();
@@ -265,10 +265,11 @@ public final class StyleLoader extends SimplePreparableReloadListener<StyleLoade
      * filename order). Cycles are cut with a warning.
      */
     private static @Nullable Theme resolveTheme(
-            ResourceLocation id,
-            Map<ResourceLocation, ThemeDef> defs,
-            Deque<ResourceLocation> chain,
-            Map<ResourceLocation, Theme> done) {
+        ResourceLocation id,
+        Map<ResourceLocation, ThemeDef> defs,
+        Deque<ResourceLocation> chain,
+        Map<ResourceLocation, Theme> done
+    ) {
         if (done.containsKey(id)) {
             return done.get(id);
         }
@@ -312,12 +313,10 @@ public final class StyleLoader extends SimplePreparableReloadListener<StyleLoade
         chain.removeLast();
 
         Theme theme = new Theme(
-                id,
-                new Stylesheet(rules),
-                def.descriptor() != null
-                        ? new Theme.Meta(
-                                def.descriptor().name(), def.descriptor().description())
-                        : null);
+            id,
+            new Stylesheet(rules),
+            def.descriptor() != null ? new Theme.Meta(def.descriptor().name(), def.descriptor().description()) : null
+        );
         done.put(id, theme);
         return theme;
     }

@@ -39,8 +39,9 @@ public record EntityContainerQueryPayload(int entityId) implements ServerboundPa
     static final int maxSlots = 512;
 
     public static final ServerPayloadInfo<EntityContainerQueryPayload> info = CloudlibPayloads.createServerInfo(
-            StreamCodec.ofMember(EntityContainerQueryPayload::encode, EntityContainerQueryPayload::decode),
-            "entity_container_query");
+        StreamCodec.ofMember(EntityContainerQueryPayload::encode, EntityContainerQueryPayload::decode),
+        "entity_container_query"
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

@@ -62,7 +62,12 @@ public record ShadowTexture(int color, int blur, int offsetX, int offsetY, int l
 
             float expand = i;
             emitter.colored(
-                    x + offsetX - expand, y + offsetY - expand, width + expand * 2, height + expand * 2, layerColor);
+                x + offsetX - expand,
+                y + offsetY - expand,
+                width + expand * 2,
+                height + expand * 2,
+                layerColor
+            );
         }
     }
 
@@ -78,11 +83,12 @@ public record ShadowTexture(int color, int blur, int offsetX, int offsetY, int l
 
             int expand = i;
             graphics.fill(
-                    x + offsetX - expand,
-                    y + offsetY - expand,
-                    x + offsetX + width + expand,
-                    y + offsetY + height + expand,
-                    layerColor);
+                x + offsetX - expand,
+                y + offsetY - expand,
+                x + offsetX + width + expand,
+                y + offsetY + height + expand,
+                layerColor
+            );
         }
     }
 

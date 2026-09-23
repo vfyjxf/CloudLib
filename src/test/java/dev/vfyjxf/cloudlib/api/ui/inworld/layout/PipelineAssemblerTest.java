@@ -40,14 +40,11 @@ class PipelineAssemblerTest {
     @Test
     void screenAnchorKindsMapToTrackedAndPanel() {
         PipelineAssembler assembler = PipelineAssembler.create();
+        assertEquals(SpaceKind.tracked, assembler.assemble(ElementSpec.from(InworldProfile.dock, "d")).spaceKind());
         assertEquals(
-                SpaceKind.tracked,
-                assembler.assemble(ElementSpec.from(InworldProfile.dock, "d")).spaceKind());
-        assertEquals(
-                SpaceKind.panel,
-                assembler
-                        .assemble(ElementSpec.from(InworldProfile.dock, "p").withAnchor(AnchorFacet.none()))
-                        .spaceKind());
+            SpaceKind.panel,
+            assembler.assemble(ElementSpec.from(InworldProfile.dock, "p").withAnchor(AnchorFacet.none())).spaceKind()
+        );
     }
 
     @Test

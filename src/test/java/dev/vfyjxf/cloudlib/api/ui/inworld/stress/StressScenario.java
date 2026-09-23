@@ -32,9 +32,7 @@ final class StressScenario {
     static final double dt = 1.0 / 60.0;
 
     private static final int staticSettleFrames = 90;
-    private static final int[][] resizeSizes = {
-        {400, 300}, {640, 360}, {320, 240}, {1024, 640}, {280, 200},
-    };
+    private static final int[][] resizeSizes = {{400, 300}, {640, 360}, {320, 240}, {1024, 640}, {280, 200},};
 
     /**
      * @param seed the one source of randomness
@@ -64,25 +62,26 @@ final class StressScenario {
      *        seeds' populations identical)
      */
     record Spec(
-            long seed,
-            int elementCount,
-            int frames,
-            int screenWidth,
-            int screenHeight,
-            int maxLadderRungs,
-            double staticTailFraction,
-            int exclusionBaseCount,
-            int exclusionEvents,
-            boolean exclusionStorm,
-            int churnEvents,
-            int retractEvents,
-            int resizeEvents,
-            boolean singleAnchor,
-            Motion motionOverride,
-            double budgetAwareFraction,
-            int giantExclusionFrame,
-            double sizeScale,
-            double worldOnlyFraction) {
+        long seed,
+        int elementCount,
+        int frames,
+        int screenWidth,
+        int screenHeight,
+        int maxLadderRungs,
+        double staticTailFraction,
+        int exclusionBaseCount,
+        int exclusionEvents,
+        boolean exclusionStorm,
+        int churnEvents,
+        int retractEvents,
+        int resizeEvents,
+        boolean singleAnchor,
+        Motion motionOverride,
+        double budgetAwareFraction,
+        int giantExclusionFrame,
+        double sizeScale,
+        double worldOnlyFraction
+    ) {
 
         Spec {
             if (elementCount < 1 || frames < 1) {
@@ -90,7 +89,8 @@ final class StressScenario {
             }
             if (screenWidth < 100 || screenHeight < 100) {
                 throw new IllegalArgumentException(
-                        "screen must be at least 100x100: " + screenWidth + "x" + screenHeight);
+                    "screen must be at least 100x100: " + screenWidth + "x" + screenHeight
+                );
             }
             if (staticTailFraction < 0 || staticTailFraction > 0.9) {
                 throw new IllegalArgumentException("staticTailFraction must be in [0, 0.9]: " + staticTailFraction);
@@ -112,326 +112,341 @@ final class StressScenario {
 
         static Spec of(long seed, int elementCount, int frames) {
             return new Spec(
-                    seed,
-                    elementCount,
-                    frames,
-                    400,
-                    300,
-                    0,
-                    0.15,
-                    4,
-                    10,
-                    false,
-                    10,
-                    6,
-                    0,
-                    false,
-                    null,
-                    0.25,
-                    -1,
-                    1.0,
-                    0.0);
+                seed,
+                elementCount,
+                frames,
+                400,
+                300,
+                0,
+                0.15,
+                4,
+                10,
+                false,
+                10,
+                6,
+                0,
+                false,
+                null,
+                0.25,
+                -1,
+                1.0,
+                0.0
+            );
         }
 
         /** Draws {@code fraction} of the population as world-only elements. */
         Spec withWorldOnly(double fraction) {
             return new Spec(
-                    seed,
-                    elementCount,
-                    frames,
-                    screenWidth,
-                    screenHeight,
-                    maxLadderRungs,
-                    staticTailFraction,
-                    exclusionBaseCount,
-                    exclusionEvents,
-                    exclusionStorm,
-                    churnEvents,
-                    retractEvents,
-                    resizeEvents,
-                    singleAnchor,
-                    motionOverride,
-                    budgetAwareFraction,
-                    giantExclusionFrame,
-                    sizeScale,
-                    fraction);
+                seed,
+                elementCount,
+                frames,
+                screenWidth,
+                screenHeight,
+                maxLadderRungs,
+                staticTailFraction,
+                exclusionBaseCount,
+                exclusionEvents,
+                exclusionStorm,
+                churnEvents,
+                retractEvents,
+                resizeEvents,
+                singleAnchor,
+                motionOverride,
+                budgetAwareFraction,
+                giantExclusionFrame,
+                sizeScale,
+                fraction
+            );
         }
 
         Spec withSizeScale(double scale) {
             return new Spec(
-                    seed,
-                    elementCount,
-                    frames,
-                    screenWidth,
-                    screenHeight,
-                    maxLadderRungs,
-                    staticTailFraction,
-                    exclusionBaseCount,
-                    exclusionEvents,
-                    exclusionStorm,
-                    churnEvents,
-                    retractEvents,
-                    resizeEvents,
-                    singleAnchor,
-                    motionOverride,
-                    budgetAwareFraction,
-                    giantExclusionFrame,
-                    scale,
-                    worldOnlyFraction);
+                seed,
+                elementCount,
+                frames,
+                screenWidth,
+                screenHeight,
+                maxLadderRungs,
+                staticTailFraction,
+                exclusionBaseCount,
+                exclusionEvents,
+                exclusionStorm,
+                churnEvents,
+                retractEvents,
+                resizeEvents,
+                singleAnchor,
+                motionOverride,
+                budgetAwareFraction,
+                giantExclusionFrame,
+                scale,
+                worldOnlyFraction
+            );
         }
 
         Spec withScreen(int width, int height) {
             return new Spec(
-                    seed,
-                    elementCount,
-                    frames,
-                    width,
-                    height,
-                    maxLadderRungs,
-                    staticTailFraction,
-                    exclusionBaseCount,
-                    exclusionEvents,
-                    exclusionStorm,
-                    churnEvents,
-                    retractEvents,
-                    resizeEvents,
-                    singleAnchor,
-                    motionOverride,
-                    budgetAwareFraction,
-                    giantExclusionFrame,
-                    sizeScale,
-                    worldOnlyFraction);
+                seed,
+                elementCount,
+                frames,
+                width,
+                height,
+                maxLadderRungs,
+                staticTailFraction,
+                exclusionBaseCount,
+                exclusionEvents,
+                exclusionStorm,
+                churnEvents,
+                retractEvents,
+                resizeEvents,
+                singleAnchor,
+                motionOverride,
+                budgetAwareFraction,
+                giantExclusionFrame,
+                sizeScale,
+                worldOnlyFraction
+            );
         }
 
         Spec withStaticTail(double fraction) {
             return new Spec(
-                    seed,
-                    elementCount,
-                    frames,
-                    screenWidth,
-                    screenHeight,
-                    maxLadderRungs,
-                    fraction,
-                    exclusionBaseCount,
-                    exclusionEvents,
-                    exclusionStorm,
-                    churnEvents,
-                    retractEvents,
-                    resizeEvents,
-                    singleAnchor,
-                    motionOverride,
-                    budgetAwareFraction,
-                    giantExclusionFrame,
-                    sizeScale,
-                    worldOnlyFraction);
+                seed,
+                elementCount,
+                frames,
+                screenWidth,
+                screenHeight,
+                maxLadderRungs,
+                fraction,
+                exclusionBaseCount,
+                exclusionEvents,
+                exclusionStorm,
+                churnEvents,
+                retractEvents,
+                resizeEvents,
+                singleAnchor,
+                motionOverride,
+                budgetAwareFraction,
+                giantExclusionFrame,
+                sizeScale,
+                worldOnlyFraction
+            );
         }
 
         Spec withStorm() {
             return new Spec(
-                    seed,
-                    elementCount,
-                    frames,
-                    screenWidth,
-                    screenHeight,
-                    maxLadderRungs,
-                    0,
-                    exclusionBaseCount,
-                    exclusionEvents,
-                    true,
-                    churnEvents,
-                    retractEvents,
-                    resizeEvents,
-                    singleAnchor,
-                    motionOverride,
-                    budgetAwareFraction,
-                    giantExclusionFrame,
-                    sizeScale,
-                    worldOnlyFraction);
+                seed,
+                elementCount,
+                frames,
+                screenWidth,
+                screenHeight,
+                maxLadderRungs,
+                0,
+                exclusionBaseCount,
+                exclusionEvents,
+                true,
+                churnEvents,
+                retractEvents,
+                resizeEvents,
+                singleAnchor,
+                motionOverride,
+                budgetAwareFraction,
+                giantExclusionFrame,
+                sizeScale,
+                worldOnlyFraction
+            );
         }
 
         Spec withSingleAnchor() {
             return new Spec(
-                    seed,
-                    elementCount,
-                    frames,
-                    screenWidth,
-                    screenHeight,
-                    maxLadderRungs,
-                    staticTailFraction,
-                    exclusionBaseCount,
-                    exclusionEvents,
-                    exclusionStorm,
-                    churnEvents,
-                    retractEvents,
-                    resizeEvents,
-                    true,
-                    motionOverride,
-                    budgetAwareFraction,
-                    giantExclusionFrame,
-                    sizeScale,
-                    worldOnlyFraction);
+                seed,
+                elementCount,
+                frames,
+                screenWidth,
+                screenHeight,
+                maxLadderRungs,
+                staticTailFraction,
+                exclusionBaseCount,
+                exclusionEvents,
+                exclusionStorm,
+                churnEvents,
+                retractEvents,
+                resizeEvents,
+                true,
+                motionOverride,
+                budgetAwareFraction,
+                giantExclusionFrame,
+                sizeScale,
+                worldOnlyFraction
+            );
         }
 
         Spec withMotion(Motion motion) {
             return new Spec(
-                    seed,
-                    elementCount,
-                    frames,
-                    screenWidth,
-                    screenHeight,
-                    maxLadderRungs,
-                    0,
-                    exclusionBaseCount,
-                    exclusionEvents,
-                    exclusionStorm,
-                    churnEvents,
-                    retractEvents,
-                    resizeEvents,
-                    singleAnchor,
-                    motion,
-                    budgetAwareFraction,
-                    giantExclusionFrame,
-                    sizeScale,
-                    worldOnlyFraction);
+                seed,
+                elementCount,
+                frames,
+                screenWidth,
+                screenHeight,
+                maxLadderRungs,
+                0,
+                exclusionBaseCount,
+                exclusionEvents,
+                exclusionStorm,
+                churnEvents,
+                retractEvents,
+                resizeEvents,
+                singleAnchor,
+                motion,
+                budgetAwareFraction,
+                giantExclusionFrame,
+                sizeScale,
+                worldOnlyFraction
+            );
         }
 
         Spec withExclusions(int base, int events) {
             return new Spec(
-                    seed,
-                    elementCount,
-                    frames,
-                    screenWidth,
-                    screenHeight,
-                    maxLadderRungs,
-                    staticTailFraction,
-                    base,
-                    events,
-                    exclusionStorm,
-                    churnEvents,
-                    retractEvents,
-                    resizeEvents,
-                    singleAnchor,
-                    motionOverride,
-                    budgetAwareFraction,
-                    giantExclusionFrame,
-                    sizeScale,
-                    worldOnlyFraction);
+                seed,
+                elementCount,
+                frames,
+                screenWidth,
+                screenHeight,
+                maxLadderRungs,
+                staticTailFraction,
+                base,
+                events,
+                exclusionStorm,
+                churnEvents,
+                retractEvents,
+                resizeEvents,
+                singleAnchor,
+                motionOverride,
+                budgetAwareFraction,
+                giantExclusionFrame,
+                sizeScale,
+                worldOnlyFraction
+            );
         }
 
         Spec withChurn(int churn, int retract) {
             return new Spec(
-                    seed,
-                    elementCount,
-                    frames,
-                    screenWidth,
-                    screenHeight,
-                    maxLadderRungs,
-                    staticTailFraction,
-                    exclusionBaseCount,
-                    exclusionEvents,
-                    exclusionStorm,
-                    churn,
-                    retract,
-                    resizeEvents,
-                    singleAnchor,
-                    motionOverride,
-                    budgetAwareFraction,
-                    giantExclusionFrame,
-                    sizeScale,
-                    worldOnlyFraction);
+                seed,
+                elementCount,
+                frames,
+                screenWidth,
+                screenHeight,
+                maxLadderRungs,
+                staticTailFraction,
+                exclusionBaseCount,
+                exclusionEvents,
+                exclusionStorm,
+                churn,
+                retract,
+                resizeEvents,
+                singleAnchor,
+                motionOverride,
+                budgetAwareFraction,
+                giantExclusionFrame,
+                sizeScale,
+                worldOnlyFraction
+            );
         }
 
         Spec withResizes(int count) {
             return new Spec(
-                    seed,
-                    elementCount,
-                    frames,
-                    screenWidth,
-                    screenHeight,
-                    maxLadderRungs,
-                    staticTailFraction,
-                    exclusionBaseCount,
-                    exclusionEvents,
-                    exclusionStorm,
-                    churnEvents,
-                    retractEvents,
-                    count,
-                    singleAnchor,
-                    motionOverride,
-                    budgetAwareFraction,
-                    giantExclusionFrame,
-                    sizeScale,
-                    worldOnlyFraction);
+                seed,
+                elementCount,
+                frames,
+                screenWidth,
+                screenHeight,
+                maxLadderRungs,
+                staticTailFraction,
+                exclusionBaseCount,
+                exclusionEvents,
+                exclusionStorm,
+                churnEvents,
+                retractEvents,
+                count,
+                singleAnchor,
+                motionOverride,
+                budgetAwareFraction,
+                giantExclusionFrame,
+                sizeScale,
+                worldOnlyFraction
+            );
         }
 
         Spec withRungs(int rungs) {
             return new Spec(
-                    seed,
-                    elementCount,
-                    frames,
-                    screenWidth,
-                    screenHeight,
-                    rungs,
-                    staticTailFraction,
-                    exclusionBaseCount,
-                    exclusionEvents,
-                    exclusionStorm,
-                    churnEvents,
-                    retractEvents,
-                    resizeEvents,
-                    singleAnchor,
-                    motionOverride,
-                    budgetAwareFraction,
-                    giantExclusionFrame,
-                    sizeScale,
-                    worldOnlyFraction);
+                seed,
+                elementCount,
+                frames,
+                screenWidth,
+                screenHeight,
+                rungs,
+                staticTailFraction,
+                exclusionBaseCount,
+                exclusionEvents,
+                exclusionStorm,
+                churnEvents,
+                retractEvents,
+                resizeEvents,
+                singleAnchor,
+                motionOverride,
+                budgetAwareFraction,
+                giantExclusionFrame,
+                sizeScale,
+                worldOnlyFraction
+            );
         }
 
         Spec withGiantExclusion(int frame) {
             return new Spec(
-                    seed,
-                    elementCount,
-                    frames,
-                    screenWidth,
-                    screenHeight,
-                    maxLadderRungs,
-                    staticTailFraction,
-                    exclusionBaseCount,
-                    exclusionEvents,
-                    exclusionStorm,
-                    churnEvents,
-                    retractEvents,
-                    resizeEvents,
-                    singleAnchor,
-                    motionOverride,
-                    budgetAwareFraction,
-                    frame,
-                    sizeScale,
-                    worldOnlyFraction);
+                seed,
+                elementCount,
+                frames,
+                screenWidth,
+                screenHeight,
+                maxLadderRungs,
+                staticTailFraction,
+                exclusionBaseCount,
+                exclusionEvents,
+                exclusionStorm,
+                churnEvents,
+                retractEvents,
+                resizeEvents,
+                singleAnchor,
+                motionOverride,
+                budgetAwareFraction,
+                frame,
+                sizeScale,
+                worldOnlyFraction
+            );
         }
     }
 
     /** One driven frame: the coordinator's answer plus the generator-side truth. */
     record FrameRecord(
-            int frameIndex,
-            InworldCoordinator.FrameInput input,
-            CoordinationResult result,
-            Map<String, FloatPos> anchors,
-            Set<String> registeredIds,
-            boolean resized,
-            boolean strictStatic,
-            Set<String> worldOnlyIds) {}
+        int frameIndex,
+        InworldCoordinator.FrameInput input,
+        CoordinationResult result,
+        Map<String, FloatPos> anchors,
+        Set<String> registeredIds,
+        boolean resized,
+        boolean strictStatic,
+        Set<String> worldOnlyIds
+    ) {}
 
     /** The outcome of one run: canonical frames, cause census, and counters. */
     record RunSummary(
-            Spec spec,
-            List<String> canonicalFrames,
-            EnumMap<CoordinationResult.RenegotiationCause, Integer> causeCounts,
-            int resolvedFrames,
-            int presentedFlips,
-            int peakPresented,
-            int lastPresented,
-            int peakWorldOnlyPresented) {
+        Spec spec,
+        List<String> canonicalFrames,
+        EnumMap<CoordinationResult.RenegotiationCause, Integer> causeCounts,
+        int resolvedFrames,
+        int presentedFlips,
+        int peakPresented,
+        int lastPresented,
+        int peakWorldOnlyPresented
+    ) {
 
         int causeCount(CoordinationResult.RenegotiationCause cause) {
             return causeCounts.getOrDefault(cause, 0);
@@ -473,7 +488,8 @@ final class StressScenario {
         List<StressElement> initial = new ArrayList<>(spec.elementCount());
         for (int i = 0; i < spec.elementCount(); i++) {
             int rungs = spec.maxLadderRungs() == 0 ? 2 + rnd.nextInt(3) : spec.maxLadderRungs();
-            initial.add(StressElement.generate(
+            initial.add(
+                StressElement.generate(
                     "e" + (idCounter++),
                     rnd,
                     width,
@@ -483,7 +499,9 @@ final class StressScenario {
                     spec.budgetAwareFraction(),
                     spec.singleAnchor(),
                     spec.sizeScale(),
-                    spec.worldOnlyFraction()));
+                    spec.worldOnlyFraction()
+                )
+            );
         }
         Collections.shuffle(initial, rnd);
         for (StressElement element : initial) {
@@ -513,8 +531,9 @@ final class StressScenario {
             resizes.put(3 + rnd.nextInt(Math.max(1, dynamicSpan(freezeStart) - 6)), i % resizeSizes.length);
         }
 
-        EnumMap<CoordinationResult.RenegotiationCause, Integer> causes =
-                new EnumMap<>(CoordinationResult.RenegotiationCause.class);
+        EnumMap<CoordinationResult.RenegotiationCause, Integer> causes = new EnumMap<>(
+            CoordinationResult.RenegotiationCause.class
+        );
         List<String> canonical = new ArrayList<>(spec.frames());
         Set<String> previousPresented = null;
         int resolvedFrames = 0;
@@ -549,16 +568,17 @@ final class StressScenario {
                     if (churnEvent) {
                         for (int i = 0; i < batch; i++) {
                             StressElement element = StressElement.generate(
-                                    "e" + (idCounter++),
-                                    rnd,
-                                    width,
-                                    height,
-                                    2 + rnd.nextInt(3),
-                                    null,
-                                    0.25,
-                                    false,
-                                    spec.sizeScale(),
-                                    spec.worldOnlyFraction());
+                                "e" + (idCounter++),
+                                rnd,
+                                width,
+                                height,
+                                2 + rnd.nextInt(3),
+                                null,
+                                0.25,
+                                false,
+                                spec.sizeScale(),
+                                spec.worldOnlyFraction()
+                            );
                             coordinator.register(element);
                             live.put(element.id(), element);
                         }
@@ -590,8 +610,8 @@ final class StressScenario {
                 }
             }
 
-            InworldCoordinator.FrameInput input =
-                    InworldCoordinator.FrameInput.of(width, height, now, dt, List.copyOf(exclusions));
+            InworldCoordinator.FrameInput input = InworldCoordinator.FrameInput
+                    .of(width, height, now, dt, List.copyOf(exclusions));
             CoordinationResult result = coordinator.frame(input);
 
             Map<String, FloatPos> anchors = new LinkedHashMap<>();
@@ -616,7 +636,8 @@ final class StressScenario {
             }
             peakWorldOnlyPresented = Math.max(peakWorldOnlyPresented, worldOnlyPresented);
             if (checkInvariants) {
-                checker.check(new FrameRecord(
+                checker.check(
+                    new FrameRecord(
                         frame,
                         input,
                         result,
@@ -624,7 +645,9 @@ final class StressScenario {
                         new LinkedHashSet<>(live.keySet()),
                         resized,
                         frame >= strictStart,
-                        worldOnlyIds));
+                        worldOnlyIds
+                    )
+                );
             }
 
             canonical.add(canonicalize(result));
@@ -643,14 +666,15 @@ final class StressScenario {
             previousPresented = presented;
         }
         return new RunSummary(
-                spec,
-                canonical,
-                causes,
-                resolvedFrames,
-                presentedFlips,
-                peakPresented,
-                previousPresented == null ? 0 : previousPresented.size(),
-                peakWorldOnlyPresented);
+            spec,
+            canonical,
+            causes,
+            resolvedFrames,
+            presentedFlips,
+            peakPresented,
+            previousPresented == null ? 0 : previousPresented.size(),
+            peakWorldOnlyPresented
+        );
     }
 
     private static int dynamicSpan(int freezeStart) {
@@ -668,59 +692,33 @@ final class StressScenario {
     /** The exact-precision per-frame witness used for determinism comparison. */
     private static String canonicalize(CoordinationResult result) {
         StringBuilder text = new StringBuilder(512);
-        text.append("f")
-                .append(result.frame())
-                .append('|')
-                .append(result.epoch())
-                .append('|')
-                .append(result.resolved())
-                .append('|')
-                .append(result.cause())
-                .append('|')
-                .append(Double.toString(result.budget().freeFraction()));
+        text.append("f").append(result.frame()).append('|').append(result.epoch()).append('|').append(result.resolved())
+                .append('|').append(result.cause()).append('|').append(Double.toString(result.budget().freeFraction()));
         for (CoordinationResult.ElementState state : result.elementStates()) {
-            text.append("||")
-                    .append(state.elementId())
-                    .append(':')
-                    .append(state.phase())
-                    .append(':')
-                    .append(Double.toString(state.alpha()))
-                    .append(':');
+            text.append("||").append(state.elementId()).append(':').append(state.phase()).append(':')
+                    .append(Double.toString(state.alpha())).append(':');
             if (state.placement() == null) {
                 text.append('-');
             } else {
-                text.append(state.placement().variant().level())
-                        .append('@')
-                        .append(Double.toString(state.placement().offsetRect().x()))
-                        .append(',')
-                        .append(Double.toString(state.placement().offsetRect().y()))
-                        .append(',')
-                        .append(Double.toString(state.placement().offsetRect().width()))
-                        .append(',')
-                        .append(Double.toString(state.placement().offsetRect().height()))
-                        .append('@')
-                        .append(state.placement().epoch())
-                        .append('@')
-                        .append(state.placement().arbitrationIndex());
+                text.append(state.placement().variant().level()).append('@')
+                        .append(Double.toString(state.placement().offsetRect().x())).append(',')
+                        .append(Double.toString(state.placement().offsetRect().y())).append(',')
+                        .append(Double.toString(state.placement().offsetRect().width())).append(',')
+                        .append(Double.toString(state.placement().offsetRect().height())).append('@')
+                        .append(state.placement().epoch()).append('@').append(state.placement().arbitrationIndex());
             }
             text.append(':');
             if (state.visualRect() == null) {
                 text.append('-');
             } else {
-                text.append(Double.toString(state.visualRect().x()))
-                        .append(',')
-                        .append(Double.toString(state.visualRect().y()))
-                        .append(',')
-                        .append(Double.toString(state.visualRect().width()))
-                        .append(',')
+                text.append(Double.toString(state.visualRect().x())).append(',')
+                        .append(Double.toString(state.visualRect().y())).append(',')
+                        .append(Double.toString(state.visualRect().width())).append(',')
                         .append(Double.toString(state.visualRect().height()));
             }
-            text.append(':')
-                    .append(
-                            state.rejection() == null
-                                    ? "-"
-                                    : state.rejection().reason() + "/"
-                                            + state.rejection().blockerId());
+            text.append(':').append(
+                state.rejection() == null ? "-" : state.rejection().reason() + "/" + state.rejection().blockerId()
+            );
         }
         return text.toString();
     }

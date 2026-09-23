@@ -166,15 +166,16 @@ class VisibilityTrackerTest {
 
         VisibilityTracker tracker = tracker(1, 1, 2);
         List<FrameReplay.Step<At>> steps = List.of(
-                new FrameReplay.Step<>(0.016, new At(0.0, true)),
-                new FrameReplay.Step<>(0.016, new At(1.0, null)),
-                new FrameReplay.Step<>(0.016, new At(10.0, false)),
-                new FrameReplay.Step<>(0.016, new At(12.5, null)),
-                new FrameReplay.Step<>(0.016, new At(12.1, null)),
-                new FrameReplay.Step<>(0.016, new At(12.9, null)),
-                new FrameReplay.Step<>(0.016, new At(9.0, null)),
-                new FrameReplay.Step<>(0.016, new At(13.5, null)),
-                new FrameReplay.Step<>(0.016, new At(13.1, null)));
+            new FrameReplay.Step<>(0.016, new At(0.0, true)),
+            new FrameReplay.Step<>(0.016, new At(1.0, null)),
+            new FrameReplay.Step<>(0.016, new At(10.0, false)),
+            new FrameReplay.Step<>(0.016, new At(12.5, null)),
+            new FrameReplay.Step<>(0.016, new At(12.1, null)),
+            new FrameReplay.Step<>(0.016, new At(12.9, null)),
+            new FrameReplay.Step<>(0.016, new At(9.0, null)),
+            new FrameReplay.Step<>(0.016, new At(13.5, null)),
+            new FrameReplay.Step<>(0.016, new At(13.1, null))
+        );
 
         FrameReplay<At, Double> replay = FrameReplay.run(tracker, steps, (subject, dt, at) -> {
             if (at.present() != null) {
@@ -191,10 +192,11 @@ class VisibilityTrackerTest {
         assertEquals(expected.length, alphas.size());
         for (int i = 0; i < expected.length; i++) {
             assertEquals(
-                    expected[i],
-                    alphas.get(i),
-                    1.0e-9,
-                    "rewinds must hold the last-seen state, never run fades backwards (frame " + i + ")");
+                expected[i],
+                alphas.get(i),
+                1.0e-9,
+                "rewinds must hold the last-seen state, never run fades backwards (frame " + i + ")"
+            );
         }
     }
 

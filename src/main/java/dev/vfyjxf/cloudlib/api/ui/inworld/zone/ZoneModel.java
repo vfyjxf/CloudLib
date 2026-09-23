@@ -35,10 +35,7 @@ public final class ZoneModel {
 
     /** The four visual zones; see the class javadoc for the precedence. */
     public enum Region {
-        anchor,
-        edge,
-        displacement,
-        center
+        anchor, edge, displacement, center
     }
 
     /**

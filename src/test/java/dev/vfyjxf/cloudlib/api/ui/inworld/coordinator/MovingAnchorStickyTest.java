@@ -81,8 +81,15 @@ class MovingAnchorStickyTest {
 
         @Override
         public VariantLadder ladder() {
-            InworldVariant rung =
-                    new InworldVariant(0, size, ContentTier.full, SpacePolicy.active, false, true, 0.75 * 96 * 60);
+            InworldVariant rung = new InworldVariant(
+                0,
+                size,
+                ContentTier.full,
+                SpacePolicy.active,
+                false,
+                true,
+                0.75 * 96 * 60
+            );
             return VariantLadder.of(List.of(rung));
         }
 
@@ -130,10 +137,11 @@ class MovingAnchorStickyTest {
             CoordinationResult result = frame(coordinator, now);
             FloatRect offset = result.placementOf("e").offsetRect();
             assertEquals(
-                    grantedX,
-                    offset.x(),
-                    2.0,
-                    "frame " + f + ": the granted slot de-pinned — offset " + offset + " vs granted " + granted);
+                grantedX,
+                offset.x(),
+                2.0,
+                "frame " + f + ": the granted slot de-pinned — offset " + offset + " vs granted " + granted
+            );
             // and the slot still rides the anchor: the screen rect follows it
             FloatPos anchor = result.placementOf("e").anchor();
             FloatRect screen = result.placementOf("e").screenRect();
@@ -172,8 +180,9 @@ class MovingAnchorStickyTest {
             // clamping re-applies at resolves; between them the retained
             // offset may drift at most the anchor-displacement threshold
             assertTrue(
-                    rectX >= -13.0 && rectX <= W,
-                    "frame " + f + ": rect stays in the work area (resolve clamped): " + rectX);
+                rectX >= -13.0 && rectX <= W,
+                "frame " + f + ": rect stays in the work area (resolve clamped): " + rectX
+            );
             if (rectX - lastRectX > 13.5) {
                 slotHops++;
                 hopFrame = f;
@@ -190,8 +199,9 @@ class MovingAnchorStickyTest {
             now += dt;
             CoordinationResult result = frame(coordinator, now);
             assertTrue(
-                    Math.abs(result.placementOf("e").offsetRect().x() - settled) <= 2.0,
-                    "frame " + f + ": the re-pinned slot holds");
+                Math.abs(result.placementOf("e").offsetRect().x() - settled) <= 2.0,
+                "frame " + f + ": the re-pinned slot holds"
+            );
         }
     }
 }

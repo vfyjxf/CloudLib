@@ -54,10 +54,11 @@ public final class AssembledElement implements InworldElement {
     private boolean reservationResolved;
 
     AssembledElement(
-            ElementSpec spec,
-            StageCatalogs.CandidateStrategy candidates,
-            StageCatalogs.AvoidStrategy avoid,
-            StageCatalogs.RankStrategy rank) {
+        ElementSpec spec,
+        StageCatalogs.CandidateStrategy candidates,
+        StageCatalogs.AvoidStrategy avoid,
+        StageCatalogs.RankStrategy rank
+    ) {
         this.spec = spec;
         this.candidates = candidates;
         this.avoid = avoid;
@@ -96,10 +97,10 @@ public final class AssembledElement implements InworldElement {
         if (state == null) {
             return;
         }
-        spec.custom()
-                .arbitrated(
-                        result.placementOf(spec.id()),
-                        InworldLayouter.Feedback.of(state, result.epoch(), result.frame()));
+        spec.custom().arbitrated(
+            result.placementOf(spec.id()),
+            InworldLayouter.Feedback.of(state, result.epoch(), result.frame())
+        );
     }
 
     // region InworldElement
@@ -154,14 +155,15 @@ public final class AssembledElement implements InworldElement {
         Objects.requireNonNull(context, "context");
         requireEnvironment();
         InworldLayoutContext layoutContext = new InworldLayoutContext(
-                context.epoch(),
-                context.round(),
-                context.budget(),
-                context.lastPlacement(),
-                context.lastRejection(),
-                context.variant(),
-                environment,
-                spec);
+            context.epoch(),
+            context.round(),
+            context.budget(),
+            context.lastPlacement(),
+            context.lastRejection(),
+            context.variant(),
+            environment,
+            spec
+        );
         if (spec.custom() != null) {
             return spec.custom().propose(layoutContext);
         }
@@ -184,32 +186,38 @@ public final class AssembledElement implements InworldElement {
         // PROJECT + CANDIDATES + AVOID + RANK.
         double inset = spec.anchor() instanceof AnchorFacet.BlockFace face ? face.insetPixels() : 0.0;
         StageCatalogs.CandidateContext candidateContext = new StageCatalogs.CandidateContext(
-                anchor,
-                context.variant().requestedSize(),
-                spec.orientation().mode(),
-                inset,
-                environment,
-                spec.profile().algorithm().params(),
-                spec.avoidance().avoids(),
-                spec.zone());
+            anchor,
+            context.variant().requestedSize(),
+            spec.orientation().mode(),
+            inset,
+            environment,
+            spec.profile().algorithm().params(),
+            spec.avoidance().avoids(),
+            spec.zone()
+        );
         List<PlacementCandidate> generated = candidates.candidates(candidateContext);
         StageCatalogs.AvoidContext avoidContext = new StageCatalogs.AvoidContext(
-                spec.avoidance().avoids(), spec.avoidance().respectsExclusions(), environment);
+            spec.avoidance().avoids(),
+            spec.avoidance().respectsExclusions(),
+            environment
+        );
         List<PlacementCandidate> surviving = avoid.filter(generated, avoidContext);
         // A spec without a zone declaration builds no zone context — its rank
         // context is exactly the pre-zone one.
         StageCatalogs.RankContext rankContext = spec.zone() == null
                 ? new StageCatalogs.RankContext(
-                        anchor,
-                        incumbentCenter(context),
-                        sticky(),
-                        spec.profile().algorithm().params())
+                    anchor,
+                    incumbentCenter(context),
+                    sticky(),
+                    spec.profile().algorithm().params()
+                )
                 : new StageCatalogs.RankContext(
-                        anchor,
-                        incumbentCenter(context),
-                        sticky(),
-                        spec.profile().algorithm().params(),
-                        zoneInputs(context, anchor));
+                    anchor,
+                    incumbentCenter(context),
+                    sticky(),
+                    spec.profile().algorithm().params(),
+                    zoneInputs(context, anchor)
+                );
         List<PlacementCandidate> ranked = rank.rank(surviving, rankContext);
         return ElementProposal.of(context.variant(), anchor, ranked);
     }
@@ -239,22 +247,23 @@ public final class AssembledElement implements InworldElement {
         Rect previousRect = last == null ? null : last.screenRect().toRect();
         AttentionField attention = zone.attention() != null ? zone.attention() : gaussianAttention(env);
         ZoneCost.Context costContext = new ZoneCost.Context(
-                spec.id(),
-                anchor,
-                new Rect(0, 0, env.screenWidth(), env.screenHeight()),
-                attention,
-                placed,
-                env.exclusionRects(),
-                previousRect,
-                previous == null ? List.of() : previous.leadersExcluding(spec.id()),
-                previous == null ? Set.of() : previous.leftOf(),
-                previous == null ? Set.of() : previous.above());
+            spec.id(),
+            anchor,
+            new Rect(0, 0, env.screenWidth(), env.screenHeight()),
+            attention,
+            placed,
+            env.exclusionRects(),
+            previousRect,
+            previous == null ? List.of() : previous.leadersExcluding(spec.id()),
+            previous == null ? Set.of() : previous.leftOf(),
+            previous == null ? Set.of() : previous.above()
+        );
         return new StageCatalogs.RankContext.ZoneInputs(zone.weightsOrDefault(), costContext);
     }
 
     private static GaussianAttention gaussianAttention(LayoutEnvironment env) {
-        return GaussianAttention.atScreenCenter(
-                env.screenWidth(), env.screenHeight(), ZoneFacet.defaultAttentionSigmaPx);
+        return GaussianAttention
+                .atScreenCenter(env.screenWidth(), env.screenHeight(), ZoneFacet.defaultAttentionSigmaPx);
     }
 
     private @Nullable FloatPos resolveAnchor() {
@@ -293,23 +302,25 @@ public final class AssembledElement implements InworldElement {
             requireEnvironment();
             Rect area = new Rect(0, 0, environment.screenWidth(), environment.screenHeight());
             InworldLayoutContext context = new InworldLayoutContext(
-                    0,
-                    0,
-                    new SpaceBudget(area, area.width() * (double) area.height(), 1.0),
-                    null,
-                    null,
-                    ladder.strongest(),
-                    environment,
-                    spec);
+                0,
+                0,
+                new SpaceBudget(area, area.width() * (double) area.height(), 1.0),
+                null,
+                null,
+                ladder.strongest(),
+                environment,
+                spec
+            );
             reservation = spec.custom().reserve(context);
             reservationResolved = true;
             return;
         }
         reservation = new InworldLayouter.SpaceReservation(
-                spaceKindOf(spec.anchor()),
-                spec.spaces().priority(),
-                spec.stability().stickySlot(),
-                ElementMode.arbitrated);
+            spaceKindOf(spec.anchor()),
+            spec.spaces().priority(),
+            spec.stability().stickySlot(),
+            ElementMode.arbitrated
+        );
         reservationResolved = true;
     }
 
@@ -323,7 +334,8 @@ public final class AssembledElement implements InworldElement {
     private void requireEnvironment() {
         if (environment == null) {
             throw new IllegalStateException(
-                    "beginFrame must be called before the coordinator drives element " + spec.id());
+                "beginFrame must be called before the coordinator drives element " + spec.id()
+            );
         }
     }
 

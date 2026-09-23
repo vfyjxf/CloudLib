@@ -24,7 +24,8 @@ public final class StateSlot {
         StateContext context = currentContext.get();
         if (context == null) {
             throw new IllegalStateException(
-                    "useState must be called during blueprint evaluation within a StateContext");
+                "useState must be called during blueprint evaluation within a StateContext"
+            );
         }
         return context.getOrCreateState(initialValue);
     }

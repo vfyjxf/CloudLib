@@ -191,9 +191,10 @@ class SceneHandleTest {
             // LIFO order: grandparent's last-registered runs first (which triggers parent cleanup),
             // then grandparent's first-registered runs
             assertEquals(
-                    List.of("parent-detach-from-grandparent", "child-detach-from-parent", "parent", "grandparent"),
-                    cleanupOrder,
-                    "Cleanup should cascade properly in LIFO order");
+                List.of("parent-detach-from-grandparent", "child-detach-from-parent", "parent", "grandparent"),
+                cleanupOrder,
+                "Cleanup should cascade properly in LIFO order"
+            );
         }
     }
 

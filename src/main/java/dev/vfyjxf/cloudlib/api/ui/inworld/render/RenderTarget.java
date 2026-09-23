@@ -36,7 +36,8 @@ public sealed interface RenderTarget {
      * @param partialTick the frame's partial tick
      */
     record WorldTarget(Camera camera, Projection projection, int viewportW, int viewportH, float partialTick)
-            implements RenderTarget {}
+            implements
+                RenderTarget {}
 
     /**
      * The screen pass: drawing happens with the gui, geometry is emitted in
@@ -48,5 +49,6 @@ public sealed interface RenderTarget {
      * @param partialTick the frame's partial tick
      */
     record ScreenTarget(GuiGraphics graphics, int viewportW, int viewportH, float partialTick)
-            implements RenderTarget {}
+            implements
+                RenderTarget {}
 }

@@ -82,11 +82,11 @@ public final class FloatingEffect implements Effect {
      * @return the effect
      */
     public static FloatingEffect create(
-            Widget reference, FloatingPlacement placement, FloatingMiddleware... middleware) {
-        return new FloatingEffect(
-                reference,
-                placement,
-                Arrays.stream(middleware).filter(Objects::nonNull).toList());
+        Widget reference,
+        FloatingPlacement placement,
+        FloatingMiddleware... middleware
+    ) {
+        return new FloatingEffect(reference, placement, Arrays.stream(middleware).filter(Objects::nonNull).toList());
     }
 
     /**
@@ -98,7 +98,10 @@ public final class FloatingEffect implements Effect {
      * @return the effect
      */
     public static FloatingEffect create(
-            Widget reference, FloatingPlacement placement, List<FloatingMiddleware> middleware) {
+        Widget reference,
+        FloatingPlacement placement,
+        List<FloatingMiddleware> middleware
+    ) {
         return new FloatingEffect(reference, placement, middleware);
     }
 
@@ -165,8 +168,8 @@ public final class FloatingEffect implements Effect {
         Rect boundary = new Rect(0, 0, root.width(), root.height());
 
         // Run the positioning engine
-        FloatingPositioning.PositionResult result =
-                FloatingPositioning.compute(referenceRect, floatingRect, boundary, placement, middleware);
+        FloatingPositioning.PositionResult result = FloatingPositioning
+                .compute(referenceRect, floatingRect, boundary, placement, middleware);
         lastResult = result;
 
         // Set position directly in scene space — extra-layer rendering

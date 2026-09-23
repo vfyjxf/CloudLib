@@ -8,10 +8,12 @@ import dev.vfyjxf.cloudlib.api.ui.style.Edge;
  * factors — {@code (0,0)} is top-left, {@code (1,1)} bottom-right.
  */
 public enum Corner {
-    topLeft(Edge.top, Edge.left, 0, 0),
-    topRight(Edge.top, Edge.right, 1, 0),
-    bottomRight(Edge.bottom, Edge.right, 1, 1),
-    bottomLeft(Edge.bottom, Edge.left, 0, 1);
+    topLeft(Edge.top, Edge.left, 0, 0), topRight(Edge.top, Edge.right, 1, 0), bottomRight(
+        Edge.bottom,
+        Edge.right,
+        1,
+        1
+    ), bottomLeft(Edge.bottom, Edge.left, 0, 1);
 
     private final Edge edgeA;
     private final Edge edgeB;

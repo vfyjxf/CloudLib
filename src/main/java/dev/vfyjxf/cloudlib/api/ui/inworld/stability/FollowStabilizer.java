@@ -31,11 +31,12 @@ public final class FollowStabilizer {
     /** A facade on the survey-synthesis defaults of both stages. */
     public FollowStabilizer() {
         this(
-                OneEuroFilter.defaultMinCutoff,
-                OneEuroFilter.defaultBeta,
-                OneEuroFilter.defaultDCutoff,
-                OneEuroFilter.defaultMaxCutoff,
-                PixelStabilizer.Config.ofDefaults());
+            OneEuroFilter.defaultMinCutoff,
+            OneEuroFilter.defaultBeta,
+            OneEuroFilter.defaultDCutoff,
+            OneEuroFilter.defaultMaxCutoff,
+            PixelStabilizer.Config.ofDefaults()
+        );
     }
 
     /**
@@ -47,7 +48,12 @@ public final class FollowStabilizer {
      * @param pixelConfig the pixel-layer knobs; see {@link PixelStabilizer.Config}
      */
     public FollowStabilizer(
-            double minCutoff, double beta, double dCutoff, double maxCutoff, PixelStabilizer.Config pixelConfig) {
+        double minCutoff,
+        double beta,
+        double dCutoff,
+        double maxCutoff,
+        PixelStabilizer.Config pixelConfig
+    ) {
         this.filterX = new OneEuroFilter(minCutoff, beta, dCutoff, maxCutoff);
         this.filterY = new OneEuroFilter(minCutoff, beta, dCutoff, maxCutoff);
         this.pixels = new PixelStabilizer(pixelConfig);

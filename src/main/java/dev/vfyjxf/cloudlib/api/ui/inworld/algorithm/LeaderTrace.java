@@ -54,11 +54,12 @@ public final class LeaderTrace {
      * the floor.
      */
     public record Frame(
-            long index,
-            List<LeaderRouter.Leader> leaders,
-            Map<String, String> clusters,
-            List<FloatRect> obstacles,
-            @Nullable FloatRect viewport) {
+        long index,
+        List<LeaderRouter.Leader> leaders,
+        Map<String, String> clusters,
+        List<FloatRect> obstacles,
+        @Nullable FloatRect viewport
+    ) {
 
         public Frame {
             leaders = List.copyOf(leaders);
@@ -81,9 +82,7 @@ public final class LeaderTrace {
             l.addProperty("id", leader.id());
             l.add("anchor", pos(leader.anchorX(), leader.anchorY()));
             JsonObject port = new JsonObject();
-            port.add(
-                    "point",
-                    pos(leader.port().point().x(), leader.port().point().y()));
+            port.add("point", pos(leader.port().point().x(), leader.port().point().y()));
             port.addProperty("face", leader.port().face().name());
             port.add("normal", pos(leader.port().normalX(), leader.port().normalY()));
             l.add("port", port);
@@ -137,20 +136,23 @@ public final class LeaderTrace {
             AttachPointResolver.Face face = AttachPointResolver.Face.valueOf(requireString(port, "face", line));
             FloatPos normal = readPos(requireArray(port, "normal", line), line);
             JsonElement panelJson = l.get("panel");
-            FloatRect panel =
-                    panelJson == null || panelJson.isJsonNull() ? null : readRect(panelJson.getAsJsonArray(), line);
-            leaders.add(new LeaderRouter.Leader(
+            FloatRect panel = panelJson == null || panelJson.isJsonNull()
+                    ? null
+                    : readRect(panelJson.getAsJsonArray(), line);
+            leaders.add(
+                new LeaderRouter.Leader(
                     requireString(l, "id", line),
                     anchor.x(),
                     anchor.y(),
                     new AttachPointResolver.Port(face, point, normal.x(), normal.y()),
-                    panel));
+                    panel
+                )
+            );
         }
         Map<String, String> clusters = new LinkedHashMap<>();
         JsonElement clustersJson = root.get("clusters");
         if (clustersJson != null && clustersJson.isJsonObject()) {
-            for (Map.Entry<String, JsonElement> entry :
-                    clustersJson.getAsJsonObject().entrySet()) {
+            for (Map.Entry<String, JsonElement> entry : clustersJson.getAsJsonObject().entrySet()) {
                 clusters.put(entry.getKey(), entry.getValue().getAsString());
             }
         }
@@ -172,30 +174,32 @@ public final class LeaderTrace {
         if (routesJson == null || !routesJson.isJsonArray()) {
             return List.of();
         }
-        List<LeaderRouter.Route> routes =
-                new ArrayList<>(routesJson.getAsJsonArray().size());
+        List<LeaderRouter.Route> routes = new ArrayList<>(routesJson.getAsJsonArray().size());
         for (JsonElement element : routesJson.getAsJsonArray()) {
             JsonObject r = element.getAsJsonObject();
             List<FloatPos> points = new ArrayList<>();
             for (JsonElement point : optArray(r, "points")) {
                 points.add(readPos(point.getAsJsonArray(), line));
             }
-            routes.add(new LeaderRouter.Route(
+            routes.add(
+                new LeaderRouter.Route(
                     requireString(r, "id", line),
                     LeaderRouter.Style.valueOf(requireString(r, "style", line)),
                     points,
                     null,
                     r.has("crossings") ? r.get("crossings").getAsInt() : 0,
                     r.has("shapeEpoch") ? r.get("shapeEpoch").getAsLong() : 0L,
-                    LeaderRouter.Tier.valueOf(
-                            r.has("tier") ? r.get("tier").getAsString() : LeaderRouter.Tier.full.name()),
+                    LeaderRouter.Tier
+                            .valueOf(r.has("tier") ? r.get("tier").getAsString() : LeaderRouter.Tier.full.name()),
                     r.has("alpha") ? r.get("alpha").getAsDouble() : 1.0,
                     new LeaderRouter.Telemetry(
-                            r.has("trigger") ? r.get("trigger").getAsInt() : 0,
-                            LeaderRouter.Decision.valueOf(
-                                    r.has("decision")
-                                            ? r.get("decision").getAsString()
-                                            : LeaderRouter.Decision.unchanged.name()))));
+                        r.has("trigger") ? r.get("trigger").getAsInt() : 0,
+                        LeaderRouter.Decision.valueOf(
+                            r.has("decision") ? r.get("decision").getAsString() : LeaderRouter.Decision.unchanged.name()
+                        )
+                    )
+                )
+            );
         }
         return routes;
     }
@@ -268,10 +272,11 @@ public final class LeaderTrace {
             throw new IllegalArgumentException("trace rect is not [x, y, w, h]: " + line);
         }
         return new FloatRect(
-                array.get(0).getAsDouble(),
-                array.get(1).getAsDouble(),
-                array.get(2).getAsDouble(),
-                array.get(3).getAsDouble());
+            array.get(0).getAsDouble(),
+            array.get(1).getAsDouble(),
+            array.get(2).getAsDouble(),
+            array.get(3).getAsDouble()
+        );
     }
 
     private static JsonArray pos(double x, double y) {

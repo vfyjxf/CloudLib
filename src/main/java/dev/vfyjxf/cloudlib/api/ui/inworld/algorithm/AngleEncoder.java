@@ -103,7 +103,10 @@ public final class AngleEncoder {
         this.insetMargin = insetMargin;
         this.config = config;
         this.edgeGate = new SwitchGate<>(
-                new SwitchGate.Config(config.edgeBand(), config.edgeDwellTicks(), 0.0, 0), ScreenEdge.right, 0.0);
+            new SwitchGate.Config(config.edgeBand(), config.edgeDwellTicks(), 0.0, 0),
+            ScreenEdge.right,
+            0.0
+        );
     }
 
     public double screenWidth() {

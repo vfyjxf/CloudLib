@@ -54,11 +54,12 @@ public class ChipWidget extends Widget {
             }
             return EventDispatch.pass;
         });
-        onMount((scene, context, handle) -> scene.layoutTree()
-                .setMeasureFunc(
-                        nodeId(),
-                        (style, space) ->
-                                new FloatSize(context.font().width(this.label) + 8, context.font().lineHeight + 4)));
+        onMount(
+            (scene, context, handle) -> scene.layoutTree().setMeasureFunc(
+                nodeId(),
+                (style, space) -> new FloatSize(context.font().width(this.label) + 8, context.font().lineHeight + 4)
+            )
+        );
     }
 
     public ChipWidget setLabel(String label) {

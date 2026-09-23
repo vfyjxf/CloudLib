@@ -31,10 +31,11 @@ public final class DependencyGraph<T extends ModPlugin> {
     private final Map<Namespace, T> pluginById;
 
     private DependencyGraph(
-            ImmutableGraph<Namespace> graph,
-            ImmutableList<T> sorted,
-            ImmutableList<LoadingLevel<T>> levels,
-            Map<Namespace, T> pluginById) {
+        ImmutableGraph<Namespace> graph,
+        ImmutableList<T> sorted,
+        ImmutableList<LoadingLevel<T>> levels,
+        Map<Namespace, T> pluginById
+    ) {
         this.graph = graph;
         this.sorted = sorted;
         this.levels = levels;
@@ -59,10 +60,11 @@ public final class DependencyGraph<T extends ModPlugin> {
         }
 
         return new DependencyGraph<>(
-                ImmutableGraph.copyOf(mutableGraph),
-                sorted.toImmutable(),
-                computeLevels(sortedIds, mutableGraph, id2Plugin).toImmutable(),
-                Collections.unmodifiableMap(id2Plugin));
+            ImmutableGraph.copyOf(mutableGraph),
+            sorted.toImmutable(),
+            computeLevels(sortedIds, mutableGraph, id2Plugin).toImmutable(),
+            Collections.unmodifiableMap(id2Plugin)
+        );
     }
 
     /**
@@ -75,10 +77,11 @@ public final class DependencyGraph<T extends ModPlugin> {
         var sortedIds = new ArrayList<>(id2Plugin.keySet());
 
         return new DependencyGraph<>(
-                ImmutableGraph.copyOf(mutableGraph),
-                MutableLists.withAll(id2Plugin.values()).toImmutable(),
-                computeLevels(sortedIds, mutableGraph, id2Plugin).toImmutable(),
-                Collections.unmodifiableMap(id2Plugin));
+            ImmutableGraph.copyOf(mutableGraph),
+            MutableLists.withAll(id2Plugin.values()).toImmutable(),
+            computeLevels(sortedIds, mutableGraph, id2Plugin).toImmutable(),
+            Collections.unmodifiableMap(id2Plugin)
+        );
     }
 
     // endregion
@@ -138,8 +141,7 @@ public final class DependencyGraph<T extends ModPlugin> {
     public boolean areIndependent(Namespace a, Namespace b) {
         Checks.checkNotNull(a, "a");
         Checks.checkNotNull(b, "b");
-        return !transitiveDependenciesOf(a).contains(b)
-                && !transitiveDependenciesOf(b).contains(a);
+        return !transitiveDependenciesOf(a).contains(b) && !transitiveDependenciesOf(b).contains(a);
     }
 
     // endregion
@@ -177,7 +179,10 @@ public final class DependencyGraph<T extends ModPlugin> {
     }
 
     private static <T extends ModPlugin> MutableList<LoadingLevel<T>> computeLevels(
-            List<Namespace> sortedIds, MutableGraph<Namespace> graph, Map<Namespace, T> id2Plugin) {
+        List<Namespace> sortedIds,
+        MutableGraph<Namespace> graph,
+        Map<Namespace, T> id2Plugin
+    ) {
         var levelMap = new Object2IntOpenHashMap<Namespace>();
         int maxLevel = -1;
 

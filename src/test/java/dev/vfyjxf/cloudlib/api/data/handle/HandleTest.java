@@ -91,7 +91,7 @@ class HandleTest {
     void pairListenerReceivesPrevAndCurrent() {
         Handle<Integer> h = Handle.of(10);
         List<int[]> pairs = new ArrayList<>();
-        h.onChange((prev, cur) -> pairs.add(new int[] {prev, cur}));
+        h.onChange((prev, cur) -> pairs.add(new int[]{prev, cur}));
 
         h.set(20);
         assertEquals(1, pairs.size());

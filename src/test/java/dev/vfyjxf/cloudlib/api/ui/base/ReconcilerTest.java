@@ -103,9 +103,7 @@ class ReconcilerTest {
     @Test
     void testEnumKeys() {
         enum ItemType {
-            header,
-            content,
-            footer
+            header, content, footer
         }
 
         TestBlueprint bp1 = new TestBlueprint("a");
@@ -157,7 +155,10 @@ class ReconcilerTest {
         List<TestBlueprint> oldList = List.of(createBlueprint("A", "key-a"), createBlueprint("B", "key-b"));
 
         List<TestBlueprint> newList = List.of(
-                createBlueprint("A-new", "key-a"), createBlueprint("B-new", "key-b"), createBlueprint("C", "key-c"));
+            createBlueprint("A-new", "key-a"),
+            createBlueprint("B-new", "key-b"),
+            createBlueprint("C", "key-c")
+        );
 
         // First two should match by key
         assertTrue(Reconciler.canUpdate(oldList.get(0), newList.get(0)));
@@ -173,7 +174,10 @@ class ReconcilerTest {
         List<TestBlueprint> oldList = List.of(createBlueprint("B", "key-b"), createBlueprint("C", "key-c"));
 
         List<TestBlueprint> newList = List.of(
-                createBlueprint("A", "key-a"), createBlueprint("B-new", "key-b"), createBlueprint("C-new", "key-c"));
+            createBlueprint("A", "key-a"),
+            createBlueprint("B-new", "key-b"),
+            createBlueprint("C-new", "key-c")
+        );
 
         // key-a is new
         assertFalse(oldList.stream().anyMatch(bp -> "key-a".equals(bp.key())));
@@ -254,8 +258,7 @@ class ReconcilerTest {
         assertTrue(Reconciler.canUpdate(oldRoot, newRoot));
 
         // Children should also be able to update
-        assertTrue(Reconciler.canUpdate(
-                oldRoot.children().get(0), newRoot.children().get(0)));
+        assertTrue(Reconciler.canUpdate(oldRoot.children().get(0), newRoot.children().get(0)));
     }
 
     // ==================== Subclass Handling ====================

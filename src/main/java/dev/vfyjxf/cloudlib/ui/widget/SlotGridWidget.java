@@ -1,31 +1,44 @@
 package dev.vfyjxf.cloudlib.ui.widget;
 
+import dev.vfyjxf.cloudlib.api.math.Rect;
+import dev.vfyjxf.cloudlib.api.ui.base.CompositeWidget;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
-import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
-import dev.vfyjxf.taffy.geometry.FloatSize;
+import dev.vfyjxf.cloudlib.api.ui.style.UIStyle;
+import dev.vfyjxf.cloudlib.api.ui.style.UIStyles;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * A read-only grid of container slots: vanilla-looking bevelled cells
  * (pixel-matched to {@code generic_54.png}) with the item icon and its count /
  * durability decorations on top; empty cells draw the slot bed only. Rows
- * adapt to the item count — {@link #setItems} re-measures.
+ * adapt to the item count — {@link #setItems} re-declares the grid's size.
+ * <p>
+ * Every cell is a real child node carrying the {@code .slot} class (the
+ * selector {@code standard/base.css} paints with {@code --slot} /
+ * {@code --slot-dark}), so a theme can restyle the bed; a cell draws its
+ * themed background when the theme paints one and the vanilla bevel otherwise.
+ * Cells are absolutely placed at their row-major offset, so the grid's own
+ * measured size is exactly what it always was.
+ * <p>
+ * The cell itself — bed, hover wash, item icon and decorations — lives in
+ * {@link SlotCellWidget}, shared with {@link IconRowWidget}.
  */
-public final class SlotGridWidget extends Widget {
+public final class SlotGridWidget extends CompositeWidget<Widget> {
 
     /** One slot cell — the vanilla 18×18 container cell. */
-    public static final int cell = 18;
+    public static final int cell = SlotCellWidget.cell;
 
     private final int columns;
+    private final List<SlotCell> cells = new ArrayList<>();
     private List<ItemStack> items = List.of();
 
     public SlotGridWidget(int columns) {
         this.columns = Math.max(1, columns);
-        onMount((scene, context, handle) -> scene.layoutTree()
-                .setMeasureFunc(
-                        nodeId(), (style, space) -> new FloatSize(gridWidth(this.columns), gridHeight(rows()))));
+        syncCells();
     }
 
     // region configuration
@@ -46,9 +59,28 @@ public final class SlotGridWidget extends Widget {
     /** Replaces the displayed stacks; rows re-derive from the count. */
     public void setItems(List<ItemStack> items) {
         this.items = List.copyOf(items);
-        if (lifecycle().mounted()) {
-            scene().layoutTree().markDirty(nodeId());
+        syncCells();
+    }
+
+    /** Grows or shrinks the cell list to one cell per grid position and re-seats the stacks. */
+    private void syncCells() {
+        int needed = columns * rows();
+        while (cells.size() > needed) {
+            removeWidget(cells.remove(cells.size() - 1));
         }
+        while (cells.size() < needed) {
+            SlotCell cell = new SlotCell(this, cells.size());
+            cells.add(cell);
+            addWidget(cell);
+        }
+        for (int i = 0; i < cells.size(); i++) {
+            cells.get(i).setStack(i < items.size() ? items.get(i) : ItemStack.EMPTY);
+        }
+        // the cells are absolute, so a taffy measure function on this node is
+        // never consulted (a measured node is a leaf): the grid declares the
+        // size its own cell geometry implies, below the theme, and the relayout
+        // follows from the style write
+        defaultStyle(UIStyle.of(UIStyles.sizeOf(gridWidth(columns), gridHeight(rows()))));
     }
 
     // endregion
@@ -93,33 +125,36 @@ public final class SlotGridWidget extends Widget {
 
     // endregion
 
-    // region rendering
+    // region cells
 
+    /**
+     * The cells mirror this grid's selector surface — a state flip (the grid
+     * going inactive, say) has to re-resolve them too.
+     */
     @Override
-    protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
-        int cells = columns * rows();
-        for (int i = 0; i < cells; i++) {
-            int x = slotX(slotColumn(i, columns));
-            int y = slotY(slotRow(i, columns));
-            slot(canvas, x, y);
-            if (i >= items.size()) continue;
-            ItemStack stack = items.get(i);
-            if (stack.isEmpty()) continue;
-            canvas.renderItemIcon(stack, x + 1, y + 1);
-            canvas.renderItemDecorations(stack, x + 1, y + 1);
-        }
+    public void markStyleDirty() {
+        super.markStyleDirty();
+        WidgetPart.markStyleDirtyAll(this);
     }
 
     /**
-     * The classic container slot: 8B8B8B face, 373737 top/left inset,
-     * FFFFFF bottom/right bevel — five fills, pixel-matched to vanilla.
+     * One cell of the grid: the shared {@link SlotCellWidget} placed at this
+     * cell's row-major offset.
      */
-    private static void slot(SceneCanvas canvas, int x, int y) {
-        canvas.fill(x, y, 18, 18, 0xFF8B8B8B);
-        canvas.fill(x, y, 17, 1, 0xFF373737);
-        canvas.fill(x, y, 1, 17, 0xFF373737);
-        canvas.fill(x + 17, y + 1, 1, 17, 0xFFFFFFFF);
-        canvas.fill(x + 1, y + 17, 17, 1, 0xFFFFFFFF);
+    static final class SlotCell extends SlotCellWidget {
+
+        SlotCell(SlotGridWidget owner, int index) {
+            super(owner, cellBounds(owner, index), true);
+        }
+
+        private static Supplier<Rect> cellBounds(SlotGridWidget owner, int index) {
+            return () -> new Rect(
+                slotX(slotColumn(index, owner.columns())),
+                slotY(slotRow(index, owner.columns())),
+                cell,
+                cell
+            );
+        }
     }
 
     // endregion

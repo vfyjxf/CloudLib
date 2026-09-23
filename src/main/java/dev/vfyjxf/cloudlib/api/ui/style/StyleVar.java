@@ -4,7 +4,10 @@ import dev.vfyjxf.cloudlib.api.css.ComponentValue;
 import dev.vfyjxf.cloudlib.api.css.Tokens;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleParseContext;
 import dev.vfyjxf.cloudlib.api.ui.style.key.StyleParser;
+import dev.vfyjxf.cloudlib.api.ui.texture.ColorTexture;
+import dev.vfyjxf.cloudlib.api.ui.texture.VisualTexture;
 import dev.vfyjxf.cloudlib.internal.ui.style.CssEnums;
+import dev.vfyjxf.cloudlib.internal.ui.style.CssTextures;
 import dev.vfyjxf.cloudlib.internal.ui.style.CssValues;
 import org.jetbrains.annotations.Nullable;
 
@@ -62,7 +65,11 @@ public final class StyleVar<T> {
     }
 
     public static <T> StyleVar<T> of(
-            String name, StyleParser<T> parser, @Nullable Function<T, String> writer, @Nullable T fallback) {
+        String name,
+        StyleParser<T> parser,
+        @Nullable Function<T, String> writer,
+        @Nullable T fallback
+    ) {
         return new StyleVar<>(name, parser, writer, fallback);
     }
 
@@ -70,15 +77,41 @@ public final class StyleVar<T> {
 
     /** {@code <color>} — a Minecraft ARGB int; writer emits {@code #RRGGBB(AA)}. */
     public static StyleVar<Integer> color(String name) {
-        return of(
-                name,
-                (values, ctx) -> {
-                    ComponentValue v = CssEnums.single(values);
-                    Integer c = v == null ? null : CssValues.color(v);
-                    if (c == null) ctx.warn("invalid <color> for " + name);
-                    return c;
-                },
-                StyleVar::colorText);
+        return of(name, (values, ctx) -> {
+            ComponentValue v = CssEnums.single(values);
+            Integer c = v == null ? null : CssValues.color(v);
+            if (c == null) ctx.warn("invalid <color> for " + name);
+            return c;
+        }, StyleVar::colorText);
+    }
+
+    /**
+     * {@code <texture>} — a texture function ({@code sdf(...)}, {@code nine-slice(...)},
+     * {@code linear-gradient(...)}, {@code sprite(...)}, {@code built-in(...)},
+     * {@code group(...)}, {@code empty}, …) with its optional modifier chain, or a bare
+     * {@code <color>} promoted to {@link ColorTexture}. This is the lens for the slots that
+     * carry a <em>surface</em> — a panel background or border — where a color is just the
+     * degenerate texture a theme may choose to write.
+     * <p>
+     * The writer emits the css form of a texture that has one; a texture with no css
+     * spelling (an atlas sprite, a frame animation, one built in java) raises
+     * {@link IllegalArgumentException} — pass its css text through
+     * {@code setVar(name, css)} instead.
+     */
+    public static StyleVar<VisualTexture> texture(String name) {
+        return of(name, (values, ctx) -> {
+            VisualTexture texture = CssTextures.parse(values);
+            if (texture != null) {
+                return texture;
+            }
+            ComponentValue v = CssEnums.single(values);
+            Integer c = v == null ? null : CssValues.color(v);
+            if (c == null) {
+                ctx.warn("invalid <texture> for " + name);
+                return null;
+            }
+            return new ColorTexture(c);
+        }, CssTextures::write);
     }
 
     /** {@code <number>} — a float; writer emits a plain number. */
@@ -98,15 +131,12 @@ public final class StyleVar<T> {
 
     /** A single {@code <ident-token>} — the ident text is the value. */
     public static StyleVar<String> ident(String name) {
-        return of(
-                name,
-                (values, ctx) -> {
-                    ComponentValue v = CssEnums.single(values);
-                    if (v instanceof ComponentValue.Ident id) return id.value();
-                    ctx.warn("expected a single ident for " + name);
-                    return null;
-                },
-                Function.identity());
+        return of(name, (values, ctx) -> {
+            ComponentValue v = CssEnums.single(values);
+            if (v instanceof ComponentValue.Ident id) return id.value();
+            ctx.warn("expected a single ident for " + name);
+            return null;
+        }, Function.identity());
     }
 
     /** Raw access — the resolved token stream itself. */

@@ -274,25 +274,20 @@ public final class AttachPointResolver {
         double y1 = y0 + rect.height();
         double insetX = Math.min(hoverInsetPx, rect.width() * 0.5);
         double insetY = Math.min(hoverInsetPx, rect.height() * 0.5);
-        FloatPos hit =
-                switch (face) {
-                    case right ->
-                        Math.abs(dx) < epsilon
-                                ? null
-                                : new FloatPos(x1, clamp(cy + (x1 - cx) / dx * dy, y0 + insetY, y1 - insetY));
-                    case left ->
-                        Math.abs(dx) < epsilon
-                                ? null
-                                : new FloatPos(x0, clamp(cy + (x0 - cx) / dx * dy, y0 + insetY, y1 - insetY));
-                    case bottom ->
-                        Math.abs(dy) < epsilon
-                                ? null
-                                : new FloatPos(clamp(cx + (y1 - cy) / dy * dx, x0 + insetX, x1 - insetX), y1);
-                    case top ->
-                        Math.abs(dy) < epsilon
-                                ? null
-                                : new FloatPos(clamp(cx + (y0 - cy) / dy * dx, x0 + insetX, x1 - insetX), y0);
-                };
+        FloatPos hit = switch (face) {
+            case right -> Math.abs(dx) < epsilon
+                    ? null
+                    : new FloatPos(x1, clamp(cy + (x1 - cx) / dx * dy, y0 + insetY, y1 - insetY));
+            case left -> Math.abs(dx) < epsilon
+                    ? null
+                    : new FloatPos(x0, clamp(cy + (x0 - cx) / dx * dy, y0 + insetY, y1 - insetY));
+            case bottom -> Math.abs(dy) < epsilon
+                    ? null
+                    : new FloatPos(clamp(cx + (y1 - cy) / dy * dx, x0 + insetX, x1 - insetX), y1);
+            case top -> Math.abs(dy) < epsilon
+                    ? null
+                    : new FloatPos(clamp(cx + (y0 - cy) / dy * dx, x0 + insetX, x1 - insetX), y0);
+        };
         return hit == null ? faceParam(rect, face) : paramOf(rect, hit);
     }
 
@@ -332,7 +327,12 @@ public final class AttachPointResolver {
 
     /** The target's offset along the given edge (perpendicular to its normal). */
     private static double alongEdgeOffset(
-            FloatPos edgeMid, double normalX, double normalY, double targetX, double targetY) {
+        FloatPos edgeMid,
+        double normalX,
+        double normalY,
+        double targetX,
+        double targetY
+    ) {
         double tangentX = -normalY;
         double tangentY = normalX;
         return (targetX - edgeMid.x()) * tangentX + (targetY - edgeMid.y()) * tangentY;

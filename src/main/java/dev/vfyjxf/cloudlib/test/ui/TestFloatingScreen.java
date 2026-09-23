@@ -54,8 +54,14 @@ public class TestFloatingScreen extends BasicScreen {
     private void buildUI() {
         // Root layout: vertical column
         var root = ColumnWidget.create(8);
-        root.useStyle(UIStyle.of(
-                UIStyles.flex(1), UIStyles.minSize(0, 0), UIStyles.padding(12), UIStyles.background(Textures.frame)));
+        root.useStyle(
+            UIStyle.of(
+                UIStyles.flex(1),
+                UIStyles.minSize(0, 0),
+                UIStyles.padding(12),
+                UIStyles.background(Textures.frame)
+            )
+        );
 
         // Title
         root.addWidget(createTitle());
@@ -138,12 +144,15 @@ public class TestFloatingScreen extends BasicScreen {
 
     private Widget createMiddlewareControls() {
         var panel = RowWidget.create(4);
-        panel.useStyle(UIStyle.of(
+        panel.useStyle(
+            UIStyle.of(
                 UIStyles.alignItemsCenter(),
                 UIStyles.padding(6),
                 UIStyles.flexWrap(),
                 UIStyles.rowGap(4),
-                UIStyles.background(Textures.inset)));
+                UIStyles.background(Textures.inset)
+            )
+        );
 
         panel.addWidget(LabelWidget.of("FloatingMiddleware:").setColor(0xFF3F3F3F));
         panel.addWidget(createButton("Toggle Flip", this::toggleFlip, 0xFF885500));
@@ -159,30 +168,34 @@ public class TestFloatingScreen extends BasicScreen {
 
     private Widget createDemoArea() {
         var area = BoxWidget.create();
-        area.useStyle(UIStyle.of(
+        area.useStyle(
+            UIStyle.of(
                 UIStyles.flex(1),
                 UIStyles.minSize(0, 60),
                 UIStyles.padding(0),
                 UIStyles.alignItemsCenter(),
                 UIStyles.justifyCenter(),
-                UIStyles.background(Textures.dark)));
+                UIStyles.background(Textures.dark)
+            )
+        );
 
         // Reference element — a colored box in the center
         referenceBox = BoxWidget.create();
-        referenceBox.useStyle(UIStyle.of(
+        referenceBox.useStyle(
+            UIStyle.of(
                 UIStyles.sizeOf(80, 32),
                 UIStyles.background(Textures.outlinedFlat),
                 UIStyles.alignItemsCenter(),
-                UIStyles.justifyCenter()));
+                UIStyles.justifyCenter()
+            )
+        );
         var refLabel = LabelWidget.of("Reference").setColor(0xFF3F3F3F).setShadow(false);
         refLabel.useStyle(UIStyle.of(UIStyles.sizeOf(60, 12)));
         referenceBox.addChild(refLabel);
         area.addChild(referenceBox);
 
         // Floating element — a tooltip-like label
-        floatingLabel = LabelWidget.of("Floating: " + currentPlacement.name())
-                .setColor(0xFF3F3F3F)
-                .setShadow(false);
+        floatingLabel = LabelWidget.of("Floating: " + currentPlacement.name()).setColor(0xFF3F3F3F).setShadow(false);
         floatingLabel.useStyle(UIStyle.of(UIStyles.padding(4, 8), UIStyles.background(Textures.flat)));
 
         // Apply the floating effect
@@ -202,35 +215,39 @@ public class TestFloatingScreen extends BasicScreen {
         var container = ColumnWidget.create(4);
         container.useStyle(UIStyle.of(UIStyles.padding(6), UIStyles.background(Textures.inset)));
 
-        var label = LabelWidget.of("All Placements Preview (offset + flip + shift):")
-                .setColor(0xFF3F3F3F)
+        var label = LabelWidget.of("All Placements Preview (offset + flip + shift):").setColor(0xFF3F3F3F)
                 .setShadow(false);
         label.useStyle(UIStyle.of(UIStyles.heightOf(12)));
         container.addWidget(label);
 
         var area = BoxWidget.create();
-        area.useStyle(UIStyle.of(
+        area.useStyle(
+            UIStyle.of(
                 UIStyles.heightOf(100),
                 UIStyles.alignItemsCenter(),
                 UIStyles.justifyCenter(),
-                UIStyles.background(Textures.dark)));
+                UIStyles.background(Textures.dark)
+            )
+        );
 
         // Small reference
         var smallRef = BoxWidget.create();
-        smallRef.useStyle(UIStyle.of(
+        smallRef.useStyle(
+            UIStyle.of(
                 UIStyles.sizeOf(48, 24),
                 UIStyles.background(Textures.outlinedFlat),
                 UIStyles.alignItemsCenter(),
-                UIStyles.justifyCenter()));
+                UIStyles.justifyCenter()
+            )
+        );
         var smallRefLabel = LabelWidget.of("Ref").setColor(0xFF3F3F3F);
         smallRefLabel.useStyle(UIStyle.of(UIStyles.sizeOf(24, 10)));
         smallRef.addChild(smallRefLabel);
         area.addChild(smallRef);
 
         // Create a tiny floating label for each of the 4 main placements
-        FloatingPlacement[] showcasePlacements = {
-            FloatingPlacement.top, FloatingPlacement.bottom, FloatingPlacement.left, FloatingPlacement.right
-        };
+        FloatingPlacement[] showcasePlacements = {FloatingPlacement.top, FloatingPlacement.bottom,
+                FloatingPlacement.left, FloatingPlacement.right};
 
         for (int i = 0; i < showcasePlacements.length; i++) {
             var p = showcasePlacements[i];
@@ -293,9 +310,8 @@ public class TestFloatingScreen extends BasicScreen {
     }
 
     private FloatingMiddleware[] buildMiddleware() {
-        return new FloatingMiddleware[] {
-            offset(offsetDistance), enableFlip ? flip() : null, enableShift ? shift(4) : null
-        };
+        return new FloatingMiddleware[]{offset(offsetDistance), enableFlip ? flip() : null,
+                enableShift ? shift(4) : null};
     }
 
     private void updateStatus() {
@@ -306,8 +322,12 @@ public class TestFloatingScreen extends BasicScreen {
 
     private String buildStatusText() {
         return String.format(
-                "FloatingPlacement: %s | Offset: %d | Flip: %s | Shift: %s",
-                currentPlacement.name(), offsetDistance, enableFlip ? "ON" : "OFF", enableShift ? "ON" : "OFF");
+            "FloatingPlacement: %s | Offset: %d | Flip: %s | Shift: %s",
+            currentPlacement.name(),
+            offsetDistance,
+            enableFlip ? "ON" : "OFF",
+            enableShift ? "ON" : "OFF"
+        );
     }
 
     // ========== Helpers ==========

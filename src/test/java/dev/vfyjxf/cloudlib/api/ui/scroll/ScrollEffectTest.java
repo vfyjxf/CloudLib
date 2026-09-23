@@ -10,12 +10,8 @@ class ScrollEffectTest {
 
     @Test
     void middleMouseAutoScrollAdvancesFromAnchorDistance() {
-        ScrollState state = ScrollState.create(ScrollDirection.vertical)
-                .middleMouseAutoScroll(true)
-                .smooth(false)
-                .autoScrollDeadZone(5.0f)
-                .autoScrollSpeed(2.0f)
-                .autoScrollMaxSpeed(12.0f);
+        ScrollState state = ScrollState.create(ScrollDirection.vertical).middleMouseAutoScroll(true).smooth(false)
+                .autoScrollDeadZone(5.0f).autoScrollSpeed(2.0f).autoScrollMaxSpeed(12.0f);
         state.updateViewport(40, 40);
         state.updateContentSize(40, 120);
 

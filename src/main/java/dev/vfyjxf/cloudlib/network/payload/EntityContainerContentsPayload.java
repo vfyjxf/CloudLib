@@ -22,13 +22,15 @@ import java.util.List;
 public record EntityContainerContentsPayload(int entityId, List<ItemStack> stacks) implements ClientboundPayload {
 
     public static final ClientPayloadInfo<EntityContainerContentsPayload> info = CloudlibPayloads.createClientInfo(
-            StreamCodec.composite(
-                    ByteBufCodecs.VAR_INT,
-                    EntityContainerContentsPayload::entityId,
-                    ItemStack.OPTIONAL_STREAM_CODEC.apply(ByteBufCodecs.list(512)),
-                    EntityContainerContentsPayload::stacks,
-                    EntityContainerContentsPayload::new),
-            "entity_container_contents");
+        StreamCodec.composite(
+            ByteBufCodecs.VAR_INT,
+            EntityContainerContentsPayload::entityId,
+            ItemStack.OPTIONAL_STREAM_CODEC.apply(ByteBufCodecs.list(512)),
+            EntityContainerContentsPayload::stacks,
+            EntityContainerContentsPayload::new
+        ),
+        "entity_container_contents"
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

@@ -18,11 +18,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.zone;
  * </ul>
  */
 public enum LodTier {
-    full,
-    compact,
-    icon,
-    clustered,
-    hidden;
+    full, compact, icon, clustered, hidden;
 
     private static final LodTier[] degradeOrder = values();
 

@@ -16,12 +16,13 @@ abstract sealed class BasicExpose<T> implements Expose<T> permits BasicDownstrea
     protected final FlowDecoder<T> decoder;
 
     protected BasicExpose(
-            String name,
-            short id,
-            Snapshot<T> snapshot,
-            ValueSupplier<T> supplier,
-            FlowEncoder<T> encoder,
-            FlowDecoder<T> decoder) {
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> supplier,
+        FlowEncoder<T> encoder,
+        FlowDecoder<T> decoder
+    ) {
         this.name = name;
         this.id = id;
         this.snapshot = snapshot;

@@ -41,13 +41,8 @@ final class WidgetTreeView extends WidgetGroup<Widget> {
     WidgetTreeView(DebugOverlayImpl overlay) {
         this.overlay = overlay;
         useStyle(UIStyle.of(UIStyles.flexColumn(), UIStyles.padding(4, 7, 0, 0)));
-        scrollState = ScrollState.create(ScrollDirection.vertical)
-                .scrollSpeed(14)
-                .smooth(true)
-                .smoothSpeed(0.4f)
-                .scrollbarWidth(7)
-                .viewportInset(4, 7, 0, 0)
-                .trackTexture(Textures.scrollTrack)
+        scrollState = ScrollState.create(ScrollDirection.vertical).scrollSpeed(14).smooth(true).smoothSpeed(0.4f)
+                .scrollbarWidth(7).viewportInset(4, 7, 0, 0).trackTexture(Textures.scrollTrack)
                 .thumbTexture(Textures.scrollbarVertical);
         useEffect(scrollable(scrollState));
         setTickable(true);
@@ -104,8 +99,7 @@ final class WidgetTreeView extends WidgetGroup<Widget> {
     }
 
     private void buildRows(Widget node, int depth) {
-        boolean hasChildren = node instanceof CompositeWidget<?> composite
-                && !composite.children().isEmpty();
+        boolean hasChildren = node instanceof CompositeWidget<?> composite && !composite.children().isEmpty();
         addWidget(new TreeRow(node, depth, hasChildren, expanded.contains(node)));
         if (hasChildren && expanded.contains(node)) {
             for (Widget child : ((CompositeWidget<?>) node).children()) {
@@ -182,10 +176,13 @@ final class WidgetTreeView extends WidgetGroup<Widget> {
             this.hasChildren = hasChildren;
             this.isExpanded = isExpanded;
             this.isSelected = node == selected;
-            useStyle(UIStyle.of(
+            useStyle(
+                UIStyle.of(
                     UIStyles.widthOf(TaffyDimension.percent(1)),
                     UIStyles.heightOf(DebugTheme.rowHeight),
-                    UIStyles.flexShrink(0)));
+                    UIStyles.flexShrink(0)
+                )
+            );
 
             onMouseClicked((input, context) -> {
                 double localX = input.mouseRelative(this).x;

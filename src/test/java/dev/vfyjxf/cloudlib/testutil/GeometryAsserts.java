@@ -66,7 +66,8 @@ public final class GeometryAsserts {
     public static void assertVecEquals(double[] expected, double[] actual, double epsilon) {
         if (expected.length != actual.length) {
             throw new AssertionError(
-                    "vector length mismatch: expected " + expected.length + " components but was " + actual.length);
+                "vector length mismatch: expected " + expected.length + " components but was " + actual.length
+            );
         }
         double maxDelta = 0;
         for (int i = 0; i < expected.length; i++) {
@@ -97,9 +98,16 @@ public final class GeometryAsserts {
     }
 
     private static AssertionError mismatch(
-            String kind, String expected, String actual, double epsilon, double maxDelta) {
-        return new AssertionError(kind + " mismatch: expected " + expected + " but was " + actual + " (epsilon="
-                + epsilon + ", maxDelta=" + maxDelta + ")");
+        String kind,
+        String expected,
+        String actual,
+        double epsilon,
+        double maxDelta
+    ) {
+        return new AssertionError(
+            kind + " mismatch: expected " + expected + " but was " + actual + " (epsilon=" + epsilon + ", maxDelta="
+                    + maxDelta + ")"
+        );
     }
 
     private static double max(double... values) {

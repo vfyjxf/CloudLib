@@ -139,7 +139,10 @@ public final class UIEffects {
      * @see FloatingMiddlewares
      */
     public static FloatingEffect floating(
-            Widget reference, FloatingPlacement placement, FloatingMiddleware... middleware) {
+        Widget reference,
+        FloatingPlacement placement,
+        FloatingMiddleware... middleware
+    ) {
         return FloatingEffect.create(reference, placement, middleware);
     }
 

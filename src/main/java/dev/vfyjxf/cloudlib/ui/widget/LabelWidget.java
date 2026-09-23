@@ -1,17 +1,27 @@
 package dev.vfyjxf.cloudlib.ui.widget;
 
+import dev.vfyjxf.cloudlib.api.text.RichText;
+import dev.vfyjxf.cloudlib.api.text.RichTexts;
+import dev.vfyjxf.cloudlib.api.text.ThemeColorResolver;
+import dev.vfyjxf.cloudlib.api.text.layout.LaidOutText;
+import dev.vfyjxf.cloudlib.api.text.layout.RichTextMeasure;
+import dev.vfyjxf.cloudlib.api.text.layout.TextAlignment;
+import dev.vfyjxf.cloudlib.api.text.render.RenderOptions;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.ui.canvas.SceneCanvas;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.cloudlib.api.ui.style.Styles;
 import dev.vfyjxf.cloudlib.data.lang.LangEntry;
-import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * Simple text label with alignment and auto-measuring.
+ * <p>
+ * Internally backed by the rich text pipeline; alignment is applied against the
+ * widget's laid-out width. Unlike the legacy implementation, text wraps when the
+ * layout imposes a width smaller than the content.
  */
 public class LabelWidget extends Widget {
 
@@ -22,14 +32,15 @@ public class LabelWidget extends Widget {
     private boolean shadow = true;
     private @Nullable TextAlign align = TextAlign.left;
 
+    private @Nullable RichTextMeasure measure;
+    private @Nullable TextAlignment appliedAlignment;
+
     // endregion
 
     // region types
 
     public enum TextAlign {
-        left,
-        CENTER,
-        right
+        left, CENTER, right
     }
 
     // endregion
@@ -55,11 +66,27 @@ public class LabelWidget extends Widget {
     private LabelWidget(Component text) {
         this.text = text;
         this.onMount((scene, context, handle) -> {
-            scene.layoutTree().setMeasureFunc(nodeId(), (style, availableSpace) -> {
-                var font = context.font();
-                return new FloatSize(font.width(this.text), font.lineHeight);
-            });
+            measure = createMeasure();
+            scene.layoutTree().setMeasureFunc(nodeId(), measure);
         });
+        this.onUnmount(() -> measure = null);
+    }
+
+    private RichTextMeasure createMeasure() {
+        RichTextMeasure created = RichTexts.measure(RichText.of(text));
+        TextAlignment alignment = mapAlignment(align);
+        created.withAlignment(alignment);
+        appliedAlignment = alignment;
+        return created;
+    }
+
+    private static TextAlignment mapAlignment(@Nullable TextAlign align) {
+        if (align == null) return TextAlignment.left;
+        return switch (align) {
+            case left -> TextAlignment.left;
+            case CENTER -> TextAlignment.center;
+            case right -> TextAlignment.right;
+        };
     }
 
     // endregion
@@ -72,17 +99,20 @@ public class LabelWidget extends Widget {
 
     public LabelWidget setText(Component text) {
         this.text = text;
+        if (measure != null) {
+            measure = createMeasure();
+            scene().layoutTree().setMeasureFunc(nodeId(), measure);
+            scene().layoutTree().markDirty(nodeId());
+        }
         return this;
     }
 
     public LabelWidget setText(LangEntry entry, Object... args) {
-        this.text = entry.get(args);
-        return this;
+        return setText(entry.get(args));
     }
 
     public LabelWidget setText(String text) {
-        this.text = Component.literal(text);
-        return this;
+        return setText(Component.literal(text));
     }
 
     public int color() {
@@ -116,6 +146,14 @@ public class LabelWidget extends Widget {
 
     public LabelWidget setAlign(@Nullable TextAlign align) {
         this.align = align;
+        if (measure != null) {
+            TextAlignment alignment = mapAlignment(align);
+            if (alignment != appliedAlignment) {
+                measure.withAlignment(alignment);
+                appliedAlignment = alignment;
+                scene().layoutTree().markDirty(nodeId());
+            }
+        }
         return this;
     }
 
@@ -126,19 +164,21 @@ public class LabelWidget extends Widget {
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         super.renderInternal(canvas, mouseX, mouseY, partialTicks);
-        var font = context().font();
-        int textWidth = font.width(text);
+        if (measure == null) return;
+        LaidOutText laidOut = measure.layoutAt(Math.max(0, width()));
+        RenderOptions options = RenderOptions.defaults.withDefaultColor(inkColor()).withShadow(shadow())
+                .withMouse(mouseX, mouseY).withPartialTicks(partialTicks)
+                .withThemeColors(ThemeColorResolver.of(style()));
+        RichTexts.renderer().render(canvas, laidOut, 0, 0, options);
+    }
 
-        int x =
-                switch (align) {
-                    case left -> 0;
-                    case CENTER -> (width() - textWidth) / 2;
-                    case right -> width() - textWidth;
-                    case null -> 0;
-                };
-
+    /**
+     * The themed {@code color} property wins over the code-level color. The rich
+     * text pipeline takes ARGB, hence the forced opaque alpha on the fallback.
+     */
+    private int inkColor() {
         Integer themed = style().visualContext().textColor();
-        canvas.text(text, x, 0, themed != null ? themed : color, shadow());
+        return themed != null ? themed : color | 0xFF000000;
     }
 
     // endregion
@@ -154,7 +194,11 @@ public class LabelWidget extends Widget {
         }
         collector.add("text", content, InspectionProperty.categoryData);
         collector.addFormatted(
-                "color", String.format("#%06X", color & 0xFFFFFF), "#FFFFFF", InspectionProperty.categoryVisual);
+            "color",
+            String.format("#%06X", color & 0xFFFFFF),
+            "#FFFFFF",
+            InspectionProperty.categoryVisual
+        );
         collector.addWithDefault("shadow", shadow, true, InspectionProperty.categoryVisual);
         collector.addWithDefault("align", align, TextAlign.left, InspectionProperty.categoryVisual);
     }

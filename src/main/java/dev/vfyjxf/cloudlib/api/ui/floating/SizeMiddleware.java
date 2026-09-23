@@ -100,10 +100,10 @@ public final class SizeMiddleware implements FloatingMiddleware {
         double maxClipHeight = floatingHeight - overflow.top() - overflow.bottom();
         double maxClipWidth = floatingWidth - overflow.left() - overflow.right();
 
-        double availableHeight =
-                Math.min(floatingHeight - FloatingPositioning.getSide(overflow, heightSide), maxClipHeight);
-        double availableWidth =
-                Math.min(floatingWidth - FloatingPositioning.getSide(overflow, widthSide), maxClipWidth);
+        double availableHeight = Math
+                .min(floatingHeight - FloatingPositioning.getSide(overflow, heightSide), maxClipHeight);
+        double availableWidth = Math
+                .min(floatingWidth - FloatingPositioning.getSide(overflow, widthSide), maxClipWidth);
 
         // Clamp to non-negative
         int width = (int) Math.max(0, availableWidth);

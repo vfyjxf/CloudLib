@@ -119,9 +119,9 @@ public class CompositeWidget<T extends Widget> extends Widget {
                         scene.reuse(widget);
                         scene.remountWidget(widget);
                     }
-                    default ->
-                        throw new IllegalArgumentException(
-                                "Illegal lifecycle: " + widget.lifecycle + " for widget: " + widget);
+                    default -> throw new IllegalArgumentException(
+                        "Illegal lifecycle: " + widget.lifecycle + " for widget: " + widget
+                    );
                 }
                 scene.invalidatePathCache();
             }

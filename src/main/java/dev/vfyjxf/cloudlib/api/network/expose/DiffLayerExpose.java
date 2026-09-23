@@ -13,63 +13,60 @@ import java.util.function.Consumer;
 public interface DiffLayerExpose<E, D> extends LayerExpose<E>, Differential<D> {
 
     static <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> create(
-            String name,
-            short id,
-            Snapshot<T> snapshot,
-            ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder,
-            FlowDecoder<E> decoder,
-            FlowEncoder<D> diffEncoder,
-            FlowDecoder<D> diffDecoder) {
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> valueSupplier,
+        FlowEncoder<T> encoder,
+        FlowDecoder<E> decoder,
+        FlowEncoder<D> diffEncoder,
+        FlowDecoder<D> diffDecoder
+    ) {
         return new StandardDiffLayerExpose<>(
-                name, id,
-                snapshot, valueSupplier,
-                encoder, decoder,
-                diffEncoder, diffDecoder);
+            name,
+            id,
+            snapshot,
+            valueSupplier,
+            encoder,
+            decoder,
+            diffEncoder,
+            diffDecoder
+        );
     }
 
     static <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> create(
-            String name,
-            short id,
-            Snapshot<T> snapshot,
-            ValueSupplier<T> valueSupplier,
-            FlowHandler<T, E> codec,
-            FlowEncoder<D> diffEncoder,
-            FlowDecoder<D> diffDecoder) {
-        return new StandardDiffLayerExpose<>(
-                name, id,
-                snapshot, valueSupplier,
-                codec, codec,
-                diffEncoder, diffDecoder);
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> valueSupplier,
+        FlowHandler<T, E> codec,
+        FlowEncoder<D> diffEncoder,
+        FlowDecoder<D> diffDecoder
+    ) {
+        return new StandardDiffLayerExpose<>(name, id, snapshot, valueSupplier, codec, codec, diffEncoder, diffDecoder);
     }
 
     static <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> create(
-            String name,
-            short id,
-            Snapshot<T> snapshot,
-            ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder,
-            FlowDecoder<E> decoder,
-            UnaryFlowHandler<D> diffCodec) {
-        return new StandardDiffLayerExpose<>(
-                name, id,
-                snapshot, valueSupplier,
-                encoder, decoder,
-                diffCodec, diffCodec);
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> valueSupplier,
+        FlowEncoder<T> encoder,
+        FlowDecoder<E> decoder,
+        UnaryFlowHandler<D> diffCodec
+    ) {
+        return new StandardDiffLayerExpose<>(name, id, snapshot, valueSupplier, encoder, decoder, diffCodec, diffCodec);
     }
 
     static <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> create(
-            String name,
-            short id,
-            Snapshot<T> snapshot,
-            ValueSupplier<T> valueSupplier,
-            FlowHandler<T, E> codec,
-            UnaryFlowHandler<D> diffCodec) {
-        return new StandardDiffLayerExpose<>(
-                name, id,
-                snapshot, valueSupplier,
-                codec, codec,
-                diffCodec, diffCodec);
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> valueSupplier,
+        FlowHandler<T, E> codec,
+        UnaryFlowHandler<D> diffCodec
+    ) {
+        return new StandardDiffLayerExpose<>(name, id, snapshot, valueSupplier, codec, codec, diffCodec, diffCodec);
     }
 
     // region handle factory
@@ -80,9 +77,22 @@ public interface DiffLayerExpose<E, D> extends LayerExpose<E>, Differential<D> {
      * underlying {@link DiffObservable} value.
      */
     static <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> create(
-            String name, short id, DiffHandle<T, D> handle, FlowHandler<T, E> codec, UnaryFlowHandler<D> diffCodec) {
+        String name,
+        short id,
+        DiffHandle<T, D> handle,
+        FlowHandler<T, E> codec,
+        UnaryFlowHandler<D> diffCodec
+    ) {
         return new StandardDiffLayerExpose<>(
-                name, id, Snapshot.HandleSnapshot.of(handle), handle::get, codec, codec, diffCodec, diffCodec);
+            name,
+            id,
+            Snapshot.HandleSnapshot.of(handle),
+            handle::get,
+            codec,
+            codec,
+            diffCodec,
+            diffCodec
+        );
     }
 
     /**
@@ -90,15 +100,24 @@ public interface DiffLayerExpose<E, D> extends LayerExpose<E>, Differential<D> {
      * {@link #create(String, short, DiffHandle, FlowHandler, UnaryFlowHandler)}.
      */
     static <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> create(
-            String name,
-            short id,
-            DiffHandle<T, D> handle,
-            FlowEncoder<T> encoder,
-            FlowDecoder<E> decoder,
-            FlowEncoder<D> diffEncoder,
-            FlowDecoder<D> diffDecoder) {
+        String name,
+        short id,
+        DiffHandle<T, D> handle,
+        FlowEncoder<T> encoder,
+        FlowDecoder<E> decoder,
+        FlowEncoder<D> diffEncoder,
+        FlowDecoder<D> diffDecoder
+    ) {
         return new StandardDiffLayerExpose<>(
-                name, id, Snapshot.HandleSnapshot.of(handle), handle::get, encoder, decoder, diffEncoder, diffDecoder);
+            name,
+            id,
+            Snapshot.HandleSnapshot.of(handle),
+            handle::get,
+            encoder,
+            decoder,
+            diffEncoder,
+            diffDecoder
+        );
     }
 
     // endregion

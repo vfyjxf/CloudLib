@@ -1,0 +1,5 @@
+{
+  "name": "Minecraft",
+  "description": "The vanilla Minecraft widget chrome — bordered rects and classic controls.",
+  "css": ["mc.css"]
+}

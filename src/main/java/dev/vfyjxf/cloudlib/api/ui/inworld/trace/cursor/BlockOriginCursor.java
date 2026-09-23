@@ -34,9 +34,10 @@ public final class BlockOriginCursor implements SourceCursor {
     /** Box corner i of {@code pos}, inflated by {@code e}. */
     public static Vec3 cornerPos(BlockPos pos, int i, double e) {
         return new Vec3(
-                pos.getX() + ((i & 1) == 0 ? -e : 1 + e),
-                pos.getY() + (((i >> 1) & 1) == 0 ? -e : 1 + e),
-                pos.getZ() + (((i >> 2) & 1) == 0 ? -e : 1 + e));
+            pos.getX() + ((i & 1) == 0 ? -e : 1 + e),
+            pos.getY() + (((i >> 1) & 1) == 0 ? -e : 1 + e),
+            pos.getZ() + (((i >> 2) & 1) == 0 ? -e : 1 + e)
+        );
     }
 
     /**
@@ -67,7 +68,13 @@ public final class BlockOriginCursor implements SourceCursor {
      * through the block's own face.
      */
     public static @Nullable FloatPos anchorCorner(
-            BlockPos pos, double inflate, Projection proj, Vec3 camPos, double targetX, double targetY) {
+        BlockPos pos,
+        double inflate,
+        Projection proj,
+        Vec3 camPos,
+        double targetX,
+        double targetY
+    ) {
         Vec3 center = Vec3.atCenterOf(pos);
         Vec3 toCam = camPos.subtract(center);
         FloatPos best = null;
@@ -114,12 +121,13 @@ public final class BlockOriginCursor implements SourceCursor {
      * @return this frame's pick, or null when no corner projects at all
      */
     public static @Nullable ScreenCorner screenAnchorCorner(
-            BlockPos pos,
-            double inflate,
-            Projection proj,
-            double targetX,
-            double targetY,
-            @Nullable ScreenCorner incumbent) {
+        BlockPos pos,
+        double inflate,
+        Projection proj,
+        double targetX,
+        double targetY,
+        @Nullable ScreenCorner incumbent
+    ) {
         ScreenCorner best = null;
         double bestDistance = Double.MAX_VALUE;
         for (int i = 0; i < 8; i++) {

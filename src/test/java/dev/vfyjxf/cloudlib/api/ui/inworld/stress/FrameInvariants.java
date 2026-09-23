@@ -139,19 +139,21 @@ final class FrameInvariants {
                 if (!policy.occlusionExempt()) {
                     if (!skipWorkArea && outsideDepth(rect, workArea) > margin + penetrationEpsilon) {
                         throw violation(
-                                record,
-                                "workarea-containment",
-                                id + " rect " + rect + " sticks " + outsideDepth(rect, workArea) + "px out of "
-                                        + workArea + " (drift margin " + margin + ")");
+                            record,
+                            "workarea-containment",
+                            id + " rect " + rect + " sticks " + outsideDepth(rect, workArea) + "px out of " + workArea
+                                    + " (drift margin " + margin + ")"
+                        );
                     }
                     for (Rect exclusion : record.input().exclusionRects()) {
                         double depth = penetration(rect, toFloat(exclusion));
                         if (depth > margin + penetrationEpsilon) {
                             throw violation(
-                                    record,
-                                    "exclusion-disjoint",
-                                    id + " rect " + rect + " penetrates exclusion " + exclusion + " by " + depth
-                                            + "px (drift margin " + margin + ")");
+                                record,
+                                "exclusion-disjoint",
+                                id + " rect " + rect + " penetrates exclusion " + exclusion + " by " + depth
+                                        + "px (drift margin " + margin + ")"
+                            );
                         }
                     }
                 }
@@ -172,10 +174,11 @@ final class FrameInvariants {
                 double depth = penetration(a.rect, b.rect);
                 if (depth > a.margin + b.margin + penetrationEpsilon) {
                     throw violation(
-                            record,
-                            "pairwise-disjoint",
-                            a.id + " " + a.rect + " overlaps " + b.id + " " + b.rect + " by " + depth
-                                    + "px (drift margins " + a.margin + "+" + b.margin + ")");
+                        record,
+                        "pairwise-disjoint",
+                        a.id + " " + a.rect + " overlaps " + b.id + " " + b.rect + " by " + depth + "px (drift margins "
+                                + a.margin + "+" + b.margin + ")"
+                    );
                 }
             }
         }
@@ -185,8 +188,7 @@ final class FrameInvariants {
         lastFrame = result.frame();
         lastEpoch = result.epoch();
         hasPrevFrame = true;
-        previousDiagonal =
-                Math.hypot(record.input().screenWidth(), record.input().screenHeight());
+        previousDiagonal = Math.hypot(record.input().screenWidth(), record.input().screenHeight());
     }
 
     // region individual invariants
@@ -195,16 +197,20 @@ final class FrameInvariants {
         CoordinationResult result = record.result();
         if (record.frameIndex() + 1 != result.frame()) {
             throw violation(
-                    record, "frame-numbering", "expected " + (record.frameIndex() + 1) + " but was " + result.frame());
+                record,
+                "frame-numbering",
+                "expected " + (record.frameIndex() + 1) + " but was " + result.frame()
+            );
         }
         if (hasPrevFrame && result.frame() != lastFrame + 1) {
             throw violation(record, "frame-numbering", "frames skipped: " + lastFrame + " -> " + result.frame());
         }
         if (result.epoch() < lastEpoch || (result.epoch() > lastEpoch && !result.resolved())) {
             throw violation(
-                    record,
-                    "epoch-monotonic",
-                    "epoch " + result.epoch() + " after " + lastEpoch + " without a resolve");
+                record,
+                "epoch-monotonic",
+                "epoch " + result.epoch() + " after " + lastEpoch + " without a resolve"
+            );
         }
         Set<String> registered = new HashSet<>(record.registeredIds());
         Set<String> seen = new HashSet<>();
@@ -236,7 +242,11 @@ final class FrameInvariants {
     }
 
     private void checkContinuity(
-            StressScenario.FrameRecord record, ElementTrace trace, CoordinationResult.ElementState state, double dt) {
+        StressScenario.FrameRecord record,
+        ElementTrace trace,
+        CoordinationResult.ElementState state,
+        double dt
+    ) {
         FloatRect visual = state.visualRect();
         if (visual == null) {
             throw violation(record, "visual-continuity", state.elementId() + " presented without a visual rect");
@@ -251,19 +261,19 @@ final class FrameInvariants {
         // plus new screen diagonal (both endpoints lie on screen); the
         // amplitude-based bound also covers the completion spike of linear
         // interpolation.
-        double diagonal =
-                Math.hypot(record.input().screenWidth(), record.input().screenHeight());
-        double movementEnvelope =
-                Math.max(config.relaxDisplacementClampPx(), (previousDiagonal + diagonal) * dt / flipMaxDurationSeconds)
-                        + envelopeSlackPx;
-        double movement = Math.hypot(
-                visual.centerX() - trace.lastVisual.centerX(), visual.centerY() - trace.lastVisual.centerY());
+        double diagonal = Math.hypot(record.input().screenWidth(), record.input().screenHeight());
+        double movementEnvelope = Math
+                .max(config.relaxDisplacementClampPx(), (previousDiagonal + diagonal) * dt / flipMaxDurationSeconds)
+                + envelopeSlackPx;
+        double movement = Math
+                .hypot(visual.centerX() - trace.lastVisual.centerX(), visual.centerY() - trace.lastVisual.centerY());
         if (movement > movementEnvelope) {
             throw violation(
-                    record,
-                    "visual-continuity",
-                    state.elementId() + " moved " + movement + "px in one frame (envelope " + movementEnvelope + "): "
-                            + trace.lastVisual + " -> " + visual);
+                record,
+                "visual-continuity",
+                state.elementId() + " moved " + movement + "px in one frame (envelope " + movementEnvelope + "): "
+                        + trace.lastVisual + " -> " + visual
+            );
         }
         double widthChange = Math.abs(visual.width() - trace.lastVisual.width());
         double heightChange = Math.abs(visual.height() - trace.lastVisual.height());
@@ -274,17 +284,19 @@ final class FrameInvariants {
             double sizeEnvelope = (previousDiagonal + diagonal) * dt / flipMaxDurationSeconds + envelopeSlackPx;
             if (sizeChange > sizeEnvelope) {
                 throw violation(
-                        record,
-                        "size-morph-rate",
-                        state.elementId() + " size changed by " + sizeChange + "px in one frame (envelope "
-                                + sizeEnvelope + "): " + trace.lastVisual + " -> " + visual);
+                    record,
+                    "size-morph-rate",
+                    state.elementId() + " size changed by " + sizeChange + "px in one frame (envelope " + sizeEnvelope
+                            + "): " + trace.lastVisual + " -> " + visual
+                );
             }
             if (trace.framesSinceLevelChange > levelChangeMorphHorizonFrames) {
                 throw violation(
-                        record,
-                        "size-morph-gated",
-                        state.elementId() + " size changed " + trace.framesSinceLevelChange
-                                + " frames after the last level change: " + trace.lastVisual + " -> " + visual);
+                    record,
+                    "size-morph-gated",
+                    state.elementId() + " size changed " + trace.framesSinceLevelChange
+                            + " frames after the last level change: " + trace.lastVisual + " -> " + visual
+                );
             }
         }
         InworldPlacement placement = state.placement();
@@ -292,16 +304,21 @@ final class FrameInvariants {
             if (!rectsAlmostEqual(trace.lastOffset, placement.offsetRect(), offsetEpsilon)
                     && !record.result().resolved()) {
                 throw violation(
-                        record,
-                        "offset-change-requires-resolve",
-                        state.elementId() + " target offset changed on a non-resolved frame: " + trace.lastOffset
-                                + " -> " + placement.offsetRect());
+                    record,
+                    "offset-change-requires-resolve",
+                    state.elementId() + " target offset changed on a non-resolved frame: " + trace.lastOffset + " -> "
+                            + placement.offsetRect()
+                );
             }
         }
     }
 
     private void checkStaticWindow(
-            StressScenario.FrameRecord record, ElementTrace trace, boolean presented, InworldPlacement placement) {
+        StressScenario.FrameRecord record,
+        ElementTrace trace,
+        boolean presented,
+        InworldPlacement placement
+    ) {
         if (!record.strictStatic()) {
             return;
         }
@@ -316,23 +333,26 @@ final class FrameInvariants {
         if (presented && placement != null) {
             if (trace.lastLevel >= 0 && placement.variant().level() != trace.lastLevel) {
                 throw violation(
-                        record,
-                        "static-window-stability",
-                        "level " + trace.lastLevel + " -> "
-                                + placement.variant().level());
+                    record,
+                    "static-window-stability",
+                    "level " + trace.lastLevel + " -> " + placement.variant().level()
+                );
             }
             if (trace.lastOffset != null
                     && !rectsAlmostEqual(trace.lastOffset, placement.offsetRect(), offsetEpsilon)) {
                 throw violation(
-                        record,
-                        "static-window-stability",
-                        "offset " + trace.lastOffset + " -> " + placement.offsetRect());
+                    record,
+                    "static-window-stability",
+                    "offset " + trace.lastOffset + " -> " + placement.offsetRect()
+                );
             }
         }
     }
 
     private void checkAnchorCauseTruthfulness(
-            StressScenario.FrameRecord record, Map<String, FloatPos> previousResolveAnchors) {
+        StressScenario.FrameRecord record,
+        Map<String, FloatPos> previousResolveAnchors
+    ) {
         if (record.result().cause() != CoordinationResult.RenegotiationCause.anchorDisplacement) {
             return;
         }
@@ -341,18 +361,18 @@ final class FrameInvariants {
             FloatPos before = previousResolveAnchors.get(entry.getKey());
             if (before != null) {
                 maxDrift = Math.max(
-                        maxDrift,
-                        Math.hypot(
-                                entry.getValue().x() - before.x(),
-                                entry.getValue().y() - before.y()));
+                    maxDrift,
+                    Math.hypot(entry.getValue().x() - before.x(), entry.getValue().y() - before.y())
+                );
             }
         }
         if (maxDrift <= config.anchorDisplacementThresholdPx() - 1.0e-6) {
             throw violation(
-                    record,
-                    "anchor-cause-truthfulness",
-                    "anchorDisplacement claimed with max drift " + maxDrift + "px, threshold is "
-                            + config.anchorDisplacementThresholdPx());
+                record,
+                "anchor-cause-truthfulness",
+                "anchorDisplacement claimed with max drift " + maxDrift + "px, threshold is "
+                        + config.anchorDisplacementThresholdPx()
+            );
         }
     }
 
@@ -361,7 +381,10 @@ final class FrameInvariants {
     // region bookkeeping
 
     private double driftSinceResolve(
-            String id, Map<String, FloatPos> previousResolveAnchors, StressScenario.FrameRecord record) {
+        String id,
+        Map<String, FloatPos> previousResolveAnchors,
+        StressScenario.FrameRecord record
+    ) {
         FloatPos before = previousResolveAnchors.get(id);
         FloatPos now = record.anchors().get(id);
         if (before == null || now == null) {
@@ -371,11 +394,12 @@ final class FrameInvariants {
     }
 
     private void updateTrace(
-            ElementTrace trace,
-            boolean presented,
-            InworldPlacement placement,
-            CoordinationResult.ElementState state,
-            double dt) {
+        ElementTrace trace,
+        boolean presented,
+        InworldPlacement placement,
+        CoordinationResult.ElementState state,
+        double dt
+    ) {
         trace.everTracked = true;
         trace.lastPresented = presented;
         trace.lastVisual = state.visualRect();
@@ -392,19 +416,18 @@ final class FrameInvariants {
     }
 
     private FloatRect workArea(StressScenario.FrameRecord record) {
-        Rect workArea = LayoutSpace.of(
-                        record.input().screenWidth(), record.input().screenHeight())
-                .withStruts(record.input().exclusionRects())
-                .workArea();
+        Rect workArea = LayoutSpace.of(record.input().screenWidth(), record.input().screenHeight())
+                .withStruts(record.input().exclusionRects()).workArea();
         return toFloat(workArea);
     }
 
     private InvariantViolation violation(StressScenario.FrameRecord record, String invariant, String detail) {
         return new InvariantViolation(
-                "invariant [" + invariant + "] failed at frame " + (record.frameIndex() + 1) + "/" + spec.frames()
-                        + " — " + detail + "\nreproduce with spec: " + spec,
-                spec.seed(),
-                record.frameIndex() + 1);
+            "invariant [" + invariant + "] failed at frame " + (record.frameIndex() + 1) + "/" + spec.frames() + " — "
+                    + detail + "\nreproduce with spec: " + spec,
+            spec.seed(),
+            record.frameIndex() + 1
+        );
     }
 
     // endregion

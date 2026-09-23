@@ -27,8 +27,8 @@ class LeaderGridRouterTest {
 
     @Test
     void aClearAxisAlignedShotIsTheStraightLine() {
-        List<FloatPos> path =
-                LeaderGridRouter.route(new FloatPos(0, 100), 1, 0, new FloatPos(200, 100), -1, 0, List.of(), config);
+        List<FloatPos> path = LeaderGridRouter
+                .route(new FloatPos(0, 100), 1, 0, new FloatPos(200, 100), -1, 0, List.of(), config);
 
         assertNotNull(path);
         assertEquals(2, path.size(), "collinear stub and approach merge away");
@@ -40,8 +40,8 @@ class LeaderGridRouterTest {
     void frozenEndsHoldThroughTheWholeRoute() {
         // first segment must leave along dir (0,+1), last must arrive along
         // −normal = (+1,0) — the perpendicular stub makes the 1-fold L
-        List<FloatPos> path =
-                LeaderGridRouter.route(new FloatPos(0, 0), 0, 1, new FloatPos(100, 100), -1, 0, List.of(), config);
+        List<FloatPos> path = LeaderGridRouter
+                .route(new FloatPos(0, 0), 0, 1, new FloatPos(100, 100), -1, 0, List.of(), config);
 
         assertNotNull(path);
         FloatPos start = path.get(0);
@@ -61,8 +61,8 @@ class LeaderGridRouterTest {
         // the wall spans y 20..140, the anchor sits at y 50: the inflated top
         // lane is 42 px away, the bottom lane 102 — the route must go over
         FloatRect wall = new FloatRect(140, 20, 20, 120);
-        List<FloatPos> path =
-                LeaderGridRouter.route(new FloatPos(0, 50), 1, 0, new FloatPos(300, 50), -1, 0, List.of(wall), config);
+        List<FloatPos> path = LeaderGridRouter
+                .route(new FloatPos(0, 50), 1, 0, new FloatPos(300, 50), -1, 0, List.of(wall), config);
 
         assertNotNull(path);
         double minY = path.stream().mapToDouble(FloatPos::y).min().orElseThrow();
@@ -76,8 +76,8 @@ class LeaderGridRouterTest {
     void aSealedAnchorHasNoRoute() {
         // the inflation around this rect swallows the anchor's stub
         FloatRect seal = new FloatRect(8, 0, 20, 100);
-        List<FloatPos> path =
-                LeaderGridRouter.route(new FloatPos(0, 50), 1, 0, new FloatPos(400, 50), -1, 0, List.of(seal), config);
+        List<FloatPos> path = LeaderGridRouter
+                .route(new FloatPos(0, 50), 1, 0, new FloatPos(400, 50), -1, 0, List.of(seal), config);
 
         assertNull(path, "unsolvable geometry returns null — the caller falls back");
     }
@@ -95,11 +95,12 @@ class LeaderGridRouterTest {
 
     /** The po-route fold count the router draws for (0,0) → (100,100), forced po by a baseline-blocking obstacle. */
     private static int bendsUnderPenalty(LeaderGridRouter.Config routing) {
-        LeaderRouter router =
-                new LeaderRouter(new LeaderRouter.Config(1.0, 1, 42.0, 84.0, 8.0, 12.0, 20.0, 6.0, routing));
+        LeaderRouter router = new LeaderRouter(
+            new LeaderRouter.Config(1.0, 1, 42.0, 84.0, 8.0, 12.0, 20.0, 6.0, routing)
+        );
         FloatRect blocker = new FloatRect(50, 30, 8, 8);
-        List<LeaderRouter.Route> routes =
-                router.route(List.of(LeaderRouter.Leader.toPoint("a", 0, 0, 100, 100)), Map.of(), List.of(blocker));
+        List<LeaderRouter.Route> routes = router
+                .route(List.of(LeaderRouter.Leader.toPoint("a", 0, 0, 100, 100)), Map.of(), List.of(blocker));
         return routes.get(0).points().size() - 2;
     }
 
@@ -110,8 +111,8 @@ class LeaderGridRouterTest {
         // slide it to the aisle's midpoint
         FloatRect upper = new FloatRect(150, 0, 20, 60);
         FloatRect lower = new FloatRect(150, 100, 20, 60);
-        List<FloatPos> path = LeaderGridRouter.route(
-                new FloatPos(0, 50), 1, 0, new FloatPos(400, 50), -1, 0, List.of(upper, lower), config);
+        List<FloatPos> path = LeaderGridRouter
+                .route(new FloatPos(0, 50), 1, 0, new FloatPos(400, 50), -1, 0, List.of(upper, lower), config);
 
         assertNotNull(path);
         double runY = Double.NaN;
@@ -132,8 +133,8 @@ class LeaderGridRouterTest {
         // (62 px) — both hug, the 6 px penalty is a tie-breaker not an
         // override, and with no second bound there is nothing to center into
         FloatRect wall = new FloatRect(150, 0, 20, 60);
-        List<FloatPos> path =
-                LeaderGridRouter.route(new FloatPos(0, 50), 1, 0, new FloatPos(400, 50), -1, 0, List.of(wall), config);
+        List<FloatPos> path = LeaderGridRouter
+                .route(new FloatPos(0, 50), 1, 0, new FloatPos(400, 50), -1, 0, List.of(wall), config);
 
         assertNotNull(path);
         double minY = path.stream().mapToDouble(FloatPos::y).min().orElseThrow();
@@ -147,8 +148,8 @@ class LeaderGridRouterTest {
         // the port sits on this panel's left border; the approach reaches
         // through the panel's own inflated margin without failing
         FloatRect panel = new FloatRect(200, 100, 160, 100);
-        List<FloatPos> path = LeaderGridRouter.route(
-                new FloatPos(0, 150), 1, 0, new FloatPos(200, 150), -1, 0, List.of(panel), config);
+        List<FloatPos> path = LeaderGridRouter
+                .route(new FloatPos(0, 150), 1, 0, new FloatPos(200, 150), -1, 0, List.of(panel), config);
 
         assertNotNull(path, "the own-panel margin never blocks the final approach");
         assertPoint(path.get(path.size() - 1), 194, 150, "still stops at the arrival gap");
@@ -162,24 +163,26 @@ class LeaderGridRouterTest {
         // leave the screen
         FloatRect viewport = new FloatRect(0, 0, 400, 300);
         FloatRect wall = new FloatRect(150, 150, 100, 170);
-        List<FloatPos> unbounded = LeaderGridRouter.route(
-                new FloatPos(40, 280), 1, 0, new FloatPos(360, 280), -1, 0, List.of(wall), config);
+        List<FloatPos> unbounded = LeaderGridRouter
+                .route(new FloatPos(40, 280), 1, 0, new FloatPos(360, 280), -1, 0, List.of(wall), config);
         assertNotNull(unbounded);
         assertTrue(
-                unbounded.stream().anyMatch(p -> p.y() > 300),
-                "the unbounded route dips onto the y=332 lane below the wall — the off-screen regression");
+            unbounded.stream().anyMatch(p -> p.y() > 300),
+            "the unbounded route dips onto the y=332 lane below the wall — the off-screen regression"
+        );
 
-        List<FloatPos> path = LeaderGridRouter.route(
-                new FloatPos(40, 280), 1, 0, new FloatPos(360, 280), -1, 0, List.of(wall), config, viewport);
+        List<FloatPos> path = LeaderGridRouter
+                .route(new FloatPos(40, 280), 1, 0, new FloatPos(360, 280), -1, 0, List.of(wall), config, viewport);
 
         assertNotNull(path);
         assertInside(path, viewport);
         assertTrue(clearsInflated(path, List.of(wall)), "still clear of the wall");
         assertEquals(
-                280.0,
-                path.stream().mapToDouble(FloatPos::y).max().orElseThrow(),
-                eps,
-                "the route never dips below the anchor line");
+            280.0,
+            path.stream().mapToDouble(FloatPos::y).max().orElseThrow(),
+            eps,
+            "the route never dips below the anchor line"
+        );
     }
 
     @Test
@@ -188,8 +191,8 @@ class LeaderGridRouterTest {
         // and the route turns there instead of failing; the port's outward
         // normal pushes both tail ends past the same edge — they clamp too
         FloatRect viewport = new FloatRect(0, 0, 400, 300);
-        List<FloatPos> path = LeaderGridRouter.route(
-                new FloatPos(392, 100), 1, 0, new FloatPos(398, 150), 1, 0, List.of(), config, viewport);
+        List<FloatPos> path = LeaderGridRouter
+                .route(new FloatPos(392, 100), 1, 0, new FloatPos(398, 150), 1, 0, List.of(), config, viewport);
 
         assertNotNull(path, "the clipped stub still routes");
         assertEquals(3, path.size());
@@ -202,8 +205,8 @@ class LeaderGridRouterTest {
     @Test
     void anAnchorExactlyOnTheEdgeStillRoutes() {
         FloatRect viewport = new FloatRect(0, 0, 400, 300);
-        List<FloatPos> path = LeaderGridRouter.route(
-                new FloatPos(400, 100), -1, 0, new FloatPos(200, 150), -1, 0, List.of(), config, viewport);
+        List<FloatPos> path = LeaderGridRouter
+                .route(new FloatPos(400, 100), -1, 0, new FloatPos(200, 150), -1, 0, List.of(), config, viewport);
 
         assertNotNull(path, "a boundary anchor is inside the closed viewport");
         assertInside(path, viewport);
@@ -213,44 +216,57 @@ class LeaderGridRouterTest {
     void aSegmentLeavingTheViewportCountsAsBlocked() {
         FloatRect viewport = new FloatRect(0, 0, 400, 300);
         FloatPos port = new FloatPos(360, 150);
-        assertFalse(LeaderGridRouter.polylineBlocked(
-                List.of(new FloatPos(10, 150), port), port, List.of(), config.clearancePx(), viewport));
+        assertFalse(
+            LeaderGridRouter.polylineBlocked(
+                List.of(new FloatPos(10, 150), port),
+                port,
+                List.of(),
+                config.clearancePx(),
+                viewport
+            )
+        );
         assertTrue(
-                LeaderGridRouter.polylineBlocked(
-                        List.of(new FloatPos(10, 150), new FloatPos(410, 150)),
-                        port,
-                        List.of(),
-                        config.clearancePx(),
-                        viewport),
-                "a polyline exiting the right edge is blocked");
+            LeaderGridRouter.polylineBlocked(
+                List.of(new FloatPos(10, 150), new FloatPos(410, 150)),
+                port,
+                List.of(),
+                config.clearancePx(),
+                viewport
+            ),
+            "a polyline exiting the right edge is blocked"
+        );
         assertTrue(
-                LeaderGridRouter.polylineBlocked(
-                        List.of(new FloatPos(10, -5), new FloatPos(200, 150)),
-                        port,
-                        List.of(),
-                        config.clearancePx(),
-                        viewport),
-                "a polyline entering from above the top edge is blocked");
+            LeaderGridRouter.polylineBlocked(
+                List.of(new FloatPos(10, -5), new FloatPos(200, 150)),
+                port,
+                List.of(),
+                config.clearancePx(),
+                viewport
+            ),
+            "a polyline entering from above the top edge is blocked"
+        );
     }
 
     @Test
     void theSameInputRoutesToTheSameOutput() {
         FloatRect wall = new FloatRect(140, 20, 20, 120);
-        List<FloatPos> one =
-                LeaderGridRouter.route(new FloatPos(0, 50), 1, 0, new FloatPos(300, 50), -1, 0, List.of(wall), config);
-        List<FloatPos> two =
-                LeaderGridRouter.route(new FloatPos(0, 50), 1, 0, new FloatPos(300, 50), -1, 0, List.of(wall), config);
+        List<FloatPos> one = LeaderGridRouter
+                .route(new FloatPos(0, 50), 1, 0, new FloatPos(300, 50), -1, 0, List.of(wall), config);
+        List<FloatPos> two = LeaderGridRouter
+                .route(new FloatPos(0, 50), 1, 0, new FloatPos(300, 50), -1, 0, List.of(wall), config);
         assertEquals(one, two);
     }
 
     @Test
     void rejectsInvalidUse() {
         assertThrows(
-                IllegalArgumentException.class,
-                () -> LeaderGridRouter.route(new FloatPos(0, 0), 1, 1, new FloatPos(10, 10), -1, 0, List.of(), config));
+            IllegalArgumentException.class,
+            () -> LeaderGridRouter.route(new FloatPos(0, 0), 1, 1, new FloatPos(10, 10), -1, 0, List.of(), config)
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> LeaderGridRouter.route(new FloatPos(0, 0), 1, 0, new FloatPos(10, 10), 0, 0, List.of(), config));
+            IllegalArgumentException.class,
+            () -> LeaderGridRouter.route(new FloatPos(0, 0), 1, 0, new FloatPos(10, 10), 0, 0, List.of(), config)
+        );
         assertThrows(IllegalArgumentException.class, () -> new LeaderGridRouter.Config(-1, 6, 12, 16, 20, 6));
         assertThrows(IllegalArgumentException.class, () -> new LeaderGridRouter.Config(24, 6, 12, 0, 20, 6));
         assertThrows(IllegalArgumentException.class, () -> new LeaderGridRouter.Config(24, 6, 12, 16, 20, -1));
@@ -265,11 +281,12 @@ class LeaderGridRouterTest {
     private static void assertInside(List<FloatPos> path, FloatRect viewport) {
         for (FloatPos p : path) {
             assertTrue(
-                    p.x() >= viewport.x() - eps
-                            && p.x() <= viewport.right() + eps
-                            && p.y() >= viewport.y() - eps
-                            && p.y() <= viewport.bottom() + eps,
-                    "point leaves the viewport: " + p);
+                p.x() >= viewport.x() - eps
+                        && p.x() <= viewport.right() + eps
+                        && p.y() >= viewport.y() - eps
+                        && p.y() <= viewport.bottom() + eps,
+                "point leaves the viewport: " + p
+            );
         }
     }
 }

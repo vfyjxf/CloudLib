@@ -88,9 +88,10 @@ public final class Theme {
         path.setLength(path.length() - 1);
         // the top layer's meta describes the stack
         return new Theme(
-                ResourceLocation.fromNamespaceAndPath("cloudlib", path.toString()),
-                new Stylesheet(rules),
-                layers.get(layers.size() - 1).meta());
+            ResourceLocation.fromNamespaceAndPath("cloudlib", path.toString()),
+            new Stylesheet(rules),
+            layers.get(layers.size() - 1).meta()
+        );
     }
 
     // endregion
@@ -142,10 +143,7 @@ public final class Theme {
 
     /** All style rules in source order (imported sheets inlined at the import point). */
     public List<StyleRule> styleRules() {
-        return sheet.rules().stream()
-                .filter(r -> r instanceof StyleRule)
-                .map(r -> (StyleRule) r)
-                .toList();
+        return sheet.rules().stream().filter(r -> r instanceof StyleRule).map(r -> (StyleRule) r).toList();
     }
 
     /** {@code :root}-scoped custom properties ({@code --name → raw values}), precomputed. */
@@ -153,8 +151,8 @@ public final class Theme {
         if (rootVars == null) {
             Map<String, List<ComponentValue>> vars = new LinkedHashMap<>();
             for (StyleRule rule : styleRules()) {
-                boolean isRoot = rule.selectors().stream().anyMatch(s -> s.last().pseudos().stream()
-                        .anyMatch(p -> p.name().equals("root")));
+                boolean isRoot = rule.selectors().stream()
+                        .anyMatch(s -> s.last().pseudos().stream().anyMatch(p -> p.name().equals("root")));
                 if (!isRoot) {
                     continue;
                 }
@@ -249,8 +247,7 @@ public final class Theme {
                         cls.computeIfAbsent(c, k -> new ArrayList<>()).add(ir);
                     }
                 } else if (last.tag() != null) {
-                    tag.computeIfAbsent(last.tag().toLowerCase(Locale.ROOT), k -> new ArrayList<>())
-                            .add(ir);
+                    tag.computeIfAbsent(last.tag().toLowerCase(Locale.ROOT), k -> new ArrayList<>()).add(ir);
                 } else {
                     all.add(ir);
                 }

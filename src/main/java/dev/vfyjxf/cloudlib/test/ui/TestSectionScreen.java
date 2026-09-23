@@ -31,21 +31,19 @@ public class TestSectionScreen extends BasicScreen {
 
     private void buildUI() {
         // Root: vertical column, centered items, full size, scrollable
-        var scrollState = ScrollState.create(ScrollDirection.vertical)
-                .scrollSpeed(12)
-                .smooth(true)
-                .smoothSpeed(0.35f)
-                .trackTexture(Textures.scrollTrack)
-                .thumbTexture(Textures.scrollbarVertical)
-                .scrollbarWidth(7);
+        var scrollState = ScrollState.create(ScrollDirection.vertical).scrollSpeed(12).smooth(true).smoothSpeed(0.35f)
+                .trackTexture(Textures.scrollTrack).thumbTexture(Textures.scrollbarVertical).scrollbarWidth(7);
 
         var root = ColumnWidget.create(8);
-        root.useStyle(UIStyle.of(
+        root.useStyle(
+            UIStyle.of(
                 flexColumn(),
                 alignItemsCenter(),
                 padding(8),
                 sizeOf(TaffyDimension.percent(1f), TaffyDimension.percent(1f)),
-                background(Textures.frame)));
+                background(Textures.frame)
+            )
+        );
         root.useEffect(scrollable(scrollState));
         root.onMouseScrolled((mouseX, mouseY, scrollX, scrollY, context) -> {
             scrollState.scrollBy(0, (float) (-scrollY * scrollState.scrollSpeed()));
@@ -57,7 +55,8 @@ public class TestSectionScreen extends BasicScreen {
         section1.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(0.5f))));
         var label1 = LabelWidget.of("这是第一个分组的内容").setColor(0xFF3F3F3F).setAlign(LabelWidget.TextAlign.CENTER);
         label1.useStyle(
-                UIStyle.of(sizeOf(TaffyDimension.percent(1f), TaffyDimension.length(200)), background(Textures.inset)));
+            UIStyle.of(sizeOf(TaffyDimension.percent(1f), TaffyDimension.length(200)), background(Textures.inset))
+        );
         addSectionContent(section1, label1, true);
         root.addWidget(section1);
 
@@ -65,11 +64,14 @@ public class TestSectionScreen extends BasicScreen {
         var section2 = createSection("第二个分组 - 默认展开", true);
         section2.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(0.5f))));
         var content2 = ColumnWidget.create(4);
-        content2.useStyle(UIStyle.of(
+        content2.useStyle(
+            UIStyle.of(
                 alignItemsFlexStart(),
                 sizeOf(TaffyDimension.percent(1f), TaffyDimension.length(150)),
                 padding(4),
-                background(Textures.flat)));
+                background(Textures.flat)
+            )
+        );
         for (int i = 1; i <= 3; i++) {
             int idx = i;
             var btn = ButtonWidget.of("按钮 " + i, () -> System.out.println("press " + idx));
@@ -84,7 +86,8 @@ public class TestSectionScreen extends BasicScreen {
         section3.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(0.5f))));
         var content3 = new Widget();
         content3.useStyle(
-                UIStyle.of(sizeOf(TaffyDimension.percent(1f), TaffyDimension.length(180)), background(Textures.dark)));
+            UIStyle.of(sizeOf(TaffyDimension.percent(1f), TaffyDimension.length(180)), background(Textures.dark))
+        );
         addSectionContent(section3, content3, false);
         root.addWidget(section3);
 
@@ -109,8 +112,14 @@ public class TestSectionScreen extends BasicScreen {
 
         // Header row
         var header = RowWidget.create(4);
-        header.useStyle(UIStyle.of(
-                widthOf(TaffyDimension.percent(1f)), padding(6, 8), alignItemsCenter(), background(Textures.dark)));
+        header.useStyle(
+            UIStyle.of(
+                widthOf(TaffyDimension.percent(1f)),
+                padding(6, 8),
+                alignItemsCenter(),
+                background(Textures.dark)
+            )
+        );
 
         var arrow = LabelWidget.of(expanded ? "▼" : "▶").setColor(0xFF3F3F3F);
         arrow.useStyle(UIStyle.of(sizeOf(12, 12)));

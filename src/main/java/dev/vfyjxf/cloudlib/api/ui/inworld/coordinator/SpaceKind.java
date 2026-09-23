@@ -8,7 +8,5 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.coordinator;
  * way, so it claims space first.
  */
 public enum SpaceKind {
-    world,
-    tracked,
-    panel
+    world, tracked, panel
 }

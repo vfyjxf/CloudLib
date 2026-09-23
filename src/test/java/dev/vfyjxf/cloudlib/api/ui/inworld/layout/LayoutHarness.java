@@ -43,8 +43,8 @@ final class LayoutHarness {
         }
         double current = now + dt;
         now = current;
-        CoordinationResult result =
-                coordinator.frame(InworldCoordinator.FrameInput.of(width, height, current, dt, exclusions));
+        CoordinationResult result = coordinator
+                .frame(InworldCoordinator.FrameInput.of(width, height, current, dt, exclusions));
         for (AssembledElement element : elements) {
             element.observe(result);
         }

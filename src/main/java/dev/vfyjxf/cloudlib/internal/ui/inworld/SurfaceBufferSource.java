@@ -60,12 +60,13 @@ public final class SurfaceBufferSource extends MultiBufferSource.BufferSource {
     private static LinkedHashMap<RenderType, ByteBufferBuilder> fixedAllocators() {
         var map = new LinkedHashMap<RenderType, ByteBufferBuilder>();
         for (RenderType type : List.of(
-                RenderType.glint(),
-                RenderType.glintTranslucent(),
-                RenderType.entityGlint(),
-                RenderType.entityGlintDirect(),
-                RenderType.armorEntityGlint(),
-                RenderType.waterMask())) {
+            RenderType.glint(),
+            RenderType.glintTranslucent(),
+            RenderType.entityGlint(),
+            RenderType.entityGlintDirect(),
+            RenderType.armorEntityGlint(),
+            RenderType.waterMask()
+        )) {
             map.put(type, new ByteBufferBuilder(Math.max(type.bufferSize(), 1536)));
         }
         return map;

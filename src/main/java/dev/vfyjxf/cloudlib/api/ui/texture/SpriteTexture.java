@@ -52,13 +52,10 @@ public class SpriteTexture implements SizedTexture, BatchableTexture {
      * This looks up the sprite from the GUI sprites atlas.
      */
     public static SpriteTexture fromGuiSprite(ResourceLocation spriteLocation, int width, int height) {
-        return new SpriteTexture(
-                () -> {
-                    var minecraft = Minecraft.getInstance();
-                    return minecraft.getGuiSprites().getSprite(spriteLocation);
-                },
-                width,
-                height);
+        return new SpriteTexture(() -> {
+            var minecraft = Minecraft.getInstance();
+            return minecraft.getGuiSprites().getSprite(spriteLocation);
+        }, width, height);
     }
 
     /**
@@ -66,13 +63,10 @@ public class SpriteTexture implements SizedTexture, BatchableTexture {
      * dimensions are read lazily on first access.
      */
     public static SpriteTexture fromGuiSprite(ResourceLocation spriteLocation) {
-        return new SpriteTexture(
-                () -> {
-                    var minecraft = Minecraft.getInstance();
-                    return minecraft.getGuiSprites().getSprite(spriteLocation);
-                },
-                -1,
-                -1);
+        return new SpriteTexture(() -> {
+            var minecraft = Minecraft.getInstance();
+            return minecraft.getGuiSprites().getSprite(spriteLocation);
+        }, -1, -1);
     }
 
     // endregion
@@ -117,16 +111,17 @@ public class SpriteTexture implements SizedTexture, BatchableTexture {
     public void emit(VertexEmitter emitter, float x, float y, float w, float h, int color) {
         TextureAtlasSprite sprite = spriteSupplier.get();
         emitter.textured(
-                sprite.atlasLocation(),
-                x,
-                y,
-                w,
-                h,
-                sprite.getU0(),
-                sprite.getV0(),
-                sprite.getU1(),
-                sprite.getV1(),
-                color);
+            sprite.atlasLocation(),
+            x,
+            y,
+            w,
+            h,
+            sprite.getU0(),
+            sprite.getV0(),
+            sprite.getU1(),
+            sprite.getV1(),
+            color
+        );
     }
 
     // endregion

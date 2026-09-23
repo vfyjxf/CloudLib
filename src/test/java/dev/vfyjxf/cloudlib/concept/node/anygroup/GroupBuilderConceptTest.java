@@ -20,8 +20,12 @@ public class GroupBuilderConceptTest {
                     public GroupElement<SpecificElement> construct(Scope<SpecificElement> scope) {
                         scope.element(() -> new SpecificElement("Specific Element A"));
                         scope.element(new SpecificElement("Specific Element B"));
-                        scope.elements(List.of(
-                                new SpecificElement("Specific Element C"), new SpecificElement("Specific Element D")));
+                        scope.elements(
+                            List.of(
+                                new SpecificElement("Specific Element C"),
+                                new SpecificElement("Specific Element D")
+                            )
+                        );
 
                         return new GroupElement<>("Specific Group");
                     }
@@ -183,10 +187,12 @@ final class AnyGroupBuildScope<E extends Element> implements BuildScope<GroupEle
     private record ElementEntry<E extends Element>(E element) implements Entry<E> {}
 
     private record ElementBlueprintEntry<E extends Element>(ElementBlueprint<? extends E> blueprint)
-            implements Entry<E> {}
+            implements
+                Entry<E> {}
 
     private record GroupEntry<E extends Element, T extends Element>(GroupBlueprint<? extends E, T> blueprint)
-            implements Entry<E> {}
+            implements
+                Entry<E> {}
 }
 
 // endregion

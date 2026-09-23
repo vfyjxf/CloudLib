@@ -179,22 +179,18 @@ class StateSlotTest {
 
         // First render
         StateSlot.withContext(context, () -> {
-            StateSlot.useMemo(
-                    () -> {
-                        computeCount.incrementAndGet();
-                        return "computed";
-                    },
-                    dependency);
+            StateSlot.useMemo(() -> {
+                computeCount.incrementAndGet();
+                return "computed";
+            }, dependency);
         });
 
         // Second render with same dependency
         StateSlot.withContext(context, () -> {
-            StateSlot.useMemo(
-                    () -> {
-                        computeCount.incrementAndGet();
-                        return "computed";
-                    },
-                    dependency);
+            StateSlot.useMemo(() -> {
+                computeCount.incrementAndGet();
+                return "computed";
+            }, dependency);
         });
 
         assertEquals(1, computeCount.get(), "Should not recompute with same dependencies");
@@ -206,22 +202,18 @@ class StateSlotTest {
 
         // First render
         StateSlot.withContext(context, () -> {
-            StateSlot.useMemo(
-                    () -> {
-                        computeCount.incrementAndGet();
-                        return "v1";
-                    },
-                    1);
+            StateSlot.useMemo(() -> {
+                computeCount.incrementAndGet();
+                return "v1";
+            }, 1);
         });
 
         // Second render with different dependency
         StateSlot.withContext(context, () -> {
-            StateSlot.useMemo(
-                    () -> {
-                        computeCount.incrementAndGet();
-                        return "v2";
-                    },
-                    2);
+            StateSlot.useMemo(() -> {
+                computeCount.incrementAndGet();
+                return "v2";
+            }, 2);
         });
 
         assertEquals(2, computeCount.get(), "Should recompute with different dependencies");
@@ -233,40 +225,28 @@ class StateSlotTest {
 
         // First render
         StateSlot.withContext(context, () -> {
-            StateSlot.useMemo(
-                    () -> {
-                        computeCount.incrementAndGet();
-                        return "computed";
-                    },
-                    "a",
-                    1,
-                    true);
+            StateSlot.useMemo(() -> {
+                computeCount.incrementAndGet();
+                return "computed";
+            }, "a", 1, true);
         });
 
         // Same dependencies
         StateSlot.withContext(context, () -> {
-            StateSlot.useMemo(
-                    () -> {
-                        computeCount.incrementAndGet();
-                        return "computed";
-                    },
-                    "a",
-                    1,
-                    true);
+            StateSlot.useMemo(() -> {
+                computeCount.incrementAndGet();
+                return "computed";
+            }, "a", 1, true);
         });
 
         assertEquals(1, computeCount.get());
 
         // One dependency changed
         StateSlot.withContext(context, () -> {
-            StateSlot.useMemo(
-                    () -> {
-                        computeCount.incrementAndGet();
-                        return "computed";
-                    },
-                    "a",
-                    2,
-                    true);
+            StateSlot.useMemo(() -> {
+                computeCount.incrementAndGet();
+                return "computed";
+            }, "a", 2, true);
         });
 
         assertEquals(2, computeCount.get());
@@ -276,12 +256,10 @@ class StateSlotTest {
     void testUseMemoOutsideContextComputesDirectly() {
         AtomicInteger computeCount = new AtomicInteger(0);
 
-        String result = StateSlot.useMemo(
-                () -> {
-                    computeCount.incrementAndGet();
-                    return "direct";
-                },
-                1);
+        String result = StateSlot.useMemo(() -> {
+            computeCount.incrementAndGet();
+            return "direct";
+        }, 1);
 
         assertEquals("direct", result);
         assertEquals(1, computeCount.get());

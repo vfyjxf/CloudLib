@@ -12,6 +12,12 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Panel with optional title bar.
+ * <p>
+ * The body background is theme-first, code-fallback — a {@code panel {
+ * background }} rule (or one of the class variants {@code panel.inset} /
+ * {@code panel.outlined}, …) paints the panel, and {@link
+ * #setBackgroundTexture} stays the code texture a sheet that styles nothing
+ * leaves in place. The border and title bar are still code-only.
  */
 public class PanelWidget extends CompositeWidget<Widget> {
 
@@ -116,13 +122,26 @@ public class PanelWidget extends CompositeWidget<Widget> {
 
     // region rendering
 
+    /**
+     * The texture this panel paints behind its children: the background the
+     * active theme resolved for it, or {@link #setBackgroundTexture}'s texture
+     * when the sheet paints none.
+     */
+    VisualTexture paintedBackground() {
+        VisualTexture themed = style().visualContext().background();
+        return themed != null && !themed.isEmpty() ? themed : backgroundTexture;
+    }
+
     @Override
     protected void renderInternal(SceneCanvas canvas, int mouseX, int mouseY, float partialTicks) {
         int w = width();
         int h = height();
 
-        // Background
-        canvas.texture(backgroundTexture, 0, 0, w, h);
+        // Background — the theme wins: a `panel { background }` rule (or the
+        // class variants `panel.inset`, …) paints the panel, and only a sheet
+        // that leaves the slot empty falls back to the code texture, the same
+        // order ButtonWidget and WidgetPart follow.
+        canvas.texture(paintedBackground(), 0, 0, w, h);
 
         // Border
         if (borderWidth > 0) {

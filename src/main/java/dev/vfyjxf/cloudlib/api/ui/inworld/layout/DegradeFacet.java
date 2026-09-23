@@ -35,14 +35,17 @@ public record DegradeFacet(VariantLadder ladder) {
         List<InworldVariant> rungs = new ArrayList<>(sizes.length);
         for (int i = 0; i < sizes.length; i++) {
             Size size = sizes[i];
-            rungs.add(new InworldVariant(
+            rungs.add(
+                new InworldVariant(
                     i,
                     size,
                     tiers[Math.min(i, tiers.length - 1)],
                     policy,
                     allowsNudge,
                     allowsClamp,
-                    0.75 * size.width() * size.height()));
+                    0.75 * size.width() * size.height()
+                )
+            );
         }
         return new DegradeFacet(VariantLadder.of(rungs));
     }

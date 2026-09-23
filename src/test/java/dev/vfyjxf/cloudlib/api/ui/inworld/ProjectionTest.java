@@ -20,10 +20,7 @@ class ProjectionTest {
 
     @Test
     void worldToClipCombinesViewAndProjectionMatrices() {
-        Projection projection = ProjectionSimulator.at(3, 4, 5)
-                .lookAt(10, 20, -7)
-                .screen(960, 540)
-                .build();
+        Projection projection = ProjectionSimulator.at(3, 4, 5).lookAt(10, 20, -7).screen(960, 540).build();
 
         Matrix4f expected = projection.viewToClip().mul(projection.worldToView());
         assertTrue(projection.worldToClip().equals(expected, matrixEpsilon));
@@ -31,10 +28,7 @@ class ProjectionTest {
 
     @Test
     void clipToWorldInvertsWorldToClip() {
-        Projection projection = ProjectionSimulator.at(1, 2, 3)
-                .lookAt(-5, 8, 4)
-                .screen(800, 400)
-                .build();
+        Projection projection = ProjectionSimulator.at(1, 2, 3).lookAt(-5, 8, 4).screen(800, 400).build();
 
         Matrix4f product = projection.worldToClip().mul(projection.clipToWorld());
         assertTrue(product.equals(new Matrix4f(), matrixEpsilon));
@@ -110,41 +104,31 @@ class ProjectionTest {
 
     @Test
     void worldPerPixelAtAPointMatchesItsViewDepth() {
-        Projection projection = ProjectionSimulator.at(0, 0, 0)
-                .lookAt(0, 0, -1)
-                .screen(640, 360)
-                .build();
+        Projection projection = ProjectionSimulator.at(0, 0, 0).lookAt(0, 0, -1).screen(640, 360).build();
         Vec3 world = new Vec3(4, -3, -12);
 
         assertEquals(
-                projection.worldPerPixelAtDepth(projection.viewDepth(world)), projection.worldPerPixel(world), 1.0e-9);
+            projection.worldPerPixelAtDepth(projection.viewDepth(world)),
+            projection.worldPerPixel(world),
+            1.0e-9
+        );
     }
 
     @Test
     void worldScreenRoundTripHoldsAcrossCameras() {
         List<Projection> cameras = List.of(
-                ProjectionSimulator.at(3, 4, 5)
-                        .lookAt(10, 20, -7)
-                        .screen(960, 540)
-                        .build(),
-                ProjectionSimulator.at(-8, 64, 12)
-                        .yawPitch(135, -15)
-                        .screen(640, 360)
-                        .build(),
-                ProjectionSimulator.at(0, 10, 0)
-                        .yawPitch(0, 90)
-                        .screen(400, 300)
-                        .build(),
-                ProjectionSimulator.at(0, 30, 0)
-                        .yawPitch(0, -90)
-                        .screen(400, 300)
-                        .build());
+            ProjectionSimulator.at(3, 4, 5).lookAt(10, 20, -7).screen(960, 540).build(),
+            ProjectionSimulator.at(-8, 64, 12).yawPitch(135, -15).screen(640, 360).build(),
+            ProjectionSimulator.at(0, 10, 0).yawPitch(0, 90).screen(400, 300).build(),
+            ProjectionSimulator.at(0, 30, 0).yawPitch(0, -90).screen(400, 300).build()
+        );
         List<Vec3> points = List.of(
-                new Vec3(10, 20, -7),
-                new Vec3(8, 18, -5),
-                new Vec3(15, 25, -12),
-                new Vec3(-4, 2, 9),
-                new Vec3(0, 0, 0));
+            new Vec3(10, 20, -7),
+            new Vec3(8, 18, -5),
+            new Vec3(15, 25, -12),
+            new Vec3(-4, 2, 9),
+            new Vec3(0, 0, 0)
+        );
 
         for (Projection projection : cameras) {
             for (Vec3 world : points) {
@@ -160,10 +144,7 @@ class ProjectionTest {
         // a point on the view axis at distance d sits at the screen center with
         // view depth d — forward extracted from worldToView must match the
         // matrix-defined view space
-        Projection projection = ProjectionSimulator.at(2, 3, 4)
-                .lookAt(2, 3, -6)
-                .screen(480, 270)
-                .build();
+        Projection projection = ProjectionSimulator.at(2, 3, 4).lookAt(2, 3, -6).screen(480, 270).build();
         Vec3 world = new Vec3(2, 3, -6);
 
         assertEquals(10, projection.viewDepth(world), 1.0e-6);

@@ -62,8 +62,7 @@ class QuadBasisOrientationTest {
         QuadBasis basis = QuadBasis.groundParallelOnPlane(center, new Vec3(0, 0, -1), slopeNormal, ppb, wPx, hPx);
 
         GeometryAsserts.assertVecEquals(new Vec3(1, 0, 0), basis.u().normalize(), eps);
-        GeometryAsserts.assertVecEquals(
-                new Vec3(0, -Math.sqrt(0.5), Math.sqrt(0.5)), basis.v().normalize(), eps);
+        GeometryAsserts.assertVecEquals(new Vec3(0, -Math.sqrt(0.5), Math.sqrt(0.5)), basis.v().normalize(), eps);
         GeometryAsserts.assertVecEquals(slopeNormal.scale(-1), basis.normal(), eps);
         assertBasisGeometry(basis);
     }
@@ -113,8 +112,8 @@ class QuadBasisOrientationTest {
 
     @Test
     void yawBillboardOverheadDegenerateUsesFallbackRight() {
-        QuadBasis withFallback =
-                QuadBasis.yawBillboard(center, new Vec3(10, 140, -7), new Vec3(0, 0, 1), ppb, wPx, hPx);
+        QuadBasis withFallback = QuadBasis
+                .yawBillboard(center, new Vec3(10, 140, -7), new Vec3(0, 0, 1), ppb, wPx, hPx);
 
         GeometryAsserts.assertVecEquals(new Vec3(0, 0, 1), withFallback.u().normalize(), eps);
         GeometryAsserts.assertVecEquals(new Vec3(0, -1, 0), withFallback.v().normalize(), eps);
@@ -144,8 +143,7 @@ class QuadBasisOrientationTest {
         float pitch = -23f;
         TestCamera camera = new TestCamera();
         camera.orient(yaw, pitch);
-        Projection projection =
-                ProjectionSimulator.at(0, 0, 0).yawPitch(yaw, pitch).build();
+        Projection projection = ProjectionSimulator.at(0, 0, 0).yawPitch(yaw, pitch).build();
 
         QuadBasis fromCamera = QuadBasis.billboard(center, camera, ppb, wPx, hPx);
         QuadBasis fromProjection = QuadBasis.cameraBillboard(center, projection, ppb, wPx, hPx);
@@ -168,14 +166,14 @@ class QuadBasisOrientationTest {
 
     @Test
     void quadWorldPerPixelEvaluatesAtTheQuadCenterDepth() {
-        Projection projection = ProjectionSimulator.at(0, 0, 0)
-                .lookAt(0, 0, -1)
-                .screen(640, 360)
-                .build();
+        Projection projection = ProjectionSimulator.at(0, 0, 0).lookAt(0, 0, -1).screen(640, 360).build();
         QuadBasis basis = QuadBasis.screen(new Vec3(0, 0, -12), Direction.SOUTH, ppb, wPx, hPx);
 
         assertEquals(
-                projection.worldPerPixel(basis.center(wPx, hPx)), basis.worldPerPixel(projection, wPx, hPx), 1.0e-12);
+            projection.worldPerPixel(basis.center(wPx, hPx)),
+            basis.worldPerPixel(projection, wPx, hPx),
+            1.0e-12
+        );
     }
 
     @Test

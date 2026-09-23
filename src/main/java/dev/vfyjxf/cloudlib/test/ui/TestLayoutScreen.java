@@ -52,20 +52,18 @@ public class TestLayoutScreen extends BasicScreen {
 
     private void buildUI() {
         // Root scroll container
-        var scrollState = ScrollState.create(ScrollDirection.vertical)
-                .scrollSpeed(12)
-                .smooth(true)
-                .smoothSpeed(0.35f)
-                .trackTexture(Textures.scrollTrack)
-                .thumbTexture(Textures.scrollbarVertical)
-                .scrollbarWidth(7);
+        var scrollState = ScrollState.create(ScrollDirection.vertical).scrollSpeed(12).smooth(true).smoothSpeed(0.35f)
+                .trackTexture(Textures.scrollTrack).thumbTexture(Textures.scrollbarVertical).scrollbarWidth(7);
 
         var root = ColumnWidget.create(10);
-        root.useStyle(UIStyle.of(
+        root.useStyle(
+            UIStyle.of(
                 flexColumn(),
                 padding(12),
                 sizeOf(TaffyDimension.percent(1f), TaffyDimension.percent(1f)),
-                background(Textures.frame)));
+                background(Textures.frame)
+            )
+        );
         root.useEffect(scrollable(scrollState));
         root.onMouseScrolled((mx, my, sx, sy, ctx) -> {
             scrollState.scrollBy(0, (float) (-sy * scrollState.scrollSpeed()));
@@ -78,7 +76,8 @@ public class TestLayoutScreen extends BasicScreen {
         // Main content: 3-column layout
         var contentRow = RowWidget.create(10);
         contentRow.useStyle(
-                UIStyle.of(widthOf(TaffyDimension.percent(1f)), flexGrow(1), minHeight(0), flexWrap(), rowGap(10)));
+            UIStyle.of(widthOf(TaffyDimension.percent(1f)), flexGrow(1), minHeight(0), flexWrap(), rowGap(10))
+        );
 
         contentRow.addWidget(createControlsPanel());
         contentRow.addWidget(createPreviewPanel());
@@ -100,7 +99,8 @@ public class TestLayoutScreen extends BasicScreen {
     private Widget createHeader() {
         var header = RowWidget.create(12);
         header.useStyle(
-                UIStyle.of(widthOf(TaffyDimension.percent(1f)), alignItemsCenter(), flexShrink(0), padding(4, 0)));
+            UIStyle.of(widthOf(TaffyDimension.percent(1f)), alignItemsCenter(), flexShrink(0), padding(4, 0))
+        );
 
         var title = LabelWidget.of("CloudLib UI Showcase").setColor(0xFF3F3F3F).setShadow(false);
         title.useStyle(UIStyle.of(flexShrink(0)));
@@ -109,8 +109,7 @@ public class TestLayoutScreen extends BasicScreen {
         header.addWidget(SpacerWidget.create());
 
         // Search field
-        var search =
-                TextFieldWidget.create().setPlaceholder("Search components...").onTextChanged(t -> inputText = t);
+        var search = TextFieldWidget.create().setPlaceholder("Search components...").onTextChanged(t -> inputText = t);
         search.useStyle(UIStyle.of(sizeOf(140, 20), flexShrink(0)));
         header.addWidget(search);
 
@@ -218,8 +217,7 @@ public class TestLayoutScreen extends BasicScreen {
 
         for (int i = 0; i < 4; i++) {
             double initial = 20 + i * 20;
-            var vs = SliderWidget.create(0, 100, initial)
-                    .setOrientation(SliderWidget.Orientation.vertical)
+            var vs = SliderWidget.create(0, 100, initial).setOrientation(SliderWidget.Orientation.vertical)
                     .onValueChanged(v -> {});
             vs.useStyle(UIStyle.of(widthOf(16), heightOf(50)));
             vRow.addWidget(vs);
@@ -247,8 +245,7 @@ public class TestLayoutScreen extends BasicScreen {
 
         // Horizontal progress bar
         var hProgress = ProgressBarWidget.create(() -> progressValue)
-                .setDirection(ProgressBarWidget.Direction.leftToRight)
-                .setColors(0xFF555555, 0xFF3A8CFF);
+                .setDirection(ProgressBarWidget.Direction.leftToRight).setColors(0xFF555555, 0xFF3A8CFF);
         hProgress.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), heightOf(14)));
         section.addWidget(hProgress);
 
@@ -260,8 +257,7 @@ public class TestLayoutScreen extends BasicScreen {
         for (int i = 0; i < colors.length; i++) {
             double factor = 0.7 - i * 0.15;
             var vp = ProgressBarWidget.create(() -> Math.min(1.0, progressValue * factor + 0.1))
-                    .setDirection(ProgressBarWidget.Direction.bottomToTop)
-                    .setColors(0xFF555555, colors[i]);
+                    .setDirection(ProgressBarWidget.Direction.bottomToTop).setColors(0xFF555555, colors[i]);
             vp.useStyle(UIStyle.of(widthOf(22), heightOf(50)));
             vRow.addWidget(vp);
         }
@@ -302,12 +298,10 @@ public class TestLayoutScreen extends BasicScreen {
         content.addWidget(createDivider());
         content.addWidget(createSectionLabel("Text Input"));
 
-        var inputField = TextFieldWidget.create()
-                .setPlaceholder("Type something...")
-                .onTextChanged(t -> {
-                    inputText = t;
-                    inputEchoLabel.setText("Echo: " + t);
-                });
+        var inputField = TextFieldWidget.create().setPlaceholder("Type something...").onTextChanged(t -> {
+            inputText = t;
+            inputEchoLabel.setText("Echo: " + t);
+        });
         inputField.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), heightOf(20)));
         content.addWidget(inputField);
 
@@ -348,12 +342,18 @@ public class TestLayoutScreen extends BasicScreen {
 
     private Widget createInfoBox() {
         var box = BoxWidget.create();
-        box.useStyle(UIStyle.of(
-                widthOf(TaffyDimension.percent(1f)), background(Textures.inset), padding(8), flexColumn(), rowGap(4)));
+        box.useStyle(
+            UIStyle.of(
+                widthOf(TaffyDimension.percent(1f)),
+                background(Textures.inset),
+                padding(8),
+                flexColumn(),
+                rowGap(4)
+            )
+        );
 
-        String[] infos = {
-            "Framework: CloudLib UI", "Theme: Cirrus Light", "Layout: Taffy Flexbox", "Rendering: SceneCanvas"
-        };
+        String[] infos = {"Framework: CloudLib UI", "Theme: Cirrus Light", "Layout: Taffy Flexbox",
+                "Rendering: SceneCanvas"};
 
         for (String info : infos) {
             var label = LabelWidget.of(info).setColor(0xFF555555);
@@ -375,19 +375,19 @@ public class TestLayoutScreen extends BasicScreen {
         content.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f))));
 
         // List items
-        String[] items = {
-            "Apple", "Banana", "Cherry", "Date",
-            "Elderberry", "Fig", "Grape", "Honeydew"
-        };
+        String[] items = {"Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape", "Honeydew"};
 
         for (int i = 0; i < items.length; i++) {
             int idx = i;
             var item = RowWidget.create(8);
-            item.useStyle(UIStyle.of(
+            item.useStyle(
+                UIStyle.of(
                     widthOf(TaffyDimension.percent(1f)),
                     padding(4, 6),
                     alignItemsCenter(),
-                    background(i % 2 == 0 ? Textures.flat : Textures.inset)));
+                    background(i % 2 == 0 ? Textures.flat : Textures.inset)
+                )
+            );
 
             var num = LabelWidget.of(String.valueOf(i + 1)).setColor(0xFF3A8CFF);
             num.useStyle(UIStyle.of(widthOf(16), flexShrink(0)));
@@ -430,27 +430,23 @@ public class TestLayoutScreen extends BasicScreen {
         row.useStyle(UIStyle.of(widthOf(TaffyDimension.percent(1f)), flexWrap(), rowGap(4)));
 
         // Texture swatches
-        var swatches = new Object[][] {
-            {"FRAME", Textures.frame},
-            {"FLAT", Textures.flat},
-            {"INSET", Textures.inset},
-            {"DARK", Textures.dark},
-            {"OUTLINED_FLAT", Textures.outlinedFlat},
-            {"OUTLINED_INSET", Textures.outlinedInset},
-            {"BORDER_DARK", Textures.borderDark},
-            {"BORDER_LIGHT", Textures.borderLight},
-            {"SCROLL_TRACK", Textures.scrollTrack},
-        };
+        var swatches = new Object[][]{{"FRAME", Textures.frame}, {"FLAT", Textures.flat}, {"INSET", Textures.inset},
+                {"DARK", Textures.dark}, {"OUTLINED_FLAT", Textures.outlinedFlat},
+                {"OUTLINED_INSET", Textures.outlinedInset}, {"BORDER_DARK", Textures.borderDark},
+                {"BORDER_LIGHT", Textures.borderLight}, {"SCROLL_TRACK", Textures.scrollTrack},};
 
         for (Object[] sw : swatches) {
             var swatch = BoxWidget.create();
-            swatch.useStyle(UIStyle.of(
+            swatch.useStyle(
+                UIStyle.of(
                     widthOf(70),
                     heightOf(40),
                     flexShrink(0),
                     background((VisualTexture) sw[1]),
                     alignItemsCenter(),
-                    justifyCenter()));
+                    justifyCenter()
+                )
+            );
 
             var label = LabelWidget.of((String) sw[0]).setColor(0xFF3F3F3F).setShadow(false);
             label.useStyle(UIStyle.of(heightOf(10)));
@@ -467,7 +463,8 @@ public class TestLayoutScreen extends BasicScreen {
     private Widget createFooter() {
         var footer = RowWidget.create(12);
         footer.useStyle(
-                UIStyle.of(widthOf(TaffyDimension.percent(1f)), alignItemsCenter(), flexShrink(0), padding(4, 0)));
+            UIStyle.of(widthOf(TaffyDimension.percent(1f)), alignItemsCenter(), flexShrink(0), padding(4, 0))
+        );
 
         statusLabel = LabelWidget.of("Status: Ready").setColor(0xFF555555);
         statusLabel.useStyle(UIStyle.of(flexGrow(1)));

@@ -48,15 +48,16 @@ public class TestShaderScreen extends BasicScreen {
         float x, y;
 
         GraphNode(
-                String title,
-                float x,
-                float y,
-                int w,
-                int headerColor,
-                String[] inputs,
-                int[] inputColors,
-                String[] outputs,
-                int[] outputColors) {
+            String title,
+            float x,
+            float y,
+            int w,
+            int headerColor,
+            String[] inputs,
+            int[] inputColors,
+            String[] outputs,
+            int[] outputColors
+        ) {
             this.title = title;
             this.x = x;
             this.y = y;
@@ -171,66 +172,84 @@ public class TestShaderScreen extends BasicScreen {
         // region graph setup
 
         private void initGraph() {
-            nodes.add(new GraphNode(
+            nodes.add(
+                new GraphNode(
                     "Texture Sample",
                     30,
                     40,
                     120,
                     0xFF1B6B3A,
-                    new String[] {},
-                    new int[] {},
-                    new String[] {"RGB", "R", "G", "B", "A"},
-                    new int[] {0xFFF9E2AF, 0xFFF38BA8, 0xFFA6E3A1, 0xFF89B4FA, 0xFFCDD6F4}));
-            nodes.add(new GraphNode(
+                    new String[]{},
+                    new int[]{},
+                    new String[]{"RGB", "R", "G", "B", "A"},
+                    new int[]{0xFFF9E2AF, 0xFFF38BA8, 0xFFA6E3A1, 0xFF89B4FA, 0xFFCDD6F4}
+                )
+            );
+            nodes.add(
+                new GraphNode(
                     "Constant",
                     30,
                     180,
                     100,
                     0xFF6C3483,
-                    new String[] {},
-                    new int[] {},
-                    new String[] {"Value"},
-                    new int[] {0xFFCBA6F7}));
-            nodes.add(new GraphNode(
+                    new String[]{},
+                    new int[]{},
+                    new String[]{"Value"},
+                    new int[]{0xFFCBA6F7}
+                )
+            );
+            nodes.add(
+                new GraphNode(
                     "Multiply",
                     200,
                     170,
                     110,
                     0xFF7D6608,
-                    new String[] {"A", "B"},
-                    new int[] {0xFFCDD6F4, 0xFFCDD6F4},
-                    new String[] {"Result"},
-                    new int[] {0xFFF9E2AF}));
-            nodes.add(new GraphNode(
+                    new String[]{"A", "B"},
+                    new int[]{0xFFCDD6F4, 0xFFCDD6F4},
+                    new String[]{"Result"},
+                    new int[]{0xFFF9E2AF}
+                )
+            );
+            nodes.add(
+                new GraphNode(
                     "Lerp",
                     210,
                     50,
                     110,
                     0xFF1A5276,
-                    new String[] {"A", "B", "Alpha"},
-                    new int[] {0xFFF9E2AF, 0xFFF9E2AF, 0xFFCDD6F4},
-                    new String[] {"Result"},
-                    new int[] {0xFFF9E2AF}));
-            nodes.add(new GraphNode(
+                    new String[]{"A", "B", "Alpha"},
+                    new int[]{0xFFF9E2AF, 0xFFF9E2AF, 0xFFCDD6F4},
+                    new String[]{"Result"},
+                    new int[]{0xFFF9E2AF}
+                )
+            );
+            nodes.add(
+                new GraphNode(
                     "Add",
                     200,
                     260,
                     110,
                     0xFF7D6608,
-                    new String[] {"A", "B"},
-                    new int[] {0xFFCDD6F4, 0xFFCDD6F4},
-                    new String[] {"Result"},
-                    new int[] {0xFFA6E3A1}));
-            nodes.add(new GraphNode(
+                    new String[]{"A", "B"},
+                    new int[]{0xFFCDD6F4, 0xFFCDD6F4},
+                    new String[]{"Result"},
+                    new int[]{0xFFA6E3A1}
+                )
+            );
+            nodes.add(
+                new GraphNode(
                     "Material",
                     400,
                     30,
                     130,
                     0xFF922B21,
-                    new String[] {"Base Color", "Metallic", "Roughness", "Normal", "Emissive"},
-                    new int[] {0xFFF9E2AF, 0xFFCDD6F4, 0xFFCDD6F4, 0xFF89B4FA, 0xFFA6E3A1},
-                    new String[] {},
-                    new int[] {}));
+                    new String[]{"Base Color", "Metallic", "Roughness", "Normal", "Emissive"},
+                    new int[]{0xFFF9E2AF, 0xFFCDD6F4, 0xFFCDD6F4, 0xFF89B4FA, 0xFFA6E3A1},
+                    new String[]{},
+                    new int[]{}
+                )
+            );
 
             connections.add(new Connection(0, 0, 3, 0));
             connections.add(new Connection(1, 0, 2, 0));
@@ -239,7 +258,8 @@ public class TestShaderScreen extends BasicScreen {
             connections.add(new Connection(2, 0, 5, 2));
             connections.add(new Connection(4, 0, 5, 3));
 
-            panels.add(new FloatingPanel(
+            panels.add(
+                new FloatingPanel(
                     "Options",
                     420,
                     200,
@@ -249,9 +269,12 @@ public class TestShaderScreen extends BasicScreen {
                     "[G] Toggle glow: ON",
                     "[C] Toggle gradient: ON",
                     "Drag pins to connect",
-                    "Node graph editor demo"));
+                    "Node graph editor demo"
+                )
+            );
             panels.add(
-                    new FloatingPanel("Stats", 420, 300, 120, 60, 0xFF585B70, "Nodes: 6", "Connections: 6", "FPS: --"));
+                new FloatingPanel("Stats", 420, 300, 120, 60, 0xFF585B70, "Nodes: 6", "Connections: 6", "FPS: --")
+            );
         }
 
         // endregion
@@ -521,28 +544,37 @@ public class TestShaderScreen extends BasicScreen {
 
             for (int i = 0; i < n.inputs.length; i++) {
                 drawPin(
-                        canvas,
-                        n.inPinX(),
-                        n.inPinY(i),
-                        n.inputs[i],
-                        n.inputColors[i],
-                        true,
-                        nodeIndex == hoverNode && i == hoverPin && !hoverIsOutput);
+                    canvas,
+                    n.inPinX(),
+                    n.inPinY(i),
+                    n.inputs[i],
+                    n.inputColors[i],
+                    true,
+                    nodeIndex == hoverNode && i == hoverPin && !hoverIsOutput
+                );
             }
             for (int i = 0; i < n.outputs.length; i++) {
                 drawPin(
-                        canvas,
-                        n.outPinX(),
-                        n.outPinY(i),
-                        n.outputs[i],
-                        n.outputColors[i],
-                        false,
-                        nodeIndex == hoverNode && i == hoverPin && hoverIsOutput);
+                    canvas,
+                    n.outPinX(),
+                    n.outPinY(i),
+                    n.outputs[i],
+                    n.outputColors[i],
+                    false,
+                    nodeIndex == hoverNode && i == hoverPin && hoverIsOutput
+                );
             }
         }
 
         private void drawPin(
-                SceneCanvas canvas, float px, float py, String label, int color, boolean isInput, boolean hovered) {
+            SceneCanvas canvas,
+            float px,
+            float py,
+            String label,
+            int color,
+            boolean isInput,
+            boolean hovered
+        ) {
             int radius = hovered ? GraphNode.pinR + 2 : GraphNode.pinR;
             canvas.circle(px, py, radius, color);
             if (hovered) {

@@ -17,12 +17,10 @@ public final class CloudLibCommands {
     private CloudLibCommands() {}
 
     public static void register(RegisterClientCommandsEvent event) {
-        event.getDispatcher()
-                .register(literal("cloudlib").then(literal("reload").executes(ctx -> {
-                    Themes.reload();
-                    ctx.getSource()
-                            .sendSystemMessage(Component.literal("Themes reloaded — active: " + Themes.activeIds()));
-                    return 1;
-                })));
+        event.getDispatcher().register(literal("cloudlib").then(literal("reload").executes(ctx -> {
+            Themes.reload();
+            ctx.getSource().sendSystemMessage(Component.literal("Themes reloaded — active: " + Themes.activeIds()));
+            return 1;
+        })));
     }
 }

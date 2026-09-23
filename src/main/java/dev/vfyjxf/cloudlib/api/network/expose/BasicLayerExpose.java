@@ -9,11 +9,8 @@ import org.jetbrains.annotations.ApiStatus;
 
 import java.util.function.Consumer;
 
-abstract sealed class BasicLayerExpose<E> implements LayerExpose<E>, Transcoder
-        permits StandardLayerExpose,
-                StandardReversedLayerExpose,
-                StandardDiffLayerExpose,
-                StandardDiffReverseLayerExpose {
+abstract sealed class BasicLayerExpose<E> implements LayerExpose<E>, Transcoder permits StandardLayerExpose,
+        StandardReversedLayerExpose, StandardDiffLayerExpose, StandardDiffReverseLayerExpose {
 
     private final SimpleEvent<Consumer<E>> receiveEvent = SimpleEvent.create();
     private final String name;
@@ -22,12 +19,13 @@ abstract sealed class BasicLayerExpose<E> implements LayerExpose<E>, Transcoder
     private final FlowDecoder<E> decoder;
 
     protected <T> BasicLayerExpose(
-            String name,
-            short id,
-            Snapshot<T> snapshot,
-            ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder,
-            FlowDecoder<E> decoder) {
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> valueSupplier,
+        FlowEncoder<T> encoder,
+        FlowDecoder<E> decoder
+    ) {
 
         this.name = name;
         this.id = id;
@@ -65,8 +63,9 @@ abstract sealed class BasicLayerExpose<E> implements LayerExpose<E>, Transcoder
             case illegal -> {
                 boolean readonly = snapshot instanceof Snapshot.Readonly;
                 throw new IllegalStateException(
-                        "Illegally modifity a " + (readonly ? "readonly" : "immutable reference") + " snapshot(id:"
-                                + id() + " name:" + name() + ")");
+                    "Illegally modifity a " + (readonly ? "readonly" : "immutable reference") + " snapshot(id:" + id()
+                            + " name:" + name() + ")"
+                );
             }
         };
     }

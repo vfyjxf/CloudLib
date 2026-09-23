@@ -32,28 +32,29 @@ import java.util.List;
  * @param subtitleCount       how many subtitle rows render
  */
 public record HudInputs(
-        int screenWidth,
-        int screenHeight,
-        int leftHeight,
-        int rightHeight,
-        boolean healthColumns,
-        boolean experienceBar,
-        boolean jumpMeter,
-        boolean experienceLevel,
-        boolean offhandSlot,
-        boolean offhandLeft,
-        boolean effects,
-        int beneficialEffects,
-        int otherEffects,
-        boolean demo,
-        List<BossBar> bossBars,
-        boolean chat,
-        int chatX,
-        int chatWidth,
-        int chatHeight,
-        List<Toast> toasts,
-        int subtitleHalfWidth,
-        int subtitleCount) {
+    int screenWidth,
+    int screenHeight,
+    int leftHeight,
+    int rightHeight,
+    boolean healthColumns,
+    boolean experienceBar,
+    boolean jumpMeter,
+    boolean experienceLevel,
+    boolean offhandSlot,
+    boolean offhandLeft,
+    boolean effects,
+    int beneficialEffects,
+    int otherEffects,
+    boolean demo,
+    List<BossBar> bossBars,
+    boolean chat,
+    int chatX,
+    int chatWidth,
+    int chatHeight,
+    List<Toast> toasts,
+    int subtitleHalfWidth,
+    int subtitleCount
+) {
 
     /** A rendered boss bar: progress-bar y origin and the per-bar row increment. */
     public record BossBar(int y, int increment) {}
@@ -195,28 +196,29 @@ public record HudInputs(
 
         public HudInputs build() {
             return new HudInputs(
-                    screenWidth,
-                    screenHeight,
-                    leftHeight,
-                    rightHeight,
-                    healthColumns,
-                    experienceBar,
-                    jumpMeter,
-                    experienceLevel,
-                    offhandSlot,
-                    offhandLeft,
-                    effects,
-                    beneficialEffects,
-                    otherEffects,
-                    demo,
-                    bossBars,
-                    chat,
-                    chatX,
-                    chatWidth,
-                    chatHeight,
-                    toasts,
-                    subtitleHalfWidth,
-                    subtitleCount);
+                screenWidth,
+                screenHeight,
+                leftHeight,
+                rightHeight,
+                healthColumns,
+                experienceBar,
+                jumpMeter,
+                experienceLevel,
+                offhandSlot,
+                offhandLeft,
+                effects,
+                beneficialEffects,
+                otherEffects,
+                demo,
+                bossBars,
+                chat,
+                chatX,
+                chatWidth,
+                chatHeight,
+                toasts,
+                subtitleHalfWidth,
+                subtitleCount
+            );
         }
     }
 }

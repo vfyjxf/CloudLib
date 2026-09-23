@@ -40,8 +40,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.coordinator;
  * </ul>
  */
 public enum AvoidanceClass {
-    rigid,
-    standard;
+    rigid, standard;
 
     /**
      * Whether this element's rect may block or displace others — the single

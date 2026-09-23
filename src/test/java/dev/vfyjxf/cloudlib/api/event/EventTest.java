@@ -15,22 +15,22 @@ class EventTest {
         }
     });
 
-    EventDefinition<GenericTest<Integer>> genericIntTest =
-            Events.createGeneric(GenericTest.class, listeners -> (Integer obj, long a, double b) -> {
+    EventDefinition<GenericTest<Integer>> genericIntTest = Events
+            .createGeneric(GenericTest.class, listeners -> (Integer obj, long a, double b) -> {
                 for (var listener : listeners) {
                     listener.test(obj, a, b);
                 }
             });
 
-    EventDefinition<GenericTest<String>> genericStringTest =
-            Events.createGeneric(GenericTest.class, listeners -> (String obj, long a, double b) -> {
+    EventDefinition<GenericTest<String>> genericStringTest = Events
+            .createGeneric(GenericTest.class, listeners -> (String obj, long a, double b) -> {
                 for (var listener : listeners) {
                     listener.test(obj, a, b);
                 }
             });
 
-    EventDefinition<ReifiedTestEvent> reifiedTestEvent =
-            Events.define(ReifiedTestEvent.class, listeners -> (String obj, long a, double b) -> {
+    EventDefinition<ReifiedTestEvent> reifiedTestEvent = Events
+            .define(ReifiedTestEvent.class, listeners -> (String obj, long a, double b) -> {
                 for (var listener : listeners) {
                     listener.test(obj, a, b);
                 }
@@ -66,55 +66,25 @@ class EventTest {
 
     @BeforeEach
     void setUp() {
-        eventHandler
-                .events()
-                .get(onTest)
-                .registerManaged(
-                        (int a, Object b, long c, double d) -> {
-                            System.out.println("testTransient");
-                        },
-                        1);
-        eventHandler
-                .events()
-                .get(onTest)
-                .registerManaged(
-                        (int a, Object b, long c, double d) -> {
-                            System.out.println("testIndependent");
-                            customCondition++;
-                        },
-                        () -> customCondition == 2);
-        eventHandler
-                .events()
-                .get(onTest)
-                .register(
-                        (int a, Object b, long c, double d) -> {
-                            System.out.println("test");
-                        },
-                        100);
-        eventHandler
-                .events()
-                .get(genericIntTest)
-                .registerManaged(
-                        (Integer obj, long a, double b) -> {
-                            System.out.println("testGenericInt" + obj);
-                        },
-                        2);
-        eventHandler
-                .events()
-                .get(genericStringTest)
-                .registerManaged(
-                        (String obj, long a, double b) -> {
-                            System.out.println("testGenericString " + obj);
-                        },
-                        3);
-        eventHandler
-                .events()
-                .get(reifiedTestEvent)
-                .registerManaged(
-                        (String obj, long a, double b) -> {
-                            System.out.println("testReified " + obj);
-                        },
-                        4);
+        eventHandler.events().get(onTest).registerManaged((int a, Object b, long c, double d) -> {
+            System.out.println("testTransient");
+        }, 1);
+        eventHandler.events().get(onTest).registerManaged((int a, Object b, long c, double d) -> {
+            System.out.println("testIndependent");
+            customCondition++;
+        }, () -> customCondition == 2);
+        eventHandler.events().get(onTest).register((int a, Object b, long c, double d) -> {
+            System.out.println("test");
+        }, 100);
+        eventHandler.events().get(genericIntTest).registerManaged((Integer obj, long a, double b) -> {
+            System.out.println("testGenericInt" + obj);
+        }, 2);
+        eventHandler.events().get(genericStringTest).registerManaged((String obj, long a, double b) -> {
+            System.out.println("testGenericString " + obj);
+        }, 3);
+        eventHandler.events().get(reifiedTestEvent).registerManaged((String obj, long a, double b) -> {
+            System.out.println("testReified " + obj);
+        }, 4);
     }
 
     @Test

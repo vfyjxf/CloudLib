@@ -17,14 +17,8 @@ import java.util.List;
  */
 final class TestElement implements InworldElement {
 
-    private static final ContentTier[] degradeTiers = {
-        ContentTier.full,
-        ContentTier.compact,
-        ContentTier.labelOnly,
-        ContentTier.iconOnly,
-        ContentTier.pip,
-        ContentTier.directionalOnly,
-    };
+    private static final ContentTier[] degradeTiers = {ContentTier.full, ContentTier.compact, ContentTier.labelOnly,
+            ContentTier.iconOnly, ContentTier.pip, ContentTier.directionalOnly,};
 
     final String id;
     final SpaceKind kind;
@@ -48,16 +42,17 @@ final class TestElement implements InworldElement {
     ElementRejection lastRejectionSeen;
 
     private TestElement(
-            String id,
-            SpaceKind kind,
-            int priority,
-            boolean sticky,
-            ElementMode mode,
-            VariantLadder ladder,
-            boolean singleCandidate,
-            boolean worldOnly,
-            AvoidanceClass avoidanceClass,
-            FloatPos anchor) {
+        String id,
+        SpaceKind kind,
+        int priority,
+        boolean sticky,
+        ElementMode mode,
+        VariantLadder ladder,
+        boolean singleCandidate,
+        boolean worldOnly,
+        AvoidanceClass avoidanceClass,
+        FloatPos anchor
+    ) {
         this.id = id;
         this.kind = kind;
         this.priority = priority;
@@ -73,31 +68,33 @@ final class TestElement implements InworldElement {
     /** A plain arbitrated world element with the default active ladder. */
     static TestElement arbitrated(String id, double anchorX, double anchorY, Size... sizes) {
         return new TestElement(
-                id,
-                SpaceKind.world,
-                0,
-                false,
-                ElementMode.arbitrated,
-                ladder(sizes),
-                false,
-                false,
-                AvoidanceClass.standard,
-                new FloatPos(anchorX, anchorY));
+            id,
+            SpaceKind.world,
+            0,
+            false,
+            ElementMode.arbitrated,
+            ladder(sizes),
+            false,
+            false,
+            AvoidanceClass.standard,
+            new FloatPos(anchorX, anchorY)
+        );
     }
 
     /** A self-managed element bringing one authoritative rect. */
     static TestElement selfManaged(String id, double anchorX, double anchorY, Size size) {
         return new TestElement(
-                id,
-                SpaceKind.world,
-                0,
-                false,
-                ElementMode.selfManaged,
-                ladder(SpacePolicy.active, false, true, size),
-                true,
-                false,
-                AvoidanceClass.standard,
-                new FloatPos(anchorX, anchorY));
+            id,
+            SpaceKind.world,
+            0,
+            false,
+            ElementMode.selfManaged,
+            ladder(SpacePolicy.active, false, true, size),
+            true,
+            false,
+            AvoidanceClass.standard,
+            new FloatPos(anchorX, anchorY)
+        );
     }
 
     /** A ladder of the given sizes with default policies: active, no nudge, clamping. */
@@ -114,36 +111,79 @@ final class TestElement implements InworldElement {
         List<InworldVariant> rungs = new ArrayList<>(sizes.length);
         for (int i = 0; i < sizes.length; i++) {
             Size size = sizes[i];
-            rungs.add(new InworldVariant(
+            rungs.add(
+                new InworldVariant(
                     i,
                     size,
                     degradeTiers[Math.min(i, degradeTiers.length - 1)],
                     policy,
                     allowsNudge,
                     allowsClamp,
-                    0.75 * size.width() * size.height()));
+                    0.75 * size.width() * size.height()
+                )
+            );
         }
         return VariantLadder.of(rungs);
     }
 
     TestElement withPriority(int newPriority) {
         return new TestElement(
-                id, kind, newPriority, sticky, mode, ladder, singleCandidate, worldOnly, avoidanceClass, anchor);
+            id,
+            kind,
+            newPriority,
+            sticky,
+            mode,
+            ladder,
+            singleCandidate,
+            worldOnly,
+            avoidanceClass,
+            anchor
+        );
     }
 
     TestElement withSticky() {
         return new TestElement(
-                id, kind, priority, true, mode, ladder, singleCandidate, worldOnly, avoidanceClass, anchor);
+            id,
+            kind,
+            priority,
+            true,
+            mode,
+            ladder,
+            singleCandidate,
+            worldOnly,
+            avoidanceClass,
+            anchor
+        );
     }
 
     TestElement withKind(SpaceKind newKind) {
         return new TestElement(
-                id, newKind, priority, sticky, mode, ladder, singleCandidate, worldOnly, avoidanceClass, anchor);
+            id,
+            newKind,
+            priority,
+            sticky,
+            mode,
+            ladder,
+            singleCandidate,
+            worldOnly,
+            avoidanceClass,
+            anchor
+        );
     }
 
     TestElement withLadder(VariantLadder newLadder) {
         return new TestElement(
-                id, kind, priority, sticky, mode, newLadder, singleCandidate, worldOnly, avoidanceClass, anchor);
+            id,
+            kind,
+            priority,
+            sticky,
+            mode,
+            newLadder,
+            singleCandidate,
+            worldOnly,
+            avoidanceClass,
+            anchor
+        );
     }
 
     TestElement withSingleCandidate() {
@@ -165,7 +205,17 @@ final class TestElement implements InworldElement {
      */
     TestElement withRigid() {
         return new TestElement(
-                id, kind, priority, sticky, mode, ladder, singleCandidate, worldOnly, AvoidanceClass.rigid, anchor);
+            id,
+            kind,
+            priority,
+            sticky,
+            mode,
+            ladder,
+            singleCandidate,
+            worldOnly,
+            AvoidanceClass.rigid,
+            anchor
+        );
     }
 
     void moveTo(double x, double y) {
@@ -231,9 +281,12 @@ final class TestElement implements InworldElement {
             usedVariants.add(context.variant());
             Size size = context.variant().requestedSize();
             return ElementProposal.worldOnly(
-                    context.variant(),
-                    List.of(PlacementCandidate.world(
-                            WorldAabb.around(anchor.x(), 64.0, anchor.y(), size.width(), 8.0, size.height()))));
+                context.variant(),
+                List.of(
+                    PlacementCandidate
+                            .world(WorldAabb.around(anchor.x(), 64.0, anchor.y(), size.width(), 8.0, size.height()))
+                )
+            );
         }
         InworldVariant variant = context.variant();
         if (budgetAware && context.round() == 0 && context.budget().capacityFor(variant.requestedArea()) == 0) {
@@ -246,21 +299,19 @@ final class TestElement implements InworldElement {
         Size size = variant.requestedSize();
         boolean oneCandidate = singleCandidate || mode == ElementMode.selfManaged;
         double[][] offsets = oneCandidate
-                ? new double[][] {{0, 0}}
-                : new double[][] {
-                    {0, 0},
-                    {size.width() + 8, 0},
-                    {-(size.width() + 8), 0},
-                    {0, size.height() + 8},
-                    {0, -(size.height() + 8)},
-                };
+                ? new double[][]{{0, 0}}
+                : new double[][]{{0, 0}, {size.width() + 8, 0}, {-(size.width() + 8), 0}, {0, size.height() + 8},
+                        {0, -(size.height() + 8)},};
         List<PlacementCandidate> candidates = new ArrayList<>(offsets.length);
         for (double[] offset : offsets) {
             double cx = anchor.x() + offset[0];
             double cy = anchor.y() + offset[1];
-            candidates.add(PlacementCandidate.dual(
+            candidates.add(
+                PlacementCandidate.dual(
                     WorldAabb.around(cx, 64.0, cy, size.width(), 8.0, size.height()),
-                    FloatRect.around(new FloatPos(cx, cy), size.width(), size.height())));
+                    FloatRect.around(new FloatPos(cx, cy), size.width(), size.height())
+                )
+            );
         }
         return ElementProposal.of(variant, anchor, candidates);
     }

@@ -22,12 +22,13 @@ import java.util.Objects;
  *        round 1: the degraded rung
  */
 public record ProposeContext(
-        long epoch,
-        int round,
-        SpaceBudget budget,
-        @Nullable InworldPlacement lastPlacement,
-        @Nullable ElementRejection lastRejection,
-        InworldVariant variant) {
+    long epoch,
+    int round,
+    SpaceBudget budget,
+    @Nullable InworldPlacement lastPlacement,
+    @Nullable ElementRejection lastRejection,
+    InworldVariant variant
+) {
 
     public ProposeContext {
         Objects.requireNonNull(budget, "budget");

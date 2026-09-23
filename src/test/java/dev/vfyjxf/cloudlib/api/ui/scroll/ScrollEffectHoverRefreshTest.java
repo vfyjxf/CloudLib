@@ -51,9 +51,7 @@ class ScrollEffectHoverRefreshTest {
         Field field = Scene.class.getDeclaredField("hoverTooltip");
         field.setAccessible(true);
         Tooltip tooltip = (Tooltip) field.get(scene);
-        return tooltip.flatEntries().stream()
-                .map(ScrollEffectHoverRefreshTest::entryText)
-                .toList();
+        return tooltip.flatEntries().stream().map(ScrollEffectHoverRefreshTest::entryText).toList();
     }
 
     private static String entryText(TooltipEntry entry) {
@@ -61,6 +59,8 @@ class ScrollEffectHoverRefreshTest {
             case TooltipEntry.TextEntry text -> text.text().getString();
             case TooltipEntry.DynamicEntry dynamic -> dynamic.provider().get().getString();
             case TooltipEntry.ComponentEntry ignored -> "";
+            case TooltipEntry.RichTextEntry rich ->
+                rich.text().isTextual() ? rich.text().toComponent().getString() : "";
         };
     }
 

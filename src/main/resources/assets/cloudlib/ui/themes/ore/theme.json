@@ -1,0 +1,5 @@
+{
+  "name": "Ore UI",
+  "description": "The OreUI chrome — flat green buttons, thin borders and compact controls.",
+  "css": ["ore.css"]
+}

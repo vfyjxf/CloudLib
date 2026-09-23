@@ -47,10 +47,11 @@ public final class ItemUnits {
     public static final Unit<ItemUnits> base = ingot;
 
     public static final ImmutableList<UnitRule> rules = Lists.immutable.of(
-            UnitRule.matter(ingot, nugget, Ratio.of(9)),
-            UnitRule.matter(block, ingot, Ratio.of(9)),
-            UnitRule.matter(dust, smallDust, Ratio.of(4)),
-            UnitRule.matter(dust, tinyDust, Ratio.of(9)));
+        UnitRule.matter(ingot, nugget, Ratio.of(9)),
+        UnitRule.matter(block, ingot, Ratio.of(9)),
+        UnitRule.matter(dust, smallDust, Ratio.of(4)),
+        UnitRule.matter(dust, tinyDust, Ratio.of(9))
+    );
 
     /**
      * Unmodifiable {@link List} view of {@link #rules}, for consumers working with

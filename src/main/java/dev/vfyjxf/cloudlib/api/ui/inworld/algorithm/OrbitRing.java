@@ -150,7 +150,7 @@ public final class OrbitRing {
             if (arc.end() - arc.start() >= twoPi - 1.0e-9) {
                 return true;
             }
-            for (double shift : new double[] {-twoPi, 0.0, twoPi}) {
+            for (double shift : new double[]{-twoPi, 0.0, twoPi}) {
                 if (arc.start() + shift <= lo && hi <= arc.end() + shift) {
                     return true;
                 }

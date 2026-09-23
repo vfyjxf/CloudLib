@@ -94,7 +94,9 @@ class SupersamplingTest {
     @Test
     void allocateWithinBudgetGrantsEveryDesired() {
         List<Supersampling.Request> requests = List.of(
-                new Supersampling.Request(176, 100, 8, 2, 1_000_000), new Supersampling.Request(96, 44, 4, 2, 200_000));
+            new Supersampling.Request(176, 100, 8, 2, 1_000_000),
+            new Supersampling.Request(96, 44, 4, 2, 200_000)
+        );
         // 17600·64 + 4224·16 ≈ 1.19M texels — far under the default budget
         int[] granted = Supersampling.allocate(requests, Supersampling.defaultTexelBudget);
         assertEquals(8, granted[0]);
@@ -107,7 +109,9 @@ class SupersamplingTest {
         // 1.5M budget: the larger projected area keeps ss8, the smaller
         // steps down until it fits
         List<Supersampling.Request> requests = List.of(
-                new Supersampling.Request(176, 100, 8, 2, 500_000), new Supersampling.Request(176, 100, 8, 2, 400_000));
+            new Supersampling.Request(176, 100, 8, 2, 500_000),
+            new Supersampling.Request(176, 100, 8, 2, 400_000)
+        );
         int[] granted = Supersampling.allocate(requests, 1_500_000);
         assertEquals(8, granted[0]);
         // 17600·6² = 633.6k ≤ 1.5M − 1.126M = 374k? no → 5² = 440k? no → 4² = 281.6k ✓
@@ -120,7 +124,9 @@ class SupersamplingTest {
         // even a zero budget cannot push a panel under its floor — floors
         // outrank the budget (an all-floors frame may overshoot)
         List<Supersampling.Request> requests = List.of(
-                new Supersampling.Request(176, 100, 8, 3, 500_000), new Supersampling.Request(96, 44, 6, 2, 100_000));
+            new Supersampling.Request(176, 100, 8, 3, 500_000),
+            new Supersampling.Request(96, 44, 6, 2, 100_000)
+        );
         int[] granted = Supersampling.allocate(requests, 0);
         assertEquals(3, granted[0]);
         assertEquals(2, granted[1]);
@@ -130,7 +136,9 @@ class SupersamplingTest {
     void allocateServesByDescendingScreenArea() {
         // the small-area panel is listed first but served last
         List<Supersampling.Request> requests = List.of(
-                new Supersampling.Request(176, 100, 8, 1, 100_000), new Supersampling.Request(176, 100, 8, 1, 900_000));
+            new Supersampling.Request(176, 100, 8, 1, 100_000),
+            new Supersampling.Request(176, 100, 8, 1, 900_000)
+        );
         int[] granted = Supersampling.allocate(requests, 1_500_000);
         assertEquals(8, granted[1]);
         assertEquals(4, granted[0]);
@@ -233,8 +241,9 @@ class SupersamplingTest {
             int desired = Supersampling.desired(projected, 100, 2);
             int applied = controller.observe(desired);
             int granted = Supersampling.allocate(
-                    List.of(new Supersampling.Request(100, 100, applied, 2, projected * projected)),
-                    Supersampling.defaultTexelBudget)[0];
+                List.of(new Supersampling.Request(100, 100, applied, 2, projected * projected)),
+                Supersampling.defaultTexelBudget
+            )[0];
             if (applied != first) {
                 switches++;
                 first = applied;

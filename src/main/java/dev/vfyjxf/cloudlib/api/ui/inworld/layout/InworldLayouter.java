@@ -107,7 +107,12 @@ public interface InworldLayouter {
      * @param frame the frame index of the reported frame
      */
     record Feedback(
-            VisibilityTracker.Phase phase, double alpha, @Nullable ElementRejection rejection, long epoch, long frame) {
+        VisibilityTracker.Phase phase,
+        double alpha,
+        @Nullable ElementRejection rejection,
+        long epoch,
+        long frame
+    ) {
 
         public Feedback {
             Objects.requireNonNull(phase, "phase must not be null");

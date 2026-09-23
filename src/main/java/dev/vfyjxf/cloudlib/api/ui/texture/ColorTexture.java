@@ -76,8 +76,8 @@ public record ColorTexture(int color) implements BatchableTexture {
 
     @Override
     public void emit(VertexEmitter emitter, float x, float y, float width, float height, int tintColor) {
-        // Use our own color, ignore tint (or could blend if desired)
-        emitter.colored(x, y, width, height, color);
+        // our own color, multiplied by the draw tint (the css `color(...)` modifier chain)
+        emitter.colored(x, y, width, height, VisualTexture.multiply(color, tintColor));
     }
 
     // endregion

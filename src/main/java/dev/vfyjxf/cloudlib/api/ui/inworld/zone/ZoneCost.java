@@ -55,15 +55,7 @@ public final class ZoneCost {
 
     /** The nine cost terms; each javadoc states its normalization basis. */
     public enum Term {
-        anchor,
-        overlap,
-        hud,
-        attention,
-        edge,
-        leader,
-        temporal,
-        crossing,
-        topology
+        anchor, overlap, hud, attention, edge, leader, temporal, crossing, topology
     }
 
     /** A leader line segment, in screen coordinates. */
@@ -111,16 +103,17 @@ public final class ZoneCost {
      *        term)
      */
     public record Context(
-            String elementId,
-            FloatPos anchor,
-            Rect safeRect,
-            AttentionField attention,
-            Map<String, Rect> placed,
-            List<Rect> exclusions,
-            @Nullable Rect previous,
-            List<Segment> placedLeaders,
-            Set<Adjacency> previousLeftOf,
-            Set<Adjacency> previousAbove) {
+        String elementId,
+        FloatPos anchor,
+        Rect safeRect,
+        AttentionField attention,
+        Map<String, Rect> placed,
+        List<Rect> exclusions,
+        @Nullable Rect previous,
+        List<Segment> placedLeaders,
+        Set<Adjacency> previousLeftOf,
+        Set<Adjacency> previousAbove
+    ) {
 
         public Context {
             Objects.requireNonNull(elementId, "elementId");
@@ -140,7 +133,17 @@ public final class ZoneCost {
         /** A context with no placements, exclusions, leaders or adjacency — everything empty. */
         public static Context of(String elementId, FloatPos anchor, Rect safeRect, AttentionField attention) {
             return new Context(
-                    elementId, anchor, safeRect, attention, Map.of(), List.of(), null, List.of(), Set.of(), Set.of());
+                elementId,
+                anchor,
+                safeRect,
+                attention,
+                Map.of(),
+                List.of(),
+                null,
+                List.of(),
+                Set.of(),
+                Set.of()
+            );
         }
     }
 
@@ -211,8 +214,9 @@ public final class ZoneCost {
             return 0.0;
         }
         return overDiagonalSq(
-                squaredDistance(candidate.centerX(), candidate.centerY(), previous.centerX(), previous.centerY()),
-                context);
+            squaredDistance(candidate.centerX(), candidate.centerY(), previous.centerX(), previous.centerY()),
+            context
+        );
     }
 
     /** Summed covered area over the candidate's own area, clamped at 1. */

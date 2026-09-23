@@ -26,9 +26,7 @@ class LifecycleDriverTest {
         receiver.context(context, "one", "context");
 
         assertFalse(driver.isLoaded());
-        assertEquals(
-                List.of("test.recipes"),
-                driver.missing().stream().map(LifecycleState::id).toList());
+        assertEquals(List.of("test.recipes"), driver.missing().stream().map(LifecycleState::id).toList());
 
         receiver.event(recipes, "recipes");
 
@@ -84,9 +82,7 @@ class LifecycleDriverTest {
         receiver.event(recipes, "recipes");
 
         assertFalse(driver.isLoaded());
-        assertEquals(
-                List.of("test.tags"),
-                driver.missing().stream().map(LifecycleState::id).toList());
+        assertEquals(List.of("test.tags"), driver.missing().stream().map(LifecycleState::id).toList());
         assertEquals(List.of("load", "unload"), calls);
     }
 
@@ -94,26 +90,16 @@ class LifecycleDriverTest {
     void sourceCanBindToTheReceiver() {
         List<String> calls = new ArrayList<>();
 
-        LifecycleDriver.builder("test-source")
-                .require(context)
-                .require(tags)
-                .source(receiver -> {
-                    receiver.context(context, "one", "context");
-                    receiver.event(tags, "tags");
-                })
-                .onLoad(() -> calls.add("load"))
-                .build();
+        LifecycleDriver.builder("test-source").require(context).require(tags).source(receiver -> {
+            receiver.context(context, "one", "context");
+            receiver.event(tags, "tags");
+        }).onLoad(() -> calls.add("load")).build();
 
         assertEquals(List.of("load"), calls);
     }
 
     private static LifecycleDriver driver(List<String> calls) {
-        return LifecycleDriver.builder("test")
-                .require(context)
-                .require(tags)
-                .require(recipes)
-                .onLoad(() -> calls.add("load"))
-                .onUnload(() -> calls.add("unload"))
-                .build();
+        return LifecycleDriver.builder("test").require(context).require(tags).require(recipes)
+                .onLoad(() -> calls.add("load")).onUnload(() -> calls.add("unload")).build();
     }
 }

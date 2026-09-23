@@ -18,7 +18,12 @@ public class ProgressTexture implements SizedTexture {
     // region factory
 
     public static ProgressTexture horizontal(
-            VisualTexture bg, VisualTexture fg, int w, int h, Supplier<Float> progress) {
+        VisualTexture bg,
+        VisualTexture fg,
+        int w,
+        int h,
+        Supplier<Float> progress
+    ) {
         return new ProgressTexture(bg, fg, w, h, Direction.leftToRight, progress);
     }
 
@@ -39,10 +44,7 @@ public class ProgressTexture implements SizedTexture {
     // region types
 
     public enum Direction {
-        leftToRight,
-        rightToLeft,
-        bottomToTop,
-        topToBottom
+        leftToRight, rightToLeft, bottomToTop, topToBottom
     }
 
     // endregion
@@ -56,12 +58,13 @@ public class ProgressTexture implements SizedTexture {
     private final Supplier<Float> progressSupplier;
 
     public ProgressTexture(
-            VisualTexture background,
-            VisualTexture foreground,
-            int width,
-            int height,
-            Direction direction,
-            Supplier<Float> progressSupplier) {
+        VisualTexture background,
+        VisualTexture foreground,
+        int width,
+        int height,
+        Direction direction,
+        Supplier<Float> progressSupplier
+    ) {
         this.background = background;
         this.foreground = foreground;
         this.width = width;
@@ -74,12 +77,13 @@ public class ProgressTexture implements SizedTexture {
      * Creates with progress from an Animation.
      */
     public ProgressTexture(
-            VisualTexture background,
-            VisualTexture foreground,
-            int width,
-            int height,
-            Direction direction,
-            Animation<?> animation) {
+        VisualTexture background,
+        VisualTexture foreground,
+        int width,
+        int height,
+        Direction direction,
+        Animation<?> animation
+    ) {
         this(background, foreground, width, height, direction, animation::progress);
     }
 
@@ -87,11 +91,12 @@ public class ProgressTexture implements SizedTexture {
      * Creates with horizontal direction (left to right).
      */
     public ProgressTexture(
-            VisualTexture background,
-            VisualTexture foreground,
-            int width,
-            int height,
-            Supplier<Float> progressSupplier) {
+        VisualTexture background,
+        VisualTexture foreground,
+        int width,
+        int height,
+        Supplier<Float> progressSupplier
+    ) {
         this(background, foreground, width, height, Direction.leftToRight, progressSupplier);
     }
 

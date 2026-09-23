@@ -37,7 +37,12 @@ public final class GazeRanking {
      *        stability tie-break)
      */
     public record GazeEntry(
-            String id, double screenDistance, double worldDistance, int priority, long registrationIndex) {
+        String id,
+        double screenDistance,
+        double worldDistance,
+        int priority,
+        long registrationIndex
+    ) {
 
         public GazeEntry {
             Objects.requireNonNull(id, "id");
@@ -56,12 +61,13 @@ public final class GazeRanking {
      * distance between the crosshair and the anchor's screen projection.
      */
     public static GazeEntry entry(
-            String id,
-            FloatPos crosshair,
-            FloatPos anchorScreen,
-            double worldDistance,
-            int priority,
-            long registrationIndex) {
+        String id,
+        FloatPos crosshair,
+        FloatPos anchorScreen,
+        double worldDistance,
+        int priority,
+        long registrationIndex
+    ) {
         Objects.requireNonNull(crosshair, "crosshair");
         Objects.requireNonNull(anchorScreen, "anchorScreen");
         double dx = anchorScreen.x() - crosshair.x();

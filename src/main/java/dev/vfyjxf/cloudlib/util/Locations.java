@@ -18,7 +18,9 @@ public final class Locations {
     }
 
     public static <T> ResourceKey<T> createKey(
-            ResourceKey<? extends Registry<T>> registryKey, ResourceLocation location) {
+        ResourceKey<? extends Registry<T>> registryKey,
+        ResourceLocation location
+    ) {
         return ResourceKey.create(registryKey, location);
     }
 

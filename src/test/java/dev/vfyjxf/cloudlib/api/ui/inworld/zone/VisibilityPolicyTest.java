@@ -12,13 +12,15 @@ class VisibilityPolicyTest {
     @Test
     void theFivePoliciesExistWithDistinctSemantics() {
         assertEquals(
-                Set.of(
-                        VisibilityPolicy.hardOcclusion,
-                        VisibilityPolicy.fade,
-                        VisibilityPolicy.occludedIndicator,
-                        VisibilityPolicy.edgeProxy,
-                        VisibilityPolicy.semanticVisible),
-                EnumSet.allOf(VisibilityPolicy.class));
+            Set.of(
+                VisibilityPolicy.hardOcclusion,
+                VisibilityPolicy.fade,
+                VisibilityPolicy.occludedIndicator,
+                VisibilityPolicy.edgeProxy,
+                VisibilityPolicy.semanticVisible
+            ),
+            EnumSet.allOf(VisibilityPolicy.class)
+        );
         assertEquals(5, VisibilityPolicy.values().length);
     }
 

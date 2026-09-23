@@ -37,9 +37,16 @@ public final class QuadOrientation {
 
     /** {@link QuadBasis#groundParallelOnPlane} with this memory's fallback. */
     public QuadBasis groundParallelOnPlane(
-            Vec3 center, Vec3 observerFacing, Vec3 planeNormal, double pixelsPerBlock, int wPx, int hPx) {
-        return remember(QuadBasis.groundParallelOnPlane(
-                center, observerFacing, planeNormal, lastRight, pixelsPerBlock, wPx, hPx));
+        Vec3 center,
+        Vec3 observerFacing,
+        Vec3 planeNormal,
+        double pixelsPerBlock,
+        int wPx,
+        int hPx
+    ) {
+        return remember(
+            QuadBasis.groundParallelOnPlane(center, observerFacing, planeNormal, lastRight, pixelsPerBlock, wPx, hPx)
+        );
     }
 
     /** {@link QuadBasis#yawBillboard(Vec3, Vec3, double, int, int)} with this memory's fallback. */

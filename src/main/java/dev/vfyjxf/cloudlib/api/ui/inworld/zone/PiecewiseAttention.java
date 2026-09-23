@@ -41,13 +41,19 @@ public final class PiecewiseAttention implements AttentionField {
      *         is below 1
      */
     public PiecewiseAttention(
-            double centerX, double centerY, double innerRadius, double outerRadius, int samplingStep) {
+        double centerX,
+        double centerY,
+        double innerRadius,
+        double outerRadius,
+        int samplingStep
+    ) {
         if (!Double.isFinite(innerRadius) || innerRadius <= 0.0) {
             throw new IllegalArgumentException("innerRadius must be finite and positive: " + innerRadius);
         }
         if (!Double.isFinite(outerRadius) || outerRadius <= innerRadius) {
             throw new IllegalArgumentException(
-                    "outerRadius must be finite and greater than innerRadius: " + outerRadius);
+                "outerRadius must be finite and greater than innerRadius: " + outerRadius
+            );
         }
         if (samplingStep < 1) {
             throw new IllegalArgumentException("samplingStep must be at least 1: " + samplingStep);
@@ -66,7 +72,11 @@ public final class PiecewiseAttention implements AttentionField {
 
     /** A banded field centered on the screen center, with the default 4px sampling grid. */
     public static PiecewiseAttention atScreenCenter(
-            int screenWidth, int screenHeight, double innerRadius, double outerRadius) {
+        int screenWidth,
+        int screenHeight,
+        double innerRadius,
+        double outerRadius
+    ) {
         return new PiecewiseAttention(screenWidth * 0.5, screenHeight * 0.5, innerRadius, outerRadius);
     }
 

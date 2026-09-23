@@ -158,11 +158,12 @@ public final class Clusterer {
     }
 
     private double mergeGain(
-            List<Member> snapshot,
-            List<Integer> a,
-            List<Integer> b,
-            double[][] distance,
-            Map<String, Integer> previousIndex) {
+        List<Member> snapshot,
+        List<Integer> a,
+        List<Integer> b,
+        double[][] distance,
+        Map<String, Integer> previousIndex
+    ) {
         double gain = 0;
         for (int i : a) {
             for (int j : b) {
@@ -210,8 +211,7 @@ public final class Clusterer {
         double[][] distance = new double[snapshot.size()][snapshot.size()];
         for (int i = 0; i < snapshot.size(); i++) {
             if (seen.put(snapshot.get(i).id(), i) != null) {
-                throw new IllegalArgumentException(
-                        "duplicate member id: " + snapshot.get(i).id());
+                throw new IllegalArgumentException("duplicate member id: " + snapshot.get(i).id());
             }
             for (int j = 0; j < i; j++) {
                 double dx = snapshot.get(i).x() - snapshot.get(j).x();

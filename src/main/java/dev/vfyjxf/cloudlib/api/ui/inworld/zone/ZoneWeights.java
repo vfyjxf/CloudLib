@@ -39,15 +39,16 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.zone;
  * @param topology broken previous-frame adjacency relations
  */
 public record ZoneWeights(
-        double anchor,
-        double overlap,
-        double hud,
-        double attention,
-        double edge,
-        double leader,
-        double temporal,
-        double crossing,
-        double topology) {
+    double anchor,
+    double overlap,
+    double hud,
+    double attention,
+    double edge,
+    double leader,
+    double temporal,
+    double crossing,
+    double topology
+) {
 
     public ZoneWeights {
         requireNonNegative("anchor", anchor);

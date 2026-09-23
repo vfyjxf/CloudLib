@@ -33,7 +33,9 @@ public record ContainerQueryPayload(BlockPos pos) implements ServerboundPayload 
     private static final int maxSlots = 512;
 
     public static final ServerPayloadInfo<ContainerQueryPayload> info = CloudlibPayloads.createServerInfo(
-            StreamCodec.ofMember(ContainerQueryPayload::encode, ContainerQueryPayload::decode), "container_query");
+        StreamCodec.ofMember(ContainerQueryPayload::encode, ContainerQueryPayload::decode),
+        "container_query"
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

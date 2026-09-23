@@ -25,14 +25,15 @@ import java.util.Objects;
  *        facets it honors and ignores the rest
  */
 public record InworldLayoutContext(
-        long epoch,
-        int round,
-        SpaceBudget budget,
-        @Nullable InworldPlacement lastPlacement,
-        @Nullable ElementRejection lastRejection,
-        InworldVariant variant,
-        LayoutEnvironment environment,
-        ElementSpec spec) {
+    long epoch,
+    int round,
+    SpaceBudget budget,
+    @Nullable InworldPlacement lastPlacement,
+    @Nullable ElementRejection lastRejection,
+    InworldVariant variant,
+    LayoutEnvironment environment,
+    ElementSpec spec
+) {
 
     public InworldLayoutContext {
         Objects.requireNonNull(budget, "budget");

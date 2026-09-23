@@ -42,14 +42,25 @@ class ZoneCostTest {
     }
 
     private static ZoneCost.Context ctx(
-            Map<String, Rect> placed,
-            List<Rect> exclusions,
-            @Nullable Rect previous,
-            List<ZoneCost.Segment> leaders,
-            Set<ZoneCost.Adjacency> leftOf,
-            Set<ZoneCost.Adjacency> above) {
+        Map<String, Rect> placed,
+        List<Rect> exclusions,
+        @Nullable Rect previous,
+        List<ZoneCost.Segment> leaders,
+        Set<ZoneCost.Adjacency> leftOf,
+        Set<ZoneCost.Adjacency> above
+    ) {
         return new ZoneCost.Context(
-                "a", anchor, screen, attention, placed, exclusions, previous, leaders, leftOf, above);
+            "a",
+            anchor,
+            screen,
+            attention,
+            placed,
+            exclusions,
+            previous,
+            leaders,
+            leftOf,
+            above
+        );
     }
 
     private static ZoneCost.Context empty() {
@@ -58,18 +69,17 @@ class ZoneCostTest {
 
     private static ZoneCost singleWeight(ZoneCost.Term term) {
         ZoneWeights zero = new ZoneWeights(0, 0, 0, 0, 0, 0, 0, 0, 0);
-        return new ZoneCost(
-                switch (term) {
-                    case anchor -> zero.withAnchor(1.0);
-                    case overlap -> zero.withOverlap(1.0);
-                    case hud -> zero.withHud(1.0);
-                    case attention -> zero.withAttention(1.0);
-                    case edge -> zero.withEdge(1.0);
-                    case leader -> zero.withLeader(1.0);
-                    case temporal -> zero.withTemporal(1.0);
-                    case crossing -> zero.withCrossing(1.0);
-                    case topology -> zero.withTopology(1.0);
-                });
+        return new ZoneCost(switch (term) {
+            case anchor -> zero.withAnchor(1.0);
+            case overlap -> zero.withOverlap(1.0);
+            case hud -> zero.withHud(1.0);
+            case attention -> zero.withAttention(1.0);
+            case edge -> zero.withEdge(1.0);
+            case leader -> zero.withLeader(1.0);
+            case temporal -> zero.withTemporal(1.0);
+            case crossing -> zero.withCrossing(1.0);
+            case topology -> zero.withTopology(1.0);
+        });
     }
 
     // region single-term semantics
@@ -83,7 +93,10 @@ class ZoneCostTest {
         assertEquals(0.0, cost.term(ZoneCost.Term.anchor, new Rect(210, 123, 60, 24), context), 1.0e-12);
         // exact fractions
         assertEquals(
-                40402.0 / diagonalSq, cost.term(ZoneCost.Term.anchor, new Rect(421, 116, 40, 40), context), 1.0e-12);
+            40402.0 / diagonalSq,
+            cost.term(ZoneCost.Term.anchor, new Rect(421, 116, 40, 40), context),
+            1.0e-12
+        );
         assertEquals(75077.0 / diagonalSq, cost.term(ZoneCost.Term.anchor, new Rect(0, 0, 2, 2), context), 1.0e-12);
         // far off-screen: clamped at 1
         assertEquals(1.0, cost.term(ZoneCost.Term.anchor, new Rect(-500, -500, 2, 2), context), 1.0e-12);
@@ -95,41 +108,50 @@ class ZoneCostTest {
         Rect candidate = new Rect(100, 100, 100, 100);
 
         assertEquals(
-                0.5,
-                cost.term(
-                        ZoneCost.Term.overlap,
-                        candidate,
-                        ctx(Map.of("b", new Rect(100, 100, 50, 100)), List.of(), null, List.of(), Set.of(), Set.of())),
-                1.0e-12);
+            0.5,
+            cost.term(
+                ZoneCost.Term.overlap,
+                candidate,
+                ctx(Map.of("b", new Rect(100, 100, 50, 100)), List.of(), null, List.of(), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
         assertEquals(
-                0.0,
-                cost.term(
-                        ZoneCost.Term.overlap,
-                        candidate,
-                        ctx(Map.of("b", new Rect(300, 100, 50, 50)), List.of(), null, List.of(), Set.of(), Set.of())),
-                1.0e-12);
+            0.0,
+            cost.term(
+                ZoneCost.Term.overlap,
+                candidate,
+                ctx(Map.of("b", new Rect(300, 100, 50, 50)), List.of(), null, List.of(), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
         // full coverage by one placement
         assertEquals(
-                1.0,
-                cost.term(
-                        ZoneCost.Term.overlap,
-                        candidate,
-                        ctx(Map.of("b", new Rect(90, 90, 120, 120)), List.of(), null, List.of(), Set.of(), Set.of())),
-                1.0e-12);
+            1.0,
+            cost.term(
+                ZoneCost.Term.overlap,
+                candidate,
+                ctx(Map.of("b", new Rect(90, 90, 120, 120)), List.of(), null, List.of(), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
         // two overlapping placements: double-counted area clamps at 1
         assertEquals(
-                1.0,
-                cost.term(
-                        ZoneCost.Term.overlap,
-                        candidate,
-                        ctx(
-                                Map.of("b1", new Rect(100, 100, 60, 100), "b2", new Rect(140, 100, 60, 100)),
-                                List.of(),
-                                null,
-                                List.of(),
-                                Set.of(),
-                                Set.of())),
-                1.0e-12);
+            1.0,
+            cost.term(
+                ZoneCost.Term.overlap,
+                candidate,
+                ctx(
+                    Map.of("b1", new Rect(100, 100, 60, 100), "b2", new Rect(140, 100, 60, 100)),
+                    List.of(),
+                    null,
+                    List.of(),
+                    Set.of(),
+                    Set.of()
+                )
+            ),
+            1.0e-12
+        );
     }
 
     @Test
@@ -139,12 +161,14 @@ class ZoneCostTest {
 
         assertEquals(0.0, cost.term(ZoneCost.Term.hud, candidate, empty()), 1.0e-12);
         assertEquals(
-                0.5,
-                cost.term(
-                        ZoneCost.Term.hud,
-                        candidate,
-                        ctx(Map.of(), List.of(new Rect(100, 100, 50, 100)), null, List.of(), Set.of(), Set.of())),
-                1.0e-12);
+            0.5,
+            cost.term(
+                ZoneCost.Term.hud,
+                candidate,
+                ctx(Map.of(), List.of(new Rect(100, 100, 50, 100)), null, List.of(), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
     }
 
     @Test
@@ -153,13 +177,15 @@ class ZoneCostTest {
         ZoneCost.Context context = empty();
 
         assertEquals(
-                attention.cost(new Rect(220, 115, 40, 40)),
-                cost.term(ZoneCost.Term.attention, new Rect(220, 115, 40, 40), context),
-                0.0);
+            attention.cost(new Rect(220, 115, 40, 40)),
+            cost.term(ZoneCost.Term.attention, new Rect(220, 115, 40, 40), context),
+            0.0
+        );
         assertEquals(
-                attention.cost(new Rect(410, 5, 40, 40)),
-                cost.term(ZoneCost.Term.attention, new Rect(410, 5, 40, 40), context),
-                0.0);
+            attention.cost(new Rect(410, 5, 40, 40)),
+            cost.term(ZoneCost.Term.attention, new Rect(410, 5, 40, 40), context),
+            0.0
+        );
     }
 
     @Test
@@ -198,20 +224,24 @@ class ZoneCostTest {
         assertEquals(0.0, cost.term(ZoneCost.Term.temporal, candidate, empty()), 1.0e-12);
         // previous rect at the same center: zero
         assertEquals(
-                0.0,
-                cost.term(
-                        ZoneCost.Term.temporal,
-                        candidate,
-                        ctx(Map.of(), List.of(), new Rect(100, 135, 60, 24), List.of(), Set.of(), Set.of())),
-                1.0e-12);
+            0.0,
+            cost.term(
+                ZoneCost.Term.temporal,
+                candidate,
+                ctx(Map.of(), List.of(), new Rect(100, 135, 60, 24), List.of(), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
         // centers 240px apart: 240² / diag²
         assertEquals(
-                57600.0 / diagonalSq,
-                cost.term(
-                        ZoneCost.Term.temporal,
-                        candidate,
-                        ctx(Map.of(), List.of(), new Rect(340, 135, 60, 24), List.of(), Set.of(), Set.of())),
-                1.0e-12);
+            57600.0 / diagonalSq,
+            cost.term(
+                ZoneCost.Term.temporal,
+                candidate,
+                ctx(Map.of(), List.of(), new Rect(340, 135, 60, 24), List.of(), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
     }
 
     @Test
@@ -224,88 +254,71 @@ class ZoneCostTest {
         assertEquals(0.0, cost.term(ZoneCost.Term.crossing, candidate, empty()), 1.0e-12);
         // one crossing vertical: full count
         assertEquals(
-                1.0,
-                cost.term(
-                        ZoneCost.Term.crossing,
-                        candidate,
-                        ctx(
-                                Map.of(),
-                                List.of(),
-                                null,
-                                List.of(new ZoneCost.Segment(180, 60, 180, 200)),
-                                Set.of(),
-                                Set.of())),
-                1.0e-12);
+            1.0,
+            cost.term(
+                ZoneCost.Term.crossing,
+                candidate,
+                ctx(Map.of(), List.of(), null, List.of(new ZoneCost.Segment(180, 60, 180, 200)), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
         // parallel segment: no crossing
         assertEquals(
-                0.0,
-                cost.term(
-                        ZoneCost.Term.crossing,
-                        candidate,
-                        ctx(
-                                Map.of(),
-                                List.of(),
-                                null,
-                                List.of(new ZoneCost.Segment(100, 100, 200, 100)),
-                                Set.of(),
-                                Set.of())),
-                1.0e-12);
+            0.0,
+            cost.term(
+                ZoneCost.Term.crossing,
+                candidate,
+                ctx(Map.of(), List.of(), null, List.of(new ZoneCost.Segment(100, 100, 200, 100)), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
         // two placed, one crossed: half
         assertEquals(
-                0.5,
-                cost.term(
-                        ZoneCost.Term.crossing,
-                        candidate,
-                        ctx(
-                                Map.of(),
-                                List.of(),
-                                null,
-                                List.of(new ZoneCost.Segment(180, 60, 180, 200), new ZoneCost.Segment(0, 50, 100, 50)),
-                                Set.of(),
-                                Set.of())),
-                1.0e-12);
+            0.5,
+            cost.term(
+                ZoneCost.Term.crossing,
+                candidate,
+                ctx(
+                    Map.of(),
+                    List.of(),
+                    null,
+                    List.of(new ZoneCost.Segment(180, 60, 180, 200), new ZoneCost.Segment(0, 50, 100, 50)),
+                    Set.of(),
+                    Set.of()
+                )
+            ),
+            1.0e-12
+        );
         // collinear overlap counts
         assertEquals(
-                1.0,
-                cost.term(
-                        ZoneCost.Term.crossing,
-                        candidate,
-                        ctx(
-                                Map.of(),
-                                List.of(),
-                                null,
-                                List.of(new ZoneCost.Segment(150, 135, 230, 135)),
-                                Set.of(),
-                                Set.of())),
-                1.0e-12);
+            1.0,
+            cost.term(
+                ZoneCost.Term.crossing,
+                candidate,
+                ctx(Map.of(), List.of(), null, List.of(new ZoneCost.Segment(150, 135, 230, 135)), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
         // collinear disjoint does not
         assertEquals(
-                0.0,
-                cost.term(
-                        ZoneCost.Term.crossing,
-                        candidate,
-                        ctx(
-                                Map.of(),
-                                List.of(),
-                                null,
-                                List.of(new ZoneCost.Segment(0, 135, 100, 135)),
-                                Set.of(),
-                                Set.of())),
-                1.0e-12);
+            0.0,
+            cost.term(
+                ZoneCost.Term.crossing,
+                candidate,
+                ctx(Map.of(), List.of(), null, List.of(new ZoneCost.Segment(0, 135, 100, 135)), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
         // a shared endpoint is not a crossing
         assertEquals(
-                0.0,
-                cost.term(
-                        ZoneCost.Term.crossing,
-                        candidate,
-                        ctx(
-                                Map.of(),
-                                List.of(),
-                                null,
-                                List.of(new ZoneCost.Segment(120, 135, 120, 60)),
-                                Set.of(),
-                                Set.of())),
-                1.0e-12);
+            0.0,
+            cost.term(
+                ZoneCost.Term.crossing,
+                candidate,
+                ctx(Map.of(), List.of(), null, List.of(new ZoneCost.Segment(120, 135, 120, 60)), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
     }
 
     @Test
@@ -313,8 +326,14 @@ class ZoneCostTest {
         ZoneCost cost = singleWeight(ZoneCost.Term.crossing);
         // the anchor lies inside this candidate: its leader is a point
         Rect containing = new Rect(220, 120, 60, 40);
-        ZoneCost.Context context =
-                ctx(Map.of(), List.of(), null, List.of(new ZoneCost.Segment(240, 60, 240, 200)), Set.of(), Set.of());
+        ZoneCost.Context context = ctx(
+            Map.of(),
+            List.of(),
+            null,
+            List.of(new ZoneCost.Segment(240, 60, 240, 200)),
+            Set.of(),
+            Set.of()
+        );
 
         assertEquals(0.0, cost.term(ZoneCost.Term.crossing, containing, context), 1.0e-12);
     }
@@ -325,8 +344,14 @@ class ZoneCostTest {
         Map<String, Rect> placed = Map.of("b", new Rect(300, 100, 60, 24));
 
         // a was left of b: a candidate still left of b keeps the relation
-        ZoneCost.Context context =
-                ctx(placed, List.of(), null, List.of(), Set.of(new ZoneCost.Adjacency("a", "b")), Set.of());
+        ZoneCost.Context context = ctx(
+            placed,
+            List.of(),
+            null,
+            List.of(),
+            Set.of(new ZoneCost.Adjacency("a", "b")),
+            Set.of()
+        );
         assertEquals(0.0, cost.term(ZoneCost.Term.topology, new Rect(100, 100, 60, 24), context), 1.0e-12);
         // touching counts as keeping (right edge flush with b's left edge)
         assertEquals(0.0, cost.term(ZoneCost.Term.topology, new Rect(240, 100, 60, 24), context), 1.0e-12);
@@ -340,23 +365,25 @@ class ZoneCostTest {
 
         // a was above b
         ZoneCost.Context above = ctx(
-                Map.of("b", new Rect(210, 200, 60, 24)),
-                List.of(),
-                null,
-                List.of(),
-                Set.of(),
-                Set.of(new ZoneCost.Adjacency("a", "b")));
+            Map.of("b", new Rect(210, 200, 60, 24)),
+            List.of(),
+            null,
+            List.of(),
+            Set.of(),
+            Set.of(new ZoneCost.Adjacency("a", "b"))
+        );
         assertEquals(0.0, cost.term(ZoneCost.Term.topology, new Rect(210, 168, 60, 24), above), 1.0e-12);
         assertEquals(1.0, cost.term(ZoneCost.Term.topology, new Rect(210, 190, 60, 24), above), 1.0e-12);
 
         // b was left of a: the candidate must sit right of b
         ZoneCost.Context reversed = ctx(
-                Map.of("b", new Rect(60, 100, 60, 24)),
-                List.of(),
-                null,
-                List.of(),
-                Set.of(new ZoneCost.Adjacency("b", "a")),
-                Set.of());
+            Map.of("b", new Rect(60, 100, 60, 24)),
+            List.of(),
+            null,
+            List.of(),
+            Set.of(new ZoneCost.Adjacency("b", "a")),
+            Set.of()
+        );
         assertEquals(0.0, cost.term(ZoneCost.Term.topology, new Rect(130, 100, 60, 24), reversed), 1.0e-12);
         assertEquals(1.0, cost.term(ZoneCost.Term.topology, new Rect(0, 100, 60, 24), reversed), 1.0e-12);
     }
@@ -365,18 +392,25 @@ class ZoneCostTest {
     void topologyTermIgnoresPairsNotInvolvingTheCandidate() {
         ZoneCost cost = singleWeight(ZoneCost.Term.topology);
         ZoneCost.Context othersPair = ctx(
-                Map.of("b", new Rect(300, 100, 60, 24), "c", new Rect(100, 100, 60, 24)),
-                List.of(),
-                null,
-                List.of(),
-                Set.of(new ZoneCost.Adjacency("b", "c")),
-                Set.of());
+            Map.of("b", new Rect(300, 100, 60, 24), "c", new Rect(100, 100, 60, 24)),
+            List.of(),
+            null,
+            List.of(),
+            Set.of(new ZoneCost.Adjacency("b", "c")),
+            Set.of()
+        );
 
         assertEquals(0.0, cost.term(ZoneCost.Term.topology, new Rect(380, 100, 60, 24), othersPair), 1.0e-12);
 
         // the other element missing from the placements is not the candidate's business
-        ZoneCost.Context missingOther =
-                ctx(Map.of(), List.of(), null, List.of(), Set.of(new ZoneCost.Adjacency("a", "c")), Set.of());
+        ZoneCost.Context missingOther = ctx(
+            Map.of(),
+            List.of(),
+            null,
+            List.of(),
+            Set.of(new ZoneCost.Adjacency("a", "c")),
+            Set.of()
+        );
         assertEquals(0.0, cost.term(ZoneCost.Term.topology, new Rect(0, 0, 60, 24), missingOther), 1.0e-12);
     }
 
@@ -385,12 +419,13 @@ class ZoneCostTest {
         ZoneCost cost = singleWeight(ZoneCost.Term.topology);
         // keep (a,b), break (a,c): half the pairs broken
         ZoneCost.Context context = ctx(
-                Map.of("b", new Rect(400, 100, 60, 24), "c", new Rect(350, 200, 60, 24)),
-                List.of(),
-                null,
-                List.of(),
-                Set.of(new ZoneCost.Adjacency("a", "b"), new ZoneCost.Adjacency("a", "c")),
-                Set.of());
+            Map.of("b", new Rect(400, 100, 60, 24), "c", new Rect(350, 200, 60, 24)),
+            List.of(),
+            null,
+            List.of(),
+            Set.of(new ZoneCost.Adjacency("a", "b"), new ZoneCost.Adjacency("a", "c")),
+            Set.of()
+        );
 
         assertEquals(0.5, cost.term(ZoneCost.Term.topology, new Rect(320, 200, 60, 24), context), 1.0e-12);
     }
@@ -405,81 +440,101 @@ class ZoneCostTest {
         assertSensitive(ZoneCost.Term.anchor, empty(), new Rect(210, 123, 60, 24), empty(), new Rect(420, 116, 60, 24));
         // overlap: a free spot beats a covered one
         assertSensitive(
-                ZoneCost.Term.overlap,
-                empty(),
-                new Rect(200, 100, 60, 24),
-                ctx(Map.of("b", new Rect(200, 100, 60, 24)), List.of(), null, List.of(), Set.of(), Set.of()),
-                new Rect(200, 100, 60, 24));
+            ZoneCost.Term.overlap,
+            empty(),
+            new Rect(200, 100, 60, 24),
+            ctx(Map.of("b", new Rect(200, 100, 60, 24)), List.of(), null, List.of(), Set.of(), Set.of()),
+            new Rect(200, 100, 60, 24)
+        );
         // hud: clear beats over an exclusion
         assertSensitive(
-                ZoneCost.Term.hud,
-                empty(),
-                new Rect(200, 100, 60, 24),
-                ctx(Map.of(), List.of(new Rect(200, 100, 60, 24)), null, List.of(), Set.of(), Set.of()),
-                new Rect(200, 100, 60, 24));
+            ZoneCost.Term.hud,
+            empty(),
+            new Rect(200, 100, 60, 24),
+            ctx(Map.of(), List.of(new Rect(200, 100, 60, 24)), null, List.of(), Set.of(), Set.of()),
+            new Rect(200, 100, 60, 24)
+        );
         // attention: a cheap field beats an expensive one
         assertSensitive(
-                ZoneCost.Term.attention,
-                new ZoneCost.Context(
-                        "a",
-                        anchor,
-                        screen,
-                        new ConstantField(0.0),
-                        Map.of(),
-                        List.of(),
-                        null,
-                        List.of(),
-                        Set.of(),
-                        Set.of()),
-                new Rect(220, 115, 40, 40),
-                new ZoneCost.Context(
-                        "a", anchor, screen, attention, Map.of(), List.of(), null, List.of(), Set.of(), Set.of()),
-                new Rect(220, 115, 40, 40));
+            ZoneCost.Term.attention,
+            new ZoneCost.Context(
+                "a",
+                anchor,
+                screen,
+                new ConstantField(0.0),
+                Map.of(),
+                List.of(),
+                null,
+                List.of(),
+                Set.of(),
+                Set.of()
+            ),
+            new Rect(220, 115, 40, 40),
+            new ZoneCost.Context(
+                "a",
+                anchor,
+                screen,
+                attention,
+                Map.of(),
+                List.of(),
+                null,
+                List.of(),
+                Set.of(),
+                Set.of()
+            ),
+            new Rect(220, 115, 40, 40)
+        );
         // edge: inside beats sticking out
         assertSensitive(ZoneCost.Term.edge, empty(), new Rect(100, 100, 60, 24), empty(), new Rect(460, 10, 40, 40));
         // leader: no leader beats a long one
         assertSensitive(ZoneCost.Term.leader, empty(), new Rect(220, 120, 60, 40), empty(), new Rect(60, 123, 60, 24));
         // temporal: staying put beats moving
         assertSensitive(
-                ZoneCost.Term.temporal,
-                ctx(Map.of(), List.of(), new Rect(210, 123, 60, 24), List.of(), Set.of(), Set.of()),
-                new Rect(210, 123, 60, 24),
-                ctx(Map.of(), List.of(), new Rect(340, 135, 60, 24), List.of(), Set.of(), Set.of()),
-                new Rect(210, 123, 60, 24));
+            ZoneCost.Term.temporal,
+            ctx(Map.of(), List.of(), new Rect(210, 123, 60, 24), List.of(), Set.of(), Set.of()),
+            new Rect(210, 123, 60, 24),
+            ctx(Map.of(), List.of(), new Rect(340, 135, 60, 24), List.of(), Set.of(), Set.of()),
+            new Rect(210, 123, 60, 24)
+        );
         // crossing: a clear leader beats a crossing one
         assertSensitive(
-                ZoneCost.Term.crossing,
-                empty(),
-                new Rect(60, 123, 60, 24),
-                ctx(Map.of(), List.of(), null, List.of(new ZoneCost.Segment(180, 60, 180, 200)), Set.of(), Set.of()),
-                new Rect(60, 123, 60, 24));
+            ZoneCost.Term.crossing,
+            empty(),
+            new Rect(60, 123, 60, 24),
+            ctx(Map.of(), List.of(), null, List.of(new ZoneCost.Segment(180, 60, 180, 200)), Set.of(), Set.of()),
+            new Rect(60, 123, 60, 24)
+        );
         // topology: keeping the neighbor order beats breaking it
         assertSensitive(
-                ZoneCost.Term.topology,
-                ctx(
-                        Map.of("b", new Rect(300, 100, 60, 24)),
-                        List.of(),
-                        null,
-                        List.of(),
-                        Set.of(new ZoneCost.Adjacency("a", "b")),
-                        Set.of()),
-                new Rect(100, 100, 60, 24),
-                ctx(
-                        Map.of("b", new Rect(300, 100, 60, 24)),
-                        List.of(),
-                        null,
-                        List.of(),
-                        Set.of(new ZoneCost.Adjacency("a", "b")),
-                        Set.of()),
-                new Rect(280, 100, 60, 24));
+            ZoneCost.Term.topology,
+            ctx(
+                Map.of("b", new Rect(300, 100, 60, 24)),
+                List.of(),
+                null,
+                List.of(),
+                Set.of(new ZoneCost.Adjacency("a", "b")),
+                Set.of()
+            ),
+            new Rect(100, 100, 60, 24),
+            ctx(
+                Map.of("b", new Rect(300, 100, 60, 24)),
+                List.of(),
+                null,
+                List.of(),
+                Set.of(new ZoneCost.Adjacency("a", "b")),
+                Set.of()
+            ),
+            new Rect(280, 100, 60, 24)
+        );
     }
 
     private static void assertSensitive(
-            ZoneCost.Term term,
-            ZoneCost.Context goodContext,
-            Rect goodRect,
-            ZoneCost.Context badContext,
-            Rect badRect) {
+        ZoneCost.Term term,
+        ZoneCost.Context goodContext,
+        Rect goodRect,
+        ZoneCost.Context badContext,
+        Rect badRect
+    ) {
         double good = singleWeight(term).cost(goodRect, goodContext);
         double bad = singleWeight(term).cost(badRect, badContext);
         assertTrue(bad > good, term + ": bad " + bad + " !> good " + good);
@@ -493,12 +548,13 @@ class ZoneCostTest {
         ZoneCost cost = new ZoneCost(new ZoneWeights(0, 0, 0, 0, 0, 0, 0, 0, 0));
         Rect candidate = new Rect(0, 0, 60, 24);
         ZoneCost.Context worst = ctx(
-                Map.of("b", candidate),
-                List.of(candidate),
-                new Rect(400, 250, 60, 24),
-                List.of(new ZoneCost.Segment(0, 0, 480, 270)),
-                Set.of(new ZoneCost.Adjacency("a", "b")),
-                Set.of(new ZoneCost.Adjacency("a", "b")));
+            Map.of("b", candidate),
+            List.of(candidate),
+            new Rect(400, 250, 60, 24),
+            List.of(new ZoneCost.Segment(0, 0, 480, 270)),
+            Set.of(new ZoneCost.Adjacency("a", "b")),
+            Set.of(new ZoneCost.Adjacency("a", "b"))
+        );
 
         assertEquals(0.0, cost.cost(candidate, worst), 0.0);
     }
@@ -510,74 +566,81 @@ class ZoneCostTest {
 
         assertEquals(1.0, cost.term(ZoneCost.Term.anchor, new Rect(-500, -500, 2, 2), empty()), 1.0e-12);
         assertEquals(
-                1.0,
-                cost.term(
-                        ZoneCost.Term.overlap,
-                        new Rect(100, 100, 100, 100),
-                        ctx(Map.of("b", new Rect(90, 90, 120, 120)), List.of(), null, List.of(), Set.of(), Set.of())),
-                1.0e-12);
+            1.0,
+            cost.term(
+                ZoneCost.Term.overlap,
+                new Rect(100, 100, 100, 100),
+                ctx(Map.of("b", new Rect(90, 90, 120, 120)), List.of(), null, List.of(), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
         assertEquals(
-                1.0,
-                cost.term(
-                        ZoneCost.Term.hud,
-                        new Rect(100, 100, 100, 100),
-                        ctx(Map.of(), List.of(new Rect(90, 90, 120, 120)), null, List.of(), Set.of(), Set.of())),
-                1.0e-12);
+            1.0,
+            cost.term(
+                ZoneCost.Term.hud,
+                new Rect(100, 100, 100, 100),
+                ctx(Map.of(), List.of(new Rect(90, 90, 120, 120)), null, List.of(), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
         assertEquals(
-                1.0,
-                cost.term(
-                        ZoneCost.Term.attention,
-                        new Rect(0, 0, 40, 40),
-                        new ZoneCost.Context(
-                                "a", anchor, screen, hot, Map.of(), List.of(), null, List.of(), Set.of(), Set.of())),
-                1.0e-12);
+            1.0,
+            cost.term(
+                ZoneCost.Term.attention,
+                new Rect(0, 0, 40, 40),
+                new ZoneCost.Context("a", anchor, screen, hot, Map.of(), List.of(), null, List.of(), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
         assertEquals(1.0, cost.term(ZoneCost.Term.edge, new Rect(500, 0, 40, 40), empty()), 1.0e-12);
         assertEquals(1.0, cost.term(ZoneCost.Term.leader, new Rect(-1000, 123, 60, 24), empty()), 1.0e-12);
         assertEquals(
-                1.0,
-                cost.term(
-                        ZoneCost.Term.temporal,
-                        new Rect(210, 123, 60, 24),
-                        ctx(Map.of(), List.of(), new Rect(-1000, 135, 2, 2), List.of(), Set.of(), Set.of())),
-                1.0e-12);
+            1.0,
+            cost.term(
+                ZoneCost.Term.temporal,
+                new Rect(210, 123, 60, 24),
+                ctx(Map.of(), List.of(), new Rect(-1000, 135, 2, 2), List.of(), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
         assertEquals(
-                1.0,
-                cost.term(
-                        ZoneCost.Term.crossing,
-                        new Rect(60, 123, 60, 24),
-                        ctx(
-                                Map.of(),
-                                List.of(),
-                                null,
-                                List.of(new ZoneCost.Segment(180, 60, 180, 200)),
-                                Set.of(),
-                                Set.of())),
-                1.0e-12);
+            1.0,
+            cost.term(
+                ZoneCost.Term.crossing,
+                new Rect(60, 123, 60, 24),
+                ctx(Map.of(), List.of(), null, List.of(new ZoneCost.Segment(180, 60, 180, 200)), Set.of(), Set.of())
+            ),
+            1.0e-12
+        );
         assertEquals(
-                1.0,
-                cost.term(
-                        ZoneCost.Term.topology,
-                        new Rect(280, 100, 60, 24),
-                        ctx(
-                                Map.of("b", new Rect(300, 100, 60, 24)),
-                                List.of(),
-                                null,
-                                List.of(),
-                                Set.of(new ZoneCost.Adjacency("a", "b")),
-                                Set.of())),
-                1.0e-12);
+            1.0,
+            cost.term(
+                ZoneCost.Term.topology,
+                new Rect(280, 100, 60, 24),
+                ctx(
+                    Map.of("b", new Rect(300, 100, 60, 24)),
+                    List.of(),
+                    null,
+                    List.of(),
+                    Set.of(new ZoneCost.Adjacency("a", "b")),
+                    Set.of()
+                )
+            ),
+            1.0e-12
+        );
     }
 
     @Test
     void topologyBreakingScoresWorseUnderDefaultWeights() {
         ZoneCost cost = ZoneCost.withDefaults();
         ZoneCost.Context context = ctx(
-                Map.of("b", new Rect(300, 100, 60, 24)),
-                List.of(),
-                null,
-                List.of(),
-                Set.of(new ZoneCost.Adjacency("a", "b")),
-                Set.of());
+            Map.of("b", new Rect(300, 100, 60, 24)),
+            List.of(),
+            null,
+            List.of(),
+            Set.of(new ZoneCost.Adjacency("a", "b")),
+            Set.of()
+        );
 
         double keeping = cost.cost(new Rect(100, 100, 60, 24), context);
         double breaking = cost.cost(new Rect(280, 100, 60, 24), context);
@@ -593,40 +656,42 @@ class ZoneCostTest {
         ZoneWeights weights = cost.weights();
         Rect candidate = new Rect(280, 100, 60, 24);
         ZoneCost.Context context = ctx(
-                Map.of("b", new Rect(300, 100, 60, 24)),
-                List.of(),
-                null,
-                List.of(),
-                Set.of(new ZoneCost.Adjacency("a", "b")),
-                Set.of());
+            Map.of("b", new Rect(300, 100, 60, 24)),
+            List.of(),
+            null,
+            List.of(),
+            Set.of(new ZoneCost.Adjacency("a", "b")),
+            Set.of()
+        );
 
         double expected = 0.0;
         for (ZoneCost.Term term : ZoneCost.Term.values()) {
             expected += switch (term) {
-                        case anchor -> weights.anchor();
-                        case overlap -> weights.overlap();
-                        case hud -> weights.hud();
-                        case attention -> weights.attention();
-                        case edge -> weights.edge();
-                        case leader -> weights.leader();
-                        case temporal -> weights.temporal();
-                        case crossing -> weights.crossing();
-                        case topology -> weights.topology();
-                    }
-                    * cost.term(term, candidate, context);
+                case anchor -> weights.anchor();
+                case overlap -> weights.overlap();
+                case hud -> weights.hud();
+                case attention -> weights.attention();
+                case edge -> weights.edge();
+                case leader -> weights.leader();
+                case temporal -> weights.temporal();
+                case crossing -> weights.crossing();
+                case topology -> weights.topology();
+            } * cost.term(term, candidate, context);
         }
         assertEquals(expected, cost.cost(candidate, context), 1.0e-9);
         // and bounded by the weight sum
-        assertTrue(cost.cost(candidate, context)
-                <= weights.anchor()
-                        + weights.overlap()
-                        + weights.hud()
-                        + weights.attention()
-                        + weights.edge()
-                        + weights.leader()
-                        + weights.temporal()
-                        + weights.crossing()
-                        + weights.topology());
+        assertTrue(
+            cost.cost(candidate, context)
+                    <= weights.anchor()
+                            + weights.overlap()
+                            + weights.hud()
+                            + weights.attention()
+                            + weights.edge()
+                            + weights.leader()
+                            + weights.temporal()
+                            + weights.crossing()
+                            + weights.topology()
+        );
     }
 
     // endregion
@@ -665,12 +730,12 @@ class ZoneCostTest {
 
     @Test
     void weightsRejectInvalidValues() {
+        assertThrows(IllegalArgumentException.class, () -> ZoneWeights.defaults().withAnchor(-0.1));
+        assertThrows(IllegalArgumentException.class, () -> ZoneWeights.defaults().withOverlap(Double.NaN));
         assertThrows(
-                IllegalArgumentException.class, () -> ZoneWeights.defaults().withAnchor(-0.1));
-        assertThrows(
-                IllegalArgumentException.class, () -> ZoneWeights.defaults().withOverlap(Double.NaN));
-        assertThrows(
-                IllegalArgumentException.class, () -> ZoneWeights.defaults().withTopology(Double.POSITIVE_INFINITY));
+            IllegalArgumentException.class,
+            () -> ZoneWeights.defaults().withTopology(Double.POSITIVE_INFINITY)
+        );
     }
 
     @Test
@@ -692,19 +757,20 @@ class ZoneCostTest {
     void degenerateSafeRectLeavesDiagonalTermsInertNotNaN() {
         ZoneCost cost = ZoneCost.withDefaults();
         ZoneCost.Context context = new ZoneCost.Context(
-                "a",
-                anchor,
-                new Rect(10, 10, 0, 0),
-                attention,
-                Map.of(),
-                List.of(),
-                new Rect(0, 0, 10, 10),
-                List.of(),
-                Set.of(),
-                Set.of());
+            "a",
+            anchor,
+            new Rect(10, 10, 0, 0),
+            attention,
+            Map.of(),
+            List.of(),
+            new Rect(0, 0, 10, 10),
+            List.of(),
+            Set.of(),
+            Set.of()
+        );
 
-        for (ZoneCost.Term term :
-                new ZoneCost.Term[] {ZoneCost.Term.anchor, ZoneCost.Term.temporal, ZoneCost.Term.leader}) {
+        for (ZoneCost.Term term : new ZoneCost.Term[]{ZoneCost.Term.anchor, ZoneCost.Term.temporal,
+                ZoneCost.Term.leader}) {
             double value = cost.term(term, new Rect(210, 123, 60, 24), context);
             assertTrue(Double.isFinite(value), term + " is not finite: " + value);
             assertEquals(0.0, value, 0.0);
@@ -716,22 +782,35 @@ class ZoneCostTest {
     void contextAndSegmentsValidateTheirInputs() {
         assertThrows(NullPointerException.class, () -> ZoneCost.Context.of(null, anchor, screen, attention));
         assertThrows(
-                NullPointerException.class,
-                () -> new ZoneCost.Context(
-                        "a", null, screen, attention, Map.of(), List.of(), null, List.of(), Set.of(), Set.of()));
+            NullPointerException.class,
+            () -> new ZoneCost.Context(
+                "a",
+                null,
+                screen,
+                attention,
+                Map.of(),
+                List.of(),
+                null,
+                List.of(),
+                Set.of(),
+                Set.of()
+            )
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new ZoneCost.Context(
-                        "a",
-                        new FloatPos(Double.NaN, 0),
-                        screen,
-                        attention,
-                        Map.of(),
-                        List.of(),
-                        null,
-                        List.of(),
-                        Set.of(),
-                        Set.of()));
+            IllegalArgumentException.class,
+            () -> new ZoneCost.Context(
+                "a",
+                new FloatPos(Double.NaN, 0),
+                screen,
+                attention,
+                Map.of(),
+                List.of(),
+                null,
+                List.of(),
+                Set.of(),
+                Set.of()
+            )
+        );
         assertThrows(IllegalArgumentException.class, () -> new ZoneCost.Segment(0, 0, Double.NaN, 1));
         assertThrows(NullPointerException.class, () -> new ZoneCost.Adjacency(null, "b"));
     }

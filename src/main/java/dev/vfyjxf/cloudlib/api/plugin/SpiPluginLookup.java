@@ -33,8 +33,6 @@ public final class SpiPluginLookup<T extends ModPlugin> implements PluginLookup<
 
     @Override
     public Collection<T> findPlugins() {
-        return ServiceLoader.load(pluginClass, classLoader).stream()
-                .map(ServiceLoader.Provider::get)
-                .toList();
+        return ServiceLoader.load(pluginClass, classLoader).stream().map(ServiceLoader.Provider::get).toList();
     }
 }

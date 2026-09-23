@@ -68,20 +68,19 @@ class ThemeCascadeTest {
      * {@link StyleValue} — box shorthands land on their {@code -top} longhand.
      */
     private static @Nullable StyleValue<?> prop(UIStyle style, String name) {
-        String mapped =
-                switch (name) {
-                    case "padding", "margin", "inset", "border-width" -> name + "-top";
-                    case "size" -> "width";
-                    case "min-size" -> "min-width";
-                    case "max-size" -> "max-width";
-                    case "gap" -> "row-gap";
-                    case "overflow" -> "overflow-x";
-                    case "flex-flow" -> "flex-direction";
-                    case "border" -> "border-top-width";
-                    case "zIndex" -> "z-index";
-                    case "textColor" -> "color";
-                    default -> name;
-                };
+        String mapped = switch (name) {
+            case "padding", "margin", "inset", "border-width" -> name + "-top";
+            case "size" -> "width";
+            case "min-size" -> "min-width";
+            case "max-size" -> "max-width";
+            case "gap" -> "row-gap";
+            case "overflow" -> "overflow-x";
+            case "flex-flow" -> "flex-direction";
+            case "border" -> "border-top-width";
+            case "zIndex" -> "z-index";
+            case "textColor" -> "color";
+            default -> name;
+        };
         var key = Styles.byId(mapped);
         return key == null ? null : style.get(key);
     }
@@ -124,8 +123,7 @@ class ThemeCascadeTest {
 
     @Test
     void combinators() {
-        Theme t = theme(
-                """
+        Theme t = theme("""
                 panel button { padding: 1px }
                 panel > button { margin: 2px }
                 a + b { gap: 3px }
@@ -177,8 +175,7 @@ class ThemeCascadeTest {
 
     @Test
     void notIsWhereHas() {
-        Theme t = theme(
-                """
+        Theme t = theme("""
                 button:not(.disabled) { padding: 1px }
                 button:is(.a, .b) { margin: 2px }
                 button:where(#x) { gap: 3px }
@@ -201,8 +198,7 @@ class ThemeCascadeTest {
 
     @Test
     void specificityWins() {
-        Theme t = theme(
-                """
+        Theme t = theme("""
                 button { padding: 1px }
                 button.primary { padding: 9px }
                 button { padding: 2px }
@@ -226,8 +222,7 @@ class ThemeCascadeTest {
 
     @Test
     void importantBeatsSpecificity() {
-        Theme t = theme(
-                """
+        Theme t = theme("""
                 button.x { padding: 9px }
                 button { padding: 3px !important }
                 """);
@@ -260,8 +255,7 @@ class ThemeCascadeTest {
 
     @Test
     void varSubstitution() {
-        Theme t = theme(
-                """
+        Theme t = theme("""
                 :root { --pad: 6px; --accent: #35D6D0 }
                 button { padding: var(--pad); color: var(--accent) }
                 """);
@@ -380,8 +374,7 @@ class ThemeCascadeTest {
 
     @Test
     void lengthUnits() {
-        Theme t = theme(
-                """
+        Theme t = theme("""
                 a { padding: 4px }
                 b { padding: 50% }
                 c { width: calc(50% - 4px) }
@@ -407,8 +400,7 @@ class ThemeCascadeTest {
 
     @Test
     void colorForms() {
-        Theme t = theme(
-                """
+        Theme t = theme("""
                 a { color: #FF0000 }
                 b { color: #35D6D0FF }
                 c { color: rgb(255, 0, 0) }
@@ -422,8 +414,7 @@ class ThemeCascadeTest {
 
     @Test
     void textureFunctions() {
-        Theme t = theme(
-                """
+        Theme t = theme("""
                 a { background: nine-slice("cloudlib:gui/background/dark", 3) }
                 b { background: color(#102030) }
                 c { background: linear-gradient(#000, #FFF, vertical) }
@@ -464,23 +455,23 @@ class ThemeCascadeTest {
 
     @Test
     void enumProperties() {
-        Theme t = theme(
-                """
+        Theme t = theme("""
                 a { display: flex; flex-direction: row; align-items: center;
                     position: absolute; overflow: hidden scroll; box-sizing: content-box;
                     text-align: justify-all; direction: rtl; flex-wrap: wrap-reverse }
                 """);
         UIStyle s = styleOf(t, new Node("a"));
         for (String p : List.of(
-                "display",
-                "flex-direction",
-                "align-items",
-                "position",
-                "overflow",
-                "box-sizing",
-                "text-align",
-                "direction",
-                "flex-wrap")) {
+            "display",
+            "flex-direction",
+            "align-items",
+            "position",
+            "overflow",
+            "box-sizing",
+            "text-align",
+            "direction",
+            "flex-wrap"
+        )) {
             assertNotNull(prop(s, p), p);
         }
     }

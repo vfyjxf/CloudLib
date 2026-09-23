@@ -42,7 +42,10 @@ class ZoneStrategiesTest {
         List<PlacementCandidate> candidates = zoneGrid(new Size(60, 20), ZoneFacet.of());
         assertEquals(25, candidates.size(), "in-place + 8 directions × 3 tiers, nothing clamped away");
         assertEquals(
-                FloatRect.around(anchor, 60, 20), candidates.getFirst().screenRect(), "the in-place candidate leads");
+            FloatRect.around(anchor, 60, 20),
+            candidates.getFirst().screenRect(),
+            "the in-place candidate leads"
+        );
         Set<FloatRect> unique = new LinkedHashSet<>();
         for (PlacementCandidate candidate : candidates) {
             assertNull(candidate.world(), "zone candidates are screen-only");
@@ -79,18 +82,22 @@ class ZoneStrategiesTest {
         List<PlacementCandidate> defaults = zoneGrid(new Size(60, 20), ZoneFacet.of());
         // with the default 8px near clearance the left-near candidate's right edge is anchor.x - 8
         assertTrue(
-                defaults.stream()
-                        .anyMatch(c ->
-                                c.screenRect().right() == 192 && c.screenRect().centerY() == 150),
-                "left-near docks at 8px clearance");
+            defaults.stream().anyMatch(c -> c.screenRect().right() == 192 && c.screenRect().centerY() == 150),
+            "left-near docks at 8px clearance"
+        );
         ZoneFacet configured = new ZoneFacet(
-                null, null, ZoneCandidates.Config.of(10.0, 30.0, 60.0), null, VisibilityPolicy.fade, LodTier.full);
+            null,
+            null,
+            ZoneCandidates.Config.of(10.0, 30.0, 60.0),
+            null,
+            VisibilityPolicy.fade,
+            LodTier.full
+        );
         List<PlacementCandidate> cleared = zoneGrid(new Size(60, 20), configured);
         assertTrue(
-                cleared.stream()
-                        .anyMatch(c ->
-                                c.screenRect().right() == 190 && c.screenRect().centerY() == 150),
-                "left-near docks at the facet's 10px clearance");
+            cleared.stream().anyMatch(c -> c.screenRect().right() == 190 && c.screenRect().centerY() == 150),
+            "left-near docks at the facet's 10px clearance"
+        );
     }
 
     private static List<PlacementCandidate> zoneGrid(Size panel, ZoneFacet facet) {
@@ -98,16 +105,18 @@ class ZoneStrategiesTest {
     }
 
     private static List<PlacementCandidate> zoneGrid(FloatPos anchorPos, Size panel, ZoneFacet facet) {
-        return StageCatalogs.requireCandidateStrategy(StageCatalogs.candidatesZoneGrid)
-                .candidates(new StageCatalogs.CandidateContext(
-                        anchorPos,
-                        panel,
-                        OrientationFacet.Mode.screen,
-                        0.0,
-                        LayoutHarness.unanchored(),
-                        AlgorithmProfile.facePanel.params(),
-                        Set.of(),
-                        facet));
+        return StageCatalogs.requireCandidateStrategy(StageCatalogs.candidatesZoneGrid).candidates(
+            new StageCatalogs.CandidateContext(
+                anchorPos,
+                panel,
+                OrientationFacet.Mode.screen,
+                0.0,
+                LayoutHarness.unanchored(),
+                AlgorithmProfile.facePanel.params(),
+                Set.of(),
+                facet
+            )
+        );
     }
 
     private static boolean contains(Rect bounds, FloatRect rect) {
@@ -126,8 +135,14 @@ class ZoneStrategiesTest {
         ZoneWeights weights = only(ZoneCost.Term.overlap);
         PlacementCandidate covered = candidate(60, 130, 60, 24);
         PlacementCandidate clear = candidate(60, 30, 60, 24);
-        ZoneCost.Context context =
-                context(weights, Map.of("blocker", new Rect(50, 120, 100, 40)), null, List.of(), Set.of(), Set.of());
+        ZoneCost.Context context = context(
+            weights,
+            Map.of("blocker", new Rect(50, 120, 100, 40)),
+            null,
+            List.of(),
+            Set.of(),
+            Set.of()
+        );
         List<PlacementCandidate> ranked = rank(List.of(covered, clear), weights, context);
         assertSame(clear, ranked.getFirst(), "the candidate covering the placed rect loses");
         assertSame(covered, ranked.get(1));
@@ -149,8 +164,14 @@ class ZoneStrategiesTest {
         ZoneWeights weights = only(ZoneCost.Term.temporal);
         PlacementCandidate nearPrevious = candidate(260, 100, 40, 20);
         PlacementCandidate far = candidate(60, 240, 40, 20);
-        ZoneCost.Context context =
-                context(weights, Map.of(), new Rect(260, 100, 40, 20), List.of(), Set.of(), Set.of());
+        ZoneCost.Context context = context(
+            weights,
+            Map.of(),
+            new Rect(260, 100, 40, 20),
+            List.of(),
+            Set.of(),
+            Set.of()
+        );
         List<PlacementCandidate> ranked = rank(List.of(far, nearPrevious), weights, context);
         assertSame(nearPrevious, ranked.getFirst(), "staying put costs nothing");
         assertSame(far, ranked.get(1));
@@ -164,12 +185,13 @@ class ZoneStrategiesTest {
         PlacementCandidate keeps = candidate(10, 50, 40, 20); // right edge 50 ≤ 60: holds
         PlacementCandidate breaks = candidate(50, 50, 40, 20); // right edge 90 > 60: broken
         ZoneCost.Context context = context(
-                weights,
-                Map.of("neighbor", new Rect(60, 50, 40, 20)),
-                null,
-                List.of(),
-                Set.of(leftOfNeighbor),
-                Set.of());
+            weights,
+            Map.of("neighbor", new Rect(60, 50, 40, 20)),
+            null,
+            List.of(),
+            Set.of(leftOfNeighbor),
+            Set.of()
+        );
         List<PlacementCandidate> ranked = rank(List.of(breaks, keeps), weights, context);
         assertSame(keeps, ranked.getFirst(), "preserving the left-of relation wins");
         assertSame(breaks, ranked.get(1));
@@ -191,25 +213,29 @@ class ZoneStrategiesTest {
     @Test
     void withoutZoneInputsTheCanonicalOrderStands() {
         List<PlacementCandidate> candidates = List.of(candidate(60, 130, 60, 24), candidate(60, 30, 60, 24));
-        List<PlacementCandidate> ranked = StageCatalogs.requireRankStrategy(StageCatalogs.rankZoneCost)
-                .rank(
-                        candidates,
-                        new StageCatalogs.RankContext(anchor, null, false, AlgorithmProfile.facePanel.params()));
+        List<PlacementCandidate> ranked = StageCatalogs.requireRankStrategy(StageCatalogs.rankZoneCost).rank(
+            candidates,
+            new StageCatalogs.RankContext(anchor, null, false, AlgorithmProfile.facePanel.params())
+        );
         assertNull(new StageCatalogs.RankContext(anchor, null, false, AlgorithmProfile.facePanel.params()).zone());
         assertEquals(candidates, ranked);
     }
 
     private static List<PlacementCandidate> rank(
-            List<PlacementCandidate> candidates, ZoneWeights weights, ZoneCost.Context context) {
-        return StageCatalogs.requireRankStrategy(StageCatalogs.rankZoneCost)
-                .rank(
-                        candidates,
-                        new StageCatalogs.RankContext(
-                                anchor,
-                                null,
-                                false,
-                                AlgorithmProfile.facePanel.params(),
-                                new StageCatalogs.RankContext.ZoneInputs(weights, context)));
+        List<PlacementCandidate> candidates,
+        ZoneWeights weights,
+        ZoneCost.Context context
+    ) {
+        return StageCatalogs.requireRankStrategy(StageCatalogs.rankZoneCost).rank(
+            candidates,
+            new StageCatalogs.RankContext(
+                anchor,
+                null,
+                false,
+                AlgorithmProfile.facePanel.params(),
+                new StageCatalogs.RankContext.ZoneInputs(weights, context)
+            )
+        );
     }
 
     private static ZoneWeights only(ZoneCost.Term term) {
@@ -225,14 +251,25 @@ class ZoneStrategiesTest {
     }
 
     private static ZoneCost.Context context(
-            ZoneWeights weights,
-            Map<String, Rect> placed,
-            Rect previous,
-            List<ZoneCost.Segment> leaders,
-            Set<ZoneCost.Adjacency> leftOf,
-            Set<ZoneCost.Adjacency> above) {
+        ZoneWeights weights,
+        Map<String, Rect> placed,
+        Rect previous,
+        List<ZoneCost.Segment> leaders,
+        Set<ZoneCost.Adjacency> leftOf,
+        Set<ZoneCost.Adjacency> above
+    ) {
         return new ZoneCost.Context(
-                "me", anchor, screen, attention, placed, List.of(), previous, leaders, leftOf, above);
+            "me",
+            anchor,
+            screen,
+            attention,
+            placed,
+            List.of(),
+            previous,
+            leaders,
+            leftOf,
+            above
+        );
     }
 
     private static PlacementCandidate candidate(int x, int y, int w, int h) {
@@ -258,16 +295,18 @@ class ZoneStrategiesTest {
     @Test
     void aZonelessFacePanelStillDrivesTheAnchoredSingleCandidate() {
         LayoutHarness harness = new LayoutHarness();
-        AssembledElement plain = harness.assemble(ElementSpec.from(InworldProfile.facePanel, "fp")
-                .withAnchor(AnchorFacet.position(1, 2, 3))
-                .withSpaces(new SpaceFacet(Set.of(SpaceMask.worldAnchored), SpacePolicy.fixed, 5))
-                .withDegrade(DegradeFacet.of(SpacePolicy.fixed, false, true, new Size(120, 90))));
+        AssembledElement plain = harness.assemble(
+            ElementSpec.from(InworldProfile.facePanel, "fp").withAnchor(AnchorFacet.position(1, 2, 3))
+                    .withSpaces(new SpaceFacet(Set.of(SpaceMask.worldAnchored), SpacePolicy.fixed, 5))
+                    .withDegrade(DegradeFacet.of(SpacePolicy.fixed, false, true, new Size(120, 90)))
+        );
         harness.register(plain);
         CoordinationResult result = harness.frame(LayoutHarness.anchored(LayoutHarness.pos(200, 150)), plain);
         assertEquals(
-                FloatRect.around(LayoutHarness.pos(200, 150), 120, 90),
-                result.placementOf("fp").screenRect(),
-                "the default path keeps candidates.single");
+            FloatRect.around(LayoutHarness.pos(200, 150), 120, 90),
+            result.placementOf("fp").screenRect(),
+            "the default path keeps candidates.single"
+        );
     }
 
     /** A tracked zone panel for the bottom-left corner of the 400×300 harness screen. */
@@ -275,14 +314,13 @@ class ZoneStrategiesTest {
         return ElementSpec.from(InworldProfile.facePanel, id)
                 .withSpaces(new SpaceFacet(Set.of(SpaceMask.screenPanel), SpacePolicy.passive, 1))
                 .withDegrade(DegradeFacet.of(SpacePolicy.passive, false, true, new Size(60, 20), new Size(40, 16)))
-                .withAnchor(AnchorFacet.cameraTracked(0.08, 0.85))
-                .withZone(ZoneFacet.of());
+                .withAnchor(AnchorFacet.cameraTracked(0.08, 0.85)).withZone(ZoneFacet.of());
     }
 
     static List<Rect> latticeRects(FloatPos anchorPos, int w, int h) {
         List<Rect> rects = new ArrayList<>();
-        for (ZoneCandidates.Candidate candidate : ZoneCandidates.generate(
-                anchorPos, new Size(w, h), new Rect(0, 0, LayoutHarness.width, LayoutHarness.height))) {
+        for (ZoneCandidates.Candidate candidate : ZoneCandidates
+                .generate(anchorPos, new Size(w, h), new Rect(0, 0, LayoutHarness.width, LayoutHarness.height))) {
             rects.add(candidate.rect());
         }
         return rects;

@@ -35,14 +35,15 @@ public final class StyleKey<T> {
     private final Function<T, String> formatter;
 
     StyleKey(
-            String id,
-            Class<T> type,
-            StyleScope scope,
-            boolean inherited,
-            @Nullable Supplier<T> initial,
-            StyleParser<T> parser,
-            StyleApply<T> applier,
-            Function<T, String> formatter) {
+        String id,
+        Class<T> type,
+        StyleScope scope,
+        boolean inherited,
+        @Nullable Supplier<T> initial,
+        StyleParser<T> parser,
+        StyleApply<T> applier,
+        Function<T, String> formatter
+    ) {
         this.id = Objects.requireNonNull(id, "id");
         this.type = Objects.requireNonNull(type, "type");
         this.scope = Objects.requireNonNull(scope, "scope");

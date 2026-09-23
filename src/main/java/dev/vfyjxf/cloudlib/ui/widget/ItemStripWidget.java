@@ -19,10 +19,12 @@ public class ItemStripWidget extends Widget {
     private List<ItemStack> items = List.of();
 
     public ItemStripWidget() {
-        onMount((scene, context, handle) -> scene.layoutTree()
-                .setMeasureFunc(
-                        nodeId(),
-                        (style, space) -> new FloatSize(Math.max(cell, Math.min(items.size(), max) * cell), 18)));
+        onMount(
+            (scene, context, handle) -> scene.layoutTree().setMeasureFunc(
+                nodeId(),
+                (style, space) -> new FloatSize(Math.max(cell, Math.min(items.size(), max) * cell), 18)
+            )
+        );
     }
 
     public void setItems(List<ItemStack> items) {

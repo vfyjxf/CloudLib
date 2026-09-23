@@ -52,7 +52,8 @@ class OverlayExclusionAggregationTest {
     void parkedOverlayOutsideTheScreenIsNotReported() {
         var register = new OverlayRegisterImpl();
         register.register(
-                OverlayEntry.global("parked", context -> new Widget(), OverlayExclusion.fixed(1000, 1000, 50, 50)));
+            OverlayEntry.global("parked", context -> new Widget(), OverlayExclusion.fixed(1000, 1000, 50, 50))
+        );
 
         OverlayManager manager = newManager(register);
         Screen screen = new TestScreen(320, 240);
@@ -61,14 +62,17 @@ class OverlayExclusionAggregationTest {
         manager.attachOverlays(screen, dummyContext(screen), group);
 
         assertTrue(
-                manager.exclusionAreas(screen).isEmpty(), "a panel parked off-screen must not report exclusion areas");
+            manager.exclusionAreas(screen).isEmpty(),
+            "a panel parked off-screen must not report exclusion areas"
+        );
     }
 
     @Test
     void areasAreClippedToTheScreen() {
         var register = new OverlayRegisterImpl();
         register.register(
-                OverlayEntry.global("clipped", context -> new Widget(), OverlayExclusion.fixed(300, 100, 50, 50)));
+            OverlayEntry.global("clipped", context -> new Widget(), OverlayExclusion.fixed(300, 100, 50, 50))
+        );
 
         OverlayManager manager = newManager(register);
         Screen screen = new TestScreen(320, 240);
@@ -89,7 +93,8 @@ class OverlayExclusionAggregationTest {
     void detachStopsReportingAreas() {
         var register = new OverlayRegisterImpl();
         register.register(
-                OverlayEntry.global("detached", context -> new Widget(), OverlayExclusion.fixed(0, 0, 10, 10)));
+            OverlayEntry.global("detached", context -> new Widget(), OverlayExclusion.fixed(0, 0, 10, 10))
+        );
 
         OverlayManager manager = newManager(register);
         Screen screen = new TestScreen(320, 240);

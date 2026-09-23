@@ -116,7 +116,10 @@ class OcclusionProbeTest {
         // the same policy math at a caller's alpha: the shipped constant and
         // the parameter agree on the shape, differ only in the floor
         assertEquals(
-                OcclusionFade.occludedAlpha, OcclusionFade.target(VisibilityPolicy.fade, true, false, false), 0.0f);
+            OcclusionFade.occludedAlpha,
+            OcclusionFade.target(VisibilityPolicy.fade, true, false, false),
+            0.0f
+        );
         assertEquals(0.5f, OcclusionFade.target(VisibilityPolicy.fade, true, false, false, 0.5f), 0.0f);
         assertEquals(1f, OcclusionFade.target(VisibilityPolicy.fade, true, true, false, 0.5f), "selected holds");
         assertEquals(1f, OcclusionFade.target(VisibilityPolicy.fade, true, false, true, 0.5f), "inspecting holds");

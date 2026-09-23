@@ -59,7 +59,7 @@ public final class WidgetPath implements Iterable<Widget> {
      */
     public static WidgetPath of(Widget widget) {
         Objects.requireNonNull(widget, "widget");
-        return new WidgetPath(new Widget[] {widget}, 1, false);
+        return new WidgetPath(new Widget[]{widget}, 1, false);
     }
 
     /**
@@ -194,7 +194,11 @@ public final class WidgetPath implements Iterable<Widget> {
     @Override
     public Spliterator<Widget> spliterator() {
         return Spliterators.spliterator(
-                nodes, 0, size, Spliterator.ORDERED | Spliterator.SIZED | Spliterator.NONNULL | Spliterator.IMMUTABLE);
+            nodes,
+            0,
+            size,
+            Spliterator.ORDERED | Spliterator.SIZED | Spliterator.NONNULL | Spliterator.IMMUTABLE
+        );
     }
 
     /**
@@ -307,7 +311,8 @@ public final class WidgetPath implements Iterable<Widget> {
     public WidgetPath subPath(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException(
-                    "fromIndex: " + fromIndex + ", toIndex: " + toIndex + ", size: " + size);
+                "fromIndex: " + fromIndex + ", toIndex: " + toIndex + ", size: " + size
+            );
         }
 
         int newSize = toIndex - fromIndex;

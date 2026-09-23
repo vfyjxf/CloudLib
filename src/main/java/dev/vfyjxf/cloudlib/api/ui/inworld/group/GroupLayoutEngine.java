@@ -102,13 +102,14 @@ public final class GroupLayoutEngine {
      *        than hard-hide
      */
     public record MemberOutcome(
-            String id,
-            Outcome outcome,
-            double offsetX,
-            double offsetY,
-            @Nullable String aggregatedInto,
-            int clusterSize,
-            boolean linger) {
+        String id,
+        Outcome outcome,
+        double offsetX,
+        double offsetY,
+        @Nullable String aggregatedInto,
+        int clusterSize,
+        boolean linger
+    ) {
 
         public MemberOutcome {
             if (id == null || id.isEmpty()) {
@@ -156,11 +157,12 @@ public final class GroupLayoutEngine {
      * @param hiddenCount how many members hid
      */
     public record GroupResult(
-            List<MemberOutcome> outcomes,
-            List<ClusterView> clusters,
-            int ringsUsed,
-            int aggregatedCount,
-            int hiddenCount) {
+        List<MemberOutcome> outcomes,
+        List<ClusterView> clusters,
+        int ringsUsed,
+        int aggregatedCount,
+        int hiddenCount
+    ) {
 
         public GroupResult {
             outcomes = List.copyOf(outcomes);
@@ -195,7 +197,10 @@ public final class GroupLayoutEngine {
         Objects.requireNonNull(strategy, "strategy");
         if (strategy instanceof ClusterToRepresentative cluster) {
             return new GroupLayoutEngine(
-                    group, strategy, new Clusterer(new Clusterer.Config(cluster.alpha(), cluster.mergeRadius())));
+                group,
+                strategy,
+                new Clusterer(new Clusterer.Config(cluster.alpha(), cluster.mergeRadius()))
+            );
         }
         return new GroupLayoutEngine(group, strategy, null);
     }
@@ -253,21 +258,24 @@ public final class GroupLayoutEngine {
             ringsUsed = Math.max(ringsUsed, slot.ring() + 1);
         }
         if (!free.isEmpty()) {
-            List<SlotAssigner.Element> elements =
-                    new ArrayList<>(frame.members().size());
+            List<SlotAssigner.Element> elements = new ArrayList<>(frame.members().size());
             for (GroupMember member : frame.members()) {
                 elements.add(new SlotAssigner.Element(member.id(), member.anchorX(), member.anchorY()));
             }
             List<SlotAssigner.Slot> slots = new ArrayList<>(free.size());
             for (OrbitRing.Slot slot : free) {
-                slots.add(new SlotAssigner.Slot(
+                slots.add(
+                    new SlotAssigner.Slot(
                         slotId(slot.ring(), slot.index()),
                         frame.anchorX() + slot.offsetX(),
-                        frame.anchorY() + slot.offsetY()));
+                        frame.anchorY() + slot.offsetY()
+                    )
+                );
             }
             SlotAssigner assigner = new SlotAssigner(
-                    orbit.recourseBudget(),
-                    new SlotAssigner.Costs(1.0, orbit.switchPenalty(), orbit.incumbentDiscount()));
+                orbit.recourseBudget(),
+                new SlotAssigner.Costs(1.0, orbit.switchPenalty(), orbit.incumbentDiscount())
+            );
             SlotAssigner.Result assigned = assigner.assign(elements, slots, slotIncumbents);
             for (SlotAssigner.Assignment one : assigned.assignments()) {
                 if (one.assigned()) {
@@ -283,12 +291,13 @@ public final class GroupLayoutEngine {
         // itself so the group keeps one visible representative.
         boolean forceRepresentative = free.isEmpty();
         String representative = nearestTo(
-                frame,
-                forceRepresentative
-                        ? frame.members().stream().map(GroupMember::id).toList()
-                        : assignedIds(frame, assignment),
-                frame.anchorX(),
-                frame.anchorY());
+            frame,
+            forceRepresentative
+                    ? frame.members().stream().map(GroupMember::id).toList()
+                    : assignedIds(frame, assignment),
+            frame.anchorX(),
+            frame.anchorY()
+        );
 
         Map<String, List<String>> aggregatees = new LinkedHashMap<>();
         List<MemberOutcome> outcomes = new ArrayList<>(frame.members().size());
@@ -299,33 +308,37 @@ public final class GroupLayoutEngine {
             String slotId = assignment.get(member.id());
             if (slotId != null) {
                 OrbitRing.Slot slot = ring.slot(ringIndex(slotId), slotOrdinal(slotId));
-                outcomes.add(new MemberOutcome(
+                outcomes.add(
+                    new MemberOutcome(
                         member.id(),
                         Outcome.placed,
                         slot.offsetX() + frame.anchorX() - member.anchorX(),
                         slot.offsetY() + frame.anchorY() - member.anchorY(),
                         null,
                         1,
-                        false));
+                        false
+                    )
+                );
                 continue;
             }
             if (forceRepresentative && member.id().equals(representative)) {
-                outcomes.add(new MemberOutcome(
+                outcomes.add(
+                    new MemberOutcome(
                         member.id(),
                         Outcome.placed,
                         frame.anchorX() - member.anchorX(),
                         frame.anchorY() - member.anchorY(),
                         null,
                         1,
-                        false));
+                        false
+                    )
+                );
                 continue;
             }
             if (representative != null && !representative.equals(member.id()) && overflow < orbit.maxAggregated()) {
                 overflow++;
                 aggregated++;
-                aggregatees
-                        .computeIfAbsent(representative, key -> new ArrayList<>())
-                        .add(member.id());
+                aggregatees.computeIfAbsent(representative, key -> new ArrayList<>()).add(member.id());
                 outcomes.add(new MemberOutcome(member.id(), Outcome.aggregated, 0, 0, representative, 1, false));
                 continue;
             }
@@ -366,8 +379,9 @@ public final class GroupLayoutEngine {
             for (int a = 0; a < clusters.size(); a++) {
                 for (int b = a + 1; b < clusters.size(); b++) {
                     double distance = Math.hypot(
-                            clusters.get(a).centerX() - clusters.get(b).centerX(),
-                            clusters.get(a).centerY() - clusters.get(b).centerY());
+                        clusters.get(a).centerX() - clusters.get(b).centerX(),
+                        clusters.get(a).centerY() - clusters.get(b).centerY()
+                    );
                     if (distance < bestDistance) {
                         bestDistance = distance;
                         bestA = a;
@@ -406,9 +420,7 @@ public final class GroupLayoutEngine {
                     folded++;
                     aggregated++;
                     foldTarget.put(id, representative);
-                    aggregatees
-                            .computeIfAbsent(representative, key -> new ArrayList<>())
-                            .add(id);
+                    aggregatees.computeIfAbsent(representative, key -> new ArrayList<>()).add(id);
                 } else {
                     hidden++;
                     hideMember.put(id, Boolean.TRUE);
@@ -422,32 +434,41 @@ public final class GroupLayoutEngine {
         for (GroupMember member : frame.members()) {
             String foldedInto = foldTarget.get(member.id());
             if (foldedInto != null) {
-                outcomes.add(new MemberOutcome(
+                outcomes.add(
+                    new MemberOutcome(
                         member.id(),
                         Outcome.aggregated,
                         0,
                         0,
                         foldedInto,
                         clusterSizeByMember.getOrDefault(member.id(), 1),
-                        false));
+                        false
+                    )
+                );
             } else if (hideMember.containsKey(member.id())) {
-                outcomes.add(new MemberOutcome(
+                outcomes.add(
+                    new MemberOutcome(
                         member.id(),
                         Outcome.hidden,
                         0,
                         0,
                         null,
                         clusterSizeByMember.getOrDefault(member.id(), 1),
-                        true));
+                        true
+                    )
+                );
             } else {
-                outcomes.add(new MemberOutcome(
+                outcomes.add(
+                    new MemberOutcome(
                         member.id(),
                         Outcome.placed,
                         0,
                         0,
                         null,
                         clusterSizeByMember.getOrDefault(member.id(), 1),
-                        false));
+                        false
+                    )
+                );
             }
         }
         return new GroupResult(outcomes, viewsFor(frame, outcomes, aggregatees), 0, aggregated, hidden);
@@ -477,9 +498,7 @@ public final class GroupLayoutEngine {
             }
             if (aggregated < stack.maxAggregated() && lastVisible != null) {
                 aggregated++;
-                aggregatees
-                        .computeIfAbsent(lastVisible, key -> new ArrayList<>())
-                        .add(member.id());
+                aggregatees.computeIfAbsent(lastVisible, key -> new ArrayList<>()).add(member.id());
                 outcomes.add(new MemberOutcome(member.id(), Outcome.aggregated, 0, 0, lastVisible, 1, false));
                 continue;
             }
@@ -587,21 +606,27 @@ public final class GroupLayoutEngine {
             if (extra == null) {
                 sized.add(outcome);
             } else {
-                sized.add(new MemberOutcome(
+                sized.add(
+                    new MemberOutcome(
                         outcome.id(),
                         outcome.outcome(),
                         outcome.offsetX(),
                         outcome.offsetY(),
                         outcome.aggregatedInto(),
                         1 + extra,
-                        outcome.linger()));
+                        outcome.linger()
+                    )
+                );
             }
         }
         return sized;
     }
 
     private static List<ClusterView> viewsFor(
-            GroupFrame frame, List<MemberOutcome> outcomes, Map<String, List<String>> aggregatees) {
+        GroupFrame frame,
+        List<MemberOutcome> outcomes,
+        Map<String, List<String>> aggregatees
+    ) {
         List<ClusterView> views = new ArrayList<>();
         for (MemberOutcome outcome : outcomes) {
             if (outcome.outcome() != Outcome.placed) {

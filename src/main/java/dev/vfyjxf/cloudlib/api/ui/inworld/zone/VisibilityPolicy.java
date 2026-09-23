@@ -25,9 +25,5 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.zone;
  * a later stage — this layer assigns no policy itself.
  */
 public enum VisibilityPolicy {
-    hardOcclusion,
-    fade,
-    occludedIndicator,
-    edgeProxy,
-    semanticVisible
+    hardOcclusion, fade, occludedIndicator, edgeProxy, semanticVisible
 }

@@ -52,8 +52,7 @@ public sealed interface TooltipLocator {
      * Whether to insert before or after the found position.
      */
     enum Anchor {
-        before,
-        after
+        before, after
     }
 
     /**
@@ -63,8 +62,7 @@ public sealed interface TooltipLocator {
      * {@link #last} selects the latest match in the entry list.
      */
     enum MatchPriority {
-        first,
-        last
+        first, last
     }
 
     // endregion
@@ -101,7 +99,8 @@ public sealed interface TooltipLocator {
      * @param matchPriority which match to use when multiple entries are found
      */
     record Relative(Anchor anchor, TooltipFinder finder, int offset, MatchPriority matchPriority)
-            implements TooltipLocator {
+            implements
+                TooltipLocator {
 
         /**
          * Returns a new locator with the given offset applied.

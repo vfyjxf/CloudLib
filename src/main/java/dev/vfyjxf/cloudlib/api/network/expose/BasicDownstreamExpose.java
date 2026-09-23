@@ -17,12 +17,13 @@ abstract sealed class BasicDownstreamExpose<T> extends BasicExpose<T> implements
     private final SimpleEvent<Consumer<T>> receiveEvent = SimpleEvent.create();
 
     protected BasicDownstreamExpose(
-            String name,
-            short id,
-            Snapshot<T> snapshot,
-            ValueSupplier<T> supplier,
-            FlowEncoder<T> encoder,
-            FlowDecoder<T> decoder) {
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> supplier,
+        FlowEncoder<T> encoder,
+        FlowDecoder<T> decoder
+    ) {
         super(name, id, snapshot, supplier, encoder, decoder);
     }
 

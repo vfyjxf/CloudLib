@@ -24,12 +24,13 @@ import java.util.function.Supplier;
 public class TestScreenEventHandler {
 
     public static final KeyMapping openTestScreen = new KeyMapping(
-            "Open Test Screen",
-            KeyConflictContext.GUI,
-            KeyModifier.CONTROL,
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_R,
-            "debug");
+        "Open Test Screen",
+        KeyConflictContext.GUI,
+        KeyModifier.CONTROL,
+        InputConstants.Type.KEYSYM,
+        GLFW.GLFW_KEY_R,
+        "debug"
+    );
     public static Supplier<Screen> testScreenSupplier;
 
     static {
@@ -40,9 +41,7 @@ public class TestScreenEventHandler {
                     String memberName = annotation.memberName();
                     testScreenSupplier = () -> {
                         try {
-                            return (Screen) Class.forName(memberName)
-                                    .getDeclaredConstructor()
-                                    .newInstance();
+                            return (Screen) Class.forName(memberName).getDeclaredConstructor().newInstance();
                         } catch (Exception e) {
                             e.printStackTrace();
                             return null;

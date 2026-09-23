@@ -25,8 +25,12 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.group;
  * @param expandOnHover whether the representative expands on hover
  */
 public record ClusterToRepresentative(
-        double alpha, double mergeRadius, int maxVisibleClusters, int maxAggregatedPerCluster, boolean expandOnHover)
-        implements GroupStrategy {
+    double alpha,
+    double mergeRadius,
+    int maxVisibleClusters,
+    int maxAggregatedPerCluster,
+    boolean expandOnHover
+) implements GroupStrategy {
 
     public ClusterToRepresentative {
         if (!Double.isFinite(alpha) || alpha < 0 || alpha > 1) {
@@ -40,7 +44,8 @@ public record ClusterToRepresentative(
         }
         if (maxAggregatedPerCluster < 0) {
             throw new IllegalArgumentException(
-                    "maxAggregatedPerCluster must not be negative: " + maxAggregatedPerCluster);
+                "maxAggregatedPerCluster must not be negative: " + maxAggregatedPerCluster
+            );
         }
     }
 

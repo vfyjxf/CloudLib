@@ -59,9 +59,7 @@ public sealed interface TooltipStack<T> {
     record Fluid(FluidStack value) implements TooltipStack<FluidStack> {
         @Override
         public ItemStack asStack() {
-            return value.isEmpty()
-                    ? ItemStack.EMPTY
-                    : new ItemStack(value.getFluid().getBucket());
+            return value.isEmpty() ? ItemStack.EMPTY : new ItemStack(value.getFluid().getBucket());
         }
     }
 

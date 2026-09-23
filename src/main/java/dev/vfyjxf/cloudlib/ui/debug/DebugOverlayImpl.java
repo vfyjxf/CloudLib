@@ -258,12 +258,10 @@ public final class DebugOverlayImpl implements DebugOverlay {
     }
 
     public void tick() {
-        if (selected != null
-                && (selected.scene() != inspected || !selected.lifecycle().mounted())) {
+        if (selected != null && (selected.scene() != inspected || !selected.lifecycle().mounted())) {
             select(null);
         }
-        if (hoverTarget != null
-                && (hoverTarget.scene() != inspected || !hoverTarget.lifecycle().mounted())) {
+        if (hoverTarget != null && (hoverTarget.scene() != inspected || !hoverTarget.lifecycle().mounted())) {
             hoverTarget = null;
         }
 

@@ -129,11 +129,13 @@ public class DependencyGraphTest {
     void testBeforeOrder() {
         // A declares BEFORE B → A runs before B
         var a = plugin(
-                "a",
-                new PluginDependency(
-                        CloudNamespaces.ofMod("b"),
-                        PluginDependency.Order.before,
-                        PluginDependency.Constraint.required));
+            "a",
+            new PluginDependency(
+                CloudNamespaces.ofMod("b"),
+                PluginDependency.Order.before,
+                PluginDependency.Constraint.required
+            )
+        );
         var b = plugin("b");
 
         var graph = DependencyGraph.build(List.of(a, b));

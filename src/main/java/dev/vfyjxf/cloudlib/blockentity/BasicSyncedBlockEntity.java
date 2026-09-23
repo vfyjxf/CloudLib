@@ -38,7 +38,9 @@ import net.minecraft.world.level.block.state.BlockState;
  * {@link BlockEntitySync} and implement the two capability interfaces.
  */
 public abstract class BasicSyncedBlockEntity extends BasicBlockEntity
-        implements SerializableBlockEntity, SyncedBlockEntity {
+        implements
+            SerializableBlockEntity,
+            SyncedBlockEntity {
 
     private final BlockEntitySerializer serializer = new BlockEntitySerializer();
     private final BlockEntitySync sync;
@@ -90,7 +92,11 @@ public abstract class BasicSyncedBlockEntity extends BasicBlockEntity
     }
 
     protected <T extends DiffObservable<D>, E, D> DiffLayerExpose<E, D> diffLayerExpose(
-            String name, DiffHandle<T, D> handle, FlowHandler<T, E> codec, UnaryFlowHandler<D> diffCodec) {
+        String name,
+        DiffHandle<T, D> handle,
+        FlowHandler<T, E> codec,
+        UnaryFlowHandler<D> diffCodec
+    ) {
         return sync.diffLayerExpose(name, handle, codec, diffCodec);
     }
 

@@ -19,16 +19,11 @@ public final class ThemeProfileMain {
 
         StringBuilder css = new StringBuilder(":root { --c: #FFF; --pad: 4px }\n");
         for (int i = 0; i < 50; i++) {
-            css.append("tag")
-                    .append(i)
-                    .append(" { color: var(--c); padding: var(--pad); margin: ")
-                    .append(i % 4 + 1)
+            css.append("tag").append(i).append(" { color: var(--c); padding: var(--pad); margin: ").append(i % 4 + 1)
                     .append("px }\n");
         }
-        css.append("button:hovered { margin: 2px }")
-                .append("panel .slot { gap: 3px }")
-                .append("panel > button { z-index: 1 }")
-                .append("*:nth-child(2n) { flex-grow: 1 }");
+        css.append("button:hovered { margin: 2px }").append("panel .slot { gap: 3px }")
+                .append("panel > button { z-index: 1 }").append("*:nth-child(2n) { flex-grow: 1 }");
         Theme theme = new Theme(ResourceLocation.fromNamespaceAndPath("test", "perf"), CssParser.parse(css.toString()));
 
         // 40 containers × 25 children = 1040 nodes
@@ -50,8 +45,10 @@ public final class ThemeProfileMain {
             }
         }
         long ms = (System.nanoTime() - start) / 1_000_000;
-        System.out.println("[theme-profile] " + iterations + " iters × " + nodes.size() + " nodes = " + ms + "ms ("
-                + (double) ms / iterations + "ms/pass)");
+        System.out.println(
+            "[theme-profile] " + iterations + " iters × " + nodes.size() + " nodes = " + ms + "ms ("
+                    + (double) ms / iterations + "ms/pass)"
+        );
     }
 
     private static void collect(ThemePerfTest.Probe n, List<ThemePerfTest.Probe> out) {

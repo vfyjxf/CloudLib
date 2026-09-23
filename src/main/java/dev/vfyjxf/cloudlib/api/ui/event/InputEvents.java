@@ -8,8 +8,8 @@ public final class InputEvents {
 
     // region mouse click events
 
-    public static final EventDefinition<InputEvent.OnMouseClicked> onMouseClicked =
-            Events.define(InputEvent.OnMouseClicked.class, listeners -> (input, context) -> {
+    public static final EventDefinition<InputEvent.OnMouseClicked> onMouseClicked = Events
+            .define(InputEvent.OnMouseClicked.class, listeners -> (input, context) -> {
                 EventDispatch result = EventDispatch.pass;
                 for (var listener : listeners) {
                     result = EventDispatch.max(result, listener.onClicked(input, context));
@@ -19,8 +19,8 @@ public final class InputEvents {
                 return result;
             });
 
-    public static final EventDefinition<InputEvent.OnMouseReleased> onMouseReleased =
-            Events.define(InputEvent.OnMouseReleased.class, listeners -> (input, context) -> {
+    public static final EventDefinition<InputEvent.OnMouseReleased> onMouseReleased = Events
+            .define(InputEvent.OnMouseReleased.class, listeners -> (input, context) -> {
                 EventDispatch result = EventDispatch.pass;
                 for (var listener : listeners) {
                     result = EventDispatch.max(result, listener.onReleased(input, context));
@@ -30,8 +30,8 @@ public final class InputEvents {
                 return result;
             });
 
-    public static final EventDefinition<InputEvent.OnMouseClick> onMouseClick =
-            Events.define(InputEvent.OnMouseClick.class, listeners -> (input, clickCount, context) -> {
+    public static final EventDefinition<InputEvent.OnMouseClick> onMouseClick = Events
+            .define(InputEvent.OnMouseClick.class, listeners -> (input, clickCount, context) -> {
                 EventDispatch result = EventDispatch.pass;
                 for (var listener : listeners) {
                     result = EventDispatch.max(result, listener.onClick(input, clickCount, context));
@@ -45,8 +45,8 @@ public final class InputEvents {
 
     // region mouse movement events
 
-    public static final EventDefinition<InputEvent.OnMouseDragged> onMouseDragged =
-            Events.define(InputEvent.OnMouseDragged.class, listeners -> (input, deltaX, deltaY, context) -> {
+    public static final EventDefinition<InputEvent.OnMouseDragged> onMouseDragged = Events
+            .define(InputEvent.OnMouseDragged.class, listeners -> (input, deltaX, deltaY, context) -> {
                 EventDispatch result = EventDispatch.pass;
                 for (var listener : listeners) {
                     result = EventDispatch.max(result, listener.onDragged(input, deltaX, deltaY, context));
@@ -56,8 +56,8 @@ public final class InputEvents {
                 return result;
             });
 
-    public static final EventDefinition<InputEvent.OnMouseScrolled> onMouseScrolled = Events.define(
-            InputEvent.OnMouseScrolled.class, listeners -> (mouseX, mouseY, scrollX, scrollY, context) -> {
+    public static final EventDefinition<InputEvent.OnMouseScrolled> onMouseScrolled = Events
+            .define(InputEvent.OnMouseScrolled.class, listeners -> (mouseX, mouseY, scrollX, scrollY, context) -> {
                 EventDispatch result = EventDispatch.pass;
                 for (var listener : listeners) {
                     result = EventDispatch.max(result, listener.onScrolled(mouseX, mouseY, scrollX, scrollY, context));
@@ -67,24 +67,24 @@ public final class InputEvents {
                 return result;
             });
 
-    public static final EventDefinition<InputEvent.OnMouseMoved> onMouseMoved =
-            Events.define(InputEvent.OnMouseMoved.class, listeners -> (mouseX, mouseY, context) -> {
+    public static final EventDefinition<InputEvent.OnMouseMoved> onMouseMoved = Events
+            .define(InputEvent.OnMouseMoved.class, listeners -> (mouseX, mouseY, context) -> {
                 for (var listener : listeners) {
                     listener.onMoved(mouseX, mouseY, context);
                     if (context.interrupted()) return;
                 }
             });
 
-    public static final EventDefinition<InputEvent.OnMouseEnter> onMouseEnter =
-            Events.define(InputEvent.OnMouseEnter.class, listeners -> (mouseX, mouseY, context) -> {
+    public static final EventDefinition<InputEvent.OnMouseEnter> onMouseEnter = Events
+            .define(InputEvent.OnMouseEnter.class, listeners -> (mouseX, mouseY, context) -> {
                 for (var listener : listeners) {
                     listener.onEnter(mouseX, mouseY, context);
                     if (context.interrupted()) return;
                 }
             });
 
-    public static final EventDefinition<InputEvent.OnMouseLeave> onMouseLeave =
-            Events.define(InputEvent.OnMouseLeave.class, listeners -> (mouseX, mouseY, context) -> {
+    public static final EventDefinition<InputEvent.OnMouseLeave> onMouseLeave = Events
+            .define(InputEvent.OnMouseLeave.class, listeners -> (mouseX, mouseY, context) -> {
                 for (var listener : listeners) {
                     listener.onLeave(mouseX, mouseY, context);
                     if (context.interrupted()) return;
@@ -95,8 +95,8 @@ public final class InputEvents {
 
     // region keyboard events
 
-    public static final EventDefinition<InputEvent.OnKeyPressed> onKeyPressed =
-            Events.define(InputEvent.OnKeyPressed.class, listeners -> (input, context) -> {
+    public static final EventDefinition<InputEvent.OnKeyPressed> onKeyPressed = Events
+            .define(InputEvent.OnKeyPressed.class, listeners -> (input, context) -> {
                 EventDispatch result = EventDispatch.pass;
                 for (var listener : listeners) {
                     result = EventDispatch.max(result, listener.onKeyPressed(input, context));
@@ -106,8 +106,8 @@ public final class InputEvents {
                 return result;
             });
 
-    public static final EventDefinition<InputEvent.OnKeyReleased> onKeyReleased =
-            Events.define(InputEvent.OnKeyReleased.class, listeners -> (input, context) -> {
+    public static final EventDefinition<InputEvent.OnKeyReleased> onKeyReleased = Events
+            .define(InputEvent.OnKeyReleased.class, listeners -> (input, context) -> {
                 EventDispatch result = EventDispatch.pass;
                 for (var listener : listeners) {
                     result = EventDispatch.max(result, listener.onKeyReleased(input, context));
@@ -117,8 +117,8 @@ public final class InputEvents {
                 return result;
             });
 
-    public static final EventDefinition<InputEvent.OnCharTyped> onCharTyped =
-            Events.define(InputEvent.OnCharTyped.class, listeners -> (codePoint, modifiers, context) -> {
+    public static final EventDefinition<InputEvent.OnCharTyped> onCharTyped = Events
+            .define(InputEvent.OnCharTyped.class, listeners -> (codePoint, modifiers, context) -> {
                 EventDispatch result = EventDispatch.pass;
                 for (var listener : listeners) {
                     result = EventDispatch.max(result, listener.onCharTyped(codePoint, modifiers, context));

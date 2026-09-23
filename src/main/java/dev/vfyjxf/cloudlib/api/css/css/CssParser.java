@@ -55,27 +55,28 @@ public final class CssParser {
 
     // region at-rule block kinds
     /** At-rules whose {@code {…}} holds a nested rule list. */
-    private static final Set<String> ruleBlocks =
-            Set.of("media", "supports", "layer", "scope", "container", "document", "starting-style");
+    private static final Set<String> ruleBlocks = Set
+            .of("media", "supports", "layer", "scope", "container", "document", "starting-style");
     /** At-rules whose {@code {…}} holds a declaration list. */
     private static final Set<String> declarationBlocks = Set.of(
-            "font-face",
-            "page",
-            "viewport",
-            "counter-style",
-            "property",
-            "font-feature-values",
-            "position-try",
-            "font-palette-values");
+        "font-face",
+        "page",
+        "viewport",
+        "counter-style",
+        "property",
+        "font-feature-values",
+        "position-try",
+        "font-palette-values"
+    );
     /** At-rules whose {@code {…}} keeps raw component values (keyframe selectors are not declarations). */
     private static final Set<String> rawBlocks = Set.of("keyframes", "-webkit-keyframes", "-moz-keyframes");
 
     /** Pseudo-classes/elements whose argument is a (possibly relative) selector list. */
-    private static final Set<String> selectorArgs =
-            Set.of("not", "is", "where", "has", "host", "host-context", "slotted", "current", "past", "future");
+    private static final Set<String> selectorArgs = Set
+            .of("not", "is", "where", "has", "host", "host-context", "slotted", "current", "past", "future");
     /** Functional pseudos taking an An+B expression. */
-    private static final Set<String> anPlusBArgs =
-            Set.of("nth-child", "nth-last-child", "nth-of-type", "nth-last-of-type", "nth-col", "nth-last-col");
+    private static final Set<String> anPlusBArgs = Set
+            .of("nth-child", "nth-last-child", "nth-of-type", "nth-last-of-type", "nth-col", "nth-last-col");
     /** Functional pseudos taking a comma-separated identifier/word list. */
     private static final Set<String> identArgs = Set.of("lang", "dir", "part", "state", "highlight");
 
@@ -309,9 +310,7 @@ public final class CssParser {
             boolean important = false;
             int i = value.size() - 1;
             while (i >= 0 && value.get(i) == ComponentValue.Whitespace.instance) i--;
-            if (i >= 0
-                    && value.get(i) instanceof ComponentValue.Ident iv
-                    && iv.value().equalsIgnoreCase("important")) {
+            if (i >= 0 && value.get(i) instanceof ComponentValue.Ident iv && iv.value().equalsIgnoreCase("important")) {
                 int j = i - 1;
                 while (j >= 0 && value.get(j) == ComponentValue.Whitespace.instance) j--;
                 if (j >= 0 && value.get(j) instanceof ComponentValue.Delim d && d.value() == '!') {
@@ -432,15 +431,27 @@ public final class CssParser {
                 case string, badString -> new ComponentValue.StringValue(t.string());
                 case url, badUrl -> new ComponentValue.UrlValue(t.string());
                 case hash -> new ComponentValue.HashValue(t.string(), t.idFlag());
-                case number ->
-                    new ComponentValue.NumericValue(
-                            t.number(), "", ComponentValue.NumericKind.number, t.integer(), t.string());
-                case percentage ->
-                    new ComponentValue.NumericValue(
-                            t.number(), "%", ComponentValue.NumericKind.percentage, t.integer(), t.string());
-                case dimension ->
-                    new ComponentValue.NumericValue(
-                            t.number(), t.unit(), ComponentValue.NumericKind.dimension, t.integer(), t.string());
+                case number -> new ComponentValue.NumericValue(
+                    t.number(),
+                    "",
+                    ComponentValue.NumericKind.number,
+                    t.integer(),
+                    t.string()
+                );
+                case percentage -> new ComponentValue.NumericValue(
+                    t.number(),
+                    "%",
+                    ComponentValue.NumericKind.percentage,
+                    t.integer(),
+                    t.string()
+                );
+                case dimension -> new ComponentValue.NumericValue(
+                    t.number(),
+                    t.unit(),
+                    ComponentValue.NumericKind.dimension,
+                    t.integer(),
+                    t.string()
+                );
                 case unicodeRange -> new ComponentValue.UnicodeRange(t.rangeStart(), t.rangeEnd());
                 case whitespace -> ComponentValue.Whitespace.instance;
                 case cdo -> ComponentValue.Cdo.instance;
@@ -802,18 +813,15 @@ public final class CssParser {
                 take();
                 return AttributeSelector.Operator.exact;
             }
-            if (t.kind() == TokenKind.delim
-                    && peekAt1().kind() == TokenKind.delim
-                    && peekAt1().delim() == '=') {
-                AttributeSelector.Operator op =
-                        switch (t.delim()) {
-                            case '~' -> AttributeSelector.Operator.includes;
-                            case '|' -> AttributeSelector.Operator.dashMatch;
-                            case '^' -> AttributeSelector.Operator.prefixMatch;
-                            case '$' -> AttributeSelector.Operator.suffixMatch;
-                            case '*' -> AttributeSelector.Operator.substringMatch;
-                            default -> null;
-                        };
+            if (t.kind() == TokenKind.delim && peekAt1().kind() == TokenKind.delim && peekAt1().delim() == '=') {
+                AttributeSelector.Operator op = switch (t.delim()) {
+                    case '~' -> AttributeSelector.Operator.includes;
+                    case '|' -> AttributeSelector.Operator.dashMatch;
+                    case '^' -> AttributeSelector.Operator.prefixMatch;
+                    case '$' -> AttributeSelector.Operator.suffixMatch;
+                    case '*' -> AttributeSelector.Operator.substringMatch;
+                    default -> null;
+                };
                 if (op != null) {
                     take();
                     take();
@@ -846,11 +854,12 @@ public final class CssParser {
                         || t.kind() == TokenKind.leftSquare
                         || t.kind() == TokenKind.leftCurly) {
                     depth++;
-                } else if ((t.kind() == TokenKind.rightParen && depth > 0)
-                        || t.kind() == TokenKind.rightSquare
-                        || t.kind() == TokenKind.rightCurly) {
-                    depth--;
-                }
+                } else
+                    if ((t.kind() == TokenKind.rightParen && depth > 0)
+                            || t.kind() == TokenKind.rightSquare
+                            || t.kind() == TokenKind.rightCurly) {
+                                depth--;
+                            }
                 out.add(take());
             }
             error("unclosed function arguments");
@@ -869,7 +878,9 @@ public final class CssParser {
             String lname = name.toLowerCase(Locale.ROOT);
             if (selectorArgs.contains(lname)) {
                 List<RelativeSelector> sels = relativeSelectorList(
-                        argTokens, lname.equals("has") || lname.equals("host-context") || lname.equals("slotted"));
+                    argTokens,
+                    lname.equals("has") || lname.equals("host-context") || lname.equals("slotted")
+                );
                 Specificity max = Specificity.zero;
                 for (RelativeSelector r : sels) {
                     max = max.max(r.selector().specificity());
@@ -879,7 +890,9 @@ public final class CssParser {
             }
             if (anPlusBArgs.contains(lname)) {
                 return new ParsedArgs(
-                        parseAnPlusB(argTokens), element ? new Specificity(0, 0, 1) : new Specificity(0, 1, 0));
+                    parseAnPlusB(argTokens),
+                    element ? new Specificity(0, 0, 1) : new Specificity(0, 1, 0)
+                );
             }
             if (identArgs.contains(lname)) {
                 List<String> words = new ArrayList<>();
@@ -889,13 +902,17 @@ public final class CssParser {
                     }
                 }
                 return new ParsedArgs(
-                        new PseudoArgs.Idents(words), element ? new Specificity(0, 0, 1) : new Specificity(0, 1, 0));
+                    new PseudoArgs.Idents(words),
+                    element ? new Specificity(0, 0, 1) : new Specificity(0, 1, 0)
+                );
             }
             // raw component values
             Parser vp = new Parser(input, argTokens, errors);
             List<ComponentValue> values = vp.componentValuesUntil(TokenKind.eof);
             return new ParsedArgs(
-                    new PseudoArgs.Raw(values), element ? new Specificity(0, 0, 1) : new Specificity(0, 1, 0));
+                new PseudoArgs.Raw(values),
+                element ? new Specificity(0, 0, 1) : new Specificity(0, 1, 0)
+            );
         }
 
         /**
@@ -916,8 +933,8 @@ public final class CssParser {
                         case '+' -> leading = Combinator.nextSibling;
                         case '~' -> leading = Combinator.subsequentSibling;
                         case '|' -> {
-                            if (sub.peekAt1().kind() == TokenKind.delim
-                                    && sub.peekAt1().delim() == '|') leading = Combinator.column;
+                            if (sub.peekAt1().kind() == TokenKind.delim && sub.peekAt1().delim() == '|')
+                                leading = Combinator.column;
                         }
                         default -> {}
                     }
@@ -987,14 +1004,14 @@ public final class CssParser {
             String s = sb.toString().strip().toLowerCase(Locale.ROOT);
             if (s.isEmpty()) {
                 error("empty :nth-* argument");
-                return new int[] {0, 0};
+                return new int[]{0, 0};
             }
-            if (s.equals("odd")) return new int[] {2, 1};
-            if (s.equals("even")) return new int[] {2, 0};
+            if (s.equals("odd")) return new int[]{2, 1};
+            if (s.equals("even")) return new int[]{2, 0};
             int[] r = anbChars(s);
             if (r == null) {
                 error("invalid An+B expression '" + s + "'");
-                return new int[] {0, 0};
+                return new int[]{0, 0};
             }
             return r;
         }
@@ -1014,7 +1031,7 @@ public final class CssParser {
                 int a = aDigits.isEmpty() ? signA : signA * Integer.parseInt(aDigits);
                 // optional ±B — whitespace allowed around the sign per spec
                 while (i < s.length() && Character.isWhitespace(s.charAt(i))) i++;
-                if (i >= s.length()) return new int[] {a, 0};
+                if (i >= s.length()) return new int[]{a, 0};
                 int signB = 1;
                 if (s.charAt(i) == '+' || s.charAt(i) == '-') {
                     if (s.charAt(i) == '-') signB = -1;
@@ -1027,11 +1044,11 @@ public final class CssParser {
                 while (i < s.length() && Character.isDigit(s.charAt(i))) i++;
                 if (bStart == i) return null;
                 int b = signB * Integer.parseInt(s.substring(bStart, i));
-                return i == s.length() ? new int[] {a, b} : null;
+                return i == s.length() ? new int[]{a, b} : null;
             }
             // plain integer B (a = 0); a leading sign belongs to B
             if (!aDigits.isEmpty() && i == s.length()) {
-                return new int[] {0, signA * Integer.parseInt(aDigits)};
+                return new int[]{0, signA * Integer.parseInt(aDigits)};
             }
             return null;
         }

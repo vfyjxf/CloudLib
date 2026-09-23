@@ -7,8 +7,5 @@ package dev.vfyjxf.cloudlib.api.ui.inworld;
  * scanlines ({@link dev.vfyjxf.cloudlib.api.ui.inworld.algorithm.DockCursor}).
  */
 public enum ScreenEdge {
-    top,
-    right,
-    bottom,
-    left
+    top, right, bottom, left
 }

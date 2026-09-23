@@ -76,7 +76,7 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
             return false;
         }
         boolean cleaned = false;
-        for (Iterator<PerformerEntry<T>> iterator = performers.iterator(); iterator.hasNext(); ) {
+        for (Iterator<PerformerEntry<T>> iterator = performers.iterator(); iterator.hasNext();) {
             PerformerEntry<T> entry = iterator.next();
             if (entry.performer() == null) {
                 iterator.remove();

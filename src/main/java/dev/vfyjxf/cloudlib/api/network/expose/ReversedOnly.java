@@ -19,7 +19,11 @@ import java.util.function.Consumer;
 public sealed interface ReversedOnly<S, R> extends Reversed<S, R> permits StandardReversed, UnaryReversed {
 
     static <S, R> ReversedOnly<S, R> create(
-            String name, short id, FlowEncoder<S> reversedEncoder, FlowDecoder<R> reversedDecoder) {
+        String name,
+        short id,
+        FlowEncoder<S> reversedEncoder,
+        FlowDecoder<R> reversedDecoder
+    ) {
         return new StandardReversed<>(name, id, reversedEncoder, reversedDecoder);
     }
 

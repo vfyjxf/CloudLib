@@ -578,7 +578,11 @@ public final class WidgetTree {
      * @return the final traversal control signal
      */
     public static TraversalControl walkPreOrderWithPath(
-            Widget root, boolean includeRoot, int maxDepth, PathVisitor visitor) {
+        Widget root,
+        boolean includeRoot,
+        int maxDepth,
+        PathVisitor visitor
+    ) {
         Objects.requireNonNull(root, "root");
         Objects.requireNonNull(visitor, "visitor");
 
@@ -760,7 +764,11 @@ public final class WidgetTree {
      * @return the first matching widget, or null
      */
     public static @Nullable Widget findFirst(
-            Widget root, boolean includeRoot, int maxDepth, Predicate<? super Widget> predicate) {
+        Widget root,
+        boolean includeRoot,
+        int maxDepth,
+        Predicate<? super Widget> predicate
+    ) {
         Objects.requireNonNull(root, "root");
         Objects.requireNonNull(predicate, "predicate");
 
@@ -786,7 +794,11 @@ public final class WidgetTree {
      * @return the first matching widget, or null
      */
     public static @Nullable Widget findFirst(
-            Widget root, boolean includeRoot, int maxDepth, BiPredicate<Widget, Integer> predicate) {
+        Widget root,
+        boolean includeRoot,
+        int maxDepth,
+        BiPredicate<Widget, Integer> predicate
+    ) {
         Objects.requireNonNull(root, "root");
         Objects.requireNonNull(predicate, "predicate");
 
@@ -813,11 +825,12 @@ public final class WidgetTree {
      * @return number of widgets collected
      */
     public static int collectInto(
-            Widget root,
-            boolean includeRoot,
-            int maxDepth,
-            Predicate<? super Widget> predicate,
-            List<? super Widget> out) {
+        Widget root,
+        boolean includeRoot,
+        int maxDepth,
+        Predicate<? super Widget> predicate,
+        List<? super Widget> out
+    ) {
         Objects.requireNonNull(root, "root");
         Objects.requireNonNull(predicate, "predicate");
         Objects.requireNonNull(out, "out");
@@ -844,7 +857,11 @@ public final class WidgetTree {
      * @return list of matching widgets
      */
     public static List<Widget> collect(
-            Widget root, boolean includeRoot, int maxDepth, Predicate<? super Widget> predicate) {
+        Widget root,
+        boolean includeRoot,
+        int maxDepth,
+        Predicate<? super Widget> predicate
+    ) {
         List<Widget> result = new ArrayList<>();
         collectInto(root, includeRoot, maxDepth, predicate, result);
         return result;

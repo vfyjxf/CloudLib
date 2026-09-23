@@ -54,7 +54,8 @@ class InworldExclusionsTest {
     @Test
     void collectClipsToViewportAndDropsEmptyRects() {
         InworldExclusions.register(
-                context -> List.of(new Rect(-10, -10, 20, 20), new Rect(100, 100, 0, 10), new Rect(500, 0, 40, 40)));
+            context -> List.of(new Rect(-10, -10, 20, 20), new Rect(100, 100, 0, 10), new Rect(500, 0, 40, 40))
+        );
 
         List<Rect> collected = InworldExclusions.collect(new ExclusionContext(200, 200, 0));
 
@@ -105,8 +106,8 @@ class InworldExclusionsTest {
 
     @Test
     void collectChainsMergesToClosure() {
-        InworldExclusions.register(
-                context -> List.of(new Rect(0, 0, 10, 10), new Rect(10, 0, 10, 10), new Rect(20, 0, 10, 10)));
+        InworldExclusions
+                .register(context -> List.of(new Rect(0, 0, 10, 10), new Rect(10, 0, 10, 10), new Rect(20, 0, 10, 10)));
 
         assertEquals(List.of(new Rect(0, 0, 30, 10)), InworldExclusions.collect(new ExclusionContext(200, 200, 0)));
     }
@@ -120,8 +121,8 @@ class InworldExclusionsTest {
 
     @Test
     void collectSortsDeterministically() {
-        InworldExclusions.register(
-                context -> List.of(new Rect(20, 10, 5, 5), new Rect(0, 10, 5, 5), new Rect(0, 0, 5, 5)));
+        InworldExclusions
+                .register(context -> List.of(new Rect(20, 10, 5, 5), new Rect(0, 10, 5, 5), new Rect(0, 0, 5, 5)));
 
         List<Rect> collected = InworldExclusions.collect(new ExclusionContext(200, 200, 0));
 

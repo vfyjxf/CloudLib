@@ -39,31 +39,32 @@ public class SyncedTestBlockEntity extends BasicSyncedBlockEntity {
     public static final int actionReset = 2;
     public static final int actionPickItem = 3;
 
-    private static final Item[] itemPool = {
-        Items.DIAMOND, Items.EMERALD, Items.GOLD_INGOT, Items.IRON_INGOT,
-        Items.REDSTONE, Items.ENDER_PEARL, Items.NETHERITE_SCRAP, Items.COPPER_INGOT
-    };
+    private static final Item[] itemPool = {Items.DIAMOND, Items.EMERALD, Items.GOLD_INGOT, Items.IRON_INGOT,
+            Items.REDSTONE, Items.ENDER_PEARL, Items.NETHERITE_SCRAP, Items.COPPER_INGOT};
 
     private static final class Network {
-        static final Schema<Integer> count =
-                Schema.of("count", 0, Codec.INT, UnaryFlowHandler.codecOf(ByteBufCodecs.INT));
-        static final Schema<String> label =
-                Schema.of("label", "", Codec.STRING, UnaryFlowHandler.codecOf(ByteBufCodecs.STRING_UTF8));
-        static final Schema<Boolean> active =
-                Schema.of("active", true, Codec.BOOL, UnaryFlowHandler.codecOf(ByteBufCodecs.BOOL));
+        static final Schema<Integer> count = Schema
+                .of("count", 0, Codec.INT, UnaryFlowHandler.codecOf(ByteBufCodecs.INT));
+        static final Schema<String> label = Schema
+                .of("label", "", Codec.STRING, UnaryFlowHandler.codecOf(ByteBufCodecs.STRING_UTF8));
+        static final Schema<Boolean> active = Schema
+                .of("active", true, Codec.BOOL, UnaryFlowHandler.codecOf(ByteBufCodecs.BOOL));
         static final Schema<List<ItemStack>> items = Schema.of(
-                "items",
-                List.of(),
-                ItemStack.CODEC.listOf(),
-                UnaryFlowHandler.codecOf(ItemStack.OPTIONAL_LIST_STREAM_CODEC));
+            "items",
+            List.of(),
+            ItemStack.CODEC.listOf(),
+            UnaryFlowHandler.codecOf(ItemStack.OPTIONAL_LIST_STREAM_CODEC)
+        );
     }
 
     private final Handle<Integer> count = useSynced(Network.count);
     private final Handle<String> label = useSynced(Network.label);
     private final Handle<Boolean> active = useSynced(Network.active);
     private final Handle<List<ItemStack>> items = useSynced(Network.items);
-    private final UnaryReversed<Integer> action =
-            unaryReversed("action", UnaryFlowHandler.codecOf(ByteBufCodecs.VAR_INT));
+    private final UnaryReversed<Integer> action = unaryReversed(
+        "action",
+        UnaryFlowHandler.codecOf(ByteBufCodecs.VAR_INT)
+    );
 
     private long tick;
 

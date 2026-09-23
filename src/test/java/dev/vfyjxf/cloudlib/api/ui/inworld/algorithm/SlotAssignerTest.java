@@ -27,9 +27,10 @@ class SlotAssignerTest {
         SlotAssigner assigner = new SlotAssigner(0, plainCosts);
 
         SlotAssigner.Result result = assigner.assign(
-                List.of(element("a", 0, 0), element("b", 100, 0)),
-                List.of(slot("s1", 0, 0), slot("s2", 100, 0), slot("s3", 500, 0)),
-                Map.of());
+            List.of(element("a", 0, 0), element("b", 100, 0)),
+            List.of(slot("s1", 0, 0), slot("s2", 100, 0), slot("s3", 500, 0)),
+            Map.of()
+        );
 
         assertEquals("s1", result.of("a").slotId());
         assertEquals("s2", result.of("b").slotId());
@@ -41,9 +42,10 @@ class SlotAssignerTest {
         SlotAssigner assigner = new SlotAssigner(0, plainCosts);
 
         SlotAssigner.Result result = assigner.assign(
-                List.of(element("a", 0, 0), element("b", 100, 0)),
-                List.of(slot("s1", 0, 0), slot("s2", 100, 0)),
-                Map.of("a", "s2", "b", "s1"));
+            List.of(element("a", 0, 0), element("b", 100, 0)),
+            List.of(slot("s1", 0, 0), slot("s2", 100, 0)),
+            Map.of("a", "s2", "b", "s1")
+        );
 
         assertEquals("s2", result.of("a").slotId());
         assertEquals("s1", result.of("b").slotId());
@@ -55,9 +57,10 @@ class SlotAssignerTest {
         SlotAssigner assigner = new SlotAssigner(1, plainCosts);
 
         SlotAssigner.Result result = assigner.assign(
-                List.of(element("a", 0, 0), element("b", 50, 0)),
-                List.of(slot("s1", 0, 0), slot("s2", 30, 0), slot("s3", 200, 0)),
-                Map.of("a", "s2", "b", "s3"));
+            List.of(element("a", 0, 0), element("b", 50, 0)),
+            List.of(slot("s1", 0, 0), slot("s2", 30, 0), slot("s3", 200, 0)),
+            Map.of("a", "s2", "b", "s3")
+        );
 
         // both want s1; b's gain (150) beats a's (30), and the budget allows one move
         assertEquals("s2", result.of("a").slotId());
@@ -68,8 +71,8 @@ class SlotAssignerTest {
     @Test
     void movesNeverExceedTheBudget() {
         SlotAssigner.Costs costs = SlotAssigner.Costs.of(1.0, 0.0, 0.0);
-        List<SlotAssigner.Slot> slots =
-                List.of(slot("s1", 0, 0), slot("s2", 10, 0), slot("s3", 20, 0), slot("s4", 400, 0), slot("s5", 410, 0));
+        List<SlotAssigner.Slot> slots = List
+                .of(slot("s1", 0, 0), slot("s2", 10, 0), slot("s3", 20, 0), slot("s4", 400, 0), slot("s5", 410, 0));
         List<SlotAssigner.Element> elements = List.of(element("a", 0, 0), element("b", 10, 0), element("c", 20, 0));
 
         for (int budget = 0; budget <= 3; budget++) {
@@ -84,8 +87,8 @@ class SlotAssignerTest {
         SlotAssigner.Costs penalizing = SlotAssigner.Costs.of(1.0, 20.0, 0.0);
         SlotAssigner assigner = new SlotAssigner(4, penalizing);
 
-        SlotAssigner.Result result = assigner.assign(
-                List.of(element("a", 0, 0)), List.of(slot("s1", 0, 0), slot("s2", 12, 0)), Map.of("a", "s2"));
+        SlotAssigner.Result result = assigner
+                .assign(List.of(element("a", 0, 0)), List.of(slot("s1", 0, 0), slot("s2", 12, 0)), Map.of("a", "s2"));
 
         assertEquals("s2", result.of("a").slotId());
         assertEquals(0, result.movesUsed());
@@ -99,13 +102,13 @@ class SlotAssignerTest {
         // anchor at 0; incumbent s2 at 8: undiscounted the move saves 8 against the
         // 5 penalty and happens; discounted the incumbent only costs 4, less than
         // the penalty — held
-        SlotAssigner.Result moving = withoutDiscount.assign(
-                List.of(element("a", 0, 0)), List.of(slot("s1", 0, 0), slot("s2", 8, 0)), Map.of("a", "s2"));
+        SlotAssigner.Result moving = withoutDiscount
+                .assign(List.of(element("a", 0, 0)), List.of(slot("s1", 0, 0), slot("s2", 8, 0)), Map.of("a", "s2"));
         assertEquals("s1", moving.of("a").slotId());
 
         SlotAssigner assigner = new SlotAssigner(4, discounted);
-        SlotAssigner.Result held = assigner.assign(
-                List.of(element("a", 0, 0)), List.of(slot("s1", 0, 0), slot("s2", 8, 0)), Map.of("a", "s2"));
+        SlotAssigner.Result held = assigner
+                .assign(List.of(element("a", 0, 0)), List.of(slot("s1", 0, 0), slot("s2", 8, 0)), Map.of("a", "s2"));
         assertEquals("s2", held.of("a").slotId());
         assertEquals(0, held.movesUsed());
     }
@@ -114,8 +117,8 @@ class SlotAssignerTest {
     void vanishedIncumbentRehomesWithoutSpendingBudget() {
         SlotAssigner assigner = new SlotAssigner(0, plainCosts);
 
-        SlotAssigner.Result result = assigner.assign(
-                List.of(element("a", 0, 0)), List.of(slot("s1", 0, 0), slot("s2", 90, 0)), Map.of("a", "gone"));
+        SlotAssigner.Result result = assigner
+                .assign(List.of(element("a", 0, 0)), List.of(slot("s1", 0, 0), slot("s2", 90, 0)), Map.of("a", "gone"));
 
         assertEquals("s1", result.of("a").slotId());
         assertEquals(0, result.movesUsed());
@@ -126,9 +129,10 @@ class SlotAssignerTest {
         SlotAssigner assigner = new SlotAssigner(2, plainCosts);
 
         SlotAssigner.Result result = assigner.assign(
-                List.of(element("a", 0, 0), element("b", 5, 0), element("c", 10, 0)),
-                List.of(slot("s1", 0, 0), slot("s2", 6, 0)),
-                Map.of());
+            List.of(element("a", 0, 0), element("b", 5, 0), element("c", 10, 0)),
+            List.of(slot("s1", 0, 0), slot("s2", 6, 0)),
+            Map.of()
+        );
 
         assertTrue(result.of("a").assigned());
         assertTrue(result.of("b").assigned());
@@ -139,10 +143,15 @@ class SlotAssignerTest {
 
     @Test
     void sameInputYieldsTheSameOutput() {
-        List<SlotAssigner.Element> elements =
-                List.of(element("a", 0, 0), element("b", 100, 40), element("c", 300, 10), element("d", 60, 90));
+        List<SlotAssigner.Element> elements = List
+                .of(element("a", 0, 0), element("b", 100, 40), element("c", 300, 10), element("d", 60, 90));
         List<SlotAssigner.Slot> slots = List.of(
-                slot("s1", 10, 10), slot("s2", 90, 30), slot("s3", 280, 0), slot("s4", 50, 100), slot("s5", 400, 400));
+            slot("s1", 10, 10),
+            slot("s2", 90, 30),
+            slot("s3", 280, 0),
+            slot("s4", 50, 100),
+            slot("s5", 400, 400)
+        );
         Map<String, String> incumbents = Map.of("a", "s5", "c", "s3");
 
         SlotAssigner first = new SlotAssigner(2, SlotAssigner.Costs.of(1.0, 15.0, 0.2));
@@ -161,12 +170,12 @@ class SlotAssignerTest {
         assertThrows(IllegalArgumentException.class, () -> SlotAssigner.Costs.of(1, -1, 0));
         assertThrows(IllegalArgumentException.class, () -> SlotAssigner.Costs.of(1, 0, 1));
         assertThrows(
-                IllegalArgumentException.class,
-                () -> assigner.assign(
-                        List.of(element("a", 0, 0), element("a", 1, 1)), List.of(slot("s1", 0, 0)), Map.of()));
+            IllegalArgumentException.class,
+            () -> assigner.assign(List.of(element("a", 0, 0), element("a", 1, 1)), List.of(slot("s1", 0, 0)), Map.of())
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> assigner.assign(
-                        List.of(element("a", 0, 0)), List.of(slot("s1", 0, 0), slot("s1", 1, 1)), Map.of()));
+            IllegalArgumentException.class,
+            () -> assigner.assign(List.of(element("a", 0, 0)), List.of(slot("s1", 0, 0), slot("s1", 1, 1)), Map.of())
+        );
     }
 }

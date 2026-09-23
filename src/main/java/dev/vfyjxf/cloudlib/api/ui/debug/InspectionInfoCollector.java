@@ -43,7 +43,11 @@ public final class InspectionInfoCollector {
      * Adds a property with a pre-formatted string value.
      */
     public InspectionInfoCollector addFormatted(
-            String name, String value, @Nullable String defaultValue, String category) {
+        String name,
+        String value,
+        @Nullable String defaultValue,
+        String category
+    ) {
         return addProperty(new InspectionProperty(name, value, defaultValue, category));
     }
 
@@ -52,9 +56,19 @@ public final class InspectionInfoCollector {
     }
 
     public InspectionInfoCollector addWithDefault(
-            String name, @Nullable Object value, @Nullable Object defaultValue, String category) {
-        return addProperty(new InspectionProperty(
-                name, InspectionProperty.format(value), InspectionProperty.format(defaultValue), category));
+        String name,
+        @Nullable Object value,
+        @Nullable Object defaultValue,
+        String category
+    ) {
+        return addProperty(
+            new InspectionProperty(
+                name,
+                InspectionProperty.format(value),
+                InspectionProperty.format(defaultValue),
+                category
+            )
+        );
     }
 
     /**

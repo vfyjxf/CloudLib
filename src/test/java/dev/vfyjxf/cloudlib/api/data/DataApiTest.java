@@ -22,8 +22,8 @@ class DataApiTest {
     static final DataKey<String> name = DataKey.create(Namespace.ofMc("name"));
     static final DataKey<Integer> count = DataKey.create(Namespace.ofMc("count"), 0);
     static final DataKey<List<String>> items = DataKey.create(Namespace.ofMc("items"), ArrayList::new);
-    static final DataKey<String> computed = DataKey.createComputed(
-            Namespace.ofMc("computed"), holder -> holder != null ? "holder-present" : "no-holder");
+    static final DataKey<String> computed = DataKey
+            .createComputed(Namespace.ofMc("computed"), holder -> holder != null ? "holder-present" : "no-holder");
     // endregion
 
     @Nested
@@ -209,8 +209,8 @@ class DataApiTest {
         @Test
         @DisplayName("Context-aware defaults receive holder")
         void contextAwareDefaultsReceiveHolder() {
-            DataKey<String> contextKey = DataKey.createComputed(
-                    Namespace.ofMc("context"), h -> h instanceof SimpleHolder ? "simple" : "other");
+            DataKey<String> contextKey = DataKey
+                    .createComputed(Namespace.ofMc("context"), h -> h instanceof SimpleHolder ? "simple" : "other");
 
             holder.data().setOwner(holder);
             assertEquals("simple", holder.get(contextKey));

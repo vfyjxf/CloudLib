@@ -33,7 +33,8 @@ public final class FocusEnvelope {
             }
             if (!Double.isFinite(opacityDelta) || opacityDelta <= 0 || opacityDelta > 0.35) {
                 throw new IllegalArgumentException(
-                        "opacityDelta must be finite, positive and at most 0.35: " + opacityDelta);
+                    "opacityDelta must be finite, positive and at most 0.35: " + opacityDelta
+                );
             }
             if (!Double.isFinite(lossSeconds) || lossSeconds <= 0) {
                 throw new IllegalArgumentException("lossSeconds must be finite and positive: " + lossSeconds);

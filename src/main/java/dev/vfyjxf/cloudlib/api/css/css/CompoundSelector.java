@@ -24,15 +24,16 @@ import java.util.List;
  * @param specC specificity column c (types, pseudo-elements)
  */
 public record CompoundSelector(
-        @Nullable String tag,
-        @Nullable String namespace,
-        @Nullable String id,
-        List<String> classes,
-        List<AttributeSelector> attributes,
-        List<PseudoClass> pseudos,
-        int specA,
-        int specB,
-        int specC) {
+    @Nullable String tag,
+    @Nullable String namespace,
+    @Nullable String id,
+    List<String> classes,
+    List<AttributeSelector> attributes,
+    List<PseudoClass> pseudos,
+    int specA,
+    int specB,
+    int specC
+) {
 
     public CompoundSelector {
         classes = List.copyOf(classes);
@@ -41,13 +42,14 @@ public record CompoundSelector(
     }
 
     public static CompoundSelector of(
-            @Nullable String tag,
-            @Nullable String namespace,
-            @Nullable String id,
-            List<String> classes,
-            List<AttributeSelector> attributes,
-            List<PseudoClass> pseudos,
-            Specificity spec) {
+        @Nullable String tag,
+        @Nullable String namespace,
+        @Nullable String id,
+        List<String> classes,
+        List<AttributeSelector> attributes,
+        List<PseudoClass> pseudos,
+        Specificity spec
+    ) {
         return new CompoundSelector(tag, namespace, id, classes, attributes, pseudos, spec.a(), spec.b(), spec.c());
     }
 

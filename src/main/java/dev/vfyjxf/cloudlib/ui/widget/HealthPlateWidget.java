@@ -65,11 +65,12 @@ public final class HealthPlateWidget extends Widget {
     /** Binds the plate to a live entity — name, health, maximum and armor read straight from it. */
     public static HealthPlateWidget of(LivingEntity entity) {
         return new HealthPlateWidget(
-                entity::getHealth,
-                entity::getMaxHealth,
-                entity::getDisplayName,
-                entity::hasCustomName,
-                entity::getArmorValue);
+            entity::getHealth,
+            entity::getMaxHealth,
+            entity::getDisplayName,
+            entity::hasCustomName,
+            entity::getArmorValue
+        );
     }
 
     public HealthPlateWidget(DoubleSupplier health, DoubleSupplier maxHealth, Supplier<Component> name) {
@@ -77,11 +78,12 @@ public final class HealthPlateWidget extends Widget {
     }
 
     public HealthPlateWidget(
-            DoubleSupplier health,
-            DoubleSupplier maxHealth,
-            Supplier<Component> name,
-            BooleanSupplier customName,
-            IntSupplier armor) {
+        DoubleSupplier health,
+        DoubleSupplier maxHealth,
+        Supplier<Component> name,
+        BooleanSupplier customName,
+        IntSupplier armor
+    ) {
         this.health = health;
         this.maxHealth = maxHealth;
         this.name = name;
@@ -275,10 +277,11 @@ public final class HealthPlateWidget extends Widget {
         if (showMaxHealth) {
             String max = formatNumber(maxHealth.getAsDouble());
             canvas.text(
-                    Component.literal(max).withStyle(ChatFormatting.BOLD),
-                    scaledWidth - font.width(max),
-                    0,
-                    0xFFFFFFFF);
+                Component.literal(max).withStyle(ChatFormatting.BOLD),
+                scaledWidth - font.width(max),
+                0,
+                0xFFFFFFFF
+            );
         }
         if (showPercentage) {
             String percent = formatNumber(Math.round(fraction * 100));

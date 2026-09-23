@@ -172,11 +172,12 @@ public final class OverlayEventHandler {
     private void onMouseDragged(ScreenEvent.MouseDragged.Pre event) {
         if (globalScene != null
                 && globalScene.mouseDragged(
-                        event.getMouseX(),
-                        event.getMouseY(),
-                        event.getMouseButton(),
-                        event.getDragX(),
-                        event.getDragY())) {
+                    event.getMouseX(),
+                    event.getMouseY(),
+                    event.getMouseButton(),
+                    event.getDragX(),
+                    event.getDragY()
+                )) {
             event.setCanceled(true);
         }
     }
@@ -185,7 +186,11 @@ public final class OverlayEventHandler {
     private void onMouseScrolled(ScreenEvent.MouseScrolled.Pre event) {
         if (globalScene != null
                 && globalScene.mouseScrolled(
-                        event.getMouseX(), event.getMouseY(), event.getScrollDeltaX(), event.getScrollDeltaY())) {
+                    event.getMouseX(),
+                    event.getMouseY(),
+                    event.getScrollDeltaX(),
+                    event.getScrollDeltaY()
+                )) {
             event.setCanceled(true);
         }
     }

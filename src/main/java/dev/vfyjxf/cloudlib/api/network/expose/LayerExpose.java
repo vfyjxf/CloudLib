@@ -12,17 +12,23 @@ import java.util.function.Consumer;
 public non-sealed interface LayerExpose<E> extends ExposeCommon {
 
     static <T, E> LayerExpose<E> create(
-            String name, short id, Snapshot<T> snapshot, ValueSupplier<T> valueSupplier, FlowHandler<T, E> codec) {
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> valueSupplier,
+        FlowHandler<T, E> codec
+    ) {
         return new StandardLayerExpose<>(name, id, snapshot, valueSupplier, codec, codec);
     }
 
     static <T, E> LayerExpose<E> create(
-            String name,
-            short id,
-            Snapshot<T> snapshot,
-            ValueSupplier<T> valueSupplier,
-            FlowEncoder<T> encoder,
-            FlowDecoder<E> decoder) {
+        String name,
+        short id,
+        Snapshot<T> snapshot,
+        ValueSupplier<T> valueSupplier,
+        FlowEncoder<T> encoder,
+        FlowDecoder<E> decoder
+    ) {
         return new StandardLayerExpose<>(name, id, snapshot, valueSupplier, encoder, decoder);
     }
 
@@ -39,7 +45,12 @@ public non-sealed interface LayerExpose<E> extends ExposeCommon {
      * Create a LayerExpose backed by a {@link Handle}. See {@link #create(String, short, Handle, FlowHandler)}.
      */
     static <T, E> LayerExpose<E> create(
-            String name, short id, Handle<T> handle, FlowEncoder<T> encoder, FlowDecoder<E> decoder) {
+        String name,
+        short id,
+        Handle<T> handle,
+        FlowEncoder<T> encoder,
+        FlowDecoder<E> decoder
+    ) {
         return new StandardLayerExpose<>(name, id, Snapshot.HandleSnapshot.of(handle), handle::get, encoder, decoder);
     }
 

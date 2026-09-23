@@ -20,7 +20,10 @@ public class SyncedTestBlock extends BasicEntityBlock<SyncedTestBlockEntity> {
     @Override
     @SuppressWarnings("unchecked")
     public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(
-            Level level, BlockState state, BlockEntityType<T> blockEntityType) {
+        Level level,
+        BlockState state,
+        BlockEntityType<T> blockEntityType
+    ) {
         return (BlockEntityTicker<T>) SyncedTestBlockEntity.ticker();
     }
 }

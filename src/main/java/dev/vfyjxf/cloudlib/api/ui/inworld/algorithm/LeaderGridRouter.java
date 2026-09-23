@@ -76,12 +76,13 @@ public final class LeaderGridRouter {
      *        the port (the endpoint marker's slot); non-negative
      */
     public record Config(
-            double bendPenaltyPx,
-            double edgePenaltyPx,
-            double clearancePx,
-            double stubPx,
-            double lastSegmentPx,
-            double arrivalGapPx) {
+        double bendPenaltyPx,
+        double edgePenaltyPx,
+        double clearancePx,
+        double stubPx,
+        double lastSegmentPx,
+        double arrivalGapPx
+    ) {
 
         public Config {
             if (!Double.isFinite(bendPenaltyPx) || bendPenaltyPx < 0) {
@@ -139,14 +140,15 @@ public final class LeaderGridRouter {
      * @see #route(FloatPos, double, double, FloatPos, double, double, List, Config, FloatRect)
      */
     public static List<FloatPos> route(
-            FloatPos anchor,
-            double dirX,
-            double dirY,
-            FloatPos port,
-            double normalX,
-            double normalY,
-            List<FloatRect> obstacles,
-            Config config) {
+        FloatPos anchor,
+        double dirX,
+        double dirY,
+        FloatPos port,
+        double normalX,
+        double normalY,
+        List<FloatRect> obstacles,
+        Config config
+    ) {
         return route(anchor, dirX, dirY, port, normalX, normalY, obstacles, config, null);
     }
 
@@ -161,15 +163,16 @@ public final class LeaderGridRouter {
      *         collision-free path exists on this grid
      */
     public static List<FloatPos> route(
-            FloatPos anchor,
-            double dirX,
-            double dirY,
-            FloatPos port,
-            double normalX,
-            double normalY,
-            List<FloatRect> obstacles,
-            Config config,
-            @Nullable FloatRect viewport) {
+        FloatPos anchor,
+        double dirX,
+        double dirY,
+        FloatPos port,
+        double normalX,
+        double normalY,
+        List<FloatRect> obstacles,
+        Config config,
+        @Nullable FloatRect viewport
+    ) {
         requireAxisUnit(dirX, dirY, "dir");
         requireAxisUnit(normalX, normalY, "normal");
         double[] bounds = boundsOf(viewport);
@@ -177,12 +180,10 @@ public final class LeaderGridRouter {
         List<Integer> ownIndices = new ArrayList<>();
         for (int k = 0; k < obstacles.size(); k++) {
             FloatRect rect = obstacles.get(k);
-            inflated.add(new double[] {
-                rect.x() - config.clearancePx(),
-                rect.y() - config.clearancePx(),
-                rect.x() + rect.width() + config.clearancePx(),
-                rect.y() + rect.height() + config.clearancePx()
-            });
+            inflated.add(
+                new double[]{rect.x() - config.clearancePx(), rect.y() - config.clearancePx(),
+                        rect.x() + rect.width() + config.clearancePx(), rect.y() + rect.height() + config.clearancePx()}
+            );
             if (portOnBorder(port, rect)) {
                 ownIndices.add(k);
             }
@@ -192,18 +193,22 @@ public final class LeaderGridRouter {
             ownInflated.add(inflated.get(k));
         }
 
-        FloatPos drawnEnd =
-                new FloatPos(port.x() + normalX * config.arrivalGapPx(), port.y() + normalY * config.arrivalGapPx());
+        FloatPos drawnEnd = new FloatPos(
+            port.x() + normalX * config.arrivalGapPx(),
+            port.y() + normalY * config.arrivalGapPx()
+        );
         FloatPos stubEnd = new FloatPos(anchor.x() + dirX * config.stubPx(), anchor.y() + dirY * config.stubPx());
         FloatPos approach = new FloatPos(
-                drawnEnd.x() + normalX * config.lastSegmentPx(), drawnEnd.y() + normalY * config.lastSegmentPx());
+            drawnEnd.x() + normalX * config.lastSegmentPx(),
+            drawnEnd.y() + normalY * config.lastSegmentPx()
+        );
         // a frozen end that would land off-screen clamps onto the viewport
         // edge instead of failing; a truncated stub may then bend at the
         // boundary and a truncated approach accepts any entry direction —
         // the frozen runs were cut short by the edge, not by geometry
         boolean stubTruncated = outsideBounds(stubEnd.x(), stubEnd.y(), bounds);
-        boolean approachTruncated =
-                outsideBounds(drawnEnd.x(), drawnEnd.y(), bounds) || outsideBounds(approach.x(), approach.y(), bounds);
+        boolean approachTruncated = outsideBounds(drawnEnd.x(), drawnEnd.y(), bounds)
+                || outsideBounds(approach.x(), approach.y(), bounds);
         stubEnd = clamped(stubEnd, bounds);
         drawnEnd = clamped(drawnEnd, bounds);
         approach = clamped(approach, bounds);
@@ -243,19 +248,20 @@ public final class LeaderGridRouter {
         List<FloatPos> bends = new ArrayList<>();
         if (start != goal) {
             int goalFound = search(
-                    start,
-                    goal,
-                    gx,
-                    gy,
-                    nodeBlocked,
-                    inflated,
-                    bounds,
-                    g,
-                    parent,
-                    closed,
-                    config,
-                    stubTruncated,
-                    approachTruncated);
+                start,
+                goal,
+                gx,
+                gy,
+                nodeBlocked,
+                inflated,
+                bounds,
+                g,
+                parent,
+                closed,
+                config,
+                stubTruncated,
+                approachTruncated
+            );
             if (goalFound < 0) {
                 return null;
             }
@@ -277,7 +283,11 @@ public final class LeaderGridRouter {
      * along the final segment only, mirroring {@link #route}'s rule.
      */
     public static boolean polylineBlocked(
-            List<FloatPos> points, FloatPos port, List<FloatRect> obstacles, double clearance) {
+        List<FloatPos> points,
+        FloatPos port,
+        List<FloatRect> obstacles,
+        double clearance
+    ) {
         return polylineBlocked(points, port, obstacles, clearance, null);
     }
 
@@ -287,21 +297,18 @@ public final class LeaderGridRouter {
      * is convex, so endpoint containment covers the whole segment.
      */
     public static boolean polylineBlocked(
-            List<FloatPos> points,
-            FloatPos port,
-            List<FloatRect> obstacles,
-            double clearance,
-            @Nullable FloatRect viewport) {
+        List<FloatPos> points,
+        FloatPos port,
+        List<FloatRect> obstacles,
+        double clearance,
+        @Nullable FloatRect viewport
+    ) {
         double[] bounds = boundsOf(viewport);
         List<double[]> inflated = new ArrayList<>(obstacles.size());
         List<double[]> own = new ArrayList<>();
         for (FloatRect rect : obstacles) {
-            double[] inflatedBounds = new double[] {
-                rect.x() - clearance,
-                rect.y() - clearance,
-                rect.x() + rect.width() + clearance,
-                rect.y() + rect.height() + clearance
-            };
+            double[] inflatedBounds = new double[]{rect.x() - clearance, rect.y() - clearance,
+                    rect.x() + rect.width() + clearance, rect.y() + rect.height() + clearance};
             inflated.add(inflatedBounds);
             if (portOnBorder(port, rect)) {
                 own.add(inflatedBounds);
@@ -332,7 +339,12 @@ public final class LeaderGridRouter {
      * whole segment.
      */
     private static boolean segmentBlocked(
-            FloatPos a, FloatPos b, List<double[]> inflated, List<double[]> exempt, double[] bounds) {
+        FloatPos a,
+        FloatPos b,
+        List<double[]> inflated,
+        List<double[]> exempt,
+        double[] bounds
+    ) {
         if (outsideBounds(a.x(), a.y(), bounds) || outsideBounds(b.x(), b.y(), bounds)) {
             return true;
         }
@@ -365,19 +377,20 @@ public final class LeaderGridRouter {
      * for the same reason.
      */
     private static int search(
-            int start,
-            int goal,
-            double[] gx,
-            double[] gy,
-            boolean[] nodeBlocked,
-            List<double[]> inflated,
-            double[] bounds,
-            int[] g,
-            int[] parent,
-            boolean[] closed,
-            Config config,
-            boolean stubTruncated,
-            boolean approachTruncated) {
+        int start,
+        int goal,
+        double[] gx,
+        double[] gy,
+        boolean[] nodeBlocked,
+        List<double[]> inflated,
+        double[] bounds,
+        int[] g,
+        int[] parent,
+        boolean[] closed,
+        Config config,
+        boolean stubTruncated,
+        boolean approachTruncated
+    ) {
         int w = gx.length;
         int goalNode = goal / 4;
         int startNode = start / 4;
@@ -460,15 +473,16 @@ public final class LeaderGridRouter {
      * always degenerate and is covered by the strictly-inside span test.
      */
     private static int edgeCost(
-            int i,
-            int j,
-            int ni,
-            int nj,
-            double[] gx,
-            double[] gy,
-            List<double[]> inflated,
-            double[] bounds,
-            Config config) {
+        int i,
+        int j,
+        int ni,
+        int nj,
+        double[] gx,
+        double[] gy,
+        List<double[]> inflated,
+        double[] bounds,
+        Config config
+    ) {
         // an edge with an end off the viewport is off-screen; the rect is
         // convex, so contained ends mean a contained segment
         if (outsideBounds(gx[i], gy[j], bounds) || outsideBounds(gx[ni], gy[nj], bounds)) {
@@ -517,10 +531,14 @@ public final class LeaderGridRouter {
 
     private static boolean segmentIntersectsRect(FloatPos a, FloatPos b, double[] rect) {
         double rx0 = rect[0], ry0 = rect[1], rx1 = rect[2], ry1 = rect[3];
-        boolean aInside =
-                a.x() > rx0 + epsilon && a.x() < rx1 - epsilon && a.y() > ry0 + epsilon && a.y() < ry1 - epsilon;
-        boolean bInside =
-                b.x() > rx0 + epsilon && b.x() < rx1 - epsilon && b.y() > ry0 + epsilon && b.y() < ry1 - epsilon;
+        boolean aInside = a.x() > rx0 + epsilon
+                && a.x() < rx1 - epsilon
+                && a.y() > ry0 + epsilon
+                && a.y() < ry1 - epsilon;
+        boolean bInside = b.x() > rx0 + epsilon
+                && b.x() < rx1 - epsilon
+                && b.y() > ry0 + epsilon
+                && b.y() < ry1 - epsilon;
         if (aInside || bInside) return true;
         return segCrossesEdge(a, b, rx0, ry0, rx1, ry0)
                 || segCrossesEdge(a, b, rx1, ry0, rx1, ry1)
@@ -555,7 +573,7 @@ public final class LeaderGridRouter {
 
     /** The viewport rect as a bounds tuple {x0, y0, x1, y1}; null when unbounded. */
     private static double[] boundsOf(@Nullable FloatRect viewport) {
-        return viewport == null ? null : new double[] {viewport.x(), viewport.y(), viewport.right(), viewport.bottom()};
+        return viewport == null ? null : new double[]{viewport.x(), viewport.y(), viewport.right(), viewport.bottom()};
     }
 
     /** Whether the point lies strictly outside the bounds; the boundary itself is inside. */
@@ -587,7 +605,9 @@ public final class LeaderGridRouter {
             return p;
         }
         return new FloatPos(
-                Math.min(Math.max(p.x(), bounds[0]), bounds[2]), Math.min(Math.max(p.y(), bounds[1]), bounds[3]));
+            Math.min(Math.max(p.x(), bounds[0]), bounds[2]),
+            Math.min(Math.max(p.y(), bounds[1]), bounds[3])
+        );
     }
 
     private static boolean portOnBorder(FloatPos port, FloatRect rect) {
@@ -691,7 +711,7 @@ public final class LeaderGridRouter {
             }
             merged.add(point);
         }
-        for (int i = 1; i < merged.size() - 1; ) {
+        for (int i = 1; i < merged.size() - 1;) {
             FloatPos a = merged.get(i - 1);
             FloatPos q = merged.get(i);
             FloatPos b = merged.get(i + 1);

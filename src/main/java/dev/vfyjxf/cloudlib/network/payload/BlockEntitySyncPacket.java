@@ -27,7 +27,9 @@ public record BlockEntitySyncPacket(List<Entry> entries) implements ClientboundP
     public record Entry(BlockPos pos, byte[] syncData) {}
 
     public static final ClientPayloadInfo<BlockEntitySyncPacket> info = CloudlibPayloads.createClientInfo(
-            StreamCodec.ofMember(BlockEntitySyncPacket::write, BlockEntitySyncPacket::decode), "block_entity_sync");
+        StreamCodec.ofMember(BlockEntitySyncPacket::write, BlockEntitySyncPacket::decode),
+        "block_entity_sync"
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -56,7 +58,10 @@ public record BlockEntitySyncPacket(List<Entry> entries) implements ClientboundP
         for (Entry entry : entries) {
             if (player.level().getBlockEntity(entry.pos()) instanceof SyncedBlockEntity synced) {
                 var buffer = new RegistryFriendlyByteBuf(
-                        Unpooled.wrappedBuffer(entry.syncData()), player.registryAccess(), ConnectionType.OTHER);
+                    Unpooled.wrappedBuffer(entry.syncData()),
+                    player.registryAccess(),
+                    ConnectionType.OTHER
+                );
                 synced.sync().receiveFromServer(buffer);
             }
         }

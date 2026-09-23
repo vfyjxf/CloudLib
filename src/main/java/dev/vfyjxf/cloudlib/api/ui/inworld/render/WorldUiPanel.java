@@ -62,15 +62,16 @@ public final class WorldUiPanel {
 
     /** Everything a placer needs for one frame. */
     public record Frame(
-            Camera camera,
-            Vec3 cameraPos,
-            Matrix4f worldToView,
-            Matrix4f viewToClip,
-            float partialTick,
-            ClientLevel level,
-            /** framebuffer px — for screen-space trace/marker sizing. */
-            int viewportW,
-            int viewportH) {}
+        Camera camera,
+        Vec3 cameraPos,
+        Matrix4f worldToView,
+        Matrix4f viewToClip,
+        float partialTick,
+        ClientLevel level,
+        /** framebuffer px — for screen-space trace/marker sizing. */
+        int viewportW,
+        int viewportH
+    ) {}
 
     private int width;
     private int height;

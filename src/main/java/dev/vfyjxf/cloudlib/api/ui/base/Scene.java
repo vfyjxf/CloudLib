@@ -601,10 +601,11 @@ public final class Scene {
             return debugInsets;
         }
         return new Insets(
-                Math.max(debugInsets.top(), exclusionInsets.top()),
-                Math.max(debugInsets.right(), exclusionInsets.right()),
-                Math.max(debugInsets.bottom(), exclusionInsets.bottom()),
-                Math.max(debugInsets.left(), exclusionInsets.left()));
+            Math.max(debugInsets.top(), exclusionInsets.top()),
+            Math.max(debugInsets.right(), exclusionInsets.right()),
+            Math.max(debugInsets.bottom(), exclusionInsets.bottom()),
+            Math.max(debugInsets.left(), exclusionInsets.left())
+        );
     }
 
     private void updateRootLayoutHandler() {
@@ -613,11 +614,13 @@ public final class Scene {
             root.onLayout(null);
             return;
         }
-        root.onLayout((widget, scope) -> scope.useTaffy()
-                .setSize(
+        root.onLayout(
+            (widget, scope) -> scope.useTaffy()
+                    .setSize(
                         Math.max(0, width - insets.left() - insets.right()),
-                        Math.max(0, height - insets.top() - insets.bottom()))
-                .offset(insets.left(), insets.top()));
+                        Math.max(0, height - insets.top() - insets.bottom())
+                    ).offset(insets.left(), insets.top())
+        );
     }
 
     public void layout() {
@@ -629,10 +632,12 @@ public final class Scene {
             effH = Math.max(0, height - insets.top() - insets.bottom());
         }
         tree.computeLayout(
-                root.nodeId(),
-                new TaffySize<>(
-                        Float.isNaN(effW) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(effW),
-                        Float.isNaN(effH) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(effH)));
+            root.nodeId(),
+            new TaffySize<>(
+                Float.isNaN(effW) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(effW),
+                Float.isNaN(effH) ? AvailableSpace.MAX_CONTENT : AvailableSpace.definite(effH)
+            )
+        );
     }
 
     // endregion
@@ -764,6 +769,10 @@ public final class Scene {
         // Clean up focus state if the unmounting widget or its descendants had focus
         handleFocusWidgetUnmount(widget);
         WidgetTree.walkBottomUp(widget, true, -1, (w, depth) -> {
+            // a queued-created descendant dies with its subtree here; dropping it from
+            // the created set is what keeps the next flush from resurrecting it as an
+            // orphan — unmount releases a never-mounted widget without its scene
+            createdWidgets.remove(w);
             w.unmount();
             destroyingWidgets.add(w);
             return TraversalControl.proceed;
@@ -1307,7 +1316,11 @@ public final class Scene {
             currentClickWidget = target;
             lastClickButton = button;
             boolean result = handleBubbleEvent(
-                    target, bubble, InputEvents.onMouseClicked, (listener) -> listener.onClicked(input, bubble));
+                target,
+                bubble,
+                InputEvents.onMouseClicked,
+                (listener) -> listener.onClicked(input, bubble)
+            );
             refreshHoverTooltip(mouseX, mouseY);
             return result;
         }
@@ -1344,10 +1357,11 @@ public final class Scene {
             InputContext input = InputContext.fromMouse(mouseX, mouseY, button);
             var releaseContext = target.bubble();
             var result = handleBubbleEvent(
-                    target,
-                    releaseContext,
-                    InputEvents.onMouseReleased,
-                    (listener) -> listener.onReleased(input, releaseContext));
+                target,
+                releaseContext,
+                InputEvents.onMouseReleased,
+                (listener) -> listener.onReleased(input, releaseContext)
+            );
 
             if (currentClickWidget == target && target.isMouseOver(mouseX, mouseY)) {
                 boolean isContinuousClick = lastClickedWidget == target
@@ -1361,10 +1375,11 @@ public final class Scene {
 
                 var clickContext = target.bubble();
                 result |= handleBubbleEvent(
-                        target,
-                        clickContext,
-                        InputEvents.onMouseClick,
-                        (listener) -> listener.onClick(input, clickCount, clickContext));
+                    target,
+                    clickContext,
+                    InputEvents.onMouseClick,
+                    (listener) -> listener.onClick(input, clickCount, clickContext)
+                );
                 lastClickedWidget = target;
                 lastClickPos = new FloatPos(mouseX, mouseY);
                 lastClickButton = button;
@@ -1467,10 +1482,11 @@ public final class Scene {
             var input = InputContext.fromMouse(mouseX, mouseY, button);
             var bubble = target.bubble();
             return handleBubbleEvent(
-                    target,
-                    bubble,
-                    InputEvents.onMouseDragged,
-                    (listener) -> listener.onDragged(input, dragX, dragY, bubble));
+                target,
+                bubble,
+                InputEvents.onMouseDragged,
+                (listener) -> listener.onDragged(input, dragX, dragY, bubble)
+            );
         }
         return false;
     }
@@ -1482,10 +1498,11 @@ public final class Scene {
         if (target != null) {
             var bubble = target.bubble();
             boolean result = handleBubbleEvent(
-                    target,
-                    bubble,
-                    InputEvents.onMouseScrolled,
-                    (listener) -> listener.onScrolled(mouseX, mouseY, scrollX, scrollY, bubble));
+                target,
+                bubble,
+                InputEvents.onMouseScrolled,
+                (listener) -> listener.onScrolled(mouseX, mouseY, scrollX, scrollY, bubble)
+            );
             refreshHoverTooltip(mouseX, mouseY);
             return result;
         }
@@ -1502,8 +1519,8 @@ public final class Scene {
      * @return {@code true} if the event is consumed, {@code false} otherwise.
      */
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        InputContext keyInput =
-                InputContext.fromKeyboard(keyCode, scanCode, modifiers, syntheticPointerX(), syntheticPointerY());
+        InputContext keyInput = InputContext
+                .fromKeyboard(keyCode, scanCode, modifiers, syntheticPointerX(), syntheticPointerY());
         if (keyInput.pressed(KeyMappings.openDevTools)) {
             DebugOverlay overlay = debugOverlay();
             if (overlay != null) {
@@ -1520,7 +1537,11 @@ public final class Scene {
         var input = InputContext.fromKeyboard(keyCode, scanCode, modifiers, mouseX, mouseY);
         var bubble = fw.bubble();
         return handleBubbleEvent(
-                fw, bubble, InputEvents.onKeyPressed, (listener) -> listener.onKeyPressed(input, bubble));
+            fw,
+            bubble,
+            InputEvents.onKeyPressed,
+            (listener) -> listener.onKeyPressed(input, bubble)
+        );
     }
 
     /**
@@ -1542,7 +1563,11 @@ public final class Scene {
         var input = InputContext.fromKeyboard(keyCode, scanCode, modifiers, mouseX, mouseY);
         var bubble = fw.bubble();
         return handleBubbleEvent(
-                fw, bubble, InputEvents.onKeyReleased, (listener) -> listener.onKeyReleased(input, bubble));
+            fw,
+            bubble,
+            InputEvents.onKeyReleased,
+            (listener) -> listener.onKeyReleased(input, bubble)
+        );
     }
 
     /**
@@ -1559,10 +1584,11 @@ public final class Scene {
         if (fw != null && fw.lifecycle.mounted()) {
             var bubble = fw.bubble();
             return handleBubbleEvent(
-                    fw,
-                    bubble,
-                    InputEvents.onCharTyped,
-                    (listener) -> listener.onCharTyped(codePoint, modifiers, bubble));
+                fw,
+                bubble,
+                InputEvents.onCharTyped,
+                (listener) -> listener.onCharTyped(codePoint, modifiers, bubble)
+            );
         }
         return false;
     }
@@ -1614,8 +1640,8 @@ public final class Scene {
                 Widget layerWidget = widgets.get(j);
                 if (!isMountedInThisScene(layerWidget)) continue;
                 double hitX, hitY;
-                boolean inSceneSpace =
-                        layerWidget.coordinateSpace == CoordinateSpace.scene || layerWidget.parent() == null;
+                boolean inSceneSpace = layerWidget.coordinateSpace == CoordinateSpace.scene
+                        || layerWidget.parent() == null;
                 if (inSceneSpace) {
                     hitX = mouseX;
                     hitY = mouseY;
@@ -1648,7 +1674,11 @@ public final class Scene {
     }
 
     public static <E extends WidgetEvent> boolean handleBubbleEvent(
-            Widget target, BubbleContext bubble, EventDefinition<E> event, Function<E, EventDispatch> listenerInvoke) {
+        Widget target,
+        BubbleContext bubble,
+        EventDefinition<E> event,
+        Function<E, EventDispatch> listenerInvoke
+    ) {
         WidgetPath path = target.path();
         EventDispatch action = EventDispatch.pass;
         // NOTE:target index is path.size() - 1
@@ -1757,7 +1787,11 @@ public final class Scene {
 
             var bubble = oldWidget.bubble();
             handleBubbleEvent(
-                    oldWidget, bubble, WidgetEvent.onFocusOut, (listener) -> listener.onFocusOut(oldWidget, bubble));
+                oldWidget,
+                bubble,
+                WidgetEvent.onFocusOut,
+                (listener) -> listener.onFocusOut(oldWidget, bubble)
+            );
             oldWidget.listeners(WidgetEvent.onFocusLost).onFocusLost(oldWidget.interruptible());
 
             for (int i = forkIndex + 1; i < newPath.size(); i++) {
@@ -1791,7 +1825,11 @@ public final class Scene {
 
         var bubble = newWidget.bubble();
         handleBubbleEvent(
-                newWidget, bubble, WidgetEvent.onFocusIn, (listener) -> listener.onFocusIn(newWidget, bubble));
+            newWidget,
+            bubble,
+            WidgetEvent.onFocusIn,
+            (listener) -> listener.onFocusIn(newWidget, bubble)
+        );
         newWidget.listeners(WidgetEvent.onFocus).onFocus(newWidget.interruptible());
     }
 
@@ -1814,7 +1852,11 @@ public final class Scene {
 
             var bubble = oldWidget.bubble();
             handleBubbleEvent(
-                    oldWidget, bubble, WidgetEvent.onFocusOut, (listener) -> listener.onFocusOut(oldWidget, bubble));
+                oldWidget,
+                bubble,
+                WidgetEvent.onFocusOut,
+                (listener) -> listener.onFocusOut(oldWidget, bubble)
+            );
             oldWidget.listeners(WidgetEvent.onFocusLost).onFocusLost(oldWidget.interruptible());
         } else {
             oldFocus.hasPrimaryFocus = false;

@@ -78,12 +78,13 @@ public final class FacetRules {
      * @throws IllegalArgumentException with the rule number on violation
      */
     public static void validate(
-            AnchorFacet anchor,
-            OrientationFacet orientation,
-            SpaceFacet spaces,
-            AvoidanceFacet avoidance,
-            GroupFacet group,
-            AlgorithmProfile algorithm) {
+        AnchorFacet anchor,
+        OrientationFacet orientation,
+        SpaceFacet spaces,
+        AvoidanceFacet avoidance,
+        GroupFacet group,
+        AlgorithmProfile algorithm
+    ) {
         rule1(anchor, orientation);
         rule2(anchor, spaces);
         rule3(avoidance, spaces);
@@ -95,7 +96,8 @@ public final class FacetRules {
     private static void rule1(AnchorFacet anchor, OrientationFacet orientation) {
         if (!orientationCompatible(anchor, orientation)) {
             throw new IllegalArgumentException(
-                    orientation.mode() + " orientation is illegal with a " + anchor.kind() + " anchor (rule 1)");
+                orientation.mode() + " orientation is illegal with a " + anchor.kind() + " anchor (rule 1)"
+            );
         }
     }
 
@@ -128,7 +130,8 @@ public final class FacetRules {
     private static void rule2(AnchorFacet anchor, SpaceFacet spaces) {
         if (spaces.claimsWorldLayer() && !anchor.worldAnchored()) {
             throw new IllegalArgumentException(
-                    "the worldAnchored layer needs a world anchor: " + anchor.kind() + " (rule 2)");
+                "the worldAnchored layer needs a world anchor: " + anchor.kind() + " (rule 2)"
+            );
         }
     }
 
@@ -151,7 +154,8 @@ public final class FacetRules {
         AlgorithmProfile.Placement placement = algorithm.placement();
         if (placement != AlgorithmProfile.Placement.none && placement != AlgorithmProfile.Placement.anchoredQuad) {
             throw new IllegalArgumentException(
-                    "a ghost only supports anchored single-candidate placement, not " + placement + " (rule 4)");
+                "a ghost only supports anchored single-candidate placement, not " + placement + " (rule 4)"
+            );
         }
     }
 
@@ -159,14 +163,16 @@ public final class FacetRules {
         if ((group.strategy() instanceof OrbitAroundAnchor || group.strategy() instanceof ClusterToRepresentative)
                 && !anchor.worldAnchored()) {
             throw new IllegalArgumentException(
-                    group.strategy().getClass().getSimpleName() + " needs a world anchor (rule 5)");
+                group.strategy().getClass().getSimpleName() + " needs a world anchor (rule 5)"
+            );
         }
     }
 
     private static void rule6(GroupFacet group, AlgorithmProfile algorithm) {
         if (group.strategy() instanceof ClusterToRepresentative && !algorithm.clustersElements()) {
             throw new IllegalArgumentException(
-                    "ClusterToRepresentative needs a cluster-binding profile, not " + algorithm + " (rule 6)");
+                "ClusterToRepresentative needs a cluster-binding profile, not " + algorithm + " (rule 6)"
+            );
         }
     }
 
@@ -179,7 +185,8 @@ public final class FacetRules {
     public static void validateWorldOnly(boolean worldOnly, AnchorFacet anchor, boolean hasCustomLayouter) {
         if (worldOnly && !hasCustomLayouter && !anchor.worldAnchored()) {
             throw new IllegalArgumentException(
-                    "worldOnly needs a custom layouter or a world anchor: " + anchor.kind() + " (rule 7)");
+                "worldOnly needs a custom layouter or a world anchor: " + anchor.kind() + " (rule 7)"
+            );
         }
     }
 
@@ -190,11 +197,12 @@ public final class FacetRules {
      * @throws IllegalArgumentException with the rule number on violation
      */
     public static void validateZone(
-            @Nullable ZoneFacet zone,
-            AnchorFacet anchor,
-            SpaceFacet spaces,
-            AlgorithmProfile algorithm,
-            boolean worldOnly) {
+        @Nullable ZoneFacet zone,
+        AnchorFacet anchor,
+        SpaceFacet spaces,
+        AlgorithmProfile algorithm,
+        boolean worldOnly
+    ) {
         if (zone == null) {
             return;
         }
@@ -209,7 +217,8 @@ public final class FacetRules {
         }
         if (worldOnly) {
             throw new IllegalArgumentException(
-                    "a zone declaration needs screen participation, not the world-only capability (rule 8)");
+                "a zone declaration needs screen participation, not the world-only capability (rule 8)"
+            );
         }
     }
 
@@ -219,7 +228,8 @@ public final class FacetRules {
         }
         if (algorithm.placement() == AlgorithmProfile.Placement.dockCursor) {
             throw new IllegalArgumentException(
-                    "a zone declaration needs an anchor-positioned candidate family, not the dock cursor (rule 9)");
+                "a zone declaration needs an anchor-positioned candidate family, not the dock cursor (rule 9)"
+            );
         }
     }
 
@@ -227,7 +237,8 @@ public final class FacetRules {
         LodTier tier = zone.initialTier();
         if (tier != LodTier.full && tier != LodTier.compact) {
             throw new IllegalArgumentException(
-                    "a zone declaration enters at full or compact, not " + tier + " (rule 10)");
+                "a zone declaration enters at full or compact, not " + tier + " (rule 10)"
+            );
         }
     }
 
@@ -240,7 +251,10 @@ public final class FacetRules {
      * @throws IllegalArgumentException with the rule number on violation
      */
     public static void validateAvoidanceClass(
-            AvoidanceClass avoidanceClass, boolean worldOnly, @Nullable ZoneFacet zone) {
+        AvoidanceClass avoidanceClass,
+        boolean worldOnly,
+        @Nullable ZoneFacet zone
+    ) {
         Objects.requireNonNull(avoidanceClass, "avoidanceClass");
         if (avoidanceClass != AvoidanceClass.rigid) {
             return;
@@ -250,7 +264,8 @@ public final class FacetRules {
         }
         if (zone != null) {
             throw new IllegalArgumentException(
-                    "rigid never ranks candidates, so a zone declaration is discarded (rule 11)");
+                "rigid never ranks candidates, so a zone declaration is discarded (rule 11)"
+            );
         }
     }
 }

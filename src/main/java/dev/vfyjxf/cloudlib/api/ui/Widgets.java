@@ -12,17 +12,21 @@ import static dev.vfyjxf.cloudlib.api.ui.style.UIStyles.*;
 public final class Widgets {
 
     public static <T extends Widget> WidgetGroup<T> column(
-            JustifyContent horizontalArrangement, AlignItems verticalArrangement) {
+        JustifyContent horizontalArrangement,
+        AlignItems verticalArrangement
+    ) {
         WidgetGroup<T> widget = new WidgetGroup<>();
-        UIStyle style =
-                UIStyle.of(flexColumn(), justifyContent(horizontalArrangement), alignItems(verticalArrangement));
+        UIStyle style = UIStyle
+                .of(flexColumn(), justifyContent(horizontalArrangement), alignItems(verticalArrangement));
 
         widget.useStyle(style);
         return widget;
     }
 
     public static <T extends Widget> WidgetGroup<T> row(
-            JustifyContent horizontalArrangement, AlignItems verticalArrangement) {
+        JustifyContent horizontalArrangement,
+        AlignItems verticalArrangement
+    ) {
         WidgetGroup<T> widget = new WidgetGroup<>();
         UIStyle style = UIStyle.of(flexRow(), justifyContent(horizontalArrangement), alignItems(verticalArrangement));
         widget.useStyle(style);

@@ -65,8 +65,9 @@ public final class SelectorMatcher {
         /** Direct children in document order — composites only. */
         List<Widget> childrenOf(Widget node) {
             return children.computeIfAbsent(
-                    node,
-                    n -> n instanceof CompositeWidget<?> composite ? List.copyOf(composite.children()) : List.of());
+                node,
+                n -> n instanceof CompositeWidget<?> composite ? List.copyOf(composite.children()) : List.of()
+            );
         }
 
         Set<String> statesOf(Widget node) {
@@ -227,14 +228,12 @@ public final class SelectorMatcher {
         if (pseudo.element()) {
             // pseudo-elements address named parts of the node itself
             return switch (name) {
-                case "part" ->
-                    pseudo.args() instanceof PseudoArgs.Idents ids
-                            && node.stylePart() != null
-                            && ids.values().contains(node.stylePart());
+                case "part" -> pseudo.args() instanceof PseudoArgs.Idents ids
+                        && node.stylePart() != null
+                        && ids.values().contains(node.stylePart());
                 case "before", "after", "first-line", "first-letter" -> false;
-                default ->
-                    pseudo.args() instanceof PseudoArgs.SelectorList sels
-                            && sels.selectors().stream().anyMatch(r -> matchesRelative(ctx, r, node));
+                default -> pseudo.args() instanceof PseudoArgs.SelectorList sels
+                        && sels.selectors().stream().anyMatch(r -> matchesRelative(ctx, r, node));
             };
         }
         return switch (name) {
@@ -243,22 +242,17 @@ public final class SelectorMatcher {
             case "first-child" -> ctx.indexOf(node) == 0;
             case "last-child" -> ctx.indexOf(node) == ctx.siblingsOf(node).size() - 1;
             case "only-child" -> ctx.siblingsOf(node).size() == 1;
-            case "nth-child", "nth-last-child" ->
-                pseudo.args() instanceof PseudoArgs.AnPlusB ab
-                        && matchesNth(ctx, ab, node, name.equals("nth-last-child"));
-            case "nth-of-type", "nth-last-of-type" ->
-                pseudo.args() instanceof PseudoArgs.AnPlusB ab
-                        && matchesNthOfType(ctx, ab, node, name.equals("nth-last-of-type"));
+            case "nth-child", "nth-last-child" -> pseudo.args() instanceof PseudoArgs.AnPlusB ab
+                    && matchesNth(ctx, ab, node, name.equals("nth-last-child"));
+            case "nth-of-type", "nth-last-of-type" -> pseudo.args() instanceof PseudoArgs.AnPlusB ab
+                    && matchesNthOfType(ctx, ab, node, name.equals("nth-last-of-type"));
             case "nth-col", "nth-last-col" -> false; // no column concept in widget trees
-            case "not" ->
-                pseudo.args() instanceof PseudoArgs.SelectorList sels
-                        && sels.selectors().stream().noneMatch(r -> matchesRelative(ctx, r, node));
-            case "is", "where" ->
-                pseudo.args() instanceof PseudoArgs.SelectorList sels
-                        && sels.selectors().stream().anyMatch(r -> matchesRelative(ctx, r, node));
-            case "has" ->
-                pseudo.args() instanceof PseudoArgs.SelectorList sels
-                        && sels.selectors().stream().anyMatch(r -> matchesHas(ctx, r, node));
+            case "not" -> pseudo.args() instanceof PseudoArgs.SelectorList sels
+                    && sels.selectors().stream().noneMatch(r -> matchesRelative(ctx, r, node));
+            case "is", "where" -> pseudo.args() instanceof PseudoArgs.SelectorList sels
+                    && sels.selectors().stream().anyMatch(r -> matchesRelative(ctx, r, node));
+            case "has" -> pseudo.args() instanceof PseudoArgs.SelectorList sels
+                    && sels.selectors().stream().anyMatch(r -> matchesHas(ctx, r, node));
             default -> ctx.statesOf(node).contains(name);
         };
     }

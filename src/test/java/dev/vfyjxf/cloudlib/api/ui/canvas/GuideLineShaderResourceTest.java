@@ -31,11 +31,12 @@ class GuideLineShaderResourceTest {
 
     /** The five sources every naming and structure check walks. */
     private static final List<String> sources = List.of(
-            dir + "guide_line_hud.vsh",
-            dir + "guide_line_hud.fsh",
-            dir + "guide_line_world.vsh",
-            dir + "guide_line_world.fsh",
-            include);
+        dir + "guide_line_hud.vsh",
+        dir + "guide_line_hud.fsh",
+        dir + "guide_line_world.vsh",
+        dir + "guide_line_world.fsh",
+        include
+    );
 
     /**
      * GLSL 1.50's reserved-for-future-use words, plus the ones later versions
@@ -46,139 +47,141 @@ class GuideLineShaderResourceTest {
      * syntax error the compiler reports anyway.
      */
     private static final Set<String> reservedWords = Set.of(
-            "common",
-            "partition",
-            "active",
-            "asm",
-            "class",
-            "union",
-            "enum",
-            "typedef",
-            "template",
-            "this",
-            "packed",
-            "goto",
-            "inline",
-            "noinline",
-            "volatile",
-            "public",
-            "static",
-            "extern",
-            "external",
-            "interface",
-            "long",
-            "short",
-            "half",
-            "fixed",
-            "unsigned",
-            "superp",
-            "input",
-            "output",
-            "hvec2",
-            "hvec3",
-            "hvec4",
-            "fvec2",
-            "fvec3",
-            "fvec4",
-            "filter",
-            "image1D",
-            "image2D",
-            "image3D",
-            "imageCube",
-            "iimage1D",
-            "iimage2D",
-            "iimage3D",
-            "iimageCube",
-            "uimage1D",
-            "uimage2D",
-            "uimage3D",
-            "uimageCube",
-            "image1DArray",
-            "image2DArray",
-            "iimage1DArray",
-            "iimage2DArray",
-            "uimage1DArray",
-            "uimage2DArray",
-            "image1DShadow",
-            "image2DShadow",
-            "image1DArrayShadow",
-            "image2DArrayShadow",
-            "imageBuffer",
-            "iimageBuffer",
-            "uimageBuffer",
-            "sizeof",
-            "cast",
-            "namespace",
-            "using",
-            "row_major",
-            "sampler3DRect",
-            "shared",
-            "resource",
-            "coherent",
-            "restrict",
-            "readonly",
-            "writeonly",
-            "atomic_uint",
-            "patch",
-            "sample",
-            "precise",
-            "buffer",
-            "demote",
-            "nonprivate",
-            "perprimitive",
-            "perviewport",
-            "any_invocable",
-            "group");
+        "common",
+        "partition",
+        "active",
+        "asm",
+        "class",
+        "union",
+        "enum",
+        "typedef",
+        "template",
+        "this",
+        "packed",
+        "goto",
+        "inline",
+        "noinline",
+        "volatile",
+        "public",
+        "static",
+        "extern",
+        "external",
+        "interface",
+        "long",
+        "short",
+        "half",
+        "fixed",
+        "unsigned",
+        "superp",
+        "input",
+        "output",
+        "hvec2",
+        "hvec3",
+        "hvec4",
+        "fvec2",
+        "fvec3",
+        "fvec4",
+        "filter",
+        "image1D",
+        "image2D",
+        "image3D",
+        "imageCube",
+        "iimage1D",
+        "iimage2D",
+        "iimage3D",
+        "iimageCube",
+        "uimage1D",
+        "uimage2D",
+        "uimage3D",
+        "uimageCube",
+        "image1DArray",
+        "image2DArray",
+        "iimage1DArray",
+        "iimage2DArray",
+        "uimage1DArray",
+        "uimage2DArray",
+        "image1DShadow",
+        "image2DShadow",
+        "image1DArrayShadow",
+        "image2DArrayShadow",
+        "imageBuffer",
+        "iimageBuffer",
+        "uimageBuffer",
+        "sizeof",
+        "cast",
+        "namespace",
+        "using",
+        "row_major",
+        "sampler3DRect",
+        "shared",
+        "resource",
+        "coherent",
+        "restrict",
+        "readonly",
+        "writeonly",
+        "atomic_uint",
+        "patch",
+        "sample",
+        "precise",
+        "buffer",
+        "demote",
+        "nonprivate",
+        "perprimitive",
+        "perviewport",
+        "any_invocable",
+        "group"
+    );
 
     /**
      * Every type a declaration or a function definition can start with —
      * {@code struct} included, so a reserved struct name is caught too.
      */
-    private static final String types =
-            "(?:void|float|int|bool|uint|struct|vec[234]|ivec[234]|bvec[234]|uvec[234]|mat[234](?:x[234])?)";
+    private static final String types = "(?:void|float|int|bool|uint|struct|vec[234]|ivec[234]|bvec[234]|uvec[234]|mat[234](?:x[234])?)";
 
     /** The uniforms {@link SceneCanvas#guideLine} sets, by name. */
     private static final Set<String> hudUniforms = Set.of(
-            "ModelViewMat",
-            "ProjMat",
-            "Size",
-            "Points",
-            "PointCount",
-            "Marker",
-            "MarkerSize",
-            "PortTick",
-            "LineColor",
-            "EdgeColor",
-            "LineWidth",
-            "EdgeWidth",
-            "Smoothing",
-            "FadeFraction",
-            "FadeAlpha",
-            "DashPeriod",
-            "DashDuty",
-            "DashPhase",
-            "ArcStart",
-            "ArcEnd");
+        "ModelViewMat",
+        "ProjMat",
+        "Size",
+        "Points",
+        "PointCount",
+        "Marker",
+        "MarkerSize",
+        "PortTick",
+        "LineColor",
+        "EdgeColor",
+        "LineWidth",
+        "EdgeWidth",
+        "Smoothing",
+        "FadeFraction",
+        "FadeAlpha",
+        "DashPeriod",
+        "DashDuty",
+        "DashPhase",
+        "ArcStart",
+        "ArcEnd"
+    );
 
     /** The uniforms one world-pass stroke sets — the vertex stage and the shared fragment math. */
     private static final Set<String> worldUniforms = Set.of(
-            "ModelViewMat",
-            "ProjMat",
-            "ScreenSize",
-            "VertexCount",
-            "ArcLengthPx",
-            "LineColor",
-            "EdgeColor",
-            "LineWidth",
-            "EdgeWidth",
-            "Smoothing",
-            "FadeFraction",
-            "FadeAlpha",
-            "DashPeriod",
-            "DashDuty",
-            "DashPhase",
-            "ArcStart",
-            "ArcEnd");
+        "ModelViewMat",
+        "ProjMat",
+        "ScreenSize",
+        "VertexCount",
+        "ArcLengthPx",
+        "LineColor",
+        "EdgeColor",
+        "LineWidth",
+        "EdgeWidth",
+        "Smoothing",
+        "FadeFraction",
+        "FadeAlpha",
+        "DashPeriod",
+        "DashDuty",
+        "DashPhase",
+        "ArcStart",
+        "ArcEnd"
+    );
 
     @Test
     void theHudShaderDeclaresEveryUniformTheCanvasSets() throws IOException {
@@ -203,10 +206,9 @@ class GuideLineShaderResourceTest {
     void theHudFragmentDeclaresPointsAsFlatFloats() throws IOException {
         String fsh = read(dir + "guide_line_hud.fsh");
         assertTrue(
-                Pattern.compile("uniform\\s+float\\s+Points\\s*\\[\\s*128\\s*\\]")
-                        .matcher(fsh)
-                        .find(),
-                "Points must stay float[128] — the json's float×128 uploads through glUniform1fv, which a strict driver rejects on a vecN array");
+            Pattern.compile("uniform\\s+float\\s+Points\\s*\\[\\s*128\\s*\\]").matcher(fsh).find(),
+            "Points must stay float[128] — the json's float×128 uploads through glUniform1fv, which a strict driver rejects on a vecN array"
+        );
     }
 
     @Test
@@ -218,8 +220,9 @@ class GuideLineShaderResourceTest {
         for (GuideLineStyle.Marker marker : GuideLineStyle.Marker.values()) {
             if (marker == GuideLineStyle.Marker.none) continue; // 0 draws nothing, by the > 0 gate
             assertTrue(
-                    fsh.contains("Marker == " + marker.ordinal()),
-                    "the HUD fragment handles Marker." + marker.name() + " (ordinal " + marker.ordinal() + ")");
+                fsh.contains("Marker == " + marker.ordinal()),
+                "the HUD fragment handles Marker." + marker.name() + " (ordinal " + marker.ordinal() + ")"
+            );
         }
         assertTrue(fsh.contains("sdSegment"), "the bracket's two L arms reuse the segment SDF");
     }
@@ -230,8 +233,9 @@ class GuideLineShaderResourceTest {
 
         assertEquals(worldUniforms, uniformNames(json), "the world json's uniform set");
         assertTrue(
-                json.contains("\"Position\"") && json.contains("\"Color\"") && json.contains("\"Normal\""),
-                "the POSITION_COLOR_NORMAL attributes the NDC expansion reads");
+            json.contains("\"Position\"") && json.contains("\"Color\"") && json.contains("\"Normal\""),
+            "the POSITION_COLOR_NORMAL attributes the NDC expansion reads"
+        );
         assertTrue(json.contains("\"cloudlib:guide_line_world\""));
     }
 
@@ -239,18 +243,19 @@ class GuideLineShaderResourceTest {
     void bothShadersShareOneFragmentMathInclude() throws IOException {
         String source = read(include);
         for (String name : Set.of(
-                "LineColor",
-                "EdgeColor",
-                "LineWidth",
-                "EdgeWidth",
-                "Smoothing",
-                "FadeFraction",
-                "FadeAlpha",
-                "DashPeriod",
-                "DashDuty",
-                "DashPhase",
-                "ArcStart",
-                "ArcEnd")) {
+            "LineColor",
+            "EdgeColor",
+            "LineWidth",
+            "EdgeWidth",
+            "Smoothing",
+            "FadeFraction",
+            "FadeAlpha",
+            "DashPeriod",
+            "DashDuty",
+            "DashPhase",
+            "ArcStart",
+            "ArcEnd"
+        )) {
             assertTrue(source.contains("uniform") && source.contains(name), "the include declares " + name);
         }
         assertTrue(source.contains("vec4 guideLineStroke("), "the shared entry point");
@@ -260,8 +265,9 @@ class GuideLineShaderResourceTest {
         assertTrue(read(dir + "guide_line_hud.fsh").contains("#moj_import <cloudlib:guide_line_common.glsl>"));
         assertTrue(read(dir + "guide_line_world.fsh").contains("#moj_import <cloudlib:guide_line_common.glsl>"));
         assertTrue(
-                read(dir + "guide_line_world.vsh").contains("#moj_import <cloudlib:guide_line_common.glsl>"),
-                "the vertex stage widens LineWidth by the outline band, so it reads the style too");
+            read(dir + "guide_line_world.vsh").contains("#moj_import <cloudlib:guide_line_common.glsl>"),
+            "the vertex stage widens LineWidth by the outline band, so it reads the style too"
+        );
     }
 
     /**
@@ -285,12 +291,10 @@ class GuideLineShaderResourceTest {
      * are stripped first, so {@code #moj_import} paths and prose never count.
      */
     private static Set<String> declaredNames(String source) {
-        String body = source.replaceAll("(?s)/\\*.*?\\*/", " ")
-                .replaceAll("//[^\n]*", " ")
+        String body = source.replaceAll("(?s)/\\*.*?\\*/", " ").replaceAll("//[^\n]*", " ")
                 .replaceAll("(?m)^\\s*#.*$", " ");
         Set<String> names = new LinkedHashSet<>();
-        Matcher declarations = Pattern.compile(types + "\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*[(;,=\\[){]")
-                .matcher(body);
+        Matcher declarations = Pattern.compile(types + "\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*[(;,=\\[){]").matcher(body);
         while (declarations.find()) {
             names.add(declarations.group(1));
         }
@@ -303,14 +307,17 @@ class GuideLineShaderResourceTest {
 
         assertTrue(vsh.contains("VIEW_SHRINK"), "vanilla's pixel-centre shrink");
         assertTrue(
-                vsh.contains("vec4(Position + Normal, 1.0)"), "Normal is the neighbour sample, not a surface normal");
+            vsh.contains("vec4(Position + Normal, 1.0)"),
+            "Normal is the neighbour sample, not a surface normal"
+        );
         assertTrue(vsh.contains("gl_VertexID % 2"), "the pair is displaced to opposite sides");
         assertTrue(vsh.contains("vertexArc") && vsh.contains("vertexSide"), "the fragment stage's varyings");
         // one connector is a strip of four vertices: two per end, so the arc
         // index counts PAIRS — the two vertices of a pair are one sample
         assertTrue(
-                vsh.contains("gl_VertexID / 2") && vsh.contains("VertexCount / 2 - 1"),
-                "the arc derives from the vertex pair index, not the raw vertex id");
+            vsh.contains("gl_VertexID / 2") && vsh.contains("VertexCount / 2 - 1"),
+            "the arc derives from the vertex pair index, not the raw vertex id"
+        );
     }
 
     // region tiny json readers
@@ -342,11 +349,9 @@ class GuideLineShaderResourceTest {
 
     /** The {@code field}'s value inside the uniform object named {@code name}. */
     private static String uniformField(String json, String name, String field) {
-        Matcher entry = Pattern.compile("\\{[^{}]*\"name\"\\s*:\\s*\"" + name + "\"[^{}]*}")
-                .matcher(json);
+        Matcher entry = Pattern.compile("\\{[^{}]*\"name\"\\s*:\\s*\"" + name + "\"[^{}]*}").matcher(json);
         assertTrue(entry.find(), "no uniform named " + name);
-        Matcher value =
-                Pattern.compile("\"" + field + "\"\\s*:\\s*(\\[[^]]*]|\\d+)").matcher(entry.group());
+        Matcher value = Pattern.compile("\"" + field + "\"\\s*:\\s*(\\[[^]]*]|\\d+)").matcher(entry.group());
         assertTrue(value.find(), "uniform " + name + " declares no " + field);
         String raw = value.group(1);
         if (!raw.startsWith("[")) return raw;

@@ -12,6 +12,8 @@ import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Set;
+
 /**
  * Button with label and icon support.
  */
@@ -125,8 +127,27 @@ public class ButtonWidget extends Widget {
     }
 
     public ButtonWidget setEnabled(boolean enabled) {
-        this.enabled = enabled;
+        if (this.enabled != enabled) {
+            this.enabled = enabled;
+            markStyleDirty();
+        }
         return this;
+    }
+
+    /**
+     * The button's own {@link #enabled()} gate is part of the selector surface:
+     * a disabled button reports {@code :disabled} (and drops {@code :enabled})
+     * instead of claiming to be enabled off the framework's {@code :active}
+     * alone.
+     */
+    @Override
+    public Set<String> styleStates() {
+        Set<String> states = super.styleStates();
+        if (!enabled) {
+            states.remove("enabled");
+            states.add("disabled");
+        }
+        return states;
     }
 
     private void setPressed(boolean pressed) {
@@ -204,8 +225,7 @@ public class ButtonWidget extends Widget {
         canvas.texture(texture, 0, 0, width(), height());
 
         // Icon
-        VisualTexture icon =
-                iconTexture != null ? iconTexture : style().visualContext().icon();
+        VisualTexture icon = iconTexture != null ? iconTexture : style().visualContext().icon();
         int iconOffset = 0;
         if (icon != null && !icon.isEmpty()) {
             int iconSize = Math.min(height() - 4, 16);

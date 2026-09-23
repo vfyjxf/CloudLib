@@ -36,11 +36,12 @@ import java.util.Objects;
  *        without a screen rect; only a world-only element may propose one
  */
 public record ElementProposal(
-        InworldVariant variant,
-        @Nullable FloatPos anchorScreen,
-        List<PlacementCandidate> candidates,
-        boolean retracted,
-        boolean worldOnly) {
+    InworldVariant variant,
+    @Nullable FloatPos anchorScreen,
+    List<PlacementCandidate> candidates,
+    boolean retracted,
+    boolean worldOnly
+) {
 
     public ElementProposal {
         Objects.requireNonNull(variant, "variant");
@@ -64,7 +65,10 @@ public record ElementProposal(
      * An active proposal anchored at {@code anchorScreen}.
      */
     public static ElementProposal of(
-            InworldVariant variant, FloatPos anchorScreen, List<PlacementCandidate> candidates) {
+        InworldVariant variant,
+        FloatPos anchorScreen,
+        List<PlacementCandidate> candidates
+    ) {
         return new ElementProposal(variant, new FloatPos(anchorScreen.x(), anchorScreen.y()), candidates, false, false);
     }
 
@@ -96,13 +100,17 @@ public record ElementProposal(
      * — carried as metadata only; the coordinator never arbitrates it.
      */
     public static ElementProposal worldOnly(
-            InworldVariant variant, @Nullable FloatPos anchorScreen, List<PlacementCandidate> candidates) {
+        InworldVariant variant,
+        @Nullable FloatPos anchorScreen,
+        List<PlacementCandidate> candidates
+    ) {
         return new ElementProposal(
-                variant,
-                anchorScreen == null ? null : new FloatPos(anchorScreen.x(), anchorScreen.y()),
-                candidates,
-                false,
-                true);
+            variant,
+            anchorScreen == null ? null : new FloatPos(anchorScreen.x(), anchorScreen.y()),
+            candidates,
+            false,
+            true
+        );
     }
 
     /**

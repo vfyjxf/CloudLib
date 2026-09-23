@@ -14,7 +14,11 @@ import org.jetbrains.annotations.Nullable;
  * @param minThumbSize the minimum thumb size (-1 means keep existing/default)
  */
 public record ScrollbarStyleData(
-        @Nullable VisualTexture track, @Nullable VisualTexture thumb, int width, int minThumbSize) {
+    @Nullable VisualTexture track,
+    @Nullable VisualTexture thumb,
+    int width,
+    int minThumbSize
+) {
 
     /** The visual-context custom-property key this data is stored under. */
     public static final String propertyKey = "scrollbar-style";

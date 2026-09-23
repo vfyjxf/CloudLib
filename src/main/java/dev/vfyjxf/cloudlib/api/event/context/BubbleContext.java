@@ -79,8 +79,6 @@ public final class BubbleContext {
     }
 
     public enum Phase {
-        capture,
-        target,
-        bubble
+        capture, target, bubble
     }
 }

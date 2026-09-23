@@ -139,7 +139,9 @@ public final class ExposeManagement {
                     expose.updateSnapshot();
                 } catch (Exception e) {
                     throw new RuntimeException(
-                            "Failed to write expose: (id:" + expose.id() + " name:" + expose.name() + ")", e);
+                        "Failed to write expose: (id:" + expose.id() + " name:" + expose.name() + ")",
+                        e
+                    );
                 }
             }
         }
@@ -156,7 +158,10 @@ public final class ExposeManagement {
 
     @SuppressWarnings("ConstantConditions")
     private static <D> void writeDiff(
-            Transcoder transcoder, Differential<D> differential, RegistryFriendlyByteBuf byteBuf) {
+        Transcoder transcoder,
+        Differential<D> differential,
+        RegistryFriendlyByteBuf byteBuf
+    ) {
         Maybe<D> difference = differential.difference();
         if (difference.defined()) {
             byteBuf.writeBoolean(true);
@@ -181,7 +186,9 @@ public final class ExposeManagement {
                 }
             } catch (Exception e) {
                 throw new RuntimeException(
-                        "Failed to read expose: (id:" + expose.id() + " name:" + expose.name() + ")", e);
+                    "Failed to read expose: (id:" + expose.id() + " name:" + expose.name() + ")",
+                    e
+                );
             }
         }
     }

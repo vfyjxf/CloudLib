@@ -76,18 +76,19 @@ public final class GuideLineAnimation {
      *        draws the old one out over the same window); positive
      */
     public record Config(
-            double enterSpeedPxPerSec,
-            double enterMinSeconds,
-            double enterMaxSeconds,
-            double exitSeconds,
-            double respawnSeconds,
-            double hoverSeconds,
-            double yieldSeconds,
-            double staggerSeconds,
-            double dashPeriodPx,
-            double dashCycleSeconds,
-            double dashHoverSpeed,
-            double fadeSeconds) {
+        double enterSpeedPxPerSec,
+        double enterMinSeconds,
+        double enterMaxSeconds,
+        double exitSeconds,
+        double respawnSeconds,
+        double hoverSeconds,
+        double yieldSeconds,
+        double staggerSeconds,
+        double dashPeriodPx,
+        double dashCycleSeconds,
+        double dashHoverSpeed,
+        double fadeSeconds
+    ) {
 
         public Config {
             requirePositive(enterSpeedPxPerSec, "enterSpeedPxPerSec");
@@ -95,7 +96,8 @@ public final class GuideLineAnimation {
             requirePositive(enterMaxSeconds, "enterMaxSeconds");
             if (enterMaxSeconds < enterMinSeconds) {
                 throw new IllegalArgumentException(
-                        "enterMaxSeconds must be at least enterMinSeconds: " + enterMaxSeconds);
+                    "enterMaxSeconds must be at least enterMinSeconds: " + enterMaxSeconds
+                );
             }
             requirePositive(exitSeconds, "exitSeconds");
             requireNonNegative(respawnSeconds, "respawnSeconds");
@@ -124,30 +126,32 @@ public final class GuideLineAnimation {
 
         /** The pre-fade constructor — the cross-fade takes the survey default. */
         public Config(
-                double enterSpeedPxPerSec,
-                double enterMinSeconds,
-                double enterMaxSeconds,
-                double exitSeconds,
-                double respawnSeconds,
-                double hoverSeconds,
-                double yieldSeconds,
-                double staggerSeconds,
-                double dashPeriodPx,
-                double dashCycleSeconds,
-                double dashHoverSpeed) {
+            double enterSpeedPxPerSec,
+            double enterMinSeconds,
+            double enterMaxSeconds,
+            double exitSeconds,
+            double respawnSeconds,
+            double hoverSeconds,
+            double yieldSeconds,
+            double staggerSeconds,
+            double dashPeriodPx,
+            double dashCycleSeconds,
+            double dashHoverSpeed
+        ) {
             this(
-                    enterSpeedPxPerSec,
-                    enterMinSeconds,
-                    enterMaxSeconds,
-                    exitSeconds,
-                    respawnSeconds,
-                    hoverSeconds,
-                    yieldSeconds,
-                    staggerSeconds,
-                    dashPeriodPx,
-                    dashCycleSeconds,
-                    dashHoverSpeed,
-                    0.17);
+                enterSpeedPxPerSec,
+                enterMinSeconds,
+                enterMaxSeconds,
+                exitSeconds,
+                respawnSeconds,
+                hoverSeconds,
+                yieldSeconds,
+                staggerSeconds,
+                dashPeriodPx,
+                dashCycleSeconds,
+                dashHoverSpeed,
+                0.17
+            );
         }
 
         /** The entry duration for a stroke {@code lengthPx} long, clamped to the configured window. */
@@ -201,14 +205,15 @@ public final class GuideLineAnimation {
      *        always inside one period — an uniform, never geometry
      */
     public record Sample(
-            boolean visible,
-            double arcStart,
-            double arcEnd,
-            double alpha,
-            double hover,
-            double morph,
-            double tierFade,
-            double dashPhasePx) {}
+        boolean visible,
+        double arcStart,
+        double arcEnd,
+        double alpha,
+        double hover,
+        double morph,
+        double tierFade,
+        double dashPhasePx
+    ) {}
 
     /** The form-token sentinel: the caller is not tracking tier forms. */
     private static final long noForm = Long.MIN_VALUE;
@@ -272,7 +277,13 @@ public final class GuideLineAnimation {
      * @return this frame's envelope
      */
     public Sample advance(
-            boolean present, double lengthPx, long geometryId, long formToken, boolean hovered, double dtSeconds) {
+        boolean present,
+        double lengthPx,
+        long geometryId,
+        long formToken,
+        boolean hovered,
+        double dtSeconds
+    ) {
         if (!Double.isFinite(dtSeconds) || dtSeconds < 0) {
             throw new IllegalArgumentException("dtSeconds must be finite and non-negative: " + dtSeconds);
         }

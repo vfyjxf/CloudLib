@@ -53,8 +53,9 @@ class SerializerManagementTest {
         var management = new SerializerManagement();
         management.register(Serialize.create("x", Handle.of(0), Codec.INT));
         assertThrows(
-                IllegalArgumentException.class,
-                () -> management.register(Serialize.create("x", Handle.of(0), Codec.INT)));
+            IllegalArgumentException.class,
+            () -> management.register(Serialize.create("x", Handle.of(0), Codec.INT))
+        );
     }
 
     @Test

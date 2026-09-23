@@ -44,12 +44,13 @@ class CoordinatorStressTest {
     @Test
     void largeMixedPopulationHoldsInvariantsAcrossSeeds() {
         for (long seed : seeds) {
-            StressScenario.RunSummary summary =
-                    StressScenario.run(StressScenario.Spec.of(seed, 240, 1000).withSizeScale(2.2));
+            StressScenario.RunSummary summary = StressScenario
+                    .run(StressScenario.Spec.of(seed, 240, 1000).withSizeScale(2.2));
             // the run must actually exercise the machinery, not pass by idling
             assertTrue(
-                    summary.peakPresented() > 20,
-                    "expected a busy scene, peak presented was " + summary.peakPresented());
+                summary.peakPresented() > 20,
+                "expected a busy scene, peak presented was " + summary.peakPresented()
+            );
             assertTrue(summary.resolvedFrames() > 50, "expected regular resolves: " + summary.causeCounts());
             assertTrue(summary.canonicalFrames().size() == 1000);
             // the static tail must have been strict for a while
@@ -59,8 +60,7 @@ class CoordinatorStressTest {
 
     @Test
     void sameSeedReproducesByteIdenticalRuns() {
-        StressScenario.Spec spec =
-                StressScenario.Spec.of(0xABCD12, 90, 450).withChurn(14, 8).withResizes(2);
+        StressScenario.Spec spec = StressScenario.Spec.of(0xABCD12, 90, 450).withChurn(14, 8).withResizes(2);
         // invariants off for this witness only: the continuity violation is
         // reported by the other tests (and the minimal repro below); the
         // determinism property deserves its own unmasked verdict
@@ -73,9 +73,8 @@ class CoordinatorStressTest {
 
     @Test
     void staticSceneSettlesAndNeverReshuffles() {
-        StressScenario.RunSummary summary = StressScenario.run(StressScenario.Spec.of(0x57A71C, 70, 420)
-                .withMotion(Motion.staticAnchor)
-                .withStaticTail(0.5));
+        StressScenario.RunSummary summary = StressScenario
+                .run(StressScenario.Spec.of(0x57A71C, 70, 420).withMotion(Motion.staticAnchor).withStaticTail(0.5));
         // the strict window (last 120 frames minus settle) enforced zero
         // flips/offset/level changes frame by frame; here we sanity-check the
         // scene was actually populated and that inside that window it resolves
@@ -87,38 +86,41 @@ class CoordinatorStressTest {
         assertTrue(summary.causeCount(CoordinationResult.RenegotiationCause.anchorDisplacement) == 0);
         List<String> tailCauses = tailCauses(summary, 120);
         assertTrue(
-                tailCauses.stream()
-                        .allMatch(cause -> cause.equals(CoordinationResult.RenegotiationCause.none.name())
-                                || cause.equals(CoordinationResult.RenegotiationCause.epochElapsed.name())),
-                "the settled tail must re-resolve only on the epoch tick: " + tailCauses);
+            tailCauses.stream().allMatch(
+                cause -> cause.equals(CoordinationResult.RenegotiationCause.none.name())
+                        || cause.equals(CoordinationResult.RenegotiationCause.epochElapsed.name())
+            ),
+            "the settled tail must re-resolve only on the epoch tick: " + tailCauses
+        );
         assertTrue(
-                tailCauses.contains(CoordinationResult.RenegotiationCause.epochElapsed.name()),
-                "the settled tail must still re-resolve on the epoch: " + tailCauses);
+            tailCauses.contains(CoordinationResult.RenegotiationCause.epochElapsed.name()),
+            "the settled tail must still re-resolve on the epoch: " + tailCauses
+        );
     }
 
     /** The renegotiation cause of each of the run's last {@code frames} frames. */
     private static List<String> tailCauses(StressScenario.RunSummary summary, int frames) {
         List<String> canonical = summary.canonicalFrames();
         return canonical.subList(canonical.size() - frames, canonical.size()).stream()
-                .map(frame -> frame.split("\\|")[3])
-                .toList();
+                .map(frame -> frame.split("\\|")[3]).toList();
     }
 
     @Test
     void subThresholdJitterNeverClaimsAnchorDisplacement() {
-        StressScenario.RunSummary summary =
-                StressScenario.run(StressScenario.Spec.of(0x3117E, 60, 400).withMotion(Motion.jitter));
+        StressScenario.RunSummary summary = StressScenario
+                .run(StressScenario.Spec.of(0x3117E, 60, 400).withMotion(Motion.jitter));
         assertEquals(
-                0,
-                summary.causeCount(CoordinationResult.RenegotiationCause.anchorDisplacement),
-                "±0.5px jitter cannot cross the 12px threshold within an epoch");
+            0,
+            summary.causeCount(CoordinationResult.RenegotiationCause.anchorDisplacement),
+            "±0.5px jitter cannot cross the 12px threshold within an epoch"
+        );
         assertTrue(summary.peakPresented() > 20);
     }
 
     @Test
     void allElementsShareOneAnchor() {
-        StressScenario.RunSummary summary =
-                StressScenario.run(StressScenario.Spec.of(0xA11CE, 200, 220).withSingleAnchor());
+        StressScenario.RunSummary summary = StressScenario
+                .run(StressScenario.Spec.of(0xA11CE, 200, 220).withSingleAnchor());
         // a single contested anchor: the contested spot holds a handful, the
         // rest must degrade or hide — never overlap, never crash
         assertTrue(summary.peakPresented() > 2, "at least the arbitration winners should place");
@@ -127,9 +129,8 @@ class CoordinatorStressTest {
 
     @Test
     void giantExclusionZeroesTheWorkArea() {
-        StressScenario.RunSummary summary = StressScenario.run(StressScenario.Spec.of(0x2E10A5, 120, 280)
-                .withGiantExclusion(60)
-                .withStaticTail(0.2));
+        StressScenario.RunSummary summary = StressScenario
+                .run(StressScenario.Spec.of(0x2E10A5, 120, 280).withGiantExclusion(60).withStaticTail(0.2));
         assertTrue(summary.peakPresented() > 40, "the pre-squeeze scene should be busy");
         // after the full-screen exclusion lands, only policy-exempt elements
         // can stay presented; the rest hide (with linger), and every frame
@@ -139,8 +140,7 @@ class CoordinatorStressTest {
 
     @Test
     void everyoneDemandsTheStrongestRung() {
-        StressScenario.RunSummary summary =
-                StressScenario.run(StressScenario.Spec.of(0x57008, 160, 350).withRungs(1));
+        StressScenario.RunSummary summary = StressScenario.run(StressScenario.Spec.of(0x57008, 160, 350).withRungs(1));
         // no degradation ladder to walk: rejected elements go straight to
         // hidden+linger; nothing may overlap and every frame commits
         assertTrue(summary.peakPresented() > 20);
@@ -148,16 +148,16 @@ class CoordinatorStressTest {
 
     @Test
     void massTeleportStorm() {
-        StressScenario.RunSummary summary =
-                StressScenario.run(StressScenario.Spec.of(0x7E1E09, 100, 300).withMotion(Motion.teleport));
+        StressScenario.RunSummary summary = StressScenario
+                .run(StressScenario.Spec.of(0x7E1E09, 100, 300).withMotion(Motion.teleport));
         assertTrue(summary.causeCount(CoordinationResult.RenegotiationCause.anchorDisplacement) > 50);
         assertTrue(summary.peakPresented() > 20);
     }
 
     @Test
     void exclusionStormResolvesEveryFrame() {
-        StressScenario.RunSummary summary = StressScenario.run(
-                StressScenario.Spec.of(0x5702A, 90, 250).withStorm().withExclusions(4, 0));
+        StressScenario.RunSummary summary = StressScenario
+                .run(StressScenario.Spec.of(0x5702A, 90, 250).withStorm().withExclusions(4, 0));
         // every frame swaps an exclusion: every frame must re-resolve and
         // still produce a valid, continuous, committed layout
         assertEquals(250, summary.resolvedFrames(), "the storm must force a resolve every frame");
@@ -166,25 +166,25 @@ class CoordinatorStressTest {
 
     @Test
     void resizeStormKeepsContinuity() {
-        StressScenario.RunSummary summary = StressScenario.run(
-                StressScenario.Spec.of(0x2E512E, 90, 500).withResizes(5).withStaticTail(0.25));
+        StressScenario.RunSummary summary = StressScenario
+                .run(StressScenario.Spec.of(0x2E512E, 90, 500).withResizes(5).withStaticTail(0.25));
         assertTrue(summary.causeCount(CoordinationResult.RenegotiationCause.epochElapsed) > 5);
         assertTrue(summary.peakPresented() > 15);
     }
 
     @Test
     void membershipChurnUnderLoad() {
-        StressScenario.RunSummary summary =
-                StressScenario.run(StressScenario.Spec.of(0x0A2E5, 100, 350).withChurn(24, 10));
+        StressScenario.RunSummary summary = StressScenario
+                .run(StressScenario.Spec.of(0x0A2E5, 100, 350).withChurn(24, 10));
         assertTrue(summary.causeCount(CoordinationResult.RenegotiationCause.membershipChanged) > 20);
         assertTrue(summary.peakPresented() > 20);
     }
 
     @Test
     void mixedWorldOnlyPopulationHoldsInvariants() {
-        for (long seed : new long[] {0x30B51A, 0x77D0}) {
-            StressScenario.RunSummary summary = StressScenario.run(
-                    StressScenario.Spec.of(seed, 120, 320).withWorldOnly(0.3).withChurn(12, 8));
+        for (long seed : new long[]{0x30B51A, 0x77D0}) {
+            StressScenario.RunSummary summary = StressScenario
+                    .run(StressScenario.Spec.of(seed, 120, 320).withWorldOnly(0.3).withChurn(12, 8));
             // both populations must actually exercise their flow: the
             // projecting one keeps arbitrating, the world-only one keeps
             // presenting unconditionally, and every frame passed the oracle
@@ -209,10 +209,28 @@ class CoordinatorStressTest {
     @Test
     void relaxSeparationMustBeClampedWhileFlipsAnimate() {
         InworldCoordinator coordinator = InworldCoordinator.withDefaults();
-        ProbeElement glider =
-                new ProbeElement("glider", SpaceKind.world, 10, true, SpacePolicy.active, 100, 80, 80, 150);
-        ProbeElement fixed =
-                new ProbeElement("fixed", SpaceKind.panel, 0, false, SpacePolicy.fixed, 120, 200, 200, 150);
+        ProbeElement glider = new ProbeElement(
+            "glider",
+            SpaceKind.world,
+            10,
+            true,
+            SpacePolicy.active,
+            100,
+            80,
+            80,
+            150
+        );
+        ProbeElement fixed = new ProbeElement(
+            "fixed",
+            SpaceKind.panel,
+            0,
+            false,
+            SpacePolicy.fixed,
+            120,
+            200,
+            200,
+            150
+        );
         coordinator.register(glider);
         coordinator.register(fixed);
 
@@ -229,8 +247,8 @@ class CoordinatorStressTest {
             CoordinationResult.ElementState state = result.elementState("glider");
             FloatRect visual = state.visualRect();
             if (lastVisual != null) {
-                double movement =
-                        Math.hypot(visual.centerX() - lastVisual.centerX(), visual.centerY() - lastVisual.centerY());
+                double movement = Math
+                        .hypot(visual.centerX() - lastVisual.centerX(), visual.centerY() - lastVisual.centerY());
                 if (movement > maxMovement) {
                     maxMovement = movement;
                     worstFrame = frame + 1;
@@ -250,10 +268,10 @@ class CoordinatorStressTest {
         // duration clamp
         double envelope = Math.max(24.0, 2 * Math.hypot(400, 300) * dt / 0.25) + 2.0;
         assertTrue(
-                maxMovement <= envelope,
-                "glider moved " + maxMovement + "px in frame " + worstFrame + " (envelope " + envelope + "): "
-                        + worstFrom + " -> " + worstTo
-                        + " — separation displacement is not clamped while a FLIP animates");
+            maxMovement <= envelope,
+            "glider moved " + maxMovement + "px in frame " + worstFrame + " (envelope " + envelope + "): " + worstFrom
+                    + " -> " + worstTo + " — separation displacement is not clamped while a FLIP animates"
+        );
     }
 
     /** A precisely controllable single-candidate, single-rung test element. */
@@ -268,23 +286,24 @@ class CoordinatorStressTest {
         FloatPos anchor;
 
         ProbeElement(
-                String id,
-                SpaceKind kind,
-                int priority,
-                boolean sticky,
-                SpacePolicy policy,
-                int width,
-                int height,
-                double anchorX,
-                double anchorY) {
+            String id,
+            SpaceKind kind,
+            int priority,
+            boolean sticky,
+            SpacePolicy policy,
+            int width,
+            int height,
+            double anchorX,
+            double anchorY
+        ) {
             this.id = id;
             this.kind = kind;
             this.priority = priority;
             this.sticky = sticky;
             this.size = new Size(width, height);
             this.anchor = new FloatPos(anchorX, anchorY);
-            this.ladder =
-                    VariantLadder.of(List.of(new InworldVariant(0, size, ContentTier.full, policy, false, true, 1)));
+            this.ladder = VariantLadder
+                    .of(List.of(new InworldVariant(0, size, ContentTier.full, policy, false, true, 1)));
         }
 
         @Override

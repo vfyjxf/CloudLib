@@ -96,9 +96,7 @@ public final class CssValues {
      * {@code % ± px}, {@code % × n}, {@code 100% ± px}, {@code % + %}.
      */
     public static @Nullable CalcExpression calc(List<ComponentValue> args) {
-        List<ComponentValue> flat = args.stream()
-                .filter(c -> c != ComponentValue.Whitespace.instance)
-                .toList();
+        List<ComponentValue> flat = args.stream().filter(c -> c != ComponentValue.Whitespace.instance).toList();
         if (flat.size() == 1 && flat.get(0) instanceof ComponentValue.NumericValue n) {
             return switch (n.kind()) {
                 case percentage -> CalcExpression.percentMultipliedBy((float) (n.value() / 100.0), 1);
@@ -116,10 +114,8 @@ public final class CssValues {
             if (lhs instanceof ComponentValue.NumericValue ln && rhs instanceof ComponentValue.NumericValue rn) {
                 boolean lpct = ln.kind() == ComponentValue.NumericKind.percentage;
                 boolean rpct = rn.kind() == ComponentValue.NumericKind.percentage;
-                boolean lpx = ln.kind() == ComponentValue.NumericKind.dimension
-                        && ln.unit().equalsIgnoreCase("px");
-                boolean rpx = rn.kind() == ComponentValue.NumericKind.dimension
-                        && rn.unit().equalsIgnoreCase("px");
+                boolean lpx = ln.kind() == ComponentValue.NumericKind.dimension && ln.unit().equalsIgnoreCase("px");
+                boolean rpx = rn.kind() == ComponentValue.NumericKind.dimension && rn.unit().equalsIgnoreCase("px");
                 if (lpct && rpx) {
                     double p = ln.value() / 100.0;
                     return minus
@@ -190,16 +186,13 @@ public final class CssValues {
     private static @Nullable Integer singleColorArg(List<ComponentValue> args) {
         return args.stream()
                 .filter(c -> c != ComponentValue.Whitespace.instance && !(c instanceof ComponentValue.Delim))
-                .findFirst()
-                .map(CssValues::color)
-                .orElse(null);
+                .findFirst().map(CssValues::color).orElse(null);
     }
 
     private static @Nullable Integer rgb(List<ComponentValue> args) {
-        List<ComponentValue> flat = args.stream()
-                .filter(c -> c != ComponentValue.Whitespace.instance
-                        && !(c instanceof ComponentValue.Delim d && d.value() == ','))
-                .toList();
+        List<ComponentValue> flat = args.stream().filter(
+            c -> c != ComponentValue.Whitespace.instance && !(c instanceof ComponentValue.Delim d && d.value() == ',')
+        ).toList();
         // rgb(r g b / a) or rgb(r,g,b,a)
         double[] chan = new double[4];
         int i = 0;
@@ -233,13 +226,9 @@ public final class CssValues {
      * {@link Shadow} value.
      */
     public static @Nullable Shadow shadow(List<ComponentValue> values) {
-        List<ComponentValue> flat = values.stream()
-                .filter(c -> c != ComponentValue.Whitespace.instance)
-                .toList();
+        List<ComponentValue> flat = values.stream().filter(c -> c != ComponentValue.Whitespace.instance).toList();
         if (flat.isEmpty()) return null;
-        if (flat.size() == 1
-                && flat.get(0) instanceof ComponentValue.Ident id
-                && id.value().equalsIgnoreCase("none")) {
+        if (flat.size() == 1 && flat.get(0) instanceof ComponentValue.Ident id && id.value().equalsIgnoreCase("none")) {
             return Shadow.none;
         }
         List<Float> lengths = new ArrayList<>();
@@ -261,9 +250,7 @@ public final class CssValues {
 
     /** {@code aspect-ratio: <n> | <n> / <n>} */
     public static @Nullable Float aspectRatio(List<ComponentValue> values) {
-        List<ComponentValue> flat = values.stream()
-                .filter(c -> c != ComponentValue.Whitespace.instance)
-                .toList();
+        List<ComponentValue> flat = values.stream().filter(c -> c != ComponentValue.Whitespace.instance).toList();
         if (flat.size() == 1 && flat.get(0) instanceof ComponentValue.NumericValue n) {
             return (float) n.value();
         }
@@ -282,9 +269,7 @@ public final class CssValues {
      * Consumes a single token for auto/line, or the pair for span/named forms.
      */
     public static @Nullable GridPlacement placement(List<ComponentValue> values, int[] consumed) {
-        List<ComponentValue> flat = values.stream()
-                .filter(c -> c != ComponentValue.Whitespace.instance)
-                .toList();
+        List<ComponentValue> flat = values.stream().filter(c -> c != ComponentValue.Whitespace.instance).toList();
         if (flat.isEmpty()) return null;
         ComponentValue first = flat.get(0);
         if (first instanceof ComponentValue.Ident id) {
@@ -357,146 +342,147 @@ public final class CssValues {
 
     /** CSS named colors — the standard 148-keyword table. */
     private static final Map<String, Integer> namedColors = Map.ofEntries(
-            Map.entry("black", 0xFF000000),
-            Map.entry("silver", 0xFFC0C0C0),
-            Map.entry("gray", 0xFF808080),
-            Map.entry("white", 0xFFFFFFFF),
-            Map.entry("maroon", 0xFF800000),
-            Map.entry("red", 0xFFFF0000),
-            Map.entry("purple", 0xFF800080),
-            Map.entry("fuchsia", 0xFFFF00FF),
-            Map.entry("green", 0xFF008000),
-            Map.entry("lime", 0xFF00FF00),
-            Map.entry("olive", 0xFF808000),
-            Map.entry("yellow", 0xFFFFFF00),
-            Map.entry("navy", 0xFF000080),
-            Map.entry("blue", 0xFF0000FF),
-            Map.entry("teal", 0xFF008080),
-            Map.entry("aqua", 0xFF00FFFF),
-            Map.entry("orange", 0xFFFFA500),
-            Map.entry("aliceblue", 0xFFF0F8FF),
-            Map.entry("antiquewhite", 0xFFFAEBD7),
-            Map.entry("aquamarine", 0xFF7FFFD4),
-            Map.entry("azure", 0xFFF0FFFF),
-            Map.entry("beige", 0xFFF5F5DC),
-            Map.entry("bisque", 0xFFFFE4C4),
-            Map.entry("blanchedalmond", 0xFFFFEBCD),
-            Map.entry("blueviolet", 0xFF8A2BE2),
-            Map.entry("brown", 0xFFA52A2A),
-            Map.entry("burlywood", 0xFFDEB887),
-            Map.entry("cadetblue", 0xFF5F9EA0),
-            Map.entry("chartreuse", 0xFF7FFF00),
-            Map.entry("chocolate", 0xFFD2691E),
-            Map.entry("coral", 0xFFFF7F50),
-            Map.entry("cornflowerblue", 0xFF6495ED),
-            Map.entry("cornsilk", 0xFFFFF8DC),
-            Map.entry("crimson", 0xFFDC143C),
-            Map.entry("cyan", 0xFF00FFFF),
-            Map.entry("darkblue", 0xFF00008B),
-            Map.entry("darkcyan", 0xFF008B8B),
-            Map.entry("darkgoldenrod", 0xFFB8860B),
-            Map.entry("darkgray", 0xFFA9A9A9),
-            Map.entry("darkgreen", 0xFF006400),
-            Map.entry("darkkhaki", 0xFFBDB76B),
-            Map.entry("darkmagenta", 0xFF8B008B),
-            Map.entry("darkolivegreen", 0xFF556B2F),
-            Map.entry("darkorange", 0xFFFF8C00),
-            Map.entry("darkorchid", 0xFF9932CC),
-            Map.entry("darkred", 0xFF8B0000),
-            Map.entry("darksalmon", 0xFFE9967A),
-            Map.entry("darkseagreen", 0xFF8FBC8F),
-            Map.entry("darkslateblue", 0xFF483D8B),
-            Map.entry("darkslategray", 0xFF2F4F4F),
-            Map.entry("darkturquoise", 0xFF00CED1),
-            Map.entry("darkviolet", 0xFF9400D3),
-            Map.entry("deeppink", 0xFFFF1493),
-            Map.entry("deepskyblue", 0xFF00BFFF),
-            Map.entry("dimgray", 0xFF696969),
-            Map.entry("dodgerblue", 0xFF1E90FF),
-            Map.entry("firebrick", 0xFFB22222),
-            Map.entry("floralwhite", 0xFFFFFAF0),
-            Map.entry("forestgreen", 0xFF228B22),
-            Map.entry("gainsboro", 0xFFDCDCDC),
-            Map.entry("ghostwhite", 0xFFF8F8FF),
-            Map.entry("gold", 0xFFFFD700),
-            Map.entry("goldenrod", 0xFFDAA520),
-            Map.entry("greenyellow", 0xFFADFF2F),
-            Map.entry("honeydew", 0xFFF0FFF0),
-            Map.entry("hotpink", 0xFFFF69B4),
-            Map.entry("indianred", 0xFFCD5C5C),
-            Map.entry("indigo", 0xFF4B0082),
-            Map.entry("ivory", 0xFFFFFFF0),
-            Map.entry("khaki", 0xFFF0E68C),
-            Map.entry("lavender", 0xFFE6E6FA),
-            Map.entry("lavenderblush", 0xFFFFF0F5),
-            Map.entry("lawngreen", 0xFF7CFC00),
-            Map.entry("lemonchiffon", 0xFFFFFACD),
-            Map.entry("lightblue", 0xFFADD8E6),
-            Map.entry("lightcoral", 0xFFF08080),
-            Map.entry("lightcyan", 0xFFE0FFFF),
-            Map.entry("lightgoldenrodyellow", 0xFFFAFAD2),
-            Map.entry("lightgray", 0xFFD3D3D3),
-            Map.entry("lightgreen", 0xFF90EE90),
-            Map.entry("lightpink", 0xFFFFB6C1),
-            Map.entry("lightsalmon", 0xFFFFA07A),
-            Map.entry("lightseagreen", 0xFF20B2AA),
-            Map.entry("lightskyblue", 0xFF87CEFA),
-            Map.entry("lightslategray", 0xFF778899),
-            Map.entry("lightsteelblue", 0xFFB0C4DE),
-            Map.entry("lightyellow", 0xFFFFFFE0),
-            Map.entry("limegreen", 0xFF32CD32),
-            Map.entry("linen", 0xFFFAF0E6),
-            Map.entry("magenta", 0xFFFF00FF),
-            Map.entry("mediumaquamarine", 0xFF66CDAA),
-            Map.entry("mediumblue", 0xFF0000CD),
-            Map.entry("mediumorchid", 0xFFBA55D3),
-            Map.entry("mediumpurple", 0xFF9370DB),
-            Map.entry("mediumseagreen", 0xFF3CB371),
-            Map.entry("mediumslateblue", 0xFF7B68EE),
-            Map.entry("mediumspringgreen", 0xFF00FA9A),
-            Map.entry("mediumturquoise", 0xFF48D1CC),
-            Map.entry("mediumvioletred", 0xFFC71585),
-            Map.entry("midnightblue", 0xFF191970),
-            Map.entry("mintcream", 0xFFF5FFFA),
-            Map.entry("mistyrose", 0xFFFFE4E1),
-            Map.entry("moccasin", 0xFFFFE4B5),
-            Map.entry("navajowhite", 0xFFFFDEAD),
-            Map.entry("oldlace", 0xFFFDF5E6),
-            Map.entry("olivedrab", 0xFF6B8E23),
-            Map.entry("orangered", 0xFFFF4500),
-            Map.entry("orchid", 0xFFDA70D6),
-            Map.entry("palegoldenrod", 0xFFEEE8AA),
-            Map.entry("palegreen", 0xFF98FB98),
-            Map.entry("paleturquoise", 0xFFAFEEEE),
-            Map.entry("palevioletred", 0xFFDB7093),
-            Map.entry("papayawhip", 0xFFFFEFD5),
-            Map.entry("peachpuff", 0xFFFFDAB9),
-            Map.entry("peru", 0xFFCD853F),
-            Map.entry("pink", 0xFFFFC0CB),
-            Map.entry("plum", 0xFFDDA0DD),
-            Map.entry("powderblue", 0xFFB0E0E6),
-            Map.entry("rosybrown", 0xFFBC8F8F),
-            Map.entry("royalblue", 0xFF4169E1),
-            Map.entry("saddlebrown", 0xFF8B4513),
-            Map.entry("salmon", 0xFFFA8072),
-            Map.entry("sandybrown", 0xFFF4A460),
-            Map.entry("seagreen", 0xFF2E8B57),
-            Map.entry("seashell", 0xFFFFF5EE),
-            Map.entry("sienna", 0xFFA0522D),
-            Map.entry("skyblue", 0xFF87CEEB),
-            Map.entry("slateblue", 0xFF6A5ACD),
-            Map.entry("slategray", 0xFF708090),
-            Map.entry("snow", 0xFFFFFAFA),
-            Map.entry("springgreen", 0xFF00FF7F),
-            Map.entry("steelblue", 0xFF4682B4),
-            Map.entry("tan", 0xFFD2B48C),
-            Map.entry("thistle", 0xFFD8BFD8),
-            Map.entry("tomato", 0xFFFF6347),
-            Map.entry("turquoise", 0xFF40E0D0),
-            Map.entry("violet", 0xFFEE82EE),
-            Map.entry("wheat", 0xFFF5DEB3),
-            Map.entry("whitesmoke", 0xFFF5F5F5),
-            Map.entry("yellowgreen", 0xFF9ACD32),
-            Map.entry("rebeccapurple", 0xFF663399));
+        Map.entry("black", 0xFF000000),
+        Map.entry("silver", 0xFFC0C0C0),
+        Map.entry("gray", 0xFF808080),
+        Map.entry("white", 0xFFFFFFFF),
+        Map.entry("maroon", 0xFF800000),
+        Map.entry("red", 0xFFFF0000),
+        Map.entry("purple", 0xFF800080),
+        Map.entry("fuchsia", 0xFFFF00FF),
+        Map.entry("green", 0xFF008000),
+        Map.entry("lime", 0xFF00FF00),
+        Map.entry("olive", 0xFF808000),
+        Map.entry("yellow", 0xFFFFFF00),
+        Map.entry("navy", 0xFF000080),
+        Map.entry("blue", 0xFF0000FF),
+        Map.entry("teal", 0xFF008080),
+        Map.entry("aqua", 0xFF00FFFF),
+        Map.entry("orange", 0xFFFFA500),
+        Map.entry("aliceblue", 0xFFF0F8FF),
+        Map.entry("antiquewhite", 0xFFFAEBD7),
+        Map.entry("aquamarine", 0xFF7FFFD4),
+        Map.entry("azure", 0xFFF0FFFF),
+        Map.entry("beige", 0xFFF5F5DC),
+        Map.entry("bisque", 0xFFFFE4C4),
+        Map.entry("blanchedalmond", 0xFFFFEBCD),
+        Map.entry("blueviolet", 0xFF8A2BE2),
+        Map.entry("brown", 0xFFA52A2A),
+        Map.entry("burlywood", 0xFFDEB887),
+        Map.entry("cadetblue", 0xFF5F9EA0),
+        Map.entry("chartreuse", 0xFF7FFF00),
+        Map.entry("chocolate", 0xFFD2691E),
+        Map.entry("coral", 0xFFFF7F50),
+        Map.entry("cornflowerblue", 0xFF6495ED),
+        Map.entry("cornsilk", 0xFFFFF8DC),
+        Map.entry("crimson", 0xFFDC143C),
+        Map.entry("cyan", 0xFF00FFFF),
+        Map.entry("darkblue", 0xFF00008B),
+        Map.entry("darkcyan", 0xFF008B8B),
+        Map.entry("darkgoldenrod", 0xFFB8860B),
+        Map.entry("darkgray", 0xFFA9A9A9),
+        Map.entry("darkgreen", 0xFF006400),
+        Map.entry("darkkhaki", 0xFFBDB76B),
+        Map.entry("darkmagenta", 0xFF8B008B),
+        Map.entry("darkolivegreen", 0xFF556B2F),
+        Map.entry("darkorange", 0xFFFF8C00),
+        Map.entry("darkorchid", 0xFF9932CC),
+        Map.entry("darkred", 0xFF8B0000),
+        Map.entry("darksalmon", 0xFFE9967A),
+        Map.entry("darkseagreen", 0xFF8FBC8F),
+        Map.entry("darkslateblue", 0xFF483D8B),
+        Map.entry("darkslategray", 0xFF2F4F4F),
+        Map.entry("darkturquoise", 0xFF00CED1),
+        Map.entry("darkviolet", 0xFF9400D3),
+        Map.entry("deeppink", 0xFFFF1493),
+        Map.entry("deepskyblue", 0xFF00BFFF),
+        Map.entry("dimgray", 0xFF696969),
+        Map.entry("dodgerblue", 0xFF1E90FF),
+        Map.entry("firebrick", 0xFFB22222),
+        Map.entry("floralwhite", 0xFFFFFAF0),
+        Map.entry("forestgreen", 0xFF228B22),
+        Map.entry("gainsboro", 0xFFDCDCDC),
+        Map.entry("ghostwhite", 0xFFF8F8FF),
+        Map.entry("gold", 0xFFFFD700),
+        Map.entry("goldenrod", 0xFFDAA520),
+        Map.entry("greenyellow", 0xFFADFF2F),
+        Map.entry("honeydew", 0xFFF0FFF0),
+        Map.entry("hotpink", 0xFFFF69B4),
+        Map.entry("indianred", 0xFFCD5C5C),
+        Map.entry("indigo", 0xFF4B0082),
+        Map.entry("ivory", 0xFFFFFFF0),
+        Map.entry("khaki", 0xFFF0E68C),
+        Map.entry("lavender", 0xFFE6E6FA),
+        Map.entry("lavenderblush", 0xFFFFF0F5),
+        Map.entry("lawngreen", 0xFF7CFC00),
+        Map.entry("lemonchiffon", 0xFFFFFACD),
+        Map.entry("lightblue", 0xFFADD8E6),
+        Map.entry("lightcoral", 0xFFF08080),
+        Map.entry("lightcyan", 0xFFE0FFFF),
+        Map.entry("lightgoldenrodyellow", 0xFFFAFAD2),
+        Map.entry("lightgray", 0xFFD3D3D3),
+        Map.entry("lightgreen", 0xFF90EE90),
+        Map.entry("lightpink", 0xFFFFB6C1),
+        Map.entry("lightsalmon", 0xFFFFA07A),
+        Map.entry("lightseagreen", 0xFF20B2AA),
+        Map.entry("lightskyblue", 0xFF87CEFA),
+        Map.entry("lightslategray", 0xFF778899),
+        Map.entry("lightsteelblue", 0xFFB0C4DE),
+        Map.entry("lightyellow", 0xFFFFFFE0),
+        Map.entry("limegreen", 0xFF32CD32),
+        Map.entry("linen", 0xFFFAF0E6),
+        Map.entry("magenta", 0xFFFF00FF),
+        Map.entry("mediumaquamarine", 0xFF66CDAA),
+        Map.entry("mediumblue", 0xFF0000CD),
+        Map.entry("mediumorchid", 0xFFBA55D3),
+        Map.entry("mediumpurple", 0xFF9370DB),
+        Map.entry("mediumseagreen", 0xFF3CB371),
+        Map.entry("mediumslateblue", 0xFF7B68EE),
+        Map.entry("mediumspringgreen", 0xFF00FA9A),
+        Map.entry("mediumturquoise", 0xFF48D1CC),
+        Map.entry("mediumvioletred", 0xFFC71585),
+        Map.entry("midnightblue", 0xFF191970),
+        Map.entry("mintcream", 0xFFF5FFFA),
+        Map.entry("mistyrose", 0xFFFFE4E1),
+        Map.entry("moccasin", 0xFFFFE4B5),
+        Map.entry("navajowhite", 0xFFFFDEAD),
+        Map.entry("oldlace", 0xFFFDF5E6),
+        Map.entry("olivedrab", 0xFF6B8E23),
+        Map.entry("orangered", 0xFFFF4500),
+        Map.entry("orchid", 0xFFDA70D6),
+        Map.entry("palegoldenrod", 0xFFEEE8AA),
+        Map.entry("palegreen", 0xFF98FB98),
+        Map.entry("paleturquoise", 0xFFAFEEEE),
+        Map.entry("palevioletred", 0xFFDB7093),
+        Map.entry("papayawhip", 0xFFFFEFD5),
+        Map.entry("peachpuff", 0xFFFFDAB9),
+        Map.entry("peru", 0xFFCD853F),
+        Map.entry("pink", 0xFFFFC0CB),
+        Map.entry("plum", 0xFFDDA0DD),
+        Map.entry("powderblue", 0xFFB0E0E6),
+        Map.entry("rosybrown", 0xFFBC8F8F),
+        Map.entry("royalblue", 0xFF4169E1),
+        Map.entry("saddlebrown", 0xFF8B4513),
+        Map.entry("salmon", 0xFFFA8072),
+        Map.entry("sandybrown", 0xFFF4A460),
+        Map.entry("seagreen", 0xFF2E8B57),
+        Map.entry("seashell", 0xFFFFF5EE),
+        Map.entry("sienna", 0xFFA0522D),
+        Map.entry("skyblue", 0xFF87CEEB),
+        Map.entry("slateblue", 0xFF6A5ACD),
+        Map.entry("slategray", 0xFF708090),
+        Map.entry("snow", 0xFFFFFAFA),
+        Map.entry("springgreen", 0xFF00FF7F),
+        Map.entry("steelblue", 0xFF4682B4),
+        Map.entry("tan", 0xFFD2B48C),
+        Map.entry("thistle", 0xFFD8BFD8),
+        Map.entry("tomato", 0xFFFF6347),
+        Map.entry("turquoise", 0xFF40E0D0),
+        Map.entry("violet", 0xFFEE82EE),
+        Map.entry("wheat", 0xFFF5DEB3),
+        Map.entry("whitesmoke", 0xFFF5F5F5),
+        Map.entry("yellowgreen", 0xFF9ACD32),
+        Map.entry("rebeccapurple", 0xFF663399)
+    );
     // endregion
 }

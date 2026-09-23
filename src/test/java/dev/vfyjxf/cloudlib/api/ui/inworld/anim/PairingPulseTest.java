@@ -66,8 +66,9 @@ class PairingPulseTest {
         long sounding = weights.stream().filter(w -> w > 0.0).count();
         assertTrue(sounding > 0, "the pulse sounds");
         assertTrue(
-                sounding * frame <= config.durationSeconds() + frame,
-                "it sounds for one duration only: " + sounding + " frames");
+            sounding * frame <= config.durationSeconds() + frame,
+            "it sounds for one duration only: " + sounding + " frames"
+        );
         // and everything past the first duration is stone silent
         int firstSilent = (int) Math.ceil(config.durationSeconds() / frame) + 1;
         for (int i = firstSilent; i < weights.size(); i++) {
@@ -133,7 +134,8 @@ class PairingPulseTest {
         // the survey delta stays inside the pairing-cue budget
         assertTrue(config.opacityDelta() <= 0.35);
         assertTrue(
-                config.durationSeconds() >= 0.15 && config.durationSeconds() <= 0.25,
-                "the default duration is in the 150–250 ms window");
+            config.durationSeconds() >= 0.15 && config.durationSeconds() <= 0.25,
+            "the default duration is in the 150–250 ms window"
+        );
     }
 }

@@ -34,11 +34,7 @@ public final class VisibilityTracker {
 
     /** The lifecycle phases, in transition order. */
     public enum Phase {
-        hidden,
-        appearing,
-        visible,
-        lingering,
-        fading
+        hidden, appearing, visible, lingering, fading
     }
 
     /**

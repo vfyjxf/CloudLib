@@ -33,7 +33,8 @@ public record OcclusionFade(double exitThreshold, double enterThreshold, int fra
     public OcclusionFade {
         if (!(exitThreshold >= 0 && exitThreshold < enterThreshold && enterThreshold <= 1)) {
             throw new IllegalArgumentException(
-                    "thresholds must satisfy 0 <= exit < enter <= 1: (" + exitThreshold + ", " + enterThreshold + ")");
+                "thresholds must satisfy 0 <= exit < enter <= 1: (" + exitThreshold + ", " + enterThreshold + ")"
+            );
         }
         if (frames < 1) {
             throw new IllegalArgumentException("frames must be >= 1: " + frames);
@@ -63,7 +64,12 @@ public record OcclusionFade(double exitThreshold, double enterThreshold, int fra
      *        occluded, in [0, 1]
      */
     public static float target(
-            VisibilityPolicy policy, boolean occluded, boolean selected, boolean inspecting, float occludedAlpha) {
+        VisibilityPolicy policy,
+        boolean occluded,
+        boolean selected,
+        boolean inspecting,
+        float occludedAlpha
+    ) {
         if (policy != VisibilityPolicy.fade || inspecting) return 1f;
         if (!occluded || selected) return 1f;
         return occludedAlpha;

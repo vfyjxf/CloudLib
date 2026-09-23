@@ -30,18 +30,26 @@ public record WorldAabb(double minX, double minY, double minZ, double maxX, doub
      * A box of {@code width × height × depth} centered at the given point.
      */
     public static WorldAabb around(
-            double centerX, double centerY, double centerZ, double width, double height, double depth) {
+        double centerX,
+        double centerY,
+        double centerZ,
+        double width,
+        double height,
+        double depth
+    ) {
         if (!isFinite(width) || width < 0 || !isFinite(height) || height < 0 || !isFinite(depth) || depth < 0) {
             throw new IllegalArgumentException(
-                    "box size must be finite and non-negative: " + width + "x" + height + "x" + depth);
+                "box size must be finite and non-negative: " + width + "x" + height + "x" + depth
+            );
         }
         return new WorldAabb(
-                centerX - width * 0.5,
-                centerY - height * 0.5,
-                centerZ - depth * 0.5,
-                centerX + width * 0.5,
-                centerY + height * 0.5,
-                centerZ + depth * 0.5);
+            centerX - width * 0.5,
+            centerY - height * 0.5,
+            centerZ - depth * 0.5,
+            centerX + width * 0.5,
+            centerY + height * 0.5,
+            centerZ + depth * 0.5
+        );
     }
 
     /** The {@code x} component of the box center. */

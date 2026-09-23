@@ -86,26 +86,28 @@ public final class UIStyles {
 
     /** Four longhands from a css 1/2/3/4 box spec. */
     private static StyleValues box(
-            StyleKey<LengthPercentage> top,
-            StyleKey<LengthPercentage> right,
-            StyleKey<LengthPercentage> bottom,
-            StyleKey<LengthPercentage> left,
-            LengthPercentage t,
-            LengthPercentage r,
-            LengthPercentage b,
-            LengthPercentage l) {
+        StyleKey<LengthPercentage> top,
+        StyleKey<LengthPercentage> right,
+        StyleKey<LengthPercentage> bottom,
+        StyleKey<LengthPercentage> left,
+        LengthPercentage t,
+        LengthPercentage r,
+        LengthPercentage b,
+        LengthPercentage l
+    ) {
         return StyleValues.of(top.of(t), right.of(r), bottom.of(b), left.of(l));
     }
 
     private static StyleValues boxAuto(
-            StyleKey<LengthPercentageAuto> top,
-            StyleKey<LengthPercentageAuto> right,
-            StyleKey<LengthPercentageAuto> bottom,
-            StyleKey<LengthPercentageAuto> left,
-            LengthPercentageAuto t,
-            LengthPercentageAuto r,
-            LengthPercentageAuto b,
-            LengthPercentageAuto l) {
+        StyleKey<LengthPercentageAuto> top,
+        StyleKey<LengthPercentageAuto> right,
+        StyleKey<LengthPercentageAuto> bottom,
+        StyleKey<LengthPercentageAuto> left,
+        LengthPercentageAuto t,
+        LengthPercentageAuto r,
+        LengthPercentageAuto b,
+        LengthPercentageAuto l
+    ) {
         return StyleValues.of(top.of(t), right.of(r), bottom.of(b), left.of(l));
     }
 
@@ -115,32 +117,46 @@ public final class UIStyles {
 
     public static StyleValues padding(LengthPercentage all) {
         return box(
-                Styles.paddingTop, Styles.paddingRight, Styles.paddingBottom, Styles.paddingLeft, all, all, all, all);
+            Styles.paddingTop,
+            Styles.paddingRight,
+            Styles.paddingBottom,
+            Styles.paddingLeft,
+            all,
+            all,
+            all,
+            all
+        );
     }
 
     public static StyleValues padding(LengthPercentage vertical, LengthPercentage horizontal) {
         return box(
-                Styles.paddingTop,
-                Styles.paddingRight,
-                Styles.paddingBottom,
-                Styles.paddingLeft,
-                vertical,
-                horizontal,
-                vertical,
-                horizontal);
+            Styles.paddingTop,
+            Styles.paddingRight,
+            Styles.paddingBottom,
+            Styles.paddingLeft,
+            vertical,
+            horizontal,
+            vertical,
+            horizontal
+        );
     }
 
     public static StyleValues padding(
-            LengthPercentage top, LengthPercentage right, LengthPercentage bottom, LengthPercentage left) {
+        LengthPercentage top,
+        LengthPercentage right,
+        LengthPercentage bottom,
+        LengthPercentage left
+    ) {
         return box(
-                Styles.paddingTop,
-                Styles.paddingRight,
-                Styles.paddingBottom,
-                Styles.paddingLeft,
-                top,
-                right,
-                bottom,
-                left);
+            Styles.paddingTop,
+            Styles.paddingRight,
+            Styles.paddingBottom,
+            Styles.paddingLeft,
+            top,
+            right,
+            bottom,
+            left
+        );
     }
 
     public static StyleValues padding(float all) {
@@ -217,28 +233,46 @@ public final class UIStyles {
 
     public static StyleValues margin(LengthPercentageAuto all) {
         return boxAuto(
-                Styles.marginTop, Styles.marginRight, Styles.marginBottom, Styles.marginLeft, all, all, all, all);
+            Styles.marginTop,
+            Styles.marginRight,
+            Styles.marginBottom,
+            Styles.marginLeft,
+            all,
+            all,
+            all,
+            all
+        );
     }
 
     public static StyleValues margin(LengthPercentageAuto vertical, LengthPercentageAuto horizontal) {
         return boxAuto(
-                Styles.marginTop,
-                Styles.marginRight,
-                Styles.marginBottom,
-                Styles.marginLeft,
-                vertical,
-                horizontal,
-                vertical,
-                horizontal);
+            Styles.marginTop,
+            Styles.marginRight,
+            Styles.marginBottom,
+            Styles.marginLeft,
+            vertical,
+            horizontal,
+            vertical,
+            horizontal
+        );
     }
 
     public static StyleValues margin(
-            LengthPercentageAuto top,
-            LengthPercentageAuto right,
-            LengthPercentageAuto bottom,
-            LengthPercentageAuto left) {
+        LengthPercentageAuto top,
+        LengthPercentageAuto right,
+        LengthPercentageAuto bottom,
+        LengthPercentageAuto left
+    ) {
         return boxAuto(
-                Styles.marginTop, Styles.marginRight, Styles.marginBottom, Styles.marginLeft, top, right, bottom, left);
+            Styles.marginTop,
+            Styles.marginRight,
+            Styles.marginBottom,
+            Styles.marginLeft,
+            top,
+            right,
+            bottom,
+            left
+        );
     }
 
     public static StyleValues margin(float all) {
@@ -258,13 +292,13 @@ public final class UIStyles {
     }
 
     public static StyleValues marginAutoHorizontal() {
-        return StyleValues.of(
-                Styles.marginLeft.of(LengthPercentageAuto.AUTO), Styles.marginRight.of(LengthPercentageAuto.AUTO));
+        return StyleValues
+                .of(Styles.marginLeft.of(LengthPercentageAuto.AUTO), Styles.marginRight.of(LengthPercentageAuto.AUTO));
     }
 
     public static StyleValues marginAutoVertical() {
-        return StyleValues.of(
-                Styles.marginTop.of(LengthPercentageAuto.AUTO), Styles.marginBottom.of(LengthPercentageAuto.AUTO));
+        return StyleValues
+                .of(Styles.marginTop.of(LengthPercentageAuto.AUTO), Styles.marginBottom.of(LengthPercentageAuto.AUTO));
     }
 
     public static StyleValues marginPercent(float percent) {
@@ -329,39 +363,46 @@ public final class UIStyles {
 
     public static StyleValues border(LengthPercentage all) {
         return box(
-                Styles.borderTopWidth,
-                Styles.borderRightWidth,
-                Styles.borderBottomWidth,
-                Styles.borderLeftWidth,
-                all,
-                all,
-                all,
-                all);
+            Styles.borderTopWidth,
+            Styles.borderRightWidth,
+            Styles.borderBottomWidth,
+            Styles.borderLeftWidth,
+            all,
+            all,
+            all,
+            all
+        );
     }
 
     public static StyleValues border(LengthPercentage vertical, LengthPercentage horizontal) {
         return box(
-                Styles.borderTopWidth,
-                Styles.borderRightWidth,
-                Styles.borderBottomWidth,
-                Styles.borderLeftWidth,
-                vertical,
-                horizontal,
-                vertical,
-                horizontal);
+            Styles.borderTopWidth,
+            Styles.borderRightWidth,
+            Styles.borderBottomWidth,
+            Styles.borderLeftWidth,
+            vertical,
+            horizontal,
+            vertical,
+            horizontal
+        );
     }
 
     public static StyleValues border(
-            LengthPercentage top, LengthPercentage right, LengthPercentage bottom, LengthPercentage left) {
+        LengthPercentage top,
+        LengthPercentage right,
+        LengthPercentage bottom,
+        LengthPercentage left
+    ) {
         return box(
-                Styles.borderTopWidth,
-                Styles.borderRightWidth,
-                Styles.borderBottomWidth,
-                Styles.borderLeftWidth,
-                top,
-                right,
-                bottom,
-                left);
+            Styles.borderTopWidth,
+            Styles.borderRightWidth,
+            Styles.borderBottomWidth,
+            Styles.borderLeftWidth,
+            top,
+            right,
+            bottom,
+            left
+        );
     }
 
     public static StyleValues border(float all) {
@@ -483,7 +524,11 @@ public final class UIStyles {
     }
 
     public static StyleValue<ScrollbarStyleData> scrollbarStyle(
-            VisualTexture track, VisualTexture thumb, int width, int minThumbSize) {
+        VisualTexture track,
+        VisualTexture thumb,
+        int width,
+        int minThumbSize
+    ) {
         return Styles.scrollbarStyle.of(new ScrollbarStyleData(track, thumb, width, minThumbSize));
     }
 
@@ -906,23 +951,33 @@ public final class UIStyles {
 
     public static StyleValues inset(LengthPercentageAuto vertical, LengthPercentageAuto horizontal) {
         return boxAuto(
-                Styles.insetTop,
-                Styles.insetRight,
-                Styles.insetBottom,
-                Styles.insetLeft,
-                vertical,
-                horizontal,
-                vertical,
-                horizontal);
+            Styles.insetTop,
+            Styles.insetRight,
+            Styles.insetBottom,
+            Styles.insetLeft,
+            vertical,
+            horizontal,
+            vertical,
+            horizontal
+        );
     }
 
     public static StyleValues inset(
-            LengthPercentageAuto top,
-            LengthPercentageAuto right,
-            LengthPercentageAuto bottom,
-            LengthPercentageAuto left) {
+        LengthPercentageAuto top,
+        LengthPercentageAuto right,
+        LengthPercentageAuto bottom,
+        LengthPercentageAuto left
+    ) {
         return boxAuto(
-                Styles.insetTop, Styles.insetRight, Styles.insetBottom, Styles.insetLeft, top, right, bottom, left);
+            Styles.insetTop,
+            Styles.insetRight,
+            Styles.insetBottom,
+            Styles.insetLeft,
+            top,
+            right,
+            bottom,
+            left
+        );
     }
 
     public static StyleValue<LengthPercentageAuto> insetTop(float value) {
@@ -1131,7 +1186,8 @@ public final class UIStyles {
     }
 
     public static StyleValue<List<GridTemplateComponent>> gridTemplateColumnsWithRepeat(
-            List<GridTemplateComponent> columns) {
+        List<GridTemplateComponent> columns
+    ) {
         return Styles.gridTemplateColumnsWithRepeat.of(columns);
     }
 

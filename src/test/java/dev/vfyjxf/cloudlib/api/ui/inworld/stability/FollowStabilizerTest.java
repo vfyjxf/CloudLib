@@ -46,8 +46,9 @@ class FollowStabilizerTest {
         assertEquals(0, reversals(outY, 0.35), "the static axis must never visibly flip direction");
         assertTrue(PerceptualAsserts.peakToPeak(outY) <= 1.0, "the static axis must sit still");
         assertTrue(
-                Math.abs(outX[outX.length - 1] - inX[inX.length - 1]) <= 2.0,
-                "the lattice must track the drift within filter lag plus one quantum");
+            Math.abs(outX[outX.length - 1] - inX[inX.length - 1]) <= 2.0,
+            "the lattice must track the drift within filter lag plus one quantum"
+        );
         // the drifting axis may trail its input by the snap band and recover
         // at crossings, and the blend passes a bounded fraction of the anchor
         // noise — both inside the ±(snapHalf + hysteresis) band, so the honest
@@ -177,18 +178,21 @@ class FollowStabilizerTest {
     @Test
     void rejectsInvalidArguments() {
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new FollowStabilizer(0.0, 0.007, 1.0, 12.0, PixelStabilizer.Config.ofDefaults()));
+            IllegalArgumentException.class,
+            () -> new FollowStabilizer(0.0, 0.007, 1.0, 12.0, PixelStabilizer.Config.ofDefaults())
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new FollowStabilizer(1.0, -1.0, 1.0, 12.0, PixelStabilizer.Config.ofDefaults()));
+            IllegalArgumentException.class,
+            () -> new FollowStabilizer(1.0, -1.0, 1.0, 12.0, PixelStabilizer.Config.ofDefaults())
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new FollowStabilizer(1.0, 0.007, 1.0, 0.5, PixelStabilizer.Config.ofDefaults()));
+            IllegalArgumentException.class,
+            () -> new FollowStabilizer(1.0, 0.007, 1.0, 0.5, PixelStabilizer.Config.ofDefaults())
+        );
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new FollowStabilizer(
-                        1.0, 0.007, 1.0, 12.0, new PixelStabilizer.Config(0.0, 0.25, 45.0, 9.0, 5, 0.12)));
+            IllegalArgumentException.class,
+            () -> new FollowStabilizer(1.0, 0.007, 1.0, 12.0, new PixelStabilizer.Config(0.0, 0.25, 45.0, 9.0, 5, 0.12))
+        );
         assertThrows(NullPointerException.class, () -> new FollowStabilizer(1.0, 0.007, 1.0, 12.0, null));
         assertThrows(IllegalArgumentException.class, () -> new FollowStabilizer().accept(0.0, Double.NaN, 0.0));
         assertThrows(IllegalArgumentException.class, () -> new FollowStabilizer().bypass(0.0, 0.0, Double.NaN));

@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.tooltip;
 
 import com.mojang.datafixers.util.Either;
 import dev.vfyjxf.cloudlib.Constants;
+import dev.vfyjxf.cloudlib.api.text.RichText;
 import dev.vfyjxf.cloudlib.api.util.MutableLists;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 import net.minecraft.network.chat.Component;
@@ -99,9 +100,10 @@ public final class Tooltip {
     }
 
     private Tooltip(
-            MutableList<TaggedEntry> entries,
-            MutableList<Consumer<Tooltip>> transforms,
-            @Nullable TooltipStack<?> stack) {
+        MutableList<TaggedEntry> entries,
+        MutableList<Consumer<Tooltip>> transforms,
+        @Nullable TooltipStack<?> stack
+    ) {
         this.entries = entries;
         this.transforms = transforms;
         this.stack = stack;
@@ -122,6 +124,16 @@ public final class Tooltip {
     @Contract("_ -> this")
     public Tooltip add(Supplier<Component> provider) {
         return add(new TooltipEntry.DynamicEntry(provider), body);
+    }
+
+    /**
+     * Adds a rich text block. Purely textual documents render as a vanilla line;
+     * rich content (inline items, images, widgets...) renders through the rich
+     * text pipeline.
+     */
+    @Contract("_ -> this")
+    public Tooltip add(RichText text) {
+        return add(new TooltipEntry.RichTextEntry(text), body);
     }
 
     @Contract("_ -> this")
@@ -146,6 +158,11 @@ public final class Tooltip {
     @Contract("_, _ -> this")
     public Tooltip add(Supplier<Component> provider, Namespace marker) {
         return add(new TooltipEntry.DynamicEntry(provider), marker);
+    }
+
+    @Contract("_, _ -> this")
+    public Tooltip add(RichText text, Namespace marker) {
+        return add(new TooltipEntry.RichTextEntry(text), marker);
     }
 
     @Contract("_, _ -> this")
@@ -176,6 +193,11 @@ public final class Tooltip {
     @Contract("_, _ -> this")
     public Tooltip insert(Supplier<Component> provider, TooltipLocator locator) {
         return insert(new TooltipEntry.DynamicEntry(provider), body, locator);
+    }
+
+    @Contract("_, _ -> this")
+    public Tooltip insert(RichText text, TooltipLocator locator) {
+        return insert(new TooltipEntry.RichTextEntry(text), body, locator);
     }
 
     @Contract("_, _ -> this")
@@ -247,7 +269,8 @@ public final class Tooltip {
     @Contract("_, _ -> this")
     public Tooltip remark(Namespace oldMarker, Namespace newMarker) {
         entries.replaceAll(
-                tagged -> tagged.marker.equals(oldMarker) ? new TaggedEntry(tagged.entry(), newMarker) : tagged);
+            tagged -> tagged.marker.equals(oldMarker) ? new TaggedEntry(tagged.entry(), newMarker) : tagged
+        );
         return this;
     }
 
@@ -347,12 +370,14 @@ public final class Tooltip {
         MutableList<TooltipEntry> flat = flatEntries();
         MutableList<Either<FormattedText, TooltipComponent>> result = MutableLists.empty();
         for (TooltipEntry entry : flat) {
-            result.add(
-                    switch (entry) {
-                        case TooltipEntry.TextEntry(var text) -> Either.left(text);
-                        case TooltipEntry.DynamicEntry(var provider) -> Either.left(provider.get());
-                        case TooltipEntry.ComponentEntry(var component) -> Either.right(component);
-                    });
+            result.add(switch (entry) {
+                case TooltipEntry.TextEntry(var text) -> Either.left(text);
+                case TooltipEntry.DynamicEntry(var provider) -> Either.left(provider.get());
+                case TooltipEntry.ComponentEntry(var component) -> Either.right(component);
+                case TooltipEntry.RichTextEntry(var text) -> text.isTextual()
+                        ? Either.left(text.toComponent())
+                        : Either.right(new RichTextTooltipComponent(text));
+            });
         }
         return result;
     }
@@ -381,11 +406,10 @@ public final class Tooltip {
             case Relative(var anchor, var finder, var offset, var matchPriority) -> {
                 int matchIdx = findMatch(finder, matchPriority);
                 if (matchIdx < 0) yield entries.size();
-                int base =
-                        switch (anchor) {
-                            case before -> matchIdx;
-                            case after -> matchIdx + 1;
-                        };
+                int base = switch (anchor) {
+                    case before -> matchIdx;
+                    case after -> matchIdx + 1;
+                };
                 yield Math.clamp(base + offset, 0, entries.size());
             }
         };
@@ -393,8 +417,7 @@ public final class Tooltip {
 
     private int findMatch(TooltipFinder finder, MatchPriority priority) {
         return switch (finder) {
-            case TooltipFinder.ByMarker(var marker) ->
-                scanEntries(tagged -> tagged.marker().equals(marker), priority);
+            case TooltipFinder.ByMarker(var marker) -> scanEntries(tagged -> tagged.marker().equals(marker), priority);
             case TooltipFinder.ByEntry(var matcher) -> scanEntries(tagged -> matcher.test(tagged.entry()), priority);
         };
     }

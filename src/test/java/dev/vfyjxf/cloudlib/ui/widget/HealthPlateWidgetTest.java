@@ -134,10 +134,7 @@ class HealthPlateWidgetTest {
         assertTrue(plate.showPercentage());
         assertFalse(plate.showArmor());
 
-        plate.setShowCurrentHealth(false)
-                .setShowMaxHealth(false)
-                .setShowPercentage(false)
-                .setShowArmor(true);
+        plate.setShowCurrentHealth(false).setShowMaxHealth(false).setShowPercentage(false).setShowArmor(true);
         assertFalse(plate.showCurrentHealth());
         assertFalse(plate.showMaxHealth());
         assertFalse(plate.showPercentage());

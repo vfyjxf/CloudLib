@@ -70,10 +70,10 @@ public final class InworldExclusions {
             }
         }
         mergeRectangleUnions(rects);
-        rects.sort(Comparator.comparingInt(Rect::y)
-                .thenComparingInt(Rect::x)
-                .thenComparingInt(Rect::height)
-                .thenComparingInt(Rect::width));
+        rects.sort(
+            Comparator.comparingInt(Rect::y).thenComparingInt(Rect::x).thenComparingInt(Rect::height)
+                    .thenComparingInt(Rect::width)
+        );
         return List.copyOf(rects);
     }
 
@@ -82,8 +82,7 @@ public final class InworldExclusions {
         boolean changed = true;
         while (changed) {
             changed = false;
-            mergePass:
-            for (int i = 0; i < rects.size(); i++) {
+            mergePass : for (int i = 0; i < rects.size(); i++) {
                 for (int j = i + 1; j < rects.size(); j++) {
                     Rect first = rects.get(i);
                     Rect second = rects.get(j);

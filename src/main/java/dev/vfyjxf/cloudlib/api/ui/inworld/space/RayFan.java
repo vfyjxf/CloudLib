@@ -116,8 +116,8 @@ public final class RayFan {
         }
         double min = Double.POSITIVE_INFINITY;
         double max = Double.NEGATIVE_INFINITY;
-        for (double dx : new double[] {dx0, dx1}) {
-            for (double dy : new double[] {dy0, dy1}) {
+        for (double dx : new double[]{dx0, dx1}) {
+            for (double dy : new double[]{dy0, dy1}) {
                 double angle = normalize(Math.atan2(dy, dx));
                 min = Math.min(min, angle);
                 max = Math.max(max, angle);

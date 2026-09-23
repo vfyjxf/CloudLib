@@ -17,13 +17,14 @@ class AvoidRectsMiddlewareTest {
 
     private static FloatingState state(double x, double y, int w, int h) {
         return new FloatingState(
-                x,
-                y,
-                FloatingPlacement.right,
-                FloatingPlacement.right,
-                new Rect(0, 0, 10, 10),
-                new Rect(0, 0, w, h),
-                boundary);
+            x,
+            y,
+            FloatingPlacement.right,
+            FloatingPlacement.right,
+            new Rect(0, 0, 10, 10),
+            new Rect(0, 0, w, h),
+            boundary
+        );
     }
 
     private static Rect at(FloatingState s, int w, int h) {
@@ -56,8 +57,9 @@ class AvoidRectsMiddlewareTest {
         var s = state(50, 50, 100, 40);
         AvoidRectsMiddleware.create(() -> obstacles, 0).run(s);
         assertTrue(
-                at(s, 100, 40).intersects(obstacles.getFirst()),
-                "deep overlap should be left alone when clearing exceeds the push budget");
+            at(s, 100, 40).intersects(obstacles.getFirst()),
+            "deep overlap should be left alone when clearing exceeds the push budget"
+        );
     }
 
     @Test
@@ -74,9 +76,9 @@ class AvoidRectsMiddlewareTest {
     void pushesClearOfSecondObstacleToo() {
         // two obstacles sandwich the panel; escaping both needs two pushes
         List<Rect> obstacles = List.of(
-                new Rect(50, 50, 100, 40), // exact cover
-                new Rect(50, 92, 100, 40) // one row below
-                );
+            new Rect(50, 50, 100, 40), // exact cover
+            new Rect(50, 92, 100, 40) // one row below
+        );
         var s = state(50, 50, 100, 40);
         AvoidRectsMiddleware.create(() -> obstacles, 0).run(s);
         Rect r = at(s, 100, 40);

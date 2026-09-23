@@ -4,10 +4,13 @@ import dev.vfyjxf.cloudlib.api.plugin.AnnotationPluginLookup;
 import dev.vfyjxf.cloudlib.api.plugin.CloudLibClientPlugin;
 import dev.vfyjxf.cloudlib.api.plugin.PluginLoader;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.InworldExclusions;
+import dev.vfyjxf.cloudlib.api.ui.tooltip.RichTextTooltipComponent;
 import dev.vfyjxf.cloudlib.data.lang.CloudLibLangProvider;
 import dev.vfyjxf.cloudlib.internal.ui.style.StyleConfig;
 import dev.vfyjxf.cloudlib.internal.ui.style.StyleLoader;
 import dev.vfyjxf.cloudlib.internal.ui.style.StyleWatcher;
+import dev.vfyjxf.cloudlib.text.ClientRichTextTooltipComponent;
+import dev.vfyjxf.cloudlib.text.RichTextManager;
 import dev.vfyjxf.cloudlib.ui.CloudLibCommands;
 import dev.vfyjxf.cloudlib.ui.KeyMappings;
 import dev.vfyjxf.cloudlib.ui.hud.VanillaHudExclusions;
@@ -16,6 +19,7 @@ import dev.vfyjxf.cloudlib.ui.overlay.OverlayApiImpl;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayEventHandler;
 import dev.vfyjxf.cloudlib.ui.overlay.OverlayRegisterImpl;
 import net.minecraft.data.DataProvider;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -40,8 +44,8 @@ public final class CloudLibClient extends CloudLib {
     public CloudLibClient(ModContainer container, IEventBus modBus, Dist dist) {
         super(container, modBus, dist);
         StyleConfig.register(container);
-        clientPlugins = PluginLoader.loadPlugin(
-                        logger, "CloudLib Client Plugin", AnnotationPluginLookup.of(CloudLibClientPlugin.class))
+        clientPlugins = PluginLoader
+                .loadPlugin(logger, "CloudLib Client Plugin", AnnotationPluginLookup.of(CloudLibClientPlugin.class))
                 .toImmutable();
         modBus.addListener(this::gatherData);
         modBus.addListener(this::registerClientTooltipComponentFactories);
@@ -78,11 +82,14 @@ public final class CloudLibClient extends CloudLib {
     }
 
     private void registerClientTooltipComponentFactories(RegisterClientTooltipComponentFactoriesEvent event) {
-        //        event.register(RichTooltipComponent.class, Function.identity());
+        event.register(RichTextTooltipComponent.class, ClientRichTextTooltipComponent::new);
     }
 
     private void registerClientReloadListeners(RegisterClientReloadListenersEvent event) {
         event.registerReloadListener(StyleLoader.instance);
+        // Rich text services capture the font and the active language; drop them on
+        // reload so locale / resource-pack changes take effect without a restart.
+        event.registerReloadListener((ResourceManagerReloadListener) resourceManager -> RichTextManager.invalidate());
     }
 
     private void gatherData(GatherDataEvent event) {

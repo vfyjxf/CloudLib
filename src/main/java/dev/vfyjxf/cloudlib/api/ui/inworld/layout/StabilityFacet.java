@@ -31,11 +31,12 @@ import java.util.Objects;
  *        when arbitrating
  */
 public record StabilityFacet(
-        SwitchGate.Config switchGate,
-        double followSpringOmega,
-        double flipSpeedPixelsPerSecond,
-        VisibilityTracker.Config visibility,
-        boolean stickySlot) {
+    SwitchGate.Config switchGate,
+    double followSpringOmega,
+    double flipSpeedPixelsPerSecond,
+    VisibilityTracker.Config visibility,
+    boolean stickySlot
+) {
 
     public StabilityFacet {
         Objects.requireNonNull(switchGate, "switchGate");
@@ -45,37 +46,41 @@ public record StabilityFacet(
         }
         if (!Double.isFinite(flipSpeedPixelsPerSecond) || flipSpeedPixelsPerSecond <= 0) {
             throw new IllegalArgumentException(
-                    "flipSpeedPixelsPerSecond must be finite and positive: " + flipSpeedPixelsPerSecond);
+                "flipSpeedPixelsPerSecond must be finite and positive: " + flipSpeedPixelsPerSecond
+            );
         }
     }
 
     /** The WoW-nameplate baseline: snappy spring, sticky, generous linger. */
     public static StabilityFacet nameplateBaseline() {
         return new StabilityFacet(
-                SwitchGate.Config.of(16.0, 1, 2.0, 0),
-                30.0,
-                900.0,
-                VisibilityTracker.Config.of(0.15, 0.25, 0.25),
-                true);
+            SwitchGate.Config.of(16.0, 1, 2.0, 0),
+            30.0,
+            900.0,
+            VisibilityTracker.Config.of(0.15, 0.25, 0.25),
+            true
+        );
     }
 
     /** The transient baseline: no stickiness, quick fades, near-open gate. */
     public static StabilityFacet transientBaseline() {
         return new StabilityFacet(
-                SwitchGate.Config.of(2.0, 1, 0.0, 0),
-                60.0,
-                1400.0,
-                VisibilityTracker.Config.of(0.05, 0.15, 0.10),
-                false);
+            SwitchGate.Config.of(2.0, 1, 0.0, 0),
+            60.0,
+            1400.0,
+            VisibilityTracker.Config.of(0.05, 0.15, 0.10),
+            false
+        );
     }
 
     /** The fixed-panel baseline: dwell-heavy gate, calm spring, sticky. */
     public static StabilityFacet fixedBaseline() {
         return new StabilityFacet(
-                SwitchGate.Config.of(24.0, 2, 4.0, 1),
-                20.0,
-                700.0,
-                VisibilityTracker.Config.of(0.20, 0.25, 0.40),
-                true);
+            SwitchGate.Config.of(24.0, 2, 4.0, 1),
+            20.0,
+            700.0,
+            VisibilityTracker.Config.of(0.20, 0.25, 0.40),
+            true
+        );
     }
 }

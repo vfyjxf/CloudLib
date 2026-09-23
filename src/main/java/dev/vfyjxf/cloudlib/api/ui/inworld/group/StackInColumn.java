@@ -18,7 +18,8 @@ import java.util.Objects;
  *        absorbs before the rest hide
  */
 public record StackInColumn(Direction direction, double spacing, int maxVisible, int maxAggregated)
-        implements GroupStrategy {
+        implements
+            GroupStrategy {
 
     public StackInColumn {
         Objects.requireNonNull(direction, "direction");
@@ -40,7 +41,6 @@ public record StackInColumn(Direction direction, double spacing, int maxVisible,
 
     /** Which way a {@link StackInColumn} grows from the anchor. */
     public enum Direction {
-        up,
-        down
+        up, down
     }
 }

@@ -20,8 +20,8 @@ import java.util.Collection;
 @NotNullByDefault
 public class CloudLibPlugin implements IModPlugin {
 
-    public static final ResourceLocation pluginId =
-            ResourceLocation.fromNamespaceAndPath(Constants.modId, "jei_plugin");
+    public static final ResourceLocation pluginId = ResourceLocation
+            .fromNamespaceAndPath(Constants.modId, "jei_plugin");
 
     public static IScreenHelper getScreenHelper() {
         Preconditions.checkState(screenHelper != null, "ScreenHelper is not initialized yet.");
@@ -40,9 +40,7 @@ public class CloudLibPlugin implements IModPlugin {
         registration.addGlobalGuiHandler(new IGlobalGuiHandler() {
             @Override
             public Collection<Rect2i> getGuiExtraAreas() {
-                return OverlayApi.instance()
-                        .exclusionAreas(Minecraft.getInstance().screen)
-                        .toList();
+                return OverlayApi.instance().exclusionAreas(Minecraft.getInstance().screen).toList();
             }
         });
     }

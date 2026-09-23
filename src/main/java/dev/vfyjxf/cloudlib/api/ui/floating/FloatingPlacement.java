@@ -16,21 +16,13 @@ public enum FloatingPlacement {
 
     // region placements
 
-    top(Side.top, null),
-    topStart(Side.top, Alignment.start),
-    topEnd(Side.top, Alignment.end),
+    top(Side.top, null), topStart(Side.top, Alignment.start), topEnd(Side.top, Alignment.end),
 
-    right(Side.right, null),
-    rightStart(Side.right, Alignment.start),
-    rightEnd(Side.right, Alignment.end),
+    right(Side.right, null), rightStart(Side.right, Alignment.start), rightEnd(Side.right, Alignment.end),
 
-    bottom(Side.bottom, null),
-    bottomStart(Side.bottom, Alignment.start),
-    bottomEnd(Side.bottom, Alignment.end),
+    bottom(Side.bottom, null), bottomStart(Side.bottom, Alignment.start), bottomEnd(Side.bottom, Alignment.end),
 
-    left(Side.left, null),
-    leftStart(Side.left, Alignment.start),
-    leftEnd(Side.left, Alignment.end);
+    left(Side.left, null), leftStart(Side.left, Alignment.start), leftEnd(Side.left, Alignment.end);
 
     // endregion
 
@@ -132,10 +124,7 @@ public enum FloatingPlacement {
      * The four sides of a rectangle.
      */
     public enum Side {
-        top,
-        right,
-        bottom,
-        left;
+        top, right, bottom, left;
 
         /**
          * @return the axis this side lies on
@@ -168,8 +157,7 @@ public enum FloatingPlacement {
      * Alignment along the cross axis.
      */
     public enum Alignment {
-        start,
-        end;
+        start, end;
 
         public Alignment opposite() {
             return this == start ? end : start;
@@ -180,8 +168,7 @@ public enum FloatingPlacement {
      * A spatial axis.
      */
     public enum Axis {
-        x,
-        y;
+        x, y;
 
         public Axis opposite() {
             return this == x ? y : x;

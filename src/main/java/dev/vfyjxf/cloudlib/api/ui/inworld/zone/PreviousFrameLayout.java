@@ -54,10 +54,11 @@ import java.util.Set;
  * @param above the above relations of the committed layout
  */
 public record PreviousFrameLayout(
-        Map<String, Rect> placements,
-        List<Leader> leaders,
-        Set<ZoneCost.Adjacency> leftOf,
-        Set<ZoneCost.Adjacency> above) {
+    Map<String, Rect> placements,
+    List<Leader> leaders,
+    Set<ZoneCost.Adjacency> leftOf,
+    Set<ZoneCost.Adjacency> above
+) {
 
     /** The default edge-gap threshold below which two rects count as adjacent, in gui pixels. */
     public static final double defaultAdjacencyGapPx = 8.0;
@@ -95,8 +96,8 @@ public record PreviousFrameLayout(
         List<Leader> leaderSegments = new ArrayList<>(placements.size());
         for (Placement placement : placements) {
             byId.put(placement.elementId(), placement.rect());
-            leaderSegments.add(
-                    new Leader(placement.elementId(), ZoneCost.leaderOf(placement.anchor(), placement.rect())));
+            leaderSegments
+                    .add(new Leader(placement.elementId(), ZoneCost.leaderOf(placement.anchor(), placement.rect())));
         }
         Set<ZoneCost.Adjacency> leftOf = new LinkedHashSet<>();
         Set<ZoneCost.Adjacency> above = new LinkedHashSet<>();

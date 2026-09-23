@@ -150,8 +150,9 @@ public final class ScrollEffect implements Effect {
     @Override
     public void apply(Widget widget) {
         if (!(widget instanceof CompositeWidget<?> composite)) {
-            throw new IllegalArgumentException("ScrollEffect can only be applied to CompositeWidget, got: "
-                    + widget.getClass().getSimpleName());
+            throw new IllegalArgumentException(
+                "ScrollEffect can only be applied to CompositeWidget, got: " + widget.getClass().getSimpleName()
+            );
         }
 
         // Set overflow: SCROLL on the container so Taffy tracks content overflow correctly
@@ -181,8 +182,7 @@ public final class ScrollEffect implements Effect {
 
         // On mount, apply the scrollbar-style value from the widget's style context
         widget.onMount((scene, context, handle) -> {
-            ScrollbarStyleData styleData = widget.style()
-                    .visualContext()
+            ScrollbarStyleData styleData = widget.style().visualContext()
                     .getProperty(ScrollbarStyleData.propertyKey, ScrollbarStyleData.class);
             if (styleData != null) {
                 styleData.applyTo(state);
@@ -191,28 +191,26 @@ public final class ScrollEffect implements Effect {
 
         // Scrollbar thumb drag support — use capture phase so clicks on the
         // scrollbar area are intercepted before children consume them.
-        widget.onMouseClicked(
-                (input, context) -> {
-                    if (!state.enabled()) {
-                        stopAutoScroll();
-                        return EventDispatch.pass;
-                    }
-                    if (input.isMiddleClick()) {
-                        return handleMiddleMouseAutoScroll(composite, input.mouseX(), input.mouseY());
-                    }
-                    if (autoScrolling && input.isMouse()) {
-                        stopAutoScroll();
-                        return EventDispatch.consumed;
-                    }
-                    if (input.isMouse()) {
-                        stopScrollbarDrag();
-                    }
-                    if (!state.draggable() || !state.showScrollbar() || !input.isLeftClick()) {
-                        return EventDispatch.pass;
-                    }
-                    return handleMousePressed(composite, input.mouseX(), input.mouseY());
-                },
-                false);
+        widget.onMouseClicked((input, context) -> {
+            if (!state.enabled()) {
+                stopAutoScroll();
+                return EventDispatch.pass;
+            }
+            if (input.isMiddleClick()) {
+                return handleMiddleMouseAutoScroll(composite, input.mouseX(), input.mouseY());
+            }
+            if (autoScrolling && input.isMouse()) {
+                stopAutoScroll();
+                return EventDispatch.consumed;
+            }
+            if (input.isMouse()) {
+                stopScrollbarDrag();
+            }
+            if (!state.draggable() || !state.showScrollbar() || !input.isLeftClick()) {
+                return EventDispatch.pass;
+            }
+            return handleMousePressed(composite, input.mouseX(), input.mouseY());
+        }, false);
 
         widget.onMouseDragged((input, deltaX, deltaY, context) -> {
             if (!state.enabled()) {
@@ -286,16 +284,20 @@ public final class ScrollEffect implements Effect {
             if (contentSize != null && !Float.isNaN(contentSize.width) && !Float.isNaN(contentSize.height)) {
                 // contentSize reports the content box extent; add padding/border back
                 // since viewport (widget.width/height) includes padding+border
-                int contentWidth = (int) Math.ceil(contentSize.width
-                        + layout.padding().left
-                        + layout.padding().right
-                        + layout.border().left
-                        + layout.border().right);
-                int contentHeight = (int) Math.ceil(contentSize.height
-                        + layout.padding().top
-                        + layout.padding().bottom
-                        + layout.border().top
-                        + layout.border().bottom);
+                int contentWidth = (int) Math.ceil(
+                    contentSize.width
+                            + layout.padding().left
+                            + layout.padding().right
+                            + layout.border().left
+                            + layout.border().right
+                );
+                int contentHeight = (int) Math.ceil(
+                    contentSize.height
+                            + layout.padding().top
+                            + layout.padding().bottom
+                            + layout.border().top
+                            + layout.border().bottom
+                );
                 state.updateContentSize(contentWidth, contentHeight);
                 return;
             }
@@ -386,8 +388,8 @@ public final class ScrollEffect implements Effect {
                     && localY < track.cross() + barWidth
                     && localX >= track.start()
                     && localX < track.start() + track.length()) {
-                float progress =
-                        (float) (localX - track.start() - thumbWidth * 0.5) / Math.max(1, track.length() - thumbWidth);
+                float progress = (float) (localX - track.start() - thumbWidth * 0.5)
+                        / Math.max(1, track.length() - thumbWidth);
                 progress = Math.clamp(progress, 0f, 1f);
                 state.jumpTo(progress * state.maxScrollX(), state.scrollY());
                 return EventDispatch.consumed;
@@ -453,14 +455,18 @@ public final class ScrollEffect implements Effect {
 
     private int computeVerticalThumbHeight(int barHeight) {
         if (barHeight <= 0 || state.contentHeight() <= 0) return Math.max(0, barHeight);
-        return Math.min(barHeight, Math.max(state.minThumbSize(), (int)
-                ((float) state.viewportHeight() / state.contentHeight() * barHeight)));
+        return Math.min(
+            barHeight,
+            Math.max(state.minThumbSize(), (int) ((float) state.viewportHeight() / state.contentHeight() * barHeight))
+        );
     }
 
     private int computeHorizontalThumbWidth(int barLength) {
         if (barLength <= 0 || state.contentWidth() <= 0) return Math.max(0, barLength);
-        return Math.min(barLength, Math.max(state.minThumbSize(), (int)
-                ((float) state.viewportWidth() / state.contentWidth() * barLength)));
+        return Math.min(
+            barLength,
+            Math.max(state.minThumbSize(), (int) ((float) state.viewportWidth() / state.contentWidth() * barLength))
+        );
     }
 
     // endregion
@@ -468,7 +474,12 @@ public final class ScrollEffect implements Effect {
     // region rendering
 
     private void renderScrollable(
-            SceneCanvas canvas, CompositeWidget<?> composite, int mouseX, int mouseY, float partialTicks) {
+        SceneCanvas canvas,
+        CompositeWidget<?> composite,
+        int mouseX,
+        int mouseY,
+        float partialTicks
+    ) {
         int width = composite.width();
         int height = composite.height();
         Insets insets = effectiveInsets(width, height);
@@ -510,12 +521,8 @@ public final class ScrollEffect implements Effect {
         canvas.texture(icon, 0, 0, width, height);
 
         // 2. Render children with scroll clipping
-        // pushClip needs absolute screen coords
-        FloatPos sceneOrigin = composite.localToScene(0, 0);
-        int absX = (int) sceneOrigin.x;
-        int absY = (int) sceneOrigin.y;
-
-        canvas.pushClip(absX + insets.left(), absY + insets.top(), viewportWidth, viewportHeight);
+        // pushClip takes local coordinates (converted to scene space internally)
+        canvas.pushClip(insets.left(), insets.top(), viewportWidth, viewportHeight);
         // Push scroll translation: children are rendered shifted by (-scrollX, -scrollY)
         canvas.pushTransform();
         canvas.translate(-scrollX, -scrollY);

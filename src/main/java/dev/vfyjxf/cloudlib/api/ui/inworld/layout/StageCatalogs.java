@@ -139,24 +139,26 @@ public final class StageCatalogs {
      *        strategies read it); null on the default path
      */
     public record CandidateContext(
+        FloatPos anchor,
+        Size variantSize,
+        OrientationFacet.Mode orientation,
+        double insetPixels,
+        LayoutEnvironment environment,
+        AlgorithmProfile.Params params,
+        Set<SpaceMask> avoids,
+        @Nullable ZoneFacet zone
+    ) {
+
+        /** The pre-zone constructor: a context without a zone declaration. */
+        public CandidateContext(
             FloatPos anchor,
             Size variantSize,
             OrientationFacet.Mode orientation,
             double insetPixels,
             LayoutEnvironment environment,
             AlgorithmProfile.Params params,
-            Set<SpaceMask> avoids,
-            @Nullable ZoneFacet zone) {
-
-        /** The pre-zone constructor: a context without a zone declaration. */
-        public CandidateContext(
-                FloatPos anchor,
-                Size variantSize,
-                OrientationFacet.Mode orientation,
-                double insetPixels,
-                LayoutEnvironment environment,
-                AlgorithmProfile.Params params,
-                Set<SpaceMask> avoids) {
+            Set<SpaceMask> avoids
+        ) {
             this(anchor, variantSize, orientation, insetPixels, environment, params, avoids, null);
         }
 
@@ -202,15 +204,20 @@ public final class StageCatalogs {
      *        path
      */
     public record RankContext(
-            FloatPos anchor,
-            @Nullable FloatPos incumbentCenter,
-            boolean sticky,
-            AlgorithmProfile.Params params,
-            @Nullable ZoneInputs zone) {
+        FloatPos anchor,
+        @Nullable FloatPos incumbentCenter,
+        boolean sticky,
+        AlgorithmProfile.Params params,
+        @Nullable ZoneInputs zone
+    ) {
 
         /** The pre-zone constructor: a context without zone inputs. */
         public RankContext(
-                FloatPos anchor, @Nullable FloatPos incumbentCenter, boolean sticky, AlgorithmProfile.Params params) {
+            FloatPos anchor,
+            @Nullable FloatPos incumbentCenter,
+            boolean sticky,
+            AlgorithmProfile.Params params
+        ) {
             this(anchor, incumbentCenter, sticky, params, null);
         }
 
@@ -410,18 +417,10 @@ public final class StageCatalogs {
 
     private static boolean isBuiltin(String name) {
         return switch (name) {
-            case candidatesSingle,
-                    candidatesRayFan,
-                    candidatesOrbitRing,
-                    candidatesDockCursor,
-                    candidatesExcentricColumn,
-                    candidatesZoneGrid,
-                    avoidNone,
-                    avoidExclusions,
-                    avoidExclusionsAndMasks,
-                    rankWeightedLinear,
-                    rankIncumbentFirst,
-                    rankZoneCost -> true;
+            case candidatesSingle, candidatesRayFan, candidatesOrbitRing, candidatesDockCursor,
+                    candidatesExcentricColumn, candidatesZoneGrid, avoidNone, avoidExclusions, avoidExclusionsAndMasks,
+                    rankWeightedLinear, rankIncumbentFirst, rankZoneCost ->
+                true;
             default -> false;
         };
     }
@@ -463,8 +462,7 @@ public final class StageCatalogs {
     }
 
     private static List<PlacementCandidate> rayFanCandidates(CandidateContext context) {
-        double radius =
-                Math.max(context.variantSize().width(), context.variantSize().height()) + 8.0;
+        double radius = Math.max(context.variantSize().width(), context.variantSize().height()) + 8.0;
         RayFan fan = new RayFan(context.anchor().x(), context.anchor().y(), radius);
         blockFan(context, fan, radius);
         List<Double> directions = fan.freeRays();
@@ -474,12 +472,13 @@ public final class StageCatalogs {
             double angle = directions.get(i);
             double cx = context.anchor().x() + Math.cos(angle) * radius;
             double cy = context.anchor().y() + Math.sin(angle) * radius;
-            candidates.add(candidate(
+            candidates.add(
+                candidate(
                     context,
-                    FloatRect.around(
-                            new FloatPos(cx, cy),
-                            context.variantSize().width(),
-                            context.variantSize().height())));
+                    FloatRect
+                            .around(new FloatPos(cx, cy), context.variantSize().width(), context.variantSize().height())
+                )
+            );
         }
         if (candidates.isEmpty()) {
             candidates.add(candidate(context, footprint(context)));
@@ -488,8 +487,7 @@ public final class StageCatalogs {
     }
 
     private static List<PlacementCandidate> orbitRingCandidates(CandidateContext context) {
-        double base =
-                Math.max(context.variantSize().width(), context.variantSize().height()) * 0.5 + 10.0;
+        double base = Math.max(context.variantSize().width(), context.variantSize().height()) * 0.5 + 10.0;
         OrbitRing ring = new OrbitRing(base, 14.0, 44.0, 4);
         double reach = base + 3 * 14.0 + 44.0;
         RayFan fan = new RayFan(context.anchor().x(), context.anchor().y(), reach);
@@ -499,12 +497,13 @@ public final class StageCatalogs {
         for (OrbitRing.Slot slot : slots) {
             double cx = context.anchor().x() + slot.offsetX();
             double cy = context.anchor().y() + slot.offsetY();
-            candidates.add(candidate(
+            candidates.add(
+                candidate(
                     context,
-                    FloatRect.around(
-                            new FloatPos(cx, cy),
-                            context.variantSize().width(),
-                            context.variantSize().height())));
+                    FloatRect
+                            .around(new FloatPos(cx, cy), context.variantSize().width(), context.variantSize().height())
+                )
+            );
         }
         if (candidates.isEmpty()) {
             candidates.add(candidate(context, footprint(context)));
@@ -592,12 +591,13 @@ public final class StageCatalogs {
     }
 
     private static void addEdgeInterval(
-            List<double[]> intervals,
-            ScreenEdge edge,
-            Rect rect,
-            double scanStart,
-            double scanEnd,
-            LayoutEnvironment env) {
+        List<double[]> intervals,
+        ScreenEdge edge,
+        Rect rect,
+        double scanStart,
+        double scanEnd,
+        LayoutEnvironment env
+    ) {
         boolean horizontal = edge == ScreenEdge.top || edge == ScreenEdge.bottom;
         double alongStart = horizontal ? rect.x() : rect.y();
         double alongEnd = horizontal ? rect.right() : rect.bottom();
@@ -606,11 +606,17 @@ public final class StageCatalogs {
         if (crossEnd <= scanStart || crossStart >= scanEnd || alongEnd <= alongStart) {
             return;
         }
-        intervals.add(new double[] {alongStart, alongEnd});
+        intervals.add(new double[]{alongStart, alongEnd});
     }
 
     private static FloatRect edgeRect(
-            ScreenEdge edge, double along, double margin, double w, double h, LayoutEnvironment env) {
+        ScreenEdge edge,
+        double along,
+        double margin,
+        double w,
+        double h,
+        LayoutEnvironment env
+    ) {
         return switch (edge) {
             case top -> new FloatRect(along, margin, w, h);
             case bottom -> new FloatRect(along, env.screenHeight() - margin - h, w, h);
@@ -648,20 +654,22 @@ public final class StageCatalogs {
     private static List<PlacementCandidate> zoneGridCandidates(CandidateContext context) {
         LayoutEnvironment env = context.environment();
         Rect safeRect = new Rect(0, 0, env.screenWidth(), env.screenHeight());
-        ZoneCandidates.Config config =
-                context.zone() != null ? context.zone().candidatesConfigOrDefault() : ZoneCandidates.Config.defaults();
-        List<ZoneCandidates.Candidate> lattice =
-                ZoneCandidates.generate(context.anchor(), context.variantSize(), safeRect, config);
+        ZoneCandidates.Config config = context.zone() != null
+                ? context.zone().candidatesConfigOrDefault()
+                : ZoneCandidates.Config.defaults();
+        List<ZoneCandidates.Candidate> lattice = ZoneCandidates
+                .generate(context.anchor(), context.variantSize(), safeRect, config);
         List<PlacementCandidate> candidates = new ArrayList<>(lattice.size());
         for (ZoneCandidates.Candidate candidate : lattice) {
             Rect rect = candidate.rect();
             candidates.add(PlacementCandidate.screen(new FloatRect(rect.x(), rect.y(), rect.width(), rect.height())));
         }
         if (candidates.isEmpty()) {
-            candidates.add(PlacementCandidate.screen(FloatRect.around(
-                    context.anchor(),
-                    context.variantSize().width(),
-                    context.variantSize().height())));
+            candidates.add(
+                PlacementCandidate.screen(
+                    FloatRect.around(context.anchor(), context.variantSize().width(), context.variantSize().height())
+                )
+            );
         }
         return candidates;
     }
@@ -691,17 +699,18 @@ public final class StageCatalogs {
         if (env.anchor() != null && env.anchor().world() != null) {
             return PlacementCandidate.dual(env.anchor().world(), rect);
         }
-        return PlacementCandidate.dual(
-                WorldAabb.around(rect.centerX(), 64.0, rect.centerY(), rect.width(), 8.0, rect.height()), rect);
+        return PlacementCandidate
+                .dual(WorldAabb.around(rect.centerX(), 64.0, rect.centerY(), rect.width(), 8.0, rect.height()), rect);
     }
 
     private static void blockFan(CandidateContext context, RayFan fan, double radius) {
         LayoutEnvironment env = context.environment();
         Rect reach = new Rect(
-                (int) Math.round(context.anchor().x() - radius),
-                (int) Math.round(context.anchor().y() - radius),
-                (int) Math.round(2 * radius),
-                (int) Math.round(2 * radius));
+            (int) Math.round(context.anchor().x() - radius),
+            (int) Math.round(context.anchor().y() - radius),
+            (int) Math.round(2 * radius),
+            (int) Math.round(2 * radius)
+        );
         for (Rect exclusion : env.exclusionRects()) {
             if (exclusion.intersects(reach)) {
                 fan.block(exclusion);
@@ -719,10 +728,11 @@ public final class StageCatalogs {
     // region built-in avoid strategies
 
     private static List<PlacementCandidate> filterExclusions(
-            List<PlacementCandidate> candidates, AvoidContext context) {
+        List<PlacementCandidate> candidates,
+        AvoidContext context
+    ) {
         List<PlacementCandidate> surviving = new ArrayList<>(candidates.size());
-        outer:
-        for (PlacementCandidate candidate : candidates) {
+        outer : for (PlacementCandidate candidate : candidates) {
             for (Rect exclusion : context.environment().exclusionRects()) {
                 if (candidate.screenRect().intersects(toFloat(exclusion))) {
                     continue outer;
@@ -734,7 +744,9 @@ public final class StageCatalogs {
     }
 
     private static List<PlacementCandidate> filterExclusionsAndMasks(
-            List<PlacementCandidate> candidates, AvoidContext context) {
+        List<PlacementCandidate> candidates,
+        AvoidContext context
+    ) {
         List<PlacementCandidate> surviving = new ArrayList<>(candidates.size());
         for (PlacementCandidate candidate : candidates) {
             if (!blockedByMasks(candidate, context)) {
@@ -787,13 +799,15 @@ public final class StageCatalogs {
 
     private static double cost(PlacementCandidate candidate, RankContext context) {
         double distance = Math.hypot(
-                candidate.screenRect().centerX() - context.anchor().x(),
-                candidate.screenRect().centerY() - context.anchor().y());
+            candidate.screenRect().centerX() - context.anchor().x(),
+            candidate.screenRect().centerY() - context.anchor().y()
+        );
         double cost = distance;
         if (context.sticky() && context.incumbentCenter() != null) {
             double incumbentDistance = Math.hypot(
-                    candidate.screenRect().centerX() - context.incumbentCenter().x(),
-                    candidate.screenRect().centerY() - context.incumbentCenter().y());
+                candidate.screenRect().centerX() - context.incumbentCenter().x(),
+                candidate.screenRect().centerY() - context.incumbentCenter().y()
+            );
             cost += context.params().switchPenalty() * Math.min(1.0, incumbentDistance / 64.0);
         }
         return cost;
@@ -807,8 +821,9 @@ public final class StageCatalogs {
         List<PlacementCandidate> rest = new ArrayList<>(candidates.size());
         for (PlacementCandidate candidate : candidates) {
             double distance = Math.hypot(
-                    candidate.screenRect().centerX() - context.incumbentCenter().x(),
-                    candidate.screenRect().centerY() - context.incumbentCenter().y());
+                candidate.screenRect().centerX() - context.incumbentCenter().x(),
+                candidate.screenRect().centerY() - context.incumbentCenter().y()
+            );
             if (distance <= 0.5) {
                 ranked.add(candidate);
             } else {
@@ -833,9 +848,12 @@ public final class StageCatalogs {
         }
         ZoneCost cost = new ZoneCost(zone.weights());
         List<PlacementCandidate> ranked = new ArrayList<>(candidates);
-        ranked.sort((a, b) -> compareCosts(
+        ranked.sort(
+            (a, b) -> compareCosts(
                 cost.cost(a.screenRect().toRect(), zone.context()),
-                cost.cost(b.screenRect().toRect(), zone.context())));
+                cost.cost(b.screenRect().toRect(), zone.context())
+            )
+        );
         return ranked;
     }
 

@@ -163,8 +163,7 @@ public final class StyleWatcher {
                         assets.add(normalize(pack.resolve("assets")));
                     }
                 }
-            } catch (IOException ignored) {
-            }
+            } catch (IOException ignored) {}
         }
 
         List<Path> roots = new ArrayList<>();
@@ -179,8 +178,7 @@ public final class StyleWatcher {
                         roots.add(themes);
                     }
                 }
-            } catch (IOException ignored) {
-            }
+            } catch (IOException ignored) {}
         }
         return roots;
     }

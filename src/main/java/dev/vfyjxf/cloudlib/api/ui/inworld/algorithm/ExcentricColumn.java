@@ -28,8 +28,7 @@ public final class ExcentricColumn {
 
     /** Which side of the focus the column occupies. */
     public enum Side {
-        left,
-        right
+        left, right
     }
 
     /**
@@ -135,10 +134,13 @@ public final class ExcentricColumn {
         List<Placed> placed = new ArrayList<>(labels.size());
         for (Label label : labels) {
             double x = side == Side.right ? columnX : columnX - label.width();
-            placed.add(new Placed(
+            placed.add(
+                new Placed(
                     label.id(),
                     new FloatPos(x, y),
-                    new FloatPos(side == Side.right ? x : x + label.width(), y + label.height() * 0.5)));
+                    new FloatPos(side == Side.right ? x : x + label.width(), y + label.height() * 0.5)
+                )
+            );
             y += label.height() + config.labelGap();
         }
         return new Layout(side, columnX, placed);
@@ -147,7 +149,10 @@ public final class ExcentricColumn {
     private SwitchGate<Side> sideGate(Side desired, double imbalance) {
         if (sideGate == null) {
             return new SwitchGate<>(
-                    new SwitchGate.Config(config.sideBand(), config.sideDwellTicks(), 0.0, 0), desired, imbalance);
+                new SwitchGate.Config(config.sideBand(), config.sideDwellTicks(), 0.0, 0),
+                desired,
+                imbalance
+            );
         }
         sideGate.propose(desired, imbalance);
         return sideGate;

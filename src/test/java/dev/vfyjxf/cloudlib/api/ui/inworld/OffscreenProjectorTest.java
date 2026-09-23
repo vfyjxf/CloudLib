@@ -17,8 +17,7 @@ class OffscreenProjectorTest {
 
     private static final double eps = 1.0e-6;
 
-    private final Projection projection =
-            ProjectionSimulator.at(0, 0, 0).lookAt(0, 0, -1).screen(480, 270).build();
+    private final Projection projection = ProjectionSimulator.at(0, 0, 0).lookAt(0, 0, -1).screen(480, 270).build();
 
     private final OffscreenProjector projector = new OffscreenProjector(8);
 
@@ -57,12 +56,8 @@ class OffscreenProjectorTest {
 
     @Test
     void farDownAndFarRightTargetsLandOnTheirEdges() {
-        assertEquals(
-                ScreenEdge.bottom,
-                projector.project(projection, new Vec3(0, -40, -10)).edge());
-        assertEquals(
-                ScreenEdge.right,
-                projector.project(projection, new Vec3(50, 0, -10)).edge());
+        assertEquals(ScreenEdge.bottom, projector.project(projection, new Vec3(0, -40, -10)).edge());
+        assertEquals(ScreenEdge.right, projector.project(projection, new Vec3(50, 0, -10)).edge());
     }
 
     @Test
@@ -106,10 +101,7 @@ class OffscreenProjectorTest {
         // circle in a tilted plane through the camera eye, eye at its center:
         // the screen direction must wind exactly one full, jump-free
         // revolution — including through the camera's back half
-        Projection circling = ProjectionSimulator.at(0, 0, 0)
-                .lookAt(0.7, 0.5, -0.5)
-                .screen(480, 270)
-                .build();
+        Projection circling = ProjectionSimulator.at(0, 0, 0).lookAt(0.7, 0.5, -0.5).screen(480, 270).build();
         Vec3 forward = circling.cameraForward();
         Vec3 circleU = new Vec3(1, 0, 0);
         Vec3 circleV = new Vec3(0, -1, -1).normalize();
@@ -124,8 +116,9 @@ class OffscreenProjectorTest {
             OffscreenProjector.Result result = projector.project(circling, target);
 
             assertTrue(
-                    Double.isFinite(result.dirX()) && Double.isFinite(result.dirY()),
-                    "direction must stay finite at theta=" + theta);
+                Double.isFinite(result.dirX()) && Double.isFinite(result.dirY()),
+                "direction must stay finite at theta=" + theta
+            );
             assertEquals(1, Math.hypot(result.dirX(), result.dirY()), 1.0e-6);
             assertEquals(target.dot(forward) <= 0, result.behind(), "behind flag at theta=" + theta);
             if (!result.onScreen()) {
@@ -159,10 +152,7 @@ class OffscreenProjectorTest {
         // camera hovering above the circle's plane: the target never hits the
         // view axis, and sweeping through the camera's back half must not
         // produce jumps, flips or out-of-bounds edge points
-        Projection circling = ProjectionSimulator.at(0, 5, 0)
-                .lookAt(0, 5, -1)
-                .screen(480, 270)
-                .build();
+        Projection circling = ProjectionSimulator.at(0, 5, 0).lookAt(0, 5, -1).screen(480, 270).build();
         Vec3 eye = circling.cameraPos();
         Vec3 forward = circling.cameraForward();
         int steps = 720;

@@ -125,16 +125,17 @@ public final class ProjectionSimulator {
         Vec3 up = explicitTarget
                 ? new Vec3(0, 1, 0)
                 : rightFromYaw(Math.toRadians(yawDegrees)).cross(forward).normalize();
-        Matrix4f worldToView = new Matrix4f()
-                .lookAt(
-                        new Vector3f((float) eyeX, (float) eyeY, (float) eyeZ),
-                        new Vector3f(
-                                (float) (eyeX + forward.x), (float) (eyeY + forward.y), (float) (eyeZ + forward.z)),
-                        new Vector3f((float) up.x, (float) up.y, (float) up.z));
-        Matrix4f viewToClip = new Matrix4f()
-                .perspective(
-                        (float) Math.toRadians(fovDegrees), (float) screenWidth / screenHeight, (float) near, (float)
-                                far);
+        Matrix4f worldToView = new Matrix4f().lookAt(
+            new Vector3f((float) eyeX, (float) eyeY, (float) eyeZ),
+            new Vector3f((float) (eyeX + forward.x), (float) (eyeY + forward.y), (float) (eyeZ + forward.z)),
+            new Vector3f((float) up.x, (float) up.y, (float) up.z)
+        );
+        Matrix4f viewToClip = new Matrix4f().perspective(
+            (float) Math.toRadians(fovDegrees),
+            (float) screenWidth / screenHeight,
+            (float) near,
+            (float) far
+        );
         return Projection.capture(worldToView, viewToClip, new Vec3(eyeX, eyeY, eyeZ), screenWidth, screenHeight);
     }
 
@@ -148,8 +149,7 @@ public final class ProjectionSimulator {
         if (screen == null) {
             throw new AssertionError("expected " + world + " to project on screen but it is behind the camera");
         }
-        Vec3 reconstructed = projection
-                .cameraPos()
+        Vec3 reconstructed = projection.cameraPos()
                 .add(projection.rayDirection(screen.x(), screen.y()).scale(projection.distance(world)));
         GeometryAsserts.assertVecEquals(world, reconstructed, epsilon);
     }
@@ -159,11 +159,17 @@ public final class ProjectionSimulator {
      * position.
      */
     public static void assertScreenOf(
-            Projection projection, Vec3 world, double screenX, double screenY, double epsilon) {
+        Projection projection,
+        Vec3 world,
+        double screenX,
+        double screenY,
+        double epsilon
+    ) {
         FloatPos screen = projection.worldToScreen(world);
         if (screen == null) {
             throw new AssertionError(
-                    "expected " + world + " at (" + screenX + ", " + screenY + ") but it is behind the camera");
+                "expected " + world + " at (" + screenX + ", " + screenY + ") but it is behind the camera"
+            );
         }
         GeometryAsserts.assertPosEquals(new FloatPos(screenX, screenY), screen, epsilon);
     }

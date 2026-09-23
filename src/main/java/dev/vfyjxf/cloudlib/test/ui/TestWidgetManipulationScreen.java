@@ -109,8 +109,7 @@ public class TestWidgetManipulationScreen extends BasicScreen {
         var header = RowWidget.create(16);
         header.useStyle(UIStyle.of(UIStyles.alignItemsCenter()));
 
-        var title =
-                LabelWidget.of("Widget Manipulation Test").setColor(0xFF3F3F3F).setShadow(false);
+        var title = LabelWidget.of("Widget Manipulation Test").setColor(0xFF3F3F3F).setShadow(false);
         title.useStyle(UIStyle.of(UIStyles.sizeOf(200, 12)));
         header.addWidget(title);
 
@@ -133,18 +132,12 @@ public class TestWidgetManipulationScreen extends BasicScreen {
 
         addRow.addWidget(createButton("Add to A", this::addWidgetToA, 0xFF0066CC));
         addRow.addWidget(createButton("Add to B", this::addWidgetToB, 0xFF006600));
-        addRow.addWidget(createButton(
-                "Add 5 to A",
-                () -> {
-                    for (int i = 0; i < 5; i++) addWidgetToA();
-                },
-                0xFF0088FF));
-        addRow.addWidget(createButton(
-                "Add 5 to B",
-                () -> {
-                    for (int i = 0; i < 5; i++) addWidgetToB();
-                },
-                0xFF00AA00));
+        addRow.addWidget(createButton("Add 5 to A", () -> {
+            for (int i = 0; i < 5; i++) addWidgetToA();
+        }, 0xFF0088FF));
+        addRow.addWidget(createButton("Add 5 to B", () -> {
+            for (int i = 0; i < 5; i++) addWidgetToB();
+        }, 0xFF00AA00));
         panel.addWidget(addRow);
 
         // Row 2: Remove Operations

@@ -67,12 +67,14 @@ class FreeRectIndexTest {
         index.occupy(new Rect(40, 40, 20, 20));
 
         assertEquals(
-                List.of(
-                        new Rect(0, 0, 40, 100),
-                        new Rect(60, 0, 40, 100),
-                        new Rect(0, 0, 100, 40),
-                        new Rect(0, 60, 100, 40)),
-                index.freeRects());
+            List.of(
+                new Rect(0, 0, 40, 100),
+                new Rect(60, 0, 40, 100),
+                new Rect(0, 0, 100, 40),
+                new Rect(0, 60, 100, 40)
+            ),
+            index.freeRects()
+        );
     }
 
     @Test
@@ -140,7 +142,7 @@ class FreeRectIndexTest {
     private static List<Rect> allocateSequence() {
         FreeRectIndex index = new FreeRectIndex(200, 100);
         List<Rect> placements = new ArrayList<>();
-        for (int[] size : new int[][] {{40, 40}, {40, 40}, {40, 40}, {40, 40}, {20, 60}, {40, 20}, {20, 20}}) {
+        for (int[] size : new int[][]{{40, 40}, {40, 40}, {40, 40}, {40, 40}, {20, 60}, {40, 20}, {20, 20}}) {
             Rect placement = index.insert(size[0], size[1]);
             if (placement != null) {
                 placements.add(placement);
@@ -162,7 +164,9 @@ class FreeRectIndexTest {
         for (int i = 0; i < placements.size(); i++) {
             for (int j = i + 1; j < placements.size(); j++) {
                 assertFalse(
-                        placements.get(i).intersects(placements.get(j)), "placements " + i + " and " + j + " overlap");
+                    placements.get(i).intersects(placements.get(j)),
+                    "placements " + i + " and " + j + " overlap"
+                );
             }
         }
     }

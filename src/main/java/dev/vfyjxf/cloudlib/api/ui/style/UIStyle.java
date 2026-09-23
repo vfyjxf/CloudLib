@@ -348,8 +348,7 @@ public final class UIStyle {
             sb.append("    ").append(value.key().id()).append(": ").append(value.value());
             sb.append(",\n");
         }
-        vars.forEach((name, tokens) ->
-                sb.append("    ").append(name).append(": ").append(tokens).append(",\n"));
+        vars.forEach((name, tokens) -> sb.append("    ").append(name).append(": ").append(tokens).append(",\n"));
         sb.setLength(sb.length() - 2);
         sb.append("\n)");
         return sb.toString();

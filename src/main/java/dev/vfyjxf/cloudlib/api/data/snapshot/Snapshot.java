@@ -18,9 +18,7 @@ import java.util.function.UnaryOperator;
 public sealed interface Snapshot<T> {
 
     enum State {
-        changed,
-        unchanged,
-        illegal;
+        changed, unchanged, illegal;
 
         public boolean changed() {
             return this == changed;

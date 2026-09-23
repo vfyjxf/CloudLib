@@ -30,7 +30,8 @@ public final class LevelOcclusionProbe implements OcclusionProbe {
     @Override
     public boolean segmentClear(Vec3 from, Vec3 to) {
         BlockHitResult hit = level.clip(
-                new ClipContext(from, to, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, CollisionContext.empty()));
+            new ClipContext(from, to, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, CollisionContext.empty())
+        );
         return hit.getType() == HitResult.Type.MISS;
     }
 }

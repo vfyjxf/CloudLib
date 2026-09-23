@@ -79,7 +79,13 @@ class LevelOcclusionProbeTest {
         // sight line funnels through the stone column, the four corner lines
         // pass outside it
         double visibility = probe.visibility(
-                new Vec3(0.5, 1.5, 8.5), new Vec3(0.5, 1.5, 0.0), new Vec3(0.02, 0, 0), new Vec3(0, 0.02, 0), 200, 200);
+            new Vec3(0.5, 1.5, 8.5),
+            new Vec3(0.5, 1.5, 0.0),
+            new Vec3(0.02, 0, 0),
+            new Vec3(0, 0.02, 0),
+            200,
+            200
+        );
         assertEquals(0.8, visibility, 1.0e-9);
     }
 

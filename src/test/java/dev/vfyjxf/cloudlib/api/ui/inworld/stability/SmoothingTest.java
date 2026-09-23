@@ -120,29 +120,33 @@ class SmoothingTest {
         assertThrows(IllegalArgumentException.class, () -> Smoothing.dampAngle(0.0, 1.0, 0.0, 0.016));
         assertThrows(IllegalArgumentException.class, () -> Smoothing.dampAngle(0.0, 1.0, 2.0, Double.NaN));
         assertThrows(
-                IllegalArgumentException.class, () -> Smoothing.dampAngle(0.0, 1.0, 2.0, Double.NEGATIVE_INFINITY));
+            IllegalArgumentException.class,
+            () -> Smoothing.dampAngle(0.0, 1.0, 2.0, Double.NEGATIVE_INFINITY)
+        );
     }
 
     private static double replayDamp(double dtSeconds, int frames) {
         double[] value = {0.0};
         FrameReplay<Double, Double> replay = FrameReplay.runUniform(
-                value,
-                dtSeconds,
-                frames,
-                0.0,
-                (subject, frameDt, input) -> subject[0] = Smoothing.damp(subject[0], 10.0, 3.0, frameDt));
+            value,
+            dtSeconds,
+            frames,
+            0.0,
+            (subject, frameDt, input) -> subject[0] = Smoothing.damp(subject[0], 10.0, 3.0, frameDt)
+        );
         return replay.lastOutput();
     }
 
     private static double replayDampAngle(double dtSeconds, int frames) {
         double[] angle = {Math.toRadians(350.0)};
         FrameReplay<Double, Double> replay = FrameReplay.runUniform(
-                angle,
-                dtSeconds,
-                frames,
-                0.0,
-                (subject, frameDt, input) ->
-                        subject[0] = Smoothing.dampAngle(subject[0], Math.toRadians(10.0), 4.0, frameDt));
+            angle,
+            dtSeconds,
+            frames,
+            0.0,
+            (subject, frameDt, input) -> subject[0] = Smoothing
+                    .dampAngle(subject[0], Math.toRadians(10.0), 4.0, frameDt)
+        );
         return replay.lastOutput();
     }
 }

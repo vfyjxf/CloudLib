@@ -131,9 +131,7 @@ public final class LeaderRouter {
 
     /** The routing style a leader ended up with. */
     public enum Style {
-        sLeader,
-        poLeader,
-        hyperLeader
+        sLeader, poLeader, hyperLeader
     }
 
     /**
@@ -175,15 +173,16 @@ public final class LeaderRouter {
      * @param routing the grid router configuration
      */
     public record Config(
-            double band,
-            int dwellEpochs,
-            double tierFoldPx,
-            double tierFullPx,
-            double tierHysteresisPx,
-            double anchorQuantPx,
-            double switchCostPx,
-            double proximityPx,
-            LeaderGridRouter.Config routing) {
+        double band,
+        int dwellEpochs,
+        double tierFoldPx,
+        double tierFullPx,
+        double tierHysteresisPx,
+        double anchorQuantPx,
+        double switchCostPx,
+        double proximityPx,
+        LeaderGridRouter.Config routing
+    ) {
 
         public Config {
             if (!Double.isFinite(band) || band <= 0) {
@@ -200,11 +199,13 @@ public final class LeaderRouter {
             }
             if (!Double.isFinite(tierHysteresisPx) || tierHysteresisPx < 0) {
                 throw new IllegalArgumentException(
-                        "tierHysteresisPx must be finite and non-negative: " + tierHysteresisPx);
+                    "tierHysteresisPx must be finite and non-negative: " + tierHysteresisPx
+                );
             }
             if (tierFullPx - tierFoldPx <= 2 * tierHysteresisPx) {
                 throw new IllegalArgumentException(
-                        "the tier bands must stay disjoint: tierFullPx - tierFoldPx > 2 * tierHysteresisPx");
+                    "the tier bands must stay disjoint: tierFullPx - tierFoldPx > 2 * tierHysteresisPx"
+                );
             }
             if (!Double.isFinite(anchorQuantPx) || anchorQuantPx <= 0) {
                 throw new IllegalArgumentException("anchorQuantPx must be finite and positive: " + anchorQuantPx);
@@ -229,17 +230,23 @@ public final class LeaderRouter {
 
         /** {@link #of} with the tier ladder's thresholds and Schmitt band. */
         public static Config ofTiered(
-                double band, int dwellEpochs, double tierFoldPx, double tierFullPx, double tierHysteresisPx) {
+            double band,
+            int dwellEpochs,
+            double tierFoldPx,
+            double tierFullPx,
+            double tierHysteresisPx
+        ) {
             return new Config(
-                    band,
-                    dwellEpochs,
-                    tierFoldPx,
-                    tierFullPx,
-                    tierHysteresisPx,
-                    12.0,
-                    20.0,
-                    6.0,
-                    LeaderGridRouter.Config.ofDefaults());
+                band,
+                dwellEpochs,
+                tierFoldPx,
+                tierFullPx,
+                tierHysteresisPx,
+                12.0,
+                20.0,
+                6.0,
+                LeaderGridRouter.Config.ofDefaults()
+            );
         }
     }
 
@@ -252,7 +259,12 @@ public final class LeaderRouter {
      * the fold segment lands on the port point itself.
      */
     public record Leader(
-            String id, double anchorX, double anchorY, AttachPointResolver.Port port, @Nullable FloatRect panel) {
+        String id,
+        double anchorX,
+        double anchorY,
+        AttachPointResolver.Port port,
+        @Nullable FloatRect panel
+    ) {
 
         public Leader {
             if (!Double.isFinite(anchorX) || !Double.isFinite(anchorY)) {
@@ -275,11 +287,12 @@ public final class LeaderRouter {
             }
             AttachPointResolver.Face face = AttachPointResolver.faceOfNormal(normalX, normalY);
             return new Leader(
-                    id,
-                    anchorX,
-                    anchorY,
-                    new AttachPointResolver.Port(face, new FloatPos(labelX, labelY), normalX, normalY),
-                    null);
+                id,
+                anchorX,
+                anchorY,
+                new AttachPointResolver.Port(face, new FloatPos(labelX, labelY), normalX, normalY),
+                null
+            );
         }
     }
 
@@ -306,15 +319,16 @@ public final class LeaderRouter {
      *        channel) so a recorded trace replays with its decisions intact
      */
     public record Route(
-            String id,
-            Style style,
-            List<FloatPos> points,
-            @Nullable String clusterId,
-            int crossings,
-            long shapeEpoch,
-            Tier tier,
-            double alpha,
-            Telemetry telemetry) {
+        String id,
+        Style style,
+        List<FloatPos> points,
+        @Nullable String clusterId,
+        int crossings,
+        long shapeEpoch,
+        Tier tier,
+        double alpha,
+        Telemetry telemetry
+    ) {
 
         public Route {
             points = List.copyOf(points);
@@ -406,10 +420,11 @@ public final class LeaderRouter {
      * @throws IllegalArgumentException if leader ids are duplicated
      */
     public List<Route> route(
-            List<Leader> leaders,
-            Map<String, String> clusters,
-            List<FloatRect> obstacles,
-            @Nullable FloatRect viewport) {
+        List<Leader> leaders,
+        Map<String, String> clusters,
+        List<FloatRect> obstacles,
+        @Nullable FloatRect viewport
+    ) {
         Map<String, Leader> byId = new LinkedHashMap<>();
         for (Leader leader : leaders) {
             if (byId.put(leader.id(), leader) != null) {
@@ -436,7 +451,8 @@ public final class LeaderRouter {
         List<Route> routes = new ArrayList<>(work.size());
         for (int i = 0; i < work.size(); i++) {
             Working w = work.get(i);
-            routes.add(new Route(
+            routes.add(
+                new Route(
                     w.id,
                     w.style,
                     w.points,
@@ -445,7 +461,9 @@ public final class LeaderRouter {
                     w.shapeEpoch,
                     w.tier,
                     w.alpha,
-                    new Telemetry(w.trigger, w.decision)));
+                    new Telemetry(w.trigger, w.decision)
+                )
+            );
         }
         return routes;
     }
@@ -508,15 +526,16 @@ public final class LeaderRouter {
     }
 
     private Working routeOne(
-            Leader leader,
-            @Nullable List<Leader> group,
-            @Nullable String clusterId,
-            int trigger,
-            List<FloatRect> obstacles,
-            @Nullable FloatRect viewport) {
+        Leader leader,
+        @Nullable List<Leader> group,
+        @Nullable String clusterId,
+        int trigger,
+        List<FloatRect> obstacles,
+        @Nullable FloatRect viewport
+    ) {
         Style desired = trigger > 0 ? Style.poLeader : Style.sLeader;
-        SwitchGate<Style> gate =
-                gates.computeIfAbsent(leader.id(), id -> new SwitchGate<>(gateConfig(), Style.sLeader, 0.0));
+        SwitchGate<Style> gate = gates
+                .computeIfAbsent(leader.id(), id -> new SwitchGate<>(gateConfig(), Style.sLeader, 0.0));
         gate.propose(desired, trigger);
         Style gated = gate.current();
 
@@ -551,11 +570,12 @@ public final class LeaderRouter {
         }
 
         boolean straightBlocked = LeaderGridRouter.polylineBlocked(
-                List.of(anchor, portPoint),
-                portPoint,
-                obstacles,
-                config.routing().clearancePx(),
-                viewport);
+            List.of(anchor, portPoint),
+            portPoint,
+            obstacles,
+            config.routing().clearancePx(),
+            viewport
+        );
         if (gated == Style.sLeader && !straightBlocked) {
             working.points = List.of(anchor, LeaderGridRouter.clamped(drawnEnd(leader), viewport));
             return working;
@@ -675,16 +695,8 @@ public final class LeaderRouter {
         double cx = rect.x() + rect.width() * 0.5;
         double cy = rect.y() + rect.height() * 0.5;
         double x0 = rect.x(), y0 = rect.y(), x1 = rect.right(), y1 = rect.bottom();
-        return new FloatPos[] {
-            new FloatPos(cx, y0),
-            new FloatPos(x1, cy),
-            new FloatPos(cx, y1),
-            new FloatPos(x0, cy),
-            new FloatPos(x0, y0),
-            new FloatPos(x1, y0),
-            new FloatPos(x1, y1),
-            new FloatPos(x0, y1)
-        };
+        return new FloatPos[]{new FloatPos(cx, y0), new FloatPos(x1, cy), new FloatPos(cx, y1), new FloatPos(x0, cy),
+                new FloatPos(x0, y0), new FloatPos(x1, y0), new FloatPos(x1, y1), new FloatPos(x0, y1)};
     }
 
     /** {@link #foldRoute}'s answer: the polyline and the border candidate it landed on (−1 = the bare port). */
@@ -705,8 +717,8 @@ public final class LeaderRouter {
 
         if (!exitChanged && prior.key.equals(key)) {
             List<FloatPos> stretched = stretch(prior.points, anchor, leader.port(), prior, viewport);
-            if (!LeaderGridRouter.polylineBlocked(
-                    stretched, portPoint, obstacles, config.routing().clearancePx(), viewport)) {
+            if (!LeaderGridRouter
+                    .polylineBlocked(stretched, portPoint, obstacles, config.routing().clearancePx(), viewport)) {
                 prior.points = stretched;
                 prior.cost = pathLength(stretched);
                 w.points = stretched;
@@ -727,17 +739,18 @@ public final class LeaderRouter {
         // both stub-axis candidates compete on the drawn cost model — the
         // perpendicular one often saves a whole bend on offset targets, the
         // dominant one wins the near-aligned case; ties keep the dominant
-        for (double[] candidate : new double[][] {primary, secondary}) {
+        for (double[] candidate : new double[][]{primary, secondary}) {
             List<FloatPos> path = LeaderGridRouter.route(
-                    anchor,
-                    candidate[0],
-                    candidate[1],
-                    portPoint,
-                    leader.port().normalX(),
-                    leader.port().normalY(),
-                    obstacles,
-                    config.routing(),
-                    viewport);
+                anchor,
+                candidate[0],
+                candidate[1],
+                portPoint,
+                leader.port().normalX(),
+                leader.port().normalY(),
+                obstacles,
+                config.routing(),
+                viewport
+            );
             if (path == null) {
                 continue;
             }
@@ -756,8 +769,8 @@ public final class LeaderRouter {
         boolean adopt = prior == null;
         if (!adopt) {
             List<FloatPos> stretched = stretch(prior.points, anchor, leader.port(), prior, viewport);
-            boolean priorValid = !LeaderGridRouter.polylineBlocked(
-                    stretched, portPoint, obstacles, config.routing().clearancePx(), viewport);
+            boolean priorValid = !LeaderGridRouter
+                    .polylineBlocked(stretched, portPoint, obstacles, config.routing().clearancePx(), viewport);
             if (priorValid && !exitChanged && prior.detour) {
                 // a bought detour is a commitment: its extra length is the
                 // crossing it avoids, which this shorter fresh route cannot
@@ -814,17 +827,18 @@ public final class LeaderRouter {
      * what is committed.
      */
     private List<FloatPos> stretch(
-            List<FloatPos> points,
-            FloatPos anchor,
-            AttachPointResolver.Port port,
-            Committed prior,
-            @Nullable FloatRect viewport) {
+        List<FloatPos> points,
+        FloatPos anchor,
+        AttachPointResolver.Port port,
+        Committed prior,
+        @Nullable FloatRect viewport
+    ) {
         FloatPos end = LeaderGridRouter.clamped(drawnEnd(port), viewport);
         if (points.size() <= 2) {
             return List.of(anchor, end);
         }
         if (points.size() == 3) {
-            return elbowFallback(anchor, new double[] {prior.dirX, prior.dirY}, port, viewport);
+            return elbowFallback(anchor, new double[]{prior.dirX, prior.dirY}, port, viewport);
         }
         FloatPos firstBend = points.get(1);
         FloatPos secondBend = points.get(2);
@@ -833,7 +847,7 @@ public final class LeaderRouter {
         if (!runsAlong(points.get(0), firstBend, prior.dirX, prior.dirY)
                 || !runsPerpendicular(firstBend, secondBend, prior.dirX, prior.dirY)
                 || !runsPerpendicular(beforeLastBend, lastBend, port.normalX(), port.normalY())) {
-            return elbowFallback(anchor, new double[] {prior.dirX, prior.dirY}, port, viewport);
+            return elbowFallback(anchor, new double[]{prior.dirX, prior.dirY}, port, viewport);
         }
         List<FloatPos> out = new ArrayList<>(points.size());
         out.add(anchor);
@@ -881,7 +895,11 @@ public final class LeaderRouter {
      * the anchor, so clamping the ends keeps the whole elbow on-screen.
      */
     private List<FloatPos> elbowFallback(
-            FloatPos anchor, double[] dir, AttachPointResolver.Port port, @Nullable FloatRect viewport) {
+        FloatPos anchor,
+        double[] dir,
+        AttachPointResolver.Port port,
+        @Nullable FloatRect viewport
+    ) {
         FloatPos end = LeaderGridRouter.clamped(drawnEnd(port), viewport);
         boolean dirHorizontal = Math.abs(dir[0]) > 0.5;
         boolean normalHorizontal = Math.abs(port.normalX()) > 0.5;
@@ -899,10 +917,12 @@ public final class LeaderRouter {
             return List.of(anchor, end);
         }
         FloatPos approach = LeaderGridRouter.clamped(
-                new FloatPos(
-                        end.x() + port.normalX() * config.routing().lastSegmentPx(),
-                        end.y() + port.normalY() * config.routing().lastSegmentPx()),
-                viewport);
+            new FloatPos(
+                end.x() + port.normalX() * config.routing().lastSegmentPx(),
+                end.y() + port.normalY() * config.routing().lastSegmentPx()
+            ),
+            viewport
+        );
         if (dirHorizontal) {
             FloatPos jog = new FloatPos(approach.x(), anchor.y());
             if (near(jog, anchor) || near(jog, approach)) {
@@ -935,8 +955,9 @@ public final class LeaderRouter {
 
     private FloatPos drawnEnd(AttachPointResolver.Port port) {
         return new FloatPos(
-                port.point().x() + port.normalX() * config.routing().arrivalGapPx(),
-                port.point().y() + port.normalY() * config.routing().arrivalGapPx());
+            port.point().x() + port.normalX() * config.routing().arrivalGapPx(),
+            port.point().y() + port.normalY() * config.routing().arrivalGapPx()
+        );
     }
 
     private FloatPos drawnEnd(Leader leader) {
@@ -956,10 +977,11 @@ public final class LeaderRouter {
      * it, so epochs served before the po upgrade carry over.
      */
     private Triggers countTriggers(
-            List<Leader> leaders,
-            Map<String, List<Leader>> clusterGroups,
-            List<FloatRect> obstacles,
-            @Nullable FloatRect viewport) {
+        List<Leader> leaders,
+        Map<String, List<Leader>> clusterGroups,
+        List<FloatRect> obstacles,
+        @Nullable FloatRect viewport
+    ) {
         Map<String, Integer> counts = new LinkedHashMap<>();
         Map<String, Boolean> baselineCrossing = new LinkedHashMap<>();
         for (Leader leader : leaders) {
@@ -992,13 +1014,12 @@ public final class LeaderRouter {
         for (Leader leader : leaders) {
             if (!obstacles.isEmpty()
                     && LeaderGridRouter.polylineBlocked(
-                            List.of(
-                                    new FloatPos(leader.anchorX(), leader.anchorY()),
-                                    leader.port().point()),
-                            leader.port().point(),
-                            obstacles,
-                            config.routing().clearancePx(),
-                            viewport)) {
+                        List.of(new FloatPos(leader.anchorX(), leader.anchorY()), leader.port().point()),
+                        leader.port().point(),
+                        obstacles,
+                        config.routing().clearancePx(),
+                        viewport
+                    )) {
                 counts.merge(leader.id(), 1, Integer::sum);
             }
         }
@@ -1079,11 +1100,12 @@ public final class LeaderRouter {
      * Remaining crossings are reported, not hidden.
      */
     private void reduceCrossings(
-            List<Working> work,
-            Map<String, List<Leader>> clusterGroups,
-            List<FloatRect> obstacles,
-            @Nullable FloatRect viewport,
-            Map<String, Boolean> baselineCrossing) {
+        List<Working> work,
+        Map<String, List<Leader>> clusterGroups,
+        List<FloatRect> obstacles,
+        @Nullable FloatRect viewport,
+        Map<String, Boolean> baselineCrossing
+    ) {
         boolean[][] crossing = crossingMatrix(work, clusterGroups);
         int[] crossings = new int[work.size()];
         for (int i = 0; i < work.size(); i++) {
@@ -1139,8 +1161,7 @@ public final class LeaderRouter {
                     continue;
                 }
                 for (int s = 0; s + 1 < work.get(j).points.size(); s++) {
-                    thin.add(thinRect(
-                            work.get(j).points.get(s), work.get(j).points.get(s + 1)));
+                    thin.add(thinRect(work.get(j).points.get(s), work.get(j).points.get(s + 1)));
                 }
             }
             FloatPos anchor = new FloatPos(w.leader.anchorX(), w.leader.anchorY());
@@ -1148,15 +1169,16 @@ public final class LeaderRouter {
             double dirX = prior != null ? prior.dirX : 1.0;
             double dirY = prior != null ? prior.dirY : 0.0;
             List<FloatPos> alt = LeaderGridRouter.route(
-                    anchor,
-                    dirX,
-                    dirY,
-                    w.leader.port().point(),
-                    w.leader.port().normalX(),
-                    w.leader.port().normalY(),
-                    thin,
-                    config.routing(),
-                    viewport);
+                anchor,
+                dirX,
+                dirY,
+                w.leader.port().point(),
+                w.leader.port().normalX(),
+                w.leader.port().normalY(),
+                thin,
+                config.routing(),
+                viewport
+            );
             if (alt == null) {
                 continue;
             }
@@ -1191,23 +1213,25 @@ public final class LeaderRouter {
      * was bought for.
      */
     private void releaseDetour(
-            Working w,
-            Committed prior,
-            List<Working> work,
-            Map<String, List<Leader>> clusterGroups,
-            List<FloatRect> obstacles,
-            @Nullable FloatRect viewport) {
+        Working w,
+        Committed prior,
+        List<Working> work,
+        Map<String, List<Leader>> clusterGroups,
+        List<FloatRect> obstacles,
+        @Nullable FloatRect viewport
+    ) {
         FloatPos anchor = new FloatPos(w.leader.anchorX(), w.leader.anchorY());
         List<FloatPos> direct = LeaderGridRouter.route(
-                anchor,
-                prior.dirX,
-                prior.dirY,
-                w.leader.port().point(),
-                w.leader.port().normalX(),
-                w.leader.port().normalY(),
-                obstacles,
-                config.routing(),
-                viewport);
+            anchor,
+            prior.dirX,
+            prior.dirY,
+            w.leader.port().point(),
+            w.leader.port().normalX(),
+            w.leader.port().normalY(),
+            obstacles,
+            config.routing(),
+            viewport
+        );
         if (direct == null) {
             return;
         }
@@ -1234,7 +1258,11 @@ public final class LeaderRouter {
      * cannot "improve" by trading one victim for another.
      */
     private static int crossingsAgainstAll(
-            List<FloatPos> points, List<Working> work, int self, Map<String, List<Leader>> clusterGroups) {
+        List<FloatPos> points,
+        List<Working> work,
+        int self,
+        Map<String, List<Leader>> clusterGroups
+    ) {
         int count = 0;
         for (int j = 0; j < work.size(); j++) {
             if (j == self || work.get(j).points.size() < 2) {
@@ -1341,7 +1369,12 @@ public final class LeaderRouter {
     }
 
     private static boolean collinearOverlap(
-            FloatPos a1, FloatPos a2, FloatPos b1, FloatPos b2, double... orientations) {
+        FloatPos a1,
+        FloatPos a2,
+        FloatPos b1,
+        FloatPos b2,
+        double... orientations
+    ) {
         for (double orientation : orientations) {
             if (Math.abs(orientation) > epsilon) {
                 return false;
@@ -1359,8 +1392,9 @@ public final class LeaderRouter {
             return 0.0;
         }
         return Math.min(
-                Math.min(pointSegmentDistance(a1, b1, b2), pointSegmentDistance(a2, b1, b2)),
-                Math.min(pointSegmentDistance(b1, a1, a2), pointSegmentDistance(b2, a1, a2)));
+            Math.min(pointSegmentDistance(a1, b1, b2), pointSegmentDistance(a2, b1, b2)),
+            Math.min(pointSegmentDistance(b1, a1, a2), pointSegmentDistance(b2, a1, a2))
+        );
     }
 
     private static boolean segmentsTouch(FloatPos a1, FloatPos a2, FloatPos b1, FloatPos b2) {
@@ -1402,15 +1436,14 @@ public final class LeaderRouter {
 
     /** The drawn cost of a candidate route: length plus one bend penalty per interior vertex. */
     private double candidateCost(List<FloatPos> points) {
-        return pathLength(points)
-                + Math.max(0, points.size() - 2) * config.routing().bendPenaltyPx();
+        return pathLength(points) + Math.max(0, points.size() - 2) * config.routing().bendPenaltyPx();
     }
 
     private static double[] axisUnit(double dx, double dy) {
         if (Math.abs(dx) >= Math.abs(dy)) {
-            return new double[] {Math.signum(dx) == 0 ? 1.0 : Math.signum(dx), 0.0};
+            return new double[]{Math.signum(dx) == 0 ? 1.0 : Math.signum(dx), 0.0};
         }
-        return new double[] {0.0, Math.signum(dy)};
+        return new double[]{0.0, Math.signum(dy)};
     }
 
     // endregion

@@ -55,9 +55,10 @@ class MipmapChainTest {
         // magnified: level 0 is all the LINEAR magnifier samples — skip
         assertFalse(chain.shouldGenerate(false));
         assertEquals(
-                MipmapChain.MinFilter.linearMipmapLinear,
-                chain.minFilter(),
-                "the existing chain keeps mipmap filtering");
+            MipmapChain.MinFilter.linearMipmapLinear,
+            chain.minFilter(),
+            "the existing chain keeps mipmap filtering"
+        );
         // minified: the chain filters the shrink — regenerate against the
         // fresh level-0 content
         assertTrue(chain.shouldGenerate(true));
@@ -74,17 +75,19 @@ class MipmapChainTest {
         for (int frame = 0; frame < minifies.length; frame++) {
             if (resizes[frame]) chain.reallocated();
             assertEquals(
-                    chain.isValid() ? MipmapChain.MinFilter.linearMipmapLinear : MipmapChain.MinFilter.linear,
-                    chain.minFilter(),
-                    "frame " + frame + ": MIN filter must match chain validity");
+                chain.isValid() ? MipmapChain.MinFilter.linearMipmapLinear : MipmapChain.MinFilter.linear,
+                chain.minFilter(),
+                "frame " + frame + ": MIN filter must match chain validity"
+            );
             if (chain.shouldGenerate(minifies[frame])) {
                 // UiSurface's half: generate, then flip validity — the same
                 // frame may return to mipmap filtering
                 chain.generated();
                 assertEquals(
-                        MipmapChain.MinFilter.linearMipmapLinear,
-                        chain.minFilter(),
-                        "frame " + frame + ": post-generation filter");
+                    MipmapChain.MinFilter.linearMipmapLinear,
+                    chain.minFilter(),
+                    "frame " + frame + ": post-generation filter"
+                );
             }
         }
     }

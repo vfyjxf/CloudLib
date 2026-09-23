@@ -115,9 +115,7 @@ public record FloatRect(double x, double y, double width, double height) {
      * Integer-rounded copy for consumers working in whole pixels.
      */
     public Rect toRect() {
-        return new Rect(
-                (int) Math.round(x), (int) Math.round(y),
-                (int) Math.round(width), (int) Math.round(height));
+        return new Rect((int) Math.round(x), (int) Math.round(y), (int) Math.round(width), (int) Math.round(height));
     }
 
     @Override

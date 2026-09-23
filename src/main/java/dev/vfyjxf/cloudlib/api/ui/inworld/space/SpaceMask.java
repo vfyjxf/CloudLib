@@ -16,12 +16,7 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.space;
  * </ul>
  */
 public enum SpaceMask {
-    hudBase,
-    hudOverlay,
-    screenPanel,
-    worldAnchored,
-    indicator,
-    debug;
+    hudBase, hudOverlay, screenPanel, worldAnchored, indicator, debug;
 
     /** The single bit this layer occupies. */
     public int bit() {

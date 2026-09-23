@@ -23,13 +23,15 @@ import java.util.List;
 public record ContainerContentsPayload(BlockPos pos, List<ItemStack> stacks) implements ClientboundPayload {
 
     public static final ClientPayloadInfo<ContainerContentsPayload> info = CloudlibPayloads.createClientInfo(
-            StreamCodec.composite(
-                    BlockPos.STREAM_CODEC,
-                    ContainerContentsPayload::pos,
-                    ItemStack.OPTIONAL_STREAM_CODEC.apply(ByteBufCodecs.list(512)),
-                    ContainerContentsPayload::stacks,
-                    ContainerContentsPayload::new),
-            "container_contents");
+        StreamCodec.composite(
+            BlockPos.STREAM_CODEC,
+            ContainerContentsPayload::pos,
+            ItemStack.OPTIONAL_STREAM_CODEC.apply(ByteBufCodecs.list(512)),
+            ContainerContentsPayload::stacks,
+            ContainerContentsPayload::new
+        ),
+        "container_contents"
+    );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
