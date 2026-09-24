@@ -69,7 +69,7 @@ public final class FocusEnvelope {
     private double phase;
 
     public FocusEnvelope(Config config) {
-        this.config = config == null ? Config.ofDefaults() : config;
+        this.config = config;
         pulse = new PairingPulse(new PairingPulse.Config(this.config.pulseSeconds(), this.config.opacityDelta()));
     }
 

@@ -149,14 +149,12 @@ public class CompositeWidget<T extends Widget> extends Widget {
         listeners(WidgetEvent.onChildRemoved).onChildRemoved(child, interruptible());
         child.listeners(WidgetEvent.onRemove).onRemove(this, child);
         Widget widget = children.remove(index);
-        if (widget != null) {
-            childrenOrderDirty = true;
-            if (scene != null) {
-                scene.unmountWidget(widget);
-                scene.invalidatePathCache();
-            }
+        childrenOrderDirty = true;
+        if (scene != null) {
+            scene.unmountWidget(widget);
+            scene.invalidatePathCache();
         }
-        return widget != null;
+        return true;
     }
 
     protected void clear() {

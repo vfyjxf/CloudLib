@@ -1,5 +1,10 @@
 package dev.vfyjxf.cloudlib.api.text;
 
+import org.jspecify.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -16,15 +21,19 @@ import java.util.List;
  *   <li>{@link String} / {@link Number} / others — rendered via {@link String#valueOf}.</li>
  * </ul>
  * A missing translation falls back to the key itself, like vanilla does.
+ *
+ * @param key  the translation key
+ * @param args the placeholder arguments in order; a {@code null} entry renders as
+ *             {@code "null"}, like vanilla
  */
-public record TranslatableNode(String key, List<Object> args) implements RichNode {
+public record TranslatableNode(String key, List<@Nullable Object> args) implements RichNode {
 
     public TranslatableNode {
         if (key == null) throw new NullPointerException("key");
-        args = List.copyOf(args);
+        args = Collections.unmodifiableList(new ArrayList<@Nullable Object>(args));
     }
 
-    public TranslatableNode(String key, Object... args) {
-        this(key, List.of(args));
+    public TranslatableNode(String key, @Nullable Object... args) {
+        this(key, Arrays.asList(args));
     }
 }

@@ -302,7 +302,6 @@ public class TestFloatingScreen extends BasicScreen {
     }
 
     private void reapplyEffect() {
-        if (floatingLabel == null || referenceBox == null) return;
         floatingLabel.setText("Floating: " + currentPlacement.name());
         activeEffect = FloatingEffect.create(referenceBox, currentPlacement, buildMiddleware());
         floatingLabel.useEffect(activeEffect);
@@ -315,9 +314,7 @@ public class TestFloatingScreen extends BasicScreen {
     }
 
     private void updateStatus() {
-        if (statusLabel != null) {
-            statusLabel.setText(buildStatusText());
-        }
+        statusLabel.setText(buildStatusText());
     }
 
     private String buildStatusText() {

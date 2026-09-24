@@ -51,7 +51,6 @@ public final class AssembledElement implements InworldElement {
 
     private @Nullable LayoutEnvironment environment;
     private InworldLayouter.@Nullable SpaceReservation reservation;
-    private boolean reservationResolved;
 
     AssembledElement(
         ElementSpec spec,
@@ -78,7 +77,7 @@ public final class AssembledElement implements InworldElement {
      */
     public void beginFrame(LayoutEnvironment frameEnvironment) {
         this.environment = Objects.requireNonNull(frameEnvironment, "frameEnvironment");
-        resolveReservation();
+        reservation();
     }
 
     /**
@@ -215,7 +214,7 @@ public final class AssembledElement implements InworldElement {
                     incumbentCenter(context),
                     sticky(),
                     spec.profile().algorithm().params(),
-                    zoneInputs(context, anchor)
+                    zoneInputs(context, anchor, spec.zone())
                 );
         List<PlacementCandidate> ranked = rank.rank(surviving, rankContext);
         return ElementProposal.of(context.variant(), anchor, ranked);
@@ -230,8 +229,11 @@ public final class AssembledElement implements InworldElement {
      * previous committed frame — this frame's incremental placements never
      * enter element-side scoring.
      */
-    private StageCatalogs.RankContext.ZoneInputs zoneInputs(InworldLayoutContext context, FloatPos anchor) {
-        ZoneFacet zone = Objects.requireNonNull(spec.zone(), "zone");
+    private StageCatalogs.RankContext.ZoneInputs zoneInputs(
+        InworldLayoutContext context,
+        FloatPos anchor,
+        ZoneFacet zone
+    ) {
         LayoutEnvironment env = context.environment();
         PreviousFrameLayout previous = env.previousLayout();
         Map<String, Rect> placed = new LinkedHashMap<>();
@@ -287,14 +289,17 @@ public final class AssembledElement implements InworldElement {
 
     // region reservation
 
+    /**
+     * The element's declared space posture: resolved once by the custom
+     * layouter's {@code reserve}, or supplied by the facets.
+     *
+     * @throws IllegalArgumentException when the custom layouter's
+     *         {@code reserve} returns no reservation
+     */
     private InworldLayouter.SpaceReservation reservation() {
-        resolveReservation();
-        return Objects.requireNonNull(reservation, "reservation");
-    }
-
-    private void resolveReservation() {
-        if (reservationResolved) {
-            return;
+        InworldLayouter.SpaceReservation resolved = reservation;
+        if (resolved != null) {
+            return resolved;
         }
         if (spec.custom() != null) {
             Rect area = new Rect(0, 0, environment().screenWidth(), environment().screenHeight());
@@ -308,17 +313,20 @@ public final class AssembledElement implements InworldElement {
                 environment(),
                 spec
             );
-            reservation = spec.custom().reserve(context);
-            reservationResolved = true;
-            return;
+            resolved = spec.custom().reserve(context);
+            if (resolved == null) {
+                throw new IllegalArgumentException("layouter of element " + spec.id() + " reserved no space");
+            }
+        } else {
+            resolved = new InworldLayouter.SpaceReservation(
+                spaceKindOf(spec.anchor()),
+                spec.spaces().priority(),
+                spec.stability().stickySlot(),
+                ElementMode.arbitrated
+            );
         }
-        reservation = new InworldLayouter.SpaceReservation(
-            spaceKindOf(spec.anchor()),
-            spec.spaces().priority(),
-            spec.stability().stickySlot(),
-            ElementMode.arbitrated
-        );
-        reservationResolved = true;
+        reservation = resolved;
+        return resolved;
     }
 
     private static SpaceKind spaceKindOf(AnchorFacet anchor) {

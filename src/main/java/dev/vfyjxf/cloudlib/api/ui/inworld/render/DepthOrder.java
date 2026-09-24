@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 
@@ -71,9 +70,10 @@ public final class DepthOrder {
         for (T item : ordered) {
             distances.put(item, distance.applyAsDouble(item));
         }
+        ToDoubleFunction<T> cachedDistance = item -> distances.get(item);
         // far → near; exactly-equal distances fall back to the registration
         // sequence, so the primary pass is a total order of its own
-        Comparator<T> byDistance = Comparator.comparingDouble((T item) -> distances.get(item)).reversed();
+        Comparator<T> byDistance = Comparator.comparingDouble(cachedDistance).reversed();
         ordered.sort(byDistance.thenComparingInt(sequence));
         // chain sorted neighbours within tieEps into clusters (cluster ids
         // come out in far → near order, and the chain is single-link:
@@ -82,7 +82,7 @@ public final class DepthOrder {
         int clusterId = 0;
         double previous = Double.POSITIVE_INFINITY;
         for (T item : ordered) {
-            double d = Objects.requireNonNull(distances.get(item));
+            double d = cachedDistance.applyAsDouble(item);
             if (previous - d >= tieEps) clusterId++;
             cluster.put(item, clusterId);
             previous = d;

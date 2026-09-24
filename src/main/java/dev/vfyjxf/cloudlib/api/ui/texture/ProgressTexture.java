@@ -1,11 +1,16 @@
 package dev.vfyjxf.cloudlib.api.ui.texture;
 
 import net.minecraft.client.gui.GuiGraphics;
+import org.jspecify.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
  * Progress texture that clips display based on progress value.
+ * <p>
+ * The background is optional and may be {@code null}; the foreground is required and is
+ * validated on construction.
  * <p>
  * Progress can be sourced from:
  * <ul>
@@ -17,8 +22,15 @@ public class ProgressTexture implements SizedTexture {
 
     // region factory
 
+    /**
+     * Creates a texture whose foreground fills from left to right.
+     *
+     * @param bg the background, may be {@code null} for no background
+     * @param fg the foreground, must be non-null
+     * @param progress the progress source
+     */
     public static ProgressTexture horizontal(
-        VisualTexture bg,
+        @Nullable VisualTexture bg,
         VisualTexture fg,
         int w,
         int h,
@@ -27,15 +39,52 @@ public class ProgressTexture implements SizedTexture {
         return new ProgressTexture(bg, fg, w, h, Direction.leftToRight, progress);
     }
 
-    public static ProgressTexture vertical(VisualTexture bg, VisualTexture fg, int w, int h, Supplier<Float> progress) {
+    /**
+     * Creates a texture whose foreground fills from bottom to top.
+     *
+     * @param bg the background, may be {@code null} for no background
+     * @param fg the foreground, must be non-null
+     * @param progress the progress source
+     */
+    public static ProgressTexture vertical(
+        @Nullable VisualTexture bg,
+        VisualTexture fg,
+        int w,
+        int h,
+        Supplier<Float> progress
+    ) {
         return new ProgressTexture(bg, fg, w, h, Direction.bottomToTop, progress);
     }
 
-    public static ProgressTexture horizontal(VisualTexture bg, VisualTexture fg, int w, int h, Animation<?> anim) {
+    /**
+     * Creates a texture whose foreground fills from left to right, driven by an animation.
+     *
+     * @param bg the background, may be {@code null} for no background
+     * @param fg the foreground, must be non-null
+     */
+    public static ProgressTexture horizontal(
+        @Nullable VisualTexture bg,
+        VisualTexture fg,
+        int w,
+        int h,
+        Animation<?> anim
+    ) {
         return new ProgressTexture(bg, fg, w, h, Direction.leftToRight, anim);
     }
 
-    public static ProgressTexture vertical(VisualTexture bg, VisualTexture fg, int w, int h, Animation<?> anim) {
+    /**
+     * Creates a texture whose foreground fills from bottom to top, driven by an animation.
+     *
+     * @param bg the background, may be {@code null} for no background
+     * @param fg the foreground, must be non-null
+     */
+    public static ProgressTexture vertical(
+        @Nullable VisualTexture bg,
+        VisualTexture fg,
+        int w,
+        int h,
+        Animation<?> anim
+    ) {
         return new ProgressTexture(bg, fg, w, h, Direction.bottomToTop, anim);
     }
 
@@ -51,14 +100,20 @@ public class ProgressTexture implements SizedTexture {
 
     // region state
 
-    private final VisualTexture background;
+    private final @Nullable VisualTexture background;
     private final VisualTexture foreground;
     private final int width, height;
     private final Direction direction;
     private final Supplier<Float> progressSupplier;
 
+    /**
+     * @param background the background, may be {@code null} for no background
+     * @param foreground the foreground, must be non-null
+     * @param direction the direction the foreground fills in
+     * @param progressSupplier the progress source
+     */
     public ProgressTexture(
-        VisualTexture background,
+        @Nullable VisualTexture background,
         VisualTexture foreground,
         int width,
         int height,
@@ -66,7 +121,7 @@ public class ProgressTexture implements SizedTexture {
         Supplier<Float> progressSupplier
     ) {
         this.background = background;
-        this.foreground = foreground;
+        this.foreground = Objects.requireNonNull(foreground, "foreground");
         this.width = width;
         this.height = height;
         this.direction = direction;
@@ -75,9 +130,14 @@ public class ProgressTexture implements SizedTexture {
 
     /**
      * Creates with progress from an Animation.
+     *
+     * @param background the background, may be {@code null} for no background
+     * @param foreground the foreground, must be non-null
+     * @param direction the direction the foreground fills in
+     * @param animation the animation supplying the progress
      */
     public ProgressTexture(
-        VisualTexture background,
+        @Nullable VisualTexture background,
         VisualTexture foreground,
         int width,
         int height,
@@ -89,9 +149,13 @@ public class ProgressTexture implements SizedTexture {
 
     /**
      * Creates with horizontal direction (left to right).
+     *
+     * @param background the background, may be {@code null} for no background
+     * @param foreground the foreground, must be non-null
+     * @param progressSupplier the progress source
      */
     public ProgressTexture(
-        VisualTexture background,
+        @Nullable VisualTexture background,
         VisualTexture foreground,
         int width,
         int height,

@@ -24,28 +24,40 @@ public final class GuideLineUniforms {
      * caller's business.
      */
     public static void applyStyle(ShaderInstance shader, GuideLineStyle style) {
-        shader.getUniform("LineWidth").set(style.lineWidth());
-        shader.getUniform("EdgeWidth").set(style.edgeWidth());
+        uniform(shader, "LineWidth").set(style.lineWidth());
+        uniform(shader, "EdgeWidth").set(style.edgeWidth());
         color(shader, "LineColor", style.lineColor());
         color(shader, "EdgeColor", style.edgeColor());
-        shader.getUniform("FadeFraction").set(style.fadeFraction());
-        shader.getUniform("FadeAlpha").set(style.fadeAlpha());
-        shader.getUniform("DashPeriod").set(style.dashPeriodPx());
-        shader.getUniform("DashDuty").set(style.dashDuty());
-        shader.getUniform("DashPhase").set(style.dashPhasePx());
-        shader.getUniform("ArcStart").set(style.arcStart());
-        shader.getUniform("ArcEnd").set(style.arcEnd());
+        uniform(shader, "FadeFraction").set(style.fadeFraction());
+        uniform(shader, "FadeAlpha").set(style.fadeAlpha());
+        uniform(shader, "DashPeriod").set(style.dashPeriodPx());
+        uniform(shader, "DashDuty").set(style.dashDuty());
+        uniform(shader, "DashPhase").set(style.dashPhasePx());
+        uniform(shader, "ArcStart").set(style.arcStart());
+        uniform(shader, "ArcEnd").set(style.arcEnd());
     }
 
     /** Decomposes an ARGB int into the (r, g, b, a) float quad a colour uniform takes. */
-    @SuppressWarnings("DataFlowIssue")
     public static void color(ShaderInstance shader, String name, int argb) {
-        Uniform uniform = shader.getUniform(name);
+        Uniform uniform = uniform(shader, name);
         uniform.set(
             ((argb >> 16) & 0xFF) / 255f,
             ((argb >> 8) & 0xFF) / 255f,
             (argb & 0xFF) / 255f,
             ((argb >>> 24) & 0xFF) / 255f
         );
+    }
+
+    /**
+     * The named uniform of {@code shader}. A name the shader's json does not
+     * declare is a broken draw, so it fails here naming the uniform instead of
+     * silently setting nothing.
+     */
+    private static Uniform uniform(ShaderInstance shader, String name) {
+        Uniform uniform = shader.getUniform(name);
+        if (uniform == null) {
+            throw new IllegalStateException("Shader uniform not found: " + name);
+        }
+        return uniform;
     }
 }

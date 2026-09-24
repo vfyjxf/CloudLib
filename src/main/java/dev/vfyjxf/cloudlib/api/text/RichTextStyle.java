@@ -15,7 +15,8 @@ import org.jspecify.annotations.Nullable;
  * The remaining fields are CloudLib extensions understood by the rich text layouter
  * and renderer.
  *
- * @param style          the vanilla style, never {@code null} ({@link Style#EMPTY} by default)
+ * @param style          the vanilla style, never {@code null} ({@code null} is normalized to
+ *                       {@link Style#EMPTY})
  * @param shadow         whether text runs draw with a drop shadow; {@code null} = inherit
  * @param highlightColor ARGB background highlight behind the fragments; {@code null} = none/inherit
  * @param verticalAlign  vertical alignment of inline objects within a line; {@code null} = inherit
@@ -34,6 +35,10 @@ public record RichTextStyle(
 ) {
 
     public static final RichTextStyle empty = new RichTextStyle(Style.EMPTY, null, null, null, null, null);
+
+    public RichTextStyle {
+        if (style == null) style = Style.EMPTY;
+    }
 
     public static RichTextStyle of(Style style) {
         return new RichTextStyle(style, null, null, null, null, null);

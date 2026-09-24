@@ -163,6 +163,8 @@ public final class PluginDispatcher<T extends ModPlugin> {
             throws PluginLoadingException {
         Checks.checkNotNull(event, "event");
         Checks.checkNotNull(eventName, "eventName");
+        Checks.checkNotNull(logger, "logger");
+        Checks.checkNotNull(progress, "progress");
 
         logger.debug("{}: dispatching to {} plugins ({} levels)", eventName, plugins.size(), graph.depth());
 

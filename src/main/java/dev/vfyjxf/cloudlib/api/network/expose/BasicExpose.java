@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.data.snapshot.Snapshot;
 import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
 import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 @ApiStatus.Internal
 abstract sealed class BasicExpose<T> implements Expose<T> permits BasicDownstreamExpose, StandardReversed {
@@ -47,22 +48,31 @@ abstract sealed class BasicExpose<T> implements Expose<T> permits BasicDownstrea
     }
 
     @Override
-    public T current() {
+    public @Nullable T current() {
         return supplier.get();
     }
 
     @Override
+    public boolean hasValue() {
+        return current() != null;
+    }
+
+    @Override
     public void updateSnapshot() {
-        if (snapshot.mutable()) {
-            snapshot.updateState(supplier.get());
-        }
+        if (!snapshot.mutable()) return;
+        @Nullable
+        T current = current();
+        if (current == null) return;
+        snapshot.updateState(current);
     }
 
     @Override
     public void forceUpdateSnapshot() {
-        if (snapshot.mutable()) {
-            snapshot.forceUpdateState(supplier.get());
-        }
+        if (!snapshot.mutable()) return;
+        @Nullable
+        T current = current();
+        if (current == null) return;
+        snapshot.forceUpdateState(current);
     }
 
     @Override

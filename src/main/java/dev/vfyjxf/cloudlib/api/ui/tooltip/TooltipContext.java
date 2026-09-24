@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.maps.MapId;
@@ -13,13 +14,18 @@ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.neoforged.neoforge.common.util.AttributeTooltipContext;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Objects;
-
+/**
+ * The tooltip context the item and attribute tooltip producers are handed: the
+ * registry lookup, the level, the player and the flag their rendering may ask
+ * for. Everything a caller cannot supply stays absent — a context built with no
+ * world carries a null level, a null player and, with them, no registry lookup,
+ * which is {@link Item.TooltipContext#EMPTY}'s answer too.
+ */
 public record TooltipContext(
-    HolderLookup.Provider registries,
-    Level level,
-    Player player,
-    TooltipFlag flag,
+    HolderLookup.@Nullable Provider registries,
+    @Nullable Level level,
+    @Nullable Player player,
+    @Nullable TooltipFlag flag,
     float tickRate
 ) implements AttributeTooltipContext {
 
@@ -29,21 +35,19 @@ public record TooltipContext(
         @Nullable TooltipFlag tooltipFlag
     ) {
         var minecraft = Minecraft.getInstance();
-        level = level == null ? Objects.requireNonNull(minecraft.level) : level;
-        player = player == null ? Objects.requireNonNull(minecraft.player) : player;
         var advancedItemTooltips = minecraft.options.advancedItemTooltips;
-        tooltipFlag = tooltipFlag == null
+        var resolvedFlag = tooltipFlag == null
                 ? (advancedItemTooltips ? TooltipFlag.ADVANCED : TooltipFlag.NORMAL)
                 : tooltipFlag;
-        var registryAccess = level.registryAccess();
-        float tickRate = level.tickRateManager().tickrate();
-        return new TooltipContext(registryAccess, level, player, tooltipFlag, tickRate);
+        var noWorld = Item.TooltipContext.EMPTY;
+        var registryAccess = level == null ? noWorld.registries() : level.registryAccess();
+        float tickRate = level == null ? noWorld.tickRate() : level.tickRateManager().tickrate();
+        return new TooltipContext(registryAccess, level, player, resolvedFlag, tickRate);
     }
 
     public static TooltipContext create() {
         var minecraft = Minecraft.getInstance();
-        var level = minecraft.level;
-        return create(level, minecraft.player, null);
+        return create(minecraft.level, minecraft.player, null);
     }
 
     public FloatPos mousePos() {

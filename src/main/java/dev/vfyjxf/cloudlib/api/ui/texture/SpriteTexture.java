@@ -21,6 +21,13 @@ public class SpriteTexture implements SizedTexture, BatchableTexture {
     private final Supplier<TextureAtlasSprite> spriteSupplier;
     private int width, height; // <0 = intrinsic, resolved from the sprite on first access
 
+    /**
+     * Creates with a sprite supplier.
+     *
+     * @param spriteSupplier the sprite source, must return a non-null sprite on every call
+     * @param width the width, or a negative value to resolve it from the sprite on first access
+     * @param height the height, or a negative value to resolve it from the sprite on first access
+     */
     public SpriteTexture(Supplier<TextureAtlasSprite> spriteSupplier, int width, int height) {
         this.spriteSupplier = spriteSupplier;
         this.width = width;
@@ -73,6 +80,9 @@ public class SpriteTexture implements SizedTexture, BatchableTexture {
 
     // region query
 
+    /**
+     * Returns the sprite from the configured supplier, which must return a non-null sprite.
+     */
     public TextureAtlasSprite sprite() {
         return spriteSupplier.get();
     }

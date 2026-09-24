@@ -2,6 +2,7 @@ package dev.vfyjxf.cloudlib.api.ui.canvas;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import dev.vfyjxf.cloudlib.api.math.FloatPos;
@@ -964,11 +965,23 @@ public final class SceneCanvas {
     }
 
     /**
+     * The named uniform of {@code shader}. A name the shader's json does not
+     * declare is a broken draw, so it fails here naming the uniform instead of
+     * silently setting nothing.
+     */
+    private static Uniform uniform(ShaderInstance shader, String name) {
+        Uniform uniform = shader.getUniform(name);
+        if (uniform == null) {
+            throw new IllegalStateException("Shader uniform not found: " + name);
+        }
+        return uniform;
+    }
+
+    /**
      * Decomposes an ARGB colour int and sets a vec4 uniform (r, g, b, a).
      */
-    @SuppressWarnings("DataFlowIssue")
     private static void setColorUniform(ShaderInstance shader, String name, int argb) {
-        shader.getUniform(name).set(
+        uniform(shader, name).set(
             ((argb >> 16) & 0xFF) / 255f,
             ((argb >> 8) & 0xFF) / 255f,
             (argb & 0xFF) / 255f,
@@ -1092,7 +1105,6 @@ public final class SceneCanvas {
     /**
      * Most general rounded-rect overload with texture support.
      */
-    @SuppressWarnings("DataFlowIssue")
     public SceneCanvas roundedRectTextured(
         int x,
         int y,
@@ -1113,16 +1125,16 @@ public final class SceneCanvas {
         directDraw(() -> {
             RenderSystem.setShader(() -> shader);
             setColorUniform(shader, "FillColor", tint(fillColor));
-            shader.getUniform("Size").set((float) width, (float) height);
-            shader.getUniform("Radii").set(radiusBR, radiusTR, radiusBL, radiusTL);
-            shader.getUniform("BorderWidth").set(borderWidth);
+            uniform(shader, "Size").set((float) width, (float) height);
+            uniform(shader, "Radii").set(radiusBR, radiusTR, radiusBL, radiusTL);
+            uniform(shader, "BorderWidth").set(borderWidth);
             setColorUniform(shader, "BorderColor", tint(borderColor));
-            shader.getUniform("Smoothing").set(getSmoothing());
+            uniform(shader, "Smoothing").set(getSmoothing());
             if (texture != null) {
-                shader.getUniform("HasTexture").set(1);
+                uniform(shader, "HasTexture").set(1);
                 RenderSystem.setShaderTexture(0, texture);
             } else {
-                shader.getUniform("HasTexture").set(0);
+                uniform(shader, "HasTexture").set(0);
             }
             drawShaderQuad(x, y, width, height);
         });
@@ -1179,7 +1191,6 @@ public final class SceneCanvas {
     /**
      * Draws an ellipse with a texture bound to Sampler0.
      */
-    @SuppressWarnings("DataFlowIssue")
     public SceneCanvas ellipseTextured(
         float x,
         float y,
@@ -1196,15 +1207,15 @@ public final class SceneCanvas {
         directDraw(() -> {
             RenderSystem.setShader(() -> shader);
             setColorUniform(shader, "FillColor", tint(fillColor));
-            shader.getUniform("Size").set(width, height);
-            shader.getUniform("BorderWidth").set(borderWidth);
+            uniform(shader, "Size").set(width, height);
+            uniform(shader, "BorderWidth").set(borderWidth);
             setColorUniform(shader, "BorderColor", tint(borderColor));
-            shader.getUniform("Smoothing").set(getSmoothing());
+            uniform(shader, "Smoothing").set(getSmoothing());
             if (texture != null) {
-                shader.getUniform("HasTexture").set(1);
+                uniform(shader, "HasTexture").set(1);
                 RenderSystem.setShaderTexture(0, texture);
             } else {
-                shader.getUniform("HasTexture").set(0);
+                uniform(shader, "HasTexture").set(0);
             }
             drawShaderQuad(x, y, width, height);
         });
@@ -1344,7 +1355,6 @@ public final class SceneCanvas {
      * curves.  Computes the bounding box from control points, remaps them
      * into quad-local pixel coordinates, and sets all uniforms.
      */
-    @SuppressWarnings("DataFlowIssue")
     private SceneCanvas bezierInternal(
         int curveType,
         float ax,
@@ -1374,17 +1384,17 @@ public final class SceneCanvas {
 
         directDraw(() -> {
             RenderSystem.setShader(() -> shader);
-            shader.getUniform("Size").set(qw, qh);
-            shader.getUniform("P0").set(ax - minX, ay - minY);
-            shader.getUniform("P1").set(bx - minX, by - minY);
-            shader.getUniform("P2").set(cx - minX, cy - minY);
-            shader.getUniform("P3").set(dx - minX, dy - minY);
-            shader.getUniform("CurveType").set(curveType);
-            shader.getUniform("LineWidth").set(lineWidth * 0.5f);
-            shader.getUniform("Smoothing").set(getSmoothing());
+            uniform(shader, "Size").set(qw, qh);
+            uniform(shader, "P0").set(ax - minX, ay - minY);
+            uniform(shader, "P1").set(bx - minX, by - minY);
+            uniform(shader, "P2").set(cx - minX, cy - minY);
+            uniform(shader, "P3").set(dx - minX, dy - minY);
+            uniform(shader, "CurveType").set(curveType);
+            uniform(shader, "LineWidth").set(lineWidth * 0.5f);
+            uniform(shader, "Smoothing").set(getSmoothing());
             setColorUniform(shader, "ColorStart", tint(colorStart));
             setColorUniform(shader, "ColorEnd", tint(colorEnd));
-            shader.getUniform("GlowWidth").set(glowWidth);
+            uniform(shader, "GlowWidth").set(glowWidth);
             setColorUniform(shader, "GlowColor", tint(glowColor));
             drawShaderQuad(minX, minY, qw, qh);
         });
@@ -1409,9 +1419,9 @@ public final class SceneCanvas {
      * marker sits on the last.
      *
      * @param points the polyline in screen px, panel end first
-     * @param style the resolved stroke look
+     * @param style the resolved stroke look, or null for an unresolved one — nothing is drawn then
      */
-    public SceneCanvas guideLine(List<FloatPos> points, GuideLineStyle style) {
+    public SceneCanvas guideLine(List<FloatPos> points, @Nullable GuideLineStyle style) {
         ShaderInstance shader = CloudShaders.guideLineHud();
         if (shader == null || points.size() < 2 || style == null) return this;
         List<FloatPos> samples = points.size() > GuideLineStyle.maxPoints
@@ -1444,13 +1454,13 @@ public final class SceneCanvas {
 
         directDraw(() -> {
             RenderSystem.setShader(() -> shader);
-            shader.getUniform("Size").set(qw, qh);
-            shader.getUniform("Points").set(uniformPoints);
-            shader.getUniform("PointCount").set(count);
-            shader.getUniform("Marker").set(style.marker().ordinal());
-            shader.getUniform("MarkerSize").set(style.markerSize());
-            shader.getUniform("PortTick").set(style.portTick());
-            shader.getUniform("Smoothing").set(getSmoothing());
+            uniform(shader, "Size").set(qw, qh);
+            uniform(shader, "Points").set(uniformPoints);
+            uniform(shader, "PointCount").set(count);
+            uniform(shader, "Marker").set(style.marker().ordinal());
+            uniform(shader, "MarkerSize").set(style.markerSize());
+            uniform(shader, "PortTick").set(style.portTick());
+            uniform(shader, "Smoothing").set(getSmoothing());
             GuideLineUniforms.applyStyle(shader, style);
             drawShaderQuad(qx, qy, qw, qh);
         });
@@ -1485,7 +1495,6 @@ public final class SceneCanvas {
     /**
      * Draws a soft drop shadow with per-corner radii.
      */
-    @SuppressWarnings("DataFlowIssue")
     public SceneCanvas shadow(
         int x,
         int y,
@@ -1511,10 +1520,10 @@ public final class SceneCanvas {
         directDraw(() -> {
             RenderSystem.setShader(() -> shader);
             setColorUniform(shader, "FillColor", tint(shadowColor));
-            shader.getUniform("Size").set(qw, qh);
-            shader.getUniform("Radii").set(radiusBR, radiusTR, radiusBL, radiusTL);
-            shader.getUniform("ShadowSpread").set(totalSpread);
-            shader.getUniform("ShadowSoftness").set(softness);
+            uniform(shader, "Size").set(qw, qh);
+            uniform(shader, "Radii").set(radiusBR, radiusTR, radiusBL, radiusTL);
+            uniform(shader, "ShadowSpread").set(totalSpread);
+            uniform(shader, "ShadowSoftness").set(softness);
             drawShaderQuad(qx, qy, qw, qh);
         });
         return this;
@@ -1644,7 +1653,7 @@ public final class SceneCanvas {
             this.tint = tint;
         }
 
-        public void drawString(String text, int x, int y, int color, boolean dropShadow) {
+        public void drawString(@Nullable String text, int x, int y, int color, boolean dropShadow) {
             if (text == null || text.isEmpty()) {
                 return;
             }
@@ -1671,14 +1680,14 @@ public final class SceneCanvas {
             }
         }
 
-        public void drawString(Component text, int x, int y, int color, boolean dropShadow) {
+        public void drawString(@Nullable Component text, int x, int y, int color, boolean dropShadow) {
             if (text == null) {
                 return;
             }
             drawString(text.getVisualOrderText(), x, y, color, dropShadow);
         }
 
-        public void drawString(FormattedCharSequence text, int x, int y, int color, boolean dropShadow) {
+        public void drawString(@Nullable FormattedCharSequence text, int x, int y, int color, boolean dropShadow) {
             if (text == null) {
                 return;
             }
@@ -1698,7 +1707,7 @@ public final class SceneCanvas {
             );
         }
 
-        private String clipText(String text, int maxWidth) {
+        private String clipText(@Nullable String text, int maxWidth) {
             if (text == null || text.isEmpty() || maxWidth <= 0) {
                 return "";
             }

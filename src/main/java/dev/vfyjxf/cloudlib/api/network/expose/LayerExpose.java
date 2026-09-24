@@ -35,7 +35,8 @@ public non-sealed interface LayerExpose<E> extends ExposeCommon {
     // region handle factory
 
     /**
-     * Create a LayerExpose backed by a {@link Handle}. The handle's dirty flag drives change detection.
+     * Create a LayerExpose backed by a {@link Handle}. The handle's dirty flag drives change detection;
+     * an empty handle yields no value and is skipped until one is stored.
      */
     static <T, E> LayerExpose<E> create(String name, short id, Handle<T> handle, FlowHandler<T, E> codec) {
         return new StandardLayerExpose<>(name, id, Snapshot.HandleSnapshot.of(handle), handle::get, codec, codec);

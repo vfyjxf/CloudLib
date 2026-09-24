@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld.space;
 
 import dev.vfyjxf.cloudlib.api.math.Rect;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -18,7 +19,9 @@ public interface ExclusionProvider {
 
     /**
      * The screen rectangles this provider currently occupies. The returned
-     * list is clipped to the context viewport and may be empty.
+     * list is clipped to the context viewport and may be empty; a {@code null}
+     * element carries no rectangle and is skipped by
+     * {@link InworldExclusions#collect}.
      */
-    List<Rect> exclusionAreas(ExclusionContext context);
+    List<@Nullable Rect> exclusionAreas(ExclusionContext context);
 }

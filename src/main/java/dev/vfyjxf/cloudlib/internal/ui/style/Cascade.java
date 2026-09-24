@@ -176,7 +176,7 @@ public final class Cascade {
             // pass through untouched — their values are node-independent, so the
             // engine downstream can memoize parse results on declaration identity.
             Map<String, List<ComponentValue>> varCache = new HashMap<>();
-            Function<String, List<ComponentValue>> env = name -> {
+            Function<String, @Nullable List<ComponentValue>> env = name -> {
                 ResolvedDecl d = local.get(name);
                 if (d != null) {
                     return d.value();

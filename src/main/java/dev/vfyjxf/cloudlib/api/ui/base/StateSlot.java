@@ -19,8 +19,9 @@ public final class StateSlot {
 
     /**
      * Get or create state. Must be called within StateContext. Slot is determined by call order.
+     * The slot may legitimately hold {@code null}.
      */
-    public static <T> StateAccessor<T> useState(Supplier<T> initialValue) {
+    public static <T extends @Nullable Object> StateAccessor<T> useState(Supplier<T> initialValue) {
         StateContext context = currentContext.get();
         if (context == null) {
             throw new IllegalStateException(
@@ -30,14 +31,17 @@ public final class StateSlot {
         return context.getOrCreateState(initialValue);
     }
 
-    public static <T> StateAccessor<T> useState(T initialValue) {
+    public static <T extends @Nullable Object> StateAccessor<T> useState(T initialValue) {
         return useState(() -> initialValue);
     }
 
     /**
      * Create memoized value. Only recomputed when dependencies change.
      */
-    public static <T> T useMemo(Supplier<T> compute, Object... dependencies) {
+    public static <T extends @Nullable Object> @Nullable T useMemo(
+        Supplier<T> compute,
+        @Nullable Object... dependencies
+    ) {
         StateContext context = currentContext.get();
         if (context == null) {
             return compute.get();
@@ -48,7 +52,7 @@ public final class StateSlot {
     /**
      * Register side effect. Runs after mount/update.
      */
-    public static void useEffect(Runnable effect, Object... dependencies) {
+    public static void useEffect(Runnable effect, @Nullable Object... dependencies) {
         StateContext context = currentContext.get();
         if (context != null) {
             context.registerEffect(effect, dependencies);
@@ -78,9 +82,9 @@ public final class StateSlot {
     }
 
     /**
-     * State read/write accessor.
+     * State read/write accessor. The slot value may legitimately be {@code null}.
      */
-    public static final class StateAccessor<T> {
+    public static final class StateAccessor<T extends @Nullable Object> {
         private final StateContext context;
         private final int slotIndex;
 
@@ -93,7 +97,7 @@ public final class StateSlot {
          * Gets the current value.
          */
         @SuppressWarnings("unchecked")
-        public T get() {
+        public @Nullable T get() {
             return (T) context.getSlotValue(slotIndex);
         }
 
@@ -128,7 +132,7 @@ public final class StateSlot {
      * Each widget has its own StateContext.
      */
     public static final class StateContext {
-        private final List<Object> slots = new ArrayList<>();
+        private final List<@Nullable Object> slots = new ArrayList<>();
         private final List<MemoEntry> memos = new ArrayList<>();
         private final List<EffectEntry> effects = new ArrayList<>();
         private int currentSlotIndex = 0;
@@ -154,7 +158,7 @@ public final class StateSlot {
         /**
          * Gets or creates a state at the current slot.
          */
-        <T> StateAccessor<T> getOrCreateState(Supplier<T> initialValue) {
+        <T extends @Nullable Object> StateAccessor<T> getOrCreateState(Supplier<T> initialValue) {
             int index = currentSlotIndex++;
 
             if (index >= slots.size()) {
@@ -166,10 +170,10 @@ public final class StateSlot {
         }
 
         /**
-         * Memorizes a value.
+         * Memorizes a value. A memorized {@code null} stays {@code null}.
          */
         @SuppressWarnings("unchecked")
-        <T> T memoize(Supplier<T> compute, Object[] dependencies) {
+        <T extends @Nullable Object> @Nullable T memoize(Supplier<T> compute, @Nullable Object[] dependencies) {
             int index = currentMemoIndex++;
 
             if (index >= memos.size()) {
@@ -193,7 +197,7 @@ public final class StateSlot {
         /**
          * Registers an effect.
          */
-        void registerEffect(Runnable effect, Object[] dependencies) {
+        void registerEffect(Runnable effect, @Nullable Object[] dependencies) {
             int index = currentEffectIndex++;
 
             if (index >= effects.size()) {
@@ -221,11 +225,12 @@ public final class StateSlot {
             }
         }
 
+        @Nullable
         Object getSlotValue(int index) {
             return slots.get(index);
         }
 
-        void setSlotValue(int index, Object value) {
+        void setSlotValue(int index, @Nullable Object value) {
             slots.set(index, value);
         }
 
@@ -250,7 +255,7 @@ public final class StateSlot {
             dirty = false;
         }
 
-        private static boolean dependenciesEqual(Object[] a, Object[] b) {
+        private static boolean dependenciesEqual(@Nullable Object[] a, @Nullable Object[] b) {
             if (a.length != b.length) return false;
             for (int i = 0; i < a.length; i++) {
                 if (!Objects.equals(a[i], b[i])) return false;
@@ -258,8 +263,8 @@ public final class StateSlot {
             return true;
         }
 
-        private record MemoEntry(Object value, Object[] dependencies) {}
+        private record MemoEntry(@Nullable Object value, @Nullable Object[] dependencies) {}
 
-        private record EffectEntry(Runnable effect, Object[] dependencies, boolean shouldRun) {}
+        private record EffectEntry(Runnable effect, @Nullable Object[] dependencies, boolean shouldRun) {}
     }
 }

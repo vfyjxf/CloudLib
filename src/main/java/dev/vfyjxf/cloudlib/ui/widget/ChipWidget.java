@@ -27,11 +27,8 @@ public class ChipWidget extends Widget {
         this.onClick = onClick;
         setFocusable(true);
         onMouseClick((input, clickCount, context) -> {
-            if (this.onClick != null) {
-                this.onClick.run();
-                return EventDispatch.consumed;
-            }
-            return EventDispatch.pass;
+            this.onClick.run();
+            return EventDispatch.consumed;
         });
         onMouseLeave((x, y, context) -> pressed = false);
         onMouseClicked((input, context) -> {
@@ -47,10 +44,8 @@ public class ChipWidget extends Widget {
             if (input.isKey(GLFW.GLFW_KEY_ENTER)
                     || input.isKey(GLFW.GLFW_KEY_KP_ENTER)
                     || input.isKey(GLFW.GLFW_KEY_SPACE)) {
-                if (this.onClick != null) {
-                    this.onClick.run();
-                    return EventDispatch.consumed;
-                }
+                this.onClick.run();
+                return EventDispatch.consumed;
             }
             return EventDispatch.pass;
         });

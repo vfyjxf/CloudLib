@@ -3,12 +3,9 @@ package dev.vfyjxf.cloudlib.gradle.lang;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.provider.ListProperty;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.language.jvm.tasks.ProcessResources;
-
-import java.nio.file.Path;
 
 /**
  * Implements the distributed language system:
@@ -53,14 +50,14 @@ public class CloudLangPlugin implements Plugin<Project> {
             task.getEntryClass().set(extension.getEntryClass());
             task.getDefaultLocale().set(extension.getDefaultLocale());
             task.getSourceDirectories().from(extension.getSourceDirectory(), extension.getGeneratedSourceDirectory());
-            wireLabels(task.getSourceDirectoryLabels(), extension, project);
+            task.getProjectDirectory().set(project.getProjectDir().getAbsolutePath());
             task.getOutputDirectory().convention(project.getLayout().getBuildDirectory().dir("generated/sources/langKeys"));
         });
 
         var generateLangResources = project.getTasks().register("generateLangResources", GenerateLangResourcesTask.class, task -> {
             task.getModId().set(extension.getModId());
             task.getSourceDirectories().from(extension.getSourceDirectory(), extension.getGeneratedSourceDirectory());
-            wireLabels(task.getSourceDirectoryLabels(), extension, project);
+            task.getProjectDirectory().set(project.getProjectDir().getAbsolutePath());
             task.getOutputDirectory().convention(project.getLayout().getBuildDirectory().dir("generated/langResources"));
         });
 
@@ -73,22 +70,6 @@ public class CloudLangPlugin implements Plugin<Project> {
                     processResources.from(generateLangResources)
             );
         });
-    }
-
-    /**
-     * Wires project-relative display labels of the source roots, used in generated file
-     * comments.
-     */
-    private static void wireLabels(ListProperty<String> labels, CloudLangExtension extension, Project project) {
-        var projectDir = project.getProjectDir().toPath();
-        labels.add(extension.getSourceDirectory().map(dir -> relativize(projectDir, dir.getAsFile().toPath())));
-        labels.add(extension.getGeneratedSourceDirectory().map(dir -> relativize(projectDir, dir.getAsFile().toPath())));
-    }
-
-    private static String relativize(Path projectDir, Path directory) {
-        return directory.startsWith(projectDir)
-                ? projectDir.relativize(directory).toString()
-                : directory.toString();
     }
 
 }

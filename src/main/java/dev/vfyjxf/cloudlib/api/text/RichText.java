@@ -72,7 +72,7 @@ public final class RichText {
         return new RichText(new GroupNode(new ComponentNode(component)));
     }
 
-    public static RichText of(LangEntry entry, Object... args) {
+    public static RichText of(LangEntry entry, @Nullable Object... args) {
         return new RichText(new GroupNode(new TranslatableNode(entry.key(), args)));
     }
 
@@ -135,7 +135,7 @@ public final class RichText {
     /**
      * Whether a {@link TranslatableNode} argument is (or contains only) text.
      */
-    public static boolean isTextualArg(Object arg) {
+    public static boolean isTextualArg(@Nullable Object arg) {
         return switch (arg) {
             case RichNode node -> node.isTextual();
             case Component ignored -> true;
@@ -306,12 +306,12 @@ public final class RichText {
         }
 
         @Contract("_, _ -> this")
-        public Builder translatable(String key, Object... args) {
+        public Builder translatable(String key, @Nullable Object... args) {
             return addNode(new TranslatableNode(key, args));
         }
 
         @Contract("_, _ -> this")
-        public Builder translatable(LangEntry entry, Object... args) {
+        public Builder translatable(LangEntry entry, @Nullable Object... args) {
             return translatable(entry.key(), args);
         }
 
@@ -322,7 +322,7 @@ public final class RichText {
 
         @Contract("_ -> this")
         public Builder image(SizedTexture texture) {
-            return addNode(new ImageNode(texture));
+            return addNode(ImageNode.of(texture));
         }
 
         @Contract("_ -> this")
@@ -351,13 +351,13 @@ public final class RichText {
         }
 
         @Contract("_, _, _ -> this")
-        public Builder entity(Supplier<? extends Entity> entity, int width, int height) {
+        public Builder entity(Supplier<? extends @Nullable Entity> entity, int width, int height) {
             return addNode(new EntityNode(entity, width, height));
         }
 
         @Contract("_, _, _, _, _ -> this")
         public Builder entity(
-            Supplier<? extends Entity> entity,
+            Supplier<? extends @Nullable Entity> entity,
             int width,
             int height,
             int scale,

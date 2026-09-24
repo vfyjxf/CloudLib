@@ -32,7 +32,7 @@ public class TestScreenEventHandler {
         GLFW.GLFW_KEY_R,
         "debug"
     );
-    public static @Nullable Supplier<Screen> testScreenSupplier;
+    public static @Nullable Supplier<@Nullable Screen> testScreenSupplier;
 
     static {
         Type annotationType = Type.getType(TestScreen.class);
@@ -58,7 +58,10 @@ public class TestScreenEventHandler {
         if (FMLEnvironment.production || testScreenSupplier == null) return;
         InputContext inputContext = InputContext.fromEvent(event);
         if (inputContext.released(openTestScreen)) {
-            Minecraft.getInstance().setScreen(testScreenSupplier.get());
+            Screen screen = testScreenSupplier.get();
+            if (screen != null) {
+                Minecraft.getInstance().setScreen(screen);
+            }
         }
     }
 }

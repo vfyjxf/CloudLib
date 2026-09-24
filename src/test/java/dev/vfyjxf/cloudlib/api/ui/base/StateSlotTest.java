@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -436,7 +437,8 @@ class StateSlotTest {
     void testStateContextWithReturnValue() {
         String result = StateSlot.withContext(context, () -> {
             StateSlot.StateAccessor<String> state = StateSlot.useState("hello");
-            return state.get().toUpperCase();
+            String value = Objects.requireNonNull(state.get(), "state was initialized with a non-null value");
+            return value.toUpperCase();
         });
 
         assertEquals("HELLO", result);
@@ -451,7 +453,13 @@ class StateSlotTest {
             StateSlot.StateAccessor<Integer> count = StateSlot.useState(0);
             StateSlot.StateAccessor<Integer> multiplier = StateSlot.useState(2);
 
-            int derived = StateSlot.useMemo(() -> count.get() * multiplier.get(), count.get(), multiplier.get());
+            int derived = Objects.requireNonNull(
+                StateSlot.useMemo(
+                    () -> Objects.requireNonNull(count.get()) * Objects.requireNonNull(multiplier.get()),
+                    count.get(),
+                    multiplier.get()
+                )
+            );
 
             assertEquals(0, derived);
 
@@ -463,7 +471,13 @@ class StateSlotTest {
             StateSlot.StateAccessor<Integer> count = StateSlot.useState(0);
             StateSlot.StateAccessor<Integer> multiplier = StateSlot.useState(2);
 
-            int derived = StateSlot.useMemo(() -> count.get() * multiplier.get(), count.get(), multiplier.get());
+            int derived = Objects.requireNonNull(
+                StateSlot.useMemo(
+                    () -> Objects.requireNonNull(count.get()) * Objects.requireNonNull(multiplier.get()),
+                    count.get(),
+                    multiplier.get()
+                )
+            );
 
             assertEquals(10, derived);
         });

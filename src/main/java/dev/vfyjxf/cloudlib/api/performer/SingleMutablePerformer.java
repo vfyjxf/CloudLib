@@ -1,6 +1,5 @@
 package dev.vfyjxf.cloudlib.api.performer;
 
-import dev.vfyjxf.cloudlib.util.Checks;
 import org.jspecify.annotations.Nullable;
 
 class SingleMutablePerformer<T> implements MutablePerformer<T> {
@@ -24,6 +23,11 @@ class SingleMutablePerformer<T> implements MutablePerformer<T> {
 
     @Override
     public T performer() {
-        return Checks.checkNotNull(performer, "performer");
+        @Nullable
+        T current = performer;
+        if (current == null) {
+            throw new IllegalStateException("performer was removed from this MutablePerformer");
+        }
+        return current;
     }
 }

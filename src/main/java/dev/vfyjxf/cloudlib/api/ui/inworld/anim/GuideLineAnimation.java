@@ -235,7 +235,7 @@ public final class GuideLineAnimation {
     private double dashPhase;
 
     public GuideLineAnimation(Config config) {
-        this.config = config == null ? Config.ofDefaults() : config;
+        this.config = config;
     }
 
     public Config config() {

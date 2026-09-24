@@ -37,9 +37,9 @@ public final class SerializerManagement {
 
     public void loadAll(CompoundTag source, HolderLookup.Provider registries) {
         for (Serialize<?> serialize : serializes) {
-            if (source.contains(serialize.name())) {
-                applyOne(serialize, source.get(serialize.name()), registries);
-            }
+            Tag tag = source.get(serialize.name());
+            if (tag == null) continue;
+            applyOne(serialize, tag, registries);
         }
     }
 

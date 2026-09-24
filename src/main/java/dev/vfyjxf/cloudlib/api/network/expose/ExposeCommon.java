@@ -28,6 +28,12 @@ public sealed interface ExposeCommon permits Expose, LayerExpose {
     @ApiStatus.Internal
     <T> boolean changed();
 
+    /**
+     * @return whether this expose currently holds a value; one without a value is never sent
+     */
+    @ApiStatus.Internal
+    boolean hasValue();
+
     void updateSnapshot();
 
     void forceUpdateSnapshot();

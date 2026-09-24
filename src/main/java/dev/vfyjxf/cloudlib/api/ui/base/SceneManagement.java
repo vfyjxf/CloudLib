@@ -1,12 +1,9 @@
 package dev.vfyjxf.cloudlib.api.ui.base;
 
 import dev.vfyjxf.cloudlib.api.ui.base.host.GlobalSceneHost;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import org.jspecify.annotations.Nullable;
 
 // @EventBusSubscriber(modid = Constants.modId, value = Dist.CLIENT)
 class SceneManagement {
@@ -23,8 +20,4 @@ class SceneManagement {
     }
 
     // endregion
-
-    private static @Nullable Screen screen() {
-        return Minecraft.getInstance().screen;
-    }
 }

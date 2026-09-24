@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.floating;
 
 import dev.vfyjxf.cloudlib.api.math.Insets;
+import org.jspecify.annotations.Nullable;
 
 /**
  * FloatingMiddleware that constrains the size of the floating element so it doesn't
@@ -86,15 +87,10 @@ public final class SizeMiddleware implements FloatingMiddleware {
         FloatingPlacement.Side widthSide;
         if (side == FloatingPlacement.Side.top || side == FloatingPlacement.Side.bottom) {
             heightSide = side;
-            FloatingPlacement.Alignment alignment = placement.alignment();
-            widthSide = alignment == FloatingPlacement.Alignment.end
-                    ? FloatingPlacement.Side.left
-                    : FloatingPlacement.Side.right;
+            widthSide = constraintSide(FloatingPlacement.Axis.x, placement.alignment());
         } else {
             widthSide = side;
-            heightSide = placement.alignment() == FloatingPlacement.Alignment.end
-                    ? FloatingPlacement.Side.top
-                    : FloatingPlacement.Side.bottom;
+            heightSide = constraintSide(FloatingPlacement.Axis.y, placement.alignment());
         }
 
         double maxClipHeight = floatingHeight - overflow.top() - overflow.bottom();
@@ -115,5 +111,26 @@ public final class SizeMiddleware implements FloatingMiddleware {
         applier.apply(state, width, height);
 
         return Result.done();
+    }
+
+    /**
+     * Returns the side of {@code axis} the floating element extends toward for
+     * {@code alignment} — the direction whose overflow constrains the size on that
+     * axis. A centered placement names no end side, so it takes the axis's
+     * non-end side ({@code right} on the x axis, {@code bottom} on the y axis).
+     */
+    private static FloatingPlacement.Side constraintSide(
+        FloatingPlacement.Axis axis,
+        FloatingPlacement.@Nullable Alignment alignment
+    ) {
+        if (alignment == null) {
+            return axis == FloatingPlacement.Axis.x ? FloatingPlacement.Side.right : FloatingPlacement.Side.bottom;
+        }
+
+        boolean isEnd = alignment == FloatingPlacement.Alignment.end;
+        if (axis == FloatingPlacement.Axis.x) {
+            return isEnd ? FloatingPlacement.Side.left : FloatingPlacement.Side.right;
+        }
+        return isEnd ? FloatingPlacement.Side.top : FloatingPlacement.Side.bottom;
     }
 }

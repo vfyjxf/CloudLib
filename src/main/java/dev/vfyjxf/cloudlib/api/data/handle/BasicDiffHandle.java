@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.data.CheckStrategy;
 import dev.vfyjxf.cloudlib.api.data.snapshot.DiffObservable;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -23,7 +24,10 @@ final class BasicDiffHandle<T extends DiffObservable<D>, D> implements DiffHandl
 
     @Override
     @Contract(pure = true)
+    @SuppressWarnings("NullAway")
     public T get() {
+        // the delegate reads @Nullable because a plain Handle may be an empty cell; a DiffHandle is
+        // always created with a value, so this accessor is non-null
         return delegate.get();
     }
 
@@ -65,20 +69,21 @@ final class BasicDiffHandle<T extends DiffObservable<D>, D> implements DiffHandl
     }
 
     @Override
-    public Subscription onChange(BiConsumer<? super T, ? super T> listener) {
+    public Subscription onChange(BiConsumer<? super @Nullable T, ? super T> listener) {
         return delegate.onChange(listener);
     }
 
     @Override
     public boolean changed() {
         // union of the handle's own dirty flag and the value's reported change; null-safe on the value half
+        @Nullable
         T current = delegate.get();
         return delegate.dirty() || (current != null && current.changed());
     }
 
     @Override
     public D difference() {
-        return delegate.get().difference();
+        return get().difference();
     }
 
     @Override

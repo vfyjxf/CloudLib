@@ -94,15 +94,15 @@ public final class FloatingEffect implements Effect {
      *
      * @param reference  the reference widget to anchor to
      * @param placement  the preferred placement
-     * @param middleware ordered middleware to apply
+     * @param middleware ordered middleware to apply (nulls are filtered out)
      * @return the effect
      */
     public static FloatingEffect create(
         Widget reference,
         FloatingPlacement placement,
-        List<FloatingMiddleware> middleware
+        List<@Nullable FloatingMiddleware> middleware
     ) {
-        return new FloatingEffect(reference, placement, middleware);
+        return new FloatingEffect(reference, placement, middleware.stream().filter(Objects::nonNull).toList());
     }
 
     private FloatingEffect(Widget reference, FloatingPlacement placement, List<FloatingMiddleware> middleware) {

@@ -40,6 +40,28 @@ public record BorderPoint(Kind kind, @Nullable Edge edge, double t, @Nullable Co
         t = Math.max(0, Math.min(1, t));
     }
 
+    /**
+     * The edge of a {@link Kind#edge} point — never null for that kind.
+     *
+     * @throws IllegalStateException if this point does not sit on a single edge
+     */
+    public Edge requireEdge() {
+        Edge edge = this.edge;
+        if (edge == null) throw new IllegalStateException("not an edge point: " + kind);
+        return edge;
+    }
+
+    /**
+     * The corner of a {@link Kind#corner} point — never null for that kind.
+     *
+     * @throws IllegalStateException if this point is not a corner
+     */
+    public Corner requireCorner() {
+        Corner corner = this.corner;
+        if (corner == null) throw new IllegalStateException("not a corner point: " + kind);
+        return corner;
+    }
+
     /** The border point closest to whatever connects here. */
     public static BorderPoint nearest() {
         return nearest;

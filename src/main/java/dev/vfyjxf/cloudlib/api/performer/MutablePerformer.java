@@ -13,5 +13,13 @@ public interface MutablePerformer<T> extends Performer<T> {
      */
     void put(T performer);
 
+    /**
+     * Removes a performer object from this performer reference.
+     * <p>
+     * When the removal leaves the reference without a performer, {@link #performer()} reports that
+     * state with an {@link IllegalStateException} instead of returning the removed performer.
+     *
+     * @param performer the performer
+     */
     void remove(T performer);
 }

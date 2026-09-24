@@ -6,6 +6,12 @@ import org.jspecify.annotations.Nullable;
  * Decorates a child node with a {@link RichTextStyle} and optional interaction
  * actions. The style merges over the inherited style (this node's fields win);
  * actions override inherited ones when non-null.
+ *
+ * @param child   the decorated node
+ * @param style   the node's style, never {@code null} ({@code null} is normalized to
+ *                {@link RichTextStyle#empty})
+ * @param onClick the click action; {@code null} = inherit
+ * @param onHover the hover action; {@code null} = inherit
  */
 public record StyledNode(
     RichNode child,

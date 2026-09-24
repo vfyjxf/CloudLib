@@ -71,7 +71,12 @@ public final class LifecycleDriver {
         if (!state.isContext()) {
             throw new IllegalArgumentException("Lifecycle state is not a context: " + state);
         }
-        Object normalized = state.normalizeValue(value);
+        @Nullable
+        Object normalized = state.normalizeValue(value, reason);
+        if (normalized == null) {
+            clear(state, reason);
+            return;
+        }
         Object previous = contexts.put(state, normalized);
         if (previous != null && !Objects.equals(previous, normalized)) {
             resetEvents(reason);
@@ -87,7 +92,9 @@ public final class LifecycleDriver {
         if (!state.isEvent()) {
             throw new IllegalArgumentException("Lifecycle state is not an event: " + state);
         }
-        state.normalizeValue(value);
+        if (state.normalizeValue(value, reason) == null) {
+            return;
+        }
         events.add(state);
         tryRun(reason, true);
     }

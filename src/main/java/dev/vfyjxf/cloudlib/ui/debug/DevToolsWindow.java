@@ -161,7 +161,7 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
     }
 
     void updateScaleButton() {
-        if (scale != null) scale.sync();
+        scale.sync();
     }
 
     // endregion
@@ -405,7 +405,7 @@ final class DevToolsWindow extends WidgetGroup<Widget> {
             "dock",
             DevToolsTextures.dockFloat,
             this::toggleDockMenu,
-            () -> dockMenu != null && dockMenu.visible(),
+            () -> dockMenu.visible(),
             base,
             () -> {
                 VisualTexture icon = modeTexture(dockLayout.mode());

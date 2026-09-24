@@ -212,10 +212,22 @@ public final class FloatingPositioning {
 
     /**
      * Returns the overflow values for the two alignment-axis sides of a placement.
+     * <p>
+     * The first value belongs to the alignment-axis side the placement can overflow
+     * at. A placement without an alignment (centered) has no such side, so the two
+     * sides of the alignment axis are returned in axis order — {@code left} before
+     * {@code right}, {@code top} before {@code bottom}.
      */
     public static int[] alignmentSides(Insets overflow, FloatingPlacement placement, Rect reference, Rect floating) {
         FloatingPlacement.Alignment alignment = placement.alignment();
         FloatingPlacement.Axis alignmentAxis = placement.alignmentAxis();
+
+        if (alignment == null) {
+            FloatingPlacement.Side axisOriginSide = alignmentAxis == FloatingPlacement.Axis.x
+                    ? FloatingPlacement.Side.left
+                    : FloatingPlacement.Side.top;
+            return new int[]{getSide(overflow, axisOriginSide), getSide(overflow, axisOriginSide.opposite())};
+        }
 
         FloatingPlacement.Side mainAlignmentSide;
         if (alignmentAxis == FloatingPlacement.Axis.x) {

@@ -179,7 +179,6 @@ public final class Events {
             Checks.checkNotNull(listener, "listener");
             Checks.checkArgument(lifetime > 0, "lifetime must be greater than 0");
             AtomicInteger counter = new AtomicInteger(lifetime);
-            assert invokeMethod != null : "Functional interface must have a single abstract method";
             T wrapper = makeWrapper(type, invokeMethod, listener, counter);
             return registerManaged(wrapper, () -> counter.get() <= 0);
         }

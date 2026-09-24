@@ -26,7 +26,12 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
         if (cleaned() || performer == null) {
             updatePerformer();
         }
-        return Checks.checkNotNull(performer, "performer");
+        @Nullable
+        T current = performer;
+        if (current == null) {
+            throw new IllegalStateException("no available performer for " + description());
+        }
+        return current;
     }
 
     @Override
@@ -65,10 +70,24 @@ public abstract class MergeablePerformer<T> implements MutablePerformer<T> {
 
     protected void updatePerformer() {
         if (performers.size() == 1) {
-            performer = performers.getFirst().performer();
+            @Nullable
+            T single = performers.getFirst().performer();
+            performer = single;
         } else {
-            performer = merger.apply(performers.collect(PerformerEntry::performer));
+            @Nullable
+            T merged = merger.apply(performers.collect(PerformerEntry::performer));
+            if (merged == null && !performers.isEmpty()) {
+                throw new IllegalStateException("merger returned null for " + description());
+            }
+            performer = merged;
         }
+    }
+
+    /**
+     * @return a short description of this performer reference, used in error messages
+     */
+    protected String description() {
+        return getClass().getSimpleName();
     }
 
     private boolean cleaned() {

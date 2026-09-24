@@ -852,5 +852,138 @@ class LeaderRouterTest {
             IllegalArgumentException.class,
             () -> router.route(List.of(leader("a", 0, 0, 1, 1), leader("a", 1, 1, 2, 2)), Map.of())
         );
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> router.route(crossingPair(), Map.of(), List.of(), null, LeaderRouter.Style.hyperLeader),
+            "a trunk is a cluster's shared geometry, not a style a caller can pin"
+        );
+    }
+
+    @Test
+    void aPinnedStraightHoldsThroughTheCrossingThatWouldUpgradeIt() {
+        // the crossing pair upgrades to po after the dwell when gated: pinned
+        // to the baseline, neither leader may leave it, dwell or no dwell
+        LeaderRouter router = new LeaderRouter(config);
+
+        for (int epoch = 0; epoch < 12; epoch++) {
+            List<LeaderRouter.Route> routes = router
+                    .route(crossingPair(), Map.of(), List.of(), null, LeaderRouter.Style.sLeader);
+            for (LeaderRouter.Route route : routes) {
+                assertEquals(LeaderRouter.Style.sLeader, route.style(), "epoch " + epoch + ": the pin holds");
+                assertEquals(2, route.points().size(), "epoch " + epoch + ": one direct segment");
+            }
+        }
+        // the same epochs gated: the upgrade is the behaviour the pin suppressed
+        LeaderRouter gated = new LeaderRouter(config);
+        gated.route(crossingPair(), Map.of());
+        assertEquals(LeaderRouter.Style.poLeader, gated.route(crossingPair(), Map.of()).get(0).style());
+    }
+
+    @Test
+    void aPinnedStraightIgnoresObstaclesAndTheTierLadder() {
+        LeaderRouter router = new LeaderRouter(config);
+        // the wall sits on the baseline (a hard po override when gated) and the
+        // port is inside the attach band — the pinned straight draws regardless
+        List<FloatRect> obstacles = List.of(new FloatRect(90, 40, 20, 20));
+
+        LeaderRouter.Route route = router
+                .route(List.of(leader("a", 0, 0, 200, 100)), Map.of(), obstacles, null, LeaderRouter.Style.sLeader)
+                .get(0);
+
+        assertEquals(LeaderRouter.Style.sLeader, route.style());
+        assertEquals(LeaderRouter.Tier.full, route.tier(), "the ladder is bypassed, not stepped down");
+        assertEquals(1.0, route.alpha(), 1.0e-9);
+        assertEquals(
+            List.of(new FloatPos(0, 0), new FloatPos(194, 100)),
+            route.points(),
+            "the baseline verbatim, the drawn end 6 px short of the port"
+        );
+
+        LeaderRouter.Route near = router
+                .route(List.of(leader("a", 0, 0, 30, 0)), Map.of(), List.of(), null, LeaderRouter.Style.sLeader).get(0);
+        assertEquals(LeaderRouter.Tier.full, near.tier(), "even inside the attach band the pin draws straight");
+        assertEquals(List.of(new FloatPos(0, 0), new FloatPos(24, 0)), near.points());
+    }
+
+    @Test
+    void aPinnedOrthogonalRoutesAClearBaselineToo() {
+        LeaderRouter router = new LeaderRouter(config);
+        // an off-axis port: nothing crosses and nothing blocks, so the gated
+        // reading is the straight baseline
+        List<LeaderRouter.Leader> one = List.of(leader("a", 0, 0, 200, 100));
+
+        LeaderRouter.Route straight = router.route(one, Map.of()).get(0);
+        assertEquals(LeaderRouter.Style.sLeader, straight.style());
+        assertEquals(2, straight.points().size());
+
+        LeaderRouter.Route pinned = router.route(one, Map.of(), List.of(), null, LeaderRouter.Style.poLeader).get(0);
+
+        assertEquals(LeaderRouter.Style.poLeader, pinned.style(), "the pin routes a clear baseline as well");
+        assertOrthogonal(pinned.points(), "pinned po");
+        assertTrue(pinned.points().size() >= 3, "the routing bends: " + pinned.points());
+        assertEquals(new FloatPos(0, 0), pinned.points().get(0), "the anchor leads the line");
+        assertPoint(pinned.points().get(pinned.points().size() - 1), 194, 100, "the arrival gap still holds");
+    }
+
+    @Test
+    void aPinnedOrthogonalLeavesTheTierLadderAlone() {
+        LeaderRouter router = new LeaderRouter(config);
+
+        LeaderRouter.Route folded = router
+                .route(List.of(leader("a", 0, 0, 60, 0)), Map.of(), List.of(), null, LeaderRouter.Style.poLeader)
+                .get(0);
+        assertEquals(LeaderRouter.Tier.fold, folded.tier(), "58 px folds with or without the pin");
+        assertEquals(List.of(new FloatPos(0, 0), new FloatPos(60, 0)), folded.points());
+
+        LeaderRouter.Route attached = router
+                .route(List.of(leader("a", 0, 0, 30, 0)), Map.of(), List.of(), null, LeaderRouter.Style.poLeader)
+                .get(0);
+        assertEquals(LeaderRouter.Tier.attach, attached.tier(), "the attach band still draws no line");
+        assertTrue(attached.points().isEmpty());
+    }
+
+    @Test
+    void anUnpinnedCallKeepsTheGateInCharge() {
+        // the four-argument overload is the gated path: the upgrade, the
+        // downgrade and the tier ladder all behave exactly as they did
+        LeaderRouter router = new LeaderRouter(config);
+
+        assertEquals(
+            LeaderRouter.Style.sLeader,
+            router.route(crossingPair(), Map.of(), List.of(), null, null).get(0).style(),
+            "an explicit null is the same as the four-argument overload"
+        );
+        assertEquals(LeaderRouter.Style.poLeader, router.route(crossingPair(), Map.of()).get(0).style());
+
+        assertEquals(LeaderRouter.Style.poLeader, router.route(parallelPair(), Map.of()).get(0).style());
+        assertEquals(LeaderRouter.Style.sLeader, router.route(parallelPair(), Map.of()).get(0).style());
+        assertEquals(
+            LeaderRouter.Tier.attach,
+            tierAt(new LeaderRouter(config), 30),
+            "the ladder is still the gated one"
+        );
+    }
+
+    @Test
+    void aPinChangeIsATopologyChangeAndASlideIsNot() {
+        LeaderRouter router = new LeaderRouter(config);
+        List<LeaderRouter.Leader> pair = parallelPair();
+
+        long gated = router.route(pair, Map.of()).get(0).shapeEpoch();
+        long pinned = router.route(pair, Map.of(), List.of(), null, LeaderRouter.Style.poLeader).get(0).shapeEpoch();
+        assertTrue(gated != pinned, "entering the pin is a topology change — the settle must play");
+
+        // sliding under the pin reuses the commit: the token stands still
+        long slid = router.route(
+            List.of(leader("a", 2, 3, 0, 100), leader("b", 100, 0, 100, 100)),
+            Map.of(),
+            List.of(),
+            null,
+            LeaderRouter.Style.poLeader
+        ).get(0).shapeEpoch();
+        assertEquals(pinned, slid, "an endpoint sliding under the pin is not a topology change");
+
+        long unpinned = router.route(pair, Map.of()).get(0).shapeEpoch();
+        assertTrue(slid != unpinned, "leaving the pin is a topology change too");
     }
 }

@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.gradle.lang;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -19,15 +21,17 @@ public enum LangNameStyle {
 
     /**
      * Parses a style name leniently; accepted values are
-     * {@code camel}, {@code pascal} and {@code upper_snake}.
+     * {@code camel}, {@code pascal} and {@code upper_snake}. A {@code null} name is treated as
+     * the empty name and rejected.
      */
-    public static LangNameStyle parse(String value) {
-        return switch (value == null ? "" : value.trim().toLowerCase(Locale.ROOT)) {
+    public static LangNameStyle parse(@Nullable String value) {
+        String normalized = value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+        return switch (normalized) {
             case "camel", "lower_camel", "camel_case" -> CAMEL;
             case "pascal", "upper_camel", "pascal_case" -> PASCAL;
             case "upper_snake", "upper_case", "screaming_snake" -> UPPER_SNAKE;
             default -> throw new IllegalArgumentException(
-                    "Unknown constant name style '" + value + "', expected one of: camel, pascal, upper_snake");
+                    "Unknown constant name style '" + normalized + "', expected one of: camel, pascal, upper_snake");
         };
     }
 
@@ -95,7 +99,7 @@ public enum LangNameStyle {
      * identifier that is not a keyword).
      */
     static boolean isValidFieldName(String name) {
-        if (name == null || name.isEmpty() || KEYWORDS.contains(name)) {
+        if (name.isEmpty() || KEYWORDS.contains(name)) {
             return false;
         }
         if (!Character.isJavaIdentifierStart(name.charAt(0))) {

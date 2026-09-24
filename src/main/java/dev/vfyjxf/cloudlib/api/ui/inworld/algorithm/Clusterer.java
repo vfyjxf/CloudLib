@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Evolutionary clustering (§3.0): each epoch's clustering is scored as
@@ -180,6 +179,9 @@ public final class Clusterer {
     }
 
     private static Cluster toCluster(List<Member> snapshot, List<Integer> memberIndices) {
+        if (memberIndices.isEmpty()) {
+            throw new IllegalStateException("empty cluster");
+        }
         List<String> ids = new ArrayList<>(memberIndices.size());
         double x = 0;
         double y = 0;
@@ -192,7 +194,7 @@ public final class Clusterer {
         x /= memberIndices.size();
         y /= memberIndices.size();
 
-        String representative = null;
+        int representative = memberIndices.get(0);
         double best = Double.POSITIVE_INFINITY;
         for (int index : memberIndices) {
             Member member = snapshot.get(index);
@@ -201,10 +203,10 @@ public final class Clusterer {
             double distance = Math.sqrt(dx * dx + dy * dy);
             if (distance < best) {
                 best = distance;
-                representative = member.id();
+                representative = index;
             }
         }
-        return new Cluster(ids, x, y, Objects.requireNonNull(representative, "representative"));
+        return new Cluster(ids, x, y, snapshot.get(representative).id());
     }
 
     private static double[][] distances(List<Member> snapshot) {

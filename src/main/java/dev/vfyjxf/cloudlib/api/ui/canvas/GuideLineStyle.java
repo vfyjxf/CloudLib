@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.canvas;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * The guide-line stroke's resolved look — everything {@code
  * cloudlib:guide_line_hud} and {@code cloudlib:guide_line_world} read past the
@@ -21,7 +23,7 @@ package dev.vfyjxf.cloudlib.api.ui.canvas;
  * @param dashPeriodPx the dash period in px; 0 draws a solid stroke
  * @param dashDuty the solid fraction of the period, in (0, 1]
  * @param dashPhasePx the dash pattern's advance along the arc, in px
- * @param marker the target-end marker
+ * @param marker the target-end marker; a null one is {@link Marker#none}
  * @param markerSize the marker's radius (dot) or length (arrow), in px
  * @param portTick the panel-end tick's half-length in px; 0 draws no tick
  * @param arcStart the drawn arc's start fraction (the entry reveal's window)
@@ -65,16 +67,42 @@ public record GuideLineStyle(
     /** How many polyline samples one stroke's uniform block holds. */
     public static final int maxPoints = 64;
 
-    public GuideLineStyle {
+    public GuideLineStyle(
+        float lineWidth,
+        float edgeWidth,
+        int lineColor,
+        int edgeColor,
+        float fadeFraction,
+        float fadeAlpha,
+        float dashPeriodPx,
+        float dashDuty,
+        float dashPhasePx,
+        @Nullable Marker marker,
+        float markerSize,
+        float portTick,
+        float arcStart,
+        float arcEnd
+    ) {
         if (!(lineWidth > 0)) {
             throw new IllegalArgumentException("lineWidth must be positive: " + lineWidth);
         }
         if (!(edgeWidth >= 0)) {
             throw new IllegalArgumentException("edgeWidth must be non-negative: " + edgeWidth);
         }
-        if (marker == null) {
-            marker = Marker.none;
-        }
+        this.lineWidth = lineWidth;
+        this.edgeWidth = edgeWidth;
+        this.lineColor = lineColor;
+        this.edgeColor = edgeColor;
+        this.fadeFraction = fadeFraction;
+        this.fadeAlpha = fadeAlpha;
+        this.dashPeriodPx = dashPeriodPx;
+        this.dashDuty = dashDuty;
+        this.dashPhasePx = dashPhasePx;
+        this.marker = marker == null ? Marker.none : marker;
+        this.markerSize = markerSize;
+        this.portTick = portTick;
+        this.arcStart = arcStart;
+        this.arcEnd = arcEnd;
     }
 
     /** The survey defaults: 2 px core, 1 px outline, solid, no marker, no fade. */
@@ -151,6 +179,31 @@ public record GuideLineStyle(
 
     /** The same stroke with the entry/exit reveal's arc window applied. */
     public GuideLineStyle withArc(float arcStart, float arcEnd) {
+        return new GuideLineStyle(
+            lineWidth,
+            edgeWidth,
+            lineColor,
+            edgeColor,
+            fadeFraction,
+            fadeAlpha,
+            dashPeriodPx,
+            dashDuty,
+            dashPhasePx,
+            marker,
+            markerSize,
+            portTick,
+            arcStart,
+            arcEnd
+        );
+    }
+
+    /**
+     * The same stroke with a duty of its own — the per-frame override of the theme's solid fraction. The period
+     * and the phase are untouched, so a caller that fades a pattern into a solid stroke keeps the ants' rhythm and
+     * their motion: the ink runs simply grow until they close (the duty reaching 1 is that closing, and a duty of 0
+     * would leave nothing but gaps). The theme's own duty is what a stroke that is not being faded carries.
+     */
+    public GuideLineStyle withDashDuty(float dashDuty) {
         return new GuideLineStyle(
             lineWidth,
             edgeWidth,

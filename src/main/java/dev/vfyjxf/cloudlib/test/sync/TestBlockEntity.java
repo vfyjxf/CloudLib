@@ -202,7 +202,7 @@ public class TestBlockEntity extends BlockEntity {
 
         @Override
         public boolean changed() {
-            return changedSlots.isEmpty();
+            return !changedSlots.isEmpty();
         }
 
         @Override

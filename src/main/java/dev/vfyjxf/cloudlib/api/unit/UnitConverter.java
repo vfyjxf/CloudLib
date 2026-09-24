@@ -152,6 +152,8 @@ public final class UnitConverter {
      * Resolves the exact ratio such that {@code 1 from = ratio to}.
      */
     public Ratio resolveRatio(Unit<?> from, Unit<?> to, @Nullable Namespace material) {
+        Checks.checkNotNull(from, "from");
+        Checks.checkNotNull(to, "to");
         if (from.equals(to)) return Ratio.one;
         return memo.computeIfAbsent(new MemoKey(from, to, material), key -> bfs(key.from(), key.to(), key.material()));
     }

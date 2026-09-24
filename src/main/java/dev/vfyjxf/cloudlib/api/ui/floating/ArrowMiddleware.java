@@ -1,6 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.floating;
 
 import dev.vfyjxf.cloudlib.api.math.Rect;
+import org.jspecify.annotations.Nullable;
 
 /**
  * FloatingMiddleware that provides positioning data for an arrow element.
@@ -8,13 +9,22 @@ import dev.vfyjxf.cloudlib.api.math.Rect;
  * The arrow should be an inner element of the floating element (e.g. a triangle/caret)
  * that visually points toward the reference element.
  * <p>
- * This middleware stores its result in middleware data under the key {@code "arrow"}.
- * The consumer reads {@code x} or {@code y} (one will be set, the other null depending
- * on side) and {@code centerOffset}.
+ * This middleware stores an {@link ArrowData} record in middleware data under the
+ * key {@code "data"} of the {@code "arrow"} namespace — read it with
+ * {@code state.getData("arrow", "data")} or {@code effect.data("arrow", "data")}.
  * <p>
  * It should be placed toward the end of the middleware array, after shift/flip.
  */
 public final class ArrowMiddleware implements FloatingMiddleware {
+
+    /**
+     * The arrow's position inside the floating element.
+     *
+     * @param x            the arrow's x offset, or null when the arrow sits on the y axis
+     * @param y            the arrow's y offset, or null when the arrow sits on the x axis
+     * @param centerOffset the distance from the arrow's center to the reference's center
+     */
+    public record ArrowData(@Nullable Double x, @Nullable Double y, double centerOffset) {}
 
     private final int arrowWidth;
     private final int arrowHeight;
@@ -94,12 +104,10 @@ public final class ArrowMiddleware implements FloatingMiddleware {
 
         double centerOffset = center - offset;
 
-        if (isYAxis) {
-            state.putData(name(), "y", offset);
-        } else {
-            state.putData(name(), "x", offset);
-        }
-        state.putData(name(), "centerOffset", centerOffset);
+        ArrowData data = isYAxis
+                ? new ArrowData(null, offset, centerOffset)
+                : new ArrowData(offset, null, centerOffset);
+        state.putData(name(), "data", data);
 
         return Result.done();
     }

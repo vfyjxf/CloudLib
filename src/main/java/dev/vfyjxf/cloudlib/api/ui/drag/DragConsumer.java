@@ -5,7 +5,6 @@ import dev.vfyjxf.cloudlib.api.performer.CompositeScenario;
 import dev.vfyjxf.cloudlib.api.ui.base.Widget;
 import dev.vfyjxf.cloudlib.api.util.Namespace;
 
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 
 public interface DragConsumer {
@@ -48,11 +47,11 @@ public interface DragConsumer {
         }
     );
 
-    static DragConsumer consumeWidget(BiFunction<DraggableElement<?>, DragContext, Boolean> consumer) {
+    static DragConsumer consumeWidget(BiPredicate<DraggableElement<?>, DragContext> consumer) {
         return new DragConsumer() {
             @Override
             public boolean consume(DraggableElement<?> element, DragContext context) {
-                return consumer.apply(element, context);
+                return consumer.test(element, context);
             }
         };
     }
@@ -60,7 +59,7 @@ public interface DragConsumer {
     @SuppressWarnings("unchecked")
     static DragConsumer consumeSpecificWidget(
         BiPredicate<Widget, DragContext> predicate,
-        BiFunction<DraggableElement<Widget>, DragContext, Boolean> consumer
+        BiPredicate<DraggableElement<Widget>, DragContext> consumer
     ) {
 
         return new DragConsumer() {
@@ -68,7 +67,7 @@ public interface DragConsumer {
             public boolean consume(DraggableElement<?> element, DragContext context) {
                 return element.whenConsume(Widget.class, widget -> {
                     if (predicate.test(widget, context)) {
-                        return consumer.apply((DraggableElement<Widget>) element, context);
+                        return consumer.test((DraggableElement<Widget>) element, context);
                     } else return false;
                 });
             }
@@ -78,14 +77,14 @@ public interface DragConsumer {
     @SuppressWarnings("unchecked")
     static DragConsumer forGroupConsumer(
         BiPredicate<DraggableElement<?>, DragContext> predicate,
-        BiFunction<DraggableElement<Widget>, DragContext, Boolean> consumer
+        BiPredicate<DraggableElement<Widget>, DragContext> consumer
     ) {
         return new DragConsumer() {
             @Override
             public boolean consume(DraggableElement<?> element, DragContext context) {
                 if (predicate.test(element, context)) {
                     return element.whenConsume(Widget.class, widget -> {
-                        return consumer.apply((DraggableElement<Widget>) element, context);
+                        return consumer.test((DraggableElement<Widget>) element, context);
                     });
                 } else return false;
             }

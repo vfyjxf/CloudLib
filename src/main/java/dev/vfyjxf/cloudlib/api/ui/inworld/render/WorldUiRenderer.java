@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * The in-world UI render pipeline (v2, sorted-translucency variant).
@@ -247,7 +246,8 @@ public final class WorldUiRenderer {
             for (DrawItem item : sequence(cameraPos)) {
                 WorldUiPanel panel = item.panel();
                 if (panel == null) {
-                    drawOverlay(Objects.requireNonNull(item.overlay()), frame);
+                    WorldOverlay overlay = item.overlay();
+                    if (overlay != null) drawOverlay(overlay, frame);
                 } else {
                     drawPanelQuad(panel);
                     // the panel's own companion lines draw at its slot, not in
@@ -316,15 +316,17 @@ public final class WorldUiRenderer {
      */
     private void renderSurfaces(WorldUiPanel.Frame frame, float pt) {
         int count = visible.size();
+        List<WorldUiPanel> repainting = new ArrayList<>(count);
         double[] projW = new double[count];
         double[] projH = new double[count];
         List<Supersampling.Request> requests = new ArrayList<>(count);
-        for (int i = 0; i < count; i++) {
-            WorldUiPanel panel = visible.get(i);
+        for (WorldUiPanel panel : visible) {
+            QuadBasis basis = bases.get(panel);
+            if (basis == null) continue;
             Supersampling.ProjectedSize proj = Supersampling.projectQuad(
                 worldToView,
                 frame.viewToClip(),
-                Objects.requireNonNull(bases.get(panel)),
+                basis,
                 panel.width(),
                 panel.height(),
                 frame.viewportW(),
@@ -334,8 +336,10 @@ public final class WorldUiRenderer {
                     .desired(proj == null ? 0 : proj.heightPx(), panel.height(), panel.supersample());
             int stable = supersampleControllers.computeIfAbsent(panel, p -> new SupersampleController())
                     .observe(desired);
-            projW[i] = proj == null ? 0 : proj.widthPx();
-            projH[i] = proj == null ? 0 : proj.heightPx();
+            int slot = repainting.size();
+            repainting.add(panel);
+            projW[slot] = proj == null ? 0 : proj.widthPx();
+            projH[slot] = proj == null ? 0 : proj.heightPx();
             requests.add(
                 new Supersampling.Request(
                     panel.width(),
@@ -347,8 +351,8 @@ public final class WorldUiRenderer {
             );
         }
         int[] granted = Supersampling.allocate(requests, Supersampling.defaultTexelBudget);
-        for (int i = 0; i < count; i++) {
-            WorldUiPanel panel = visible.get(i);
+        for (int i = 0; i < repainting.size(); i++) {
+            WorldUiPanel panel = repainting.get(i);
             int grantedStable = grantStabilizers.computeIfAbsent(panel, p -> new SupersampleController())
                     .observe(granted[i]);
             RepaintGate gate = repaintGates.computeIfAbsent(panel, p -> new RepaintGate());
@@ -369,13 +373,22 @@ public final class WorldUiRenderer {
     /** Last frame's draw order, per panel — the hysteresis tie-break for near-ties. */
     private final Map<WorldUiPanel, Integer> lastOrder = new IdentityHashMap<>();
 
-    /** One entry of the world pass's far → near sequence: a panel's quad, or a host overlay. */
+    /**
+     * One entry of the world pass's far → near sequence: a panel's quad, or a
+     * host overlay — exactly one of the two is present.
+     */
     private record DrawItem(
         @Nullable WorldUiPanel panel,
         @Nullable WorldOverlay overlay,
         double distance,
         int sequence
-    ) {}
+    ) {
+        DrawItem {
+            if ((panel == null) == (overlay == null)) {
+                throw new IllegalArgumentException("a draw item carries exactly one of panel, overlay");
+            }
+        }
+    }
 
     /**
      * The frame's draw sequence: every visible panel and every registered

@@ -13,6 +13,9 @@ import org.jspecify.annotations.Nullable;
  * Three write modes: {@link #set} (server mutate: store + dirty + fire), {@link #apply} (client
  * receive: store + fire, no dirty), {@link #load} (NBT: store only). The dirty flag is consumed by
  * tick-based observers (e.g. Expose sync via the internal {@code HandleSnapshot} adapter).
+ * <p>
+ * A handle may be created without a value ({@link #of()}), an empty cell: reads then return null
+ * until a value is stored, while all writes take a non-null value.
  *
  * @param <T> the value type
  */

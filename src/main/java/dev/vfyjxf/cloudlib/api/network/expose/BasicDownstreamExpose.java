@@ -34,7 +34,11 @@ abstract sealed class BasicDownstreamExpose<T> extends BasicExpose<T> implements
 
     @Override
     public void writeToClient(RegistryFriendlyByteBuf byteBuf) {
-        encoder.encode(byteBuf, current());
+        T value = current();
+        if (value == null) {
+            throw new IllegalStateException("Expose has no value to write: (id:" + id() + " name:" + name() + ")");
+        }
+        encoder.encode(byteBuf, value);
     }
 
     @Override

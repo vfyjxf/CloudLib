@@ -83,12 +83,22 @@ public class PerformerContainer {
 
     @SuppressWarnings({"unchecked"})
     public <T> T get(CompositeScenario<T> scenario) {
-        return (T) mergeablePerformers.getIfAbsentPut(scenario, new SimpleMergeablePerformer<>(scenario)).performer();
+        MergeablePerformer<T> mergeableperformer = (MergeablePerformer<T>) mergeablePerformers
+                .getIfAbsentPut(scenario, () -> new SimpleMergeablePerformer<>(scenario));
+        return Checks.checkNotNull(mergeableperformer, "mergeableperformer").performer();
     }
 
     private static class SimpleMergeablePerformer<T> extends MergeablePerformer<T> {
+        private final CompositeScenario<T> scenario;
+
         private SimpleMergeablePerformer(CompositeScenario<T> scenario) {
             super(scenario.merger());
+            this.scenario = scenario;
+        }
+
+        @Override
+        protected String description() {
+            return "scenario " + scenario;
         }
     }
 }

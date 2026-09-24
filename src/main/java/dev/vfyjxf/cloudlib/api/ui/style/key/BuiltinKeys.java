@@ -946,8 +946,10 @@ public class BuiltinKeys {
 
     /**
      * {@code transition} — the animation declaration kept as its raw token
-     * stream ({@code transition: all 200ms ease}), read via
-     * {@code style().get(transition).text()}.
+     * stream ({@code transition: all 200ms ease}). Read it with
+     * {@code Tokens tokens = style().get(transition)}, which is null when no
+     * rule sets the property; a non-null value's {@code text()} is the
+     * declaration.
      */
     public static final StyleKey<Tokens> transition = rawKey("transition", StyleApplies.customProp("transition"));
 

@@ -8,7 +8,6 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -81,14 +80,38 @@ public final class CssParser {
     /** Functional pseudos taking a comma-separated identifier/word list. */
     private static final Set<String> identArgs = Set.of("lang", "dir", "part", "state", "highlight");
 
+    /** Token kinds whose token carries text — a decoded value or raw numeric text. */
+    private static final Set<TokenKind> textKinds = Set.of(
+        TokenKind.ident,
+        TokenKind.function,
+        TokenKind.atKeyword,
+        TokenKind.hash,
+        TokenKind.string,
+        TokenKind.badString,
+        TokenKind.url,
+        TokenKind.badUrl,
+        TokenKind.number,
+        TokenKind.percentage,
+        TokenKind.dimension,
+        TokenKind.unicodeRange
+    );
+
     /** The text a token of a kind that carries one — its decoded value or its raw numeric text. */
     private static String text(Token t) {
-        return Objects.requireNonNull(t.string());
+        String value = t.string();
+        if (value == null || !textKinds.contains(t.kind())) {
+            throw new IllegalStateException("token of kind " + t.kind() + " carries no text");
+        }
+        return value;
     }
 
     /** The unit of a dimension token. */
     private static String unit(Token t) {
-        return Objects.requireNonNull(t.unit());
+        String value = t.unit();
+        if (value == null || t.kind() != TokenKind.dimension) {
+            throw new IllegalStateException("token of kind " + t.kind() + " carries no unit");
+        }
+        return value;
     }
 
     private static final class Parser {
@@ -183,7 +206,7 @@ public final class CssParser {
         /** Spec "consume an at-rule" — cursor is on the {@code @keyword} token. */
         private @Nullable Rule atRule() {
             Token at = take();
-            String name = at.string() != null ? at.string().toLowerCase(Locale.ROOT) : "";
+            String name = text(at).toLowerCase(Locale.ROOT);
             List<ComponentValue> prelude = new ArrayList<>();
             while (true) {
                 Token t = peek();
@@ -644,7 +667,7 @@ public final class CssParser {
                     skipWsNs();
                     if (isDelim(peek(), '|') && !isDelim(peekAt1(), '=') && !isDelim(peekAt1(), '|')) {
                         take(); // the |
-                        namespace = t.kind() == TokenKind.ident ? t.string() : "*";
+                        namespace = t.kind() == TokenKind.ident ? text(t) : "*";
                         sawNamespace = true;
                     } else {
                         pos = save;
@@ -653,7 +676,7 @@ public final class CssParser {
                 if (sawNamespace) {
                     Token tagTok = peek();
                     if (tagTok.kind() == TokenKind.ident) {
-                        tag = tagTok.string();
+                        tag = text(tagTok);
                         take();
                     } else if (isDelim(tagTok, '*')) {
                         take();
@@ -664,7 +687,7 @@ public final class CssParser {
                     any = true;
                     spec = spec.plus(tag != null ? new Specificity(0, 0, 1) : Specificity.zero);
                 } else if (t.kind() == TokenKind.ident) {
-                    tag = take().string();
+                    tag = text(take());
                     any = true;
                     spec = spec.plus(new Specificity(0, 0, 1));
                 } else if (isDelim(t, '*')) {
@@ -676,7 +699,7 @@ public final class CssParser {
             while (true) {
                 t = peek();
                 if (t.kind() == TokenKind.hash && t.idFlag()) {
-                    id = take().string();
+                    id = text(take());
                     spec = spec.plus(new Specificity(1, 0, 0));
                     any = true;
                 } else if (isDelim(t, '.')) {
@@ -686,7 +709,7 @@ public final class CssParser {
                         error("expected class name after '.'");
                         return null;
                     }
-                    classes.add(name.string());
+                    classes.add(text(name));
                     take();
                     spec = spec.plus(new Specificity(0, 1, 0));
                     any = true;
@@ -756,7 +779,7 @@ public final class CssParser {
                 ns = "";
             } else if (t.kind() == TokenKind.ident || isDelim(t, '*')) {
                 int save = pos;
-                String candidate = t.kind() == TokenKind.ident ? take().string() : "*";
+                String candidate = t.kind() == TokenKind.ident ? text(take()) : "*";
                 skipWs();
                 if (isDelim(peek(), '|') && !isDelim(peekAt1(), '=')) {
                     take();
@@ -909,7 +932,7 @@ public final class CssParser {
                 List<String> words = new ArrayList<>();
                 for (Token t : argTokens) {
                     if (t.kind() == TokenKind.ident || t.kind() == TokenKind.string) {
-                        words.add(t.string());
+                        words.add(text(t));
                     }
                 }
                 return new ParsedArgs(
@@ -983,7 +1006,7 @@ public final class CssParser {
             int ofIndex = -1;
             for (int i = 0; i < argTokens.size(); i++) {
                 Token t = argTokens.get(i);
-                if (t.kind() == TokenKind.ident && "of".equalsIgnoreCase(t.string())) {
+                if (t.kind() == TokenKind.ident && "of".equalsIgnoreCase(text(t))) {
                     ofIndex = i;
                     break;
                 }

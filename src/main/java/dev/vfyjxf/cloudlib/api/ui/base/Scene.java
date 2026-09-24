@@ -627,7 +627,15 @@ public final class Scene {
         );
     }
 
+    /**
+     * Computes the layout of the scene's widget tree.
+     *
+     * @throws IllegalStateException when the scene is not mounted
+     */
     public void layout() {
+        if (!root.lifecycle.mounted()) {
+            throw new IllegalStateException("Scene is not mounted!");
+        }
         float effW = width;
         float effH = height;
         Insets insets = effectiveInsets();
@@ -810,6 +818,9 @@ public final class Scene {
     }
 
     private void rebuildRequired() {
+        if (!root.lifecycle.mounted()) {
+            throw new IllegalStateException("Scene is not mounted!");
+        }
         if (!createdWidgets.isEmpty()) {
             for (Widget created : createdWidgets) {
                 WidgetTree.walkBreadthFirst(created, true, -1, (widget, depth) -> {
@@ -864,6 +875,8 @@ public final class Scene {
      * Applies pending scene mutations without performing a render pass.
      * Useful for automation flows that trigger UI updates and need a stable
      * widget tree immediately afterward.
+     *
+     * @throws IllegalStateException when the scene is not mounted
      */
     public void stabilize() {
         drainDeferred();
@@ -970,8 +983,10 @@ public final class Scene {
 
     /**
      * @return the context this scene is mounted with.
+     * @throws IllegalArgumentException when the scene is not mounted
      */
     public SceneContext context() {
+        Checks.checkArgument(root.lifecycle.mounted(), "Scene is not mounted!");
         return Checks.checkNotNull(context, "Scene context ");
     }
 
@@ -1785,8 +1800,8 @@ public final class Scene {
         FocusNode oldFocus = primaryFocus;
         if (oldFocus == node) return;
 
-        Widget newWidget = Checks.checkNotNull(node.owner, "Focus node owner ");
-        assert newWidget.lifecycle.mounted();
+        Widget newWidget = node.owner;
+        if (newWidget == null || !newWidget.lifecycle.mounted()) return;
         WidgetPath newPath = newWidget.path();
 
         if (oldFocus != null && oldFocus.owner != null && oldFocus.owner.lifecycle.mounted()) {

@@ -61,9 +61,6 @@ public final class VanillaHudSampler {
 
     private void sampleHeights(GuiGraphics guiGraphics, DeltaTracker deltaTracker) {
         Gui gui = Minecraft.getInstance().gui;
-        if (gui == null) {
-            return;
-        }
         leftHeight = gui.leftHeight;
         rightHeight = gui.rightHeight;
         bossBars.clear();
@@ -90,7 +87,7 @@ public final class VanillaHudSampler {
                 .leftHeight(leftHeight).rightHeight(rightHeight).demo(minecraft.isDemo())
                 .bossBars(List.copyOf(bossBars));
         LocalPlayer player = minecraft.player;
-        if (gui != null && player != null && minecraft.gameMode != null) {
+        if (player != null && minecraft.gameMode != null) {
             builder.healthColumns(minecraft.gameMode.canHurtPlayer());
             boolean ridingJumpable = player.jumpableVehicle() != null;
             boolean hasExperience = minecraft.gameMode.hasExperience();

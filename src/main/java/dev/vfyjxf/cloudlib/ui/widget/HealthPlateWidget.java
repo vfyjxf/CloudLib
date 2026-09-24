@@ -8,6 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
@@ -49,7 +50,7 @@ public final class HealthPlateWidget extends Widget {
 
     private final DoubleSupplier health;
     private final DoubleSupplier maxHealth;
-    private final Supplier<Component> name;
+    private final Supplier<@Nullable Component> name;
     private final BooleanSupplier customName;
     private final IntSupplier armor;
 
@@ -73,14 +74,18 @@ public final class HealthPlateWidget extends Widget {
         );
     }
 
-    public HealthPlateWidget(DoubleSupplier health, DoubleSupplier maxHealth, Supplier<Component> name) {
+    public HealthPlateWidget(DoubleSupplier health, DoubleSupplier maxHealth, Supplier<@Nullable Component> name) {
         this(health, maxHealth, name, () -> false, () -> 0);
     }
 
+    /**
+     * @param name the name line, read per measure; {@code null} for a nameless
+     *             plate
+     */
     public HealthPlateWidget(
         DoubleSupplier health,
         DoubleSupplier maxHealth,
-        Supplier<Component> name,
+        Supplier<@Nullable Component> name,
         BooleanSupplier customName,
         IntSupplier armor
     ) {
@@ -90,9 +95,14 @@ public final class HealthPlateWidget extends Widget {
         this.customName = customName;
         this.armor = armor;
         onMount((scene, context, handle) -> scene.layoutTree().setMeasureFunc(nodeId(), (style, space) -> {
-            boolean named = name.get() != null && !name.get().getString().isEmpty();
-            int nameHeight = named ? context.font().lineHeight : 0;
-            int boardW = panelWidth(named ? context.font().width(name.get()) : 0);
+            Component currentName = name.get();
+            int nameHeight = 0;
+            int nameWidth = 0;
+            if (currentName != null && !currentName.getString().isEmpty()) {
+                nameHeight = context.font().lineHeight;
+                nameWidth = context.font().width(currentName);
+            }
+            int boardW = panelWidth(nameWidth);
             int rows = showArmor ? armorRows(armor.getAsInt(), boardW) : 0;
             return new FloatSize(boardW, panelHeight(nameHeight, rows));
         }));
@@ -231,9 +241,8 @@ public final class HealthPlateWidget extends Widget {
         canvas.fill(0, 0, w, h, boardColor);
 
         Component nameComponent = name.get();
-        boolean named = nameComponent != null && !nameComponent.getString().isEmpty();
         int y;
-        if (named) {
+        if (nameComponent != null && !nameComponent.getString().isEmpty()) {
             if (customName.getAsBoolean()) {
                 nameComponent = nameComponent.copy().withStyle(ChatFormatting.ITALIC);
             }

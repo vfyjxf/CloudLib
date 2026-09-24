@@ -8,6 +8,7 @@ import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
 import dev.vfyjxf.cloudlib.api.util.Maybe;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Consumer;
 
@@ -52,7 +53,7 @@ final class StandardDiffReverseLayerExpose<E, D, S, R> extends BasicLayerExpose<
                 "There is already a value going to send,data shouldn't be updated at tick end."
             );
         }
-        this.reversedData = Maybe.of(toSend);
+        this.reversedData = Maybe.ofNonNull(toSend);
     }
 
     @Override
@@ -89,12 +90,12 @@ final class StandardDiffReverseLayerExpose<E, D, S, R> extends BasicLayerExpose<
     }
 
     @Override
-    @SuppressWarnings("ConstantConditions")
     public void writeToServer(RegistryFriendlyByteBuf byteBuf) {
-        if (this.reversedData.defined()) {
-            this.reverseEncoder.encode(byteBuf, this.reversedData.get());
-            this.reversedData = Maybe.empty();
-        }
+        @Nullable
+        S data = this.reversedData.orElse(null);
+        if (data == null) return;
+        this.reverseEncoder.encode(byteBuf, data);
+        this.reversedData = Maybe.empty();
     }
 
     @Override

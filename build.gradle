@@ -242,6 +242,7 @@ tasks.withType(JavaCompile).configureEach {
     options.errorprone {
         disableAllChecks = true
         option("NullAway:OnlyNullMarked", "true")
+        option("NullAway:CastToNonNullMethod", "dev.vfyjxf.cloudlib.util.Checks.checkNotNull")
         check("NullAway", CheckSeverity.ERROR)
     }
 }

@@ -25,16 +25,16 @@ public interface DragProvider {
             }
 
             @Override
-            public DraggableElement<?> getDraggableElement(
+            public @Nullable DraggableElement<?> getDraggableElement(
                 @Nullable Scene scene,
                 InputContext input,
                 DragContext dragContext
             ) {
                 for (DragProvider listener : listeners) {
                     DraggableElement<?> element = listener.getDraggableElement(scene, input, dragContext);
-                    if (!element.isEmpty()) return element;
+                    if (element != null) return element;
                 }
-                return DraggableElement.empty();
+                return null;
             }
         }
     );
@@ -47,18 +47,22 @@ public interface DragProvider {
             }
 
             @Override
-            public DraggableElement<?> getDraggableElement(
+            public @Nullable DraggableElement<?> getDraggableElement(
                 @Nullable Scene scene,
                 InputContext input,
                 DragContext dragContext
             ) {
                 if (widget.parent() != null && widget.isMouseOver(input)) return DraggableElement.draggable(widget);
-                else return DraggableElement.empty();
+                else return null;
             }
         };
     }
 
     boolean draggable(@Nullable Scene scene, InputContext input, DragContext dragContext);
 
+    /**
+     * @return the element to drag at the given input, or {@code null} when nothing is draggable there
+     */
+    @Nullable
     DraggableElement<?> getDraggableElement(@Nullable Scene scene, InputContext input, DragContext dragContext);
 }

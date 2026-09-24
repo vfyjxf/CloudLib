@@ -123,6 +123,38 @@ import java.util.Objects;
  * no path — a sealed-in anchor, an overlapping obstacle field — a simple
  * elbow is drawn instead: never a blank frame.
  * <p>
+ * <strong>Pinning a style.</strong>
+ * {@link #route(List, Map, List, FloatRect, Style)} takes an optional forced
+ * style, which replaces the gate's verdict for that epoch — the caller's
+ * "draw every leader straight" or "draw every leader routed". Both pins are
+ * the full-tier forms taken from the same construction the gated reading
+ * uses; nothing is rebuilt in parallel:
+ * <ul>
+ *   <li><strong>{@link Style#sLeader} pinned</strong> — every leader draws the
+ *       straight baseline (anchor → drawn end, the arrival gap still held off
+ *       the port), which is the segment the trigger measurement is taken
+ *       on. The blocked test is not consulted (the caller asked for the
+ *       baseline) and no cluster trunk forms. The near-distance ladder is
+ *       skipped with it: a pinned baseline is not the full routing the ladder
+ *       exists to protect, so it draws at every distance (full tier, alpha 1)
+ *       and is recorded as full, so a later ladder re-entry happens under the
+ *       Schmitt band rather than instantly.</li>
+ *   <li><strong>{@link Style#poLeader} pinned</strong> — every full-tier
+ *       leader takes the orthogonal route, a clear baseline included, so the
+ *       committed-route reuse, the 12 px quantization and the switch guards
+ *       apply exactly as they do to a gated route. The ladder is untouched:
+ *       the fold and attach forms draw as they always do.</li>
+ * </ul>
+ * A pin also suppresses the cluster trunk (the pin names the form a leader
+ * draws, which a trunk would override) and, under a pinned straight, the
+ * zero-crossing pass — its lines are not routed geometry the pass can move,
+ * and a detour commit from an earlier epoch must not be released into an
+ * orthogonal route that the pin forbids. Crossings are counted and reported
+ * either way. The triggers are still measured and still fed to the gate while
+ * a style is pinned, so the gate resumes from the dwell the geometry earned.
+ * {@link Style#hyperLeader} is not a pin at all: a trunk is a cluster's shared
+ * geometry, and asking for it as a style is rejected.
+ * <p>
  * One {@link #route} call is one decision epoch; determinism holds because
  * everything iterates the caller's leader list in order and the grid search
  * itself is tie-broken. No wall clock — the perimeter slide's dt is consumed
@@ -402,12 +434,36 @@ public final class LeaderRouter {
     }
 
     /**
-     * Routes one epoch's leaders.
+     * Routes one epoch's leaders, the style gate deciding each style.
+     *
+     * @see #route(List, Map, List, FloatRect, Style)
+     */
+    public List<Route> route(
+        List<Leader> leaders,
+        Map<String, String> clusters,
+        List<FloatRect> obstacles,
+        @Nullable FloatRect viewport
+    ) {
+        return route(leaders, clusters, obstacles, viewport, null);
+    }
+
+    /**
+     * Routes one epoch's leaders, optionally with the style pinned instead of
+     * gated.
+     * <p>
+     * A pin replaces the gate's verdict for every leader this epoch and
+     * nothing else: the triggers are still measured and still fed to the gate
+     * (so its dwell streaks stay truthful for the epoch the pinning ends), the
+     * baseline geometry, the commits, the quantization and the fold/attach
+     * ladder stay exactly what they are — only which of the two full-tier
+     * forms is drawn changes. See the class docs for what each pinned style
+     * draws and how it meets the ladder.
      *
      * @param leaders the leaders, in the caller's canonical order
      * @param clusters leader id → cluster id; leaders sharing a cluster id
      *        (two or more) route as hyperleaders through their shared trunk,
-     *        leaders absent from the map route individually
+     *        leaders absent from the map route individually. A pinned style
+     *        outranks the trunk: the pinned form is what draws
      * @param obstacles the rects to route around — other panels and HUD
      *        areas as a plain rectangle list (never one monolithic HUD
      *        block), in the caller's canonical order
@@ -416,16 +472,28 @@ public final class LeaderRouter {
      *        or committed routes that would leave it are re-routed, and the
      *        elbow fallback clamps onto its edge. {@code null} bounds
      *        nothing
+     * @param forcedStyle the style every leader is pinned to this epoch —
+     *        {@link Style#sLeader} for the straight baseline,
+     *        {@link Style#poLeader} for the orthogonal route — or {@code null}
+     *        to let the style gate decide
      * @return one {@link Route} per leader, in the leaders' order
      *
-     * @throws IllegalArgumentException if leader ids are duplicated
+     * @throws IllegalArgumentException if leader ids are duplicated, or if
+     *         {@code forcedStyle} is {@link Style#hyperLeader} — a trunk is a
+     *         cluster's shared geometry, not a style a caller can ask for
      */
     public List<Route> route(
         List<Leader> leaders,
         Map<String, String> clusters,
         List<FloatRect> obstacles,
-        @Nullable FloatRect viewport
+        @Nullable FloatRect viewport,
+        @Nullable Style forcedStyle
     ) {
+        if (forcedStyle == Style.hyperLeader) {
+            throw new IllegalArgumentException(
+                "hyperLeader cannot be forced: a trunk is a cluster's shared geometry, not a routing choice"
+            );
+        }
         Map<String, Leader> byId = new LinkedHashMap<>();
         for (Leader leader : leaders) {
             if (byId.put(leader.id(), leader) != null) {
@@ -452,11 +520,18 @@ public final class LeaderRouter {
                     clusterId,
                     Objects.requireNonNull(triggers.counts.get(leader.id()), "trigger count"),
                     obstacles,
-                    viewport
+                    viewport,
+                    forcedStyle
                 )
             );
         }
-        reduceCrossings(work, clusterGroups, obstacles, viewport, triggers.baselineCrossing);
+        // the zero-crossing pass is the routed geometry's own obligation: with
+        // the style pinned to the baseline there is no route for it to move,
+        // and a detour commit left over from an earlier epoch must not be
+        // released into an orthogonal route behind a pinned straight
+        if (forcedStyle != Style.sLeader) {
+            reduceCrossings(work, clusterGroups, obstacles, viewport, triggers.baselineCrossing);
+        }
         int[] counts = countCrossings(work, clusterGroups);
         List<Route> routes = new ArrayList<>(work.size());
         for (int i = 0; i < work.size(); i++) {
@@ -546,20 +621,31 @@ public final class LeaderRouter {
         @Nullable String clusterId,
         int trigger,
         List<FloatRect> obstacles,
-        @Nullable FloatRect viewport
+        @Nullable FloatRect viewport,
+        @Nullable Style forcedStyle
     ) {
         Style desired = trigger > 0 ? Style.poLeader : Style.sLeader;
         SwitchGate<Style> gate = gates
                 .computeIfAbsent(leader.id(), id -> new SwitchGate<>(gateConfig(), Style.sLeader, 0.0));
         gate.propose(desired, trigger);
-        Style gated = gate.current();
+        // a pinned style replaces the gate's verdict without silencing the gate:
+        // it keeps observing the epoch, so the epoch the pinning ends resumes
+        // from the dwell the geometry earned rather than from a frozen state
+        Style gated = forcedStyle != null ? forcedStyle : gate.current();
 
         FloatPos anchor = new FloatPos(leader.anchorX(), leader.anchorY());
         FloatPos portPoint = leader.port().point();
         double distance = Math.hypot(portPoint.x() - anchor.x(), portPoint.y() - anchor.y());
-        Working working = new Working(leader, group != null && group.size() >= 2 ? clusterId : null, gated);
+        // a pinned style outranks the trunk: it names the form this leader
+        // draws, which a shared trunk would override with a third one
+        List<Leader> cluster = forcedStyle == null && group != null && group.size() >= 2 ? group : null;
+        Working working = new Working(leader, cluster != null ? clusterId : null, gated);
         working.trigger = trigger;
-        working.tier = tierOf(leader.id(), distance);
+        // the ladder answers "the full form does not fit at this distance" for
+        // the routed form; the straight baseline is not that form, so a pin to
+        // it bypasses the ladder and draws at every distance. The pinned tier is
+        // what is recorded, so the ladder re-enters from it under its own band
+        working.tier = forcedStyle == Style.sLeader ? Tier.full : tierOf(leader.id(), distance);
         tiers.put(leader.id(), working.tier);
         if (working.tier == Tier.attach) {
             working.alpha = 0.0;
@@ -576,21 +662,32 @@ public final class LeaderRouter {
         working.alpha = 1.0;
         working.shapeEpoch = styleShapeEpoch(gated);
 
-        if (working.clusterId != null) {
-            FloatPos trunk = trunkOf(Objects.requireNonNull(group, "group"));
+        if (forcedStyle == Style.sLeader) {
+            // the pinned baseline: the straight the gate measures, drawn as
+            // asked — the blocked test, the obstacles and the viewport clamp on
+            // the drawn end are all the geometry it ever gets
+            working.points = List.of(anchor, LeaderGridRouter.clamped(drawnEnd(leader), viewport));
+            return working;
+        }
+
+        if (cluster != null) {
+            FloatPos trunk = trunkOf(cluster);
             working.points = List.of(anchor, trunk, LeaderGridRouter.clamped(drawnEnd(leader), viewport));
             working.style = Style.hyperLeader;
             working.shapeEpoch = styleShapeEpoch(Style.hyperLeader);
             return working;
         }
 
-        boolean straightBlocked = LeaderGridRouter.polylineBlocked(
-            List.of(anchor, portPoint),
-            portPoint,
-            obstacles,
-            config.routing().clearancePx(),
-            viewport
-        );
+        // only the gate's own reading may take the straight shortcut; a pinned
+        // po style never draws the baseline, so it reaches the router below
+        boolean straightBlocked = forcedStyle == null
+                && LeaderGridRouter.polylineBlocked(
+                    List.of(anchor, portPoint),
+                    portPoint,
+                    obstacles,
+                    config.routing().clearancePx(),
+                    viewport
+                );
         if (gated == Style.sLeader && !straightBlocked) {
             working.points = List.of(anchor, LeaderGridRouter.clamped(drawnEnd(leader), viewport));
             return working;
@@ -730,8 +827,7 @@ public final class LeaderRouter {
                 || prior.exitX != leader.port().normalX()
                 || prior.exitY != leader.port().normalY();
 
-        if (!exitChanged) {
-            prior = Objects.requireNonNull(prior, "prior");
+        if (prior != null && !exitChanged) {
             if (prior.key.equals(key)) {
                 List<FloatPos> stretched = stretch(prior.points, anchor, leader.port(), prior, viewport);
                 if (!LeaderGridRouter
@@ -784,9 +880,8 @@ public final class LeaderRouter {
             freshDir = primary;
         }
 
-        boolean adopt = prior == null;
-        if (!adopt) {
-            prior = Objects.requireNonNull(prior, "prior");
+        boolean adopt = true;
+        if (prior != null) {
             List<FloatPos> stretched = stretch(prior.points, anchor, leader.port(), prior, viewport);
             boolean priorValid = !LeaderGridRouter
                     .polylineBlocked(stretched, portPoint, obstacles, config.routing().clearancePx(), viewport);

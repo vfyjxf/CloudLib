@@ -25,11 +25,23 @@ public class FrameAnimation implements Playable<VisualTexture> {
 
     public FrameAnimation() {}
 
+    /**
+     * Appends a single frame.
+     *
+     * @param texture the frame texture, must be non-null — use {@link VisualTexture#empty} for an empty frame
+     * @param duration the frame duration, in seconds
+     */
     public FrameAnimation addFrame(VisualTexture texture, float duration) {
         frames.add(new Frame(texture, duration));
         return this;
     }
 
+    /**
+     * Appends one frame per texture, all sharing {@code duration}.
+     *
+     * @param duration the duration of each frame, in seconds
+     * @param textures the frame textures, each must be non-null — use {@link VisualTexture#empty} for an empty frame
+     */
     public FrameAnimation addFrames(float duration, VisualTexture... textures) {
         for (VisualTexture t : textures) {
             addFrame(t, duration);

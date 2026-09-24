@@ -14,7 +14,7 @@ public class DebugConfig {
     }
 
     public static boolean debugExpose() {
-        return debugExpose.get();
+        return !FMLEnvironment.production && debugExpose.get();
     }
 
     private static final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();

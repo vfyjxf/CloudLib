@@ -274,7 +274,8 @@ public final class InworldCoordinator {
      *
      * @throws IllegalArgumentException if the input is malformed or an element
      *         breaches the propose contract (invalid proposal records,
-     *         out-of-ladder variants)
+     *         out-of-ladder variants, a capability the element does not
+     *         declare)
      */
     public CoordinationResult frame(FrameInput frame) {
         frameCounter++;
@@ -334,11 +335,7 @@ public final class InworldCoordinator {
                 ladderVariant(runtime)
             );
             runtime.roundZero = runtime.element.propose(context);
-            if (runtime.roundZero.worldOnly() && !runtime.element.worldOnly()) {
-                throw new IllegalArgumentException(
-                    "element " + runtime.element.id() + " is not world-only but proposed a world-only proposal"
-                );
-            }
+            requireProposalContract(runtime, runtime.roundZero);
         }
 
         // Renegotiate judgment, post-collect half: presentation recovery,
@@ -427,6 +424,12 @@ public final class InworldCoordinator {
         // candidate retracts (state without placement).
         for (ElementRuntime runtime : bypassed) {
             if (rigid(runtime.element)) {
+                if (runtime.roundZero.worldOnly()) {
+                    throw new IllegalArgumentException(
+                        "element " + runtime.element.id() + " is rigid but proposed a world-only proposal: rigid"
+                                + " places a screen rect, not the world-only capability"
+                    );
+                }
                 acceptRigid(runtime, toFloat(workArea));
             } else {
                 acceptWorldOnly(runtime);
@@ -439,26 +442,27 @@ public final class InworldCoordinator {
         // to relax or separate.
         Map<ElementRuntime, FloatRect> visuals = new LinkedHashMap<>();
         for (ElementRuntime runtime : arbitrated) {
-            if (!runtime.pendingPresent || runtime.target == null) {
+            InworldPlacement target = runtime.target;
+            if (!runtime.pendingPresent || target == null) {
                 continue;
             }
-            FloatRect targetRect = layoutTargetRect(runtime);
-            boolean discrete = resolveNow
+            FloatRect targetRect = layoutTargetRect(runtime, target);
+            boolean retarget = runtime.flip != null
+                    && runtime.spring != null
+                    && resolveNow
                     && (runtime.lastTargetRect == null || !rectsAlmostEqual(runtime.lastTargetRect, targetRect));
-            if (runtime.flip == null || runtime.spring == null) {
-                runtime.flip = new FlipPlanner(config.flipSpeedPixelsPerSecond(), targetRect);
-                runtime.spring = new Spring2(config.springOmega(), targetRect.centerX(), targetRect.centerY());
-            } else if (discrete) {
-                runtime.flip.flipTo(targetRect, frame.nowSeconds());
-                runtime.spring.snap(targetRect.centerX(), targetRect.centerY());
+            Animation animation = animationAt(runtime, targetRect);
+            if (retarget) {
+                animation.flip().flipTo(targetRect, frame.nowSeconds());
+                animation.spring().snap(targetRect.centerX(), targetRect.centerY());
             }
             FloatRect visual;
-            if (runtime.flip.isAnimating(frame.nowSeconds())) {
-                visual = runtime.flip.visual(frame.nowSeconds());
+            if (animation.flip().isAnimating(frame.nowSeconds())) {
+                visual = animation.flip().visual(frame.nowSeconds());
             } else {
-                runtime.spring.step(targetRect.centerX(), targetRect.centerY(), frame.dtSeconds());
+                animation.spring().step(targetRect.centerX(), targetRect.centerY(), frame.dtSeconds());
                 visual = FloatRect.around(
-                    new FloatPos(runtime.spring.x(), runtime.spring.y()),
+                    new FloatPos(animation.spring().x(), animation.spring().y()),
                     targetRect.width(),
                     targetRect.height()
                 );
@@ -489,8 +493,9 @@ public final class InworldCoordinator {
                 }
             } else {
                 boolean wasPresented = runtime.lastPresented;
+                InworldPlacement target = runtime.target;
                 FloatRect unclamped = visuals.get(runtime);
-                if (runtime.pendingPresent && runtime.target != null && unclamped != null) {
+                if (runtime.pendingPresent && target != null && unclamped != null) {
                     FloatRect visual = unclamped;
                     if (runtime.lastVisual != null) {
                         visual = clampDisplacement(visual, runtime.lastVisual, config.relaxDisplacementClampPx());
@@ -498,29 +503,30 @@ public final class InworldCoordinator {
                     carryRelaxation(runtime, unclamped, visual, frame.nowSeconds());
                     FloatPos anchor = runtime.roundZero.anchorScreen() != null
                             ? runtime.roundZero.anchorScreen()
-                            : runtime.target.anchor();
+                            : target.anchor();
                     runtime.lastVisual = visual;
-                    runtime.lastTargetRect = runtime.target.offsetRect().translate(anchor.x(), anchor.y());
+                    runtime.lastTargetRect = target.offsetRect().translate(anchor.x(), anchor.y());
                     runtime.target = new InworldPlacement(
                         runtime.element.id(),
-                        runtime.target.variant(),
+                        target.variant(),
                         anchor,
-                        runtime.target.offsetRect(),
-                        runtime.target.world(),
+                        target.offsetRect(),
+                        target.world(),
                         runtime.frameArbitrationIndex,
-                        runtime.target.epoch()
+                        target.epoch()
                     );
                     placements.add(runtime.target);
-                } else if (wasPresented && runtime.target != null && runtime.lastVisual != null) {
+                } else if (wasPresented && target != null && runtime.lastVisual != null) {
                     // The element just left the presented set. Commit its pending
                     // morph: nothing is animated off screen, and a half-applied
                     // morph held over a linger would resume a whole morph-late
                     // position/size change on the next presentation. The rect the
                     // element lingers at (and is later rescued from) is therefore
                     // the layout rect it was heading for.
-                    FloatRect resting = layoutTargetRect(runtime);
-                    runtime.flip.snap(resting);
-                    runtime.spring.snap(resting.centerX(), resting.centerY());
+                    FloatRect resting = layoutTargetRect(runtime, target);
+                    Animation animation = animationAt(runtime, resting);
+                    animation.flip().snap(resting);
+                    animation.spring().snap(resting.centerX(), resting.centerY());
                     runtime.lastVisual = resting;
                     runtime.lastTargetRect = resting;
                 }
@@ -670,7 +676,7 @@ public final class InworldCoordinator {
         }
         requireLadderRung(runtime, proposal.variant());
         runtime.currentLevel = proposal.variant().level();
-        FloatPos anchor = Objects.requireNonNull(proposal.anchorScreen(), "anchorScreen");
+        FloatPos anchor = requireAnchor(runtime, proposal);
         for (PlacementCandidate candidate : proposal.candidates()) {
             FloatRect screen = candidate.screenRect();
             if (screen == null) {
@@ -756,6 +762,7 @@ public final class InworldCoordinator {
                     runtime.activeRejection = null;
                     break;
                 }
+                requireProposalContract(runtime, proposal);
                 requireLadderRung(runtime, proposal.variant());
                 if (proposal.variant().level() <= runtime.currentLevel) {
                     // the protocol demands strict degradation within a round
@@ -797,23 +804,24 @@ public final class InworldCoordinator {
         RoundScope scope,
         Acceptance rejected
     ) {
-        if (!runtime.lastPresented || runtime.target == null) {
+        InworldPlacement incumbent = runtime.target;
+        if (!runtime.lastPresented || incumbent == null) {
             return rejected;
         }
         FloatPos anchor = proposal.anchorScreen();
         if (anchor == null) {
             return rejected;
         }
-        if (!incumbentStillFits(runtime.target.offsetRect().translate(anchor.x(), anchor.y()), runtime, scope)) {
+        if (!incumbentStillFits(incumbent.offsetRect().translate(anchor.x(), anchor.y()), incumbent, scope)) {
             return rejected;
         }
         return Acceptance.accepted(
             new InworldPlacement(
                 runtime.element.id(),
-                runtime.target.variant(),
+                incumbent.variant(),
                 anchor,
-                runtime.target.offsetRect(),
-                runtime.target.world(),
+                incumbent.offsetRect(),
+                incumbent.world(),
                 runtime.frameArbitrationIndex,
                 scope.epoch
             )
@@ -847,12 +855,13 @@ public final class InworldCoordinator {
      */
     private Acceptance tryAccept(ElementRuntime runtime, ElementProposal proposal, RoundScope scope) {
         InworldVariant variant = proposal.variant();
-        FloatPos anchor = Objects.requireNonNull(proposal.anchorScreen(), "anchorScreen");
+        FloatPos anchor = requireAnchor(runtime, proposal);
+        InworldPlacement incumbent = runtime.target;
 
         FloatRect chosenRect = null;
         PlacementCandidate chosen = null;
         FloatRect stickyOffset = null;
-        if (runtime.element.sticky() && runtime.target != null) {
+        if (runtime.element.sticky() && incumbent != null) {
             // the sticky match is offset-from-anchor, not absolute: candidates
             // dock to their anchor (the lattice translates with it), and the
             // incumbent is stored as exactly such an offset — comparing in
@@ -865,13 +874,16 @@ public final class InworldCoordinator {
             // pick back to the ranker — a moving anchor would re-argue its
             // slot at every resolve and visibly hop.
             for (PlacementCandidate candidate : proposal.candidates()) {
-                FloatRect screen = Objects.requireNonNull(candidate.screenRect(), "screenRect");
+                FloatRect screen = candidate.screenRect();
+                if (screen == null) {
+                    continue;
+                }
                 FloatRect candidateOffset = screen.translate(-anchor.x(), -anchor.y());
-                if (rectsAlmostEqual(candidateOffset, runtime.target.offsetRect(), stickySlotEpsilonPx)) {
+                if (rectsAlmostEqual(candidateOffset, incumbent.offsetRect(), stickySlotEpsilonPx)) {
                     Fit fit = fitRect(candidate, variant, scope);
                     if (fit.ok()) {
                         chosen = candidate;
-                        FloatRect held = heldOffset(runtime, anchor, candidate, fit, variant, scope);
+                        FloatRect held = heldOffset(incumbent, anchor, screen, fit, variant, scope);
                         if (held != null) {
                             stickyOffset = held;
                             chosenRect = held.translate(anchor.x(), anchor.y());
@@ -952,20 +964,24 @@ public final class InworldCoordinator {
         );
 
         // Stabilize (discrete half): the tier switch goes through the gate.
-        if (runtime.gate != null && variant.level() != runtime.gate.current()) {
-            double metric = switchMetric(runtime, anchor, placement.screenRect());
-            boolean switched = runtime.gate.propose(variant.level(), metric);
+        // The gate is created with the element's first committed placement, so
+        // an incumbent exists whenever the gate does.
+        SwitchGate<Integer> gate = runtime.gate;
+        if (gate != null && variant.level() != gate.current()) {
+            InworldPlacement incumbentAtGate = Objects.requireNonNull(incumbent, "incumbent");
+            double metric = switchMetric(incumbentAtGate, anchor, placement.screenRect());
+            boolean switched = gate.propose(variant.level(), metric);
             if (!switched) {
-                FloatRect incumbent = runtime.target.offsetRect().translate(anchor.x(), anchor.y());
-                if (incumbentStillFits(incumbent, runtime, scope)) {
+                FloatRect held = incumbentAtGate.offsetRect().translate(anchor.x(), anchor.y());
+                if (incumbentStillFits(held, incumbentAtGate, scope)) {
                     InworldPlacement kept = new InworldPlacement(
                         runtime.element.id(),
-                        runtime.target.variant(),
+                        incumbentAtGate.variant(),
                         anchor,
-                        runtime.target.offsetRect(),
-                        runtime.target.world(),
+                        incumbentAtGate.offsetRect(),
+                        incumbentAtGate.world(),
                         runtime.frameArbitrationIndex,
-                        runtime.target.epoch()
+                        incumbentAtGate.epoch()
                     );
                     return Acceptance.accepted(kept);
                 }
@@ -989,26 +1005,29 @@ public final class InworldCoordinator {
      * epoch cadence. Null when the held rect no longer stands on its own:
      * the fit rect, with its re-derived offset, is the slot then (the one
      * way a sticky slot may drift).
+     *
+     * @param incumbent the placement whose offset is held
+     * @param candidateScreen the candidate's projected rect, the fit's basis
      */
     private static @Nullable FloatRect heldOffset(
-        ElementRuntime runtime,
+        InworldPlacement incumbent,
         FloatPos anchor,
-        PlacementCandidate candidate,
+        FloatRect candidateScreen,
         Fit fit,
         InworldVariant variant,
         RoundScope scope
     ) {
-        if (!rectsAlmostEqual(fit.rect(), Objects.requireNonNull(candidate.screenRect(), "screenRect"))) {
+        if (!rectsAlmostEqual(fit.rect(), candidateScreen)) {
             return null; // the fit moved the slot: its rect is the new slot
         }
-        FloatRect held = runtime.target.offsetRect().translate(anchor.x(), anchor.y());
+        FloatRect held = incumbent.offsetRect().translate(anchor.x(), anchor.y());
         if (held.areaOutside(scope.workArea) > outOfBoundsEpsilon) {
             return null; // the held rect sticks out where the lattice fit did not
         }
         if (!variant.spacePolicy().occlusionExempt() && !scope.bitmap.isFree(held.toRect())) {
             return null; // the held rect grazes occupancy the lattice fit cleared
         }
-        return runtime.target.offsetRect();
+        return incumbent.offsetRect();
     }
 
     /**
@@ -1072,8 +1091,19 @@ public final class InworldCoordinator {
         return rect.width() * rect.height();
     }
 
+    /**
+     * Whether the candidate fits the variant's hard constraints. A candidate
+     * with no screen rect — pure world geometry, which a projecting proposal
+     * cannot carry — grants no screen rect at all, so it is unfit; the
+     * screen-less form reaches the coordinator only for a world-only element,
+     * whose grant is the world box.
+     */
     private Fit fitRect(PlacementCandidate candidate, InworldVariant variant, RoundScope scope) {
-        FloatRect rect = Objects.requireNonNull(candidate.screenRect(), "screenRect");
+        FloatRect screen = candidate.screenRect();
+        if (screen == null) {
+            return Fit.fail(RejectionReason.insufficientArea);
+        }
+        FloatRect rect = screen;
         if (variant.allowsClamp()) {
             rect = rect.clampInto(scope.workArea);
         }
@@ -1158,6 +1188,10 @@ public final class InworldCoordinator {
         return null;
     }
 
+    /**
+     * The rejection a failed grant reports: the fit's classified reason and
+     * blocker, or the unavoidable default a missing fit gets.
+     */
     private ElementRejection toRejection(@Nullable Fit failure, InworldVariant variant, RoundScope scope) {
         if (failure == null) {
             return ElementRejection.of(RejectionReason.overlap);
@@ -1188,8 +1222,8 @@ public final class InworldCoordinator {
         return inserted == null ? null : inserted.move(new Pos(workArea.x(), workArea.y()));
     }
 
-    private boolean incumbentStillFits(FloatRect incumbent, ElementRuntime runtime, RoundScope scope) {
-        InworldVariant incumbentVariant = runtime.target.variant();
+    private boolean incumbentStillFits(FloatRect incumbent, InworldPlacement held, RoundScope scope) {
+        InworldVariant incumbentVariant = held.variant();
         if (incumbentVariant.spacePolicy().occlusionExempt()) {
             return true;
         }
@@ -1199,12 +1233,11 @@ public final class InworldCoordinator {
         return scope.bitmap.isFree(incumbent.toRect());
     }
 
-    private double switchMetric(ElementRuntime runtime, FloatPos anchor, FloatRect candidateRect) {
-        FloatRect incumbent = runtime.target.offsetRect().translate(anchor.x(), anchor.y());
+    private double switchMetric(InworldPlacement incumbent, FloatPos anchor, FloatRect candidateRect) {
+        FloatRect held = incumbent.offsetRect().translate(anchor.x(), anchor.y());
         double centerDistance = Math
-                .hypot(candidateRect.centerX() - incumbent.centerX(), candidateRect.centerY() - incumbent.centerY());
-        double sizeChange = Math
-                .hypot(candidateRect.width() - incumbent.width(), candidateRect.height() - incumbent.height())
+                .hypot(candidateRect.centerX() - held.centerX(), candidateRect.centerY() - held.centerY());
+        double sizeChange = Math.hypot(candidateRect.width() - held.width(), candidateRect.height() - held.height())
                 * 0.5;
         return centerDistance + sizeChange;
     }
@@ -1219,32 +1252,34 @@ public final class InworldCoordinator {
      * axis (fixed elements never move; ghosts are not present at all).
      */
     private void separateOverlaps(Map<ElementRuntime, FloatRect> visuals, FloatRect workArea) {
-        List<ElementRuntime> presented = new ArrayList<>(visuals.keySet());
+        List<Map.Entry<ElementRuntime, FloatRect>> presented = new ArrayList<>(visuals.entrySet());
         for (int pass = 0; pass < config.relaxIterations(); pass++) {
             boolean moved = false;
             for (int i = 0; i < presented.size(); i++) {
                 for (int j = i + 1; j < presented.size(); j++) {
-                    ElementRuntime first = presented.get(i);
-                    ElementRuntime second = presented.get(j);
-                    FloatRect a = Objects.requireNonNull(visuals.get(first), "visual");
-                    FloatRect b = Objects.requireNonNull(visuals.get(second), "visual");
+                    Map.Entry<ElementRuntime, FloatRect> firstEntry = presented.get(i);
+                    Map.Entry<ElementRuntime, FloatRect> secondEntry = presented.get(j);
+                    FloatRect a = firstEntry.getValue();
+                    FloatRect b = secondEntry.getValue();
                     if (!a.intersects(b)) {
                         continue;
                     }
-                    boolean secondPushable = second.target.variant().spacePolicy().pushable();
-                    boolean firstPushable = first.target.variant().spacePolicy().pushable();
-                    ElementRuntime mover;
+                    InworldPlacement firstTarget = Objects.requireNonNull(firstEntry.getKey().target, "target");
+                    InworldPlacement secondTarget = Objects.requireNonNull(secondEntry.getKey().target, "target");
+                    boolean secondPushable = secondTarget.variant().spacePolicy().pushable();
+                    boolean firstPushable = firstTarget.variant().spacePolicy().pushable();
+                    Map.Entry<ElementRuntime, FloatRect> moverEntry;
                     FloatRect obstacle;
                     if (secondPushable) {
-                        mover = second;
+                        moverEntry = secondEntry;
                         obstacle = a;
                     } else if (firstPushable) {
-                        mover = first;
+                        moverEntry = firstEntry;
                         obstacle = b;
                     } else {
                         continue;
                     }
-                    FloatRect moving = Objects.requireNonNull(visuals.get(mover), "visual");
+                    FloatRect moving = moverEntry.getValue();
                     double dx = moving.centerX() - obstacle.centerX();
                     double dy = moving.centerY() - obstacle.centerY();
                     double overlapX = Math.min(moving.right(), obstacle.right()) - Math.max(moving.x(), obstacle.x());
@@ -1256,8 +1291,7 @@ public final class InworldCoordinator {
                     } else {
                         shiftY = dy >= 0 ? overlapY : -overlapY;
                     }
-                    FloatRect shifted = moving.translate(shiftX, shiftY).clampInto(workArea);
-                    visuals.put(mover, shifted);
+                    moverEntry.setValue(moving.translate(shiftX, shiftY).clampInto(workArea));
                     moved = true;
                 }
             }
@@ -1302,24 +1336,40 @@ public final class InworldCoordinator {
      * from the anchor it currently proposes (the retained anchor when the
      * element proposes none, e.g. while retracted).
      */
-    private FloatRect layoutTargetRect(ElementRuntime runtime) {
-        FloatPos anchor = runtime.roundZero.anchorScreen() != null
-                ? runtime.roundZero.anchorScreen()
-                : runtime.target.anchor();
-        return runtime.target.offsetRect().translate(anchor.x(), anchor.y());
+    private FloatRect layoutTargetRect(ElementRuntime runtime, InworldPlacement target) {
+        FloatPos anchor = runtime.roundZero.anchorScreen() != null ? runtime.roundZero.anchorScreen() : target.anchor();
+        return target.offsetRect().translate(anchor.x(), anchor.y());
+    }
+
+    /**
+     * The element's continuous-layer state, created lazily at {@code rect} on
+     * first use — the creation is the initial snap, the FLIP planner starting
+     * at its rect and the spring at its center.
+     */
+    private Animation animationAt(ElementRuntime runtime, FloatRect rect) {
+        FlipPlanner flip = runtime.flip;
+        Spring2 spring = runtime.spring;
+        if (flip == null || spring == null) {
+            flip = new FlipPlanner(config.flipSpeedPixelsPerSecond(), rect);
+            spring = new Spring2(config.springOmega(), rect.centerX(), rect.centerY());
+            runtime.flip = flip;
+            runtime.spring = spring;
+        }
+        return new Animation(flip, spring);
     }
 
     private void carryRelaxation(ElementRuntime runtime, FloatRect unclamped, FloatRect committed, double nowSeconds) {
+        Animation animation = animationAt(runtime, unclamped);
         double dx = committed.centerX() - unclamped.centerX();
         double dy = committed.centerY() - unclamped.centerY();
         if (dx != 0 || dy != 0) {
-            runtime.spring.translate(dx, dy);
-            if (runtime.flip.isAnimating(nowSeconds)) {
-                runtime.flip.translate(dx, dy);
+            animation.spring().translate(dx, dy);
+            if (animation.flip().isAnimating(nowSeconds)) {
+                animation.flip().translate(dx, dy);
             }
         }
-        if (!runtime.flip.isAnimating(nowSeconds)) {
-            runtime.flip.snap(committed);
+        if (!animation.flip().isAnimating(nowSeconds)) {
+            animation.flip().snap(committed);
         }
     }
 
@@ -1371,6 +1421,40 @@ public final class InworldCoordinator {
                         + " outside its ladder [0, " + ladder.size() + ")"
             );
         }
+    }
+
+    /**
+     * The propose contract's capability rule, enforced on every round's
+     * proposal: a world-only proposal carries no anchor projection and no
+     * screen rects, so only an element declaring
+     * {@link InworldElement#worldOnly()} may hand one over.
+     *
+     * @throws IllegalArgumentException when the element breaches the contract
+     */
+    private static void requireProposalContract(ElementRuntime runtime, ElementProposal proposal) {
+        if (proposal.worldOnly() && !runtime.element.worldOnly()) {
+            throw new IllegalArgumentException(
+                "element " + runtime.element.id() + " is not world-only but proposed a world-only proposal"
+            );
+        }
+    }
+
+    /**
+     * The anchor a projecting proposal's granted rect is stored relative to.
+     * The record contract leaves the anchor open only for the world-only form,
+     * which never reaches the arbitration, so a null here is an element
+     * breaching the propose contract.
+     *
+     * @throws IllegalArgumentException when the proposal carries no anchor
+     */
+    private static FloatPos requireAnchor(ElementRuntime runtime, ElementProposal proposal) {
+        FloatPos anchor = proposal.anchorScreen();
+        if (anchor == null) {
+            throw new IllegalArgumentException(
+                "element " + runtime.element.id() + " proposed a projecting proposal without an anchor"
+            );
+        }
+        return anchor;
     }
 
     private SpaceBudget smoothedBudget(FrameInput frame, Rect workArea, List<ElementRuntime> ordered) {
@@ -1456,6 +1540,8 @@ public final class InworldCoordinator {
 
     private record Blocker(@Nullable String elementId, FloatRect rect) {}
 
+    private record Animation(FlipPlanner flip, Spring2 spring) {}
+
     private record Fit(boolean ok, FloatRect rect, @Nullable RejectionReason reason, @Nullable String blockerId) {
 
         static Fit ok(FloatRect rect) {
@@ -1491,6 +1577,7 @@ public final class InworldCoordinator {
 
         int frameArbitrationIndex;
         int currentLevel;
+        @Nullable
         InworldPlacement target;
         boolean lastPresented;
         boolean pendingPresent;
@@ -1499,14 +1586,24 @@ public final class InworldCoordinator {
         ElementRejection activeRejection;
         @Nullable
         FloatPos anchorAtLastResolve;
+        @Nullable
         FloatRect lastVisual;
+        @Nullable
         FloatRect lastTargetRect;
+        @Nullable
         FlipPlanner flip;
+        @Nullable
         Spring2 spring;
+        @Nullable
         SwitchGate<Integer> gate;
+
+        /**
+         * The frame's round-0 proposal, assigned by Collect before any read;
+         * NullAway's constructor-initialization check cannot see that handoff.
+         */
+        @SuppressWarnings("NullAway.Init")
         ElementProposal roundZero;
 
-        @SuppressWarnings("NullAway")
         ElementRuntime(InworldElement element, long registrationIndex, Config config) {
             this.element = element;
             this.registrationIndex = registrationIndex;

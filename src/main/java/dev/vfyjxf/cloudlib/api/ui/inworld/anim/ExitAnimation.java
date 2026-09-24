@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.api.ui.inworld.anim;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * How a UI surface animates away when it disappears (hidden, closed or
  * withdrawn): a pure envelope — alpha, rise and scale factors over a
@@ -8,11 +10,14 @@ package dev.vfyjxf.cloudlib.api.ui.inworld.anim;
  * what "rise" and "scale" mean in its own space).
  * <p>
  * The record is the declarative vocabulary; the state machine around it
- * (freeze, interruption, completion) belongs to the host runtime. Two
+ * (freeze, interruption, completion) belongs to the host runtime. Three
  * normalizations keep every instance well-behaved: a {@link Kind#none} kind
- * is always a 0&nbsp;ms instant exit, and any duration is clamped to
+ * is always a 0&nbsp;ms instant exit, any duration is clamped to
  * {@link #maxDurationMs} — an exit overlay must never linger as a zombie
- * over content that has logically moved on.
+ * over content that has logically moved on — and a null easing means the
+ * default {@link Easing#linear}. A null <em>kind</em> is a rejected
+ * argument rather than a default: an exit must name its kind, its curve is
+ * the optional part.
  */
 public record ExitAnimation(Kind kind, int durationMs, Easing easing) {
 
@@ -110,18 +115,28 @@ public record ExitAnimation(Kind kind, int durationMs, Easing easing) {
         return new ExitAnimation(Kind.fadeScale, durationMs, easing);
     }
 
-    public ExitAnimation {
+    /**
+     * @param kind the exit's kind; must not be {@code null}
+     * @param durationMs the exit's length in milliseconds; clamped to
+     *        {@link #maxDurationMs}
+     * @param easing the envelope's curve; {@code null} takes
+     *        {@link Easing#linear}
+     */
+    public ExitAnimation(Kind kind, int durationMs, @Nullable Easing easing) {
         if (kind == null) throw new IllegalArgumentException("kind must not be null");
-        if (easing == null) easing = Easing.linear;
+        Easing curve = easing == null ? Easing.linear : easing;
         if (kind == Kind.none || durationMs <= 0) {
             // a zero-duration animation is no animation — normalize to the
             // canonical instant exit so equality comparisons stay meaningful
             kind = Kind.none;
             durationMs = 0;
-            easing = Easing.linear;
+            curve = Easing.linear;
         } else if (durationMs > maxDurationMs) {
             durationMs = maxDurationMs;
         }
+        this.kind = kind;
+        this.durationMs = durationMs;
+        this.easing = curve;
     }
 
     /** Whether this is the instant exit (0 ms, no envelope). */

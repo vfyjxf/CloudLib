@@ -27,6 +27,7 @@ import dev.vfyjxf.taffy.style.TaffyDisplay;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import dev.vfyjxf.taffy.style.TextAlign;
 import dev.vfyjxf.taffy.style.TrackSizingFunction;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -515,17 +516,24 @@ public final class UIStyles {
         return Styles.sceneLayer.of(layer);
     }
 
-    public static StyleValue<ScrollbarStyleData> scrollbarStyle(VisualTexture track, VisualTexture thumb) {
+    public static StyleValue<ScrollbarStyleData> scrollbarStyle(
+        @Nullable VisualTexture track,
+        @Nullable VisualTexture thumb
+    ) {
         return Styles.scrollbarStyle.of(new ScrollbarStyleData(track, thumb, -1, -1));
     }
 
-    public static StyleValue<ScrollbarStyleData> scrollbarStyle(VisualTexture track, VisualTexture thumb, int width) {
+    public static StyleValue<ScrollbarStyleData> scrollbarStyle(
+        @Nullable VisualTexture track,
+        @Nullable VisualTexture thumb,
+        int width
+    ) {
         return Styles.scrollbarStyle.of(new ScrollbarStyleData(track, thumb, width, -1));
     }
 
     public static StyleValue<ScrollbarStyleData> scrollbarStyle(
-        VisualTexture track,
-        VisualTexture thumb,
+        @Nullable VisualTexture track,
+        @Nullable VisualTexture thumb,
         int width,
         int minThumbSize
     ) {

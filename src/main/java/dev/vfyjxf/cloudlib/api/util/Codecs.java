@@ -11,12 +11,15 @@ public final class Codecs {
     private Codecs() {}
 
     public static <E extends Enum<E>> Codec<E> lowerCaseEnum(Class<E> type) {
-        return Codec.STRING.comapFlatMap(
-            name -> Arrays.stream(type.getEnumConstants()).filter(value -> value.name().equals(name)).findFirst()
+        return Codec.STRING.comapFlatMap(name -> {
+            E[] constants = type.getEnumConstants();
+            if (constants == null) {
+                return DataResult.error(() -> type.getSimpleName() + " is not an enum type");
+            }
+            return Arrays.stream(constants).filter(value -> value.name().equals(name)).findFirst()
                     .map(DataResult::success)
-                    .orElseGet(() -> DataResult.error(() -> "Unknown " + type.getSimpleName() + ": " + name)),
-            Enum::name
-        );
+                    .orElseGet(() -> DataResult.error(() -> "Unknown " + type.getSimpleName() + ": " + name));
+        }, Enum::name);
     }
 
     public static <T> Codec<ImmutableList<T>> immutableList(Codec<T> elementCodec) {

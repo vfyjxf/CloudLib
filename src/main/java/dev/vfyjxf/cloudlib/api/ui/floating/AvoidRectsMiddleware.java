@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.math.FloatPos;
 import dev.vfyjxf.cloudlib.api.math.Rect;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.ExclusionContext;
 import dev.vfyjxf.cloudlib.api.ui.inworld.space.InworldExclusions;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Function;
@@ -16,9 +17,10 @@ import java.util.function.Supplier;
  * Obstacle sources are pluggable: {@link #create} takes any custom rect
  * supplier, while {@link #exclusions} reads the screen's registered
  * {@link InworldExclusions exclusion-area providers} each run — the same
- * rectangles every other avoidance consumer sees. The escape logic itself is
- * the pure function {@link #escapeObstacles}, so sources and geometry can be
- * exercised without a live client.
+ * rectangles every other avoidance consumer sees. A source that yields no
+ * rects at all — null or empty — is skipped for that run. The escape logic
+ * itself is the pure function {@link #escapeObstacles}, so sources and
+ * geometry can be exercised without a live client.
  * <p>
  * For every obstacle the element intersects, the minimal single-axis escape
  * push is applied, preferring the axis that keeps the element closest to its
@@ -28,7 +30,7 @@ import java.util.function.Supplier;
  */
 public final class AvoidRectsMiddleware implements FloatingMiddleware {
 
-    private final Function<FloatingState, List<Rect>> obstacles;
+    private final Function<FloatingState, @Nullable List<Rect>> obstacles;
     private final int padding;
     private final int maxPush;
 
@@ -105,7 +107,7 @@ public final class AvoidRectsMiddleware implements FloatingMiddleware {
         return InworldExclusions.collect(new ExclusionContext(boundary.width(), boundary.height(), 0f));
     }
 
-    private AvoidRectsMiddleware(Function<FloatingState, List<Rect>> obstacles, int padding, int maxPush) {
+    private AvoidRectsMiddleware(Function<FloatingState, @Nullable List<Rect>> obstacles, int padding, int maxPush) {
         this.obstacles = obstacles;
         this.padding = padding;
         this.maxPush = maxPush;

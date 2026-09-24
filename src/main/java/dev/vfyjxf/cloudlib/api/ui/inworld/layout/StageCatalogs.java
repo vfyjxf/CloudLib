@@ -106,7 +106,9 @@ public final class StageCatalogs {
 
     /**
      * Filters the candidate list down to the placements this element may
-     * actually take this frame.
+     * actually take this frame. A candidate carrying no screen rect is pure
+     * world geometry the screen-space filters cannot block: it survives
+     * every filter unchanged.
      */
     public interface AvoidStrategy {
 
@@ -116,7 +118,10 @@ public final class StageCatalogs {
 
     /**
      * Orders the surviving candidates into the element's preference order —
-     * strongest first; the coordinator grants the first that fits.
+     * strongest first; the coordinator grants the first that fits. A
+     * candidate carrying no screen rect is pure world geometry with no
+     * screen distance to rank on: the rankers keep it behind every candidate
+     * they can measure, in its canonical order.
      */
     public interface RankStrategy {
 
@@ -733,7 +738,11 @@ public final class StageCatalogs {
     ) {
         List<PlacementCandidate> surviving = new ArrayList<>(candidates.size());
         outer : for (PlacementCandidate candidate : candidates) {
-            FloatRect screen = Objects.requireNonNull(candidate.screenRect(), "screenRect");
+            FloatRect screen = candidate.screenRect();
+            if (screen == null) {
+                surviving.add(candidate);
+                continue;
+            }
             for (Rect exclusion : context.environment().exclusionRects()) {
                 if (screen.intersects(toFloat(exclusion))) {
                     continue outer;
@@ -758,7 +767,10 @@ public final class StageCatalogs {
     }
 
     private static boolean blockedByMasks(PlacementCandidate candidate, AvoidContext context) {
-        FloatRect rect = Objects.requireNonNull(candidate.screenRect(), "screenRect");
+        FloatRect rect = candidate.screenRect();
+        if (rect == null) {
+            return false;
+        }
         for (Rect exclusion : context.environment().exclusionRects()) {
             if (rect.intersects(toFloat(exclusion))) {
                 return true;
@@ -799,7 +811,10 @@ public final class StageCatalogs {
     }
 
     private static double cost(PlacementCandidate candidate, RankContext context) {
-        FloatRect screen = Objects.requireNonNull(candidate.screenRect(), "screenRect");
+        FloatRect screen = candidate.screenRect();
+        if (screen == null) {
+            return Double.POSITIVE_INFINITY;
+        }
         double distance = Math.hypot(screen.centerX() - context.anchor().x(), screen.centerY() - context.anchor().y());
         double cost = distance;
         if (context.sticky() && context.incumbentCenter() != null) {
@@ -818,8 +833,13 @@ public final class StageCatalogs {
         }
         List<PlacementCandidate> ranked = new ArrayList<>(candidates.size());
         List<PlacementCandidate> rest = new ArrayList<>(candidates.size());
+        List<PlacementCandidate> screenless = new ArrayList<>(candidates.size());
         for (PlacementCandidate candidate : candidates) {
-            FloatRect screen = Objects.requireNonNull(candidate.screenRect(), "screenRect");
+            FloatRect screen = candidate.screenRect();
+            if (screen == null) {
+                screenless.add(candidate);
+                continue;
+            }
             double distance = Math.hypot(
                 screen.centerX() - context.incumbentCenter().x(),
                 screen.centerY() - context.incumbentCenter().y()
@@ -831,6 +851,7 @@ public final class StageCatalogs {
             }
         }
         ranked.addAll(rest);
+        ranked.addAll(screenless);
         return ranked;
     }
 
@@ -848,13 +869,25 @@ public final class StageCatalogs {
         }
         ZoneCost cost = new ZoneCost(zone.weights());
         List<PlacementCandidate> ranked = new ArrayList<>(candidates);
-        ranked.sort(
-            (a, b) -> compareCosts(
-                cost.cost(Objects.requireNonNull(a.screenRect(), "screenRect").toRect(), zone.context()),
-                cost.cost(Objects.requireNonNull(b.screenRect(), "screenRect").toRect(), zone.context())
-            )
-        );
+        ranked.sort((a, b) -> compareZoneCosts(a, b, cost, zone.context()));
         return ranked;
+    }
+
+    private static int compareZoneCosts(
+        PlacementCandidate a,
+        PlacementCandidate b,
+        ZoneCost cost,
+        ZoneCost.Context context
+    ) {
+        FloatRect first = a.screenRect();
+        FloatRect second = b.screenRect();
+        if (first == null || second == null) {
+            if (first == null && second == null) {
+                return 0;
+            }
+            return first == null ? 1 : -1;
+        }
+        return compareCosts(cost.cost(first.toRect(), context), cost.cost(second.toRect(), context));
     }
 
     // endregion

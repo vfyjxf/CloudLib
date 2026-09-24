@@ -207,13 +207,13 @@ public class TestRichTextScreen extends BasicScreen {
         if (Minecraft.getInstance().level == null) {
             return LabelWidget.of("(open this screen in a world to see entities)").setColor(0xFF777777);
         }
-        return RichTextWidget.of(
-            RichText.builder().text("pig follows mouse ").color(0xFFCCCCCC)
-                    .entity(() -> new Pig(EntityType.PIG, Minecraft.getInstance().level), 24, 30, 14, true)
-                    .text(" zombie static ").color(0xFFCCCCCC)
-                    .entity(() -> new Zombie(EntityType.ZOMBIE, Minecraft.getInstance().level), 24, 30, 14, false)
-                    .build()
-        );
+        return RichTextWidget.of(RichText.builder().text("pig follows mouse ").color(0xFFCCCCCC).entity(() -> {
+            var level = Minecraft.getInstance().level;
+            return level == null ? null : new Pig(EntityType.PIG, level);
+        }, 24, 30, 14, true).text(" zombie static ").color(0xFFCCCCCC).entity(() -> {
+            var level = Minecraft.getInstance().level;
+            return level == null ? null : new Zombie(EntityType.ZOMBIE, level);
+        }, 24, 30, 14, false).build());
     }
 
     private Widget interactive() {

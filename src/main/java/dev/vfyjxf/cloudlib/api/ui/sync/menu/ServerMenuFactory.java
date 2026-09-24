@@ -21,10 +21,10 @@ public record ServerMenuFactory<M extends AbstractContainerMenu, A, P>(
     public static final Supplier<Component> emptyName = Component::empty;
 
     @Override
-    @SuppressWarnings("ConstantConditions")
     public Component getDisplayName() {
         if (displayName == emptyName && provider instanceof Nameable nameable) {
-            return nameable.hasCustomName() ? nameable.getCustomName() : nameable.getDisplayName();
+            Component customName = nameable.getCustomName();
+            return customName != null ? customName : nameable.getDisplayName();
         }
         return displayName.get();
     }

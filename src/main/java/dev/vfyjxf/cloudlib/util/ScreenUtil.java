@@ -45,7 +45,9 @@ public final class ScreenUtil {
     }
 
     public static void renderTooltip(GuiGraphics graphics, Tooltip tooltip, int mouseX, int mouseY) {
-        Font font = Minecraft.getInstance().font;
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null) return;
+        Font font = minecraft.font;
         var tooltipStack = tooltip.stack();
         ItemStack stackValue = ItemStack.EMPTY;
         if (tooltipStack != null) {

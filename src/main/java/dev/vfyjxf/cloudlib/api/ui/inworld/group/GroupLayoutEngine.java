@@ -182,10 +182,10 @@ public final class GroupLayoutEngine {
 
     private final InworldGroup group;
     private final GroupStrategy strategy;
-    private final @Nullable Clusterer clusterer;
+    private final Clusterer clusterer;
     private final Map<String, String> slotIncumbents = new HashMap<>();
 
-    private GroupLayoutEngine(InworldGroup group, GroupStrategy strategy, @Nullable Clusterer clusterer) {
+    private GroupLayoutEngine(InworldGroup group, GroupStrategy strategy, Clusterer clusterer) {
         this.group = group;
         this.strategy = strategy;
         this.clusterer = clusterer;
@@ -195,14 +195,21 @@ public final class GroupLayoutEngine {
     public static GroupLayoutEngine of(InworldGroup group, GroupStrategy strategy) {
         Objects.requireNonNull(group, "group");
         Objects.requireNonNull(strategy, "strategy");
+        return new GroupLayoutEngine(group, strategy, clustererFor(strategy));
+    }
+
+    /**
+     * The clusterer {@code strategy} arranges with: the evolutionary
+     * {@link Clusterer} of a {@link ClusterToRepresentative}, and one that
+     * never merges for the strategies that do not cluster — at α 0 a pair is
+     * scored on history alone, which starts empty, so no merge gain is ever
+     * positive and every member keeps its own cluster.
+     */
+    private static Clusterer clustererFor(GroupStrategy strategy) {
         if (strategy instanceof ClusterToRepresentative cluster) {
-            return new GroupLayoutEngine(
-                group,
-                strategy,
-                new Clusterer(new Clusterer.Config(cluster.alpha(), cluster.mergeRadius()))
-            );
+            return new Clusterer(new Clusterer.Config(cluster.alpha(), cluster.mergeRadius()));
         }
-        return new GroupLayoutEngine(group, strategy, null);
+        return new Clusterer(Clusterer.Config.of(0.0, 1.0));
     }
 
     /** The group this engine arranges. */
@@ -217,9 +224,7 @@ public final class GroupLayoutEngine {
 
     /** Drops all cross-epoch state (a scene change, a teleport). */
     public void reset() {
-        if (clusterer != null) {
-            clusterer.reset();
-        }
+        clusterer.reset();
         slotIncumbents.clear();
     }
 
@@ -369,7 +374,7 @@ public final class GroupLayoutEngine {
         for (GroupMember member : frame.members()) {
             snapshot.add(new Clusterer.Member(member.id(), member.anchorX(), member.anchorY()));
         }
-        List<Clusterer.Cluster> clusters = new ArrayList<>(Objects.requireNonNull(clusterer).cluster(snapshot));
+        List<Clusterer.Cluster> clusters = new ArrayList<>(clusterer.cluster(snapshot));
 
         // The visible-cap rung: merge the closest clusters until the cap
         // holds — merging absorbs, it never hides.
@@ -569,7 +574,11 @@ public final class GroupLayoutEngine {
         }
         x /= memberIds.size();
         y /= memberIds.size();
-        return new Clusterer.Cluster(memberIds, x, y, Objects.requireNonNull(nearestTo(frame, memberIds, x, y)));
+        String representative = nearestTo(frame, memberIds, x, y);
+        if (representative == null) {
+            throw new IllegalArgumentException("a cluster must have at least one member");
+        }
+        return new Clusterer.Cluster(memberIds, x, y, representative);
     }
 
     private static double distance(GroupFrame frame, String id, String other) {

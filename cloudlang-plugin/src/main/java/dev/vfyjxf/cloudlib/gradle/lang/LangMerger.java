@@ -1,5 +1,6 @@
 package dev.vfyjxf.cloudlib.gradle.lang;
 
+import org.jspecify.annotations.Nullable;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -94,6 +95,16 @@ final class LangMerger {
      * A source root together with a display label used in generated file comments.
      */
     record SourceRoot(Path directory, String label) {
+
+        /**
+         * A source root labelled with its path relative to the given base directory, or with its
+         * absolute path when it lies outside that base.
+         */
+        static SourceRoot of(Path baseDirectory, Path directory) {
+            Path absolute = directory.toAbsolutePath().normalize();
+            Path base = baseDirectory.toAbsolutePath().normalize();
+            return new SourceRoot(directory, absolute.startsWith(base) ? base.relativize(absolute).toString() : absolute.toString());
+        }
     }
 
     /**
@@ -159,27 +170,37 @@ final class LangMerger {
 
     /**
      * Flattens a parsed yaml document into dotted keys. Scalars are coerced to strings;
-     * sequences are skipped with a warning.
+     * sequences are skipped with a warning. A {@code null} document (an empty file) yields an
+     * empty chunk with a warning.
      */
-    static Chunk flatten(Object document, Consumer<String> warnings) {
+    static Chunk flatten(@Nullable Object document, Consumer<String> warnings) {
         Map<String, String> entries = new TreeMap<>();
         Map<String, String> fieldNames = new TreeMap<>();
         if (document instanceof Map<?, ?> map) {
             flattenInto(map, "", entries, fieldNames, warnings);
-        } else if (document != null) {
-            warnings.accept("Ignoring lang yaml document: root must be a mapping");
+        } else {
+            warnings.accept(document == null
+                    ? "Ignoring lang yaml document: it is empty"
+                    : "Ignoring lang yaml document: root must be a mapping");
         }
         return new Chunk(entries, fieldNames, new ArrayList<>());
     }
 
     private static void flattenInto(Map<?, ?> map, String prefix, Map<String, String> entries, Map<String, String> fieldNames, Consumer<String> warnings) {
         for (var entry : map.entrySet()) {
-            String key = prefix.isEmpty() ? String.valueOf(entry.getKey()) : prefix + "." + entry.getKey();
+            Object rawKey = entry.getKey();
+            if (rawKey == null) {
+                warnings.accept(prefix.isEmpty()
+                        ? "Ignoring lang entry: key is null"
+                        : "Ignoring lang entry under '" + prefix + "': key is null");
+                continue;
+            }
+            String key = prefix.isEmpty() ? String.valueOf(rawKey) : prefix + "." + rawKey;
             Object value = entry.getValue();
             if (value instanceof Map<?, ?> child) {
                 if (containsKey(child, FIELD_NAME_TOKEN)) {
-                    Object text = valueOf(child, "value");
-                    Object field = valueOf(child, FIELD_NAME_TOKEN);
+                    @Nullable Object text = valueOf(child, "value");
+                    @Nullable Object field = valueOf(child, FIELD_NAME_TOKEN);
                     if (text == null || field == null || !isScalar(text) || !isScalar(field)) {
                         warnings.accept("Ignoring annotated entry '" + key + "': it must contain plain scalar 'value' and '" + FIELD_NAME_TOKEN + "'");
                     } else if (child.size() != 2) {
@@ -211,7 +232,7 @@ final class LangMerger {
     }
 
     /** Returns the value for the given string key, or {@code null} when absent. */
-    private static Object valueOf(Map<?, ?> map, String key) {
+    private static @Nullable Object valueOf(Map<?, ?> map, String key) {
         for (var entry : map.entrySet()) {
             if (key.equals(entry.getKey())) {
                 return entry.getValue();

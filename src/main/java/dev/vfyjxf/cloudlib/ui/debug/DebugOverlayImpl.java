@@ -174,14 +174,12 @@ public final class DebugOverlayImpl implements DebugOverlay {
     }
 
     void onDockChanged() {
-        if (inspected != null) {
-            Insets insets = contentInsets();
-            if (!insets.equals(lastInsets)) {
-                lastInsets = insets;
-                inspected.setDebugInsets(insets);
-                inspected.root().useStyle(UIStyle.of(sizeOf(TaffyDimension.percent(1f))));
-                inspected.stabilize();
-            }
+        Insets insets = contentInsets();
+        if (!insets.equals(lastInsets)) {
+            lastInsets = insets;
+            inspected.setDebugInsets(insets);
+            inspected.root().useStyle(UIStyle.of(sizeOf(TaffyDimension.percent(1f))));
+            inspected.stabilize();
         }
     }
 

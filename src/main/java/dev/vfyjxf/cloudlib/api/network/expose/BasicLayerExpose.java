@@ -6,6 +6,7 @@ import dev.vfyjxf.cloudlib.api.network.FlowDecoder;
 import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Consumer;
 
@@ -48,6 +49,11 @@ abstract sealed class BasicLayerExpose<E> implements LayerExpose<E>, Transcoder 
         return layerSnapshot.snapshot;
     }
 
+    @Override
+    public boolean hasValue() {
+        return layerSnapshot.current() != null;
+    }
+
     @SuppressWarnings("unchecked")
     protected <T> LayerSnapshot<T> layerSnapshot() {
         return (LayerSnapshot<T>) layerSnapshot;
@@ -77,7 +83,12 @@ abstract sealed class BasicLayerExpose<E> implements LayerExpose<E>, Transcoder 
 
     @Override
     public void writeToClient(RegistryFriendlyByteBuf byteBuf) {
-        layerSnapshot().encoder().encode(byteBuf, layerSnapshot().current());
+        LayerSnapshot<Object> layerSnapshot = layerSnapshot();
+        Object value = layerSnapshot.current();
+        if (value == null) {
+            throw new IllegalStateException("LayerExpose has no value to write: (id:" + id() + " name:" + name() + ")");
+        }
+        layerSnapshot.encoder().encode(byteBuf, value);
     }
 
     @Override
@@ -88,16 +99,12 @@ abstract sealed class BasicLayerExpose<E> implements LayerExpose<E>, Transcoder 
 
     @Override
     public void updateSnapshot() {
-        if (layerSnapshot.mutableSnapshot()) {
-            layerSnapshot.updateSnapshot();
-        }
+        layerSnapshot.updateSnapshot();
     }
 
     @Override
     public void forceUpdateSnapshot() {
-        if (layerSnapshot.mutableSnapshot()) {
-            layerSnapshot.forceUpdateSnapshot();
-        }
+        layerSnapshot.forceUpdateSnapshot();
     }
 
     @Override
@@ -107,12 +114,19 @@ abstract sealed class BasicLayerExpose<E> implements LayerExpose<E>, Transcoder 
 
     @ApiStatus.Internal
     public record LayerSnapshot<T>(Snapshot<T> snapshot, ValueSupplier<T> valueSupplier, FlowEncoder<T> encoder) {
-        public T current() {
+        /**
+         * @return the value the underlying supplier currently holds, or null while it holds none
+         */
+        public @Nullable T current() {
             return valueSupplier.get();
         }
 
+        /** An absent value reports no state change and is never recorded. */
         public Snapshot.State currentState() {
-            return snapshot.currentState(current());
+            @Nullable
+            T current = current();
+            if (current == null) return Snapshot.State.unchanged;
+            return snapshot.currentState(current);
         }
 
         public boolean mutableSnapshot() {
@@ -120,15 +134,19 @@ abstract sealed class BasicLayerExpose<E> implements LayerExpose<E>, Transcoder 
         }
 
         public void updateSnapshot() {
-            if (snapshot.mutable()) {
-                snapshot.updateState(current());
-            }
+            if (!snapshot.mutable()) return;
+            @Nullable
+            T current = current();
+            if (current == null) return;
+            snapshot.updateState(current);
         }
 
         public void forceUpdateSnapshot() {
-            if (snapshot.mutable()) {
-                snapshot.forceUpdateState(current());
-            }
+            if (!snapshot.mutable()) return;
+            @Nullable
+            T current = current();
+            if (current == null) return;
+            snapshot.forceUpdateState(current);
         }
     }
 }

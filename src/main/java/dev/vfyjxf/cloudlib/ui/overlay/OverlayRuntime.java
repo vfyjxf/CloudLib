@@ -49,16 +49,13 @@ public final class OverlayRuntime<T extends Widget> {
             return List.of();
         }
         List<Rect2i> areas = exclusion.areas(widget, context);
-        if (areas == null || areas.isEmpty()) {
+        if (areas.isEmpty()) {
             return List.of();
         }
         int screenWidth = context.width();
         int screenHeight = context.height();
         List<Rect2i> presented = new ArrayList<>(areas.size());
         for (Rect2i area : areas) {
-            if (area == null) {
-                continue;
-            }
             int left = Math.max(area.getX(), 0);
             int top = Math.max(area.getY(), 0);
             int right = Math.min(area.getX() + area.getWidth(), screenWidth);

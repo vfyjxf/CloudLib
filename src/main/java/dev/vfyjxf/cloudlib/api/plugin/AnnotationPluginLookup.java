@@ -19,6 +19,9 @@ import java.util.List;
  * <p>
  * Scans for classes annotated with the specified annotation (default: {@link PluginMarker})
  * that also implement the target plugin interface.
+ * <p>
+ * {@link #findPlugins()} reads NeoForge's mod scan data, so it may only be called once mod loading
+ * has started.
  *
  * @param <T> the plugin type
  */
@@ -55,8 +58,14 @@ public final class AnnotationPluginLookup<T extends ModPlugin> implements Plugin
 
     @Override
     public Collection<T> findPlugins() {
+        ModList modList = ModList.get();
+        if (modList == null) {
+            throw new IllegalStateException(
+                "ModList is not initialized: plugin lookup requires mod loading to have started"
+            );
+        }
         List<T> result = new ArrayList<>();
-        for (ModFileScanData scanData : ModList.get().getAllScanData()) {
+        for (ModFileScanData scanData : modList.getAllScanData()) {
             scanData.getAnnotatedBy(annotation, ElementType.TYPE).forEach(annotationData -> {
                 String className = annotationData.memberName();
                 try {

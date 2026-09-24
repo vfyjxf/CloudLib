@@ -28,7 +28,7 @@ public class ItemStripWidget extends Widget {
     }
 
     public void setItems(List<ItemStack> items) {
-        this.items = items;
+        this.items = List.copyOf(items);
         if (lifecycle().mounted()) {
             scene().layoutTree().markDirty(nodeId());
         }

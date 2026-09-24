@@ -1,10 +1,10 @@
 package dev.vfyjxf.cloudlib.api.network.expose;
 
-import dev.vfyjxf.cloudlib.api.util.Maybe;
 import dev.vfyjxf.cloudlib.util.Checks;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.eclipse.collections.api.map.primitive.MutableShortObjectMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ShortObjectHashMap;
+import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -118,7 +118,7 @@ public final class ExposeManagement {
         if (strategy == SyncStrategy.full) {
             byteBuf.writeBoolean(true); // flag:send all
             for (ExposeCommon expose : exposes) {
-                if (expose instanceof ReversedOnly<?, ?>) continue;
+                if (expose instanceof ReversedOnly<?, ?> || !expose.hasValue()) continue;
                 byteBuf.writeShort(expose.id());
                 writeExpose(expose, byteBuf);
                 if (clearDirty) expose.updateSnapshot();
@@ -156,16 +156,16 @@ public final class ExposeManagement {
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
     private static <D> void writeDiff(
         Transcoder transcoder,
         Differential<D> differential,
         RegistryFriendlyByteBuf byteBuf
     ) {
-        Maybe<D> difference = differential.difference();
-        if (difference.defined()) {
+        @Nullable
+        D difference = differential.difference().orElse(null);
+        if (difference != null) {
             byteBuf.writeBoolean(true);
-            differential.encodeDifference(byteBuf, difference.get());
+            differential.encodeDifference(byteBuf, difference);
         } else {
             byteBuf.writeBoolean(false);
             transcoder.writeToClient(byteBuf);

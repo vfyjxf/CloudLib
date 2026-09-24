@@ -17,8 +17,6 @@ import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 
-import java.util.Objects;
-
 /**
  * A panel's offscreen surface: a {@link TextureTarget} (color + depth) sized
  * at {@code logicalSize × supersample} that content is rasterized into with
@@ -104,8 +102,8 @@ public final class UiSurface implements AutoCloseable {
         float prevFogStart = RenderSystem.getShaderFogStart();
         float prevFogEnd = RenderSystem.getShaderFogEnd();
 
-        if (!ensure(wPx, hPx, supersample)) return;
-        Objects.requireNonNull(target);
+        TextureTarget target = ensure(wPx, hPx, supersample);
+        if (target == null) return;
         RenderStats.surfaceRendered((long) widthPx * supersample * heightPx * supersample);
 
         var mv = RenderSystem.getModelViewStack();
@@ -181,8 +179,13 @@ public final class UiSurface implements AutoCloseable {
         }
     }
 
-    private boolean ensure(int wPx, int hPx, int ss) {
-        if (wPx <= 0 || hPx <= 0) return false;
+    /**
+     * Allocates or resizes the target for the given pixel size.
+     *
+     * @return the target to render into, or {@code null} when the size is not positive
+     */
+    private @Nullable TextureTarget ensure(int wPx, int hPx, int ss) {
+        if (wPx <= 0 || hPx <= 0) return null;
         widthPx = wPx;
         heightPx = hPx;
         supersample = ss;
@@ -212,7 +215,7 @@ public final class UiSurface implements AutoCloseable {
             mips.minFilter() == MipmapChain.MinFilter.linear ? GL11.GL_LINEAR : GL11.GL_LINEAR_MIPMAP_LINEAR
         );
         GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-        return true;
+        return target;
     }
 
     /** Releases GL objects — callable from any thread (defers to the render thread). */

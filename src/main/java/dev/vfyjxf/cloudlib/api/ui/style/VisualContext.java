@@ -293,6 +293,9 @@ public class VisualContext {
         background = VisualTexture.empty;
         icon = VisualTexture.empty;
 
+        // zIndex
+        zIndex = 0;
+
         // Border
         borderWidth = 0.0f;
         borderColor = 0;
@@ -324,6 +327,9 @@ public class VisualContext {
         this.background = other.background;
         this.icon = other.icon;
 
+        // zIndex
+        this.zIndex = other.zIndex;
+
         // Border
         this.borderWidth = other.borderWidth;
         this.borderColor = other.borderColor;
@@ -351,11 +357,11 @@ public class VisualContext {
         StringBuilder sb = new StringBuilder("VisualContext{");
         boolean any = false;
 
-        if (background != null && background != VisualTexture.empty) {
+        if (background != VisualTexture.empty) {
             sb.append("background=").append(background).append(", ");
             any = true;
         }
-        if (icon != null && icon != VisualTexture.empty) {
+        if (icon != VisualTexture.empty) {
             sb.append("icon=").append(icon).append(", ");
             any = true;
         }

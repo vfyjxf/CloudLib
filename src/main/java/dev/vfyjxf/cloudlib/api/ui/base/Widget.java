@@ -333,6 +333,12 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         return scene().pathOf(this);
     }
 
+    /**
+     * The taffy node backing this widget's layout. Available as soon as {@code mount} has created it,
+     * which is before the widget counts as mounted — an {@code onMount} listener reads it through here.
+     *
+     * @throws NullPointerException when the widget has no node: never mounted, or already destroyed
+     */
     public final NodeId nodeId() {
         return Checks.checkNotNull(nodeId, "Widget is not mounted or destroyed!");
     }
@@ -1044,8 +1050,8 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
             codeVars.putAll(style.vars());
             markStyleDirty();
         }
-        if (scene != null) {
-            scene.tree.markDirty(nodeId);
+        if (lifecycle.mounted()) {
+            scene().tree.markDirty(nodeId());
         }
         return this;
     }
@@ -1072,8 +1078,8 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         if (sawVar[0]) {
             markStyleDirty();
         }
-        if (scene != null) {
-            scene.tree.markDirty(nodeId);
+        if (lifecycle.mounted()) {
+            scene().tree.markDirty(nodeId());
         }
         return this;
     }
@@ -1084,8 +1090,8 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
     public final <T> Widget set(StyleKey<T> key, T value) {
         codeStyles.add(key.of(value));
         style.set(key, value);
-        if (scene != null) {
-            scene.tree.markDirty(nodeId);
+        if (lifecycle.mounted()) {
+            scene().tree.markDirty(nodeId());
         }
         return this;
     }
@@ -1104,8 +1110,8 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         codeVars.put(name, value);
         style.setVar(name, value);
         markStyleDirty();
-        if (scene != null) {
-            scene.tree.markDirty(nodeId);
+        if (lifecycle.mounted()) {
+            scene().tree.markDirty(nodeId());
         }
         return this;
     }
@@ -1125,8 +1131,8 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         if (codeVars.remove(name) != null) {
             style.removeVar(name);
             markStyleDirty();
-            if (scene != null) {
-                scene.tree.markDirty(nodeId);
+            if (lifecycle.mounted()) {
+                scene().tree.markDirty(nodeId());
             }
         }
         return this;
@@ -1279,12 +1285,13 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
         // vars already in the table (the resolved theme vars), so the result
         // matches what the cascade produced
         codeVars.forEach(style::setVar);
-        if (scene != null) {
+        if (lifecycle.mounted()) {
+            Scene mountedScene = scene();
             // reset() swaps in a fresh TaffyStyle — the tree still holds the
             // old object, so every layout write since reset would be lost.
             // Hand the live style back before flagging the relayout.
-            scene.tree.setStyle(nodeId, style.layoutStyle());
-            scene.tree.markDirty(nodeId);
+            mountedScene.tree.setStyle(nodeId(), style.layoutStyle());
+            mountedScene.tree.markDirty(nodeId());
         }
     }
 
@@ -1370,9 +1377,17 @@ public class Widget implements Renderable, EventHandler<WidgetEvent>, DataAttach
 
     // endregion
 
+    /**
+     * The taffy layout applied to this widget by the last layout pass.
+     *
+     * @throws IllegalArgumentException when the widget is not mounted or its layout has not been applied
+     */
     public Layout layout() {
-        Checks.checkArgument(layout != null, "layout is not applied");
-        return Checks.checkNotNull(layout, "Widget layout ");
+        Layout applied = layout;
+        if (applied == null) {
+            throw new IllegalArgumentException("Widget: %s is not mounted or has no applied layout!".formatted(this));
+        }
+        return applied;
     }
 
     /**

@@ -186,6 +186,7 @@ public class StyleContext {
      * tokens (the binding may become meaningful once later vars arrive).
      */
     public void setVar(String name, Tokens value) {
+        Objects.requireNonNull(value, "value");
         vars.put(name, Cascade.substituteVars(value, vars));
     }
 

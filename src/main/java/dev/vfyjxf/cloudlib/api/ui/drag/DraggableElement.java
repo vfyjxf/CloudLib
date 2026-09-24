@@ -11,20 +11,9 @@ import java.util.function.Predicate;
 
 public interface DraggableElement<T> extends Renderable {
 
-    @SuppressWarnings("unchecked")
-    static <T> DraggableElement<T> empty() {
-        return (DraggableElement<T>) EmptyDraggableElement.instance;
-    }
-
-    boolean isEmpty();
-
-    default boolean notEmpty() {
-        return !isEmpty();
-    }
-
     /**
-     * @param widget a widget to be draggable,it will translate widget's position when drag released
-     * @return a draggable element
+     * @param widget the widget to make draggable
+     * @return a draggable element backed by the widget
      */
     static DraggableElement<Widget> draggable(Widget widget) {
         return new SimpleDraggableElement(widget);
@@ -67,31 +56,6 @@ public interface DraggableElement<T> extends Renderable {
     void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks);
 }
 
-class EmptyDraggableElement<T> implements DraggableElement<T> {
-
-    static final EmptyDraggableElement<?> instance = new EmptyDraggableElement<>();
-
-    @Override
-    public boolean isEmpty() {
-        return true;
-    }
-
-    @Override
-    public T value() {
-        throw new UnsupportedOperationException("Empty draggable element does not support this operation.");
-    }
-
-    @Override
-    public Rect originalBounds() {
-        throw new UnsupportedOperationException("Empty draggable element does not support this operation.");
-    }
-
-    @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        throw new UnsupportedOperationException("Empty draggable element does not support this operation.");
-    }
-}
-
 class SimpleDraggableElement implements DraggableElement<Widget> {
 
     protected final Widget widget;
@@ -103,21 +67,12 @@ class SimpleDraggableElement implements DraggableElement<Widget> {
     }
 
     @Override
-    public boolean isEmpty() {
-        return false;
-    }
-
-    @Override
     public void dragStart(InputContext input, DragContext context) {
         widget.setDragging(true);
     }
 
     @Override
     public void dragEnd(InputContext input, DragContext context, double deltaX, double deltaY, boolean consumed) {
-        if (!consumed) {
-            throw new UnsupportedOperationException("Not Implemented");
-            //            widget.translate((int) deltaX, (int) deltaY);
-        }
         widget.setDragging(false);
     }
 

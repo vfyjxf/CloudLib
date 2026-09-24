@@ -1,5 +1,7 @@
 package dev.vfyjxf.cloudlib.gradle.lang;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -45,8 +47,8 @@ final class LangKeysClassWriter {
         out.append("package ").append(packageName).append(";\n\n");
 
         boolean imported = false;
-        String annotationSimpleName = null;
-        if (generatedAnnotation != null && !generatedAnnotation.isBlank()) {
+        @Nullable String annotationSimpleName = null;
+        if (!generatedAnnotation.isBlank()) {
             annotationSimpleName = simpleName(generatedAnnotation);
             imported |= appendImport(out, generatedAnnotation, annotationSimpleName, packageName);
         }

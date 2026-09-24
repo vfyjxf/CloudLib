@@ -15,7 +15,7 @@ import java.util.function.UnaryOperator;
  *
  * @param <T> the type of the value
  */
-public sealed interface Snapshot<T> {
+public sealed interface Snapshot<T extends @Nullable Object> {
 
     enum State {
         changed, unchanged, illegal;
@@ -33,19 +33,19 @@ public sealed interface Snapshot<T> {
         }
     }
 
-    static <T> Snapshot<T> noneOf() {
+    static <T extends @Nullable Object> Snapshot<T> noneOf() {
         return None.instance();
     }
 
-    static <T> Snapshot<T> copyOf(UnaryOperator<T> copier, CheckStrategy<T> strategy) {
+    static <T extends @Nullable Object> Snapshot<T> copyOf(UnaryOperator<T> copier, CheckStrategy<T> strategy) {
         return new CopyInstance<>(null, copier, strategy);
     }
 
-    static <T> Snapshot<T> readonlyOf(T value) {
+    static <T extends @Nullable Object> Snapshot<T> readonlyOf(T value) {
         return new Readonly<>(value);
     }
 
-    static <T> Snapshot<T> immutableRefOf(T value, Predicate<T> strategy) {
+    static <T extends @Nullable Object> Snapshot<T> immutableRefOf(T value, Predicate<T> strategy) {
         return new ImmutableRef<>(value, strategy);
     }
 
@@ -56,7 +56,7 @@ public sealed interface Snapshot<T> {
         return new ImmutableRef<>(value, (unused) -> value.changed());
     }
 
-    static <T> MutableRef<T> mutableRefOf(CheckStrategy<T> strategy) {
+    static <T extends @Nullable Object> MutableRef<T> mutableRefOf(CheckStrategy<T> strategy) {
         return new MutableRef<>(strategy);
     }
 
@@ -77,23 +77,28 @@ public sealed interface Snapshot<T> {
     @Nullable
     T value();
 
-    State currentState(T current);
+    /**
+     * @param current the current value, null when the source holds no value
+     * @return the state of the snapshot against {@code current}
+     */
+    State currentState(@Nullable T current);
 
     /**
+     * @param current the current value, null when the source holds no value
      * @return true if the state is changed, false if the state is unchanged
      */
-    boolean updateState(T current);
+    boolean updateState(@Nullable T current);
 
     /**
      * Force update the state of the snapshot, normally this method used to init mutable snapshot
      *
-     * @param current the current value
+     * @param current the current value, null when the source holds no value
      */
-    default void forceUpdateState(T current) {
+    default void forceUpdateState(@Nullable T current) {
         updateState(current);
     }
 
-    static <T> boolean changed(Snapshot<T> instance, T current) {
+    static <T extends @Nullable Object> boolean changed(Snapshot<T> instance, @Nullable T current) {
         return switch (instance.currentState(current)) {
             case changed -> true;
             case unchanged -> false;
@@ -129,12 +134,12 @@ public sealed interface Snapshot<T> {
         }
 
         @Override
-        public boolean updateState(Object current) {
+        public boolean updateState(@Nullable Object current) {
             return false;
         }
 
         @Override
-        public State currentState(Object current) {
+        public State currentState(@Nullable Object current) {
             return State.unchanged;
         }
     }
@@ -142,7 +147,7 @@ public sealed interface Snapshot<T> {
     /**
      * snapshot of the readonly value,the value is immutable
      */
-    final class Readonly<T> implements Snapshot<T> {
+    final class Readonly<T extends @Nullable Object> implements Snapshot<T> {
         private final T value;
         private final Predicate<T> strategy;
 
@@ -167,14 +172,14 @@ public sealed interface Snapshot<T> {
         }
 
         @Override
-        public State currentState(T current) {
+        public State currentState(@Nullable T current) {
             boolean changed = value != current || !strategy.test(current);
             if (changed) return State.illegal;
             else return State.unchanged;
         }
 
         @Override
-        public boolean updateState(T current) {
+        public boolean updateState(@Nullable T current) {
             State state = currentState(current);
             if (state == State.illegal) throw new IllegalStateException("The snapshot has been changed illegally");
             else return false;
@@ -205,7 +210,7 @@ public sealed interface Snapshot<T> {
     /**
      * the shallow immutable reference,normally the value is a {@link Observable}
      */
-    record ImmutableRef<T>(T value, Predicate<T> strategy) implements Snapshot<T> {
+    record ImmutableRef<T extends @Nullable Object>(T value, Predicate<T> strategy) implements Snapshot<T> {
 
         public boolean observable() {
             return value instanceof Observable;
@@ -226,13 +231,13 @@ public sealed interface Snapshot<T> {
         }
 
         @Override
-        public State currentState(T current) {
+        public State currentState(@Nullable T current) {
             if (value != current) return State.illegal;
             else return strategy.test(value) ? State.unchanged : State.changed;
         }
 
         @Override
-        public boolean updateState(T current) {
+        public boolean updateState(@Nullable T current) {
             return switch (currentState(current)) {
                 case changed -> true;
                 case unchanged -> false;
@@ -264,7 +269,7 @@ public sealed interface Snapshot<T> {
      *
      * @param <T> the type of the value
      */
-    final class MutableRef<T> implements Snapshot<T> {
+    final class MutableRef<T extends @Nullable Object> implements Snapshot<T> {
         private final CheckStrategy<T> strategy;
         private @Nullable T value;
 
@@ -286,21 +291,21 @@ public sealed interface Snapshot<T> {
         }
 
         @Override
-        public State currentState(T current) {
+        public State currentState(@Nullable T current) {
             if (value == null) return State.changed;
             var changed = !strategy.matches(value, current);
             return changed ? State.changed : State.unchanged;
         }
 
         @Override
-        public boolean updateState(T current) {
+        public boolean updateState(@Nullable T current) {
             State state = currentState(current);
             if (state.changed()) value = current;
             return state.changed();
         }
 
         @Override
-        public void forceUpdateState(T current) {
+        public void forceUpdateState(@Nullable T current) {
             value = current;
         }
 
@@ -331,15 +336,15 @@ public sealed interface Snapshot<T> {
      *
      * @param <T> the type of the value
      */
-    final class CopyInstance<T> implements Snapshot<T> {
+    final class CopyInstance<T extends @Nullable Object> implements Snapshot<T> {
         private final UnaryOperator<T> copier;
         private final CheckStrategy<T> strategy;
-        private T value;
+        private @Nullable T value;
 
         public CopyInstance(@Nullable T initialValue, UnaryOperator<T> copier, CheckStrategy<T> strategy) {
             this.copier = copier;
             this.strategy = strategy;
-            this.value = copier.apply(initialValue);
+            this.value = initialValue == null ? null : copier.apply(initialValue);
         }
 
         public UnaryOperator<T> copier() {
@@ -351,27 +356,27 @@ public sealed interface Snapshot<T> {
         }
 
         @Override
-        public T readValue() throws IllegalStateException {
+        public @Nullable T readValue() throws IllegalStateException {
             return value;
         }
 
         @Override
-        public T value() {
+        public @Nullable T value() {
             return value;
         }
 
-        private void set(T value) {
-            this.value = copier.apply(value);
+        private void set(@Nullable T value) {
+            this.value = value == null ? null : copier.apply(value);
         }
 
         @Override
-        public State currentState(T current) {
+        public State currentState(@Nullable T current) {
             var changed = !strategy.matches(value, current);
             return changed ? State.changed : State.unchanged;
         }
 
         @Override
-        public boolean updateState(T current) {
+        public boolean updateState(@Nullable T current) {
             State state = currentState(current);
             if (state.changed()) set(current);
             return state.changed();
@@ -406,7 +411,7 @@ public sealed interface Snapshot<T> {
      * happens at {@link Handle#set} time, so this is a pure dirty-flag reader/clearer.
      */
     @ApiStatus.Internal
-    final class HandleSnapshot<T> implements Snapshot<T> {
+    final class HandleSnapshot<T extends @Nullable Object> implements Snapshot<T> {
 
         private final Handle<T> handle;
 
@@ -414,12 +419,12 @@ public sealed interface Snapshot<T> {
             this.handle = handle;
         }
 
-        public static <T> HandleSnapshot<T> of(Handle<T> handle) {
+        public static <T extends @Nullable Object> HandleSnapshot<T> of(Handle<T> handle) {
             return new HandleSnapshot<>(handle);
         }
 
         @Override
-        public T readValue() {
+        public @Nullable T readValue() {
             return handle.get();
         }
 
@@ -429,7 +434,7 @@ public sealed interface Snapshot<T> {
         }
 
         @Override
-        public State currentState(T current) {
+        public State currentState(@Nullable T current) {
             // handle.changed() is the change signal: for a plain Handle it is dirty(); for a DiffHandle
             // it is dirty() || get().changed(), so in-place mutation of a DiffObservable value surfaces too.
             // `current` is handle.get() and is intentionally ignored.
@@ -437,14 +442,14 @@ public sealed interface Snapshot<T> {
         }
 
         @Override
-        public boolean updateState(T current) {
+        public boolean updateState(@Nullable T current) {
             boolean changed = handle.changed();
             handle.clearDirty();
             return changed;
         }
 
         @Override
-        public void forceUpdateState(T current) {
+        public void forceUpdateState(@Nullable T current) {
             handle.clearDirty();
         }
 

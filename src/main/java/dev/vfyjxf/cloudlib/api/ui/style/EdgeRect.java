@@ -87,7 +87,7 @@ public record EdgeRect<T>(@Nullable T top, @Nullable T right, @Nullable T bottom
      * @param <T>    the value type
      * @return a new EdgeRect
      */
-    public static <T> EdgeRect<T> of(T top, T right, T bottom, T left) {
+    public static <T> EdgeRect<T> of(@Nullable T top, @Nullable T right, @Nullable T bottom, @Nullable T left) {
         return new EdgeRect<>(top, right, bottom, left);
     }
 
@@ -309,10 +309,10 @@ public record EdgeRect<T>(@Nullable T top, @Nullable T right, @Nullable T bottom
      * EdgeRect<Integer> result = base.merge(override); // top=20, others=10
      * }</pre>
      *
-     * @param other the EdgeRect to merge with
+     * @param other the EdgeRect to merge with, or null to return this unchanged
      * @return a new merged EdgeRect
      */
-    public EdgeRect<T> merge(EdgeRect<T> other) {
+    public EdgeRect<T> merge(@Nullable EdgeRect<T> other) {
         if (other == null) {
             return this;
         }

@@ -38,13 +38,18 @@ sealed class StandardReversed<S, R> extends BasicExpose<Void> implements Reverse
     }
 
     @Override
+    public boolean hasValue() {
+        return false;
+    }
+
+    @Override
     public void sendToServer(S toSend) {
         if (reversedData.defined()) {
             throw new IllegalStateException(
                 "There is already a value going to send,data shouldn't be updated at tick end."
             );
         }
-        this.reversedData = Maybe.of(toSend);
+        this.reversedData = Maybe.ofNonNull(toSend);
     }
 
     @Override
@@ -59,12 +64,12 @@ sealed class StandardReversed<S, R> extends BasicExpose<Void> implements Reverse
     }
 
     @Override
-    @SuppressWarnings("ConstantConditions")
     public void writeToServer(RegistryFriendlyByteBuf byteBuf) {
-        if (reversedData.defined()) {
-            reversedEncoder.encode(byteBuf, reversedData.get());
-            reversedData = Maybe.empty();
-        }
+        @Nullable
+        S data = reversedData.orElse(null);
+        if (data == null) return;
+        reversedEncoder.encode(byteBuf, data);
+        reversedData = Maybe.empty();
     }
 
     @Override
@@ -74,7 +79,7 @@ sealed class StandardReversed<S, R> extends BasicExpose<Void> implements Reverse
     }
 
     @Override
-    public void whenReceive(Consumer<@Nullable Void> consumer) {
+    public void whenReceive(Consumer<Void> consumer) {
         // No-op, this is a reversed
     }
 }

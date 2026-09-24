@@ -13,7 +13,11 @@ public record ImageNode(VisualTexture texture, int width, int height) implements
         if (texture == null) throw new NullPointerException("texture");
     }
 
-    public ImageNode(SizedTexture texture) {
-        this(texture, texture.width(), texture.height());
+    /**
+     * An image filling a box of the texture's intrinsic size.
+     */
+    public static ImageNode of(SizedTexture texture) {
+        if (texture == null) throw new NullPointerException("texture");
+        return new ImageNode(texture, texture.width(), texture.height());
     }
 }

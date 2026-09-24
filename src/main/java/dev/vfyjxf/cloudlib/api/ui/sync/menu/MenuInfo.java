@@ -24,6 +24,7 @@ import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.factory.BiMaps;
 import org.eclipse.collections.api.list.MutableList;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,7 +35,7 @@ import java.util.function.Supplier;
 public record MenuInfo<M extends BasicMenu<?>, A>(
     MenuType<M> menuType,
     MenuFactory<M, A> menuFactory,
-    Supplier<ScreenFactory<M, ?>> screenFactory,
+    @Nullable Supplier<ScreenFactory<M, ?>> screenFactory,
     Class<A> accessorType
 ) {
     private static final MutableList<MenuInfo<?, ?>> allInfos = MutableLists.empty();
@@ -100,7 +101,15 @@ public record MenuInfo<M extends BasicMenu<?>, A>(
             if (accessor == null) throw new IllegalStateException("Cannot find accessor for " + typeId);
             // endregion
 
-            return menuFactory.createWithInit(Objects.requireNonNull(reference.get()), containerId, inv, accessor);
+            return menuFactory.createWithInit(
+                Objects.requireNonNull(
+                    reference.get(),
+                    "menu type not initialized: the factory runs after MenuInfo.create has set the reference"
+                ),
+                containerId,
+                inv,
+                accessor
+            );
         });
         // endregion
         reference.set(menuType);
@@ -131,7 +140,7 @@ public record MenuInfo<M extends BasicMenu<?>, A>(
     private static <M extends BasicMenu<?>, A, S extends Screen & MenuAccess<M>> MenuInfo<M, A> createInstance(
         MenuType<M> menuType,
         MenuFactory<M, A> menuFactory,
-        Supplier<ScreenFactory<M, S>> screenFactory,
+        @Nullable Supplier<ScreenFactory<M, S>> screenFactory,
         Class<A> accessorType
     ) {
 
@@ -162,8 +171,9 @@ public record MenuInfo<M extends BasicMenu<?>, A>(
         @SuppressWarnings({"unchecked", "rawtypes"})
         private static void registerMenuScreen(RegisterMenuScreensEvent event) {
             for (MenuInfo info : allInfos) {
-                if (info.screenFactory != null) {
-                    registerMenuScreenHelper(event, info, info.screenFactory);
+                Supplier screenFactory = info.screenFactory;
+                if (screenFactory != null) {
+                    registerMenuScreenHelper(event, info, screenFactory);
                 }
             }
         }

@@ -215,7 +215,7 @@ public class RichTextWidget extends CompositeWidget<Widget> {
     }
 
     private void markLayoutDirty() {
-        if (scene() != null) {
+        if (lifecycle().mounted()) {
             scene().layoutTree().markDirty(nodeId());
         }
     }

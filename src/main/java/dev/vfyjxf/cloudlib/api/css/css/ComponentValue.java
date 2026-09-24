@@ -1,6 +1,8 @@
 /* Ported from katana-parser (MIT, (c) 2015 Hackers and Painters) — see LICENSE-katana.txt */
 package dev.vfyjxf.cloudlib.api.css;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 
 /**
@@ -39,9 +41,10 @@ public sealed interface ComponentValue {
      *     dimension
      * @param kind which numeric token kind this was
      * @param integer whether the token had integer type (no fraction or exponent)
-     * @param raw the exact source text of the numeric part (not including the unit)
+     * @param raw the exact source text of the numeric part (not including the unit), or {@code null}
+     *     when the value was built without one
      */
-    record NumericValue(double value, String unit, NumericKind kind, boolean integer, String raw)
+    record NumericValue(double value, String unit, NumericKind kind, boolean integer, @Nullable String raw)
             implements
                 ComponentValue {
 

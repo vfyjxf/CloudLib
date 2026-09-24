@@ -18,12 +18,11 @@ final class BasicHandle<T> implements Handle<T> {
 
     private final CheckStrategy<T> strategy;
     private final SimpleEvent<Consumer<T>> changeEvent = SimpleEvent.create();
-    private final SimpleEvent<BiConsumer<T, T>> pairChangeEvent = SimpleEvent.create();
+    private final SimpleEvent<BiConsumer<@Nullable T, T>> pairChangeEvent = SimpleEvent.create();
 
-    private T value;
+    private @Nullable T value;
     private boolean dirty;
 
-    @SuppressWarnings("NullAway")
     BasicHandle(@Nullable T initial, CheckStrategy<T> strategy) {
         this.strategy = strategy;
         this.value = initial;
@@ -31,13 +30,14 @@ final class BasicHandle<T> implements Handle<T> {
 
     @Override
     @Contract(pure = true)
-    public T get() {
+    public @Nullable T get() {
         return value;
     }
 
     @Override
     public void set(T value) {
         if (strategy.matches(this.value, value)) return;
+        @Nullable
         T previous = this.value;
         this.value = value;
         dirty = true;
@@ -47,6 +47,7 @@ final class BasicHandle<T> implements Handle<T> {
     @Override
     public void apply(T value) {
         if (strategy.matches(this.value, value)) return;
+        @Nullable
         T previous = this.value;
         this.value = value;
         fire(previous, value);
@@ -58,7 +59,7 @@ final class BasicHandle<T> implements Handle<T> {
         this.value = value;
     }
 
-    private void fire(T previous, T value) {
+    private void fire(@Nullable T previous, T value) {
         changeEvent.invoke(listener -> listener.accept(value));
         pairChangeEvent.invoke(listener -> listener.accept(previous, value));
     }
@@ -89,9 +90,9 @@ final class BasicHandle<T> implements Handle<T> {
     }
 
     @Override
-    public Subscription onChange(BiConsumer<? super T, ? super T> listener) {
+    public Subscription onChange(BiConsumer<? super @Nullable T, ? super T> listener) {
         Checks.checkNotNull(listener, "listener");
-        BiConsumer<T, T> adapted = listener::accept;
+        BiConsumer<@Nullable T, T> adapted = listener::accept;
         pairChangeEvent.register(adapted);
         return () -> pairChangeEvent.unregister(adapted);
     }

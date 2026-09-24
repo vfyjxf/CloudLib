@@ -102,16 +102,26 @@ public class SyncedTestBlockEntity extends BasicSyncedBlockEntity {
     /** Server-side validation of actions sent from the in-world UI. */
     private void onAction(int actionId) {
         switch (actionId) {
-            case actionIncrement -> count.set(count.get() + 1);
-            case actionDecrement -> count.set(count.get() - 1);
+            case actionIncrement -> {
+                Integer current = count.get();
+                if (current != null) count.set(current + 1);
+            }
+            case actionDecrement -> {
+                Integer current = count.get();
+                if (current != null) count.set(current - 1);
+            }
             case actionReset -> {
                 count.set(0);
                 items.set(List.of());
             }
             case actionPickItem -> {
-                var next = new ArrayList<>(items.get());
-                next.add(new ItemStack(itemPool[count.get() % itemPool.length], 1 + count.get() % 64));
-                items.set(List.copyOf(next));
+                List<ItemStack> stacks = items.get();
+                Integer current = count.get();
+                if (stacks != null && current != null) {
+                    var next = new ArrayList<>(stacks);
+                    next.add(new ItemStack(itemPool[current % itemPool.length], 1 + current % 64));
+                    items.set(List.copyOf(next));
+                }
             }
             default -> {
                 // unknown action — drop silently
@@ -124,8 +134,9 @@ public class SyncedTestBlockEntity extends BasicSyncedBlockEntity {
         return (level, pos, state, be) -> {
             if (level.isClientSide) return;
             be.tick++;
-            if (be.tick % 20 == 0 && be.active.get()) {
-                be.count.set(be.count.get() + 1);
+            if (be.tick % 20 == 0 && Boolean.TRUE.equals(be.active.get())) {
+                Integer current = be.count.get();
+                if (current != null) be.count.set(current + 1);
                 be.label.set("tick " + be.tick);
             }
         };

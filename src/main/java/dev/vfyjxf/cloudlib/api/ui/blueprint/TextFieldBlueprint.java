@@ -34,7 +34,7 @@ public final class TextFieldBlueprint implements Blueprint<TextFieldWidget> {
     private @Nullable Object key;
     private UIStyle style = UIStyle.empty;
 
-    private TextFieldBlueprint(String text) {
+    private TextFieldBlueprint(@Nullable String text) {
         this.text = text != null ? text : "";
     }
 
@@ -52,8 +52,8 @@ public final class TextFieldBlueprint implements Blueprint<TextFieldWidget> {
 
     // region builder methods
 
-    public TextFieldBlueprint text(String text) {
-        this.text = text;
+    public TextFieldBlueprint text(@Nullable String text) {
+        this.text = text != null ? text : "";
         return this;
     }
 

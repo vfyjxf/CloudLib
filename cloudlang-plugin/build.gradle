@@ -16,6 +16,7 @@ repositories {
 dependencies {
     implementation 'org.yaml:snakeyaml:2.2'
     implementation 'com.diffplug.spotless:spotless-plugin-gradle:7.0.4'
+    compileOnly 'org.jspecify:jspecify:1.0.1'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

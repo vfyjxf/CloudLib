@@ -4,6 +4,7 @@ import dev.vfyjxf.cloudlib.api.data.snapshot.DiffObservable;
 import dev.vfyjxf.cloudlib.api.util.Maybe;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Consumer;
 
@@ -25,7 +26,10 @@ interface Differential<D> {
     Maybe<D> difference();
 
     static <T extends DiffObservable<D>, D> Maybe<D> getDifference(BasicLayerExpose.LayerSnapshot<T> snapshot) {
+        @Nullable
         T current = snapshot.current();
+        // no value yet: nothing changed, so there is no difference to send either
+        if (current == null) return Maybe.empty();
         return current.changed() ? Maybe.of(current.difference()) : Maybe.empty();
     }
 

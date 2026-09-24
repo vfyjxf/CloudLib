@@ -55,7 +55,7 @@ public final class Namespace implements Comparable<Namespace> {
         if (index != -1) {
             String root = str.substring(0, index);
             String path = str.substring(index + 1);
-            if (!ResourceLocation.isValidPath(path)) return null;
+            if (!ResourceLocation.isValidNamespace(root) || !ResourceLocation.isValidPath(path)) return null;
             return new Namespace(root, path);
         } else {
             return ResourceLocation.isValidPath(str) ? ofMc(str) : null;

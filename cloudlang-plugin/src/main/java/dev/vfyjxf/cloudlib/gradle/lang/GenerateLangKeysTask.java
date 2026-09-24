@@ -3,7 +3,6 @@ package dev.vfyjxf.cloudlib.gradle.lang;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.IgnoreEmptyDirectories;
@@ -55,10 +54,10 @@ public abstract class GenerateLangKeysTask extends DefaultTask {
     public abstract ConfigurableFileCollection getSourceDirectories();
 
     /**
-     * Display labels of {@link #getSourceDirectories()}, used in generated comments.
+     * Directory the source roots are labelled against in generated comments.
      */
     @Input
-    public abstract ListProperty<String> getSourceDirectoryLabels();
+    public abstract Property<String> getProjectDirectory();
 
     @OutputDirectory
     public abstract DirectoryProperty getOutputDirectory();
@@ -66,7 +65,12 @@ public abstract class GenerateLangKeysTask extends DefaultTask {
     @TaskAction
     public void generate() {
         var locales = LangMerger.merge(sourceRoots(), warning -> getLogger().warn(warning));
-        var content = locales.getOrDefault(getDefaultLocale().get(), LangMerger.LocaleContent.empty());
+        String defaultLocale = getDefaultLocale().get();
+        var content = locales.getOrDefault(defaultLocale, LangMerger.LocaleContent.empty());
+        if (!locales.isEmpty() && !locales.containsKey(defaultLocale)) {
+            getLogger().warn("No lang sources for the default locale '{}'; the generated key class will be empty. Available locales: {}",
+                    defaultLocale, String.join(", ", locales.keySet()));
+        }
 
         String source = LangKeysClassWriter.write(
                 getPackageName().get(),
@@ -92,12 +96,10 @@ public abstract class GenerateLangKeysTask extends DefaultTask {
     }
 
     protected final java.util.List<LangMerger.SourceRoot> sourceRoots() {
-        var directories = getSourceDirectories().getFiles().stream().map(java.io.File::toPath).toList();
-        var labels = getSourceDirectoryLabels().get();
-        var roots = new ArrayList<LangMerger.SourceRoot>(directories.size());
-        for (int i = 0; i < directories.size(); i++) {
-            String label = i < labels.size() ? labels.get(i) : directories.get(i).toString();
-            roots.add(new LangMerger.SourceRoot(directories.get(i), label));
+        Path projectDirectory = Path.of(getProjectDirectory().get());
+        var roots = new ArrayList<LangMerger.SourceRoot>();
+        for (java.io.File file : getSourceDirectories().getFiles()) {
+            roots.add(LangMerger.SourceRoot.of(projectDirectory, file.toPath()));
         }
         return roots;
     }

@@ -496,8 +496,8 @@ public class TestLayoutScreen extends BasicScreen {
     }
 
     private void updateStatus(String message) {
-        if (statusLabel != null) statusLabel.setText("Status: " + message);
-        if (clickCountLabel != null) clickCountLabel.setText("Clicks: " + clickCount);
+        statusLabel.setText("Status: " + message);
+        clickCountLabel.setText("Clicks: " + clickCount);
     }
 
     @Override

@@ -7,7 +7,9 @@ import dev.vfyjxf.cloudlib.api.ui.debug.InspectionInfoCollector;
 import dev.vfyjxf.cloudlib.api.ui.debug.InspectionProperty;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 import net.minecraft.world.entity.Entity;
+import org.jspecify.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -35,7 +37,7 @@ import java.util.function.Supplier;
  */
 public final class EntityPreviewWidget extends Widget {
 
-    private final Supplier<? extends Entity> entity;
+    private final Supplier<@Nullable ? extends Entity> entity;
     private final int previewWidth;
     private final int previewHeight;
     private final int scale;
@@ -45,7 +47,7 @@ public final class EntityPreviewWidget extends Widget {
      * A {@code width}×{@code height} preview at the auto-fitting scale — the entity's own bounding box
      * decides the pixels-per-block, so anything from a chicken to a golem fills the box.
      */
-    public EntityPreviewWidget(Supplier<? extends Entity> entity, int width, int height) {
+    public EntityPreviewWidget(Supplier<@Nullable ? extends Entity> entity, int width, int height) {
         this(entity, width, height, 0, false);
     }
 
@@ -60,16 +62,13 @@ public final class EntityPreviewWidget extends Widget {
      * @param followMouse whether the body and head track the pointer
      */
     public EntityPreviewWidget(
-        Supplier<? extends Entity> entity,
+        Supplier<@Nullable ? extends Entity> entity,
         int width,
         int height,
         int scale,
         boolean followMouse
     ) {
-        if (entity == null) {
-            throw new NullPointerException("entity");
-        }
-        this.entity = entity;
+        this.entity = Objects.requireNonNull(entity, "entity");
         this.previewWidth = Math.max(1, width);
         this.previewHeight = Math.max(1, height);
         this.scale = scale > 0 ? scale : 0;
@@ -82,8 +81,8 @@ public final class EntityPreviewWidget extends Widget {
 
     // region configuration
 
-    /** The live supplier — re-read every frame. */
-    public Supplier<? extends Entity> entity() {
+    /** The live supplier — re-read every frame, answering {@code null} once the entity is gone. */
+    public Supplier<@Nullable ? extends Entity> entity() {
         return entity;
     }
 

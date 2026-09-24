@@ -212,7 +212,7 @@ public final class RichTextLayouter {
      */
     private void flattenTranslatable(TranslatableNode node, FlattenContext context, List<InlineAtom> out) {
         String pattern = translations.pattern(node.key()).orElse(node.key());
-        List<Object> args = node.args();
+        List<@Nullable Object> args = node.args();
         StringBuilder text = new StringBuilder();
         int sequential = 0;
         int i = 0;
@@ -266,7 +266,12 @@ public final class RichTextLayouter {
         }
     }
 
-    private void spliceArg(Object arg, FlattenContext context, TranslatableNode source, List<InlineAtom> out) {
+    private void spliceArg(
+        @Nullable Object arg,
+        FlattenContext context,
+        TranslatableNode source,
+        List<InlineAtom> out
+    ) {
         switch (arg) {
             case null -> splitText("null", context, source, out);
             case RichNode node -> flattenInto(node, context, out);

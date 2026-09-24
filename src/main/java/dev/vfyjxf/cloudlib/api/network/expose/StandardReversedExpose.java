@@ -7,6 +7,7 @@ import dev.vfyjxf.cloudlib.api.network.FlowEncoder;
 import dev.vfyjxf.cloudlib.api.util.Maybe;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Consumer;
 
@@ -43,7 +44,7 @@ final class StandardReversedExpose<T, S, R> extends BasicDownstreamExpose<T>
                 "There is already a value going to send,data shouldn't be updated at tick end."
             );
         }
-        reversedData = Maybe.of(toSend);
+        reversedData = Maybe.ofNonNull(toSend);
     }
 
     @Override
@@ -58,12 +59,12 @@ final class StandardReversedExpose<T, S, R> extends BasicDownstreamExpose<T>
     }
 
     @Override
-    @SuppressWarnings("ConstantConditions")
     public void writeToServer(RegistryFriendlyByteBuf byteBuf) {
-        if (reversedData.defined()) {
-            reverseEncoder.encode(byteBuf, reversedData.get());
-            reversedData = Maybe.empty();
-        }
+        @Nullable
+        S data = reversedData.orElse(null);
+        if (data == null) return;
+        reverseEncoder.encode(byteBuf, data);
+        reversedData = Maybe.empty();
     }
 
     @Override

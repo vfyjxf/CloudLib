@@ -4,6 +4,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -79,9 +80,9 @@ public final class ComponentAdapter {
         };
     }
 
-    private static Object[] convertArgs(Iterable<Object> args) {
-        var list = new ArrayList<>();
-        for (Object arg : args) {
+    private static Object[] convertArgs(Iterable<@Nullable Object> args) {
+        var list = new ArrayList<@Nullable Object>();
+        for (var arg : args) {
             if (arg instanceof RichNode node) {
                 list.add(toComponent(node));
             } else {

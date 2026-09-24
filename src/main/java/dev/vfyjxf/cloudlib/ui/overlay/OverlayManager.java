@@ -26,14 +26,19 @@ public final class OverlayManager {
     private static final Logger log = LoggerFactory.getLogger(OverlayManager.class);
 
     private final Collection<OverlayEntry<?>> entries;
-    private final Function<Screen, OverlayContext> contextFactory;
+    private final Function<@Nullable Screen, OverlayContext> contextFactory;
     private final List<OverlayRuntime<?>> activeOverlays = new ArrayList<>();
 
+    /**
+     * Creates a manager whose contexts are built from the running client.
+     *
+     * @throws IllegalStateException when a context is requested before the Minecraft client is initialized
+     */
     public OverlayManager(Collection<OverlayEntry<?>> entries) {
         this(entries, OverlayManager::buildDefaultContext);
     }
 
-    OverlayManager(Collection<OverlayEntry<?>> entries, Function<Screen, OverlayContext> contextFactory) {
+    OverlayManager(Collection<OverlayEntry<?>> entries, Function<@Nullable Screen, OverlayContext> contextFactory) {
         this.entries = Objects.requireNonNull(entries, "entries");
         this.contextFactory = Objects.requireNonNull(contextFactory, "contextFactory");
     }
@@ -123,8 +128,16 @@ public final class OverlayManager {
         return contextFactory.apply(screen);
     }
 
+    /**
+     * Builds a context from the running client.
+     *
+     * @throws IllegalStateException when the Minecraft client is not initialized
+     */
     private static OverlayContext buildDefaultContext(@Nullable Screen screen) {
-        Minecraft minecraft = Objects.requireNonNull(Minecraft.getInstance(), "minecraft");
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null) {
+            throw new IllegalStateException("Cannot build overlay context: Minecraft client is not initialized");
+        }
         var window = minecraft.getWindow();
         return new OverlayContext(
             screen,

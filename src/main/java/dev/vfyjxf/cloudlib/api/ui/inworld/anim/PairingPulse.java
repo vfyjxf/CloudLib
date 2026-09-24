@@ -51,7 +51,7 @@ public final class PairingPulse {
     private double elapsed = idle;
 
     public PairingPulse(Config config) {
-        this.config = config == null ? Config.ofDefaults() : config;
+        this.config = config;
     }
 
     public Config config() {

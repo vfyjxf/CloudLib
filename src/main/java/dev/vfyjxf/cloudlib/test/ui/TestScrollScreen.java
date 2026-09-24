@@ -328,12 +328,9 @@ public class TestScrollScreen extends BasicScreen {
     // ========== Helpers ==========
 
     private void updateStatus(String message) {
-        if (statusLabel != null) {
-            String vInfo = String.format("V: %.0f/%.0f", verticalState.scrollY(), (float) verticalState.maxScrollY());
-            String hInfo = String
-                    .format("H: %.0f/%.0f", horizontalState.scrollX(), (float) horizontalState.maxScrollX());
-            statusLabel.setText(message + "  |  " + vInfo + "  " + hInfo);
-        }
+        String vInfo = String.format("V: %.0f/%.0f", verticalState.scrollY(), (float) verticalState.maxScrollY());
+        String hInfo = String.format("H: %.0f/%.0f", horizontalState.scrollX(), (float) horizontalState.maxScrollX());
+        statusLabel.setText(message + "  |  " + vInfo + "  " + hInfo);
     }
 
     private Widget createDivider() {

@@ -3,7 +3,6 @@ package dev.vfyjxf.cloudlib.gradle.lang;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.IgnoreEmptyDirectories;
@@ -38,24 +37,17 @@ public abstract class GenerateLangResourcesTask extends DefaultTask {
     public abstract ConfigurableFileCollection getSourceDirectories();
 
     /**
-     * Display labels of {@link #getSourceDirectories()}, used in generated comments.
+     * Directory the source roots are labelled against in generated comments.
      */
     @Input
-    public abstract ListProperty<String> getSourceDirectoryLabels();
+    public abstract Property<String> getProjectDirectory();
 
     @OutputDirectory
     public abstract DirectoryProperty getOutputDirectory();
 
     @TaskAction
     public void generate() {
-        var sourceRoots = getSourceDirectories().getFiles().stream().map(java.io.File::toPath).toList();
-        var labels = getSourceDirectoryLabels().get();
-        var roots = new java.util.ArrayList<LangMerger.SourceRoot>(sourceRoots.size());
-        for (int i = 0; i < sourceRoots.size(); i++) {
-            String label = i < labels.size() ? labels.get(i) : sourceRoots.get(i).toString();
-            roots.add(new LangMerger.SourceRoot(sourceRoots.get(i), label));
-        }
-        var locales = LangMerger.merge(roots, warning -> getLogger().warn(warning));
+        var locales = LangMerger.merge(sourceRoots(), warning -> getLogger().warn(warning));
 
         Path outputRoot = getOutputDirectory().get().getAsFile().toPath();
         clean(outputRoot);
@@ -70,6 +62,15 @@ public abstract class GenerateLangResourcesTask extends DefaultTask {
             }
             getLogger().lifecycle("Packed {} ({} entries in {} files)", jsonFile.getFileName(), content.entryCount(), content.chunks().size());
         }
+    }
+
+    private java.util.List<LangMerger.SourceRoot> sourceRoots() {
+        Path projectDirectory = Path.of(getProjectDirectory().get());
+        var roots = new java.util.ArrayList<LangMerger.SourceRoot>();
+        for (var file : getSourceDirectories().getFiles()) {
+            roots.add(LangMerger.SourceRoot.of(projectDirectory, file.toPath()));
+        }
+        return roots;
     }
 
     private static void clean(Path directory) {

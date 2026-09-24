@@ -10,10 +10,14 @@ import java.util.Objects;
 
 public interface CheckStrategy<T> {
 
+    /**
+     * @return whether {@code current} should be treated as equal to {@code previous}; either side may
+     * be null while a cell holds no value
+     */
     @Contract(pure = true)
-    boolean matches(T previous, T current);
+    boolean matches(@Nullable T previous, @Nullable T current);
 
-    default boolean notMatches(T previous, T current) {
+    default boolean notMatches(@Nullable T previous, @Nullable T current) {
         return !matches(previous, current);
     }
 
@@ -81,7 +85,10 @@ public interface CheckStrategy<T> {
     /**
      * matches {@link ItemStack#getItem()} and {@link ItemStack#getCount()}
      */
-    CheckStrategy<ItemStack> sameItemAndCount = (a, b) -> ItemStack.isSameItem(a, b) && a.getCount() == b.getCount();
+    CheckStrategy<ItemStack> sameItemAndCount = (a, b) -> {
+        if (a == null || b == null) return a == b;
+        return ItemStack.isSameItem(a, b) && a.getCount() == b.getCount();
+    };
 
     /**
      * matches {@link ItemStack#getItem()} and {@link ItemStack#getComponents()}
@@ -101,8 +108,10 @@ public interface CheckStrategy<T> {
     /**
      * matches {@link FluidStack#getFluid()} and {@link FluidStack#getAmount()}
      */
-    CheckStrategy<FluidStack> sameFluidAndAmount = (a, b) -> FluidStack.isSameFluid(a, b)
-            && a.getAmount() == b.getAmount();
+    CheckStrategy<FluidStack> sameFluidAndAmount = (a, b) -> {
+        if (a == null || b == null) return a == b;
+        return FluidStack.isSameFluid(a, b) && a.getAmount() == b.getAmount();
+    };
 
     /**
      * matches {@link FluidStack#getFluid()} and {@link FluidStack#getComponents()}

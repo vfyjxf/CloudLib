@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 /**
  * @param <T> the type of the exposed value
  */
-public non-sealed interface Expose<T> extends ExposeCommon {
+public non-sealed interface Expose<T extends @Nullable Object> extends ExposeCommon {
 
     // region factory
 
@@ -46,6 +46,9 @@ public non-sealed interface Expose<T> extends ExposeCommon {
      * Create an Expose backed by a {@link Handle}. The handle's dirty flag drives change detection
      * (via the internal {@code HandleSnapshot} adapter), and {@code handle::get} is the value supplier.
      * This is the push-based replacement for the snapshot/polling entry points above.
+     * <p>
+     * An empty handle has nothing to expose: {@link #current()} is null and the expose reports no
+     * change until a value is stored.
      */
     static <T> Expose<T> create(String name, short id, Handle<T> handle, UnaryFlowHandler<T> exposeCodec) {
         return new StandardExpose<>(
@@ -109,8 +112,11 @@ public non-sealed interface Expose<T> extends ExposeCommon {
 
     @Override
     default boolean changed() {
+        @Nullable
+        T current = current();
+        if (current == null) return false;
         var snapshot = snapshot();
-        return switch (snapshot.currentState(current())) {
+        return switch (snapshot.currentState(current)) {
             case unchanged -> false;
             case changed -> true;
             case illegal -> {
@@ -124,9 +130,10 @@ public non-sealed interface Expose<T> extends ExposeCommon {
     }
 
     /**
-     * @return the current value of this Expose
+     * @return the current value of this Expose, or null while it holds no value yet
      */
     @Contract(pure = true)
+    @Nullable
     T current();
 
     // endregion

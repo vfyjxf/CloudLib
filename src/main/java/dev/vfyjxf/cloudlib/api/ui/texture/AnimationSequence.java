@@ -61,6 +61,7 @@ public class AnimationSequence<T> implements Playable<T> {
     public float progress() {
         if (animations.isEmpty()) return 0;
         float completed = currentIndex;
+        @Nullable
         Playable<T> current = current();
         if (current != null) {
             completed += current.progress();
@@ -82,6 +83,7 @@ public class AnimationSequence<T> implements Playable<T> {
         }
 
         currentIndex = targetIndex;
+        @Nullable
         Playable<T> current = current();
         if (current != null) {
             float localProgress = (progress - targetIndex * perAnim) / perAnim;
@@ -91,12 +93,14 @@ public class AnimationSequence<T> implements Playable<T> {
 
     @Override
     public @Nullable T value() {
+        @Nullable
         Playable<T> current = current();
         return current != null ? current.value() : null;
     }
 
     @Override
     public @Nullable T value(float partialTick) {
+        @Nullable
         Playable<T> current = current();
         return current != null ? current.value(partialTick) : null;
     }
@@ -105,6 +109,7 @@ public class AnimationSequence<T> implements Playable<T> {
     public void update(float deltaTime) {
         if (!playing || animations.isEmpty()) return;
 
+        @Nullable
         Playable<T> current = current();
         if (current == null) return;
 
@@ -132,6 +137,7 @@ public class AnimationSequence<T> implements Playable<T> {
     @Override
     public void play() {
         playing = true;
+        @Nullable
         Playable<T> current = current();
         if (current != null) {
             current.play();
@@ -141,6 +147,7 @@ public class AnimationSequence<T> implements Playable<T> {
     @Override
     public void pause() {
         playing = false;
+        @Nullable
         Playable<T> current = current();
         if (current != null) {
             current.pause();
